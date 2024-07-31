@@ -1,6 +1,19 @@
 defmodule EventBroker do
   @moduledoc """
-  an event broker
+  I am an Event Broker module.
+
+  I specify the behavior of the server acting as a central broker of the
+  PubSub servive. My functionality is minimal. I wait for messages and
+  relay them to my subscribers.
+
+  We assume that there is only one local entity named EventBroker for
+  proper functionality.
+
+  ### Public API
+
+  I provide the following public functionality:
+
+  - `event/1`
   """
 
   alias __MODULE__
@@ -9,6 +22,15 @@ defmodule EventBroker do
   use TypedStruct
 
   typedstruct enforce: true do
+    @typedoc """
+    I am the type of the Event Broker.
+
+    ### Fields
+
+    - `:subscribers` - The set of pids showcasing subscribers.
+                       Default: Map.Set.new()
+    """
+
     field(:subscribers, MapSet.t(pid()), default: MapSet.new())
   end
 
@@ -24,6 +46,14 @@ defmodule EventBroker do
   #                      Public RPC API                      #
   ############################################################
 
+  @doc """
+  I am the Event Broker event function.
+
+  I process any incoming events by sending them to all of my subscribers
+  using the `send/2` functionality.
+  """
+
+  @spec event(EventBroker.Event.t()) :: :ok
   def event(event = %EventBroker.Event{}) do
     GenServer.cast(__MODULE__, {:event, event})
   end

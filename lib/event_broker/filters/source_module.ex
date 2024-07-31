@@ -1,12 +1,19 @@
 defmodule EventBroker.Filters.SourceModule do
   @moduledoc """
-  filters an event based on its source module
+  I filter an event based on its source module.
   """
 
   use TypedStruct
   use EventBroker.Filter
 
   typedstruct enforce: true do
+    @typedoc """
+    I store the module representing the source of a message.
+
+    ### Field
+
+    - `:module` - A module name.
+    """
     field(:module, module())
   end
 

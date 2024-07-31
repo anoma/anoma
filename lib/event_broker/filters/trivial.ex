@@ -1,6 +1,6 @@
 defmodule EventBroker.Filters.Trivial do
   @moduledoc """
-  the trivial filter
+  I am the trivial filter. I always return true.
   """
 
   use TypedStruct

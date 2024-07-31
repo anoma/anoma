@@ -1,6 +1,10 @@
 defmodule EventBroker.FilterAgent do
   @moduledoc """
-  holds a filter and applies it to incoming messages
+  I am a Filter Agent module.
+
+  I implement the base server behavior of the spawned filter agent. In
+  general, I monitor subscribers of an individual filtering agent and
+  send whichever events I receive to them.
   """
 
   alias __MODULE__
@@ -9,6 +13,21 @@ defmodule EventBroker.FilterAgent do
   use TypedStruct
 
   typedstruct enforce: true do
+    @typedoc """
+    I am the type of the Filter Agent.
+
+    I contain the minimal info for a filter to work, namely the filter
+    specification to aplly to incoming messages and subscribers to send
+    filtered messages to.
+
+    ### Fields
+
+    - `:spec` - The filter specification. This is a structure of a module
+                with a public filter API for the agent to call.
+    - `:subscribers` - The list of subscribers to send filtered messages to.
+                       Default: MapSet.new()
+    """
+
     field(:spec, struct())
     field(:subscribers, MapSet.t(pid()), default: MapSet.new())
   end
@@ -23,6 +42,10 @@ defmodule EventBroker.FilterAgent do
        spec: filter_params
      }}
   end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
 
   def handle_call({:subscribe, pid}, _from, state) do
     {:reply, :ok, %{state | subscribers: MapSet.put(state.subscribers, pid)}}

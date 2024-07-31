@@ -1,6 +1,7 @@
 defmodule EventBroker.Filter do
   @moduledoc """
-  A behaviour for filters.
+  I am a filter module for the Event Broker. I provide the callbacks for
+  all the filters used in the PubSub system.
   """
 
   @callback filter(EventBroker.Event.t(), struct()) :: bool()
