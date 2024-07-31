@@ -1,8 +1,7 @@
 defmodule Examples.EventBroker do
   @moduledoc false
 
-  require ExUnit.Assertions
-  import ExUnit.Assertions
+  use TestHelper.TestMacro
 
   @doc """
   I start the broker-registry duo.
