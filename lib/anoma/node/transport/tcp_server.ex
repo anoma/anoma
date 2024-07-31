@@ -1,4 +1,9 @@
 defmodule Anoma.Node.Transport.TCPServer do
+  @moduledoc """
+  I am TCPServer Engine.
+
+  I open a listening TCP connection in server mode on the specified address.
+  """
   alias Anoma.Node.{Router, Transport, Logger}
   alias __MODULE__
 
@@ -8,6 +13,19 @@ defmodule Anoma.Node.Transport.TCPServer do
   require Logger
 
   typedstruct do
+    @typedoc """
+    I am the type of the TCPServer Engine.
+
+    ### Fields
+    - `:router` - The address of the Router Engine that the Transport Engine
+      instance serves to.
+    - `:transport` - The address of the Transport server managing the server.
+    - `:connection_pool` - The supervisor which manages the connection pool that
+      the TCPServer Engine instance belongs to.
+    - `:listener` - The socket listening on the specified host, port.
+      request.  Must be provided in the listener mode. Default: nil
+    - `:logger` - The Logger Engine address. Enforced: false.
+    """
     field(:router, Router.addr())
     field(:transport, Router.addr())
     field(:connection_pool, Supervisor.supervisor())
@@ -43,6 +61,10 @@ defmodule Anoma.Node.Transport.TCPServer do
         {:error, reason}
     end
   end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
 
   def handle_continue(:start_listener, s) do
     Router.start_engine(
