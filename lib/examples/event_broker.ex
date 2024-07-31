@@ -165,10 +165,9 @@ defmodule Examples.EventBroker do
   @doc """
   I am a function unsubbing from all filters.
 
-  Assuming that only one actor is subscribed to the list of the filter tree,
-  I start the broker, then see all the filters, revert the list - this
-  helps me as the newer filters delist quicker - then go through said
-  filters. If they are alive, unsubscribe self from them.
+  Assuming that only one non-filter actor is subscribed to the list of the
+  filter tree, I start the broker, then see all the filters. If they have
+  self as a subscriber, I ask the Registry to unsubscribe.
 
   Per the hypothesis, only the Broker should remain alive after that. I
   check that this is indeed true and return the Registry state.
@@ -178,16 +177,17 @@ defmodule Examples.EventBroker do
   def unsub_all() do
     start_broker()
 
-    filters =
-      :sys.get_state(EventBroker.Registry).registered_filters |> Map.keys()
+    registered = :sys.get_state(EventBroker.Registry).registered_filters
 
-    for f <- Enum.reverse(filters) do
-      if :sys.get_state(EventBroker.Registry).registered_filters
-         |> Map.get(f)
-         |> Process.alive?() do
-        EventBroker.Registry.unsubscribe_me(f)
-      end
+    for {spec, pid} <- registered, reduce: [] do
+      acc ->
+        if :sys.get_state(pid).subscribers |> MapSet.member?(self()) do
+          acc ++ [spec]
+        else
+          acc
+        end
     end
+    |> Enum.map(&EventBroker.Registry.unsubscribe_me(&1))
 
     assert [[]] ==
              :sys.get_state(EventBroker.Registry).registered_filters
