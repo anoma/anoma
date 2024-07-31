@@ -295,28 +295,29 @@ defmodule AnomaTest.Node.Executor.Worker do
     compliance_inputs = """
     {
     "input": {
-        "logic" : 2377229611309868107108938255682430113398371484321807491305813521724764405791,
-        "label" : 2377229611309868107108938255682430113398371484321807491305813521724764405791,
-        "quantity" : 13,
-        "data" : 14,
-        "eph" : 15,
-        "nonce" : 26,
-        "npk" : 37,
-        "rseed" : 48
+        "logic" : "0x78641adee85319d58ec95e4d1d4127d96a9ca365e77b5e06f286e71f9d6ca70",
+        "label" : "0x12",
+        "quantity" : "0x13",
+        "data" : "0x14",
+        "eph" : true,
+        "nonce" : "0x26",
+        "npk" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
+        "rseed" : "0x48"
     },
     "output": {
-        "logic" : 2377229611309868107108938255682430113398371484321807491305813521724764405791,
-        "label" : 2377229611309868107108938255682430113398371484321807491305813521724764405791,
-        "quantity" : 13,
-        "data" : 812,
-        "eph" : 93,
-        "nonce" : 104,
-        "npk" : 195,
-        "rseed" : 16
+        "logic" : "0x78641adee85319d58ec95e4d1d4127d96a9ca365e77b5e06f286e71f9d6ca70",
+        "label" : "0x12",
+        "quantity" : "0x13",
+        "data" : "0x812",
+        "eph" : true,
+        "nonce" : "0x104",
+        "npk" : "0x195",
+        "rseed" : "0x16"
     },
-    "merkle_path": [{"fst": 33, "snd": true}, {"fst": 83, "snd": false}, {"fst": 73, "snd": false}, {"fst": 23, "snd": false}, {"fst": 33, "snd": false}, {"fst": 43, "snd": false}, {"fst": 53, "snd": false}, {"fst": 3, "snd": false}, {"fst": 36, "snd": false}, {"fst": 37, "snd": false}, {"fst": 118, "snd": false}, {"fst": 129, "snd": false}, {"fst": 12, "snd": true}, {"fst": 33, "snd": false}, {"fst": 43, "snd": false}, {"fst": 156, "snd": true}, {"fst": 63, "snd": false}, {"fst": 128, "snd": false}, {"fst": 32, "snd": false}, {"fst": 230, "snd": true}, {"fst": 3, "snd": false}, {"fst": 33, "snd": false}, {"fst": 223, "snd": false}, {"fst": 2032, "snd": true}, {"fst": 32, "snd": false}, {"fst": 323, "snd": false}, {"fst": 3223, "snd": false}, {"fst": 203, "snd": true}, {"fst": 31, "snd": false}, {"fst": 32, "snd": false}, {"fst": 22, "snd": false}, {"fst": 23, "snd": true}],
-    "rcv": 3,
-    "eph_root": 4
+    "input_nf_key": "0x1",
+    "merkle_path": [{"fst": "0x33", "snd": true}, {"fst": "0x83", "snd": false}, {"fst": "0x73", "snd": false}, {"fst": "0x23", "snd": false}, {"fst": "0x33", "snd": false}, {"fst": "0x43", "snd": false}, {"fst": "0x53", "snd": false}, {"fst": "0x3", "snd": false}, {"fst": "0x36", "snd": false}, {"fst": "0x37", "snd": false}, {"fst": "0x118", "snd": false}, {"fst": "0x129", "snd": false}, {"fst": "0x12", "snd": true}, {"fst": "0x33", "snd": false}, {"fst": "0x43", "snd": false}, {"fst": "0x156", "snd": true}, {"fst": "0x63", "snd": false}, {"fst": "0x128", "snd": false}, {"fst": "0x32", "snd": false}, {"fst": "0x230", "snd": true}, {"fst": "0x3", "snd": false}, {"fst": "0x33", "snd": false}, {"fst": "0x223", "snd": false}, {"fst": "0x2032", "snd": true}, {"fst": "0x32", "snd": false}, {"fst": "0x323", "snd": false}, {"fst": "0x3223", "snd": false}, {"fst": "0x203", "snd": true}, {"fst": "0x31", "snd": false}, {"fst": "0x32", "snd": false}, {"fst": "0x22", "snd": false}, {"fst": "0x23", "snd": true}],
+    "rcv": "0x3",
+    "eph_root": "0x4"
     }
     """
 
