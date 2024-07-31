@@ -85,28 +85,12 @@ defmodule EventBroker.Registry do
   end
 
   def handle_call({:unsubscribe, pid, filter_spec_list}, _from, state) do
-    GenServer.call(
-      Map.get(state.registered_filters, filter_spec_list),
-      {:unsubscribe, pid}
-    )
-
-    {:reply, :ok, state}
+    new_registered_filters = do_unsubscribe(pid, filter_spec_list, state.registered_filters)
+    {:reply, :ok, %{state | registered_filters: new_registered_filters}}
   end
 
   def handle_call(_msg, _from, state) do
     {:reply, :ok, state}
-  end
-
-  def handle_cast({:delist, pid}, state) do
-    filters = state.registered_filters
-
-    [{key, _pid}] = Enum.filter(filters, fn {_key, value} -> value == pid end)
-
-    father_spec = Enum.take(key, length(key) - 1)
-
-    filters |> Map.get(father_spec) |> GenServer.call({:unsubscribe, pid})
-
-    {:noreply, %{state | registered_filters: Map.delete(filters, key)}}
   end
 
   def handle_cast(_msg, state) do
@@ -146,6 +130,19 @@ defmodule EventBroker.Registry do
         new_spec_list = parent_spec_list ++ [f]
         new_state = Map.put(old_state, new_spec_list, new_pid)
         {new_spec_list, new_state}
+    end
+  end
+
+  defp do_unsubscribe(pid, filter_spec_list, registered_filters) do
+    filter_pid = Map.get(registered_filters, filter_spec_list)
+    case GenServer.call(filter_pid, {:unsubscribe, pid}) do
+      :ok ->
+        registered_filters
+
+      :reap ->
+        new_registered_filters = Map.delete(registered_filters, filter_spec_list)
+        parent_spec_list = Enum.take(filter_spec_list, length(filter_spec_list) - 1)
+        do_unsubscribe(filter_pid, parent_spec_list, new_registered_filters)
     end
   end
 end

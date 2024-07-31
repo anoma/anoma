@@ -34,10 +34,7 @@ defmodule EventBroker.FilterAgent do
     new_state = %{state | subscribers: new_subs}
 
     if Enum.empty?(new_subs) do
-      EventBroker.Registry
-      |> GenServer.cast({:delist, self()})
-
-      {:stop, :normal, "No subscribers left, shutting down", new_state}
+      {:stop, :normal, :reap, new_state}
     else
       {:reply, :ok, new_state}
     end
