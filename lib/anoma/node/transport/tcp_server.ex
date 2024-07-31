@@ -33,6 +33,10 @@ defmodule Anoma.Node.Transport.TCPServer do
     field(:logger, Router.addr(), enforce: false)
   end
 
+  @spec init(
+          {Router.addr(), Router.addr(), Transport.listen_addr(),
+           Supervisor.supervisor(), Router.addr()}
+        ) :: {:ok, t()} | {:error, any()}
   def init({router, transport, addr, connection_pool, logger}) do
     res =
       case addr do
