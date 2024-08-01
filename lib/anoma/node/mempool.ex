@@ -314,7 +314,7 @@ defmodule Anoma.Node.Mempool do
 
   @doc """
   I order the transactions based on the current ordering specified by the
-  Ordering engine, place a new orderig, and for every ordered transaction,
+  Ordering engine, place a new ordering, and for every ordered transaction,
   send to their appropriate Worker a `:write_ready` message.
 
   Return :ok.
@@ -322,8 +322,10 @@ defmodule Anoma.Node.Mempool do
   @spec choose_and_execute_ordering(t(), list(Transaction.t())) :: :ok
   def choose_and_execute_ordering(state, transactions) do
     # get an ordering for the transactions we are executing
+    next_order = Ordering.next_order(state.ordering)
+
     ordered_transactions =
-      order(transactions, Router.Engine.get_state(state.ordering).next_order)
+      order(transactions, next_order)
 
     # send in the ordering for the write ready
     log({:order, state.ordering, state.logger})

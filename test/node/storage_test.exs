@@ -36,9 +36,9 @@ defmodule AnomaTest.Node.Storage do
     ])
 
     Ordering.reset(ordering)
-    ordering = Engine.get_state(ordering)
-    assert ordering.hash_to_order == %{}
-    assert ordering.next_order == 1
+
+    assert Ordering.all_orders(ordering) == []
+    assert Ordering.next_order(ordering) == 1
   end
 
   test "added to the hash_ordering", %{ordering: ordering} do
@@ -52,20 +52,20 @@ defmodule AnomaTest.Node.Storage do
       ]
     )
 
-    ordering = Engine.get_state(ordering)
-    assert ordering.hash_to_order == %{<<3>> => 1}
+    assert Ordering.all_orders(ordering) == [{<<3>>, 1}]
+    assert Ordering.true_order(ordering, <<3>>) == 1
   end
 
   test "getting proper offsets", %{ordering: ordering} do
     Ordering.reset(ordering)
-    assert 1 == Engine.get_state(ordering).next_order
+    assert 1 == Ordering.next_order(ordering)
 
     Ordering.new_order(ordering, [
       Transaction.new_with_order(1, <<3>>, Router.self_addr()),
       Transaction.new_with_order(2, <<3>>, Router.self_addr())
     ])
 
-    assert 3 == Engine.get_state(ordering).next_order
+    assert 3 == Ordering.next_order(ordering)
   end
 
   test "receiving read readies", %{ordering: ordering} do
@@ -80,7 +80,7 @@ defmodule AnomaTest.Node.Storage do
 
   test "we properly cache orders", %{ordering: ordering} do
     Ordering.reset(ordering)
-    assert Ordering.true_order(ordering, <<3>>) == nil
+    assert Ordering.true_order(ordering, <<3>>) == :absent
 
     Ordering.new_order(ordering, [
       Transaction.new_with_order(1, <<3>>, Router.self_addr())

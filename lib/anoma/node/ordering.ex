@@ -11,8 +11,9 @@ defmodule Anoma.Node.Ordering do
 
   #### Ordering
 
+  - `all_orders/1`
+  - `new_order/1`
   - `true_order/2`
-  - `new_order/2`
 
   #### Reset
 
@@ -51,23 +52,17 @@ defmodule Anoma.Node.Ordering do
     @typedoc """
     I am the type of the Ordering Engine.
 
-    I have basic fields relating to upcoming ordering for the incoming
-    transactions as well as mapping of transaction ID's to their orders.
+    I am an agent which has a direct access to the storage and asks it to
+    give me information on stored ordering info regarding all transactions
+    processed.
 
     ### Fileds
 
     - `:storage` - The address of the storage engine
-    - `:next_order` - The integer referencing the order to be given to the
-                      next incoming transaction.
-                      Default: 1
-    - `:hash_to_order` - A map of transaction ID's and their orders.
-                         Default: %{}
     - `:logger` - The Logger Engine address.
     """
 
     field(:storage, Router.Addr.t())
-    field(:next_order, non_neg_integer(), default: 1)
-    field(:hash_to_order, %{key() => non_neg_integer()}, default: %{})
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
@@ -93,7 +88,6 @@ defmodule Anoma.Node.Ordering do
           list(
             {:storage, Router.Addr.t()}
             | {:logger, Router.Addr.t()}
-            | any()
           )
         ) :: {:ok, Ordering.t()}
   def init(opts) do
@@ -115,22 +109,52 @@ defmodule Anoma.Node.Ordering do
   I am the true order function.
 
   Given a transaction ID, I get the order associated with the transaction.
-  I look at the map stored in the state and then check the value of said
-  ID.
+
+  To do this I ask storage to get the value of the appropriate keyword
+  formulated using the transaction ID.
+
+  If no order is present, I return `:absent`.
   """
 
-  @spec true_order(Router.Addr.t(), any()) :: non_neg_integer() | nil
+  @spec true_order(Router.Addr.t(), any()) :: non_neg_integer() | :absent
   def true_order(ordering, id) do
     Router.call(ordering, {:true_order, id})
   end
 
   @doc """
+  I am the next order function.
+
+  Given an ordering address, I see what is the next order of the coming in
+  transaction will be by checking the storage info.
+  """
+
+  @spec next_order(Router.Addr.t()) :: non_neg_integer()
+  def next_order(ordering) do
+    Router.call(ordering, :next_order)
+  end
+
+  @doc """
+  I am the function showcasing all stored orders.
+
+  Given an ordering address, I get the keyspace associated to all orders
+  that got backed to the storage.
+  """
+
+  @spec all_orders(Router.Addr.t()) ::
+          list({non_neg_integer(), non_neg_integer()}) | []
+  def all_orders(ordering) do
+    Router.call(ordering, :all)
+  end
+
+  @doc """
   I am the function dealing with new ordered transactions.
 
-  Given a list of ordered transactions, I update the Ordering Engine state
-  appropritaely by changing the `:next_order` field and filling in the
-  `:hash_to_order` field with new key-value pairs pairing the new ID's with
-  their asigned orderings.
+  Given a list of ordered transactions where the transactions are indexed
+  according to the order they are supposed to be put to, I populate the
+  storage one by one with the new orders as given in their index fields.
+
+  I then set the `:new_order` key in the storage to the index of the last
+  transaction fed-in.
   """
 
   @spec new_order(Router.Addr.t(), ordered_transactions()) ::
@@ -142,8 +166,8 @@ defmodule Anoma.Node.Ordering do
   @doc """
   I am the Ordering Engine reset function.
 
-  I get rid of all hot state fields of the Ordering Engine leaving only the
-  Storage and Logger address intact.
+  Using storage functionality, I delete all keys that are used throughout
+  my lifecycle, including all `order` namespace keys and `next_order`.
   """
 
   @spec reset(Router.Addr.t()) :: :ok
@@ -154,9 +178,9 @@ defmodule Anoma.Node.Ordering do
   @doc """
   I hard reset the Ordering Engine.
 
-  Similarly to `reset/1` I get rid of all hot state fields in the Ordering
-  Engine. Moreover, I ask the Storage engine to ensure that the tables are
-  re-launched and put a new snapshot specified by the second argument.
+  Similarly to `reset/1`, I renew the Ordering usage. However, I do that by
+  completely resetting the Storage tables used, instead of tombstoning the
+  keys using the Storage functionality.
   """
   @spec hard_reset(Router.Addr.t(), atom()) :: :ok
   def hard_reset(ordering, initial_snapshot) do
@@ -168,21 +192,35 @@ defmodule Anoma.Node.Ordering do
   ############################################################
 
   def handle_call({:true_order, id}, _from, state) do
+    log_info({:true_order, id, state.logger})
     {:reply, do_true_order(state, id), state}
   end
 
-  def handle_cast({:new_order, trans}, _from, state) do
-    {next_order, new_map} = handle_new_order(trans, state)
-    log_info({:new, next_order, new_map, state.logger})
+  def handle_call(:next_order, _from, state) do
+    log_info({:new, state.logger})
+    {:reply, do_next_order(state), state}
+  end
 
-    {:noreply, %{state | next_order: next_order, hash_to_order: new_map}}
+  def handle_call(:all, _from, state) do
+    log_info({:all, state.logger})
+    {:reply, do_all(state), state}
+  end
+
+  def handle_cast({:new_order, trans}, _from, state) do
+    handle_new_order(trans, state)
+    {:noreply, state}
   end
 
   def handle_cast(:reset, _from, state) do
     storage = state.storage
     log_info({:reset, storage, state.logger})
 
-    {:noreply, %Ordering{storage: storage, logger: state.logger}}
+    Storage.delete_key(storage, "next_order")
+
+    space = Storage.get_keyspace(storage, ["order"])
+    space |> Enum.map(fn {key, _} -> Storage.delete_key(storage, key) end)
+
+    {:noreply, state}
   end
 
   def handle_cast({:hard_reset, initial_snapshot}, _from, state) do
@@ -192,7 +230,7 @@ defmodule Anoma.Node.Ordering do
 
     log_info({:hard_reset, storage, initial_snapshot, state.logger})
 
-    {:noreply, %Ordering{storage: state.storage, logger: state.logger}}
+    {:noreply, state}
   end
 
   ############################################################
@@ -200,49 +238,72 @@ defmodule Anoma.Node.Ordering do
   ############################################################
 
   @spec do_true_order(Ordering.t(), non_neg_integer()) ::
-          non_neg_integer() | nil
+          non_neg_integer() | :absent
   defp do_true_order(state, id) do
-    order = Map.get(state.hash_to_order, id)
-    log_info({true, order, state.logger})
-    order
+    case Storage.get(state.storage, ["order", id]) do
+      {:ok, value} -> value
+      :absent -> :absent
+    end
+  end
+
+  @spec do_next_order(Ordering.t()) ::
+          non_neg_integer() | :error
+  defp do_next_order(state) do
+    case Storage.get(state.storage, "next_order") do
+      :absent -> 1
+      {:ok, value} -> value
+      _ -> :error
+    end
+  end
+
+  @spec do_all(Ordering.t()) ::
+          list({non_neg_integer(), non_neg_integer()}) | []
+  defp do_all(state) do
+    state.storage
+    |> Storage.get_keyspace(["order"])
+    |> Enum.map(fn {["order", id], order} -> {id, order} end)
   end
 
   @doc """
   I handle the new ordered transactions comming in to the Ordering Engine.
 
-  I send read_ready messages regarding the transaction orders, then add the
-  length of the incoming transaction list to the `:next_order` value,
-  finally updating the `:hash_to_order` map with new key-values.
+  I send read_ready messages regarding the transaction orders, putting
+  their orders alingside their id's in the Storage. Finally, after each
+  transaction is processed, I set the `next_order` key to the index of the
+  last transaction I got.
 
-  I return a tuple where the first argument is the new proposed next order
-  while the second argument is the new map of ID's to orders.
+  If I get sent an empty list, I do nothing.
   """
 
   @spec handle_new_order(ordered_transactions(), t()) ::
-          {non_neg_integer(), %{key() => non_neg_integer()}}
+          :ok | nil
   def handle_new_order(ordered_transactions, state) do
     num_txs = length(ordered_transactions)
-    log_info({:new_handle, num_txs, state.logger})
 
-    for order <- ordered_transactions do
-      log_info({:ready_handle, Transaction.addr(order), state.logger})
+    unless num_txs == 0 do
+      storage = state.storage
+      log_info({:new_handle, num_txs, state.logger})
 
-      Router.send_raw(
-        Transaction.addr(order),
-        {:read_ready, Transaction.index(order)}
+      for tx <- ordered_transactions do
+        index = Transaction.index(tx)
+        addr = Transaction.addr(tx)
+
+        log_info({:ready_handle, addr, state.logger})
+
+        Storage.put(storage, ["order", tx.id], index)
+
+        Router.send_raw(
+          addr,
+          {:read_ready, index}
+        )
+      end
+
+      Storage.put(
+        storage,
+        "next_order",
+        List.last(ordered_transactions).index + 1
       )
     end
-
-    new_next_order = state.next_order + length(ordered_transactions)
-
-    new_map_elements =
-      Map.new(
-        ordered_transactions,
-        &{Transaction.id(&1), Transaction.index(&1)}
-      )
-
-    new_map = Map.merge(state.hash_to_order, new_map_elements)
-    {new_next_order, new_map}
   end
 
   ############################################################
@@ -276,7 +337,7 @@ defmodule Anoma.Node.Ordering do
 
     read_order =
       case maybe_true_order do
-        nil ->
+        :absent ->
           receive do
             {:read_ready, true_order} ->
               true_order
@@ -294,17 +355,16 @@ defmodule Anoma.Node.Ordering do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({true, state, logger}) do
-    Logger.add(
-      logger,
-      :info,
-      "Requested true order: #{inspect(state)}"
-    )
+  defp log_info({:true_order, id, logger}) do
+    Logger.add(logger, :info, "Requested true order. ID: #{inspect(id)}")
   end
 
-  defp log_info({:new, order, map, logger}) do
-    Logger.add(logger, :info, "Requested new order.
-      Next order: #{inspect(order)}. New hash: #{inspect(map)}")
+  defp log_info({:new, logger}) do
+    Logger.add(logger, :info, "Requested new order.")
+  end
+
+  defp log_info({:all, logger}) do
+    Logger.add(logger, :info, "Requested all orders.")
   end
 
   defp log_info({:reset, state, logger}) do
