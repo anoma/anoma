@@ -172,7 +172,7 @@ defmodule Anoma.Node.Mempool do
 
   def handle_cast(:execute, _from, state) do
     {length_ran, new_state} = handle_execute(state)
-    log_info({:execute, state.logger})
+    log({:execute, state.logger})
     Router.cast(state.topic, {:executed, {:ok, length_ran}})
     {:noreply, new_state}
   end
@@ -181,20 +181,20 @@ defmodule Anoma.Node.Mempool do
     ntrans = handle_tx(tx_code, state, reply_to)
     nstate = %Mempool{state | transactions: [ntrans | state.transactions]}
     Router.cast(state.topic, {:submitted, ntrans})
-    log_info({:tx, nstate.transactions, state.logger})
+    log({:tx, nstate.transactions, state.logger})
     {:noreply, nstate}
   end
 
   def handle_cast(:soft_reset, _from, state) do
     logger = state.logger
-    log_info({:soft, logger})
+    log({:soft, logger})
     kill_transactions(state)
     {:noreply, reset_state(state)}
   end
 
   def handle_cast(:hard_reset, _from, state) do
     logger = state.logger
-    log_info({:hard, logger})
+    log({:hard, logger})
     snapshot = Executor.snapshot(state.executor)
     kill_transactions(state)
     reset_blocks(state)
@@ -225,7 +225,7 @@ defmodule Anoma.Node.Mempool do
 
     ex = state.executor
 
-    log_info({:fire, ex, random_tx_id, state.logger})
+    log({:fire, ex, random_tx_id, state.logger})
 
     ex_topic = Engine.get_state(ex).topic
 
@@ -266,7 +266,7 @@ defmodule Anoma.Node.Mempool do
     choose_and_execute_ordering(state, executing)
     save_block(state, block)
     new_state = %Mempool{state | transactions: left, round: state.round + 1}
-    log_info({:execute_handle, new_state, state.logger})
+    log({:execute_handle, new_state, state.logger})
     {length(executing), new_state}
   end
 
@@ -279,10 +279,10 @@ defmodule Anoma.Node.Mempool do
   @spec kill_transactions(Mempool.t()) :: :ok
   def kill_transactions(state) do
     transactions = state.transactions
-    log_info({:kill, length(transactions), state.logger})
+    log({:kill, length(transactions), state.logger})
 
     for transaction <- transactions do
-      log_info({:killing_pid, transaction, state.logger})
+      log({:killing_pid, transaction, state.logger})
     end
 
     Executor.kill_transactions(state.executor, transactions)
@@ -303,7 +303,7 @@ defmodule Anoma.Node.Mempool do
     neg_flag = :mnesia.table_info(storage, :rocksdb_copies) |> Enum.empty?()
 
     :mnesia.delete_table(storage)
-    log_info({:delete_table, storage, state.logger})
+    log({:delete_table, storage, state.logger})
 
     Block.create_table(storage, not neg_flag)
   end
@@ -326,11 +326,11 @@ defmodule Anoma.Node.Mempool do
       order(transactions, Router.Engine.get_state(state.ordering).next_order)
 
     # send in the ordering for the write ready
-    log_info({:order, state.ordering, state.logger})
+    log({:order, state.ordering, state.logger})
     Ordering.new_order(state.ordering, ordered_transactions)
 
     # also send in the logic for write ready
-    log_info({:write, length(ordered_transactions), state.logger})
+    log({:write, length(ordered_transactions), state.logger})
 
     for ord <- ordered_transactions do
       Router.send_raw(
@@ -348,7 +348,7 @@ defmodule Anoma.Node.Mempool do
 
   @spec produce_block(t(), list(Transaction.t())) :: Block.t()
   def produce_block(state, trans) do
-    log_info({:produce, trans, state.logger})
+    log({:produce, trans, state.logger})
 
     trans
     |> Enum.map(&persistent_transaction/1)
@@ -365,7 +365,7 @@ defmodule Anoma.Node.Mempool do
   @spec save_block(t(), Block.t()) :: {:atomic, :ok} | {:aborted, any()}
   def save_block(state, block) do
     encoded = Block.encode(block, state.block_storage)
-    log_info({:encode_block, block, state.logger})
+    log({:encode_block, block, state.logger})
     :mnesia.transaction(fn -> :mnesia.write(encoded) end)
   end
 
@@ -426,8 +426,8 @@ defmodule Anoma.Node.Mempool do
   #                     Logging Info                         #
   ############################################################
 
-  @dialyzer {:nowarn_function, [log_info: 1]}
-  defp log_info({:tx, state, logger}) do
+  @dialyzer {:nowarn_function, [log: 1]}
+  defp log({:tx, state, logger}) do
     Logger.add(
       logger,
       :info,
@@ -435,29 +435,29 @@ defmodule Anoma.Node.Mempool do
     )
   end
 
-  defp log_info({:execute, logger}) do
+  defp log({:execute, logger}) do
     Logger.add(logger, :info, "Requested execution")
   end
 
-  defp log_info({:soft, logger}) do
+  defp log({:soft, logger}) do
     Logger.add(logger, :debug, "Requested soft reset")
   end
 
-  defp log_info({:hard, logger}) do
+  defp log({:hard, logger}) do
     Logger.add(logger, :debug, "Requested hard reset")
   end
 
-  defp log_info({:fire, ex, id, logger}) do
+  defp log({:fire, ex, id, logger}) do
     Logger.add(logger, :info, "Requested transaction fire.
       Executor: #{inspect(ex)}.
       Id : #{inspect(id)}")
   end
 
-  defp log_info({:execute_handle, state, logger}) do
+  defp log({:execute_handle, state, logger}) do
     Logger.add(logger, :info, "New state: #{inspect(state)})")
   end
 
-  defp log_info({:order, ordering, logger}) do
+  defp log({:order, ordering, logger}) do
     Logger.add(
       logger,
       :info,
@@ -465,7 +465,7 @@ defmodule Anoma.Node.Mempool do
     )
   end
 
-  defp log_info({:write, length, logger}) do
+  defp log({:write, length, logger}) do
     Logger.add(
       logger,
       :info,
@@ -473,7 +473,7 @@ defmodule Anoma.Node.Mempool do
     )
   end
 
-  defp log_info({:produce, trans, logger}) do
+  defp log({:produce, trans, logger}) do
     Logger.add(
       logger,
       :info,
@@ -481,11 +481,11 @@ defmodule Anoma.Node.Mempool do
     )
   end
 
-  defp log_info({:encode_block, block, logger}) do
+  defp log({:encode_block, block, logger}) do
     Logger.add(logger, :info, "Encoding block: #{inspect(block)}")
   end
 
-  defp log_info({:delete_table, storage, logger}) do
+  defp log({:delete_table, storage, logger}) do
     Logger.add(
       logger,
       :debug,
@@ -493,7 +493,7 @@ defmodule Anoma.Node.Mempool do
     )
   end
 
-  defp log_info({:kill, length, logger}) do
+  defp log({:kill, length, logger}) do
     Logger.add(
       logger,
       :debug,
@@ -501,7 +501,7 @@ defmodule Anoma.Node.Mempool do
     )
   end
 
-  defp log_info({:killing_pid, pid, logger}) do
+  defp log({:killing_pid, pid, logger}) do
     Logger.add(logger, :debug, "Killing: #{inspect(pid)}")
   end
 end

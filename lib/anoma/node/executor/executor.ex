@@ -123,7 +123,7 @@ defmodule Anoma.Node.Executor do
 
   def handle_call(:snapshot, _from, state) do
     hd = hd(state.ambiant_env.snapshot_path)
-    log_info({:snap, hd, state.logger})
+    log({:snap, hd, state.logger})
     {:reply, hd, state}
   end
 
@@ -142,7 +142,7 @@ defmodule Anoma.Node.Executor do
         )
       end
 
-    log_info({:tx_call_addr, worker_addr, logger})
+    log({:tx_call_addr, worker_addr, logger})
 
     Router.cast(state.topic, {:worker_spawned, worker_addr})
 
@@ -162,7 +162,7 @@ defmodule Anoma.Node.Executor do
   @spec spawn_transactions(Noun.t(), Noun.t(), t(), Router.addr() | nil) ::
           Router.addr()
   defp spawn_transactions(order, gate, state, reply_to) do
-    log_info({:spawn, order, state.logger})
+    log({:spawn, order, state.logger})
 
     {:ok, addr} =
       Router.start_engine(
@@ -190,11 +190,11 @@ defmodule Anoma.Node.Executor do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({:snap, hd, logger}) do
+  defp log({:snap, hd, logger}) do
     Logger.add(logger, :info, "Requested snapshot: #{inspect(hd)}")
   end
 
-  defp log_info({:tx_call_addr, pid, logger}) do
+  defp log({:tx_call_addr, pid, logger}) do
     Logger.add(
       logger,
       :info,
@@ -202,7 +202,7 @@ defmodule Anoma.Node.Executor do
     )
   end
 
-  defp log_info({:spawn, order, logger}) do
+  defp log({:spawn, order, logger}) do
     Logger.add(
       logger,
       :info,

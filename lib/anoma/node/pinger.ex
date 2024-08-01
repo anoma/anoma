@@ -109,12 +109,12 @@ defmodule Anoma.Node.Pinger do
 
   def handle_cast(:start, _from, state) do
     pinger(state.time)
-    log_info({:launch, state.logger})
+    log({:launch, state.logger})
     {:noreply, state}
   end
 
   def handle_cast({:set, time}, _from, state) do
-    log_info({:set, time, state.logger})
+    log({:set, time, state.logger})
     {:noreply, %Pinger{state | time: time}}
   end
 
@@ -150,11 +150,11 @@ defmodule Anoma.Node.Pinger do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({:set, time, logger}) do
+  defp log({:set, time, logger}) do
     Logger.add(logger, :info, "Timer set to #{inspect(time)}")
   end
 
-  defp log_info({:launch, logger}) do
+  defp log({:launch, logger}) do
     Logger.add(logger, :info, "Pinger launched")
   end
 end

@@ -112,14 +112,14 @@ defmodule Anoma.Node.Configuration do
       spawn(fn ->
         case Anoma.Dump.dump_full_path(dump_path, node_name) do
           {:ok, :ok} ->
-            log_info({:dump_ok, dump_path, node_name, logger})
+            log({:dump_ok, dump_path, node_name, logger})
 
           {:error, reason} ->
-            log_info({:dump_error, dump_path, node_name, reason, logger})
+            log({:dump_error, dump_path, node_name, reason, logger})
         end
       end)
     else
-      log_info({:no_config, config.logger})
+      log({:no_config, config.logger})
     end
   end
 
@@ -130,7 +130,7 @@ defmodule Anoma.Node.Configuration do
     if configuration do
       File.rm(configuration["dump"]["dump"])
     else
-      log_info({:no_config, config.logger})
+      log({:no_config, config.logger})
     end
   end
 
@@ -138,7 +138,7 @@ defmodule Anoma.Node.Configuration do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({:dump_ok, dump_path, node_name, logger}) do
+  defp log({:dump_ok, dump_path, node_name, logger}) do
     Logger.add(
       logger,
       :info,
@@ -146,7 +146,7 @@ defmodule Anoma.Node.Configuration do
     )
   end
 
-  defp log_info({:dump_error, dump_path, node_name, reason, logger}) do
+  defp log({:dump_error, dump_path, node_name, reason, logger}) do
     Logger.add(
       logger,
       :error,
@@ -155,7 +155,7 @@ defmodule Anoma.Node.Configuration do
     )
   end
 
-  defp log_info({:no_config, logger}) do
+  defp log({:no_config, logger}) do
     Logger.add(
       logger,
       :error,

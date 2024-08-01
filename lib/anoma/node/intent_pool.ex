@@ -45,11 +45,11 @@ defmodule Anoma.Node.IntentPool do
 
   def handle_cast({:new_intent, intent}, _, pool) do
     if MapSet.member?(pool.intents, intent) do
-      log_info({:new_f, intent, pool.logger})
+      log({:new_f, intent, pool.logger})
       {:noreply, pool}
     else
       Router.cast(pool.intents_topic, {:new_intent, intent})
-      log_info({:new_t, intent, pool.logger})
+      log({:new_t, intent, pool.logger})
 
       {:noreply,
        %IntentPool{pool | intents: MapSet.put(pool.intents, intent)}}
@@ -58,20 +58,20 @@ defmodule Anoma.Node.IntentPool do
 
   def handle_cast({:remove_intent, intent}, _, pool) do
     if MapSet.member?(pool.intents, intent) do
-      log_info({:remove_t, intent, pool.logger})
+      log({:remove_t, intent, pool.logger})
       Router.cast(pool.intents_topic, {:remove_intent, intent})
 
       {:noreply,
        %IntentPool{pool | intents: MapSet.delete(pool.intents, intent)}}
     else
-      log_info({:remove_f, intent, pool.logger})
+      log({:remove_f, intent, pool.logger})
       {:noreply, pool}
     end
   end
 
   def handle_call(:intents, _, pool) do
     intents = pool.intents
-    log_info({:all, intents, pool.logger})
+    log({:all, intents, pool.logger})
     {:reply, intents, pool}
   end
 
@@ -79,7 +79,7 @@ defmodule Anoma.Node.IntentPool do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({:all, intents, logger}) do
+  defp log({:all, intents, logger}) do
     Logger.add(
       logger,
       :info,
@@ -87,7 +87,7 @@ defmodule Anoma.Node.IntentPool do
     )
   end
 
-  defp log_info({:remove_t, intent, logger}) do
+  defp log({:remove_t, intent, logger}) do
     Logger.add(
       logger,
       :info,
@@ -95,7 +95,7 @@ defmodule Anoma.Node.IntentPool do
     )
   end
 
-  defp log_info({:remove_f, intent, logger}) do
+  defp log({:remove_f, intent, logger}) do
     Logger.add(
       logger,
       :info,
@@ -104,7 +104,7 @@ defmodule Anoma.Node.IntentPool do
     )
   end
 
-  defp log_info({:new_t, intent, logger}) do
+  defp log({:new_t, intent, logger}) do
     Logger.add(
       logger,
       :info,
@@ -112,7 +112,7 @@ defmodule Anoma.Node.IntentPool do
     )
   end
 
-  defp log_info({:new_f, intent, logger}) do
+  defp log({:new_f, intent, logger}) do
     Logger.add(
       logger,
       :info,

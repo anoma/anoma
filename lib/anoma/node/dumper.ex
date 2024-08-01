@@ -141,7 +141,7 @@ defmodule Anoma.Node.Dumper do
 
     task_shutdown_log(state.task, logger)
 
-    log_info({:stop, logger})
+    log({:stop, logger})
     {:noreply, %Dumper{state | task: nil}}
   end
 
@@ -195,7 +195,7 @@ defmodule Anoma.Node.Dumper do
               )
             end)
 
-          log_info({:new_task, task, logger})
+          log({:new_task, task, logger})
           %Dumper{state | count: count, task: task}
         else
           state
@@ -215,7 +215,7 @@ defmodule Anoma.Node.Dumper do
         # We start count from the zeroeth block
         if rem(n + 1, count) == 0 do
           Anoma.Node.Configuration.snapshot(config)
-          log_info({:dump, logger})
+          log({:dump, logger})
         end
 
         dump_loop(count, block_table, config, logger)
@@ -227,13 +227,13 @@ defmodule Anoma.Node.Dumper do
     unless task == nil do
       case Task.shutdown(task) do
         nil ->
-          log_info({:shutting_down, task, logger})
+          log({:shutting_down, task, logger})
 
         {:ok, reply} ->
-          log_info({:shutting_down_reply, task, reply, logger})
+          log({:shutting_down_reply, task, reply, logger})
 
         {:exit, reason} ->
-          log_info({:shutting_down_exit, task, reason, logger})
+          log({:shutting_down_exit, task, reason, logger})
       end
     end
   end
@@ -242,11 +242,11 @@ defmodule Anoma.Node.Dumper do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({:shutting_down, task, logger}) do
+  defp log({:shutting_down, task, logger}) do
     Logger.add(logger, :debug, "Task shut down: #{inspect(task)}")
   end
 
-  defp log_info({:shutting_down_reply, task, reply, logger}) do
+  defp log({:shutting_down_reply, task, reply, logger}) do
     Logger.add(
       logger,
       :debug,
@@ -254,7 +254,7 @@ defmodule Anoma.Node.Dumper do
     )
   end
 
-  defp log_info({:shutting_down_exit, task, reason, logger}) do
+  defp log({:shutting_down_exit, task, reason, logger}) do
     Logger.add(
       logger,
       :error,
@@ -262,15 +262,15 @@ defmodule Anoma.Node.Dumper do
     )
   end
 
-  defp log_info({:new_task, task, logger}) do
+  defp log({:new_task, task, logger}) do
     Logger.add(logger, :debug, "New task created. Task: #{inspect(task)}")
   end
 
-  defp log_info({:stop, logger}) do
+  defp log({:stop, logger}) do
     Logger.add(logger, :debug, "Stopping the dumper")
   end
 
-  defp log_info({:dump, logger}) do
+  defp log({:dump, logger}) do
     Logger.add(
       logger,
       :debug,

@@ -122,7 +122,7 @@ defmodule Anoma.Node.Executor.Worker do
 
       :error ->
         storage = Router.Engine.get_state(env.ordering).storage
-        log_info({:fail, "failed to cue!", env.logger})
+        log({:fail, "failed to cue!", env.logger})
         wait_for_ready(s)
         snapshot(storage, env)
         :error
@@ -155,7 +155,7 @@ defmodule Anoma.Node.Executor.Worker do
        ) do
     logger = env.logger
 
-    log_info({:dispatch, id, logger})
+    log({:dispatch, id, logger})
     storage = Router.Engine.get_state(env.ordering).storage
 
     with {:ok, stage_2_tx} <- nock(proto_tx, [9, 2, 0 | 1], env),
@@ -165,11 +165,11 @@ defmodule Anoma.Node.Executor.Worker do
          :ok <-
            process.(s, result, storage) do
       snapshot(storage, env)
-      log_info({:success_run, logger})
+      log({:success_run, logger})
       :ok
     else
       e ->
-        log_info({:fail, e, logger})
+        log({:fail, e, logger})
         wait_for_ready(s)
         snapshot(storage, env)
         :error
@@ -197,7 +197,7 @@ defmodule Anoma.Node.Executor.Worker do
     # send the value to the worker topic
     Router.cast(topic, reply_msg)
 
-    log_info({:get, value, env.logger})
+    log({:get, value, env.logger})
   end
 
   @spec store_value(t(), Noun.t(), Router.addr()) :: any()
@@ -210,9 +210,9 @@ defmodule Anoma.Node.Executor.Worker do
       true_order = wait_for_ready(s)
 
       logger = env.logger
-      log_info({:writing, true_order, logger})
+      log({:writing, true_order, logger})
       Storage.put(storage, key, value)
-      log_info({:put, key, logger})
+      log({:put, key, logger})
       :ok
     else
       e -> e
@@ -228,7 +228,7 @@ defmodule Anoma.Node.Executor.Worker do
        ) do
     logger = env.logger
 
-    log_info({:dispatch, id, logger})
+    log({:dispatch, id, logger})
     storage = Router.Engine.get_state(env.ordering).storage
 
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | id], 0 | 1], env),
@@ -244,13 +244,13 @@ defmodule Anoma.Node.Executor.Worker do
       # The failure had to be on the true match above, which is after
       # the wait for ready
       false ->
-        log_info({:fail, false, logger})
+        log({:fail, false, logger})
         snapshot(storage, env)
         :error
 
       # This failed before the waiting for read as it's likely :error
       e ->
-        log_info({:fail, e, logger})
+        log({:fail, e, logger})
         wait_for_ready(s)
         snapshot(storage, env)
         :error
@@ -262,7 +262,7 @@ defmodule Anoma.Node.Executor.Worker do
     logger = env.logger
     storage = Router.Engine.get_state(env.ordering).storage
 
-    log_info({:writing, true_order, logger})
+    log({:writing, true_order, logger})
     # this is not quite correct, but storage has to be revisited as a whole
     # for it to be made correct.
     # in particular, the get/put api must be deleted, since it cannot be correct,
@@ -282,7 +282,7 @@ defmodule Anoma.Node.Executor.Worker do
 
           Storage.put(storage, cm_key, true)
           CommitmentTree.add(tree, [commit_hash])
-          log_info({:put, cm_key, logger})
+          log({:put, cm_key, logger})
           tree
       end
 
@@ -292,11 +292,11 @@ defmodule Anoma.Node.Executor.Worker do
       nullifier_hash = Resource.nullifier_hash(nullifier)
       nf_key = ["rm", "nullifiers", nullifier_hash]
       Storage.put(storage, nf_key, true)
-      log_info({:put, nf_key, logger})
+      log({:put, nf_key, logger})
     end
 
     snapshot(storage, env)
-    log_info({:success_run, logger})
+    log({:success_run, logger})
     :ok
   end
 
@@ -322,18 +322,18 @@ defmodule Anoma.Node.Executor.Worker do
   defp wait_for_ready(%__MODULE__{env: env, id: id}) do
     logger = env.logger
 
-    log_info({:ensure_read, logger})
+    log({:ensure_read, logger})
 
     Ordering.caller_blocking_read_id(
       env.ordering,
       [id | env.snapshot_path]
     )
 
-    log_info({:waiting_write_ready, logger})
+    log({:waiting_write_ready, logger})
 
     receive do
       {:write_ready, id} ->
-        log_info({:write_ready, logger})
+        log({:write_ready, logger})
         id
     end
   end
@@ -342,7 +342,7 @@ defmodule Anoma.Node.Executor.Worker do
           :ok | nil
   defp snapshot(storage, env) do
     snapshot = hd(env.snapshot_path)
-    log_info({:snap, {storage, snapshot}, env.logger})
+    log({:snap, {storage, snapshot}, env.logger})
     Storage.put_snapshot(storage, snapshot)
   end
 
@@ -350,33 +350,33 @@ defmodule Anoma.Node.Executor.Worker do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({:dispatch, id, logger}) do
+  defp log({:dispatch, id, logger}) do
     Logger.add(logger, :info, "Worker dispatched.
     Order id: #{inspect(id)}")
   end
 
-  defp log_info({:writing, order, logger}) do
+  defp log({:writing, order, logger}) do
     Logger.add(logger, :info, "Worker writing.
     True order: #{inspect(order)}")
   end
 
-  defp log_info({:fail, error, logger}) do
+  defp log({:fail, error, logger}) do
     Logger.add(logger, :error, "Worker failed! #{inspect(error)}")
   end
 
-  defp log_info({:get, value, logger}) do
+  defp log({:get, value, logger}) do
     Logger.add(logger, :info, "Getting value #{inspect(value)}")
   end
 
-  defp log_info({:put, key, logger}) do
+  defp log({:put, key, logger}) do
     Logger.add(logger, :info, "Putting #{inspect(key)}")
   end
 
-  defp log_info({:success_run, logger}) do
+  defp log({:success_run, logger}) do
     Logger.add(logger, :info, "Run successful!")
   end
 
-  defp log_info({:ensure_read, logger}) do
+  defp log({:ensure_read, logger}) do
     Logger.add(
       logger,
       :info,
@@ -384,7 +384,7 @@ defmodule Anoma.Node.Executor.Worker do
     )
   end
 
-  defp log_info({:waiting_write_ready, logger}) do
+  defp log({:waiting_write_ready, logger}) do
     Logger.add(
       logger,
       :info,
@@ -392,7 +392,7 @@ defmodule Anoma.Node.Executor.Worker do
     )
   end
 
-  defp log_info({:write_ready, logger}) do
+  defp log({:write_ready, logger}) do
     Logger.add(
       logger,
       :info,
@@ -400,7 +400,7 @@ defmodule Anoma.Node.Executor.Worker do
     )
   end
 
-  defp log_info({:snap, {s, ss}, logger}) do
+  defp log({:snap, {s, ss}, logger}) do
     Logger.add(
       logger,
       :info,

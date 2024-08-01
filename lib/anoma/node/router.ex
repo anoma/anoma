@@ -519,7 +519,7 @@ defmodule Anoma.Node.Router do
   def cast(addr, msg) do
     case Addr.noncanonical_server(addr) do
       nil ->
-        log_info({:casting, addr})
+        log({:casting, addr})
 
         # todo message serialisation should happen here (but there is some subtlety
         # because local topics also go through the router, and we don't want to
@@ -581,7 +581,7 @@ defmodule Anoma.Node.Router do
   end
 
   defp call_nonlocal(addr, msg, timeout) do
-    log_info({:calling, addr})
+    log({:calling, addr})
     # todo message serialisation should happen here
     GenServer.cast(
       Addr.server(router()),
@@ -678,7 +678,7 @@ defmodule Anoma.Node.Router do
         do_handle_external_cast(msg, src, s)
 
       :error ->
-        log_info({:message_detect, s.logger})
+        log({:message_detect, s.logger})
     end
   end
 
@@ -687,7 +687,7 @@ defmodule Anoma.Node.Router do
   end
 
   def handle_self_cast(:shutdown_everything, _src, s) do
-    log_info({:shutdown, s.logger})
+    log({:shutdown, s.logger})
     System.stop()
   end
 
@@ -710,14 +710,14 @@ defmodule Anoma.Node.Router do
         case Anoma.Serialise.unpack(data) do
           {:ok, [dst_id = %Id.Extern{}, src_id = %Id.Extern{}, msg]} ->
             if not Anoma.Crypto.Sign.verify_detached(sig, data, src_id.sign) do
-              log_info({:drop_sig, logger})
+              log({:drop_sig, logger})
               s
             else
               src_addr = id_to_addr(s, src_id)
               dst_addr = id_to_addr(s, dst_id)
 
               if not Map.has_key?(s.local_engines, dst_id) do
-                log_info({:drop_eng, logger})
+                log({:drop_eng, logger})
                 s
               else
                 case msg do
@@ -734,7 +734,7 @@ defmodule Anoma.Node.Router do
                       }
                     else
                       # timeout expired, or confused or malicious correspondant; drop
-                      log_info({:drop_call, logger})
+                      log({:drop_call, logger})
 
                       s
                     end
@@ -770,7 +770,7 @@ defmodule Anoma.Node.Router do
 
                   # unknown message format; drop
                   _ ->
-                    log_info({:drop_form_3, logger, msg})
+                    log({:drop_form_3, logger, msg})
 
                     s
                 end
@@ -778,13 +778,13 @@ defmodule Anoma.Node.Router do
             end
 
           _ ->
-            log_info({:drop_form_2, logger, Anoma.Serialise.unpack(data)})
+            log({:drop_form_2, logger, Anoma.Serialise.unpack(data)})
 
             s
         end
 
       _ ->
-        log_info({:drop_form_1, logger, msg})
+        log({:drop_form_1, logger, msg})
         s
     end
   end
@@ -874,7 +874,7 @@ defmodule Anoma.Node.Router do
     cond do
       # send directly to a local engine
       Addr.server(dst) ->
-        log_info({:dir_cast, dst})
+        log({:dir_cast, dst})
         GenServer.cast(Addr.server(dst), {:router_cast, src, msg})
         s
 
@@ -937,7 +937,7 @@ defmodule Anoma.Node.Router do
   end
 
   def do_handle_external_cast(:shutdown_everything, _src, s) do
-    log_info({:shutdown, s.logger})
+    log({:shutdown, s.logger})
     System.stop()
   end
 
@@ -1068,31 +1068,31 @@ defmodule Anoma.Node.Router do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({:casting, addr}) do
+  defp log({:casting, addr}) do
     Logger.add(nil, :info, "Casting to non-local addr #{inspect(addr)}")
   end
 
-  defp log_info({:calling, addr}) do
+  defp log({:calling, addr}) do
     Logger.add(nil, :info, "Calling non-local addr #{inspect(addr)}")
   end
 
-  defp log_info({:message_detect, logger}) do
+  defp log({:message_detect, logger}) do
     Logger.add(logger, :debug, "Not able to detect message")
   end
 
-  defp log_info({:shutdown, logger}) do
+  defp log({:shutdown, logger}) do
     Logger.add(logger, :info, "Shutting down the system")
   end
 
-  defp log_info({:drop_sig, logger}) do
+  defp log({:drop_sig, logger}) do
     Logger.add(logger, :debug, "Dropping message; bad signature")
   end
 
-  defp log_info({:drop_eng, logger}) do
+  defp log({:drop_eng, logger}) do
     Logger.add(logger, :debug, "Dropping message; unknown engine")
   end
 
-  defp log_info({:drop_call, logger}) do
+  defp log({:drop_call, logger}) do
     Logger.add(
       logger,
       :debug,
@@ -1100,7 +1100,7 @@ defmodule Anoma.Node.Router do
     )
   end
 
-  defp log_info({:drop_form_1, logger, msg}) do
+  defp log({:drop_form_1, logger, msg}) do
     Logger.add(
       logger,
       :debug,
@@ -1108,7 +1108,7 @@ defmodule Anoma.Node.Router do
     )
   end
 
-  defp log_info({:drop_form_2, logger, data}) do
+  defp log({:drop_form_2, logger, data}) do
     Logger.add(
       logger,
       :debug,
@@ -1116,7 +1116,7 @@ defmodule Anoma.Node.Router do
     )
   end
 
-  defp log_info({:drop_form_3, logger, msg}) do
+  defp log({:drop_form_3, logger, msg}) do
     Logger.add(
       logger,
       :debug,
@@ -1124,7 +1124,7 @@ defmodule Anoma.Node.Router do
     )
   end
 
-  defp log_info({:dir_cast, dst}) do
+  defp log({:dir_cast, dst}) do
     Logger.add(nil, :info, "Cast to #{inspect(dst)}")
   end
 end
