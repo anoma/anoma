@@ -130,7 +130,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
       # Collect resource logics from compliance proofs
       resource_logics_from_compliance =
         compliance_outputs
-        |> Enum.reduce([], &[&1.output_label | [&1.input_label | &2]])
+        |> Enum.reduce([], &[&1.output_logic | [&1.input_logic | &2]])
         |> Enum.reverse()
 
       # Compute the program hash of resource logic proofs
