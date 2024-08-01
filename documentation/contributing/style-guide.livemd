@@ -95,7 +95,7 @@ where
 
 * `Public RPC API` contains public functions using `call` or `cast` functionality
 * `GenServer Behavior` contains all `handle_call` and `handle_cast` functions
-* `GenServer Implmentation` contains all functions explicitly used in the `GenServer Behavior` sections.
+* `GenServer Implementation` contains all functions explicitly used in the `GenServer Behavior` sections.
 
 Extra functions can be contained in the latter section or can further be separated into `Helper` functions.
 
