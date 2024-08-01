@@ -192,17 +192,17 @@ defmodule Anoma.Node.Ordering do
   ############################################################
 
   def handle_call({:true_order, id}, _from, state) do
-    log_info({:true_order, id, state.logger})
+    log({:true_order, id, state.logger})
     {:reply, do_true_order(state, id), state}
   end
 
   def handle_call(:next_order, _from, state) do
-    log_info({:new, state.logger})
+    log({:new, state.logger})
     {:reply, do_next_order(state), state}
   end
 
   def handle_call(:all, _from, state) do
-    log_info({:all, state.logger})
+    log({:all, state.logger})
     {:reply, do_all(state), state}
   end
 
@@ -213,7 +213,7 @@ defmodule Anoma.Node.Ordering do
 
   def handle_cast(:reset, _from, state) do
     storage = state.storage
-    log_info({:reset, storage, state.logger})
+    log({:reset, storage, state.logger})
 
     Storage.delete_key(storage, "next_order")
 
@@ -228,7 +228,7 @@ defmodule Anoma.Node.Ordering do
     Storage.ensure_new(storage)
     Storage.put_snapshot(storage, initial_snapshot)
 
-    log_info({:hard_reset, storage, initial_snapshot, state.logger})
+    log({:hard_reset, storage, initial_snapshot, state.logger})
 
     {:noreply, state}
   end
@@ -282,13 +282,13 @@ defmodule Anoma.Node.Ordering do
 
     unless num_txs == 0 do
       storage = state.storage
-      log_info({:new_handle, num_txs, state.logger})
+      log({:new_handle, num_txs, state.logger})
 
       for tx <- ordered_transactions do
         index = Transaction.index(tx)
         addr = Transaction.addr(tx)
 
-        log_info({:ready_handle, addr, state.logger})
+        log({:ready_handle, addr, state.logger})
 
         Storage.put(storage, ["order", tx.id], index)
 
@@ -355,19 +355,19 @@ defmodule Anoma.Node.Ordering do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({:true_order, id, logger}) do
+  defp log({:true_order, id, logger}) do
     Logger.add(logger, :info, "Requested true order. ID: #{inspect(id)}")
   end
 
-  defp log_info({:new, logger}) do
+  defp log({:new, logger}) do
     Logger.add(logger, :info, "Requested new order.")
   end
 
-  defp log_info({:all, logger}) do
+  defp log({:all, logger}) do
     Logger.add(logger, :info, "Requested all orders.")
   end
 
-  defp log_info({:reset, state, logger}) do
+  defp log({:reset, state, logger}) do
     Logger.add(
       logger,
       :debug,
@@ -375,16 +375,16 @@ defmodule Anoma.Node.Ordering do
     )
   end
 
-  defp log_info({:hard_reset, storage, snap, logger}) do
+  defp log({:hard_reset, storage, snap, logger}) do
     Logger.add(logger, :debug, "Requested hard reset.
       Storage: #{inspect(storage)}. Snapshot: #{inspect(snap)}")
   end
 
-  defp log_info({:new_handle, state, logger}) do
+  defp log({:new_handle, state, logger}) do
     Logger.add(logger, :info, "New tx count: #{inspect(state)}")
   end
 
-  defp log_info({:ready_handle, state, logger}) do
+  defp log({:ready_handle, state, logger}) do
     Logger.add(
       logger,
       :info,
