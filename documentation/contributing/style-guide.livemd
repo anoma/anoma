@@ -79,6 +79,16 @@ Every actor module should have mandatory `Public RPC API`, `GenServer Behavior`,
   #                      Public RPC API                      #
   ############################################################
 ```
+```
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+```
+```
+  ############################################################
+  #                  Genserver Implementation                #
+  ############################################################
+```
 
 where
 
@@ -112,14 +122,14 @@ If subsections were used yet not all functions feature in their lists, the rest 
   ### Public API
   I have the following public functionality:
 
-    #### Transaction Functions
+  #### Transaction Functions
 
   - `new_transaction/3`
   - `fire_new_transaction/3`
   - `new_transaction/4`
   - `fire_new_transaction/4`
 
-    #### Other
+  #### Other
 
   - `snapshot/1`
   - `subscribe/2`
@@ -182,12 +192,12 @@ The list should be formatted as follows:
 Given an option `:option` we list it as ``` - `:option` - ``` followed by a short description.
 
 * ```
-  ###Options
+  ### Options
 
   - `:use_rocksdb` - See `t:Anoma.Node.configuration/0` for more
   information.
   - `:supervisor` - This flag determine if we use a supervisor and if
-  so what options. See `t:Supervisor.option/0 ` for supervisor options
+  so what options. See `t:Supervisor.option/0 ` for supervisor options.
   - `:testing` - This flag notes if we are testing the node. This gets
     fed directly into the type `t:Anoma.Node.configuration/0` for
     `Anoma.Node.start_link/1`. Please consult the
@@ -216,14 +226,14 @@ Given an option `:option` we list it as ``` - `:option` - ``` followed by a shor
   end
 
   @typedoc """
-  I control options for `launch_min/2`
+  I control options for `launch_min/2`.
 
-  ###Options
+  ### Options
 
   - `:use_rocksdb` - See `t:Anoma.Node.configuration/0` for more
   information.
   - `:supervisor` - This flag determine if we use a supervisor and if
-  so what options. See `t:Supervisor.option/0 ` for supervisor options
+  so what options. See `t:Supervisor.option/0 ` for supervisor options.
   - `:testing` - This flag notes if we are testing the node. This gets
     fed directly into the type `t:Anoma.Node.configuration/0` for
     `Anoma.Node.start_link/1`. Please consult the
@@ -252,7 +262,7 @@ If a documented function has functions of same arity in the same module which pa
 
 If function `foo` has a variation `foo(x1, ... , xn)` where `x1,...,xn` are some Elixir object capable of being pattern-matched to, we present it in a list as `- foo(x1, ... ,xn) -` followed by a short description.
 
-If the arguments are not pattern-matched provide the variable names as in the definition.
+If the arguments are not pattern-matched, provide the variable names as in the definition.
 
 * ```
   ### Pattern-Matching Variations
@@ -270,7 +280,7 @@ Any function application which a non-constant output and an appropriate EModule 
 ### Example
 
 ```
-    @doc """
+  @doc """
   I am the initialization function of the Clock Engine.
 
   ### Pattern-Matching Variations
