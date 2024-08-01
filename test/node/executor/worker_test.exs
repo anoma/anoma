@@ -289,9 +289,6 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.ensure_new(storage)
     Ordering.reset(env.ordering)
 
-    {:ok, compliance_circuit} = File.read("./params/cairo_compliance.json")
-
-    # The inputs are in big-int formats.
     compliance_inputs = """
     {
     "input": {
@@ -321,18 +318,8 @@ defmodule AnomaTest.Node.Executor.Worker do
     }
     """
 
-    {_output, trace, memory, public_inputs} =
-      Cairo.cairo_vm_runner(
-        compliance_circuit,
-        compliance_inputs
-      )
-
-    {proof, public_inputs} = Cairo.prove(trace, memory, public_inputs)
-
-    compliance_proof = %ProofRecord{
-      proof: proof |> :binary.list_to_bin(),
-      public_inputs: public_inputs |> :binary.list_to_bin()
-    }
+    {:ok, compliance_proof} =
+      ProofRecord.generate_compliance_proof(compliance_inputs)
 
     # TODO: make up real logic proofs when building a client
     input_resource_logic = compliance_proof
