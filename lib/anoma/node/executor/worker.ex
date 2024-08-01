@@ -268,11 +268,7 @@ defmodule Anoma.Node.Executor.Worker do
     # in particular, the get/put api must be deleted, since it cannot be correct,
     # but an append api should also be added.
     # the latter requires the merkle tree to be complete
-    cm_tree =
-      CommitmentTree.new(
-        CommitmentTree.Spec.cm_tree_spec(),
-        Anoma.Node.Router.Engine.get_state(storage).rm_commitments
-      )
+    cm_tree = Transaction.cm_tree(vm_resource_tx, storage)
 
     new_tree =
       for commitment <- Transaction.storage_commitments(vm_resource_tx),

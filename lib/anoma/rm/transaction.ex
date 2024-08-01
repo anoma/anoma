@@ -27,6 +27,9 @@ defprotocol Anoma.RM.Transaction do
 
   @spec nullifiers(t()) :: list(binary())
   def nullifiers(transaction)
+
+  @spec cm_tree(t(), term()) :: CommitmentTree.t()
+  def cm_tree(transaction, storage)
 end
 
 defmodule Anoma.RM.Trans do
