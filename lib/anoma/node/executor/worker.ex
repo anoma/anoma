@@ -270,19 +270,18 @@ defmodule Anoma.Node.Executor.Worker do
     # the latter requires the merkle tree to be complete
     cm_tree = Transaction.cm_tree(vm_resource_tx, storage)
 
-    new_tree =
-      for commitment <- Transaction.storage_commitments(vm_resource_tx),
-          reduce: cm_tree do
-        tree ->
-          cm_key = ["rm", "commitments", commitment]
+    commitments = Transaction.storage_commitments(vm_resource_tx)
 
-          Storage.put(storage, cm_key, true)
-          CommitmentTree.add(tree, [commitment])
-          log_info({:put, cm_key, logger})
-          tree
-      end
+    for commitment <- commitments do
+      cm_key = ["rm", "commitments", commitment]
 
-    Storage.put(storage, ["rm", "commitment_root"], new_tree.root)
+      Storage.put(storage, cm_key, true)
+      log_info({:put, cm_key, logger})
+    end
+
+    CommitmentTree.add(cm_tree, commitments)
+
+    Storage.put(storage, ["rm", "commitment_root"], cm_tree.root)
 
     for nullifier <- Transaction.storage_nullifiers(vm_resource_tx) do
       nf_key = ["rm", "nullifiers", nullifier]
