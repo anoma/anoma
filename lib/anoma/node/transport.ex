@@ -25,7 +25,7 @@ defmodule Anoma.Node.Transport do
   use Router.Engine
   use TypedStruct
 
-  # cap messages at 1mb.  todo should be a configuration parameter, maybe more sophisticated policy, etc.
+  # cap messages at 1mb. TODO should be a configuration parameter, maybe more sophisticated policy, etc.
   @max_message_size 1_000_000
 
   @typedoc """
@@ -332,8 +332,9 @@ defmodule Anoma.Node.Transport do
     handle_cast({:learn_engine, node, node}, Router.self_addr(), s)
   end
 
-  # if an engine claims to be associated with a node, believe it (_not_ the other way around); and of course we believe local advertisements
-  # todo condition should perhaps be id signsfor engine, not id == engine?
+  # if an engine claims to be associated with a node, believe it (_not_ the
+  # other way around); and of course we believe local advertisements
+  # TODO condition should perhaps be id signsfor engine, not id == engine?
   def handle_cast(
         {:learn_engine, engine, node},
         %Router.Addr{server: server, id: id},
@@ -453,7 +454,7 @@ defmodule Anoma.Node.Transport do
            Anoma.Serialise.from_msgpack(data) do
       with {:ok, %{nonce: other_nonce, id: other_id}} <-
              Anoma.Serialise.unpack(packed) do
-        # todo check structure of nonce/id
+        # TODO check structure of nonce/id
         if (state.id == nil || state.id === other_id) &&
              Anoma.Crypto.Sign.verify_detached(
                signature,
@@ -511,7 +512,7 @@ defmodule Anoma.Node.Transport do
 
     if node === nil do
       log_info({:queued, dst, nil, nil, s.logger})
-      # todo limit queue size
+      # TODO limit queue size
       %{
         s
         | pending_outgoing_engine_messages:
@@ -551,7 +552,7 @@ defmodule Anoma.Node.Transport do
       else
         # no current connections--whether pending or active--so try to open one
         # just pick the first address and try to open a new connection to it
-        # todo more sophisticated strategy--if the first address doesn't work,
+        # TODO more sophisticated strategy--if the first address doesn't work,
         # try more; ask if anyone else knows more addresses; tune effort
         # according to message priority (qos and
         # https://github.com/anoma/anoma/issues/328 again); exponential backoff
@@ -561,7 +562,7 @@ defmodule Anoma.Node.Transport do
           log_info({:queued, dst, node, addr, s.logger})
           add_connection(s, node, addr)
         else
-          # todo attempt to discover an address; should limit outgoing queue
+          # TODO attempt to discover an address; should limit outgoing queue
           # size, with lower priority for messages for nodes whose addresses we
           # don't know
           log_info({:queued, dst, node, nil, s.logger})
