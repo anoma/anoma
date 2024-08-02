@@ -7,6 +7,7 @@ defmodule Examples.ENock do
   alias Examples.ENode.EStorage
   alias Anoma.Transaction
   alias Anoma.Node.{Router, Ordering}
+  alias Anoma.Node.Executor.Worker
   alias Examples.ENode
   alias Examples.ECrypto
   alias Noun.Format
@@ -144,6 +145,11 @@ defmodule Examples.ENock do
            "Key ought not to be found"
 
     node
+  end
+
+  @spec miki_increment_kv_tx() :: Worker.transaction()
+  def miki_increment_kv_tx() do
+    {:kv, miki_increment_candidate()}
   end
 
   def miki_increment_candidate() do
