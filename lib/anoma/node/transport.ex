@@ -367,6 +367,7 @@ defmodule Anoma.Node.Transport do
   #                  Genserver Implementation                #
   ############################################################
 
+  @spec handle_recv_chunk(t(), Router.addr(), binary()) :: t()
   defp handle_recv_chunk(s, from, data) do
     case :msgpack.unpack_stream(data) do
       # message still incomplete; enqueue (todo: the partial_message <> chunk
@@ -392,6 +393,7 @@ defmodule Anoma.Node.Transport do
     end
   end
 
+  @spec send_initial_handshake(t(), ConnectionState.t()) :: :ok
   defp send_initial_handshake(s, %ConnectionState{
          connection: conn,
          outgoing_nonce: nonce
@@ -491,6 +493,7 @@ defmodule Anoma.Node.Transport do
     end
   end
 
+  @spec handle_second_handshake(t(), term(), ConnectionState.t()) :: boolean()
   defp handle_second_handshake(s, data, state) do
     with %{data: packed, sig: signature} <- data do
       with {:ok,
