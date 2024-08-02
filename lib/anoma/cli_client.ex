@@ -54,11 +54,14 @@ defmodule Anoma.Cli.Client do
 
   @spec handle_continue(
           {Router.addr(), Router.addr(), Anoma.Node.t() | Dump.dump(),
-           Transport.transport_addr(), any()},
+           Transport.transport_addr(), any(), boolean()},
           any()
         ) ::
           {:noreply, {0 | 1, any()}}
-  def handle_continue({router, transport, server, sock_addr, operation}, _) do
+  def handle_continue(
+        {router, transport, server, sock_addr, operation, silent},
+        _
+      ) do
     if not File.exists?(elem(sock_addr, 1)) do
       {:noreply, try_offline(operation)}
     else
@@ -78,10 +81,18 @@ defmodule Anoma.Cli.Client do
       # we should get notified when connection establishment succeeds/fails)
       # use a shorter timeout because--come on
       with :pong <- Router.call(server_engines.transport, :ping, 1000) do
-        results = perform(operation, server_engines)
+        {:ok, output} = StringIO.open("")
+
+        results = perform(operation, server_engines, output)
 
         # synchronise--make sure the queues get flushed properly before we exit
         Router.call(server_engines.transport, :ping)
+
+        unless silent do
+          StringIO.flush(output) |> IO.puts()
+        end
+
+        StringIO.close(output)
 
         {:noreply, results}
       else
@@ -102,25 +113,34 @@ defmodule Anoma.Cli.Client do
     perform_offline(operation)
   end
 
-  defp perform({:submit_tx, path}, server_engines) do
-    do_submit(path, server_engines, :kv)
+  defp perform({:submit_tx, path}, server_engines, output) do
+    do_submit(path, server_engines, :kv, output)
   end
 
-  defp perform({:rm_submit_tx, path}, server_engines) do
-    do_submit(path, server_engines, :rm)
+  defp perform({:rm_submit_tx, path}, server_engines, output) do
+    do_submit(path, server_engines, :rm, output)
   end
 
-  defp perform({:ro_submit_tx, path}, server_engines) do
+  defp perform({:ro_submit_tx, path}, server_engines, output) do
     client_addr = Router.Addr.id(Router.self_addr())
 
-    case do_submit(path, server_engines, :ro, client_addr) do
+    case do_submit(path, server_engines, :ro, output, client_addr) do
       {0, _} ->
         receive do
           {:"$gen_cast", {:router_external_cast, _, payload}} ->
-            {:ok, {:read_value, value}} = Anoma.Serialise.unpack(payload)
+            case Anoma.Serialise.unpack(payload) do
+              {:ok, {:read_value, value}} ->
+                IO.puts(output, inspect(value))
+                {0, value}
 
-            IO.puts("#{inspect(value)}")
-            {0, value}
+              {:ok, {:worker_error}} ->
+                IO.puts(output, "Execution error")
+                {0, nil}
+
+              _ ->
+                IO.puts(output, "Unexpected response")
+                {0, nil}
+            end
         end
 
       res ->
@@ -128,46 +148,46 @@ defmodule Anoma.Cli.Client do
     end
   end
 
-  defp perform({:check_commitment, comm}, server_engines) do
+  defp perform({:check_commitment, comm}, server_engines, output) do
     ["rm", "commitments"]
-    |> base64_storage_check(comm, server_engines)
+    |> base64_storage_check(comm, server_engines, output)
   end
 
-  defp perform({:check_nulifier, null}, server_engines) do
+  defp perform({:check_nulifier, null}, server_engines, output) do
     ["rm", "nullifiers"]
-    |> base64_storage_check(null, server_engines)
+    |> base64_storage_check(null, server_engines, output)
   end
 
-  defp perform(:shutdown, server_engines) do
+  defp perform(:shutdown, server_engines, _output) do
     Anoma.Node.Router.shutdown_node(server_engines.router)
     {0, nil}
   end
 
-  defp perform({:get_key, key}, server_engines) do
+  defp perform({:get_key, key}, server_engines, output) do
     case Anoma.Node.Storage.get(server_engines.storage, key) do
       {:error, :timed_out} ->
         IO.puts("Connection error")
         {1, :timed_out}
 
       :absent ->
-        IO.puts("no such key")
+        IO.puts(output, "no such key")
         {0, :absent}
 
       {:ok, value} ->
-        IO.puts(inspect(value))
+        IO.puts(output, inspect(value))
         {0, value}
     end
   end
 
-  defp perform(:snapshot, server_engines) do
+  defp perform(:snapshot, server_engines, _output) do
     Anoma.Node.Configuration.snapshot(server_engines.configuration)
   end
 
-  defp perform(:delete_dump, server_engines) do
+  defp perform(:delete_dump, server_engines, _output) do
     Anoma.Node.Configuration.delete_dump(server_engines.configuration)
   end
 
-  defp perform(_, _) do
+  defp perform(_, _, _) do
     {1, nil}
   end
 
@@ -288,11 +308,16 @@ defmodule Anoma.Cli.Client do
   #                        Helper                            #
   ############################################################
 
-  defp base64_storage_check(path_prefix, base64_path_suffix, server_engines) do
+  defp base64_storage_check(
+         path_prefix,
+         base64_path_suffix,
+         server_engines,
+         output
+       ) do
     case Base.decode64(base64_path_suffix) do
       {:ok, decoded_suffix} ->
         full_path = path_prefix ++ [decoded_suffix]
-        perform({:get_key, full_path}, server_engines)
+        perform({:get_key, full_path}, server_engines, output)
 
       :error ->
         IO.puts("Error decoding key")
@@ -300,7 +325,7 @@ defmodule Anoma.Cli.Client do
     end
   end
 
-  defp do_submit(path, server_engines, kind, reply_to \\ nil) do
+  defp do_submit(path, server_engines, kind, output, reply_to \\ nil) do
     with {:ok, tx} <- File.read(path),
          {:ok, tx} <- Noun.Format.parse(tx) do
       jammed = Nock.Jam.jam(tx)
@@ -314,12 +339,14 @@ defmodule Anoma.Cli.Client do
 
           for commitment <- tx_proper.commitments do
             IO.puts(
+              output,
               "commitment: #{Resource.commitment_hash(commitment) |> Base.encode64()}"
             )
           end
 
           for nullifier <- tx_proper.nullifiers do
             IO.puts(
+              output,
               "nullifier: #{Resource.commitment_hash(nullifier) |> Base.encode64()}"
             )
           end
