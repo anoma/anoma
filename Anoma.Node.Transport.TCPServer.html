@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.18.0">
+    <meta name="project" content="Anoma v0.19.0">
 
 
-    <title>Anoma.Node.Transport.TCPServer — Anoma v0.18.0</title>
+    <title>Anoma.Node.Transport.TCPServer — Anoma v0.19.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-703F6B39.js"></script>
+    <script src="dist/sidebar_items-142A9862.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.18.0
+          v0.19.0
         </div>
       </div>
     </div>
@@ -125,10 +125,14 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Transport.TCPServer</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>I am TCPServer Engine.</p><p>I open a listening TCP connection in server mode on the specified address.</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -148,6 +152,8 @@ GUIDES
         <a href="#t:t/0" translate="no">t()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of the TCPServer Engine.</p></div>
 
     </div>
 
@@ -226,7 +232,16 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of the TCPServer Engine.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:router</code> - The address of the Router Engine that the Transport Engine
+instance serves to.</li><li><code class="inline">:transport</code> - The address of the Transport server managing the server.</li><li><code class="inline">:connection_pool</code> - The supervisor which manages the connection pool that
+the TCPServer Engine instance belongs to.</li><li><code class="inline">:listener</code> - The socket listening on the specified host, port.
+request.  Must be provided in the listener mode. Default: nil</li><li><code class="inline">:logger</code> - The Logger Engine address. Enforced: false.</li></ul>
   </section>
 </section>
 
@@ -289,6 +304,16 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init(
+  {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
+   <a href="Anoma.Node.Transport.html#t:listen_addr/0">Anoma.Node.Transport.listen_addr</a>(), <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>(),
+   <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()}
+) :: {:ok, <a href="#t:t/0">t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
   </section>
 </section>
@@ -300,11 +325,11 @@ GUIDES
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/transport/tcp_server.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node/transport/tcp_server.ex">current file</a>)
 
             </span>
 

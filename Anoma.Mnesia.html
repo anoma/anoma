@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.18.0">
+    <meta name="project" content="Anoma v0.19.0">
 
 
-    <title>Anoma.Mnesia — Anoma v0.18.0</title>
+    <title>Anoma.Mnesia — Anoma v0.19.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-703F6B39.js"></script>
+    <script src="dist/sidebar_items-142A9862.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.18.0
+          v0.19.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Mnesia</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
 
 </h1>
 
@@ -137,7 +137,7 @@ GUIDES
   </a>
   <span class="text">Usage</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="n">i</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">init</span><span class="p" data-group-id="7639361094-1">(</span><span class="p" data-group-id="7639361094-1">)</span></code></pre><h3 id="module-initialization" class="section-heading">
+<pre><code class="makeup elixir" translate="no"><span class="n">i</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">init</span><span class="p" data-group-id="8129913015-1">(</span><span class="p" data-group-id="8129913015-1">)</span></code></pre><h3 id="module-initialization" class="section-heading">
   <a href="#module-initialization" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -263,12 +263,12 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
   </a>
   <span class="text">Example</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="w"> </span><span class="gp unselectable">iex(15)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">create_table</span><span class="p" data-group-id="3511236091-1">(</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3511236091-2">[</span><span class="ss">attributes</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3511236091-3">[</span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">:name</span><span class="p">,</span><span class="w"> </span><span class="ss">:job</span><span class="p" data-group-id="3511236091-3">]</span><span class="p" data-group-id="3511236091-2">]</span><span class="p" data-group-id="3511236091-1">)</span><span class="w">
- </span><span class="p" data-group-id="3511236091-4">{</span><span class="ss">:atomic</span><span class="p">,</span><span class="w"> </span><span class="ss">:ok</span><span class="p" data-group-id="3511236091-4">}</span><span class="w">
- </span><span class="gp unselectable">iex(16)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">dirty_write</span><span class="p" data-group-id="3511236091-5">(</span><span class="p" data-group-id="3511236091-6">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="3511236091-6">}</span><span class="p" data-group-id="3511236091-5">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="w"> </span><span class="gp unselectable">iex(15)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">create_table</span><span class="p" data-group-id="6054049950-1">(</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6054049950-2">[</span><span class="ss">attributes</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6054049950-3">[</span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">:name</span><span class="p">,</span><span class="w"> </span><span class="ss">:job</span><span class="p" data-group-id="6054049950-3">]</span><span class="p" data-group-id="6054049950-2">]</span><span class="p" data-group-id="6054049950-1">)</span><span class="w">
+ </span><span class="p" data-group-id="6054049950-4">{</span><span class="ss">:atomic</span><span class="p">,</span><span class="w"> </span><span class="ss">:ok</span><span class="p" data-group-id="6054049950-4">}</span><span class="w">
+ </span><span class="gp unselectable">iex(16)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">dirty_write</span><span class="p" data-group-id="6054049950-5">(</span><span class="p" data-group-id="6054049950-6">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="6054049950-6">}</span><span class="p" data-group-id="6054049950-5">)</span><span class="w">
  </span><span class="ss">:ok</span><span class="w">
- </span><span class="gp unselectable">iex(17)&gt; </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">dirty_dump</span><span class="p" data-group-id="3511236091-7">(</span><span class="ss">:test</span><span class="p" data-group-id="3511236091-7">)</span><span class="w">
- </span><span class="p" data-group-id="3511236091-8">[</span><span class="p" data-group-id="3511236091-9">[</span><span class="p" data-group-id="3511236091-10">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="3511236091-10">}</span><span class="p" data-group-id="3511236091-9">]</span><span class="p" data-group-id="3511236091-8">]</span></code></pre>
+ </span><span class="gp unselectable">iex(17)&gt; </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">dirty_dump</span><span class="p" data-group-id="6054049950-7">(</span><span class="ss">:test</span><span class="p" data-group-id="6054049950-7">)</span><span class="w">
+ </span><span class="p" data-group-id="6054049950-8">[</span><span class="p" data-group-id="6054049950-9">[</span><span class="p" data-group-id="6054049950-10">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="6054049950-10">}</span><span class="p" data-group-id="6054049950-9">]</span><span class="p" data-group-id="6054049950-8">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="dump/1">
@@ -330,11 +330,11 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/mnesia.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/mnesia.ex">current file</a>)
 
             </span>
 

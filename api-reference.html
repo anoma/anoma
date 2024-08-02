@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.18.0">
+    <meta name="project" content="Anoma v0.19.0">
 
 
-    <title>API Reference — Anoma v0.18.0</title>
+    <title>API Reference — Anoma v0.19.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-703F6B39.js"></script>
+    <script src="dist/sidebar_items-142A9862.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.18.0
+          v0.19.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
 
-  <span>API Reference <small class="app-vsn">Anoma v0.18.0</small></span>
+  <span>API Reference <small class="app-vsn">Anoma v0.19.0</small></span>
 </h1>
 
 
@@ -506,7 +506,8 @@ information in order to choose how to verify a commitment.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I have a few use cases and APIs throughout an Anoma application</p></div>
+    <div class="summary-synopsis"><p>I am the Router, the central networking component of Anoma. My
+functionality includes several services</p></div>
 
 </div>
 <div class="summary-row">
@@ -515,12 +516,8 @@ information in order to choose how to verify a commitment.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>An address to which we can send a message.
-The server, if known, is a local actor which can receive it directly;
-otherwise, the mssage will be sent via the central router.
-If the server is known, but the id is not, then this is a local-only
-engine, which can only talk to other local engines.
-(Hence, at least one of id and server must be known; potentially both are.)</p></div>
+    <div class="summary-synopsis"><p>I am a module providing address information for the Engine and Node
+networking used by the Router.</p></div>
 
 </div>
 <div class="summary-row">
@@ -528,6 +525,8 @@ engine, which can only talk to other local engines.
     <a href="Anoma.Node.Router.Engine.html" translate="no">Anoma.Node.Router.Engine</a>
 
   </div>
+
+    <div class="summary-synopsis"><p>I am the general Engine module.</p></div>
 
 </div>
 <div class="summary-row">
@@ -554,6 +553,8 @@ engine, which can only talk to other local engines.
 
   </div>
 
+    <div class="summary-synopsis"><p>I am the Transport server.</p></div>
+
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -561,7 +562,7 @@ engine, which can only talk to other local engines.
 
   </div>
 
-    <div class="summary-synopsis"><p>I am an abstract interface that connections obey.</p></div>
+    <div class="summary-synopsis"><p>I am the Transport Connection module.</p></div>
 
 </div>
 <div class="summary-row">
@@ -577,7 +578,7 @@ engine, which can only talk to other local engines.
 
   </div>
 
-    <div class="summary-synopsis"><p>I am an abstract interface that servers obey.</p></div>
+    <div class="summary-synopsis"><p>I am the Transport Server module.</p></div>
 
 </div>
 <div class="summary-row">
@@ -586,7 +587,7 @@ engine, which can only talk to other local engines.
 
   </div>
 
-    <div class="summary-synopsis"><p>I serve as a supervision pool for various transport connections</p></div>
+    <div class="summary-synopsis"><p>I am the Transport Supervisor module.</p></div>
 
 </div>
 <div class="summary-row">
@@ -595,12 +596,7 @@ engine, which can only talk to other local engines.
 
   </div>
 
-    <div class="summary-synopsis"><p>I manage an individual TCP connection and stream.
-I can run in two modes: either I can act as a client, initiating a connection
-to a server, or as a listener, waiting to accept and then accepting a
-connection on a server.
-In the latter case, since accepting the connection marks me as its owner and
-handoff is complicated, I start up a new listener once I accept a connection.</p></div>
+    <div class="summary-synopsis"><p>I am TCPConnection Engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -608,6 +604,8 @@ handoff is complicated, I start up a new listener once I accept a connection.</p
     <a href="Anoma.Node.Transport.TCPServer.html" translate="no">Anoma.Node.Transport.TCPServer</a>
 
   </div>
+
+    <div class="summary-synopsis"><p>I am TCPServer Engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1124,9 +1122,9 @@ Anoma
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
 
             </span>
 

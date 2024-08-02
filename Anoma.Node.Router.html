@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.18.0">
+    <meta name="project" content="Anoma v0.19.0">
 
 
-    <title>Anoma.Node.Router — Anoma v0.18.0</title>
+    <title>Anoma.Node.Router — Anoma v0.19.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-703F6B39.js"></script>
+    <script src="dist/sidebar_items-142A9862.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.18.0
+          v0.19.0
         </div>
       </div>
     </div>
@@ -125,22 +125,23 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Router</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I have a few use cases and APIs throughout an Anoma application:</p><ol><li><p>I provide central routing infrastructure for inter-node and
+<p>I am the Router, the central networking component of Anoma. My
+functionality includes several services:</p><ol><li><p>I provide central routing infrastructure for inter-node and
 intra-node communication</p></li><li><p>I provide service's for topic creation and
 <a href="Anoma.Node.Router.Engine.html"><code class="inline">Anoma.Node.Router.Engine</code></a> creation</p></li><li><p>I provide a behavior interface similar to <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> for both
 <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a> messaging and <code class="inline">Topic</code>
-messaging</p></li></ol><h2 id="module-router-topology" class="section-heading">
+messaging</p></li></ol><h3 id="module-router-topology" class="section-heading">
   <a href="#module-router-topology" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Router Topology</span>
-</h2>
+</h3>
 <p>A good view of my topology and how various
 <a href="Anoma.Node.Router.Engine.html"><code class="inline">Anoma.Node.Router.Engine</code></a> and topic's relate to me can be seen by
 the following diagram.</p><pre><code class="mermaid">graph TB
@@ -157,45 +158,40 @@ limited role, I handle and manage them personally and the dashed
 lines in the diagram are not real. However for building a conceptual
 model, we can view <code class="inline">Topics</code> spawned by <a href="#new_topic/1"><code class="inline">new_topic/1</code></a> as spawning an
 <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a>, and messages sent via
-<a href="#call/3"><code class="inline">call/3</code></a> or <a href="#cast/2"><code class="inline">cast/2</code></a> as being routed through myself.</p><h2 id="module-server-terminology" class="section-heading">
+<a href="#call/3"><code class="inline">call/3</code></a> or <a href="#cast/2"><code class="inline">cast/2</code></a> as being routed through myself.</p><h3 id="module-server-terminology" class="section-heading">
   <a href="#module-server-terminology" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Server Terminology</span>
-</h2>
+</h3>
 <p>For the sake of this document, the word <code class="inline">Server</code> will refer to both
-<a href="Anoma.Node.Router.Engine.html"><code class="inline">Engines</code></a> and <code class="inline">Topics</code>.</p><h2 id="module-router-pids" class="section-heading">
+<a href="Anoma.Node.Router.Engine.html"><code class="inline">Engines</code></a> and <code class="inline">Topics</code>.</p><h3 id="module-router-pids" class="section-heading">
   <a href="#module-router-pids" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Router PIDs</span>
-</h2>
+</h3>
 <p>The IDs of the various topics and
 <a href="Anoma.Node.Router.Engine.html">engines</a>, are not regular Erlang
 PID's. Instead we use our own address schema laid out in
 <a href="Anoma.Node.Router.Addr.html"><code class="inline">Anoma.Node.Router.Addr</code></a>. Further information can also be found in
-our specs (link to specs when they are online).</p><h2 id="module-router-api" class="section-heading">
-  <a href="#module-router-api" class="hover-link">
+our specs (link to specs when they are online).</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">Router API</span>
-</h2>
-<p>I offer an API for anyone wishing to call me. These functions are:</p><ul><li><a href="#start/0"><code class="inline">start/0</code></a></li><li><a href="#start/1"><code class="inline">start/1</code></a></li><li><a href="#new_topic/1"><code class="inline">new_topic/1</code></a></li><li><a href="#start_engine/3"><code class="inline">start_engine/3</code></a></li><li><a href="#start_engine/4"><code class="inline">start_engine/4</code></a></li><li><code class="inline">subscribe_topic/2</code></li><li><code class="inline">subscribe_topic/3</code></li></ul><h2 id="module-server-apis" class="section-heading">
-  <a href="#module-server-apis" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Server APIs</span>
-</h2>
-<p>When writing server code, My module acts as a <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> behavior,
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><h4>Router API</h4><p>I offer an API for anyone wishing to call me. These functions are:</p><ul><li><a href="#start/0"><code class="inline">start/0</code></a></li><li><a href="#start/1"><code class="inline">start/1</code></a></li><li><a href="#new_topic/1"><code class="inline">new_topic/1</code></a></li><li><code class="inline">subscribe_topic/2</code></li><li><a href="#start_engine/3"><code class="inline">start_engine/3</code></a></li><li><a href="#start_engine/4"><code class="inline">start_engine/4</code></a></li><li><code class="inline">subscribe_topic/3</code></li></ul><h4>Server APIs</h4><p>When writing server code, My module acts as a <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> behavior,
 in that one should be using these functions when writing code to
-talk to the <code class="inline">Server</code>:</p><ul><li><a href="#call/2"><code class="inline">call/2</code></a></li><li><a href="#call/3"><code class="inline">call/3</code></a></li><li><a href="#cast/2"><code class="inline">cast/2</code></a></li></ul><p>The API I offer is very reminiscent of <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>'s API, however
+talk to the <code class="inline">Server</code>:</p><ul><li><a href="#call/2"><code class="inline">call/2</code></a></li><li><a href="#cast/2"><code class="inline">cast/2</code></a></li><li><a href="#call/3"><code class="inline">call/3</code></a></li></ul><p>The API I offer is very reminiscent of <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>'s API, however
 please read the <a href="#module-examples">examples</a> section to get a sense
-on how the server code differs.</p><h2 id="module-client-server-apis" class="section-heading">
+on how the server code differs.</p><h4>Self-Cast/Call API</h4><p>I have separate API for assisting myself upon message reception from
+myself as a GenServer.</p><ul><li><a href="#handle_self_cast/3"><code class="inline">handle_self_cast/3</code></a></li><li><a href="#handle_self_call/3"><code class="inline">handle_self_call/3</code></a></li></ul><h4>Other</h4><ul><li><code class="inline">stop/0</code></li><li><a href="#self_addr/0"><code class="inline">self_addr/0</code></a></li><li><a href="#router/0"><code class="inline">router/0</code></a></li><li><a href="#shutdown_node/1"><code class="inline">shutdown_node/1</code></a></li><li><a href="#dump_state/1"><code class="inline">dump_state/1</code></a></li><li><a href="#set_logger/2"><code class="inline">set_logger/2</code></a></li><li><a href="#send_raw/2"><code class="inline">send_raw/2</code></a></li><li><a href="#process_name/2"><code class="inline">process_name/2</code></a></li><li><a href="#do_handle_external_cast/3"><code class="inline">do_handle_external_cast/3</code></a></li><li><a href="#send_response/4"><code class="inline">send_response/4</code></a></li></ul><h3 id="module-client-server-apis" class="section-heading">
   <a href="#module-client-server-apis" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Client/Server APIs</span>
-</h2>
+</h3>
 <p>Much like <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>, user's typically don't call my <a href="#call/3"><code class="inline">call/3</code></a> or
 <a href="#cast/2"><code class="inline">cast/2</code></a> directly. Instead the user wraps the calls in new functions
 representing the public API of the server. These wrappers are called
@@ -208,43 +204,43 @@ the <strong>client API</strong>.</p><h3 id="module-examples" class="section-head
 <p>To get a good feel for writing idiomatic code using me, and how my
 API is differs from <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>, we will look at an implementation
 of a stack and see how it <a href="https://hexdocs.pm/elixir/GenServer.html#module-client-server-apis">differs from GenServer's stack
-example</a></p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="k" data-group-id="8273742327-1">do</span><span class="w">
+example</a></p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="k" data-group-id="5763281930-1">do</span><span class="w">
   </span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Router</span><span class="w">
 
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Router.Engine</span><span class="w">
 
-  </span><span class="na">@spec</span><span class="w"> </span><span class="n">init</span><span class="p" data-group-id="8273742327-2">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="8273742327-3">(</span><span class="p" data-group-id="8273742327-3">)</span><span class="p" data-group-id="8273742327-2">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="8273742327-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">list</span><span class="p" data-group-id="8273742327-5">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="8273742327-6">(</span><span class="p" data-group-id="8273742327-6">)</span><span class="p" data-group-id="8273742327-5">)</span><span class="p" data-group-id="8273742327-4">}</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="8273742327-7">(</span><span class="n">elements</span><span class="p" data-group-id="8273742327-7">)</span><span class="w"> </span><span class="k" data-group-id="8273742327-8">do</span><span class="w">
-    </span><span class="n">initial_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">split</span><span class="p" data-group-id="8273742327-9">(</span><span class="n">elements</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">trim</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="8273742327-9">)</span><span class="w">
-    </span><span class="p" data-group-id="8273742327-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">initial_state</span><span class="p" data-group-id="8273742327-10">}</span><span class="w">
-  </span><span class="k" data-group-id="8273742327-8">end</span><span class="w">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">init</span><span class="p" data-group-id="5763281930-2">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5763281930-3">(</span><span class="p" data-group-id="5763281930-3">)</span><span class="p" data-group-id="5763281930-2">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="5763281930-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">list</span><span class="p" data-group-id="5763281930-5">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5763281930-6">(</span><span class="p" data-group-id="5763281930-6">)</span><span class="p" data-group-id="5763281930-5">)</span><span class="p" data-group-id="5763281930-4">}</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="5763281930-7">(</span><span class="n">elements</span><span class="p" data-group-id="5763281930-7">)</span><span class="w"> </span><span class="k" data-group-id="5763281930-8">do</span><span class="w">
+    </span><span class="n">initial_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">split</span><span class="p" data-group-id="5763281930-9">(</span><span class="n">elements</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">trim</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="5763281930-9">)</span><span class="w">
+    </span><span class="p" data-group-id="5763281930-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">initial_state</span><span class="p" data-group-id="5763281930-10">}</span><span class="w">
+  </span><span class="k" data-group-id="5763281930-8">end</span><span class="w">
 
-  </span><span class="na">@spec</span><span class="w"> </span><span class="n">push</span><span class="p" data-group-id="8273742327-11">(</span><span class="nc">Router</span><span class="o">.</span><span class="n">addr</span><span class="p" data-group-id="8273742327-12">(</span><span class="p" data-group-id="8273742327-12">)</span><span class="p">,</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="8273742327-13">(</span><span class="p" data-group-id="8273742327-13">)</span><span class="p" data-group-id="8273742327-11">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="ss">:ok</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">push</span><span class="p" data-group-id="8273742327-14">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="8273742327-14">)</span><span class="w"> </span><span class="k" data-group-id="8273742327-15">do</span><span class="w">
-    </span><span class="nc">Router</span><span class="o">.</span><span class="n">cast</span><span class="p" data-group-id="8273742327-16">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8273742327-17">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="8273742327-17">}</span><span class="p" data-group-id="8273742327-16">)</span><span class="w">
-  </span><span class="k" data-group-id="8273742327-15">end</span><span class="w">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">push</span><span class="p" data-group-id="5763281930-11">(</span><span class="nc">Router</span><span class="o">.</span><span class="n">addr</span><span class="p" data-group-id="5763281930-12">(</span><span class="p" data-group-id="5763281930-12">)</span><span class="p">,</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5763281930-13">(</span><span class="p" data-group-id="5763281930-13">)</span><span class="p" data-group-id="5763281930-11">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="ss">:ok</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">push</span><span class="p" data-group-id="5763281930-14">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="5763281930-14">)</span><span class="w"> </span><span class="k" data-group-id="5763281930-15">do</span><span class="w">
+    </span><span class="nc">Router</span><span class="o">.</span><span class="n">cast</span><span class="p" data-group-id="5763281930-16">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5763281930-17">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="5763281930-17">}</span><span class="p" data-group-id="5763281930-16">)</span><span class="w">
+  </span><span class="k" data-group-id="5763281930-15">end</span><span class="w">
 
-  </span><span class="na">@spec</span><span class="w"> </span><span class="n">pop</span><span class="p" data-group-id="8273742327-18">(</span><span class="nc">Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="8273742327-19">(</span><span class="p" data-group-id="8273742327-19">)</span><span class="p" data-group-id="8273742327-18">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="8273742327-20">(</span><span class="p" data-group-id="8273742327-20">)</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">pop</span><span class="p" data-group-id="8273742327-21">(</span><span class="n">pid</span><span class="p" data-group-id="8273742327-21">)</span><span class="w"> </span><span class="k" data-group-id="8273742327-22">do</span><span class="w">
-    </span><span class="nc">Router</span><span class="o">.</span><span class="n">call</span><span class="p" data-group-id="8273742327-23">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">:pop</span><span class="p" data-group-id="8273742327-23">)</span><span class="w">
-  </span><span class="k" data-group-id="8273742327-22">end</span><span class="w">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">pop</span><span class="p" data-group-id="5763281930-18">(</span><span class="nc">Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5763281930-19">(</span><span class="p" data-group-id="5763281930-19">)</span><span class="p" data-group-id="5763281930-18">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5763281930-20">(</span><span class="p" data-group-id="5763281930-20">)</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">pop</span><span class="p" data-group-id="5763281930-21">(</span><span class="n">pid</span><span class="p" data-group-id="5763281930-21">)</span><span class="w"> </span><span class="k" data-group-id="5763281930-22">do</span><span class="w">
+    </span><span class="nc">Router</span><span class="o">.</span><span class="n">call</span><span class="p" data-group-id="5763281930-23">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">:pop</span><span class="p" data-group-id="5763281930-23">)</span><span class="w">
+  </span><span class="k" data-group-id="5763281930-22">end</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_call</span><span class="p" data-group-id="8273742327-24">(</span><span class="ss">:pop</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="8273742327-24">)</span><span class="w"> </span><span class="k" data-group-id="8273742327-25">do</span><span class="w">
-    </span><span class="p" data-group-id="8273742327-26">[</span><span class="n">to_caller</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="8273742327-26">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="w">
-    </span><span class="p" data-group-id="8273742327-27">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="n">to_caller</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="8273742327-27">}</span><span class="w">
-  </span><span class="k" data-group-id="8273742327-25">end</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_call</span><span class="p" data-group-id="5763281930-24">(</span><span class="ss">:pop</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="5763281930-24">)</span><span class="w"> </span><span class="k" data-group-id="5763281930-25">do</span><span class="w">
+    </span><span class="p" data-group-id="5763281930-26">[</span><span class="n">to_caller</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="5763281930-26">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="w">
+    </span><span class="p" data-group-id="5763281930-27">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="n">to_caller</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="5763281930-27">}</span><span class="w">
+  </span><span class="k" data-group-id="5763281930-25">end</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_cast</span><span class="p" data-group-id="8273742327-28">(</span><span class="p" data-group-id="8273742327-29">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="8273742327-29">}</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="8273742327-28">)</span><span class="w"> </span><span class="k" data-group-id="8273742327-30">do</span><span class="w">
-    </span><span class="n">new_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="8273742327-31">[</span><span class="n">element</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="8273742327-31">]</span><span class="w">
-    </span><span class="p" data-group-id="8273742327-32">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="8273742327-32">}</span><span class="w">
-  </span><span class="k" data-group-id="8273742327-30">end</span><span class="w">
-</span><span class="k" data-group-id="8273742327-1">end</span></code></pre><p>And we can use this Engine like the following</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="7539756492-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="c">_transport</span><span class="p" data-group-id="7539756492-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="7539756492-2">(</span><span class="p" data-group-id="7539756492-2">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="7539756492-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">stack</span><span class="p" data-group-id="7539756492-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="7539756492-4">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="p" data-group-id="7539756492-4">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="7539756492-5">(</span><span class="n">stack</span><span class="p" data-group-id="7539756492-5">)</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_cast</span><span class="p" data-group-id="5763281930-28">(</span><span class="p" data-group-id="5763281930-29">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="5763281930-29">}</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="5763281930-28">)</span><span class="w"> </span><span class="k" data-group-id="5763281930-30">do</span><span class="w">
+    </span><span class="n">new_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="5763281930-31">[</span><span class="n">element</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="5763281930-31">]</span><span class="w">
+    </span><span class="p" data-group-id="5763281930-32">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="5763281930-32">}</span><span class="w">
+  </span><span class="k" data-group-id="5763281930-30">end</span><span class="w">
+</span><span class="k" data-group-id="5763281930-1">end</span></code></pre><p>And we can use this Engine like the following</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="4308078340-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="c">_transport</span><span class="p" data-group-id="4308078340-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="4308078340-2">(</span><span class="p" data-group-id="4308078340-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="4308078340-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">stack</span><span class="p" data-group-id="4308078340-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="4308078340-4">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="p" data-group-id="4308078340-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="4308078340-5">(</span><span class="n">stack</span><span class="p" data-group-id="4308078340-5">)</span><span class="w">
 </span><span class="s">&quot;hello&quot;</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">push</span><span class="p" data-group-id="7539756492-6">(</span><span class="n">stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hi&quot;</span><span class="p" data-group-id="7539756492-6">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">push</span><span class="p" data-group-id="4308078340-6">(</span><span class="n">stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hi&quot;</span><span class="p" data-group-id="4308078340-6">)</span><span class="w">
 </span><span class="ss">:ok</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="7539756492-7">(</span><span class="n">stack</span><span class="p" data-group-id="7539756492-7">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="4308078340-7">(</span><span class="n">stack</span><span class="p" data-group-id="4308078340-7">)</span><span class="w">
 </span><span class="s">&quot;hi&quot;</span></code></pre><p>Overall having both server and client functionality that is clearly
 labeled, leads to good user UI's.</p><h3 id="module-difference-in-design-from-genserver" class="section-heading">
   <a href="#module-difference-in-design-from-genserver" class="hover-link">
@@ -338,6 +334,8 @@ indeed differ from the diagram.</p>
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of an Engine address.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -346,6 +344,8 @@ indeed differ from the diagram.</p>
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of Engine identification.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -353,6 +353,11 @@ indeed differ from the diagram.</p>
         <a href="#t:t/0" translate="no">t()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of the Anoma Router. I contain all necessary information
+for coordination of the Anoma network, including all registered local
+engines, topics, subscriptions, the message queues, message counter, as
+well as local identification information.</p></div>
 
     </div>
 
@@ -368,7 +373,7 @@ indeed differ from the diagram.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>See <a href="#call/3"><code class="inline">call/3</code></a> for documentation.</p></div>
+        <div class="summary-synopsis"><p>I am a call function.</p></div>
 
     </div>
 
@@ -378,7 +383,7 @@ indeed differ from the diagram.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Makes a synchronous call to the <code class="inline">Server</code> and waits for a reply.</p></div>
+        <div class="summary-synopsis"><p>I am the Router call function.</p></div>
 
     </div>
 
@@ -388,7 +393,7 @@ indeed differ from the diagram.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Makes a synchronous call to the <code class="inline">Server</code> and waits for a reply.</p></div>
+        <div class="summary-synopsis"><p>I am the Router cast function.</p></div>
 
     </div>
 
@@ -408,6 +413,8 @@ indeed differ from the diagram.</p>
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a function handling non-local casts to the Router.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -415,6 +422,8 @@ indeed differ from the diagram.</p>
         <a href="#dump_state/1" translate="no">dump_state(router)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the state cleanup function.</p></div>
 
     </div>
 
@@ -424,6 +433,8 @@ indeed differ from the diagram.</p>
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a handle_self_call function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -431,6 +442,8 @@ indeed differ from the diagram.</p>
         <a href="#handle_self_cast/3" translate="no">handle_self_cast(arg1, src, s)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a handle_self_cast function.</p></div>
 
     </div>
 
@@ -450,7 +463,7 @@ indeed differ from the diagram.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Creates a new topic. Takes the address of the router.</p></div>
+        <div class="summary-synopsis"><p>I am the topic-creation function.</p></div>
 
     </div>
 
@@ -460,6 +473,8 @@ indeed differ from the diagram.</p>
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the topic-creation function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -467,6 +482,8 @@ indeed differ from the diagram.</p>
         <a href="#process_name/2" translate="no">process_name(module, id)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a function formulating a process name.</p></div>
 
     </div>
 
@@ -476,6 +493,8 @@ indeed differ from the diagram.</p>
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a function to search for the Engine Router inside an Engine.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -483,6 +502,9 @@ indeed differ from the diagram.</p>
         <a href="#self_addr/0" translate="no">self_addr()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a function providing the default address to the process which runs
+me.</p></div>
 
     </div>
 
@@ -492,7 +514,7 @@ indeed differ from the diagram.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Send a message directly using Kernel.send/1 to the local process, assuming
+        <div class="summary-synopsis"><p>I send a message directly using Kernel.send/1 to the local process, assuming
 there is one.</p></div>
 
     </div>
@@ -503,9 +525,7 @@ there is one.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Send a response to an externally received call.
-This is a low-level routine, intended to be called only by the internals of
-Router and Engine.</p></div>
+        <div class="summary-synopsis"><p>I am a function sending responses.</p></div>
 
     </div>
 
@@ -515,6 +535,8 @@ Router and Engine.</p></div>
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the logger-setting function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -523,7 +545,7 @@ Router and Engine.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Shuts down the entire router and Elixir node it's in.</p></div>
+        <div class="summary-synopsis"><p>I am a function for Node shutdown.</p></div>
 
     </div>
 
@@ -533,7 +555,7 @@ Router and Engine.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Starts a new router, with a random <a href="Anoma.Crypto.Id.html"><code class="inline">Anoma.Crypto.Id</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the minimal start function.</p></div>
 
     </div>
 
@@ -543,8 +565,7 @@ Router and Engine.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Starts a new router with the given cryptographic ID for itself, and another
-for the transport engine.  On success, returns {:ok, router_addr, transport_addr}</p></div>
+        <div class="summary-synopsis"><p>I am the Router start function.</p></div>
 
     </div>
 
@@ -554,7 +575,7 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
 
       </div>
 
-        <div class="summary-synopsis"><p>Starts a new Engine</p></div>
+        <div class="summary-synopsis"><p>I am the function launching a new Anoma Engine instance</p></div>
 
     </div>
 
@@ -580,6 +601,8 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
 
       </div>
 
+        <div class="summary-synopsis"><p>I do nothing.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -588,7 +611,7 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
 
       </div>
 
-        <div class="summary-synopsis"><p>I Forcibly stops an engine.</p></div>
+        <div class="summary-synopsis"><p>I forcibly stop an engine by calling <code class="inline">terminate_child/2</code>.</p></div>
 
     </div>
 
@@ -625,7 +648,7 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
 
       </div>
 
-
+<p>I am the type of an Engine address.</p>
   </section>
 </section>
 <section class="detail" id="t:engine_options/0">
@@ -652,7 +675,13 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
 
       </div>
 
-
+<p>I am the type of Engine identification.</p><h3 id="t:engine_options/0-options" class="section-heading">
+  <a href="#t:engine_options/0-options" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Options</span>
+</h3>
+<ul><li><code class="inline">{:id, Id.t()}</code> - Identify the engine by its full Anoma ID.</li><li><code class="inline">{:id, Id.Extern.t()}</code> - Identify the engine by its external ID.</li><li><code class="inline">{:supervisor, Supervisor.supervisor}</code> - Identify as supervisor.</li><li><code class="inline">{:supervisor_mod, atom()}</code> - Identify as supervisor given a name.</li></ul>
   </section>
 </section>
 <section class="detail" id="t:t/0">
@@ -700,7 +729,22 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
 
       </div>
 
-
+<p>I am the type of the Anoma Router. I contain all necessary information
+for coordination of the Anoma network, including all registered local
+engines, topics, subscriptions, the message queues, message counter, as
+well as local identification information.</p><h3 id="t:t/0-fileds" class="section-heading">
+  <a href="#t:t/0-fileds" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fileds</span>
+</h3>
+<ul><li><code class="inline">:local_engines</code> - The map of local engines external IDs to their full<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="nc">IDs</span><span class="w"> </span><span class="n">alonsgide</span><span class="w"> </span><span class="n">their</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="n">process</span><span class="w"> </span><span class="n">identifications</span><span class="o">.</span></code></pre></li><li><code class="inline">:topic_table</code> - The map of local topic external IDs to the set of their<pre><code class="makeup elixir" translate="no"><span class="w">             </span><span class="n">subscribers</span><span class="o">.</span><span class="w">
+             </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8024710033-1">%{</span><span class="p" data-group-id="8024710033-1">}</span></code></pre></li><li><code class="inline">:waiting_engines</code> - Map whose keys are external IDs of engines who make<pre><code class="makeup elixir" translate="no"><span class="w">                 </span><span class="n">a</span><span class="w"> </span><span class="n">call</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">whose</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">external</span><span class="w"> </span><span class="nc">ID</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">whom</span><span class="w">
+                 </span><span class="n">the</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="n">gets</span><span class="w"> </span><span class="n">sent</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">alongside</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">message</span><span class="w">
+                 </span><span class="n">counter</span><span class="o">.</span><span class="w">
+                 </span><span class="nc">Default</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4446994100-1">%{</span><span class="p" data-group-id="4446994100-1">}</span></code></pre></li><li><code class="inline">:max_call_id</code> - The latest message counter.<pre><code class="makeup elixir" translate="no"><span class="w">             </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><code class="inline">:local_engine_subs</code> - Similar to <code class="inline">:topic_table</code> but for local engine<pre><code class="makeup elixir" translate="no"><span class="w">                   </span><span class="n">addresses</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">individual</span><span class="w"> </span><span class="n">external</span><span class="w">
+                   </span><span class="nc">IDs</span><span class="o">.</span><span class="w">
+                   </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4579124005-1">%{</span><span class="p" data-group-id="4579124005-1">}</span></code></pre></li><li><code class="inline">:id</code> - Router external ID.</li><li><code class="inline">:internal_id</code> - Full Router Anoma ID.</li><li><code class="inline">:addr</code> - Router Address.</li><li><code class="inline">:supervisor</code> - Supervisor name.</li><li><code class="inline">:transport</code> - Name of the used Transaport.</li><li><code class="inline">:msg_queue</code> - Map of IDs to the list of pending messages.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6036778333-1">%{</span><span class="p" data-group-id="6036778333-1">}</span></code></pre></li><li><code class="inline">:logger</code> - The Logger Engine address for Event keeping.</li></ul>
   </section>
 </section>
 
@@ -735,7 +779,8 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
 
       </div>
 
-<p>See <a href="#call/3"><code class="inline">call/3</code></a> for documentation.</p>
+<p>I am a call function.</p><p>I use <a href="#call/3"><code class="inline">call/3</code></a> with the specified address and message and set the default
+timeout o 5000.</p>
   </section>
 </section>
 <section class="detail" id="call/3">
@@ -758,7 +803,7 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
 
       </div>
 
-<p>Makes a synchronous call to the <code class="inline">Server</code> and waits for a reply.</p><p>Call has a few interesting cases we can consider</p><ol><li><p>Calling a local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li><li><p>Calling a non local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li></ol><p>We can not <a href="#call/3"><code class="inline">call/3</code></a> a <code class="inline">Topic</code>, and thus those instances are not
+<p>I am the Router call function.</p><p>I make a synchronous call to the <code class="inline">Server</code> and wait for a reply.</p><p>Call has a few interesting cases we can consider</p><ol><li><p>Calling a local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li><li><p>Calling a non local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li></ol><p>We can not <a href="#call/3"><code class="inline">call/3</code></a> a <code class="inline">Topic</code>, and thus those instances are not
 handled.</p><p>Currently we do not handle the non local
 <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a> case.</p><p>For the local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a>, then their
 <a href="Anoma.Node.Router.Engine.html#c:handle_call/3"><code class="inline">Engine.handle_call/3</code></a>
@@ -794,10 +839,10 @@ future versions</p>
 
       </div>
 
-<p>Makes a synchronous call to the <code class="inline">Server</code> and waits for a reply.</p><p>Call has a few interesting cases we can consider</p><ol><li><p>Casting to a local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li><li><p>Calling to a non local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li><li><p>Casting to a <code class="inline">Topic</code></p></li></ol><p>For the local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a>, then their
+<p>I am the Router cast function.</p><p>I make a asynchronous cast to the <code class="inline">Server</code>.</p><p>Call has a few interesting cases we can consider</p><ol><li><p>Casting to a local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li><li><p>Casting to a non local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li><li><p>Casting to a <code class="inline">Topic</code></p></li></ol><p>For the local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a>, then their
 <a href="Anoma.Node.Router.Engine.html#c:handle_cast/3"><code class="inline">Engine.handle_cast/3</code></a>
 will be called on the <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a> to
-handle the request.</p><p>Calling a non local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a> isn't
+handle the request.</p><p>Casting a non local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a> isn't
 handled yet.</p><p>For <code class="inline">Topics</code> any <a href="#cast/2"><code class="inline">cast/2</code></a> sent, then triggers a series of <a href="#cast/2"><code class="inline">cast/2</code></a>
 to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="inline">Process</code></a>'s</p>
   </section>
@@ -833,7 +878,14 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> do_handle_external_cast(:shutdown_everything, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="#t:t/0">t</a>()) :: :ok</pre>
+
+      </div>
+
+<p>I am a function handling non-local casts to the Router.</p><p>Currently I only process a message to shut everything down by calling
+<a href="https://hexdocs.pm/elixir/System.html#stop/0"><code class="inline">System.stop/0</code></a></p>
   </section>
 </section>
 <section class="detail" id="dump_state/1">
@@ -850,7 +902,13 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> dump_state(<a href="#t:addr/0">addr</a>()) :: <a href="#t:t/0">t</a>()</pre>
+
+      </div>
+
+<p>I am the state cleanup function.</p><p>I empty the entire state of the Router whose Address I receive.</p>
   </section>
 </section>
 <section class="detail" id="handle_self_call/3">
@@ -867,7 +925,41 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> handle_self_call(
+  :supervisor
+  | {:create_topic, <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), :local}
+  | {:subscribe_topic, <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), :local}
+  | {:unsubscribe_topic, <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), :local},
+  <a href="#t:addr/0">addr</a>(),
+  <a href="#t:t/0">t</a>()
+) ::
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="#t:t/0">t</a>()}
+  | {:ok, <a href="#t:t/0">t</a>()}
+  | {{:error, :no_such_topic}, <a href="#t:t/0">t</a>()}
+  | {{:error, :already_exists}, <a href="#t:t/0">t</a>()}</pre>
+
+      </div>
+
+<p>I am a handle_self_call function.</p><p>Once <a href="#call/2"><code class="inline">call/2</code></a> or <code class="inline">do_call</code> gets done finding the appropriate server to
+send the message to, some of them get forwarded back to the Router
+through itself. I am the helper function helping to process such
+interactions.</p><h3 id="handle_self_call/3-pattern-matching-variations" class="section-heading">
+  <a href="#handle_self_call/3-pattern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Matching Variations</span>
+</h3>
+<ul><li><code class="inline">handle_self_call(:supervisor, src, s)</code> -
+  Asks for a supervisor of the router.</li><li><code class="inline">handle_self_call({:create_topic, id, :local}, _, _)</code> -
+  Unless the topic has already been added to the topic table, puts it
+  to the table with an empty set of subscribers and return the new
+  structure with specified ID.</li><li><code class="inline">handle_self_call({:subscribe_topic, topic, :local}, _, _)</code> -
+  Updates the topic tables and engine subscriber fields in the Router to
+  include the new specified subscriber.</li><li><code class="inline">handle_self_call({:unsubscribe_topic, topic, :local}, _, _)</code> -
+  Updates the topic tables and engine subscriber fields in the Router to
+  remove the specified subscriber information.</li></ul>
   </section>
 </section>
 <section class="detail" id="handle_self_cast/3">
@@ -884,7 +976,35 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> handle_self_cast(
+  :shutdown_everything
+  | {:set_logger, <a href="#t:addr/0">addr</a>()}
+  | {:p2p_raw, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}
+  | {:send_response, <a href="#t:addr/0">addr</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()},
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(),
+  <a href="#t:t/0">t</a>()
+) :: <a href="#t:t/0">t</a>() | :ok</pre>
+
+      </div>
+
+<p>I am a handle_self_cast function.</p><p>Once <a href="#cast/2"><code class="inline">cast/2</code></a> or <code class="inline">do_cast</code> gets done finding the appropriate server to
+send the message to, some of them get forwarded back to the Router
+through itself. I am the helper function helping to process such
+interactions.</p><h3 id="handle_self_cast/3-pattern-matching-variations" class="section-heading">
+  <a href="#handle_self_cast/3-pattern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Matching Variations</span>
+</h3>
+<ul><li><code class="inline">handle_self_cast{:set_logger, logger}, src, s</code> -
+  Assigns the specified Logger Engine address to the Router.</li><li><code class="inline">handle_self_cast(:shutdown_everything, _, _)</code> -
+  Calls <code class="inline">System.stop</code> to shutdown the entire system.</li><li><code class="inline">handle_self_cast({:send_reponse, _, _, _}, _, _)</code> -
+  Sends the response message to transaport with specified cookie.</li><li><code class="inline">handle_self_cast({:p2p_raw, _, _}, _, _)</code> -
+  Handles p2p messaging, either sending raw messages or post-processing
+  them using Router functionality. Note that unknown message formats get
+  dropped. The droppages get logged.</li></ul>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -931,7 +1051,7 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 
       </div>
 
-<p>Creates a new topic. Takes the address of the router.</p>
+<p>I am the topic-creation function.</p><p>I create a new topic with a new random external key.</p>
   </section>
 </section>
 <section class="detail" id="new_topic/2">
@@ -955,7 +1075,7 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 
       </div>
 
-
+<p>I am the topic-creation function.</p><p>I create a new ropic with specified external ID from a full Anoma ID.</p>
   </section>
 </section>
 <section class="detail" id="process_name/2">
@@ -978,7 +1098,8 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 
       </div>
 
-
+<p>I am a function formulating a process name.</p><p>Given a module name and an external ID, I append to the module name the
+encoded sign field of the ID and return it as an atom.</p>
   </section>
 </section>
 <section class="detail" id="router/0">
@@ -1001,7 +1122,7 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 
       </div>
 
-
+<p>I am a function to search for the Engine Router inside an Engine.</p>
   </section>
 </section>
 <section class="detail" id="self_addr/0">
@@ -1024,7 +1145,8 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 
       </div>
 
-
+<p>I am a function providing the default address to the process which runs
+me.</p><p>My server is either the specified engine server or my PID.</p>
   </section>
 </section>
 <section class="detail" id="send_raw/2">
@@ -1047,7 +1169,7 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 
       </div>
 
-<p>Send a message directly using Kernel.send/1 to the local process, assuming
+<p>I send a message directly using Kernel.send/1 to the local process, assuming
 there is one.</p>
   </section>
 </section>
@@ -1077,9 +1199,8 @@ there is one.</p>
 
       </div>
 
-<p>Send a response to an externally received call.
-This is a low-level routine, intended to be called only by the internals of
-Router and Engine.</p>
+<p>I am a function sending responses.</p><p>I send a response to an externally received call. This is a low-level
+routine, intended to be called only by the internals of Router and Engine.</p>
   </section>
 </section>
 <section class="detail" id="set_logger/2">
@@ -1096,7 +1217,15 @@ Router and Engine.</p>
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> set_logger(<a href="#t:addr/0">addr</a>(), <a href="#t:addr/0">addr</a>()) :: :ok</pre>
+
+      </div>
+
+<p>I am the logger-setting function.</p><p>After the Logger Engine has been started, we can add it to the Router to
+log events using it. To avoid recursive calls, some logging utilizes only
+the internal Elixir logger.</p>
   </section>
 </section>
 <section class="detail" id="shutdown_node/1">
@@ -1113,8 +1242,16 @@ Router and Engine.</p>
 
   <section class="docstring">
 
-<p>Shuts down the entire router and Elixir node it's in.</p><p>We should tweak this in the future, with a mode to just shut down
-the Anoma node itself.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> shutdown_node(<a href="#t:addr/0">addr</a>()) :: :ok</pre>
+
+      </div>
+
+<p>I am a function for Node shutdown.</p><p>As an Anoma Node is associated with a specific Router, I can cast a
+message to shut down all local Engines, the Router, and the Node
+itself using only the Router.</p><p>We should tweak this in the future, with a mode to just shut down
+the Anoma Node itself.</p>
   </section>
 </section>
 <section class="detail" id="start/0">
@@ -1140,7 +1277,7 @@ the Anoma node itself.</p>
 
       </div>
 
-<p>Starts a new router, with a random <a href="Anoma.Crypto.Id.html"><code class="inline">Anoma.Crypto.Id</code></a>.</p>
+<p>I am the minimal start function.</p><p>I call <a href="#start/1"><code class="inline">start/1</code></a> with a random <a href="Anoma.Crypto.Id.html"><code class="inline">Anoma.Crypto.Id</code></a> and default state.</p>
   </section>
 </section>
 <section class="detail" id="start/1">
@@ -1166,8 +1303,11 @@ the Anoma node itself.</p>
 
       </div>
 
-<p>Starts a new router with the given cryptographic ID for itself, and another
-for the transport engine.  On success, returns {:ok, router_addr, transport_addr}</p>
+<p>I am the Router start function.</p><p>I start a new router using the specified Anoma ID for the Router and the
+transaport. (Additionally, you can feed me a router state)</p><p>Using the fed in external ID, I name the supervisor using <a href="#process_name/2"><code class="inline">process_name/2</code></a>
+and start it as a Dynamical Supervisor with approrpiate name.</p><p>Similarly, I create the router name and address using the external ID and
+start the Router and Transport structures as children to the specified
+supervisor.</p><p>On success, return {:ok, router_addr, transport_addr}</p>
   </section>
 </section>
 <section class="detail" id="start_engine/4">
@@ -1196,7 +1336,9 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
 
       </div>
 
-<p>Starts a new Engine</p><h3 id="start_engine/4-arguments" class="section-heading">
+<p>I am the function launching a new Anoma Engine instance</p><p>I start the Engine using <a href="Anoma.Node.Router.Engine.html"><code class="inline">Anoma.Node.Router.Engine</code></a> with the base settings
+from the ROuter. As a server, I start it as a new child to the router
+supervisor.</p><h3 id="start_engine/4-arguments" class="section-heading">
   <a href="#start_engine/4-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -1275,7 +1417,13 @@ or internal ID.</li></ul>
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> stop(<a href="#t:addr/0">addr</a>()) :: nil</pre>
+
+      </div>
+
+<p>I do nothing.</p>
   </section>
 </section>
 <section class="detail" id="stop_engine/3">
@@ -1303,7 +1451,7 @@ or internal ID.</li></ul>
 
       </div>
 
-<p>I Forcibly stops an engine.</p><p>TODO, please try to be more friendly to the engine, try to send a
+<p>I forcibly stop an engine by calling <code class="inline">terminate_child/2</code>.</p><p>TODO, please try to be more friendly to the engine, try to send a
 <code class="inline">:shutdown</code> and waiting.</p><h3 id="stop_engine/3-example" class="section-heading">
   <a href="#stop_engine/3-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -1323,11 +1471,11 @@ Router.stop_engine(node.router, worker_zero)</p></blockquote>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/router.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node/router.ex">current file</a>)
 
             </span>
 

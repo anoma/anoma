@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.18.0">
+    <meta name="project" content="Anoma v0.19.0">
 
 
-    <title>Anoma.Node.Router.Addr — Anoma v0.18.0</title>
+    <title>Anoma.Node.Router.Addr — Anoma v0.19.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-703F6B39.js"></script>
+    <script src="dist/sidebar_items-142A9862.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.18.0
+          v0.19.0
         </div>
       </div>
     </div>
@@ -125,18 +125,22 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Router.Addr</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>An address to which we can send a message.
-The server, if known, is a local actor which can receive it directly;
-otherwise, the mssage will be sent via the central router.
-If the server is known, but the id is not, then this is a local-only
-engine, which can only talk to other local engines.
-(Hence, at least one of id and server must be known; potentially both are.)</p>
+<p>I am a module providing address information for the Engine and Node
+networking used by the Router.</p><p>The server, if known, is a local actor which can receive it directly;
+otherwise, the mssage will be sent via the central router.</p><p>If the server is known, but the id is not, then this is a local-only
+engine, which can only talk to other local engines.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the follwing public functionality:</p><ul><li><a href="#id/1"><code class="inline">id/1</code></a></li><li><a href="#id!/1"><code class="inline">id!/1</code></a></li><li><a href="#server/1"><code class="inline">server/1</code></a></li><li><a href="#server!/1"><code class="inline">server!/1</code></a></li><li><a href="#pid/1"><code class="inline">pid/1</code></a></li><li><a href="#pid!/1"><code class="inline">pid!/1</code></a></li><li><a href="#noncanonical_server/1"><code class="inline">noncanonical_server/1</code></a></li></ul>
   </section>
 
 
@@ -158,6 +162,8 @@ engine, which can only talk to other local engines.
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type for general process identifications.</p></div>
+
     </div>
 
 </div>
@@ -172,6 +178,8 @@ engine, which can only talk to other local engines.
 
       </div>
 
+        <div class="summary-synopsis"><p>I am an ID printing function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -179,6 +187,8 @@ engine, which can only talk to other local engines.
         <a href="#id!/1" translate="no">id!(addr)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a function printing IDs of an address with a guarded side-effect.</p></div>
 
     </div>
 
@@ -188,6 +198,9 @@ engine, which can only talk to other local engines.
 
       </div>
 
+        <div class="summary-synopsis"><p>I return some Process destination without attempting to canonalize the
+result, that is, I may return a PID.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -195,6 +208,8 @@ engine, which can only talk to other local engines.
         <a href="#pid/1" translate="no">pid(addr)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a function finding an associated PID to an address.</p></div>
 
     </div>
 
@@ -204,6 +219,8 @@ engine, which can only talk to other local engines.
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a function printing PIDs of an address with a guarded side-effect.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -212,6 +229,9 @@ engine, which can only talk to other local engines.
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a function printing the server of the given Address attempting to
+find its canonical registered name.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -219,6 +239,8 @@ engine, which can only talk to other local engines.
         <a href="#server!/1" translate="no">server!(addr)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a function printing servers of an address with a guarded side-effect.</p></div>
 
     </div>
 
@@ -262,7 +284,14 @@ engine, which can only talk to other local engines.
 
       </div>
 
-
+<p>I am the type for general process identifications.</p><p>I posess the minimal information needed to send some agent a message
+through the Anoma networking structure.</p><h3 id="t:t/0-options" class="section-heading">
+  <a href="#t:t/0-options" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Options</span>
+</h3>
+<ul><li><code class="inline">pid()</code> - The raw PID</li><li><code class="inline">atom()</code> - The registered name</li><li><code class="inline">Id.Extern.t()</code> - The Anoma identification</li><li><code class="inline">%Addr { id: Id.Extern.t(), server: Process.dest() }</code>  - The full address structure with its Anoma ID and server.</li></ul>
   </section>
 </section>
 
@@ -297,7 +326,13 @@ engine, which can only talk to other local engines.
 
       </div>
 
-
+<p>I am an ID printing function.</p><h3 id="id/1-pattern-matching-variations" class="section-heading">
+  <a href="#id/1-pattern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Matching Variations</span>
+</h3>
+<ul><li><code class="inline">id(%Id.Extern{})</code> - If I match on an external identity, I print it.</li><li><code class="inline">id(%Addr{id: id})</code> - If I match on an Address struct with an <code class="inline">id</code><pre><code class="makeup elixir" translate="no"><span class="w">                  </span><span class="n">field</span><span class="p">,</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">print</span><span class="w"> </span><span class="n">said</span><span class="w"> </span><span class="n">field</span></code></pre></li><li><code class="inline">id(x)</code> when is_pid(x) or is_atom(x) - If I match on a PID or atom, I<pre><code class="makeup elixir" translate="no"><span class="w">                                   </span><span class="n">print</span><span class="w"> </span><span class="n">nothing</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="id!/1">
@@ -320,7 +355,8 @@ engine, which can only talk to other local engines.
 
       </div>
 
-
+<p>I am a function printing IDs of an address with a guarded side-effect.</p><p>I use <a href="#id/1"><code class="inline">id/1</code></a> on an address and print an error message if appropriate ID
+does not exist.</p>
   </section>
 </section>
 <section class="detail" id="noncanonical_server/1">
@@ -343,7 +379,14 @@ engine, which can only talk to other local engines.
 
       </div>
 
-
+<p>I return some Process destination without attempting to canonalize the
+result, that is, I may return a PID.</p><h3 id="noncanonical_server/1-pattern-matching-variations" class="section-heading">
+  <a href="#noncanonical_server/1-pattern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Matching Variations</span>
+</h3>
+<ul><li><code class="inline">noncanonical_server(%Id.Extern{})</code> - No server, so I print nil.</li><li><code class="inline">noncanonical_server(%Addr{server: server})</code> - If an address has a<pre><code class="makeup elixir" translate="no"><span class="w">                                           </span><span class="n">server</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">print</span><span class="w"> </span><span class="n">it</span><span class="o">.</span></code></pre></li><li><code class="inline">noncanonical_server(server)</code> when is_atom(server) - I print the server<pre><code class="makeup elixir" translate="no"><span class="w">                                                </span><span class="n">name</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">given</span><span class="o">.</span></code></pre></li><li><code class="inline">noncanonical_server(pid)</code> when is_pid(pid) - I print the pid.</li></ul>
   </section>
 </section>
 <section class="detail" id="pid/1">
@@ -366,7 +409,9 @@ engine, which can only talk to other local engines.
 
       </div>
 
-
+<p>I am a function finding an associated PID to an address.</p><p>Given an address I feed it to <code class="inline">noncanonical_server</code>. In case the returned
+value is a PID, I print it. If I get the server name, I use
+<a href="https://hexdocs.pm/elixir/Process.html#whereis/1"><code class="inline">Process.whereis/1</code></a> to search for its PID.</p><p>If <code class="inline">nil</code> is returned, I print <code class="inline">nil</code>.</p>
   </section>
 </section>
 <section class="detail" id="pid!/1">
@@ -389,7 +434,8 @@ engine, which can only talk to other local engines.
 
       </div>
 
-
+<p>I am a function printing PIDs of an address with a guarded side-effect.</p><p>I use <a href="#pid/1"><code class="inline">pid/1</code></a> on an address and print an error message if appropriate PID
+does not exist.</p>
   </section>
 </section>
 <section class="detail" id="server/1">
@@ -412,7 +458,11 @@ engine, which can only talk to other local engines.
 
       </div>
 
-
+<p>I am a function printing the server of the given Address attempting to
+find its canonical registered name.</p><p>Given an address, I use <a href="#noncanonical_server/1"><code class="inline">noncanonical_server/1</code></a> to see its associated pid
+or name. If I get a pidm then I print the name of the process associated
+with said pid by checking Erlang's <code class="inline">process_info/2</code> in case there is any,
+otherwise returning the original PID.</p><p>Else, I print the returned value (<code class="inline">nil</code>).</p>
   </section>
 </section>
 <section class="detail" id="server!/1">
@@ -435,7 +485,8 @@ engine, which can only talk to other local engines.
 
       </div>
 
-
+<p>I am a function printing servers of an address with a guarded side-effect.</p><p>I use <a href="#server/1"><code class="inline">server/1</code></a> on an address and print an error message if appropriate
+ID does not exist.</p>
   </section>
 </section>
 
@@ -446,11 +497,11 @@ engine, which can only talk to other local engines.
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/router/address.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node/router/address.ex">current file</a>)
 
             </span>
 

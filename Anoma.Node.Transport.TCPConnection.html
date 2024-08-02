@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.18.0">
+    <meta name="project" content="Anoma v0.19.0">
 
 
-    <title>Anoma.Node.Transport.TCPConnection — Anoma v0.18.0</title>
+    <title>Anoma.Node.Transport.TCPConnection — Anoma v0.19.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-703F6B39.js"></script>
+    <script src="dist/sidebar_items-142A9862.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.18.0
+          v0.19.0
         </div>
       </div>
     </div>
@@ -125,14 +125,13 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Transport.TCPConnection</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I manage an individual TCP connection and stream.
-I can run in two modes: either I can act as a client, initiating a connection
+<p>I am TCPConnection Engine.</p><p>I manage an individual TCP connection and stream.</p><p>I can run in two modes: either I can act as a client, initiating a connection
 to a server, or as a listener, waiting to accept and then accepting a
 connection on a server.
 In the latter case, since accepting the connection marks me as its owner and
@@ -157,6 +156,8 @@ handoff is complicated, I start up a new listener once I accept a connection.</p
         <a href="#t:t/0" translate="no">t()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of the TCPConnection Engine.</p></div>
 
     </div>
 
@@ -200,7 +201,7 @@ handoff is complicated, I start up a new listener once I accept a connection.</p
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the initialization function for TCPConnection Engine.</p></div>
 
     </div>
 
@@ -244,7 +245,18 @@ handoff is complicated, I start up a new listener once I accept a connection.</p
 
       </div>
 
-
+<p>I am the type of the TCPConnection Engine.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:router</code> - The address of the Router Engine that the Transport Engine
+instance serves to.</li><li><code class="inline">:transport</code> - The address of the Transport server managing the
+connection.</li><li><code class="inline">:connection_pool</code> - The supervisor which manages the connection pool that
+the TCPConnection Engine instance belongs to.</li><li><code class="inline">:mode</code> - The mode of the connection: client or listener.</li><li><code class="inline">:listener</code> - The listening socket that accepts incoming connection
+requests.  Must be provided in the listener mode. Default: nil</li><li><code class="inline">:conn</code> - Socket of the established connection for the listener mode.
+Initially, nil. Filled in as soon as a connection is established.</li></ul>
   </section>
 </section>
 
@@ -324,7 +336,29 @@ handoff is complicated, I start up a new listener once I accept a connection.</p
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init(
+  {:client, <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
+   <a href="Anoma.Node.Transport.html#t:transport_addr/0">Anoma.Node.Transport.transport_addr</a>(), <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>()}
+) :: {:ok, <a href="#t:t/0">t</a>(), {:continue, {:init_connection, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}}}</pre>
+
+          <pre translate="no"><span class="attribute">@spec</span> init(
+  {:listener, <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">reference</a>(),
+   <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>()}
+) :: {:ok, <a href="#t:t/0">t</a>(), {:continue, :accept_connection}}</pre>
+
+      </div>
+
+<p>I am the initialization function for TCPConnection Engine.</p><h3 id="init/1-pattern-matching-variations" class="section-heading">
+  <a href="#init/1-pattern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Matching Variations</span>
+</h3>
+<ul><li><p><code class="inline">init({:client, router, transport, address, connection_pool})</code> -
+create a TCP connection as a client.</p></li><li><p><code class="inline">init({:listener, router, transport, listener, connection_pool})</code> -
+create a TCP connection as a listener.</p></li></ul>
   </section>
 </section>
 
@@ -335,11 +369,11 @@ handoff is complicated, I start up a new listener once I accept a connection.</p
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/transport/tcp_connection.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node/transport/tcp_connection.ex">current file</a>)
 
             </span>
 

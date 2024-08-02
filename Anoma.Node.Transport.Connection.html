@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.18.0">
+    <meta name="project" content="Anoma v0.19.0">
 
 
-    <title>Anoma.Node.Transport.Connection — Anoma v0.18.0</title>
+    <title>Anoma.Node.Transport.Connection — Anoma v0.19.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-703F6B39.js"></script>
+    <script src="dist/sidebar_items-142A9862.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.18.0
+          v0.19.0
         </div>
       </div>
     </div>
@@ -125,13 +125,19 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Transport.Connection</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I am an abstract interface that connections obey.</p>
+<p>I am the Transport Connection module.</p><p>I am an abstract interface that connection implementations obey.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><ul><li><a href="#send/2"><code class="inline">send/2</code></a></li><li><a href="#shutdown/1"><code class="inline">shutdown/1</code></a></li></ul>
   </section>
 
 
@@ -153,6 +159,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I send messages to the given connection.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -161,7 +169,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>Asynchronously initiate a shutdown.  Idempotent.</p></div>
+        <div class="summary-synopsis"><p>I asynchronously initiate the connection shutdown.</p></div>
 
     </div>
 
@@ -198,7 +206,7 @@ GUIDES
 
       </div>
 
-
+<p>I send messages to the given connection.</p>
   </section>
 </section>
 <section class="detail" id="shutdown/1">
@@ -221,7 +229,7 @@ GUIDES
 
       </div>
 
-<p>Asynchronously initiate a shutdown.  Idempotent.</p>
+<p>I asynchronously initiate the connection shutdown.</p>
   </section>
 </section>
 
@@ -232,11 +240,11 @@ GUIDES
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/transport/connection.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node/transport/connection.ex">current file</a>)
 
             </span>
 

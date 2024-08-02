@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.18.0">
+    <meta name="project" content="Anoma v0.19.0">
 
 
-    <title>Calling — Anoma v0.18.0</title>
+    <title>Calling — Anoma v0.19.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-703F6B39.js"></script>
+    <script src="dist/sidebar_items-142A9862.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.18.0
+          v0.19.0
         </div>
       </div>
     </div>
@@ -189,8 +189,8 @@ GUIDES
   </a>
   <span class="text">Evaluating Calls in The Anoma Context</span>
 </h2>
-<p>For actually writing code for Anoma, the dump of dec that we saw:</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="o">!=</span><span class="p" data-group-id="3670625913-1">(</span><span class="n">dec</span><span class="ss">:anoma</span><span class="p" data-group-id="3670625913-1">)</span><span class="w">
-</span><span class="p" data-group-id="3670625913-2">[</span><span class="mi">7</span><span class="w"> </span><span class="p" data-group-id="3670625913-3">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">46</span><span class="p" data-group-id="3670625913-3">]</span><span class="w"> </span><span class="mi">9</span><span class="w"> </span><span class="mi">342</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">15</span><span class="p" data-group-id="3670625913-2">]</span></code></pre><p>would not actually run in the Anoma standard library. This is because it is assuming the current environment which has the Hoon standard library.</p><pre><code class="hoon">&gt; .*  anoma  [7 [0 46] 9 342 0 15]
+<p>For actually writing code for Anoma, the dump of dec that we saw:</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="o">!=</span><span class="p" data-group-id="1958404339-1">(</span><span class="n">dec</span><span class="ss">:anoma</span><span class="p" data-group-id="1958404339-1">)</span><span class="w">
+</span><span class="p" data-group-id="1958404339-2">[</span><span class="mi">7</span><span class="w"> </span><span class="p" data-group-id="1958404339-3">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">46</span><span class="p" data-group-id="1958404339-3">]</span><span class="w"> </span><span class="mi">9</span><span class="w"> </span><span class="mi">342</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">15</span><span class="p" data-group-id="1958404339-2">]</span></code></pre><p>would not actually run in the Anoma standard library. This is because it is assuming the current environment which has the Hoon standard library.</p><pre><code class="hoon">&gt; .*  anoma  [7 [0 46] 9 342 0 15]
 dojo: hoon expression failed</code></pre><p>Rather than by hand editing the <code class="inline">7 [0 46]</code> out, we can instead tell Hoon that the context of the computation is in Anoma, and this is done through <a href="https://developers.urbit.org/reference/hoon/rune/tis#-tisgar">tisgar(=&gt;)</a>.</p><p>A good example can be seen here:</p><pre><code class="hoon">&gt; =&gt;  anoma  !=(dec)
 [9 342 0 15]</code></pre><p>Which gives us the correct computation to run dec on Anoma.</p><pre><code class="hoon">&gt; =&gt;  anoma  .*  .  [9 342 0 15]
 [ [ 6
@@ -273,11 +273,11 @@ Dumping
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/documentation/hoon/calling.livemd">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/documentation/hoon/calling.livemd">current file</a>)
 
             </span>
 
