@@ -45,8 +45,7 @@ defmodule Anoma.Node.Transport do
   - `:unix` - I provide file path for Unix socket.
   """
   @type transport_addr ::
-          {:tcp, binary(), non_neg_integer()}
-          # file path
+          {:tcp, binary(), :inet.port_number()}
           | {:unix, binary()}
 
   @typedoc """
@@ -57,8 +56,7 @@ defmodule Anoma.Node.Transport do
   - `:unix` - I provide file path for Unix socket.
   """
   @type listen_addr ::
-          {:tcp, binary(), non_neg_integer()}
-          # file path
+          {:tcp, binary(), :inet.port_number()}
           | {:unix, binary()}
 
   typedstruct module: ConnectionState do
