@@ -231,6 +231,30 @@ defmodule Examples.ENode.EStorage do
     anode
   end
 
+  @doc """
+  I am the replaced keyspace node for august.
+
+  I use `august_node` and then delete the associated miki value. This way
+  when we print keyspaces, we see all the previously availiable key-value
+  pairs sans the miki key.
+  """
+
+  @spec august_replaced_keyspace() :: Node.t()
+  @spec august_replaced_keyspace(Symbol.s()) :: Node.t()
+  def august_replaced_keyspace(storage_name \\ "august_replaced") do
+    anode = august_node(storage_name)
+
+    Storage.delete_key(anode.storage, miki_key())
+
+    space = [{isuzumi_key(), devil_value()}]
+
+    assert [] == Storage.get_keyspace(anode.storage, miki_key())
+    assert space == Storage.get_keyspace(anode.storage, ["August"])
+    assert space == Storage.get_keyspace(anode.storage, isuzumi_key())
+
+    anode
+  end
+
   ####################################################################
   ##                    Properly namespaced storage                 ##
   ##   Differs from `august_node/1`: go through the name manager.   ##

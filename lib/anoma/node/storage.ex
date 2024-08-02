@@ -202,11 +202,11 @@ defmodule Anoma.Node.Storage do
   first look up whether the keys appear in any qualified key in the
   Qualified table. If so, look up all apropriate latest values of all such
   keys and return them as a list of table query responses in a standard
-  mnesia format. If not present, return `:absent`
+  mnesia format. If no values are present, I return an empty list.
   """
 
   @spec get_keyspace(Router.Addr.t(), list(order_key())) ::
-          :absent
+          []
           | list({list(), qualified_value()})
           | {:atomic, any()}
   def get_keyspace(storage, key_space) do
@@ -543,25 +543,17 @@ defmodule Anoma.Node.Storage do
   end
 
   @spec do_get_keyspace(Storage.t(), list(any())) ::
-          :absent
+          []
           | list({list(), qualified_value()})
           | {:atomic, any()}
   defp do_get_keyspace(storage = %__MODULE__{}, key_space) do
     with {:atomic, orders} <- read_keyspace_order(storage, key_space) do
-      absent_predicate = &(elem(&1, 0) == :absent)
-
-      latest_keys =
-        Enum.map(orders, fn [key, order] ->
-          checked_read_at_absent_details(storage, key, order)
-        end)
-
-      if Enum.any?(latest_keys, absent_predicate) do
-        {:absent, key, order} = Enum.find(latest_keys, absent_predicate)
-        log_info({:error_missing, key, order})
-        :absent
-      else
-        latest_keys
-      end
+      Enum.reduce(orders, [], fn [key, order], acc ->
+        case checked_read_at(storage, key, order) do
+          {:ok, val} -> [{key, val} | acc]
+          :absent -> acc
+        end
+      end)
     end
   end
 
@@ -714,17 +706,6 @@ defmodule Anoma.Node.Storage do
   @spec calculate_order([{any(), any(), number()}]) :: number()
   defp calculate_order([{_, _, order}]), do: order + 1
   defp calculate_order([]), do: 1
-
-  @spec checked_read_at_absent_details(t(), Noun.t(), non_neg_integer()) ::
-          {:absent, Noun.t(), non_neg_integer()}
-          | {any(), qualified_value()}
-  defp checked_read_at_absent_details(storage = %__MODULE__{}, key, order) do
-    with {:ok, value} <- checked_read_at(storage, key, order) do
-      {key, value}
-    else
-      :absent -> {:absent, key, order}
-    end
-  end
 
   @spec checked_read_at(t(), Noun.t(), non_neg_integer()) ::
           :absent | {:ok, qualified_value()}
@@ -947,14 +928,6 @@ defmodule Anoma.Node.Storage do
 
   defp log_info({:read_all, keys}) do
     Logger.add(nil, :info, "Reading key_space at: #{inspect(keys)}")
-  end
-
-  defp log_info({:error_missing, key, order}) do
-    Logger.add(
-      nil,
-      :error,
-      "Missing key: #{inspect(key)} at order: #{inspect(order)}"
-    )
   end
 
   defp log_info({:delete_key, key}) do
