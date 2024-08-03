@@ -515,17 +515,8 @@ defmodule Anoma.Node.Transport do
 
     if node === nil do
       log_info({:queued, dst, nil, nil, s.logger})
-      # TODO limit queue size
-      %{
-        s
-        | pending_outgoing_engine_messages:
-            Map.update(
-              s.pending_outgoing_engine_messages,
-              dst,
-              [msg],
-              fn msgs -> [msg | msgs] end
-            )
-      }
+
+      enqueue_outgoing_engine_message(s, dst, msg)
     else
       conns = MapSetMap.get(s.node_connections, node)
 
@@ -669,6 +660,21 @@ defmodule Anoma.Node.Transport do
   ############################################################
   #                          Helpers                         #
   ############################################################
+
+  @spec enqueue_outgoing_engine_message(t(), Id.Extern.t(), binary()) :: t()
+  defp enqueue_outgoing_engine_message(s, dst, msg) do
+    # TODO limit queue size
+    %{
+      s
+      | pending_outgoing_engine_messages:
+          Map.update(
+            s.pending_outgoing_engine_messages,
+            dst,
+            [msg],
+            fn msgs -> [msg | msgs] end
+          )
+    }
+  end
 
   @doc """
   I return transport type of the given transport address.
