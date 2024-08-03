@@ -457,7 +457,7 @@ defmodule Anoma.Node.Transport do
       with {:ok, %{nonce: other_nonce, id: other_id}} <-
              Anoma.Serialise.unpack(packed) do
         # TODO check structure of nonce/id
-        if (state.id == nil || state.id === other_id) &&
+        if (state.id == nil or state.id == other_id) and
              Anoma.Crypto.Sign.verify_detached(
                signature,
                packed,
@@ -501,9 +501,9 @@ defmodule Anoma.Node.Transport do
       with {:ok,
             %{mynonce: incoming_nonce, yournonce: outgoing_nonce, yourid: id}} <-
              Anoma.Serialise.unpack(packed) do
-        incoming_nonce === state.incoming_nonce &&
-          outgoing_nonce === state.outgoing_nonce &&
-          id === s.node_internal_id.external &&
+        incoming_nonce == state.incoming_nonce and
+          outgoing_nonce == state.outgoing_nonce and
+          id == s.node_internal_id.external and
           Anoma.Crypto.Sign.verify_detached(signature, packed, state.id.sign)
       end
     end
