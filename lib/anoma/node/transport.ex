@@ -532,16 +532,7 @@ defmodule Anoma.Node.Transport do
           Connection.send(active_conn, msg)
           s
         else
-          %{
-            s
-            | pending_outgoing_messages:
-                Map.update(
-                  s.pending_outgoing_messages,
-                  node,
-                  [msg],
-                  fn msgs -> [msg | msgs] end
-                )
-          }
+          enqueue_outgoing_message(s, node, msg)
         end
       else
         # no current connections--whether pending or active--so try to open one
@@ -563,16 +554,7 @@ defmodule Anoma.Node.Transport do
           s
         end
 
-        %{
-          s
-          | pending_outgoing_messages:
-              Map.update(
-                s.pending_outgoing_messages,
-                node,
-                [msg],
-                fn msgs -> [msg | msgs] end
-              )
-        }
+        enqueue_outgoing_message(s, node, msg)
       end
     end
   end
@@ -670,6 +652,20 @@ defmodule Anoma.Node.Transport do
           Map.update(
             s.pending_outgoing_engine_messages,
             dst,
+            [msg],
+            fn msgs -> [msg | msgs] end
+          )
+    }
+  end
+
+  @spec enqueue_outgoing_message(t(), Id.Extern.t(), binary()) :: t()
+  defp enqueue_outgoing_message(s, node, msg) do
+    %{
+      s
+      | pending_outgoing_messages:
+          Map.update(
+            s.pending_outgoing_messages,
+            node,
             [msg],
             fn msgs -> [msg | msgs] end
           )
