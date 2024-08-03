@@ -32,7 +32,7 @@ defmodule Anoma.Node.Transport.TCPConnection do
       the TCPConnection Engine instance belongs to.
     - `:mode` - The mode of the connection: client or listener.
     - `:listener` - The listening socket that accepts incoming connection
-      requests.  Must be provided in the listener mode. Default: nil
+      requests. Must be provided in the listener mode. Default: nil
     - `:conn` - Socket of the established connection for the listener mode.
       Initially, nil. Filled in as soon as a connection is established.
     """

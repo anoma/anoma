@@ -8,12 +8,12 @@ defmodule Anoma.Node.Transport do
   ### Public API
   I provide the following public functionality:
   - `start_server/2`
-  - `receive_chunk/2`
   - `learn_node/3`
   - `learn_engine/3`
-  - `send/3`
   - `new_connection/2`
   - `disconnect/2`
+  - `send/3`
+  - `receive_chunk/2`
   """
 
   alias __MODULE__
@@ -116,11 +116,13 @@ defmodule Anoma.Node.Transport do
     - `:servers` - Stores a set of transport servers that the Transport Engine
       is currently running. Every transport server is mapped to an external
       transport address, by which messages may reach the Engine through this
-      server.
+      server. Default: empty.
     - `:known_nodes` - Maps every known node (indexed by its public id) to a
       set of transport addresses through which the node can be reached.
+      Default: empty.
     - `:known_engines` - Stores a set of known engines by their public id: every
       engine id is mapped to a public id of a node that the engine belongs to.
+      Default: empty.
     """
     field(:router, Router.addr())
     field(:logger, Router.addr())
