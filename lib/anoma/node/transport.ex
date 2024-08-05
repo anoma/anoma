@@ -610,7 +610,8 @@ defmodule Anoma.Node.Transport do
     case Router.start_engine(
            s.router,
            trans_connection_mod(transport_type(trans)),
-           {:client, s.router, Router.self_addr(), trans, s.connection_pool},
+           {:client, s.router, Router.self_addr(), trans, s.connection_pool,
+            s.logger},
            supervisor: s.connection_pool
          ) do
       {:ok, addr} -> addr
