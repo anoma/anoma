@@ -83,7 +83,8 @@ defmodule Anoma.MixProject do
        rev: "529e6bd0e5c2e05189b141a51dadf255683d38f2"},
       {:plug_crypto, "~> 2.0"},
       {:memoize, "~> 1.4.3"},
-      {:msgpack, "~> 0.8.1"}
+      {:msgpack, "~> 0.8.1"},
+      {:qex, ">= 0.5.1"}
     ]
   end
 
