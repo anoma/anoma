@@ -125,7 +125,7 @@ defmodule Anoma.Node.Transport do
       Default: empty.
     """
     field(:router, Router.addr())
-    field(:logger, Router.addr())
+    field(:logger, Router.addr(), enforce: false)
     field(:node_internal_id, Id.t())
     field(:transport_internal_id, Id.t())
     field(:connection_pool, Supervisor.supervisor())
