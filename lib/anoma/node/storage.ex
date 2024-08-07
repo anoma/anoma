@@ -81,7 +81,7 @@ defmodule Anoma.Node.Storage do
                      Default: Anoma.Node.Storage.Qualified
     - `:order` - The name of the Ordering table.
                  Default: Anoma.Node.Storage.Order
-    - `:rm_commitments` - The name of the Reource Machine Commitments table.
+    - `:rm_commitments` - The name of the Resource Machine Commitments table.
                           Default: Anoma.Node.Storage.RMCommitments
     - `:namespace` - The namespace used for writing functionality.
                      Default: []
@@ -129,7 +129,7 @@ defmodule Anoma.Node.Storage do
   @doc """
   I am the initialization function for a Storage Engine Instance.
 
-  ### Pattern-Macthing Variations
+  ### Pattern-Matching Variations
 
   - `init(%Storage{})` - I initialize the Engine with the given state.
   - `init(args)` - I expect a keylist/map with all the keywords matching
@@ -200,7 +200,7 @@ defmodule Anoma.Node.Storage do
 
   Given a storage address and a list of keys in the appropriate format, I
   first look up whether the keys appear in any qualified key in the
-  Qualified table. If so, look up all apropriate latest values of all such
+  Qualified table. If so, look up all appropriate latest values of all such
   keys and return them as a list of table query responses in a standard
   mnesia format. If no values are present, I return an empty list.
   """
@@ -312,7 +312,7 @@ defmodule Anoma.Node.Storage do
   namespace info from the appropriate storage state. Secondly, I re-write
   the order-value assigned to said namespaced key, incrementing its value.
   Finally, I write the value given to me to the Qualified table, assigning
-  it to the namspaced key with appropriate new order attached,
+  it to the namespaced key with appropriate new order attached,
   corresponding to the one in the Ordering table.
   """
 
@@ -582,7 +582,7 @@ defmodule Anoma.Node.Storage do
 
   ### General Usage
 
-  I expect a Storage Engine address alingside with a key. Given a key which
+  I expect a Storage Engine address alongside with a key. Given a key which
   isn't a list, I error. Given a key which is a list starting with 0, I
   error following Nock and Ordering semantics. Given any other list, I
   subscribe to a Qualified table that is attached to the given Storage and
@@ -592,7 +592,7 @@ defmodule Anoma.Node.Storage do
   and unsubscribe from the table.
 
   If the key does not have a value in the table, I wait until I receive a
-  `:write` message from the table, where the key written is exactlythe key
+  `:write` message from the table, where the key written is exactly the key
   supplied. Given the message, I return the written value as `{:ok, value}`
   and unsubscribe from the table.
 
@@ -608,7 +608,7 @@ defmodule Anoma.Node.Storage do
   of form `[... | 0]`.
 
   My main functionality is to make sure that the value of said transaction
-  has been recorded suscessfully in the Qualified table in the following
+  has been recorded successfully in the Qualified table in the following
   way:
 
   After subscribing to the appropriate Qualified table, I first check the
