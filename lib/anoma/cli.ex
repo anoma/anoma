@@ -129,6 +129,13 @@ defmodule Anoma.Cli do
             required: true,
             parser: :integer
           ]
+        ],
+        flags: [
+          silent: [
+            long: "--silent",
+            help: "Do not print the returned value.",
+            required: false
+          ]
         ]
       ]
     ]
@@ -222,8 +229,9 @@ defmodule Anoma.Cli do
     run_client_command({:check_nulifier, null}, ci)
   end
 
-  def run_commands({[:get], %{args: %{key: key}}}, ci) do
-    run_client_command({:get_key, key}, ci)
+  def run_commands({[:get], %{args: %{key: key}, flags: flags}}, ci) do
+    silent = Map.get(flags, :silent, false)
+    run_client_command({:get_key, key}, ci, silent)
   end
 
   def run_commands({[:shutdown], %{}}, ci) do
