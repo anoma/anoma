@@ -74,6 +74,13 @@ defmodule Anoma.Cli do
             required: true,
             parser: :string
           ]
+        ],
+        flags: [
+          silent: [
+            long: "--silent",
+            help: "Do not print the returned value.",
+            required: false
+          ]
         ]
       ],
       check_nullifier: [
@@ -202,8 +209,9 @@ defmodule Anoma.Cli do
     run_client_command({:rm_submit_tx, file}, ci)
   end
 
-  def run_commands({[:ro_submit], %{args: %{file: file}}}, ci) do
-    run_client_command({:ro_submit_tx, file}, ci)
+  def run_commands({[:ro_submit], %{args: %{file: file}, flags: flags}}, ci) do
+    silent = Map.get(flags, :silent, false)
+    run_client_command({:ro_submit_tx, file}, ci, silent)
   end
 
   def run_commands({[:check_commitment], %{args: %{commitment: comm}}}, ci) do
@@ -253,10 +261,13 @@ defmodule Anoma.Cli do
     IO.puts(Optimus.help(Anoma.Cli.argument_parser()))
   end
 
-  @spec run_client_command(any(), client_info()) :: {:ok, Router.addr()}
-  def run_client_command(operation, {router, transport, server, sock}) do
-    silent = false
-
+  @spec run_client_command(any(), client_info(), boolean()) ::
+          {:ok, Router.addr()}
+  def run_client_command(
+        operation,
+        {router, transport, server, sock},
+        silent \\ false
+      ) do
     {:ok, addr} =
       Anoma.Node.Router.start_engine(
         router,
