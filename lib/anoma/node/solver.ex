@@ -115,7 +115,7 @@ defmodule Anoma.Node.Solver do
     })
   end
 
-  # Currentltly just clear out all solved\unsolved\solutions
+  # Currently, just clear out all solved\unsolved\solutions
   # after sending info to mempool.
 
   def handle_cast({:send, mempool}, _from, s) do
