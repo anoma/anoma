@@ -35,7 +35,7 @@ defmodule Anoma.Node.Mempool do
     @typedoc """
     I am the type of the Mempool Engine.
 
-    My fields store information necessary to succesfully call for
+    My fields store information necessary to successfully call for
     transaction candidate creation, execution, and ordering requests.
 
     ### Fields
