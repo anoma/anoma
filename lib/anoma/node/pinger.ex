@@ -89,7 +89,7 @@ defmodule Anoma.Node.Pinger do
   end
 
   @doc """
-  I start the Pinger Engine's execution-calling functionaluty.
+  I start the Pinger Engine's execution-calling functionality.
 
   Given a pinger address, I start up the pinger by calling the `pinger/1`
   function feeding it the time associated to the address.
@@ -134,7 +134,7 @@ defmodule Anoma.Node.Pinger do
 
   I receive an argument which is either an integer or :no_timer.
   If it is an integer, send to self an :execute message after
-  specified ammount of time. Otherwise, simply reply :ok
+  the specified amount of time. Otherwise, simply reply :ok
   """
 
   @spec pinger(:no_timer | non_neg_integer()) :: :ok | reference()
