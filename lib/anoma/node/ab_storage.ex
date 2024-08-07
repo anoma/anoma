@@ -5,6 +5,7 @@ defmodule Anoma.Node.AbStorage do
 
   use GenServer
   use TypedStruct
+  require EventBroker.Event
 
   @type bare_key() :: list(String.t())
   @type qualified_key() :: {integer(), bare_key()}
@@ -17,14 +18,23 @@ defmodule Anoma.Node.AbStorage do
   # - committed/uncommitted distinction
   # - reads to "future" block rather than yielding an old value
 
+  # committed is basically a dummy representing mnesia-backed final state
   typedstruct enforce: true do
     field(:committed, %{qualified_key() => term()}, default: %{})
+    field(:committed_height, integer(), default: 0)
     field(:committed_updates, %{bare_key() => list(integer())}, default: %{})
     field(:uncommitted, %{qualified_key() => term()}, default: %{})
+    field(:uncommitted_height, integer(), default: 0)
 
     field(:uncommitted_updates, %{bare_key() => list(integer())},
       default: %{}
     )
+  end
+
+  typedstruct enforce: true, module: WriteEvent do
+    field(:height, integer())
+    field(:key, Anoma.Node.AbStorage.bare_key())
+    field(:value, term())
   end
 
   def start_link() do
@@ -35,31 +45,57 @@ defmodule Anoma.Node.AbStorage do
     {:ok, %__MODULE__{}}
   end
 
-  def handle_call({:read, {time, key}}, _from, state) do
-    real_time =
-      Map.get(state.uncommitted_updates, key)
-      |> Enum.find(fn a -> a <= time end)
+  def handle_call({:read, {height, key}}, from, state) do
+    if height <= state.uncommitted_height do
+      real_time =
+        Map.get(state.uncommitted_updates, key)
+        |> Enum.find(fn a -> a <= height end)
 
-    {:reply, Map.get(state.uncommitted, {real_time, key}), state}
+      {:reply, Map.get(state.uncommitted, {real_time, key}), state}
+    else
+      {:ok, pid} = Task.start(fn -> blocking_read(height, key, from) end)
+
+      EventBroker.subscribe(pid, [
+        this_module_filter(),
+        height_filter(height)
+      ])
+
+      {:noreply, state}
+    end
   end
 
   def handle_call(_msg, _from, state) do
     {:reply, :ok, state}
   end
 
-  def handle_cast({:write, {time, key}, value}, state) do
-    key_old_updates = Map.get(state.uncommitted_updates, key, [])
-    key_new_updates = [time | key_old_updates]
-    new_updates = Map.put(state.uncommitted_updates, key, key_new_updates)
-    new_kv = Map.put_new(state.uncommitted, {time, key}, value)
+  # fixme do out of order writes correctly
+  def handle_cast({:write, {height, key}, value}, state) do
+    unless height == state.uncommitted_height + 1 do
+      {:noreply, state}
+    else
+      key_old_updates = Map.get(state.uncommitted_updates, key, [])
+      key_new_updates = [height | key_old_updates]
+      new_updates = Map.put(state.uncommitted_updates, key, key_new_updates)
+      new_kv = Map.put_new(state.uncommitted, {height, key}, value)
 
-    new_state = %{
-      state
-      | uncommitted: new_kv,
-        uncommitted_updates: new_updates
-    }
+      new_state = %{
+        state
+        | uncommitted: new_kv,
+          uncommitted_height: height,
+          uncommitted_updates: new_updates
+      }
 
-    {:noreply, new_state}
+      write_event =
+        EventBroker.Event.new_with_body(%__MODULE__.WriteEvent{
+          height: height,
+          key: key,
+          value: value
+        })
+
+      EventBroker.event(write_event)
+
+      {:noreply, new_state}
+    end
   end
 
   def handle_cast(_msg, state) do
@@ -70,11 +106,44 @@ defmodule Anoma.Node.AbStorage do
     {:noreply, state}
   end
 
-  def read({time, key}) do
-    GenServer.call(__MODULE__, {:read, {time, key}})
+  def read({height, key}) do
+    GenServer.call(__MODULE__, {:read, {height, key}}, :infinity)
   end
 
-  def write({time, key}, value) do
-    GenServer.cast(__MODULE__, {:write, {time, key}, value})
+  def write({height, key}, value) do
+    GenServer.cast(__MODULE__, {:write, {height, key}, value})
+  end
+
+  defp blocking_read(height, key, from) do
+    receive do
+      # if the key we care about was written at exactly the height we
+      # care about, then we already have the value for free
+      %EventBroker.Event{
+        body: %__MODULE__.WriteEvent{height: ^height, key: ^key, value: value}
+      } ->
+        GenServer.reply(from, value)
+
+      # else read the value with a call
+      %EventBroker.Event{
+        body: %__MODULE__.WriteEvent{height: ^height}
+      } ->
+        GenServer.reply(from, read({height, key}))
+
+      _ ->
+        IO.puts("this should be unreachable")
+    end
+
+    EventBroker.unsubscribe_me([
+      this_module_filter(),
+      height_filter(height)
+    ])
+  end
+
+  defp this_module_filter() do
+    %EventBroker.Filters.SourceModule{module: __MODULE__}
+  end
+
+  defp height_filter(height) do
+    %__MODULE__.HeightFilter{height: height}
   end
 end
