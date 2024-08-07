@@ -7,7 +7,7 @@ defmodule Anoma.Node.Router.Engine do
 
   Note other that the coordination info, such as a Router address and
   module name of an engine instance, I provide an actual storage of an
-  Engine state and all state transformaations correspond to the changes one
+  Engine state and all state transformations correspond to the changes one
   can observe in my code.
 
   ### Public API
@@ -98,7 +98,7 @@ defmodule Anoma.Node.Router.Engine do
   instance.
 
   I first cast a message to initialize a local engine to the connected
-  eoutwe, then store the engine ID, server, and router information in the
+  router, then store the engine ID, server, and router information in the
   Process dictionary.
 
   Afterwards, I call the actual (module) Engine instance initialization
@@ -143,7 +143,7 @@ defmodule Anoma.Node.Router.Engine do
   I am an Engine-wide function for getting the router address associated
   with the given Engine.
 
-  I provide it by simply dumping the `:router` field of the asssociated
+  I provide it by simply dumping the `:router` field of the associated
   Engine server.
   """
 
@@ -342,7 +342,7 @@ defmodule Anoma.Node.Router.Engine do
 
   I provide the main functionality to shut down an engine.
 
-  I first use the GenSercer functionality to route a message to clean up
+  I first use the GenServer functionality to route a message to clean up
   the local engine info stored inside the specified Router and then stop
   the Engine process with a given reason.
   """
