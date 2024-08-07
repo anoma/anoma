@@ -5,7 +5,7 @@ defmodule Anoma.Node.Executor.Worker do
   My instance gets launched by the Executor and is connected to a unique
   transaction.
 
-  I am responsible for the main work done to run a succesful transaction
+  I am responsible for the main work done to run a successful transaction
   lifecycle. This includes processing of transactions, calling for their
   ordering via the Ordering Engine, creation and revision of commitment
   trees, nullifier key-checking, as well as the storage of relevant data
@@ -46,8 +46,8 @@ defmodule Anoma.Node.Executor.Worker do
     - `:tx` - The transaction code.
     - `:env` - The environment for the transaction to be evaluated in. E.g.
                contains the Ordering engine address. See `Nock.t()`
-    - `:completion_topc` - The address of the topic connected to the
-                           relevant Executor Engine for broadcasting.
+    - `:completion_topic` - The address of the topic connected to the
+                            relevant Executor Engine for broadcasting.
     - `:reply_to` - The address that the computed value (for read-only
                     transaction) is sent to.
     """
