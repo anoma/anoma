@@ -28,7 +28,7 @@ defmodule TestHelper.Node do
       :erlang.unregister(name)
     end
 
-    # We recieve messages at this name
+    # We receive messages at this name
     :erlang.register(server_name, self())
 
     Process.put(:engine_id, id.external)
