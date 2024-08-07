@@ -2,7 +2,7 @@ defmodule Anoma.Node.Executor do
   @moduledoc """
   I am the Executor Engine.
 
-  My main responsibility is to be the intemediary between the Mempool and
+  My main responsibility is to be the intermediary between the Mempool and
   transaction spawning by launching the Worker Engines provided the pending
   transaction code.
 
