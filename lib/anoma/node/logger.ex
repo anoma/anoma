@@ -147,7 +147,7 @@ defmodule Anoma.Node.Logger do
   I am the Logger get function of two arguments.
 
   Given a non-nil logger address and an engine address, I get the keyspace
-  which conatins all the info stored by the logger about the supplied
+  which contains all the info stored by the logger about the supplied
   engine using `Storage.get_keyspace/2`
 
   I return a list of 2-tuples. Its left element will be a list whose
