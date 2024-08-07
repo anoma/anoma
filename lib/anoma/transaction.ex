@@ -20,7 +20,7 @@ defmodule Anoma.Transaction do
     I contain info necessary for the Mempool, Ordering, and Workers to
     properly go through a transaction lifecycle.
 
-    A transactionstructure may not contain transaction code or
+    A transaction structure may not contain transaction code or
     index information.
 
     ### Fields
@@ -48,7 +48,7 @@ defmodule Anoma.Transaction do
   code.
 
   My main purpose is to be used for testing. Generally, the index of the
-  transaction comes aded to the structure bearing trasnaction backend code.
+  transaction comes added to the structure bearing transaction backend code.
   """
 
   @spec new_with_order(
