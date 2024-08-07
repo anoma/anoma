@@ -4,14 +4,14 @@ defmodule Anoma.Node.Router.Addr do
   networking used by the Router.
 
   The server, if known, is a local actor which can receive it directly;
-  otherwise, the mssage will be sent via the central router.
+  otherwise, the message will be sent via the central router.
 
   If the server is known, but the id is not, then this is a local-only
   engine, which can only talk to other local engines.
 
   ### Public API
 
-  I provide the follwing public functionality:
+  I provide the following public functionality:
 
   - `id/1`
   - `id!/1`
@@ -27,7 +27,7 @@ defmodule Anoma.Node.Router.Addr do
   @typedoc """
   I am the type for general process identifications.
 
-  I posess the minimal information needed to send some agent a message
+  I possess the minimal information needed to send some agent a message
   through the Anoma networking structure.
 
   ### Options
@@ -120,7 +120,7 @@ defmodule Anoma.Node.Router.Addr do
   find its canonical registered name.
 
   Given an address, I use `noncanonical_server/1` to see its associated pid
-  or name. If I get a pidm then I print the name of the process associated
+  or name. If I get a pid then I print the name of the process associated
   with said pid by checking Erlang's `process_info/2` in case there is any,
   otherwise returning the original PID.
 
@@ -164,7 +164,7 @@ defmodule Anoma.Node.Router.Addr do
   end
 
   @doc """
-  I return some Process destination without attempting to canonalize the
+  I return some Process destination without attempting to canonicalize the
   result, that is, I may return a PID.
 
   ### Pattern-Matching Variations
