@@ -31,7 +31,7 @@ defmodule Anoma.Node.Clock do
 
     ### Fields
 
-    - `:start` - Integer vallue corresponding to the system start timing
+    - `:start` - Integer value corresponding to the system start timing
                  provided by the internal erlang functionality.
     """
 
