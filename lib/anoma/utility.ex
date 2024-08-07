@@ -5,7 +5,7 @@ defmodule Anoma.Utility do
 
   ### Public API
 
-  I posess the following public API:
+  I possess the following public API:
 
   - message_label/1
   """
