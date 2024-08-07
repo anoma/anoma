@@ -2,7 +2,7 @@ defmodule Anoma.Node.Dumper do
   @moduledoc """
   I am the Dumper Engine.
 
-  My role is to spawn asyncronous processes which
+  My role is to spawn asynchronous processes which
   listen to a specified block table announcement and await when blocks
   modulo my count have been executed, at which point I checkpoint the
   assigned node using the duping system using a file with a specified name.
@@ -54,7 +54,7 @@ defmodule Anoma.Node.Dumper do
 
   - `init(%Dumper{})` - I initialize the Engine with given state.
   - `init(opts)` - I expect a keylist with the `:count`, `:configuration`,
-                   and `:logger` keys availiable. I then start the engine
+                   and `:logger` keys available. I then start the engine
                    instance with appropriate state.
   """
 
