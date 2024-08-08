@@ -9,7 +9,7 @@ defmodule EventBroker.FilterAgent do
 
   alias __MODULE__
 
-  use GenServer
+  use GenServer, restart: :transient
   use TypedStruct
 
   typedstruct enforce: true do

@@ -2,6 +2,7 @@ defmodule Examples.EventBroker do
   @moduledoc false
 
   use TestHelper.TestMacro
+  alias EventBroker.{Filters, Broker, Registry, Event}
 
   @doc """
   I start the broker-registry duo.
@@ -17,9 +18,8 @@ defmodule Examples.EventBroker do
           :already_started | :error | {:ok, %{broker: pid(), registry: pid()}}
   def start_broker do
     on_start =
-      with {:ok, broker_pid} <- EventBroker.start_link(),
-           {:ok, registry_pid} <- EventBroker.Registry.start_link(broker_pid) do
-        {:ok, %{broker: broker_pid, registry: registry_pid}}
+      with {:ok, sup_pid} <- EventBroker.start_link() do
+        {:ok, sup_pid}
       else
         {:error, {:already_started, _pid}} -> :already_started
         _ -> :error
@@ -57,10 +57,10 @@ defmodule Examples.EventBroker do
   module which sent the message and with body the specified string.
   """
 
-  @spec example_message_a(String.t()) :: EventBroker.Event.t()
-  @spec example_message_a() :: EventBroker.Event.t()
+  @spec example_message_a(String.t()) :: Event.t()
+  @spec example_message_a() :: Event.t()
   def example_message_a(string \\ "example body") do
-    %EventBroker.Event{
+    %Event{
       source_module: __MODULE__,
       body: string
     }
@@ -70,10 +70,10 @@ defmodule Examples.EventBroker do
   I am an example message whose source module is `Bad.Module`.
   """
 
-  @spec example_message_b(String.t()) :: EventBroker.Event.t()
-  @spec example_message_b() :: EventBroker.Event.t()
+  @spec example_message_b(String.t()) :: Event.t()
+  @spec example_message_b() :: Event.t()
   def example_message_b(string \\ "example body") do
-    %EventBroker.Event{
+    %Event{
       source_module: Bad.Module,
       body: string
     }
@@ -89,27 +89,27 @@ defmodule Examples.EventBroker do
   received event.
   """
 
-  @spec subscribe_and_check() :: {:received, EventBroker.Event.t()}
+  @spec subscribe_and_check() :: {:received, Event.t()}
   def subscribe_and_check do
-    EventBroker.Registry.subscribe_me([
+    Registry.subscribe_me([
       trivial_filter_spec(),
       this_module_filter_spec(),
       trivial_filter_spec()
     ])
 
-    EventBroker.event(example_message_a())
-    EventBroker.event(example_message_b())
+    Broker.event(example_message_a())
+    Broker.event(example_message_b())
 
     {:ok, event} =
       receive do
-        event = %EventBroker.Event{} ->
+        event = %Event{} ->
           {:ok, event}
 
         _ ->
           :error
       end
 
-    EventBroker.Registry.unsubscribe_me([
+    Registry.unsubscribe_me([
       trivial_filter_spec(),
       this_module_filter_spec(),
       trivial_filter_spec()
@@ -136,15 +136,15 @@ defmodule Examples.EventBroker do
         this_module_filter_spec()
       end
 
-    EventBroker.Registry.subscribe_me(filter_spec_list)
+    Registry.subscribe_me(filter_spec_list)
 
     f = fn ->
       for _ <- 1..1_000_000 do
-        EventBroker.event(example_message_a())
+        Broker.event(example_message_a())
 
         {:ok, _} =
           receive do
-            event = %EventBroker.Event{} ->
+            event = %Event{} ->
               {:ok, event}
 
             _ ->
@@ -157,7 +157,7 @@ defmodule Examples.EventBroker do
 
     result = :timer.tc(f)
 
-    EventBroker.Registry.unsubscribe_me(filter_spec_list)
+    Registry.unsubscribe_me(filter_spec_list)
 
     result
   end
@@ -173,11 +173,11 @@ defmodule Examples.EventBroker do
   check that this is indeed true and return the Registry state.
   """
 
-  @spec unsub_all() :: EventBroker.Registry.t()
+  @spec unsub_all() :: Registry.t()
   def unsub_all() do
     start_broker()
 
-    registered = :sys.get_state(EventBroker.Registry).registered_filters
+    registered = :sys.get_state(Registry).registered_filters
 
     for {spec, pid} <- registered, reduce: [] do
       acc ->
@@ -187,13 +187,13 @@ defmodule Examples.EventBroker do
           acc
         end
     end
-    |> Enum.map(&EventBroker.Registry.unsubscribe_me(&1))
+    |> Enum.map(&Registry.unsubscribe_me(&1))
 
     assert [[]] ==
-             :sys.get_state(EventBroker.Registry).registered_filters
+             :sys.get_state(Registry).registered_filters
              |> Map.keys()
 
-    :sys.get_state(EventBroker.Registry)
+    :sys.get_state(Registry)
   end
 
   @doc """
@@ -208,20 +208,20 @@ defmodule Examples.EventBroker do
   I return a tuple with the Registry state and the agent.
   """
 
-  @spec check_self_sub(list()) :: {EventBroker.Registry.t(), pid()}
-  @spec check_self_sub() :: {EventBroker.Registry.t(), pid()}
+  @spec check_self_sub(list()) :: {Registry.t(), pid()}
+  @spec check_self_sub() :: {Registry.t(), pid()}
   def check_self_sub(list \\ []) do
     unsub_all()
-    assert :ok = EventBroker.Registry.subscribe_me(list)
+    assert :ok = Registry.subscribe_me(list)
 
     agent =
-      :sys.get_state(EventBroker.Registry).registered_filters |> Map.get(list)
+      :sys.get_state(Registry).registered_filters |> Map.get(list)
 
     assert Process.alive?(agent)
 
     assert MapSet.new([self()]) == :sys.get_state(agent).subscribers
 
-    {:sys.get_state(EventBroker.Registry), agent}
+    {:sys.get_state(Registry), agent}
   end
 
   @doc """
@@ -234,21 +234,21 @@ defmodule Examples.EventBroker do
   one of the subscribers.
   """
 
-  @spec check_sub_no_unsub(list()) :: {EventBroker.Registry.t(), pid()}
-  @spec check_sub_no_unsub() :: {EventBroker.Registry.t(), pid()}
+  @spec check_sub_no_unsub(list()) :: {Registry.t(), pid()}
+  @spec check_sub_no_unsub() :: {Registry.t(), pid()}
   def check_sub_no_unsub(list \\ []) do
     start_broker()
-    EventBroker.Registry.subscribe_me(list)
+    Registry.subscribe_me(list)
 
     agent =
-      :sys.get_state(EventBroker.Registry).registered_filters |> Map.get(list)
+      :sys.get_state(Registry).registered_filters |> Map.get(list)
 
     assert Process.alive?(agent)
 
     assert MapSet.new([self()])
            |> MapSet.subset?(:sys.get_state(agent).subscribers)
 
-    {:sys.get_state(EventBroker.Registry), agent}
+    {:sys.get_state(Registry), agent}
   end
 
   @doc """
@@ -261,19 +261,19 @@ defmodule Examples.EventBroker do
   """
 
   @spec message_works_trivial(String.t()) ::
-          {EventBroker.Registry.t(), list(), pid()}
-  @spec message_works_trivial() :: {EventBroker.Registry.t(), list(), pid()}
+          {Registry.t(), list(), pid()}
+  @spec message_works_trivial() :: {Registry.t(), list(), pid()}
   def message_works_trivial(string \\ "subscribing works") do
     trivial = [trivial_filter_spec()]
     {_, trivial_agent} = check_self_sub(trivial)
 
     message = string |> example_message_a()
 
-    EventBroker.event(message)
+    Broker.event(message)
 
     assert_receive ^message
 
-    {:sys.get_state(EventBroker.Registry), trivial, trivial_agent}
+    {:sys.get_state(Registry), trivial, trivial_agent}
   end
 
   @doc """
@@ -287,17 +287,17 @@ defmodule Examples.EventBroker do
   I then return the Registry state.
   """
 
-  @spec un_subscribing_works_atomic(list()) :: EventBroker.Registry.t()
-  @spec un_subscribing_works_atomic() :: EventBroker.Registry.t()
+  @spec un_subscribing_works_atomic(list()) :: Registry.t()
+  @spec un_subscribing_works_atomic() :: Registry.t()
   def un_subscribing_works_atomic(list \\ [trivial_filter_spec()]) do
     {state, pid} = check_self_sub(list)
 
-    EventBroker.Registry.unsubscribe_me(list)
+    Registry.unsubscribe_me(list)
 
     refute Process.alive?(pid)
     refute Map.get(state, list)
 
-    :sys.get_state(EventBroker.Registry)
+    :sys.get_state(Registry)
   end
 
   @doc """
@@ -312,11 +312,9 @@ defmodule Examples.EventBroker do
   """
 
   @spec message_gets_blocked(String.t()) ::
-          {EventBroker.Registry.t(), [EventBroker.Filters.SourceModule.t()],
-           pid()}
+          {Registry.t(), [Filters.SourceModule.t()], pid()}
   @spec message_gets_blocked() ::
-          {EventBroker.Registry.t(), [EventBroker.Filters.SourceModule.t()],
-           pid()}
+          {Registry.t(), [Filters.SourceModule.t()], pid()}
   def message_gets_blocked(string \\ "blocked message") do
     module_spec = [this_module_filter_spec()]
 
@@ -324,11 +322,11 @@ defmodule Examples.EventBroker do
 
     message = string |> example_message_b()
 
-    EventBroker.event(message)
+    Broker.event(message)
 
     refute_receive ^message
 
-    {:sys.get_state(EventBroker.Registry), module_spec, pid}
+    {:sys.get_state(Registry), module_spec, pid}
   end
 
   @doc """
@@ -344,9 +342,9 @@ defmodule Examples.EventBroker do
   """
 
   @spec add_filter_on_top(list(), list()) ::
-          {EventBroker.Registry.t(), list(), pid()}
-  @spec add_filter_on_top(list()) :: {EventBroker.Registry.t(), list(), pid()}
-  @spec add_filter_on_top() :: {EventBroker.Registry.t(), list(), pid()}
+          {Registry.t(), list(), pid()}
+  @spec add_filter_on_top(list()) :: {Registry.t(), list(), pid()}
+  @spec add_filter_on_top() :: {Registry.t(), list(), pid()}
   def add_filter_on_top(
         filter1 \\ [trivial_filter_spec()],
         filter2 \\ [trivial_filter_spec()]
@@ -367,7 +365,7 @@ defmodule Examples.EventBroker do
     assert MapSet.new([self(), pid_top_sub]) ==
              :sys.get_state(get_agent).subscribers
 
-    {:sys.get_state(EventBroker.Registry), filter, pid2}
+    {:sys.get_state(Registry), filter, pid2}
   end
 
   @doc """
@@ -384,8 +382,8 @@ defmodule Examples.EventBroker do
   second one and return the Registry state.
   """
 
-  @spec complex_filter_message(String.t()) :: EventBroker.Registry.t()
-  @spec complex_filter_message() :: EventBroker.Registry.t()
+  @spec complex_filter_message(String.t()) :: Registry.t()
+  @spec complex_filter_message() :: Registry.t()
   def complex_filter_message(string \\ "complex filter message") do
     trivial = [trivial_filter_spec()]
 
@@ -397,15 +395,15 @@ defmodule Examples.EventBroker do
     good_msg = (string <> " good") |> example_message_a()
     bad_msg = (string <> " bad") |> example_message_b()
 
-    EventBroker.Registry.unsubscribe_me(trivial)
+    Registry.unsubscribe_me(trivial)
 
-    EventBroker.event(good_msg)
-    EventBroker.event(bad_msg)
+    Broker.event(good_msg)
+    Broker.event(bad_msg)
 
     assert_receive ^good_msg
     refute_receive ^bad_msg
 
-    :sys.get_state(EventBroker.Registry)
+    :sys.get_state(Registry)
   end
 
   @doc """
@@ -422,6 +420,6 @@ defmodule Examples.EventBroker do
     unsub_all()
 
     assert "[Nock] do not export filtering functions" ==
-             EventBroker.Registry.subscribe_me([%Nock{}])
+             Registry.subscribe_me([%Nock{}])
   end
 end

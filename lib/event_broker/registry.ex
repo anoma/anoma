@@ -45,21 +45,42 @@ defmodule EventBroker.Registry do
 
     ### Fields
 
+    - `:supervisor` - The name of the dynamic supervisor launched on start.
     - `:registered_filters` - The map whose keys are a filter-spec dependency
-                              list and whose values are PID's of filter
-                              agents corresponding to said lists.
-                              Default: %{}
+    list and whose values are PID's of filter
+    agents corresponding to said lists.
+    Default: %{}
     """
 
+    field(:supervisor, atom())
     field(:registered_filters, registered_filters, default: %{})
   end
 
-  def start_link(top_level_pid) do
-    GenServer.start_link(__MODULE__, top_level_pid, name: __MODULE__)
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: args[:registry_name])
   end
 
-  def init(top_level_pid) do
-    {:ok, %Registry{registered_filters: %{[] => top_level_pid}}}
+  def init(args) do
+    broker = args[:broker_name]
+
+    pid =
+      if is_pid(broker) do
+        broker
+      else
+        Process.whereis(broker)
+      end
+
+    sup_name =
+      (Atom.to_string(args[:registry_name]) <> ".DynamicSupervisor")
+      |> :erlang.binary_to_atom()
+
+    DynamicSupervisor.start_link(
+      name: sup_name,
+      strategy: :one_for_one,
+      max_restarts: 0
+    )
+
+    {:ok, %Registry{supervisor: sup_name, registered_filters: %{[] => pid}}}
   end
 
   ############################################################
@@ -170,7 +191,7 @@ defmodule EventBroker.Registry do
           state
         else
           {_, new_registered_filters} =
-            iterate_sub(registered, filter_spec_list)
+            iterate_sub(registered, filter_spec_list, state.supervisor)
 
           %{state | registered_filters: new_registered_filters}
         end
@@ -206,9 +227,9 @@ defmodule EventBroker.Registry do
   #                          Helpers                         #
   ############################################################
 
-  @spec iterate_sub(%{filter_spec_list => pid}, filter_spec_list) ::
+  @spec iterate_sub(%{filter_spec_list => pid}, filter_spec_list, atom()) ::
           {filter_spec_list, registered_filters}
-  defp iterate_sub(registered, filter_spec_list) do
+  defp iterate_sub(registered, filter_spec_list, supervisor) do
     existing_prefix =
       registered
       |> Map.keys()
@@ -226,15 +247,15 @@ defmodule EventBroker.Registry do
         reduce: {existing_prefix, registered} do
       {parent_spec_list, old_state} ->
         parent_pid = Map.get(old_state, parent_spec_list)
+        new_spec_list = parent_spec_list ++ [f]
 
         {:ok, new_pid} =
-          GenServer.start_link(
-            EventBroker.FilterAgent,
-            f
+          DynamicSupervisor.start_child(
+            supervisor,
+            {EventBroker.FilterAgent, f}
           )
 
         GenServer.call(parent_pid, {:subscribe, new_pid})
-        new_spec_list = parent_spec_list ++ [f]
         new_state = Map.put(old_state, new_spec_list, new_pid)
         {new_spec_list, new_state}
     end
