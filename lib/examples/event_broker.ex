@@ -2,7 +2,7 @@ defmodule Examples.EventBroker do
   @moduledoc false
 
   use TestHelper.TestMacro
-  alias EventBroker.{Filters, Broker, Registry, Event}
+  alias EventBroker.{Supervisor, Filters, Broker, Registry, Event}
 
   @doc """
   I start the broker-registry duo.
@@ -18,7 +18,7 @@ defmodule Examples.EventBroker do
           :already_started | :error | {:ok, %{broker: pid(), registry: pid()}}
   def start_broker do
     on_start =
-      with {:ok, sup_pid} <- EventBroker.start_link() do
+      with {:ok, sup_pid} <- Supervisor.start_link() do
         {:ok, sup_pid}
       else
         {:error, {:already_started, _pid}} -> :already_started
@@ -91,11 +91,14 @@ defmodule Examples.EventBroker do
 
   @spec subscribe_and_check() :: {:received, Event.t()}
   def subscribe_and_check do
-    Registry.subscribe_me([
-      trivial_filter_spec(),
-      this_module_filter_spec(),
-      trivial_filter_spec()
-    ])
+    Registry.subscribe_me(
+      EventBroker.Registry,
+      [
+        trivial_filter_spec(),
+        this_module_filter_spec(),
+        trivial_filter_spec()
+      ]
+    )
 
     Broker.event(example_message_a())
     Broker.event(example_message_b())
@@ -109,7 +112,7 @@ defmodule Examples.EventBroker do
           :error
       end
 
-    Registry.unsubscribe_me([
+    Registry.unsubscribe_me(EventBroker.Registry, [
       trivial_filter_spec(),
       this_module_filter_spec(),
       trivial_filter_spec()
@@ -136,7 +139,7 @@ defmodule Examples.EventBroker do
         this_module_filter_spec()
       end
 
-    Registry.subscribe_me(filter_spec_list)
+    Registry.subscribe_me(EventBroker.Registry, filter_spec_list)
 
     f = fn ->
       for _ <- 1..1_000_000 do
@@ -157,7 +160,7 @@ defmodule Examples.EventBroker do
 
     result = :timer.tc(f)
 
-    Registry.unsubscribe_me(filter_spec_list)
+    Registry.unsubscribe_me(EventBroker.Registry, filter_spec_list)
 
     result
   end
@@ -187,7 +190,7 @@ defmodule Examples.EventBroker do
           acc
         end
     end
-    |> Enum.map(&Registry.unsubscribe_me(&1))
+    |> Enum.map(&Registry.unsubscribe_me(EventBroker.Registry, &1))
 
     assert [[]] ==
              :sys.get_state(Registry).registered_filters
@@ -212,7 +215,7 @@ defmodule Examples.EventBroker do
   @spec check_self_sub() :: {Registry.t(), pid()}
   def check_self_sub(list \\ []) do
     unsub_all()
-    assert :ok = Registry.subscribe_me(list)
+    assert :ok = Registry.subscribe_me(EventBroker.Registry, list)
 
     agent =
       :sys.get_state(Registry).registered_filters |> Map.get(list)
@@ -238,7 +241,7 @@ defmodule Examples.EventBroker do
   @spec check_sub_no_unsub() :: {Registry.t(), pid()}
   def check_sub_no_unsub(list \\ []) do
     start_broker()
-    Registry.subscribe_me(list)
+    Registry.subscribe_me(EventBroker.Registry, list)
 
     agent =
       :sys.get_state(Registry).registered_filters |> Map.get(list)
@@ -292,7 +295,7 @@ defmodule Examples.EventBroker do
   def un_subscribing_works_atomic(list \\ [trivial_filter_spec()]) do
     {state, pid} = check_self_sub(list)
 
-    Registry.unsubscribe_me(list)
+    Registry.unsubscribe_me(EventBroker.Registry, list)
 
     refute Process.alive?(pid)
     refute Map.get(state, list)
@@ -395,7 +398,7 @@ defmodule Examples.EventBroker do
     good_msg = (string <> " good") |> example_message_a()
     bad_msg = (string <> " bad") |> example_message_b()
 
-    Registry.unsubscribe_me(trivial)
+    Registry.unsubscribe_me(EventBroker.Registry, trivial)
 
     Broker.event(good_msg)
     Broker.event(bad_msg)
@@ -420,6 +423,6 @@ defmodule Examples.EventBroker do
     unsub_all()
 
     assert "[Nock] do not export filtering functions" ==
-             Registry.subscribe_me([%Nock{}])
+             Registry.subscribe_me(EventBroker.Registry, [%Nock{}])
   end
 end

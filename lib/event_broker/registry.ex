@@ -110,9 +110,9 @@ defmodule EventBroker.Registry do
   registration.
   """
 
-  @spec subscribe(pid(), filter_spec_list) :: :ok | String.t()
-  def subscribe(pid, filter_spec_list) do
-    GenServer.call(__MODULE__, {:subscribe, pid, filter_spec_list})
+  @spec subscribe(pid(), atom() | pid(), filter_spec_list) :: :ok | String.t()
+  def subscribe(pid, registry, filter_spec_list) do
+    GenServer.call(registry, {:subscribe, pid, filter_spec_list})
   end
 
   @doc """
@@ -121,9 +121,9 @@ defmodule EventBroker.Registry do
   I call `subscribe/2` where the first argument is `self()`
   """
 
-  @spec subscribe_me(filter_spec_list) :: :ok | String.t()
-  def subscribe_me(filter_spec_list) do
-    subscribe(self(), filter_spec_list)
+  @spec subscribe_me(atom() | pid(), filter_spec_list) :: :ok | String.t()
+  def subscribe_me(registry, filter_spec_list) do
+    subscribe(self(), registry, filter_spec_list)
   end
 
   @doc """
@@ -142,9 +142,9 @@ defmodule EventBroker.Registry do
   all agents which have shut down from my registry map and return `:ok`
   """
 
-  @spec unsubscribe(pid(), filter_spec_list) :: :ok
-  def unsubscribe(pid, filter_spec_list) do
-    GenServer.call(__MODULE__, {:unsubscribe, pid, filter_spec_list})
+  @spec unsubscribe(pid(), atom() | pid(), filter_spec_list) :: :ok
+  def unsubscribe(pid, registry, filter_spec_list) do
+    GenServer.call(registry, {:unsubscribe, pid, filter_spec_list})
   end
 
   @doc """
@@ -153,9 +153,9 @@ defmodule EventBroker.Registry do
   I call `unsubscribe/2` where the first argument is `self()`
   """
 
-  @spec unsubscribe_me(filter_spec_list) :: :ok
-  def unsubscribe_me(filter_spec_list) do
-    unsubscribe(self(), filter_spec_list)
+  @spec unsubscribe_me(atom() | pid(), filter_spec_list) :: :ok
+  def unsubscribe_me(registry, filter_spec_list) do
+    unsubscribe(self(), registry, filter_spec_list)
   end
 
   ############################################################
