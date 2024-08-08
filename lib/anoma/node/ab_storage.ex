@@ -47,6 +47,7 @@ defmodule Anoma.Node.AbStorage do
 
   def handle_call({:read, {height, key}}, from, state) do
     if height <= state.uncommitted_height do
+      # relies on this being a reverse-ordered list
       real_time =
         Map.get(state.uncommitted_updates, key)
         |> Enum.find(fn a -> a <= height end)

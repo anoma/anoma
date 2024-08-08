@@ -1,6 +1,6 @@
-defmodule Anoma.Node.AbOrdering do
+defmodule Anoma.Node.AbMempool do
   @moduledoc """
-  abordering genserver
+  abmempool genserver
   """
 
   use GenServer
