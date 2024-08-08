@@ -70,17 +70,11 @@ defmodule EventBroker.Registry do
         Process.whereis(broker)
       end
 
-    sup_name =
-      (Atom.to_string(args[:registry_name]) <> ".DynamicSupervisor")
-      |> :erlang.binary_to_atom()
-
-    DynamicSupervisor.start_link(
-      name: sup_name,
-      strategy: :one_for_one,
-      max_restarts: 0
-    )
-
-    {:ok, %Registry{supervisor: sup_name, registered_filters: %{[] => pid}}}
+    {:ok,
+     %Registry{
+       supervisor: args[:dyn_sup_name],
+       registered_filters: %{[] => pid}
+     }}
   end
 
   ############################################################
