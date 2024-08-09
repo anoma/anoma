@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Nock — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Nock — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,43 +94,45 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Nock</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Nock</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Nock, a universal function on nouns.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -149,7 +148,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -165,7 +164,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#cons/2" translate="no">cons(a, b)</a>
+        <a href="#cons/2" data-no-tooltip translate="no">cons(a, b)</a>
 
       </div>
 
@@ -173,7 +172,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#decrement_arm/0" translate="no">decrement_arm()</a>
+        <a href="#decrement_arm/0" data-no-tooltip translate="no">decrement_arm()</a>
 
       </div>
 
@@ -181,7 +180,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#decrement_core/0" translate="no">decrement_core()</a>
+        <a href="#decrement_core/0" data-no-tooltip translate="no">decrement_core()</a>
 
       </div>
 
@@ -189,7 +188,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#gas_meter/0" translate="no">gas_meter()</a>
+        <a href="#gas_meter/0" data-no-tooltip translate="no">gas_meter()</a>
 
       </div>
 
@@ -197,7 +196,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#gas_meter/1" translate="no">gas_meter(gas)</a>
+        <a href="#gas_meter/1" data-no-tooltip translate="no">gas_meter(gas)</a>
 
       </div>
 
@@ -205,7 +204,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_jet/1" translate="no">get_jet(battery_mug)</a>
+        <a href="#get_jet/1" data-no-tooltip translate="no">get_jet(battery_mug)</a>
 
       </div>
 
@@ -213,7 +212,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#logics_core/0" translate="no">logics_core()</a>
+        <a href="#logics_core/0" data-no-tooltip translate="no">logics_core()</a>
 
       </div>
 
@@ -221,7 +220,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#metered_nock/2" translate="no">metered_nock(subject, formula)</a>
+        <a href="#metered_nock/2" data-no-tooltip translate="no">metered_nock(subject, formula)</a>
 
       </div>
 
@@ -229,7 +228,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#metered_nock/3" translate="no">metered_nock(subject, formula, environment)</a>
+        <a href="#metered_nock/3" data-no-tooltip translate="no">metered_nock(subject, formula, environment)</a>
 
       </div>
 
@@ -237,7 +236,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#naive_nock/2" translate="no">naive_nock(subject, formula)</a>
+        <a href="#naive_nock/2" data-no-tooltip translate="no">naive_nock(subject, formula)</a>
 
       </div>
 
@@ -245,7 +244,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#naive_nock/3" translate="no">naive_nock(subject, formula, environment)</a>
+        <a href="#naive_nock/3" data-no-tooltip translate="no">naive_nock(subject, formula, environment)</a>
 
       </div>
 
@@ -253,7 +252,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock/2" translate="no">nock(subject, formula)</a>
+        <a href="#nock/2" data-no-tooltip translate="no">nock(subject, formula)</a>
 
       </div>
 
@@ -261,7 +260,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock/3" translate="no">nock(subject, formula, env)</a>
+        <a href="#nock/3" data-no-tooltip translate="no">nock(subject, formula, env)</a>
 
       </div>
 
@@ -269,7 +268,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_0/1" translate="no">nock_0(axis)</a>
+        <a href="#nock_0/1" data-no-tooltip translate="no">nock_0(axis)</a>
 
       </div>
 
@@ -277,7 +276,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_1/1" translate="no">nock_1(constant)</a>
+        <a href="#nock_1/1" data-no-tooltip translate="no">nock_1(constant)</a>
 
       </div>
 
@@ -285,7 +284,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_2/2" translate="no">nock_2(subject_formula, formula_formula)</a>
+        <a href="#nock_2/2" data-no-tooltip translate="no">nock_2(subject_formula, formula_formula)</a>
 
       </div>
 
@@ -293,7 +292,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_3/1" translate="no">nock_3(sub_formula)</a>
+        <a href="#nock_3/1" data-no-tooltip translate="no">nock_3(sub_formula)</a>
 
       </div>
 
@@ -301,7 +300,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_4/1" translate="no">nock_4(sub_formula)</a>
+        <a href="#nock_4/1" data-no-tooltip translate="no">nock_4(sub_formula)</a>
 
       </div>
 
@@ -309,7 +308,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_5/2" translate="no">nock_5(formula_1, formula_2)</a>
+        <a href="#nock_5/2" data-no-tooltip translate="no">nock_5(formula_1, formula_2)</a>
 
       </div>
 
@@ -317,7 +316,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_6/3" translate="no">nock_6(cond, true_branch, false_branch)</a>
+        <a href="#nock_6/3" data-no-tooltip translate="no">nock_6(cond, true_branch, false_branch)</a>
 
       </div>
 
@@ -325,7 +324,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_7/2" translate="no">nock_7(subject_formula, sub_formula)</a>
+        <a href="#nock_7/2" data-no-tooltip translate="no">nock_7(subject_formula, sub_formula)</a>
 
       </div>
 
@@ -333,7 +332,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_8/2" translate="no">nock_8(push_formula, sub_formula)</a>
+        <a href="#nock_8/2" data-no-tooltip translate="no">nock_8(push_formula, sub_formula)</a>
 
       </div>
 
@@ -341,7 +340,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_9/2" translate="no">nock_9(axis, sub_formula)</a>
+        <a href="#nock_9/2" data-no-tooltip translate="no">nock_9(axis, sub_formula)</a>
 
       </div>
 
@@ -349,7 +348,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_10/3" translate="no">nock_10(axis, replacement_formula, sub_formula)</a>
+        <a href="#nock_10/3" data-no-tooltip translate="no">nock_10(axis, replacement_formula, sub_formula)</a>
 
       </div>
 
@@ -357,7 +356,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_11/2" translate="no">nock_11(hint_noun, sub_formula)</a>
+        <a href="#nock_11/2" data-no-tooltip translate="no">nock_11(hint_noun, sub_formula)</a>
 
       </div>
 
@@ -365,7 +364,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nock_11/3" translate="no">nock_11(hint_noun, hint_formula, sub_formula)</a>
+        <a href="#nock_11/3" data-no-tooltip translate="no">nock_11(hint_noun, hint_formula, sub_formula)</a>
 
       </div>
 
@@ -373,7 +372,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#put_jet/2" translate="no">put_jet(battery_mug, jet_info)</a>
+        <a href="#put_jet/2" data-no-tooltip translate="no">put_jet(battery_mug, jet_info)</a>
 
       </div>
 
@@ -381,7 +380,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read_with_id/2" translate="no">read_with_id(id, env)</a>
+        <a href="#read_with_id/2" data-no-tooltip translate="no">read_with_id(id, env)</a>
 
       </div>
 
@@ -389,7 +388,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#rm_core/0" translate="no">rm_core()</a>
+        <a href="#rm_core/0" data-no-tooltip translate="no">rm_core()</a>
 
       </div>
 
@@ -397,7 +396,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stdlib_core/0" translate="no">stdlib_core()</a>
+        <a href="#stdlib_core/0" data-no-tooltip translate="no">stdlib_core()</a>
 
       </div>
 
@@ -405,7 +404,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stdlib_layers/0" translate="no">stdlib_layers()</a>
+        <a href="#stdlib_layers/0" data-no-tooltip translate="no">stdlib_layers()</a>
 
       </div>
 
@@ -429,7 +428,7 @@ GUIDES
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -470,7 +469,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="cons/2">
 
   <div class="detail-header">
-    <a href="#cons/2" class="detail-link" title="Link to this function">
+    <a href="#cons/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -487,7 +486,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="decrement_arm/0">
 
   <div class="detail-header">
-    <a href="#decrement_arm/0" class="detail-link" title="Link to this function">
+    <a href="#decrement_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -504,7 +503,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="decrement_core/0">
 
   <div class="detail-header">
-    <a href="#decrement_core/0" class="detail-link" title="Link to this function">
+    <a href="#decrement_core/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -521,7 +520,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="gas_meter/0">
 
   <div class="detail-header">
-    <a href="#gas_meter/0" class="detail-link" title="Link to this function">
+    <a href="#gas_meter/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -544,7 +543,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="gas_meter/1">
 
   <div class="detail-header">
-    <a href="#gas_meter/1" class="detail-link" title="Link to this function">
+    <a href="#gas_meter/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -567,7 +566,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="get_jet/1">
 
   <div class="detail-header">
-    <a href="#get_jet/1" class="detail-link" title="Link to this function">
+    <a href="#get_jet/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -584,7 +583,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="logics_core/0">
 
   <div class="detail-header">
-    <a href="#logics_core/0" class="detail-link" title="Link to this function">
+    <a href="#logics_core/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -607,7 +606,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="metered_nock/2">
 
   <div class="detail-header">
-    <a href="#metered_nock/2" class="detail-link" title="Link to this function">
+    <a href="#metered_nock/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -631,7 +630,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="metered_nock/3">
 
   <div class="detail-header">
-    <a href="#metered_nock/3" class="detail-link" title="Link to this function">
+    <a href="#metered_nock/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -655,7 +654,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="naive_nock/2">
 
   <div class="detail-header">
-    <a href="#naive_nock/2" class="detail-link" title="Link to this function">
+    <a href="#naive_nock/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -678,7 +677,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="naive_nock/3">
 
   <div class="detail-header">
-    <a href="#naive_nock/3" class="detail-link" title="Link to this function">
+    <a href="#naive_nock/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -701,7 +700,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock/2">
 
   <div class="detail-header">
-    <a href="#nock/2" class="detail-link" title="Link to this function">
+    <a href="#nock/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -724,7 +723,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock/3">
 
   <div class="detail-header">
-    <a href="#nock/3" class="detail-link" title="Link to this function">
+    <a href="#nock/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -747,7 +746,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_0/1">
 
   <div class="detail-header">
-    <a href="#nock_0/1" class="detail-link" title="Link to this function">
+    <a href="#nock_0/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -764,7 +763,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_1/1">
 
   <div class="detail-header">
-    <a href="#nock_1/1" class="detail-link" title="Link to this function">
+    <a href="#nock_1/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -781,7 +780,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_2/2">
 
   <div class="detail-header">
-    <a href="#nock_2/2" class="detail-link" title="Link to this function">
+    <a href="#nock_2/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -798,7 +797,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_3/1">
 
   <div class="detail-header">
-    <a href="#nock_3/1" class="detail-link" title="Link to this function">
+    <a href="#nock_3/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -815,7 +814,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_4/1">
 
   <div class="detail-header">
-    <a href="#nock_4/1" class="detail-link" title="Link to this function">
+    <a href="#nock_4/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -832,7 +831,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_5/2">
 
   <div class="detail-header">
-    <a href="#nock_5/2" class="detail-link" title="Link to this function">
+    <a href="#nock_5/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -849,7 +848,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_6/3">
 
   <div class="detail-header">
-    <a href="#nock_6/3" class="detail-link" title="Link to this function">
+    <a href="#nock_6/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -866,7 +865,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_7/2">
 
   <div class="detail-header">
-    <a href="#nock_7/2" class="detail-link" title="Link to this function">
+    <a href="#nock_7/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -883,7 +882,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_8/2">
 
   <div class="detail-header">
-    <a href="#nock_8/2" class="detail-link" title="Link to this function">
+    <a href="#nock_8/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -900,7 +899,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_9/2">
 
   <div class="detail-header">
-    <a href="#nock_9/2" class="detail-link" title="Link to this function">
+    <a href="#nock_9/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -917,7 +916,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_10/3">
 
   <div class="detail-header">
-    <a href="#nock_10/3" class="detail-link" title="Link to this function">
+    <a href="#nock_10/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -934,7 +933,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_11/2">
 
   <div class="detail-header">
-    <a href="#nock_11/2" class="detail-link" title="Link to this function">
+    <a href="#nock_11/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -951,7 +950,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="nock_11/3">
 
   <div class="detail-header">
-    <a href="#nock_11/3" class="detail-link" title="Link to this function">
+    <a href="#nock_11/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -968,7 +967,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="put_jet/2">
 
   <div class="detail-header">
-    <a href="#put_jet/2" class="detail-link" title="Link to this function">
+    <a href="#put_jet/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -985,7 +984,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="read_with_id/2">
 
   <div class="detail-header">
-    <a href="#read_with_id/2" class="detail-link" title="Link to this function">
+    <a href="#read_with_id/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1008,7 +1007,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="rm_core/0">
 
   <div class="detail-header">
-    <a href="#rm_core/0" class="detail-link" title="Link to this function">
+    <a href="#rm_core/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1031,7 +1030,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="stdlib_core/0">
 
   <div class="detail-header">
-    <a href="#stdlib_core/0" class="detail-link" title="Link to this function">
+    <a href="#stdlib_core/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1054,7 +1053,7 @@ determine if we should be using jets or not</p>
 <section class="detail" id="stdlib_layers/0">
 
   <div class="detail-header">
-    <a href="#stdlib_layers/0" class="detail-link" title="Link to this function">
+    <a href="#stdlib_layers/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1072,43 +1071,40 @@ determine if we should be using jets or not</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/nock.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

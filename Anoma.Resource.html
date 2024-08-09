@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Resource — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Resource — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,44 +94,46 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Resource</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Resource</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Ι represent a resource.</p><p>Do not create with <code class="inline">%Anoma.Resource{}</code> directly, instead use
 <code class="inline">%{Anoma.Resource.new | ...}</code> for random nonce and seed.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -150,7 +149,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -164,7 +163,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#commitment/1" translate="no">commitment(resource)</a>
+        <a href="#commitment/1" data-no-tooltip translate="no">commitment(resource)</a>
 
       </div>
 
@@ -174,7 +173,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#commitment_hash/1" translate="no">commitment_hash(commitment)</a>
+        <a href="#commitment_hash/1" data-no-tooltip translate="no">commitment_hash(commitment)</a>
 
       </div>
 
@@ -182,7 +181,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#commits_to/2" translate="no">commits_to(commitment, resource)</a>
+        <a href="#commits_to/2" data-no-tooltip translate="no">commits_to(commitment, resource)</a>
 
       </div>
 
@@ -192,7 +191,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#commits_to_any/2" translate="no">commits_to_any(commitment, resources)</a>
+        <a href="#commits_to_any/2" data-no-tooltip translate="no">commits_to_any(commitment, resources)</a>
 
       </div>
 
@@ -200,7 +199,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delta/1" translate="no">delta(resource)</a>
+        <a href="#delta/1" data-no-tooltip translate="no">delta(resource)</a>
 
       </div>
 
@@ -210,7 +209,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#from_noun/1" translate="no">from_noun(list)</a>
+        <a href="#from_noun/1" data-no-tooltip translate="no">from_noun(list)</a>
 
       </div>
 
@@ -218,7 +217,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#kind/1" translate="no">kind(resource)</a>
+        <a href="#kind/1" data-no-tooltip translate="no">kind(resource)</a>
 
       </div>
 
@@ -228,7 +227,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new/0" translate="no">new()</a>
+        <a href="#new/0" data-no-tooltip translate="no">new()</a>
 
       </div>
 
@@ -238,7 +237,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new_with_npk/1" translate="no">new_with_npk(npk)</a>
+        <a href="#new_with_npk/1" data-no-tooltip translate="no">new_with_npk(npk)</a>
 
       </div>
 
@@ -249,7 +248,7 @@ resource.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nullifier/2" translate="no">nullifier(resource, secret)</a>
+        <a href="#nullifier/2" data-no-tooltip translate="no">nullifier(resource, secret)</a>
 
       </div>
 
@@ -260,7 +259,7 @@ resource.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nullifier_hash/1" translate="no">nullifier_hash(nullifier)</a>
+        <a href="#nullifier_hash/1" data-no-tooltip translate="no">nullifier_hash(nullifier)</a>
 
       </div>
 
@@ -268,7 +267,7 @@ resource.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nullifies/2" translate="no">nullifies(nullifier, resource)</a>
+        <a href="#nullifies/2" data-no-tooltip translate="no">nullifies(nullifier, resource)</a>
 
       </div>
 
@@ -278,7 +277,7 @@ resource.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nullifies_any/2" translate="no">nullifies_any(nullifier, resources)</a>
+        <a href="#nullifies_any/2" data-no-tooltip translate="no">nullifies_any(nullifier, resources)</a>
 
       </div>
 
@@ -286,7 +285,7 @@ resource.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#to_noun/1" translate="no">to_noun(resource)</a>
+        <a href="#to_noun/1" data-no-tooltip translate="no">to_noun(resource)</a>
 
       </div>
 
@@ -296,7 +295,7 @@ resource.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#transparent_committed_resource/1" translate="no">transparent_committed_resource(commitment)</a>
+        <a href="#transparent_committed_resource/1" data-no-tooltip translate="no">transparent_committed_resource(commitment)</a>
 
       </div>
 
@@ -304,7 +303,7 @@ resource.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#transparent_run_resource_logic/2" translate="no">transparent_run_resource_logic(transaction, resource)</a>
+        <a href="#transparent_run_resource_logic/2" data-no-tooltip translate="no">transparent_run_resource_logic(transaction, resource)</a>
 
       </div>
 
@@ -312,7 +311,7 @@ resource.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#unique/1" translate="no">unique(r)</a>
+        <a href="#unique/1" data-no-tooltip translate="no">unique(r)</a>
 
       </div>
 
@@ -336,7 +335,7 @@ resource.</p></div>
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -380,7 +379,7 @@ resource.</p></div>
 <section class="detail" id="commitment/1">
 
   <div class="detail-header">
-    <a href="#commitment/1" class="detail-link" title="Link to this function">
+    <a href="#commitment/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -403,7 +402,7 @@ resource.</p></div>
 <section class="detail" id="commitment_hash/1">
 
   <div class="detail-header">
-    <a href="#commitment_hash/1" class="detail-link" title="Link to this function">
+    <a href="#commitment_hash/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -426,7 +425,7 @@ resource.</p></div>
 <section class="detail" id="commits_to/2">
 
   <div class="detail-header">
-    <a href="#commits_to/2" class="detail-link" title="Link to this function">
+    <a href="#commits_to/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -443,7 +442,7 @@ resource.</p></div>
 <section class="detail" id="commits_to_any/2">
 
   <div class="detail-header">
-    <a href="#commits_to_any/2" class="detail-link" title="Link to this function">
+    <a href="#commits_to_any/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -460,7 +459,7 @@ resource.</p></div>
 <section class="detail" id="delta/1">
 
   <div class="detail-header">
-    <a href="#delta/1" class="detail-link" title="Link to this function">
+    <a href="#delta/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -477,7 +476,7 @@ resource.</p></div>
 <section class="detail" id="from_noun/1">
 
   <div class="detail-header">
-    <a href="#from_noun/1" class="detail-link" title="Link to this function">
+    <a href="#from_noun/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -494,7 +493,7 @@ resource.</p></div>
 <section class="detail" id="kind/1">
 
   <div class="detail-header">
-    <a href="#kind/1" class="detail-link" title="Link to this function">
+    <a href="#kind/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -517,7 +516,7 @@ resource.</p></div>
 <section class="detail" id="new/0">
 
   <div class="detail-header">
-    <a href="#new/0" class="detail-link" title="Link to this function">
+    <a href="#new/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -534,7 +533,7 @@ resource.</p></div>
 <section class="detail" id="new_with_npk/1">
 
   <div class="detail-header">
-    <a href="#new_with_npk/1" class="detail-link" title="Link to this function">
+    <a href="#new_with_npk/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -552,7 +551,7 @@ resource.</p>
 <section class="detail" id="nullifier/2">
 
   <div class="detail-header">
-    <a href="#nullifier/2" class="detail-link" title="Link to this function">
+    <a href="#nullifier/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -576,7 +575,7 @@ resource.</p>
 <section class="detail" id="nullifier_hash/1">
 
   <div class="detail-header">
-    <a href="#nullifier_hash/1" class="detail-link" title="Link to this function">
+    <a href="#nullifier_hash/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -599,7 +598,7 @@ resource.</p>
 <section class="detail" id="nullifies/2">
 
   <div class="detail-header">
-    <a href="#nullifies/2" class="detail-link" title="Link to this function">
+    <a href="#nullifies/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -616,7 +615,7 @@ resource.</p>
 <section class="detail" id="nullifies_any/2">
 
   <div class="detail-header">
-    <a href="#nullifies_any/2" class="detail-link" title="Link to this function">
+    <a href="#nullifies_any/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -633,7 +632,7 @@ resource.</p>
 <section class="detail" id="to_noun/1">
 
   <div class="detail-header">
-    <a href="#to_noun/1" class="detail-link" title="Link to this function">
+    <a href="#to_noun/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -656,7 +655,7 @@ resource.</p>
 <section class="detail" id="transparent_committed_resource/1">
 
   <div class="detail-header">
-    <a href="#transparent_committed_resource/1" class="detail-link" title="Link to this function">
+    <a href="#transparent_committed_resource/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -673,7 +672,7 @@ resource.</p>
 <section class="detail" id="transparent_run_resource_logic/2">
 
   <div class="detail-header">
-    <a href="#transparent_run_resource_logic/2" class="detail-link" title="Link to this function">
+    <a href="#transparent_run_resource_logic/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -690,7 +689,7 @@ resource.</p>
 <section class="detail" id="unique/1">
 
   <div class="detail-header">
-    <a href="#unique/1" class="detail-link" title="Link to this function">
+    <a href="#unique/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -708,43 +707,40 @@ resource.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/resource.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

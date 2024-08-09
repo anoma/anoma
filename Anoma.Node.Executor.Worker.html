@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Node.Executor.Worker — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Node.Executor.Worker — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,40 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Node.Executor.Worker</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Node.Executor.Worker</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>I am the Worker Engine.</p><p>My instance gets launched by the Executor and is connected to a unique
 transaction.</p><p>I am responsible for the main work done to run a succesful transaction
 lifecycle. This includes processing of transactions, calling for their
@@ -143,8 +141,9 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
   <span class="text">Public API</span>
 </h3>
 <p>I provide the following public functionality:</p><ul><li><a href="#rm_nullifier_check/2"><code class="inline">rm_nullifier_check/2</code></a></li></ul>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -160,7 +159,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:backend/0" translate="no">backend()</a>
+        <a href="#t:backend/0" data-no-tooltip translate="no">backend()</a>
 
       </div>
 
@@ -168,7 +167,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:from_noun/1" translate="no">from_noun(trans)</a>
+        <a href="#t:from_noun/1" data-no-tooltip translate="no">from_noun(trans)</a>
 
       </div>
 
@@ -176,7 +175,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -186,7 +185,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:transaction/0" translate="no">transaction()</a>
+        <a href="#t:transaction/0" data-no-tooltip translate="no">transaction()</a>
 
       </div>
 
@@ -194,7 +193,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:verify_fun/1" translate="no">verify_fun(trans)</a>
+        <a href="#t:verify_fun/1" data-no-tooltip translate="no">verify_fun(trans)</a>
 
       </div>
 
@@ -208,7 +207,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
 
       </div>
 
@@ -218,7 +217,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" translate="no">init(arg)</a>
+        <a href="#init/1" data-no-tooltip translate="no">init(arg)</a>
 
       </div>
 
@@ -228,7 +227,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#rm_nullifier_check/2" translate="no">rm_nullifier_check(storage, nullifiers)</a>
+        <a href="#rm_nullifier_check/2" data-no-tooltip translate="no">rm_nullifier_check(storage, nullifiers)</a>
 
       </div>
 
@@ -252,7 +251,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 <section class="detail" id="t:backend/0">
 
   <div class="detail-header">
-    <a href="#t:backend/0" class="detail-link" title="Link to this type">
+    <a href="#t:backend/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -275,7 +274,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 <section class="detail" id="t:from_noun/1">
 
   <div class="detail-header">
-    <a href="#t:from_noun/1" class="detail-link" title="Link to this type">
+    <a href="#t:from_noun/1" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -298,7 +297,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -327,13 +326,13 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:id</code> - The ID of the transaction fed in.</li><li><code class="inline">:tx</code> - The transaction code.</li><li><code class="inline">:env</code> - The environment for the transaction to be evaluated in. E.g.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="n">contains</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Ordering</span><span class="w"> </span><span class="n">engine</span><span class="w"> </span><span class="n">address</span><span class="o">.</span><span class="w"> </span><span class="nc">See</span><span class="w"> </span><span class="err">`</span><span class="nc">Nock</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5522946995-1">(</span><span class="p" data-group-id="5522946995-1">)</span><span class="err">`</span></code></pre></li><li><code class="inline">:completion_topc</code> - The address of the topic connected to the<pre><code class="makeup elixir" translate="no"><span class="w">                 </span><span class="n">relevant</span><span class="w"> </span><span class="nc">Executor</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">broadcasting</span><span class="o">.</span></code></pre></li><li><code class="inline">:reply_to</code> - The address that the computed value (for read-only<pre><code class="makeup elixir" translate="no"><span class="w">          </span><span class="n">transaction</span><span class="p">)</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">sent</span><span class="w"> </span><span class="n">to</span><span class="o">.</span></code></pre></li></ul>
+<ul><li><code class="inline">:id</code> - The ID of the transaction fed in.</li><li><code class="inline">:tx</code> - The transaction code.</li><li><code class="inline">:env</code> - The environment for the transaction to be evaluated in. E.g.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="n">contains</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Ordering</span><span class="w"> </span><span class="n">engine</span><span class="w"> </span><span class="n">address</span><span class="o">.</span><span class="w"> </span><span class="nc">See</span><span class="w"> </span><span class="err">`</span><span class="nc">Nock</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="9673269357-1">(</span><span class="p" data-group-id="9673269357-1">)</span><span class="err">`</span></code></pre></li><li><code class="inline">:completion_topc</code> - The address of the topic connected to the<pre><code class="makeup elixir" translate="no"><span class="w">                 </span><span class="n">relevant</span><span class="w"> </span><span class="nc">Executor</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">broadcasting</span><span class="o">.</span></code></pre></li><li><code class="inline">:reply_to</code> - The address that the computed value (for read-only<pre><code class="makeup elixir" translate="no"><span class="w">          </span><span class="n">transaction</span><span class="p">)</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">sent</span><span class="w"> </span><span class="n">to</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="t:transaction/0">
 
   <div class="detail-header">
-    <a href="#t:transaction/0" class="detail-link" title="Link to this type">
+    <a href="#t:transaction/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -356,7 +355,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 <section class="detail" id="t:verify_fun/1">
 
   <div class="detail-header">
-    <a href="#t:verify_fun/1" class="detail-link" title="Link to this type">
+    <a href="#t:verify_fun/1" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -391,7 +390,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -408,7 +407,7 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
 <section class="detail" id="init/1">
 
   <div class="detail-header">
-    <a href="#init/1" class="detail-link" title="Link to this function">
+    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -442,7 +441,7 @@ return the appropriate state.</p><h3 id="init/1-pattern-matching-variations" cla
 <section class="detail" id="rm_nullifier_check/2">
 
   <div class="detail-header">
-    <a href="#rm_nullifier_check/2" class="detail-link" title="Link to this function">
+    <a href="#rm_nullifier_check/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -466,43 +465,40 @@ return the appropriate state.</p><h3 id="init/1-pattern-matching-variations" cla
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node/executor/worker.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

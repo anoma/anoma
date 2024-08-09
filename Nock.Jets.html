@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Nock.Jets — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Nock.Jets — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,43 +94,45 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Nock.Jets</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Nock.Jets</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Jets for the Nock interpreter, taking a gate core. Not fully general.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -149,7 +148,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add/1" translate="no">add(core)</a>
+        <a href="#add/1" data-no-tooltip translate="no">add(core)</a>
 
       </div>
 
@@ -157,7 +156,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bex/1" translate="no">bex(core)</a>
+        <a href="#bex/1" data-no-tooltip translate="no">bex(core)</a>
 
       </div>
 
@@ -165,7 +164,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#calculate_core_param/3" translate="no">calculate_core_param(core_index, gate_index, parent_layer)</a>
+        <a href="#calculate_core_param/3" data-no-tooltip translate="no">calculate_core_param(core_index, gate_index, parent_layer)</a>
 
       </div>
 
@@ -173,7 +172,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#calculate_mug_of_core/2" translate="no">calculate_mug_of_core(index_in_core, parent_layer)</a>
+        <a href="#calculate_mug_of_core/2" data-no-tooltip translate="no">calculate_mug_of_core(index_in_core, parent_layer)</a>
 
       </div>
 
@@ -183,7 +182,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#calculate_mug_of_layer/1" translate="no">calculate_mug_of_layer(parent_layer)</a>
+        <a href="#calculate_mug_of_layer/1" data-no-tooltip translate="no">calculate_mug_of_layer(parent_layer)</a>
 
       </div>
 
@@ -193,7 +192,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#calculate_mug_of_param_core/3" translate="no">calculate_mug_of_param_core(index_in_core, core_index, parent_layer)</a>
+        <a href="#calculate_mug_of_param_core/3" data-no-tooltip translate="no">calculate_mug_of_param_core(index_in_core, core_index, parent_layer)</a>
 
       </div>
 
@@ -203,7 +202,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#calculate_mug_of_param_layer/2" translate="no">calculate_mug_of_param_layer(core_index, parent_layer)</a>
+        <a href="#calculate_mug_of_param_layer/2" data-no-tooltip translate="no">calculate_mug_of_param_layer(core_index, parent_layer)</a>
 
       </div>
 
@@ -213,7 +212,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#cue/1" translate="no">cue(core)</a>
+        <a href="#cue/1" data-no-tooltip translate="no">cue(core)</a>
 
       </div>
 
@@ -221,7 +220,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dec/1" translate="no">dec(core)</a>
+        <a href="#dec/1" data-no-tooltip translate="no">dec(core)</a>
 
       </div>
 
@@ -229,7 +228,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#div/1" translate="no">div(core)</a>
+        <a href="#div/1" data-no-tooltip translate="no">div(core)</a>
 
       </div>
 
@@ -237,7 +236,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#gte/1" translate="no">gte(core)</a>
+        <a href="#gte/1" data-no-tooltip translate="no">gte(core)</a>
 
       </div>
 
@@ -245,7 +244,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#gth/1" translate="no">gth(core)</a>
+        <a href="#gth/1" data-no-tooltip translate="no">gth(core)</a>
 
       </div>
 
@@ -253,7 +252,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#jam/1" translate="no">jam(core)</a>
+        <a href="#jam/1" data-no-tooltip translate="no">jam(core)</a>
 
       </div>
 
@@ -261,7 +260,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#lsh/1" translate="no">lsh(core)</a>
+        <a href="#lsh/1" data-no-tooltip translate="no">lsh(core)</a>
 
       </div>
 
@@ -269,7 +268,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#lte/1" translate="no">lte(core)</a>
+        <a href="#lte/1" data-no-tooltip translate="no">lte(core)</a>
 
       </div>
 
@@ -277,7 +276,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#lth/1" translate="no">lth(core)</a>
+        <a href="#lth/1" data-no-tooltip translate="no">lth(core)</a>
 
       </div>
 
@@ -285,7 +284,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#met/1" translate="no">met(core)</a>
+        <a href="#met/1" data-no-tooltip translate="no">met(core)</a>
 
       </div>
 
@@ -293,7 +292,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mix/1" translate="no">mix(core)</a>
+        <a href="#mix/1" data-no-tooltip translate="no">mix(core)</a>
 
       </div>
 
@@ -301,7 +300,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mod/1" translate="no">mod(core)</a>
+        <a href="#mod/1" data-no-tooltip translate="no">mod(core)</a>
 
       </div>
 
@@ -309,7 +308,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mul/1" translate="no">mul(core)</a>
+        <a href="#mul/1" data-no-tooltip translate="no">mul(core)</a>
 
       </div>
 
@@ -317,7 +316,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nend/1" translate="no">nend(core)</a>
+        <a href="#nend/1" data-no-tooltip translate="no">nend(core)</a>
 
       </div>
 
@@ -325,7 +324,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#rsh/1" translate="no">rsh(core)</a>
+        <a href="#rsh/1" data-no-tooltip translate="no">rsh(core)</a>
 
       </div>
 
@@ -333,7 +332,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#sample/1" translate="no">sample(arg1)</a>
+        <a href="#sample/1" data-no-tooltip translate="no">sample(arg1)</a>
 
       </div>
 
@@ -341,7 +340,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#sign/1" translate="no">sign(core)</a>
+        <a href="#sign/1" data-no-tooltip translate="no">sign(core)</a>
 
       </div>
 
@@ -349,7 +348,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#sign_detatched/1" translate="no">sign_detatched(core)</a>
+        <a href="#sign_detatched/1" data-no-tooltip translate="no">sign_detatched(core)</a>
 
       </div>
 
@@ -357,7 +356,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#sub/1" translate="no">sub(core)</a>
+        <a href="#sub/1" data-no-tooltip translate="no">sub(core)</a>
 
       </div>
 
@@ -365,7 +364,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#verify/1" translate="no">verify(core)</a>
+        <a href="#verify/1" data-no-tooltip translate="no">verify(core)</a>
 
       </div>
 
@@ -373,7 +372,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#verify_detatched/1" translate="no">verify_detatched(core)</a>
+        <a href="#verify_detatched/1" data-no-tooltip translate="no">verify_detatched(core)</a>
 
       </div>
 
@@ -395,7 +394,7 @@ GUIDES
 <section class="detail" id="add/1">
 
   <div class="detail-header">
-    <a href="#add/1" class="detail-link" title="Link to this function">
+    <a href="#add/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -412,7 +411,7 @@ GUIDES
 <section class="detail" id="bex/1">
 
   <div class="detail-header">
-    <a href="#bex/1" class="detail-link" title="Link to this function">
+    <a href="#bex/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -435,7 +434,7 @@ GUIDES
 <section class="detail" id="calculate_core_param/3">
 
   <div class="detail-header">
-    <a href="#calculate_core_param/3" class="detail-link" title="Link to this function">
+    <a href="#calculate_core_param/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -452,7 +451,7 @@ GUIDES
 <section class="detail" id="calculate_mug_of_core/2">
 
   <div class="detail-header">
-    <a href="#calculate_mug_of_core/2" class="detail-link" title="Link to this function">
+    <a href="#calculate_mug_of_core/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -485,15 +484,15 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></p
 <p>In the Hoon repl one should write</p><pre><code class="makeup elixir" translate="no"><span class="n">dojo</span><span class="o">&gt;</span><span class="w"> </span><span class="o">|</span><span class="n">commit</span><span class="w"> </span><span class="p">%</span><span class="n">anoma</span><span class="w">
 </span><span class="o">&gt;=</span><span class="w">
 </span><span class="n">dojo</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="n">anoma</span><span class="w"> </span><span class="o">-</span><span class="n">build</span><span class="o">-</span><span class="n">file</span><span class="w"> </span><span class="o">/</span><span class="o">=</span><span class="n">anoma</span><span class="o">=</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">anoma</span><span class="o">/</span><span class="n">hoon</span><span class="w">
-</span><span class="n">dojo</span><span class="o">&gt;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w">  </span><span class="n">anoma</span><span class="w">  </span><span class="o">!=</span><span class="p" data-group-id="9735485253-1">(</span><span class="n">sub</span><span class="p" data-group-id="9735485253-1">)</span><span class="w">
-</span><span class="p" data-group-id="9735485253-2">[</span><span class="mi">9</span><span class="w"> </span><span class="mi">47</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">31</span><span class="p" data-group-id="9735485253-2">]</span></code></pre><p>Now in IEX</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="nc">Nock.Jets</span><span class="o">.</span><span class="n">calculate_mug_of_core</span><span class="p" data-group-id="7263693205-1">(</span><span class="mi">47</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7263693205-1">)</span><span class="w">
+</span><span class="n">dojo</span><span class="o">&gt;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w">  </span><span class="n">anoma</span><span class="w">  </span><span class="o">!=</span><span class="p" data-group-id="6317638635-1">(</span><span class="n">sub</span><span class="p" data-group-id="6317638635-1">)</span><span class="w">
+</span><span class="p" data-group-id="6317638635-2">[</span><span class="mi">9</span><span class="w"> </span><span class="mi">47</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">31</span><span class="p" data-group-id="6317638635-2">]</span></code></pre><p>Now in IEX</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="nc">Nock.Jets</span><span class="o">.</span><span class="n">calculate_mug_of_core</span><span class="p" data-group-id="2618456571-1">(</span><span class="mi">47</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="2618456571-1">)</span><span class="w">
 </span><span class="mi">14801825384048474882</span></code></pre>
   </section>
 </section>
 <section class="detail" id="calculate_mug_of_layer/1">
 
   <div class="detail-header">
-    <a href="#calculate_mug_of_layer/1" class="detail-link" title="Link to this function">
+    <a href="#calculate_mug_of_layer/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -526,15 +525,15 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <p>In the Hoon repl one should write</p><pre><code class="makeup elixir" translate="no"><span class="n">dojo</span><span class="o">&gt;</span><span class="w"> </span><span class="o">|</span><span class="n">commit</span><span class="w"> </span><span class="p">%</span><span class="n">anoma</span><span class="w">
 </span><span class="o">&gt;=</span><span class="w">
 </span><span class="n">dojo</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="n">anoma</span><span class="w"> </span><span class="o">-</span><span class="n">build</span><span class="o">-</span><span class="n">file</span><span class="w"> </span><span class="o">/</span><span class="o">=</span><span class="n">anoma</span><span class="o">=</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">anoma</span><span class="o">/</span><span class="n">hoon</span><span class="w">
-</span><span class="n">dojo</span><span class="o">&gt;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w">  </span><span class="n">anoma</span><span class="w">  </span><span class="o">!=</span><span class="p" data-group-id="8099620723-1">(</span><span class="n">sub</span><span class="p" data-group-id="8099620723-1">)</span><span class="w">
-</span><span class="p" data-group-id="8099620723-2">[</span><span class="mi">9</span><span class="w"> </span><span class="mi">47</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">31</span><span class="p" data-group-id="8099620723-2">]</span></code></pre><p>Now in IEX</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="nc">Nock.Jets</span><span class="o">.</span><span class="n">calculate_mug_of_layer</span><span class="p" data-group-id="8177964533-1">(</span><span class="mi">1</span><span class="p" data-group-id="8177964533-1">)</span><span class="w">
+</span><span class="n">dojo</span><span class="o">&gt;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w">  </span><span class="n">anoma</span><span class="w">  </span><span class="o">!=</span><span class="p" data-group-id="3536416242-1">(</span><span class="n">sub</span><span class="p" data-group-id="3536416242-1">)</span><span class="w">
+</span><span class="p" data-group-id="3536416242-2">[</span><span class="mi">9</span><span class="w"> </span><span class="mi">47</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">31</span><span class="p" data-group-id="3536416242-2">]</span></code></pre><p>Now in IEX</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="nc">Nock.Jets</span><span class="o">.</span><span class="n">calculate_mug_of_layer</span><span class="p" data-group-id="7191505966-1">(</span><span class="mi">1</span><span class="p" data-group-id="7191505966-1">)</span><span class="w">
 </span><span class="mi">17654928022549292273</span></code></pre><p>This value should match Nock.@layer_1_contex_mug</p>
   </section>
 </section>
 <section class="detail" id="calculate_mug_of_param_core/3">
 
   <div class="detail-header">
-    <a href="#calculate_mug_of_param_core/3" class="detail-link" title="Link to this function">
+    <a href="#calculate_mug_of_param_core/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -561,14 +560,14 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
   </a>
   <span class="text">Example</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="nc">Nock.Jets</span><span class="o">.</span><span class="n">calculate_mug_of_param_core</span><span class="p" data-group-id="6531631260-1">(</span><span class="mi">767</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p" data-group-id="6531631260-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="nc">Nock.Jets</span><span class="o">.</span><span class="n">calculate_mug_of_param_core</span><span class="p" data-group-id="3633972263-1">(</span><span class="mi">767</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p" data-group-id="3633972263-1">)</span><span class="w">
 </span><span class="mi">12605872635346981159</span></code></pre><p>For our standard library, so far only layer 4 is parameterized</p>
   </section>
 </section>
 <section class="detail" id="calculate_mug_of_param_layer/2">
 
   <div class="detail-header">
-    <a href="#calculate_mug_of_param_layer/2" class="detail-link" title="Link to this function">
+    <a href="#calculate_mug_of_param_layer/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -592,14 +591,14 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
   </a>
   <span class="text">Example</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="nc">Nock.Jets</span><span class="o">.</span><span class="n">calculate_mug_of_param_layer</span><span class="p" data-group-id="7328926524-1">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p" data-group-id="7328926524-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="nc">Nock.Jets</span><span class="o">.</span><span class="n">calculate_mug_of_param_layer</span><span class="p" data-group-id="5925486632-1">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p" data-group-id="5925486632-1">)</span><span class="w">
 </span><span class="mi">11284470320276584209</span></code></pre><p>For our standard library, so far only layer 4 is parameterized</p>
   </section>
 </section>
 <section class="detail" id="cue/1">
 
   <div class="detail-header">
-    <a href="#cue/1" class="detail-link" title="Link to this function">
+    <a href="#cue/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -616,7 +615,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="dec/1">
 
   <div class="detail-header">
-    <a href="#dec/1" class="detail-link" title="Link to this function">
+    <a href="#dec/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -633,7 +632,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="div/1">
 
   <div class="detail-header">
-    <a href="#div/1" class="detail-link" title="Link to this function">
+    <a href="#div/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -650,7 +649,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="gte/1">
 
   <div class="detail-header">
-    <a href="#gte/1" class="detail-link" title="Link to this function">
+    <a href="#gte/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -667,7 +666,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="gth/1">
 
   <div class="detail-header">
-    <a href="#gth/1" class="detail-link" title="Link to this function">
+    <a href="#gth/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -684,7 +683,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="jam/1">
 
   <div class="detail-header">
-    <a href="#jam/1" class="detail-link" title="Link to this function">
+    <a href="#jam/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -701,7 +700,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="lsh/1">
 
   <div class="detail-header">
-    <a href="#lsh/1" class="detail-link" title="Link to this function">
+    <a href="#lsh/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -724,7 +723,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="lte/1">
 
   <div class="detail-header">
-    <a href="#lte/1" class="detail-link" title="Link to this function">
+    <a href="#lte/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -741,7 +740,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="lth/1">
 
   <div class="detail-header">
-    <a href="#lth/1" class="detail-link" title="Link to this function">
+    <a href="#lth/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -758,7 +757,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="met/1">
 
   <div class="detail-header">
-    <a href="#met/1" class="detail-link" title="Link to this function">
+    <a href="#met/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -781,7 +780,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="mix/1">
 
   <div class="detail-header">
-    <a href="#mix/1" class="detail-link" title="Link to this function">
+    <a href="#mix/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -804,7 +803,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="mod/1">
 
   <div class="detail-header">
-    <a href="#mod/1" class="detail-link" title="Link to this function">
+    <a href="#mod/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -821,7 +820,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="mul/1">
 
   <div class="detail-header">
-    <a href="#mul/1" class="detail-link" title="Link to this function">
+    <a href="#mul/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -838,7 +837,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="nend/1">
 
   <div class="detail-header">
-    <a href="#nend/1" class="detail-link" title="Link to this function">
+    <a href="#nend/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -861,7 +860,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="rsh/1">
 
   <div class="detail-header">
-    <a href="#rsh/1" class="detail-link" title="Link to this function">
+    <a href="#rsh/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -884,7 +883,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="sample/1">
 
   <div class="detail-header">
-    <a href="#sample/1" class="detail-link" title="Link to this function">
+    <a href="#sample/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -901,7 +900,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="sign/1">
 
   <div class="detail-header">
-    <a href="#sign/1" class="detail-link" title="Link to this function">
+    <a href="#sign/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -924,7 +923,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="sign_detatched/1">
 
   <div class="detail-header">
-    <a href="#sign_detatched/1" class="detail-link" title="Link to this function">
+    <a href="#sign_detatched/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -947,7 +946,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="sub/1">
 
   <div class="detail-header">
-    <a href="#sub/1" class="detail-link" title="Link to this function">
+    <a href="#sub/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -964,7 +963,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="verify/1">
 
   <div class="detail-header">
-    <a href="#verify/1" class="detail-link" title="Link to this function">
+    <a href="#verify/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -987,7 +986,7 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
 <section class="detail" id="verify_detatched/1">
 
   <div class="detail-header">
-    <a href="#verify_detatched/1" class="detail-link" title="Link to this function">
+    <a href="#verify_detatched/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1011,43 +1010,40 @@ the same as the layer numbers found in <code class="inline">anoma.hoon</code></l
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/nock/jets.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

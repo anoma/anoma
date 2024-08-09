@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Examples.ENock — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Examples.ENock — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,39 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Examples.ENock</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Examples.ENock</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -145,7 +144,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#anode/0" translate="no">anode()</a>
+        <a href="#anode/0" data-no-tooltip translate="no">anode()</a>
 
       </div>
 
@@ -153,7 +152,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#anode/1" translate="no">anode(t1)</a>
+        <a href="#anode/1" data-no-tooltip translate="no">anode(t1)</a>
 
       </div>
 
@@ -161,7 +160,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bex/0" translate="no">bex()</a>
+        <a href="#bex/0" data-no-tooltip translate="no">bex()</a>
 
       </div>
 
@@ -169,7 +168,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#counter_logic/0" translate="no">counter_logic()</a>
+        <a href="#counter_logic/0" data-no-tooltip translate="no">counter_logic()</a>
 
       </div>
 
@@ -177,7 +176,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#cue/0" translate="no">cue()</a>
+        <a href="#cue/0" data-no-tooltip translate="no">cue()</a>
 
       </div>
 
@@ -185,7 +184,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dec/0" translate="no">dec()</a>
+        <a href="#dec/0" data-no-tooltip translate="no">dec()</a>
 
       </div>
 
@@ -193,7 +192,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#devil_increment/0" translate="no">devil_increment()</a>
+        <a href="#devil_increment/0" data-no-tooltip translate="no">devil_increment()</a>
 
       </div>
 
@@ -201,7 +200,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#env/1" translate="no">env(storage \\ raw_storage())</a>
+        <a href="#env/1" data-no-tooltip translate="no">env(storage \\ raw_storage())</a>
 
       </div>
 
@@ -209,7 +208,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#factorial/0" translate="no">factorial()</a>
+        <a href="#factorial/0" data-no-tooltip translate="no">factorial()</a>
 
       </div>
 
@@ -217,7 +216,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#incorrectly_ending/0" translate="no">incorrectly_ending()</a>
+        <a href="#incorrectly_ending/0" data-no-tooltip translate="no">incorrectly_ending()</a>
 
       </div>
 
@@ -225,7 +224,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#incorrectly_nested_noun/0" translate="no">incorrectly_nested_noun()</a>
+        <a href="#incorrectly_nested_noun/0" data-no-tooltip translate="no">incorrectly_nested_noun()</a>
 
       </div>
 
@@ -233,7 +232,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#incorrectly_starting/0" translate="no">incorrectly_starting()</a>
+        <a href="#incorrectly_starting/0" data-no-tooltip translate="no">incorrectly_starting()</a>
 
       </div>
 
@@ -241,7 +240,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#increment_counter_val/1" translate="no">increment_counter_val(val)</a>
+        <a href="#increment_counter_val/1" data-no-tooltip translate="no">increment_counter_val(val)</a>
 
       </div>
 
@@ -249,7 +248,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#indexed_noun/0" translate="no">indexed_noun()</a>
+        <a href="#indexed_noun/0" data-no-tooltip translate="no">indexed_noun()</a>
 
       </div>
 
@@ -257,7 +256,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#jam/0" translate="no">jam()</a>
+        <a href="#jam/0" data-no-tooltip translate="no">jam()</a>
 
       </div>
 
@@ -265,7 +264,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#jam_and_cue/2" translate="no">jam_and_cue(jam_value, cue_value)</a>
+        <a href="#jam_and_cue/2" data-no-tooltip translate="no">jam_and_cue(jam_value, cue_value)</a>
 
       </div>
 
@@ -273,7 +272,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#jamming_and_cueing/0" translate="no">jamming_and_cueing()</a>
+        <a href="#jamming_and_cueing/0" data-no-tooltip translate="no">jamming_and_cueing()</a>
 
       </div>
 
@@ -281,7 +280,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#lsh0/0" translate="no">lsh0()</a>
+        <a href="#lsh0/0" data-no-tooltip translate="no">lsh0()</a>
 
       </div>
 
@@ -289,7 +288,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#lsh1/0" translate="no">lsh1()</a>
+        <a href="#lsh1/0" data-no-tooltip translate="no">lsh1()</a>
 
       </div>
 
@@ -297,7 +296,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#lsh2/0" translate="no">lsh2()</a>
+        <a href="#lsh2/0" data-no-tooltip translate="no">lsh2()</a>
 
       </div>
 
@@ -305,7 +304,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#lsh/1" translate="no">lsh(value)</a>
+        <a href="#lsh/1" data-no-tooltip translate="no">lsh(value)</a>
 
       </div>
 
@@ -313,7 +312,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mat/0" translate="no">mat()</a>
+        <a href="#mat/0" data-no-tooltip translate="no">mat()</a>
 
       </div>
 
@@ -321,7 +320,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#met0/0" translate="no">met0()</a>
+        <a href="#met0/0" data-no-tooltip translate="no">met0()</a>
 
       </div>
 
@@ -329,7 +328,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#met1/0" translate="no">met1()</a>
+        <a href="#met1/0" data-no-tooltip translate="no">met1()</a>
 
       </div>
 
@@ -337,7 +336,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#met2/0" translate="no">met2()</a>
+        <a href="#met2/0" data-no-tooltip translate="no">met2()</a>
 
       </div>
 
@@ -345,7 +344,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#met/1" translate="no">met(value)</a>
+        <a href="#met/1" data-no-tooltip translate="no">met(value)</a>
 
       </div>
 
@@ -353,7 +352,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#miki_increment/0" translate="no">miki_increment()</a>
+        <a href="#miki_increment/0" data-no-tooltip translate="no">miki_increment()</a>
 
       </div>
 
@@ -361,7 +360,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#miki_increment_candidate/0" translate="no">miki_increment_candidate()</a>
+        <a href="#miki_increment_candidate/0" data-no-tooltip translate="no">miki_increment_candidate()</a>
 
       </div>
 
@@ -369,7 +368,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#miki_increment_kv_tx/0" translate="no">miki_increment_kv_tx()</a>
+        <a href="#miki_increment_kv_tx/0" data-no-tooltip translate="no">miki_increment_kv_tx()</a>
 
       </div>
 
@@ -377,7 +376,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mix/0" translate="no">mix()</a>
+        <a href="#mix/0" data-no-tooltip translate="no">mix()</a>
 
       </div>
 
@@ -385,7 +384,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#nesting_noun/0" translate="no">nesting_noun()</a>
+        <a href="#nesting_noun/0" data-no-tooltip translate="no">nesting_noun()</a>
 
       </div>
 
@@ -393,7 +392,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#one_two/0" translate="no">one_two()</a>
+        <a href="#one_two/0" data-no-tooltip translate="no">one_two()</a>
 
       </div>
 
@@ -401,7 +400,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#raw_storage/0" translate="no">raw_storage()</a>
+        <a href="#raw_storage/0" data-no-tooltip translate="no">raw_storage()</a>
 
       </div>
 
@@ -409,7 +408,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#replacing_terms/0" translate="no">replacing_terms()</a>
+        <a href="#replacing_terms/0" data-no-tooltip translate="no">replacing_terms()</a>
 
       </div>
 
@@ -417,7 +416,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#rsh0/0" translate="no">rsh0()</a>
+        <a href="#rsh0/0" data-no-tooltip translate="no">rsh0()</a>
 
       </div>
 
@@ -425,7 +424,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#rsh1/0" translate="no">rsh1()</a>
+        <a href="#rsh1/0" data-no-tooltip translate="no">rsh1()</a>
 
       </div>
 
@@ -433,7 +432,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#rsh2/0" translate="no">rsh2()</a>
+        <a href="#rsh2/0" data-no-tooltip translate="no">rsh2()</a>
 
       </div>
 
@@ -441,7 +440,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#rsh/1" translate="no">rsh(value)</a>
+        <a href="#rsh/1" data-no-tooltip translate="no">rsh(value)</a>
 
       </div>
 
@@ -449,7 +448,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#sign/0" translate="no">sign()</a>
+        <a href="#sign/0" data-no-tooltip translate="no">sign()</a>
 
       </div>
 
@@ -457,7 +456,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#sign_detatched/0" translate="no">sign_detatched()</a>
+        <a href="#sign_detatched/0" data-no-tooltip translate="no">sign_detatched()</a>
 
       </div>
 
@@ -465,7 +464,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#successful_inc/0" translate="no">successful_inc()</a>
+        <a href="#successful_inc/0" data-no-tooltip translate="no">successful_inc()</a>
 
       </div>
 
@@ -473,7 +472,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#uend0/0" translate="no">uend0()</a>
+        <a href="#uend0/0" data-no-tooltip translate="no">uend0()</a>
 
       </div>
 
@@ -481,7 +480,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#uend1/0" translate="no">uend1()</a>
+        <a href="#uend1/0" data-no-tooltip translate="no">uend1()</a>
 
       </div>
 
@@ -489,7 +488,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#uend/1" translate="no">uend(value)</a>
+        <a href="#uend/1" data-no-tooltip translate="no">uend(value)</a>
 
       </div>
 
@@ -497,7 +496,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#unsuccessful_inc/0" translate="no">unsuccessful_inc()</a>
+        <a href="#unsuccessful_inc/0" data-no-tooltip translate="no">unsuccessful_inc()</a>
 
       </div>
 
@@ -505,7 +504,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#verify/0" translate="no">verify()</a>
+        <a href="#verify/0" data-no-tooltip translate="no">verify()</a>
 
       </div>
 
@@ -513,7 +512,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#verify_detatched/0" translate="no">verify_detatched()</a>
+        <a href="#verify_detatched/0" data-no-tooltip translate="no">verify_detatched()</a>
 
       </div>
 
@@ -521,7 +520,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#zero_counter/1" translate="no">zero_counter(val)</a>
+        <a href="#zero_counter/1" data-no-tooltip translate="no">zero_counter(val)</a>
 
       </div>
 
@@ -529,7 +528,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#zero_delta_logic/0" translate="no">zero_delta_logic()</a>
+        <a href="#zero_delta_logic/0" data-no-tooltip translate="no">zero_delta_logic()</a>
 
       </div>
 
@@ -551,7 +550,7 @@ GUIDES
 <section class="detail" id="anode/0">
 
   <div class="detail-header">
-    <a href="#anode/0" class="detail-link" title="Link to this function">
+    <a href="#anode/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -574,7 +573,7 @@ GUIDES
 <section class="detail" id="anode/1">
 
   <div class="detail-header">
-    <a href="#anode/1" class="detail-link" title="Link to this function">
+    <a href="#anode/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -597,7 +596,7 @@ GUIDES
 <section class="detail" id="bex/0">
 
   <div class="detail-header">
-    <a href="#bex/0" class="detail-link" title="Link to this function">
+    <a href="#bex/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -620,7 +619,7 @@ GUIDES
 <section class="detail" id="counter_logic/0">
 
   <div class="detail-header">
-    <a href="#counter_logic/0" class="detail-link" title="Link to this function">
+    <a href="#counter_logic/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -643,7 +642,7 @@ GUIDES
 <section class="detail" id="cue/0">
 
   <div class="detail-header">
-    <a href="#cue/0" class="detail-link" title="Link to this function">
+    <a href="#cue/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -666,7 +665,7 @@ GUIDES
 <section class="detail" id="dec/0">
 
   <div class="detail-header">
-    <a href="#dec/0" class="detail-link" title="Link to this function">
+    <a href="#dec/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -689,7 +688,7 @@ GUIDES
 <section class="detail" id="devil_increment/0">
 
   <div class="detail-header">
-    <a href="#devil_increment/0" class="detail-link" title="Link to this function">
+    <a href="#devil_increment/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -708,7 +707,7 @@ GUIDES
     <span id="env/0"></span>
 
   <div class="detail-header">
-    <a href="#env/1" class="detail-link" title="Link to this function">
+    <a href="#env/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -731,7 +730,7 @@ GUIDES
 <section class="detail" id="factorial/0">
 
   <div class="detail-header">
-    <a href="#factorial/0" class="detail-link" title="Link to this function">
+    <a href="#factorial/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -754,7 +753,7 @@ GUIDES
 <section class="detail" id="incorrectly_ending/0">
 
   <div class="detail-header">
-    <a href="#incorrectly_ending/0" class="detail-link" title="Link to this function">
+    <a href="#incorrectly_ending/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -777,7 +776,7 @@ GUIDES
 <section class="detail" id="incorrectly_nested_noun/0">
 
   <div class="detail-header">
-    <a href="#incorrectly_nested_noun/0" class="detail-link" title="Link to this function">
+    <a href="#incorrectly_nested_noun/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -794,7 +793,7 @@ GUIDES
 <section class="detail" id="incorrectly_starting/0">
 
   <div class="detail-header">
-    <a href="#incorrectly_starting/0" class="detail-link" title="Link to this function">
+    <a href="#incorrectly_starting/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -817,7 +816,7 @@ GUIDES
 <section class="detail" id="increment_counter_val/1">
 
   <div class="detail-header">
-    <a href="#increment_counter_val/1" class="detail-link" title="Link to this function">
+    <a href="#increment_counter_val/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -840,7 +839,7 @@ GUIDES
 <section class="detail" id="indexed_noun/0">
 
   <div class="detail-header">
-    <a href="#indexed_noun/0" class="detail-link" title="Link to this function">
+    <a href="#indexed_noun/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -863,7 +862,7 @@ GUIDES
 <section class="detail" id="jam/0">
 
   <div class="detail-header">
-    <a href="#jam/0" class="detail-link" title="Link to this function">
+    <a href="#jam/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -886,7 +885,7 @@ GUIDES
 <section class="detail" id="jam_and_cue/2">
 
   <div class="detail-header">
-    <a href="#jam_and_cue/2" class="detail-link" title="Link to this function">
+    <a href="#jam_and_cue/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -903,7 +902,7 @@ GUIDES
 <section class="detail" id="jamming_and_cueing/0">
 
   <div class="detail-header">
-    <a href="#jamming_and_cueing/0" class="detail-link" title="Link to this function">
+    <a href="#jamming_and_cueing/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -920,7 +919,7 @@ GUIDES
 <section class="detail" id="lsh0/0">
 
   <div class="detail-header">
-    <a href="#lsh0/0" class="detail-link" title="Link to this function">
+    <a href="#lsh0/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -943,7 +942,7 @@ GUIDES
 <section class="detail" id="lsh1/0">
 
   <div class="detail-header">
-    <a href="#lsh1/0" class="detail-link" title="Link to this function">
+    <a href="#lsh1/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -966,7 +965,7 @@ GUIDES
 <section class="detail" id="lsh2/0">
 
   <div class="detail-header">
-    <a href="#lsh2/0" class="detail-link" title="Link to this function">
+    <a href="#lsh2/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -989,7 +988,7 @@ GUIDES
 <section class="detail" id="lsh/1">
 
   <div class="detail-header">
-    <a href="#lsh/1" class="detail-link" title="Link to this function">
+    <a href="#lsh/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1012,7 +1011,7 @@ GUIDES
 <section class="detail" id="mat/0">
 
   <div class="detail-header">
-    <a href="#mat/0" class="detail-link" title="Link to this function">
+    <a href="#mat/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1035,7 +1034,7 @@ GUIDES
 <section class="detail" id="met0/0">
 
   <div class="detail-header">
-    <a href="#met0/0" class="detail-link" title="Link to this function">
+    <a href="#met0/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1058,7 +1057,7 @@ GUIDES
 <section class="detail" id="met1/0">
 
   <div class="detail-header">
-    <a href="#met1/0" class="detail-link" title="Link to this function">
+    <a href="#met1/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1081,7 +1080,7 @@ GUIDES
 <section class="detail" id="met2/0">
 
   <div class="detail-header">
-    <a href="#met2/0" class="detail-link" title="Link to this function">
+    <a href="#met2/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1104,7 +1103,7 @@ GUIDES
 <section class="detail" id="met/1">
 
   <div class="detail-header">
-    <a href="#met/1" class="detail-link" title="Link to this function">
+    <a href="#met/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1127,7 +1126,7 @@ GUIDES
 <section class="detail" id="miki_increment/0">
 
   <div class="detail-header">
-    <a href="#miki_increment/0" class="detail-link" title="Link to this function">
+    <a href="#miki_increment/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1144,7 +1143,7 @@ GUIDES
 <section class="detail" id="miki_increment_candidate/0">
 
   <div class="detail-header">
-    <a href="#miki_increment_candidate/0" class="detail-link" title="Link to this function">
+    <a href="#miki_increment_candidate/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1161,7 +1160,7 @@ GUIDES
 <section class="detail" id="miki_increment_kv_tx/0">
 
   <div class="detail-header">
-    <a href="#miki_increment_kv_tx/0" class="detail-link" title="Link to this function">
+    <a href="#miki_increment_kv_tx/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1184,7 +1183,7 @@ GUIDES
 <section class="detail" id="mix/0">
 
   <div class="detail-header">
-    <a href="#mix/0" class="detail-link" title="Link to this function">
+    <a href="#mix/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1207,7 +1206,7 @@ GUIDES
 <section class="detail" id="nesting_noun/0">
 
   <div class="detail-header">
-    <a href="#nesting_noun/0" class="detail-link" title="Link to this function">
+    <a href="#nesting_noun/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1230,7 +1229,7 @@ GUIDES
 <section class="detail" id="one_two/0">
 
   <div class="detail-header">
-    <a href="#one_two/0" class="detail-link" title="Link to this function">
+    <a href="#one_two/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1253,7 +1252,7 @@ GUIDES
 <section class="detail" id="raw_storage/0">
 
   <div class="detail-header">
-    <a href="#raw_storage/0" class="detail-link" title="Link to this function">
+    <a href="#raw_storage/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1276,7 +1275,7 @@ GUIDES
 <section class="detail" id="replacing_terms/0">
 
   <div class="detail-header">
-    <a href="#replacing_terms/0" class="detail-link" title="Link to this function">
+    <a href="#replacing_terms/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1299,7 +1298,7 @@ GUIDES
 <section class="detail" id="rsh0/0">
 
   <div class="detail-header">
-    <a href="#rsh0/0" class="detail-link" title="Link to this function">
+    <a href="#rsh0/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1322,7 +1321,7 @@ GUIDES
 <section class="detail" id="rsh1/0">
 
   <div class="detail-header">
-    <a href="#rsh1/0" class="detail-link" title="Link to this function">
+    <a href="#rsh1/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1345,7 +1344,7 @@ GUIDES
 <section class="detail" id="rsh2/0">
 
   <div class="detail-header">
-    <a href="#rsh2/0" class="detail-link" title="Link to this function">
+    <a href="#rsh2/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1368,7 +1367,7 @@ GUIDES
 <section class="detail" id="rsh/1">
 
   <div class="detail-header">
-    <a href="#rsh/1" class="detail-link" title="Link to this function">
+    <a href="#rsh/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1391,7 +1390,7 @@ GUIDES
 <section class="detail" id="sign/0">
 
   <div class="detail-header">
-    <a href="#sign/0" class="detail-link" title="Link to this function">
+    <a href="#sign/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1414,7 +1413,7 @@ GUIDES
 <section class="detail" id="sign_detatched/0">
 
   <div class="detail-header">
-    <a href="#sign_detatched/0" class="detail-link" title="Link to this function">
+    <a href="#sign_detatched/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1437,7 +1436,7 @@ GUIDES
 <section class="detail" id="successful_inc/0">
 
   <div class="detail-header">
-    <a href="#successful_inc/0" class="detail-link" title="Link to this function">
+    <a href="#successful_inc/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1460,7 +1459,7 @@ GUIDES
 <section class="detail" id="uend0/0">
 
   <div class="detail-header">
-    <a href="#uend0/0" class="detail-link" title="Link to this function">
+    <a href="#uend0/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1483,7 +1482,7 @@ GUIDES
 <section class="detail" id="uend1/0">
 
   <div class="detail-header">
-    <a href="#uend1/0" class="detail-link" title="Link to this function">
+    <a href="#uend1/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1506,7 +1505,7 @@ GUIDES
 <section class="detail" id="uend/1">
 
   <div class="detail-header">
-    <a href="#uend/1" class="detail-link" title="Link to this function">
+    <a href="#uend/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1529,7 +1528,7 @@ GUIDES
 <section class="detail" id="unsuccessful_inc/0">
 
   <div class="detail-header">
-    <a href="#unsuccessful_inc/0" class="detail-link" title="Link to this function">
+    <a href="#unsuccessful_inc/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1552,7 +1551,7 @@ GUIDES
 <section class="detail" id="verify/0">
 
   <div class="detail-header">
-    <a href="#verify/0" class="detail-link" title="Link to this function">
+    <a href="#verify/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1575,7 +1574,7 @@ GUIDES
 <section class="detail" id="verify_detatched/0">
 
   <div class="detail-header">
-    <a href="#verify_detatched/0" class="detail-link" title="Link to this function">
+    <a href="#verify_detatched/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1598,7 +1597,7 @@ GUIDES
 <section class="detail" id="zero_counter/1">
 
   <div class="detail-header">
-    <a href="#zero_counter/1" class="detail-link" title="Link to this function">
+    <a href="#zero_counter/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1621,7 +1620,7 @@ GUIDES
 <section class="detail" id="zero_delta_logic/0">
 
   <div class="detail-header">
-    <a href="#zero_delta_logic/0" class="detail-link" title="Link to this function">
+    <a href="#zero_delta_logic/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1645,43 +1644,40 @@ GUIDES
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/examples/enock.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

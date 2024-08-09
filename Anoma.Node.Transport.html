@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Node.Transport — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Node.Transport — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,53 +94,52 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Node.Transport</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Node.Transport</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
-<p>I am the Transport server.</p><p>I implement the transport layer for communication between the router and other engines.
-XXX
-My instance gets launched by the Executor and is connected to a unique
-transaction.</p><h3 id="module-public-api" class="section-heading">
+    <section id="moduledoc">
+<p>I am the Transport Engine.</p><p>I implement the transport layer for communication between nodes. Connections
+between nodes are established by means of a two-step handshake protocol.</p><h3 id="module-public-api" class="section-heading">
   <a href="#module-public-api" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Public API</span>
 </h3>
-<p>I provide the following public functionality:</p><ul><li><a href="#start_server/2"><code class="inline">start_server/2</code></a></li><li><a href="#receive_chunk/2"><code class="inline">receive_chunk/2</code></a></li><li><a href="#learn_node/3"><code class="inline">learn_node/3</code></a></li><li><a href="#learn_engine/3"><code class="inline">learn_engine/3</code></a></li><li><a href="#send/3"><code class="inline">send/3</code></a></li><li><a href="#new_connection/2"><code class="inline">new_connection/2</code></a></li><li><code class="inline">disconnect/2</code>
-XXX</li></ul>
-  </section>
+<p>I provide the following public functionality:</p><ul><li><a href="#start_server/2"><code class="inline">start_server/2</code></a></li><li><a href="#receive_chunk/2"><code class="inline">receive_chunk/2</code></a></li><li><a href="#learn_node/3"><code class="inline">learn_node/3</code></a></li><li><a href="#learn_engine/3"><code class="inline">learn_engine/3</code></a></li><li><a href="#send/3"><code class="inline">send/3</code></a></li><li><a href="#new_connection/2"><code class="inline">new_connection/2</code></a></li><li><code class="inline">disconnect/2</code></li></ul>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -159,7 +155,7 @@ XXX</li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:listen_addr/0" translate="no">listen_addr()</a>
+        <a href="#t:listen_addr/0" data-no-tooltip translate="no">listen_addr()</a>
 
       </div>
 
@@ -169,7 +165,7 @@ XXX</li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -179,7 +175,7 @@ XXX</li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:transport_addr/0" translate="no">transport_addr()</a>
+        <a href="#t:transport_addr/0" data-no-tooltip translate="no">transport_addr()</a>
 
       </div>
 
@@ -189,7 +185,7 @@ XXX</li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:transport_type/0" translate="no">transport_type()</a>
+        <a href="#t:transport_type/0" data-no-tooltip translate="no">transport_type()</a>
 
       </div>
 
@@ -205,15 +201,7 @@ XXX</li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_connection/3" translate="no">add_connection(s, node, addr)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
 
       </div>
 
@@ -223,7 +211,7 @@ XXX</li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#disconnected/2" translate="no">disconnected(transport, reason)</a>
+        <a href="#disconnected/2" data-no-tooltip translate="no">disconnected(transport, reason)</a>
 
       </div>
 
@@ -231,7 +219,7 @@ XXX</li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_cast/3" translate="no">handle_cast(arg, from, s)</a>
+        <a href="#handle_cast/3" data-no-tooltip translate="no">handle_cast(arg, from, s)</a>
 
       </div>
 
@@ -239,15 +227,7 @@ XXX</li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_recv_chunk/3" translate="no">handle_recv_chunk(s, from, data)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#init/1" translate="no">init(arg)</a>
+        <a href="#init/1" data-no-tooltip translate="no">init(arg)</a>
 
       </div>
 
@@ -257,48 +237,40 @@ XXX</li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init_connection/2" translate="no">init_connection(s, trans)</a>
+        <a href="#learn_engine/3" data-no-tooltip translate="no">learn_engine(transport, engine, node)</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#learn_engine/3" translate="no">learn_engine(transport, engine, node)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I notify the transport Engine that the specified engine lives on the
+        <div class="summary-synopsis"><p>I notify the Transport Engine that the specified engine lives on the
 specified node.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#learn_node/3" translate="no">learn_node(transport, id, addr)</a>
+        <a href="#learn_node/3" data-no-tooltip translate="no">learn_node(transport, id, addr)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>I notify the Transport Engine that the specified node with given public id
-can be reached by the specified transport address.</p></div>
+        <div class="summary-synopsis"><p>I notify the Transport Engine that the node specified by the given public id
+can be reached through the specified transport address.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new_connection/2" translate="no">new_connection(transport, trans_type)</a>
+        <a href="#new_connection/2" data-no-tooltip translate="no">new_connection(transport, trans_type)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Notify the transport that you, a local engine, are now managing a new
+        <div class="summary-synopsis"><p>I notify the Transport Engine that you, a local engine, are now managing a new
 incoming connection of the specified type.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#receive_chunk/2" translate="no">receive_chunk(transport, chunk)</a>
+        <a href="#receive_chunk/2" data-no-tooltip translate="no">receive_chunk(transport, chunk)</a>
 
       </div>
 
@@ -308,7 +280,7 @@ incoming connection of the specified type.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#send/3" translate="no">send(transport, dst, msg)</a>
+        <a href="#send/3" data-no-tooltip translate="no">send(transport, dst, msg)</a>
 
       </div>
 
@@ -318,17 +290,17 @@ incoming connection of the specified type.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_server/2" translate="no">start_server(transport, addr)</a>
+        <a href="#start_server/2" data-no-tooltip translate="no">start_server(transport, addr)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>I start a new transport server listening on the specified address.</p></div>
+        <div class="summary-synopsis"><p>I try to start a new transport server listening on the specified address.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#transport_type/1" translate="no">transport_type(addr)</a>
+        <a href="#transport_type/1" data-no-tooltip translate="no">transport_type(addr)</a>
 
       </div>
 
@@ -352,7 +324,7 @@ incoming connection of the specified type.</p></div>
 <section class="detail" id="t:listen_addr/0">
 
   <div class="detail-header">
-    <a href="#t:listen_addr/0" class="detail-link" title="Link to this type">
+    <a href="#t:listen_addr/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -365,7 +337,7 @@ incoming connection of the specified type.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> listen_addr() :: {:tcp, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://www.erlang.org/doc/man/inet.html#type-port_number">:inet.port_number</a>()} | {:unix, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()}</pre>
+          <pre translate="no"><span class="attribute">@type</span> listen_addr() :: {:tcp, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:port_number/0">:inet.port_number</a>()} | {:unix, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()}</pre>
 
       </div>
 
@@ -381,7 +353,7 @@ incoming connection of the specified type.</p></div>
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -428,21 +400,25 @@ incoming connection of the specified type.</p></div>
   <span class="text">Fields</span>
 </h3>
 <ul><li><code class="inline">:router</code> - The address of the Router Engine that the Transport Engine
-instance serves to.</li><li><code class="inline">:logger</code> - The Logger Engine address. Enforced: false.</li><li><code class="inline">:node_internal_id</code> - TODO</li><li><code class="inline">:transport_internal_id</code> - TODO</li><li><code class="inline">:connection_pool</code> - The supervisor which manages the connection pool that
-the TCPConnection Engine instance belongs to.</li><li><code class="inline">:node_connections</code> - Keeps opened (??) node connections. Maps external
-connection ids to their addresses.</li><li><code class="inline">:connection_states</code> - Maps connections (known? TODO) to their connection states.</li><li><code class="inline">:pending_outgoing_messages</code> - TODO</li><li><code class="inline">:pending_outgoing_engine_messages</code> - TODO</li><li><code class="inline">:servers</code> - Stores a set of transport servers that the Transport Engine
+instance serves to.</li><li><code class="inline">:logger</code> - The Logger Engine address. Enforced: false.</li><li><code class="inline">:node_internal_id</code> - Id of this node.</li><li><code class="inline">:transport_internal_id</code> - Id of the Transport Engine.</li><li><code class="inline">:connection_pool</code> - The supervisor which manages the connection pool that
+the TCPConnection Engine instance belongs to.</li><li><code class="inline">:node_connections</code> - For every current node connection, maps the
+correspondent id to their address. Default: empty.</li><li><code class="inline">:connection_states</code> - Maps current connections to their respective
+connection states. Default: empty.</li><li><code class="inline">:pending_outgoing_messages</code> - For every node, to which we have not
+established a connection yet, store a list of messages addressed to the node.
+Default: empty.</li><li><code class="inline">:pending_outgoing_engine_messages</code> - For every engine, whose node
+location is not known yet, store a list of messages addressed to the
+engine. Default: empty.</li><li><code class="inline">:servers</code> - Stores a set of transport servers that the Transport Engine
 is currently running. Every transport server is mapped to an external
-transport address, by which messages may reach the Engine through this server.</li><li><code class="inline">:known_nodes</code> - Stores a set of known nodes by their public id: every
-node id is mapped to a set of transport addresses through which the node can be reached.
-TODO should become its own engine
-XXX</li><li><code class="inline">:conn</code> - Socket of the established connection for the listener mode.
-Initially, nil. Filled in as soon as a connection is established.</li></ul>
+transport address, by which messages may reach the Engine through this
+server.</li><li><code class="inline">:known_nodes</code> - Maps every known node (indexed by its public id) to a
+set of transport addresses through which the node can be reached.</li><li><code class="inline">:known_engines</code> - Stores a set of known engines by their public id: every
+engine id is mapped to a public id of a node that the engine belongs to.</li></ul>
   </section>
 </section>
 <section class="detail" id="t:transport_addr/0">
 
   <div class="detail-header">
-    <a href="#t:transport_addr/0" class="detail-link" title="Link to this type">
+    <a href="#t:transport_addr/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -455,7 +431,7 @@ Initially, nil. Filled in as soon as a connection is established.</li></ul>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> transport_addr() :: {:tcp, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://www.erlang.org/doc/man/inet.html#type-port_number">:inet.port_number</a>()} | {:unix, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()}</pre>
+          <pre translate="no"><span class="attribute">@type</span> transport_addr() :: {:tcp, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:port_number/0">:inet.port_number</a>()} | {:unix, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()}</pre>
 
       </div>
 
@@ -471,7 +447,7 @@ Initially, nil. Filled in as soon as a connection is established.</li></ul>
 <section class="detail" id="t:transport_type/0">
 
   <div class="detail-header">
-    <a href="#t:transport_type/0" class="detail-link" title="Link to this type">
+    <a href="#t:transport_type/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -509,33 +485,10 @@ Initially, nil. Filled in as soon as a connection is established.</li></ul>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="add_connection/3">
-
-  <div class="detail-header">
-    <a href="#add_connection/3" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">add_connection(s, node, addr)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> add_connection(<a href="#t:t/0">t</a>(), <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="#t:transport_addr/0">transport_addr</a>()) :: <a href="#t:t/0">t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -552,7 +505,7 @@ Initially, nil. Filled in as soon as a connection is established.</li></ul>
 <section class="detail" id="disconnected/2">
 
   <div class="detail-header">
-    <a href="#disconnected/2" class="detail-link" title="Link to this function">
+    <a href="#disconnected/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -575,7 +528,7 @@ Initially, nil. Filled in as soon as a connection is established.</li></ul>
 <section class="detail" id="handle_cast/3">
 
   <div class="detail-header">
-    <a href="#handle_cast/3" class="detail-link" title="Link to this function">
+    <a href="#handle_cast/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -589,27 +542,10 @@ Initially, nil. Filled in as soon as a connection is established.</li></ul>
 
   </section>
 </section>
-<section class="detail" id="handle_recv_chunk/3">
-
-  <div class="detail-header">
-    <a href="#handle_recv_chunk/3" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">handle_recv_chunk(s, from, data)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="init/1">
 
   <div class="detail-header">
-    <a href="#init/1" class="detail-link" title="Link to this function">
+    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -623,34 +559,10 @@ Initially, nil. Filled in as soon as a connection is established.</li></ul>
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="init_connection/2">
-
-  <div class="detail-header">
-    <a href="#init_connection/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">init_connection(s, trans)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> init_connection(<a href="#t:t/0">t</a>(), <a href="#t:transport_addr/0">transport_addr</a>()) ::
-  {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="#t:transport_type/0">transport_type</a>()} | nil</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="learn_engine/3">
 
   <div class="detail-header">
-    <a href="#learn_engine/3" class="detail-link" title="Link to this function">
+    <a href="#learn_engine/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -672,14 +584,14 @@ Initially, nil. Filled in as soon as a connection is established.</li></ul>
 
       </div>
 
-<p>I notify the transport Engine that the specified engine lives on the
+<p>I notify the Transport Engine that the specified engine lives on the
 specified node.</p>
   </section>
 </section>
 <section class="detail" id="learn_node/3">
 
   <div class="detail-header">
-    <a href="#learn_node/3" class="detail-link" title="Link to this function">
+    <a href="#learn_node/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -700,14 +612,15 @@ specified node.</p>
 
       </div>
 
-<p>I notify the Transport Engine that the specified node with given public id
-can be reached by the specified transport address.</p>
+<p>I notify the Transport Engine that the node specified by the given public id
+can be reached through the specified transport address.</p><p>If there are pending outgoing messages addressed to the node, I try to
+initiate a new connection to the node.</p>
   </section>
 </section>
 <section class="detail" id="new_connection/2">
 
   <div class="detail-header">
-    <a href="#new_connection/2" class="detail-link" title="Link to this function">
+    <a href="#new_connection/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -724,14 +637,14 @@ can be reached by the specified transport address.</p>
 
       </div>
 
-<p>Notify the transport that you, a local engine, are now managing a new
+<p>I notify the Transport Engine that you, a local engine, are now managing a new
 incoming connection of the specified type.</p>
   </section>
 </section>
 <section class="detail" id="receive_chunk/2">
 
   <div class="detail-header">
-    <a href="#receive_chunk/2" class="detail-link" title="Link to this function">
+    <a href="#receive_chunk/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -754,7 +667,7 @@ incoming connection of the specified type.</p>
 <section class="detail" id="send/3">
 
   <div class="detail-header">
-    <a href="#send/3" class="detail-link" title="Link to this function">
+    <a href="#send/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -777,7 +690,7 @@ incoming connection of the specified type.</p>
 <section class="detail" id="start_server/2">
 
   <div class="detail-header">
-    <a href="#start_server/2" class="detail-link" title="Link to this function">
+    <a href="#start_server/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -794,14 +707,14 @@ incoming connection of the specified type.</p>
 
       </div>
 
-<p>I start a new transport server listening on the specified address.</p><p>If a new transport server fails to start, the Transport Engine state does not
+<p>I try to start a new transport server listening on the specified address.</p><p>If a new transport server fails to start, the Transport Engine state does not
 change.</p>
   </section>
 </section>
 <section class="detail" id="transport_type/1">
 
   <div class="detail-header">
-    <a href="#transport_type/1" class="detail-link" title="Link to this function">
+    <a href="#transport_type/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -825,43 +738,40 @@ change.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node/transport.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Block — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Block — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,40 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Block</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Block</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>I represent a block that will be stored and gossiped around the
 network.</p><h3 id="module-fields" class="section-heading">
   <a href="#module-fields" class="hover-link">
@@ -139,8 +137,9 @@ network.</p><h3 id="module-fields" class="section-heading">
   <span class="text">Fields</span>
 </h3>
 <ul><li><code class="inline">:id</code> - Identification number derived from the serialization of my:<ul><li>digest(block)</li><li>round</li><li>pub_key</li></ul></li><li><code class="inline">:block</code> - The block I contain</li><li><code class="inline">:round</code> - The round I come from</li><li><code class="inline">:pub_key</code> - Public key</li><li><code class="inline">:signature</code> - Id signed with the private_key related to my public_key</li></ul>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -156,7 +155,7 @@ network.</p><h3 id="module-fields" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:private_key/0" translate="no">private_key()</a>
+        <a href="#t:private_key/0" data-no-tooltip translate="no">private_key()</a>
 
       </div>
 
@@ -164,7 +163,7 @@ network.</p><h3 id="module-fields" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:public_key/0" translate="no">public_key()</a>
+        <a href="#t:public_key/0" data-no-tooltip translate="no">public_key()</a>
 
       </div>
 
@@ -172,7 +171,7 @@ network.</p><h3 id="module-fields" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -186,7 +185,7 @@ network.</p><h3 id="module-fields" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create/3" translate="no">create(block, pub, round)</a>
+        <a href="#create/3" data-no-tooltip translate="no">create(block, pub, round)</a>
 
       </div>
 
@@ -197,29 +196,29 @@ then I also contain a signature of myself.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_table/0" translate="no">create_table()</a>
+        <a href="#create_table/0" data-no-tooltip translate="no">create_table()</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>I create a <code class="inline">:mnesia</code> table for <a href="Anoma.Block.html#content"><code class="inline">Anoma.Block</code></a>. This table is backed
+        <div class="summary-synopsis"><p>I create a <code class="inline">:mnesia</code> table for <a href="Anoma.Block.html"><code class="inline">Anoma.Block</code></a>. This table is backed
 by rocksdb, and thus persists across IEX sessions.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_table/2" translate="no">create_table(table_key, rocks?)</a>
+        <a href="#create_table/2" data-no-tooltip translate="no">create_table(table_key, rocks?)</a>
 
       </div>
 
         <div class="summary-synopsis"><p>I am like <a href="#create_table/0"><code class="inline">create_table/0</code></a>, however I am given a special
-table_key. This overrides the default table key of <a href="Anoma.Block.html#content"><code class="inline">Anoma.Block</code></a>.</p></div>
+table_key. This overrides the default table key of <a href="Anoma.Block.html"><code class="inline">Anoma.Block</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#decode/1" translate="no">decode(arg)</a>
+        <a href="#decode/1" data-no-tooltip translate="no">decode(arg)</a>
 
       </div>
 
@@ -227,7 +226,7 @@ table_key. This overrides the default table key of <a href="Anoma.Block.html#con
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#encode/1" translate="no">encode(block)</a>
+        <a href="#encode/1" data-no-tooltip translate="no">encode(block)</a>
 
       </div>
 
@@ -235,7 +234,7 @@ table_key. This overrides the default table key of <a href="Anoma.Block.html#con
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#encode/2" translate="no">encode(block, atom)</a>
+        <a href="#encode/2" data-no-tooltip translate="no">encode(block, atom)</a>
 
       </div>
 
@@ -243,7 +242,7 @@ table_key. This overrides the default table key of <a href="Anoma.Block.html#con
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#sign/2" translate="no">sign(block, priv)</a>
+        <a href="#sign/2" data-no-tooltip translate="no">sign(block, priv)</a>
 
       </div>
 
@@ -268,7 +267,7 @@ table_key. This overrides the default table key of <a href="Anoma.Block.html#con
 <section class="detail" id="t:private_key/0">
 
   <div class="detail-header">
-    <a href="#t:private_key/0" class="detail-link" title="Link to this type">
+    <a href="#t:private_key/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -281,7 +280,7 @@ table_key. This overrides the default table key of <a href="Anoma.Block.html#con
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> private_key() :: [<a href="https://www.erlang.org/doc/man/crypto.html#type-key_id">:crypto.key_id</a>()]</pre>
+          <pre translate="no"><span class="attribute">@type</span> private_key() :: [<a href="https://www.erlang.org/doc/apps/crypto/crypto.html#t:key_id/0">:crypto.key_id</a>()]</pre>
 
       </div>
 
@@ -291,7 +290,7 @@ table_key. This overrides the default table key of <a href="Anoma.Block.html#con
 <section class="detail" id="t:public_key/0">
 
   <div class="detail-header">
-    <a href="#t:public_key/0" class="detail-link" title="Link to this type">
+    <a href="#t:public_key/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -304,7 +303,7 @@ table_key. This overrides the default table key of <a href="Anoma.Block.html#con
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> public_key() :: [<a href="https://www.erlang.org/doc/man/crypto.html#type-key_id">:crypto.key_id</a>()]</pre>
+          <pre translate="no"><span class="attribute">@type</span> public_key() :: [<a href="https://www.erlang.org/doc/apps/crypto/crypto.html#t:key_id/0">:crypto.key_id</a>()]</pre>
 
       </div>
 
@@ -314,7 +313,7 @@ table_key. This overrides the default table key of <a href="Anoma.Block.html#con
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -355,7 +354,7 @@ table_key. This overrides the default table key of <a href="Anoma.Block.html#con
 <section class="detail" id="create/3">
 
   <div class="detail-header">
-    <a href="#create/3" class="detail-link" title="Link to this function">
+    <a href="#create/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -391,7 +390,7 @@ then I also contain a signature of myself.</p><p>The signature (if created), rep
 <section class="detail" id="create_table/0">
 
   <div class="detail-header">
-    <a href="#create_table/0" class="detail-link" title="Link to this function">
+    <a href="#create_table/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -402,7 +401,7 @@ then I also contain a signature of myself.</p><p>The signature (if created), rep
 
   <section class="docstring">
 
-<p>I create a <code class="inline">:mnesia</code> table for <a href="Anoma.Block.html#content"><code class="inline">Anoma.Block</code></a>. This table is backed
+<p>I create a <code class="inline">:mnesia</code> table for <a href="Anoma.Block.html"><code class="inline">Anoma.Block</code></a>. This table is backed
 by rocksdb, and thus persists across IEX sessions.</p><p>I will only ever needed to be called once upon Configuration start,
 <a href="Anoma.Mnesia.html#init/0"><code class="inline">Anoma.Mnesia.init/0</code></a> will likely set me up as is.</p>
   </section>
@@ -410,7 +409,7 @@ by rocksdb, and thus persists across IEX sessions.</p><p>I will only ever needed
 <section class="detail" id="create_table/2">
 
   <div class="detail-header">
-    <a href="#create_table/2" class="detail-link" title="Link to this function">
+    <a href="#create_table/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -422,7 +421,7 @@ by rocksdb, and thus persists across IEX sessions.</p><p>I will only ever needed
   <section class="docstring">
 
 <p>I am like <a href="#create_table/0"><code class="inline">create_table/0</code></a>, however I am given a special
-table_key. This overrides the default table key of <a href="Anoma.Block.html#content"><code class="inline">Anoma.Block</code></a>.</p><p>I am useful when trying to spawn many solvers/validators/etc, who
+table_key. This overrides the default table key of <a href="Anoma.Block.html"><code class="inline">Anoma.Block</code></a>.</p><p>I am useful when trying to spawn many solvers/validators/etc, who
 all want their own tables.</p><h3 id="create_table/2-parameters" class="section-heading">
   <a href="#create_table/2-parameters" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -435,7 +434,7 @@ all want their own tables.</p><h3 id="create_table/2-parameters" class="section-
 <section class="detail" id="decode/1">
 
   <div class="detail-header">
-    <a href="#decode/1" class="detail-link" title="Link to this function">
+    <a href="#decode/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -452,7 +451,7 @@ all want their own tables.</p><h3 id="create_table/2-parameters" class="section-
 <section class="detail" id="encode/1">
 
   <div class="detail-header">
-    <a href="#encode/1" class="detail-link" title="Link to this function">
+    <a href="#encode/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -475,7 +474,7 @@ all want their own tables.</p><h3 id="create_table/2-parameters" class="section-
 <section class="detail" id="encode/2">
 
   <div class="detail-header">
-    <a href="#encode/2" class="detail-link" title="Link to this function">
+    <a href="#encode/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -498,7 +497,7 @@ all want their own tables.</p><h3 id="create_table/2-parameters" class="section-
 <section class="detail" id="sign/2">
 
   <div class="detail-header">
-    <a href="#sign/2" class="detail-link" title="Link to this function">
+    <a href="#sign/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -523,43 +522,40 @@ all want their own tables.</p><h3 id="create_table/2-parameters" class="section-
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/block.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

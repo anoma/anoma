@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Configuration — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Configuration — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,40 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Configuration</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Configuration</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>I am a configuration module. I read the provided TOML configuration file
 and feed the apporpriate info for Node launching</p><p>The codebase has a corresponding file that can inform the user of the
 format I expect.</p><h3 id="module-public-api" class="section-heading">
@@ -140,8 +138,9 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
   <span class="text">Public API</span>
 </h3>
 <ul><li><a href="#configuration/0"><code class="inline">configuration/0</code></a></li><li><a href="#configuration/1"><code class="inline">configuration/1</code></a></li><li><a href="#read_configuration/1"><code class="inline">read_configuration/1</code></a></li><li><a href="#node_settings/1"><code class="inline">node_settings/1</code></a></li><li><a href="#save/1"><code class="inline">save/1</code></a></li><li><a href="#save/2"><code class="inline">save/2</code></a></li><li><a href="#locate_dump_file/1"><code class="inline">locate_dump_file/1</code></a></li><li><a href="#launch_min/1"><code class="inline">launch_min/1</code></a></li><li><a href="#launch_min/2"><code class="inline">launch_min/2</code></a></li></ul>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -157,7 +156,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:configruation/0" translate="no">configruation()</a>
+        <a href="#t:configruation/0" data-no-tooltip translate="no">configruation()</a>
 
       </div>
 
@@ -165,7 +164,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:configuration_map/0" translate="no">configuration_map()</a>
+        <a href="#t:configuration_map/0" data-no-tooltip translate="no">configuration_map()</a>
 
       </div>
 
@@ -173,7 +172,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:launch_option/0" translate="no">launch_option()</a>
+        <a href="#t:launch_option/0" data-no-tooltip translate="no">launch_option()</a>
 
       </div>
 
@@ -183,7 +182,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:node_settings/0" translate="no">node_settings()</a>
+        <a href="#t:node_settings/0" data-no-tooltip translate="no">node_settings()</a>
 
       </div>
 
@@ -191,7 +190,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:section_format/0" translate="no">section_format()</a>
+        <a href="#t:section_format/0" data-no-tooltip translate="no">section_format()</a>
 
       </div>
 
@@ -199,7 +198,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:section_map/0" translate="no">section_map()</a>
+        <a href="#t:section_map/0" data-no-tooltip translate="no">section_map()</a>
 
       </div>
 
@@ -213,7 +212,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#configuration/1" translate="no">configuration(user_map \\ %{})</a>
+        <a href="#configuration/1" data-no-tooltip translate="no">configuration(user_map \\ %{})</a>
 
       </div>
 
@@ -221,7 +220,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#configuration_format/0" translate="no">configuration_format()</a>
+        <a href="#configuration_format/0" data-no-tooltip translate="no">configuration_format()</a>
 
       </div>
 
@@ -229,7 +228,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#default_configuration_location/1" translate="no">default_configuration_location(env \\ Mix.env())</a>
+        <a href="#default_configuration_location/1" data-no-tooltip translate="no">default_configuration_location(env \\ Mix.env())</a>
 
       </div>
 
@@ -237,7 +236,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#default_data_location/1" translate="no">default_data_location(env \\ Mix.env())</a>
+        <a href="#default_data_location/1" data-no-tooltip translate="no">default_data_location(env \\ Mix.env())</a>
 
       </div>
 
@@ -245,7 +244,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#is_pinger/1" translate="no">is_pinger(field)</a>
+        <a href="#is_pinger/1" data-no-tooltip translate="no">is_pinger(field)</a>
 
       </div>
 
@@ -253,7 +252,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#launch_min/2" translate="no">launch_min(parsed_map, options \\ [])</a>
+        <a href="#launch_min/2" data-no-tooltip translate="no">launch_min(parsed_map, options \\ [])</a>
 
       </div>
 
@@ -264,7 +263,7 @@ the appopriate name</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#locate_dump_file/1" translate="no">locate_dump_file(path)</a>
+        <a href="#locate_dump_file/1" data-no-tooltip translate="no">locate_dump_file(path)</a>
 
       </div>
 
@@ -272,7 +271,7 @@ the appopriate name</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#node_settings/1" translate="no">node_settings(configuration)</a>
+        <a href="#node_settings/1" data-no-tooltip translate="no">node_settings(configuration)</a>
 
       </div>
 
@@ -283,7 +282,7 @@ and put it in the appropriate keyword list</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read_configuration/1" translate="no">read_configuration(file)</a>
+        <a href="#read_configuration/1" data-no-tooltip translate="no">read_configuration(file)</a>
 
       </div>
 
@@ -291,7 +290,7 @@ and put it in the appropriate keyword list</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#save/2" translate="no">save(config, file \\ default_configuration_location())</a>
+        <a href="#save/2" data-no-tooltip translate="no">save(config, file \\ default_configuration_location())</a>
 
       </div>
 
@@ -313,7 +312,7 @@ and put it in the appropriate keyword list</p></div>
 <section class="detail" id="t:configruation/0">
 
   <div class="detail-header">
-    <a href="#t:configruation/0" class="detail-link" title="Link to this type">
+    <a href="#t:configruation/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -336,7 +335,7 @@ and put it in the appropriate keyword list</p></div>
 <section class="detail" id="t:configuration_map/0">
 
   <div class="detail-header">
-    <a href="#t:configuration_map/0" class="detail-link" title="Link to this type">
+    <a href="#t:configuration_map/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -359,7 +358,7 @@ and put it in the appropriate keyword list</p></div>
 <section class="detail" id="t:launch_option/0">
 
   <div class="detail-header">
-    <a href="#t:launch_option/0" class="detail-link" title="Link to this type">
+    <a href="#t:launch_option/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -391,7 +390,7 @@ this has on the node</li></ul>
 <section class="detail" id="t:node_settings/0">
 
   <div class="detail-header">
-    <a href="#t:node_settings/0" class="detail-link" title="Link to this type">
+    <a href="#t:node_settings/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -414,7 +413,7 @@ this has on the node</li></ul>
 <section class="detail" id="t:section_format/0">
 
   <div class="detail-header">
-    <a href="#t:section_format/0" class="detail-link" title="Link to this type">
+    <a href="#t:section_format/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -437,7 +436,7 @@ this has on the node</li></ul>
 <section class="detail" id="t:section_map/0">
 
   <div class="detail-header">
-    <a href="#t:section_map/0" class="detail-link" title="Link to this type">
+    <a href="#t:section_map/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -474,7 +473,7 @@ this has on the node</li></ul>
     <span id="configuration/0"></span>
 
   <div class="detail-header">
-    <a href="#configuration/1" class="detail-link" title="Link to this function">
+    <a href="#configuration/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -497,7 +496,7 @@ this has on the node</li></ul>
 <section class="detail" id="configuration_format/0">
 
   <div class="detail-header">
-    <a href="#configuration_format/0" class="detail-link" title="Link to this function">
+    <a href="#configuration_format/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -522,7 +521,7 @@ this has on the node</li></ul>
     <span id="default_configuration_location/0"></span>
 
   <div class="detail-header">
-    <a href="#default_configuration_location/1" class="detail-link" title="Link to this function">
+    <a href="#default_configuration_location/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -541,7 +540,7 @@ this has on the node</li></ul>
     <span id="default_data_location/0"></span>
 
   <div class="detail-header">
-    <a href="#default_data_location/1" class="detail-link" title="Link to this function">
+    <a href="#default_data_location/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -558,7 +557,7 @@ this has on the node</li></ul>
 <section class="detail" id="is_pinger/1">
 
   <div class="detail-header">
-    <a href="#is_pinger/1" class="detail-link" title="Link to this function">
+    <a href="#is_pinger/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -583,7 +582,7 @@ this has on the node</li></ul>
     <span id="launch_min/1"></span>
 
   <div class="detail-header">
-    <a href="#launch_min/2" class="detail-link" title="Link to this function">
+    <a href="#launch_min/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -613,7 +612,7 @@ the appopriate name</p><h3 id="launch_min/2-options" class="section-heading">
 <section class="detail" id="locate_dump_file/1">
 
   <div class="detail-header">
-    <a href="#locate_dump_file/1" class="detail-link" title="Link to this function">
+    <a href="#locate_dump_file/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -636,7 +635,7 @@ the appopriate name</p><h3 id="launch_min/2-options" class="section-heading">
 <section class="detail" id="node_settings/1">
 
   <div class="detail-header">
-    <a href="#node_settings/1" class="detail-link" title="Link to this function">
+    <a href="#node_settings/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -660,7 +659,7 @@ and put it in the appropriate keyword list</p>
 <section class="detail" id="read_configuration/1">
 
   <div class="detail-header">
-    <a href="#read_configuration/1" class="detail-link" title="Link to this function">
+    <a href="#read_configuration/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -685,7 +684,7 @@ and put it in the appropriate keyword list</p>
     <span id="save/1"></span>
 
   <div class="detail-header">
-    <a href="#save/2" class="detail-link" title="Link to this function">
+    <a href="#save/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -709,43 +708,40 @@ and put it in the appropriate keyword list</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/configuration.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

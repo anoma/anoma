@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Node.Storage — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Node.Storage — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,40 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Node.Storage</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Node.Storage</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>I am the Anoma Storage Engine.</p><p>The Anoma database usage is separated into two parts:</p><ol><li><p>The Ordering table provides info on the order of appropriate keys.
 That is, it has info about how many times the key has been assigned to
 some value.</p></li><li><p>The Qualified table provides a representation of all stored key-values
@@ -144,8 +142,9 @@ that the base read events read only the latest value of a given key.</p><h3 id="
   <span class="text">Public API</span>
 </h3>
 <p>I provide the following public functionality:</p><h4>Setup</h4><ul><li><a href="#setup/1"><code class="inline">setup/1</code></a></li><li><a href="#remove/1"><code class="inline">remove/1</code></a></li><li><a href="#do_setup/1"><code class="inline">do_setup/1</code></a></li><li><a href="#ensure_new/2"><code class="inline">ensure_new/2</code></a></li><li><a href="#do_ensure_new/2"><code class="inline">do_ensure_new/2</code></a></li></ul><h4>Writing</h4><ul><li><a href="#put_snapshot/2"><code class="inline">put_snapshot/2</code></a></li><li><a href="#delete_key/2"><code class="inline">delete_key/2</code></a></li><li><a href="#put/3"><code class="inline">put/3</code></a></li></ul><h4>Reading</h4><ul><li><a href="#snapshot_order/1"><code class="inline">snapshot_order/1</code></a></li><li><a href="#get/2"><code class="inline">get/2</code></a></li><li><a href="#get_keyspace/2"><code class="inline">get_keyspace/2</code></a></li><li><a href="#get_at_snapshot/2"><code class="inline">get_at_snapshot/2</code></a></li><li><a href="#in_snapshot/2"><code class="inline">in_snapshot/2</code></a></li><li><a href="#read_order/2"><code class="inline">read_order/2</code></a></li><li><a href="#read_order_tx/2"><code class="inline">read_order_tx/2</code></a></li><li><a href="#read_at_order/3"><code class="inline">read_at_order/3</code></a></li><li><a href="#read_at_order_tx/3"><code class="inline">read_at_order_tx/3</code></a></li></ul><h4>Blocking</h4><ul><li><a href="#blocking_read/2"><code class="inline">blocking_read/2</code></a></li></ul><h4>Other</h4><ul><li><code class="inline">cm_tree_spec/0</code></li></ul>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -161,7 +160,7 @@ that the base read events read only the latest value of a given key.</p><h3 id="
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:order_key/0" translate="no">order_key()</a>
+        <a href="#t:order_key/0" data-no-tooltip translate="no">order_key()</a>
 
       </div>
 
@@ -171,7 +170,7 @@ that the base read events read only the latest value of a given key.</p><h3 id="
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:order_value/0" translate="no">order_value()</a>
+        <a href="#t:order_value/0" data-no-tooltip translate="no">order_value()</a>
 
       </div>
 
@@ -181,7 +180,7 @@ that the base read events read only the latest value of a given key.</p><h3 id="
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:qualified_key/0" translate="no">qualified_key()</a>
+        <a href="#t:qualified_key/0" data-no-tooltip translate="no">qualified_key()</a>
 
       </div>
 
@@ -191,7 +190,7 @@ that the base read events read only the latest value of a given key.</p><h3 id="
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:qualified_value/0" translate="no">qualified_value()</a>
+        <a href="#t:qualified_value/0" data-no-tooltip translate="no">qualified_value()</a>
 
       </div>
 
@@ -201,7 +200,7 @@ that the base read events read only the latest value of a given key.</p><h3 id="
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:result/1" translate="no">result(res)</a>
+        <a href="#t:result/1" data-no-tooltip translate="no">result(res)</a>
 
       </div>
 
@@ -211,7 +210,7 @@ that the base read events read only the latest value of a given key.</p><h3 id="
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:snapshot/0" translate="no">snapshot()</a>
+        <a href="#t:snapshot/0" data-no-tooltip translate="no">snapshot()</a>
 
       </div>
 
@@ -221,7 +220,7 @@ that the base read events read only the latest value of a given key.</p><h3 id="
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -237,7 +236,7 @@ that the base read events read only the latest value of a given key.</p><h3 id="
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#blocking_read/2" translate="no">blocking_read(storage, key)</a>
+        <a href="#blocking_read/2" data-no-tooltip translate="no">blocking_read(storage, key)</a>
 
       </div>
 
@@ -248,7 +247,7 @@ necessary for transaction-execution.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
 
       </div>
 
@@ -258,7 +257,7 @@ necessary for transaction-execution.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete_key/2" translate="no">delete_key(storage, key)</a>
+        <a href="#delete_key/2" data-no-tooltip translate="no">delete_key(storage, key)</a>
 
       </div>
 
@@ -268,7 +267,7 @@ necessary for transaction-execution.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#do_ensure_new/2" translate="no">do_ensure_new(storage, rocks \\ false)</a>
+        <a href="#do_ensure_new/2" data-no-tooltip translate="no">do_ensure_new(storage, rocks \\ false)</a>
 
       </div>
 
@@ -279,7 +278,7 @@ tables.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#do_setup/2" translate="no">do_setup(t, rocks \\ false)</a>
+        <a href="#do_setup/2" data-no-tooltip translate="no">do_setup(t, rocks \\ false)</a>
 
       </div>
 
@@ -289,7 +288,7 @@ tables.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#ensure_new/2" translate="no">ensure_new(storage, rocks \\ false)</a>
+        <a href="#ensure_new/2" data-no-tooltip translate="no">ensure_new(storage, rocks \\ false)</a>
 
       </div>
 
@@ -299,7 +298,7 @@ tables.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get/2" translate="no">get(storage, key)</a>
+        <a href="#get/2" data-no-tooltip translate="no">get(storage, key)</a>
 
       </div>
 
@@ -309,7 +308,7 @@ tables.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_at_snapshot/2" translate="no">get_at_snapshot(snapshot, key)</a>
+        <a href="#get_at_snapshot/2" data-no-tooltip translate="no">get_at_snapshot(snapshot, key)</a>
 
       </div>
 
@@ -320,7 +319,7 @@ given key.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_keyspace/2" translate="no">get_keyspace(storage, key_space)</a>
+        <a href="#get_keyspace/2" data-no-tooltip translate="no">get_keyspace(storage, key_space)</a>
 
       </div>
 
@@ -330,7 +329,7 @@ given key.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_cast/3" translate="no">handle_cast(arg1, _, storage)</a>
+        <a href="#handle_cast/3" data-no-tooltip translate="no">handle_cast(arg1, _, storage)</a>
 
       </div>
 
@@ -338,7 +337,7 @@ given key.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#in_snapshot/2" translate="no">in_snapshot(arg, key)</a>
+        <a href="#in_snapshot/2" data-no-tooltip translate="no">in_snapshot(arg, key)</a>
 
       </div>
 
@@ -349,7 +348,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" translate="no">init(state)</a>
+        <a href="#init/1" data-no-tooltip translate="no">init(state)</a>
 
       </div>
 
@@ -359,7 +358,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#put/3" translate="no">put(storage, key, value)</a>
+        <a href="#put/3" data-no-tooltip translate="no">put(storage, key, value)</a>
 
       </div>
 
@@ -369,7 +368,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#put_snapshot/2" translate="no">put_snapshot(storage, key)</a>
+        <a href="#put_snapshot/2" data-no-tooltip translate="no">put_snapshot(storage, key)</a>
 
       </div>
 
@@ -379,7 +378,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read_at_order/3" translate="no">read_at_order(storage, key, order)</a>
+        <a href="#read_at_order/3" data-no-tooltip translate="no">read_at_order(storage, key, order)</a>
 
       </div>
 
@@ -389,7 +388,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read_at_order_tx/3" translate="no">read_at_order_tx(storage, key, order)</a>
+        <a href="#read_at_order_tx/3" data-no-tooltip translate="no">read_at_order_tx(storage, key, order)</a>
 
       </div>
 
@@ -399,7 +398,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read_keyspace_order/2" translate="no">read_keyspace_order(storage, key_query)</a>
+        <a href="#read_keyspace_order/2" data-no-tooltip translate="no">read_keyspace_order(storage, key_query)</a>
 
       </div>
 
@@ -409,7 +408,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read_order/2" translate="no">read_order(storage, key)</a>
+        <a href="#read_order/2" data-no-tooltip translate="no">read_order(storage, key)</a>
 
       </div>
 
@@ -419,7 +418,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read_order_tx/2" translate="no">read_order_tx(storage, key)</a>
+        <a href="#read_order_tx/2" data-no-tooltip translate="no">read_order_tx(storage, key)</a>
 
       </div>
 
@@ -429,7 +428,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#remove/1" translate="no">remove(storage)</a>
+        <a href="#remove/1" data-no-tooltip translate="no">remove(storage)</a>
 
       </div>
 
@@ -439,7 +438,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#setup/1" translate="no">setup(t)</a>
+        <a href="#setup/1" data-no-tooltip translate="no">setup(t)</a>
 
       </div>
 
@@ -449,7 +448,7 @@ snapshot.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#snapshot_order/1" translate="no">snapshot_order(storage)</a>
+        <a href="#snapshot_order/1" data-no-tooltip translate="no">snapshot_order(storage)</a>
 
       </div>
 
@@ -473,7 +472,7 @@ snapshot.</p></div>
 <section class="detail" id="t:order_key/0">
 
   <div class="detail-header">
-    <a href="#t:order_key/0" class="detail-link" title="Link to this type">
+    <a href="#t:order_key/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -496,7 +495,7 @@ snapshot.</p></div>
 <section class="detail" id="t:order_value/0">
 
   <div class="detail-header">
-    <a href="#t:order_value/0" class="detail-link" title="Link to this type">
+    <a href="#t:order_value/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -519,7 +518,7 @@ snapshot.</p></div>
 <section class="detail" id="t:qualified_key/0">
 
   <div class="detail-header">
-    <a href="#t:qualified_key/0" class="detail-link" title="Link to this type">
+    <a href="#t:qualified_key/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -542,7 +541,7 @@ snapshot.</p></div>
 <section class="detail" id="t:qualified_value/0">
 
   <div class="detail-header">
-    <a href="#t:qualified_value/0" class="detail-link" title="Link to this type">
+    <a href="#t:qualified_value/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -565,7 +564,7 @@ snapshot.</p></div>
 <section class="detail" id="t:result/1">
 
   <div class="detail-header">
-    <a href="#t:result/1" class="detail-link" title="Link to this type">
+    <a href="#t:result/1" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -588,7 +587,7 @@ snapshot.</p></div>
 <section class="detail" id="t:snapshot/0">
 
   <div class="detail-header">
-    <a href="#t:snapshot/0" class="detail-link" title="Link to this type">
+    <a href="#t:snapshot/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -611,7 +610,7 @@ snapshot.</p></div>
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -641,7 +640,7 @@ read/write actions.</p><h3 id="t:t/0-fields" class="section-heading">
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:qualified</code> - The name of the Qualified table.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Qualified</span></code></pre></li><li><code class="inline">:order</code> - The name of the Ordering table.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Order</span></code></pre></li><li><code class="inline">:rm_commitments</code> - The name of the Reource Machine Commitments table.<pre><code class="makeup elixir" translate="no"><span class="w">                </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.RMCommitments</span></code></pre></li><li><code class="inline">:namespace</code> - The namespace used for writing functionality.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4879708473-1">[</span><span class="p" data-group-id="4879708473-1">]</span></code></pre></li><li><code class="inline">:topic</code> - The subscription topic.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
+<ul><li><code class="inline">:qualified</code> - The name of the Qualified table.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Qualified</span></code></pre></li><li><code class="inline">:order</code> - The name of the Ordering table.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Order</span></code></pre></li><li><code class="inline">:rm_commitments</code> - The name of the Reource Machine Commitments table.<pre><code class="makeup elixir" translate="no"><span class="w">                </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.RMCommitments</span></code></pre></li><li><code class="inline">:namespace</code> - The namespace used for writing functionality.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7535919139-1">[</span><span class="p" data-group-id="7535919139-1">]</span></code></pre></li><li><code class="inline">:topic</code> - The subscription topic.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -659,7 +658,7 @@ read/write actions.</p><h3 id="t:t/0-fields" class="section-heading">
 <section class="detail" id="blocking_read/2">
 
   <div class="detail-header">
-    <a href="#blocking_read/2" class="detail-link" title="Link to this function">
+    <a href="#blocking_read/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -718,7 +717,7 @@ the value written in an <code class="inline">{:ok, value}</code> tuple.</p>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -735,7 +734,7 @@ the value written in an <code class="inline">{:ok, value}</code> tuple.</p>
 <section class="detail" id="delete_key/2">
 
   <div class="detail-header">
-    <a href="#delete_key/2" class="detail-link" title="Link to this function">
+    <a href="#delete_key/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -764,7 +763,7 @@ deleted using the main <a href="#get/2"><code class="inline">get/2</code></a> fu
     <span id="do_ensure_new/1"></span>
 
   <div class="detail-header">
-    <a href="#do_ensure_new/2" class="detail-link" title="Link to this function">
+    <a href="#do_ensure_new/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -791,7 +790,7 @@ afterwards creating the tables with given names using <a href="#do_setup/2"><cod
     <span id="do_setup/1"></span>
 
   <div class="detail-header">
-    <a href="#do_setup/2" class="detail-link" title="Link to this function">
+    <a href="#do_setup/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -818,7 +817,7 @@ rocksdb depending on the second argument given in the argument.</p>
     <span id="ensure_new/1"></span>
 
   <div class="detail-header">
-    <a href="#ensure_new/2" class="detail-link" title="Link to this function">
+    <a href="#ensure_new/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -844,7 +843,7 @@ for rocksdb copies.</p>
 <section class="detail" id="get/2">
 
   <div class="detail-header">
-    <a href="#get/2" class="detail-link" title="Link to this function">
+    <a href="#get/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -871,7 +870,7 @@ present (or if the key is tombstoned* in the latest instance).</p><p>See <a href
 <section class="detail" id="get_at_snapshot/2">
 
   <div class="detail-header">
-    <a href="#get_at_snapshot/2" class="detail-link" title="Link to this function">
+    <a href="#get_at_snapshot/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -898,7 +897,7 @@ returning said value in the standard mnesia format.</p>
 <section class="detail" id="get_keyspace/2">
 
   <div class="detail-header">
-    <a href="#get_keyspace/2" class="detail-link" title="Link to this function">
+    <a href="#get_keyspace/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -926,7 +925,7 @@ mnesia format. If no values are present, I return an empty list.</p>
 <section class="detail" id="handle_cast/3">
 
   <div class="detail-header">
-    <a href="#handle_cast/3" class="detail-link" title="Link to this function">
+    <a href="#handle_cast/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -943,7 +942,7 @@ mnesia format. If no values are present, I return an empty list.</p>
 <section class="detail" id="in_snapshot/2">
 
   <div class="detail-header">
-    <a href="#in_snapshot/2" class="detail-link" title="Link to this function">
+    <a href="#in_snapshot/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -970,7 +969,7 @@ snapshot-taking.</p>
 <section class="detail" id="init/1">
 
   <div class="detail-header">
-    <a href="#init/1" class="detail-link" title="Link to this function">
+    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1017,7 +1016,7 @@ snapshot-taking.</p>
 <section class="detail" id="put/3">
 
   <div class="detail-header">
-    <a href="#put/3" class="detail-link" title="Link to this function">
+    <a href="#put/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1046,7 +1045,7 @@ corresponding to the one in the Ordering table.</p>
 <section class="detail" id="put_snapshot/2">
 
   <div class="detail-header">
-    <a href="#put_snapshot/2" class="detail-link" title="Link to this function">
+    <a href="#put_snapshot/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1071,7 +1070,7 @@ the functionality underlying <a href="#put/3"><code class="inline">put/3</code><
 <section class="detail" id="read_at_order/3">
 
   <div class="detail-header">
-    <a href="#read_at_order/3" class="detail-link" title="Link to this function">
+    <a href="#read_at_order/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1100,7 +1099,7 @@ being part of the searched key at the mnesia level.</p><p>I return a list of 3-t
 <section class="detail" id="read_at_order_tx/3">
 
   <div class="detail-header">
-    <a href="#read_at_order_tx/3" class="detail-link" title="Link to this function">
+    <a href="#read_at_order_tx/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1130,7 +1129,7 @@ Qualified table.</p>
 <section class="detail" id="read_keyspace_order/2">
 
   <div class="detail-header">
-    <a href="#read_keyspace_order/2" class="detail-link" title="Link to this function">
+    <a href="#read_keyspace_order/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1157,7 +1156,7 @@ query keylist and the tail being the order.</p>
 <section class="detail" id="read_order/2">
 
   <div class="detail-header">
-    <a href="#read_order/2" class="detail-link" title="Link to this function">
+    <a href="#read_order/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1182,7 +1181,7 @@ is gotten by appending the storage namespace to the initially given key.</p><p>I
 <section class="detail" id="read_order_tx/2">
 
   <div class="detail-header">
-    <a href="#read_order_tx/2" class="detail-link" title="Link to this function">
+    <a href="#read_order_tx/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1207,7 +1206,7 @@ the value in standard mnesia format.</p><p>See <a href="#read_order/2"><code cla
 <section class="detail" id="remove/1">
 
   <div class="detail-header">
-    <a href="#remove/1" class="detail-link" title="Link to this function">
+    <a href="#remove/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1231,7 +1230,7 @@ inside said Engine structure.</p>
 <section class="detail" id="setup/1">
 
   <div class="detail-header">
-    <a href="#setup/1" class="detail-link" title="Link to this function">
+    <a href="#setup/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1256,7 +1255,7 @@ success, I also create a new commitment tree.</p>
 <section class="detail" id="snapshot_order/1">
 
   <div class="detail-header">
-    <a href="#snapshot_order/1" class="detail-link" title="Link to this function">
+    <a href="#snapshot_order/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1282,43 +1281,40 @@ returned in a mnesia result format and the attached storage structure.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node/storage.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

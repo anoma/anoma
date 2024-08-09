@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Node.Router — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Node.Router — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,40 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Node.Router</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Node.Router</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>I am the Router, the central networking component of Anoma. My
 functionality includes several services:</p><ol><li><p>I provide central routing infrastructure for inter-node and
 intra-node communication</p></li><li><p>I provide service's for topic creation and
@@ -204,43 +202,43 @@ the <strong>client API</strong>.</p><h3 id="module-examples" class="section-head
 <p>To get a good feel for writing idiomatic code using me, and how my
 API is differs from <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>, we will look at an implementation
 of a stack and see how it <a href="https://hexdocs.pm/elixir/GenServer.html#module-client-server-apis">differs from GenServer's stack
-example</a></p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="k" data-group-id="6811657241-1">do</span><span class="w">
+example</a></p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="k" data-group-id="9002650773-1">do</span><span class="w">
   </span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Router</span><span class="w">
 
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Router.Engine</span><span class="w">
 
-  </span><span class="na">@spec</span><span class="w"> </span><span class="n">init</span><span class="p" data-group-id="6811657241-2">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="6811657241-3">(</span><span class="p" data-group-id="6811657241-3">)</span><span class="p" data-group-id="6811657241-2">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="6811657241-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">list</span><span class="p" data-group-id="6811657241-5">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="6811657241-6">(</span><span class="p" data-group-id="6811657241-6">)</span><span class="p" data-group-id="6811657241-5">)</span><span class="p" data-group-id="6811657241-4">}</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="6811657241-7">(</span><span class="n">elements</span><span class="p" data-group-id="6811657241-7">)</span><span class="w"> </span><span class="k" data-group-id="6811657241-8">do</span><span class="w">
-    </span><span class="n">initial_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">split</span><span class="p" data-group-id="6811657241-9">(</span><span class="n">elements</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">trim</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="6811657241-9">)</span><span class="w">
-    </span><span class="p" data-group-id="6811657241-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">initial_state</span><span class="p" data-group-id="6811657241-10">}</span><span class="w">
-  </span><span class="k" data-group-id="6811657241-8">end</span><span class="w">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">init</span><span class="p" data-group-id="9002650773-2">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="9002650773-3">(</span><span class="p" data-group-id="9002650773-3">)</span><span class="p" data-group-id="9002650773-2">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="9002650773-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">list</span><span class="p" data-group-id="9002650773-5">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="9002650773-6">(</span><span class="p" data-group-id="9002650773-6">)</span><span class="p" data-group-id="9002650773-5">)</span><span class="p" data-group-id="9002650773-4">}</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="9002650773-7">(</span><span class="n">elements</span><span class="p" data-group-id="9002650773-7">)</span><span class="w"> </span><span class="k" data-group-id="9002650773-8">do</span><span class="w">
+    </span><span class="n">initial_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">split</span><span class="p" data-group-id="9002650773-9">(</span><span class="n">elements</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">trim</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="9002650773-9">)</span><span class="w">
+    </span><span class="p" data-group-id="9002650773-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">initial_state</span><span class="p" data-group-id="9002650773-10">}</span><span class="w">
+  </span><span class="k" data-group-id="9002650773-8">end</span><span class="w">
 
-  </span><span class="na">@spec</span><span class="w"> </span><span class="n">push</span><span class="p" data-group-id="6811657241-11">(</span><span class="nc">Router</span><span class="o">.</span><span class="n">addr</span><span class="p" data-group-id="6811657241-12">(</span><span class="p" data-group-id="6811657241-12">)</span><span class="p">,</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="6811657241-13">(</span><span class="p" data-group-id="6811657241-13">)</span><span class="p" data-group-id="6811657241-11">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="ss">:ok</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">push</span><span class="p" data-group-id="6811657241-14">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="6811657241-14">)</span><span class="w"> </span><span class="k" data-group-id="6811657241-15">do</span><span class="w">
-    </span><span class="nc">Router</span><span class="o">.</span><span class="n">cast</span><span class="p" data-group-id="6811657241-16">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6811657241-17">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="6811657241-17">}</span><span class="p" data-group-id="6811657241-16">)</span><span class="w">
-  </span><span class="k" data-group-id="6811657241-15">end</span><span class="w">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">push</span><span class="p" data-group-id="9002650773-11">(</span><span class="nc">Router</span><span class="o">.</span><span class="n">addr</span><span class="p" data-group-id="9002650773-12">(</span><span class="p" data-group-id="9002650773-12">)</span><span class="p">,</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="9002650773-13">(</span><span class="p" data-group-id="9002650773-13">)</span><span class="p" data-group-id="9002650773-11">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="ss">:ok</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">push</span><span class="p" data-group-id="9002650773-14">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="9002650773-14">)</span><span class="w"> </span><span class="k" data-group-id="9002650773-15">do</span><span class="w">
+    </span><span class="nc">Router</span><span class="o">.</span><span class="n">cast</span><span class="p" data-group-id="9002650773-16">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9002650773-17">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="9002650773-17">}</span><span class="p" data-group-id="9002650773-16">)</span><span class="w">
+  </span><span class="k" data-group-id="9002650773-15">end</span><span class="w">
 
-  </span><span class="na">@spec</span><span class="w"> </span><span class="n">pop</span><span class="p" data-group-id="6811657241-18">(</span><span class="nc">Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="6811657241-19">(</span><span class="p" data-group-id="6811657241-19">)</span><span class="p" data-group-id="6811657241-18">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="6811657241-20">(</span><span class="p" data-group-id="6811657241-20">)</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">pop</span><span class="p" data-group-id="6811657241-21">(</span><span class="n">pid</span><span class="p" data-group-id="6811657241-21">)</span><span class="w"> </span><span class="k" data-group-id="6811657241-22">do</span><span class="w">
-    </span><span class="nc">Router</span><span class="o">.</span><span class="n">call</span><span class="p" data-group-id="6811657241-23">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">:pop</span><span class="p" data-group-id="6811657241-23">)</span><span class="w">
-  </span><span class="k" data-group-id="6811657241-22">end</span><span class="w">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">pop</span><span class="p" data-group-id="9002650773-18">(</span><span class="nc">Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="9002650773-19">(</span><span class="p" data-group-id="9002650773-19">)</span><span class="p" data-group-id="9002650773-18">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="9002650773-20">(</span><span class="p" data-group-id="9002650773-20">)</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">pop</span><span class="p" data-group-id="9002650773-21">(</span><span class="n">pid</span><span class="p" data-group-id="9002650773-21">)</span><span class="w"> </span><span class="k" data-group-id="9002650773-22">do</span><span class="w">
+    </span><span class="nc">Router</span><span class="o">.</span><span class="n">call</span><span class="p" data-group-id="9002650773-23">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">:pop</span><span class="p" data-group-id="9002650773-23">)</span><span class="w">
+  </span><span class="k" data-group-id="9002650773-22">end</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_call</span><span class="p" data-group-id="6811657241-24">(</span><span class="ss">:pop</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="6811657241-24">)</span><span class="w"> </span><span class="k" data-group-id="6811657241-25">do</span><span class="w">
-    </span><span class="p" data-group-id="6811657241-26">[</span><span class="n">to_caller</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="6811657241-26">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="w">
-    </span><span class="p" data-group-id="6811657241-27">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="n">to_caller</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="6811657241-27">}</span><span class="w">
-  </span><span class="k" data-group-id="6811657241-25">end</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_call</span><span class="p" data-group-id="9002650773-24">(</span><span class="ss">:pop</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="9002650773-24">)</span><span class="w"> </span><span class="k" data-group-id="9002650773-25">do</span><span class="w">
+    </span><span class="p" data-group-id="9002650773-26">[</span><span class="n">to_caller</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="9002650773-26">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="w">
+    </span><span class="p" data-group-id="9002650773-27">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="n">to_caller</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="9002650773-27">}</span><span class="w">
+  </span><span class="k" data-group-id="9002650773-25">end</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_cast</span><span class="p" data-group-id="6811657241-28">(</span><span class="p" data-group-id="6811657241-29">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="6811657241-29">}</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="6811657241-28">)</span><span class="w"> </span><span class="k" data-group-id="6811657241-30">do</span><span class="w">
-    </span><span class="n">new_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="6811657241-31">[</span><span class="n">element</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="6811657241-31">]</span><span class="w">
-    </span><span class="p" data-group-id="6811657241-32">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="6811657241-32">}</span><span class="w">
-  </span><span class="k" data-group-id="6811657241-30">end</span><span class="w">
-</span><span class="k" data-group-id="6811657241-1">end</span></code></pre><p>And we can use this Engine like the following</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="6337150453-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="c">_transport</span><span class="p" data-group-id="6337150453-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="6337150453-2">(</span><span class="p" data-group-id="6337150453-2">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="6337150453-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">stack</span><span class="p" data-group-id="6337150453-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="6337150453-4">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="p" data-group-id="6337150453-4">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="6337150453-5">(</span><span class="n">stack</span><span class="p" data-group-id="6337150453-5">)</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_cast</span><span class="p" data-group-id="9002650773-28">(</span><span class="p" data-group-id="9002650773-29">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="9002650773-29">}</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="9002650773-28">)</span><span class="w"> </span><span class="k" data-group-id="9002650773-30">do</span><span class="w">
+    </span><span class="n">new_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="9002650773-31">[</span><span class="n">element</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="9002650773-31">]</span><span class="w">
+    </span><span class="p" data-group-id="9002650773-32">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="9002650773-32">}</span><span class="w">
+  </span><span class="k" data-group-id="9002650773-30">end</span><span class="w">
+</span><span class="k" data-group-id="9002650773-1">end</span></code></pre><p>And we can use this Engine like the following</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="7551864350-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="c">_transport</span><span class="p" data-group-id="7551864350-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="7551864350-2">(</span><span class="p" data-group-id="7551864350-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="7551864350-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">stack</span><span class="p" data-group-id="7551864350-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="7551864350-4">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="p" data-group-id="7551864350-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="7551864350-5">(</span><span class="n">stack</span><span class="p" data-group-id="7551864350-5">)</span><span class="w">
 </span><span class="s">&quot;hello&quot;</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">push</span><span class="p" data-group-id="6337150453-6">(</span><span class="n">stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hi&quot;</span><span class="p" data-group-id="6337150453-6">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">push</span><span class="p" data-group-id="7551864350-6">(</span><span class="n">stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hi&quot;</span><span class="p" data-group-id="7551864350-6">)</span><span class="w">
 </span><span class="ss">:ok</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="6337150453-7">(</span><span class="n">stack</span><span class="p" data-group-id="6337150453-7">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="7551864350-7">(</span><span class="n">stack</span><span class="p" data-group-id="7551864350-7">)</span><span class="w">
 </span><span class="s">&quot;hi&quot;</span></code></pre><p>Overall having both server and client functionality that is clearly
 labeled, leads to good user UI's.</p><h3 id="module-difference-in-design-from-genserver" class="section-heading">
   <a href="#module-difference-in-design-from-genserver" class="hover-link">
@@ -313,8 +311,9 @@ that, this diagram may be of assistance.</p><pre><code class="mermaid">  sequenc
     R-)S2: Genserver.cast(pid, msg)</code></pre><p>The dotted lines in the diagram are theoretically how <code class="inline">Tasks</code> could
 be implemented, however this is implementation dependent, and does
 indeed differ from the diagram.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -330,7 +329,7 @@ indeed differ from the diagram.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:addr/0" translate="no">addr()</a>
+        <a href="#t:addr/0" data-no-tooltip translate="no">addr()</a>
 
       </div>
 
@@ -340,7 +339,7 @@ indeed differ from the diagram.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:engine_options/0" translate="no">engine_options()</a>
+        <a href="#t:engine_options/0" data-no-tooltip translate="no">engine_options()</a>
 
       </div>
 
@@ -350,7 +349,7 @@ indeed differ from the diagram.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -369,7 +368,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#call/2" translate="no">call(addr, msg)</a>
+        <a href="#call/2" data-no-tooltip translate="no">call(addr, msg)</a>
 
       </div>
 
@@ -379,7 +378,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#call/3" translate="no">call(addr, msg, timeout)</a>
+        <a href="#call/3" data-no-tooltip translate="no">call(addr, msg, timeout)</a>
 
       </div>
 
@@ -389,7 +388,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#cast/2" translate="no">cast(addr, msg)</a>
+        <a href="#cast/2" data-no-tooltip translate="no">cast(addr, msg)</a>
 
       </div>
 
@@ -399,7 +398,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
 
       </div>
 
@@ -409,7 +408,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#do_handle_external_cast/3" translate="no">do_handle_external_cast(atom, src, s)</a>
+        <a href="#do_handle_external_cast/3" data-no-tooltip translate="no">do_handle_external_cast(atom, src, s)</a>
 
       </div>
 
@@ -419,7 +418,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dump_state/1" translate="no">dump_state(router)</a>
+        <a href="#dump_state/1" data-no-tooltip translate="no">dump_state(router)</a>
 
       </div>
 
@@ -429,7 +428,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_self_call/3" translate="no">handle_self_call(arg1, addr, s)</a>
+        <a href="#handle_self_call/3" data-no-tooltip translate="no">handle_self_call(arg1, addr, s)</a>
 
       </div>
 
@@ -439,7 +438,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_self_cast/3" translate="no">handle_self_cast(arg1, src, s)</a>
+        <a href="#handle_self_cast/3" data-no-tooltip translate="no">handle_self_cast(arg1, src, s)</a>
 
       </div>
 
@@ -449,7 +448,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" translate="no">init(arg)</a>
+        <a href="#init/1" data-no-tooltip translate="no">init(arg)</a>
 
       </div>
 
@@ -459,7 +458,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new_topic/1" translate="no">new_topic(router)</a>
+        <a href="#new_topic/1" data-no-tooltip translate="no">new_topic(router)</a>
 
       </div>
 
@@ -469,7 +468,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new_topic/2" translate="no">new_topic(router, id)</a>
+        <a href="#new_topic/2" data-no-tooltip translate="no">new_topic(router, id)</a>
 
       </div>
 
@@ -479,7 +478,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#process_name/2" translate="no">process_name(module, id)</a>
+        <a href="#process_name/2" data-no-tooltip translate="no">process_name(module, id)</a>
 
       </div>
 
@@ -489,7 +488,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#router/0" translate="no">router()</a>
+        <a href="#router/0" data-no-tooltip translate="no">router()</a>
 
       </div>
 
@@ -499,7 +498,7 @@ well as local identification information.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#self_addr/0" translate="no">self_addr()</a>
+        <a href="#self_addr/0" data-no-tooltip translate="no">self_addr()</a>
 
       </div>
 
@@ -510,7 +509,7 @@ me.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#send_raw/2" translate="no">send_raw(addr, msg)</a>
+        <a href="#send_raw/2" data-no-tooltip translate="no">send_raw(addr, msg)</a>
 
       </div>
 
@@ -521,7 +520,7 @@ there is one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#send_response/4" translate="no">send_response(router, dst, cookie, encoded_response)</a>
+        <a href="#send_response/4" data-no-tooltip translate="no">send_response(router, dst, cookie, encoded_response)</a>
 
       </div>
 
@@ -531,7 +530,7 @@ there is one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#set_logger/2" translate="no">set_logger(router, logger)</a>
+        <a href="#set_logger/2" data-no-tooltip translate="no">set_logger(router, logger)</a>
 
       </div>
 
@@ -541,7 +540,7 @@ there is one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#shutdown_node/1" translate="no">shutdown_node(router)</a>
+        <a href="#shutdown_node/1" data-no-tooltip translate="no">shutdown_node(router)</a>
 
       </div>
 
@@ -551,7 +550,7 @@ there is one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start/0" translate="no">start()</a>
+        <a href="#start/0" data-no-tooltip translate="no">start()</a>
 
       </div>
 
@@ -561,7 +560,7 @@ there is one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start/1" translate="no">start(arg)</a>
+        <a href="#start/1" data-no-tooltip translate="no">start(arg)</a>
 
       </div>
 
@@ -571,7 +570,7 @@ there is one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_engine/4" translate="no">start_engine(router, module, arg, options \\ [])</a>
+        <a href="#start_engine/4" data-no-tooltip translate="no">start_engine(router, module, arg, options \\ [])</a>
 
       </div>
 
@@ -581,7 +580,7 @@ there is one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_link/1" translate="no">start_link(init)</a>
+        <a href="#start_link/1" data-no-tooltip translate="no">start_link(init)</a>
 
       </div>
 
@@ -589,7 +588,7 @@ there is one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_supervisor/2" translate="no">start_supervisor(router, supervisor)</a>
+        <a href="#start_supervisor/2" data-no-tooltip translate="no">start_supervisor(router, supervisor)</a>
 
       </div>
 
@@ -597,7 +596,7 @@ there is one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stop/1" translate="no">stop(router)</a>
+        <a href="#stop/1" data-no-tooltip translate="no">stop(router)</a>
 
       </div>
 
@@ -607,7 +606,7 @@ there is one.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stop_engine/3" translate="no">stop_engine(router, engine, options \\ [])</a>
+        <a href="#stop_engine/3" data-no-tooltip translate="no">stop_engine(router, engine, options \\ [])</a>
 
       </div>
 
@@ -631,7 +630,7 @@ there is one.</p></div>
 <section class="detail" id="t:addr/0">
 
   <div class="detail-header">
-    <a href="#t:addr/0" class="detail-link" title="Link to this type">
+    <a href="#t:addr/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -654,7 +653,7 @@ there is one.</p></div>
 <section class="detail" id="t:engine_options/0">
 
   <div class="detail-header">
-    <a href="#t:engine_options/0" class="detail-link" title="Link to this type">
+    <a href="#t:engine_options/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -687,7 +686,7 @@ there is one.</p></div>
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -739,12 +738,12 @@ well as local identification information.</p><h3 id="t:t/0-fileds" class="sectio
   <span class="text">Fileds</span>
 </h3>
 <ul><li><code class="inline">:local_engines</code> - The map of local engines external IDs to their full<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="nc">IDs</span><span class="w"> </span><span class="n">alonsgide</span><span class="w"> </span><span class="n">their</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="n">process</span><span class="w"> </span><span class="n">identifications</span><span class="o">.</span></code></pre></li><li><code class="inline">:topic_table</code> - The map of local topic external IDs to the set of their<pre><code class="makeup elixir" translate="no"><span class="w">             </span><span class="n">subscribers</span><span class="o">.</span><span class="w">
-             </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4865190080-1">%{</span><span class="p" data-group-id="4865190080-1">}</span></code></pre></li><li><code class="inline">:waiting_engines</code> - Map whose keys are external IDs of engines who make<pre><code class="makeup elixir" translate="no"><span class="w">                 </span><span class="n">a</span><span class="w"> </span><span class="n">call</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">whose</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">external</span><span class="w"> </span><span class="nc">ID</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">whom</span><span class="w">
+             </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1085956660-1">%{</span><span class="p" data-group-id="1085956660-1">}</span></code></pre></li><li><code class="inline">:waiting_engines</code> - Map whose keys are external IDs of engines who make<pre><code class="makeup elixir" translate="no"><span class="w">                 </span><span class="n">a</span><span class="w"> </span><span class="n">call</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">whose</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">external</span><span class="w"> </span><span class="nc">ID</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">whom</span><span class="w">
                  </span><span class="n">the</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="n">gets</span><span class="w"> </span><span class="n">sent</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">alongside</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">message</span><span class="w">
                  </span><span class="n">counter</span><span class="o">.</span><span class="w">
-                 </span><span class="nc">Default</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6833288421-1">%{</span><span class="p" data-group-id="6833288421-1">}</span></code></pre></li><li><code class="inline">:max_call_id</code> - The latest message counter.<pre><code class="makeup elixir" translate="no"><span class="w">             </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><code class="inline">:local_engine_subs</code> - Similar to <code class="inline">:topic_table</code> but for local engine<pre><code class="makeup elixir" translate="no"><span class="w">                   </span><span class="n">addresses</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">individual</span><span class="w"> </span><span class="n">external</span><span class="w">
+                 </span><span class="nc">Default</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2248093523-1">%{</span><span class="p" data-group-id="2248093523-1">}</span></code></pre></li><li><code class="inline">:max_call_id</code> - The latest message counter.<pre><code class="makeup elixir" translate="no"><span class="w">             </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><code class="inline">:local_engine_subs</code> - Similar to <code class="inline">:topic_table</code> but for local engine<pre><code class="makeup elixir" translate="no"><span class="w">                   </span><span class="n">addresses</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">individual</span><span class="w"> </span><span class="n">external</span><span class="w">
                    </span><span class="nc">IDs</span><span class="o">.</span><span class="w">
-                   </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9874369410-1">%{</span><span class="p" data-group-id="9874369410-1">}</span></code></pre></li><li><code class="inline">:id</code> - Router external ID.</li><li><code class="inline">:internal_id</code> - Full Router Anoma ID.</li><li><code class="inline">:addr</code> - Router Address.</li><li><code class="inline">:supervisor</code> - Supervisor name.</li><li><code class="inline">:transport</code> - Name of the used Transaport.</li><li><code class="inline">:msg_queue</code> - Map of IDs to the list of pending messages.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3170922308-1">%{</span><span class="p" data-group-id="3170922308-1">}</span></code></pre></li><li><code class="inline">:logger</code> - The Logger Engine address for Event keeping.</li></ul>
+                   </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1679549693-1">%{</span><span class="p" data-group-id="1679549693-1">}</span></code></pre></li><li><code class="inline">:id</code> - Router external ID.</li><li><code class="inline">:internal_id</code> - Full Router Anoma ID.</li><li><code class="inline">:addr</code> - Router Address.</li><li><code class="inline">:supervisor</code> - Supervisor name.</li><li><code class="inline">:transport</code> - Name of the used Transaport.</li><li><code class="inline">:msg_queue</code> - Map of IDs to the list of pending messages.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0115366952-1">%{</span><span class="p" data-group-id="0115366952-1">}</span></code></pre></li><li><code class="inline">:logger</code> - The Logger Engine address for Event keeping.</li></ul>
   </section>
 </section>
 
@@ -762,7 +761,7 @@ well as local identification information.</p><h3 id="t:t/0-fileds" class="sectio
 <section class="detail" id="call/2">
 
   <div class="detail-header">
-    <a href="#call/2" class="detail-link" title="Link to this function">
+    <a href="#call/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -786,7 +785,7 @@ timeout o 5000.</p>
 <section class="detail" id="call/3">
 
   <div class="detail-header">
-    <a href="#call/3" class="detail-link" title="Link to this function">
+    <a href="#call/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -799,7 +798,7 @@ timeout o 5000.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> call(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(), <a href="https://www.erlang.org/doc/man/erlang.html#type-timeout">:erlang.timeout</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> call(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(), <a href="https://www.erlang.org/doc/apps/erts/erlang.html#t:timeout/0">:erlang.timeout</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()</pre>
 
       </div>
 
@@ -822,7 +821,7 @@ future versions</p>
 <section class="detail" id="cast/2">
 
   <div class="detail-header">
-    <a href="#cast/2" class="detail-link" title="Link to this function">
+    <a href="#cast/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -850,7 +849,7 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -867,7 +866,7 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 <section class="detail" id="do_handle_external_cast/3">
 
   <div class="detail-header">
-    <a href="#do_handle_external_cast/3" class="detail-link" title="Link to this function">
+    <a href="#do_handle_external_cast/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -891,7 +890,7 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 <section class="detail" id="dump_state/1">
 
   <div class="detail-header">
-    <a href="#dump_state/1" class="detail-link" title="Link to this function">
+    <a href="#dump_state/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -914,7 +913,7 @@ to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="
 <section class="detail" id="handle_self_call/3">
 
   <div class="detail-header">
-    <a href="#handle_self_call/3" class="detail-link" title="Link to this function">
+    <a href="#handle_self_call/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -965,7 +964,7 @@ interactions.</p><h3 id="handle_self_call/3-pattern-matching-variations" class="
 <section class="detail" id="handle_self_cast/3">
 
   <div class="detail-header">
-    <a href="#handle_self_cast/3" class="detail-link" title="Link to this function">
+    <a href="#handle_self_cast/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1010,7 +1009,7 @@ interactions.</p><h3 id="handle_self_cast/3-pattern-matching-variations" class="
 <section class="detail" id="init/1">
 
   <div class="detail-header">
-    <a href="#init/1" class="detail-link" title="Link to this function">
+    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1033,7 +1032,7 @@ interactions.</p><h3 id="handle_self_cast/3-pattern-matching-variations" class="
 <section class="detail" id="new_topic/1">
 
   <div class="detail-header">
-    <a href="#new_topic/1" class="detail-link" title="Link to this function">
+    <a href="#new_topic/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1057,7 +1056,7 @@ interactions.</p><h3 id="handle_self_cast/3-pattern-matching-variations" class="
 <section class="detail" id="new_topic/2">
 
   <div class="detail-header">
-    <a href="#new_topic/2" class="detail-link" title="Link to this function">
+    <a href="#new_topic/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1081,7 +1080,7 @@ interactions.</p><h3 id="handle_self_cast/3-pattern-matching-variations" class="
 <section class="detail" id="process_name/2">
 
   <div class="detail-header">
-    <a href="#process_name/2" class="detail-link" title="Link to this function">
+    <a href="#process_name/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1105,7 +1104,7 @@ encoded sign field of the ID and return it as an atom.</p>
 <section class="detail" id="router/0">
 
   <div class="detail-header">
-    <a href="#router/0" class="detail-link" title="Link to this function">
+    <a href="#router/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1128,7 +1127,7 @@ encoded sign field of the ID and return it as an atom.</p>
 <section class="detail" id="self_addr/0">
 
   <div class="detail-header">
-    <a href="#self_addr/0" class="detail-link" title="Link to this function">
+    <a href="#self_addr/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1152,7 +1151,7 @@ me.</p><p>My server is either the specified engine server or my PID.</p>
 <section class="detail" id="send_raw/2">
 
   <div class="detail-header">
-    <a href="#send_raw/2" class="detail-link" title="Link to this function">
+    <a href="#send_raw/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1176,7 +1175,7 @@ there is one.</p>
 <section class="detail" id="send_response/4">
 
   <div class="detail-header">
-    <a href="#send_response/4" class="detail-link" title="Link to this function">
+    <a href="#send_response/4" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1206,7 +1205,7 @@ routine, intended to be called only by the internals of Router and Engine.</p>
 <section class="detail" id="set_logger/2">
 
   <div class="detail-header">
-    <a href="#set_logger/2" class="detail-link" title="Link to this function">
+    <a href="#set_logger/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1231,7 +1230,7 @@ the internal Elixir logger.</p>
 <section class="detail" id="shutdown_node/1">
 
   <div class="detail-header">
-    <a href="#shutdown_node/1" class="detail-link" title="Link to this function">
+    <a href="#shutdown_node/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1257,7 +1256,7 @@ the Anoma Node itself.</p>
 <section class="detail" id="start/0">
 
   <div class="detail-header">
-    <a href="#start/0" class="detail-link" title="Link to this function">
+    <a href="#start/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1283,7 +1282,7 @@ the Anoma Node itself.</p>
 <section class="detail" id="start/1">
 
   <div class="detail-header">
-    <a href="#start/1" class="detail-link" title="Link to this function">
+    <a href="#start/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1315,7 +1314,7 @@ supervisor.</p><p>On success, return {:ok, router_addr, transport_addr}</p>
     <span id="start_engine/3"></span>
 
   <div class="detail-header">
-    <a href="#start_engine/4" class="detail-link" title="Link to this function">
+    <a href="#start_engine/4" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1357,7 +1356,7 @@ or internal ID.</li></ul>
 <section class="detail" id="start_link/1">
 
   <div class="detail-header">
-    <a href="#start_link/1" class="detail-link" title="Link to this function">
+    <a href="#start_link/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1380,7 +1379,7 @@ or internal ID.</li></ul>
 <section class="detail" id="start_supervisor/2">
 
   <div class="detail-header">
-    <a href="#start_supervisor/2" class="detail-link" title="Link to this function">
+    <a href="#start_supervisor/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1406,7 +1405,7 @@ or internal ID.</li></ul>
 <section class="detail" id="stop/1">
 
   <div class="detail-header">
-    <a href="#stop/1" class="detail-link" title="Link to this function">
+    <a href="#stop/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1431,7 +1430,7 @@ or internal ID.</li></ul>
     <span id="stop_engine/2"></span>
 
   <div class="detail-header">
-    <a href="#stop_engine/3" class="detail-link" title="Link to this function">
+    <a href="#stop_engine/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -1467,43 +1466,40 @@ Router.stop_engine(node.router, worker_zero)</p></blockquote>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node/router.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

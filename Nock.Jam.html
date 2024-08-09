@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Nock.Jam — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Nock.Jam — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,39 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Nock.Jam</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Nock.Jam</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -145,7 +144,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:cache/0" translate="no">cache()</a>
+        <a href="#t:cache/0" data-no-tooltip translate="no">cache()</a>
 
       </div>
 
@@ -153,7 +152,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -167,7 +166,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#cache_noun/2" translate="no">cache_noun(env, noun)</a>
+        <a href="#cache_noun/2" data-no-tooltip translate="no">cache_noun(env, noun)</a>
 
       </div>
 
@@ -175,7 +174,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#encode/2" translate="no">encode(jam_env, noun)</a>
+        <a href="#encode/2" data-no-tooltip translate="no">encode(jam_env, noun)</a>
 
       </div>
 
@@ -183,7 +182,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fetch_cache_noun/2" translate="no">fetch_cache_noun(env, noun)</a>
+        <a href="#fetch_cache_noun/2" data-no-tooltip translate="no">fetch_cache_noun(env, noun)</a>
 
       </div>
 
@@ -191,7 +190,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_back/3" translate="no">handle_back(env, position, noun)</a>
+        <a href="#handle_back/3" data-no-tooltip translate="no">handle_back(env, position, noun)</a>
 
       </div>
 
@@ -199,7 +198,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#jam/1" translate="no">jam(noun)</a>
+        <a href="#jam/1" data-no-tooltip translate="no">jam(noun)</a>
 
       </div>
 
@@ -207,7 +206,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#write/2" translate="no">write(env, atom)</a>
+        <a href="#write/2" data-no-tooltip translate="no">write(env, atom)</a>
 
       </div>
 
@@ -215,7 +214,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#write_atom/2" translate="no">write_atom(env, atom)</a>
+        <a href="#write_atom/2" data-no-tooltip translate="no">write_atom(env, atom)</a>
 
       </div>
 
@@ -223,7 +222,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#write_back_ref/2" translate="no">write_back_ref(env, position)</a>
+        <a href="#write_back_ref/2" data-no-tooltip translate="no">write_back_ref(env, position)</a>
 
       </div>
 
@@ -231,7 +230,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#write_length/2" translate="no">write_length(env, len_atom)</a>
+        <a href="#write_length/2" data-no-tooltip translate="no">write_length(env, len_atom)</a>
 
       </div>
 
@@ -253,7 +252,7 @@ GUIDES
 <section class="detail" id="t:cache/0">
 
   <div class="detail-header">
-    <a href="#t:cache/0" class="detail-link" title="Link to this type">
+    <a href="#t:cache/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -276,7 +275,7 @@ GUIDES
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -311,7 +310,7 @@ GUIDES
 <section class="detail" id="cache_noun/2">
 
   <div class="detail-header">
-    <a href="#cache_noun/2" class="detail-link" title="Link to this function">
+    <a href="#cache_noun/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -334,7 +333,7 @@ GUIDES
 <section class="detail" id="encode/2">
 
   <div class="detail-header">
-    <a href="#encode/2" class="detail-link" title="Link to this function">
+    <a href="#encode/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -357,7 +356,7 @@ GUIDES
 <section class="detail" id="fetch_cache_noun/2">
 
   <div class="detail-header">
-    <a href="#fetch_cache_noun/2" class="detail-link" title="Link to this function">
+    <a href="#fetch_cache_noun/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -380,7 +379,7 @@ GUIDES
 <section class="detail" id="handle_back/3">
 
   <div class="detail-header">
-    <a href="#handle_back/3" class="detail-link" title="Link to this function">
+    <a href="#handle_back/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -403,7 +402,7 @@ GUIDES
 <section class="detail" id="jam/1">
 
   <div class="detail-header">
-    <a href="#jam/1" class="detail-link" title="Link to this function">
+    <a href="#jam/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -426,7 +425,7 @@ GUIDES
 <section class="detail" id="write/2">
 
   <div class="detail-header">
-    <a href="#write/2" class="detail-link" title="Link to this function">
+    <a href="#write/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -449,7 +448,7 @@ GUIDES
 <section class="detail" id="write_atom/2">
 
   <div class="detail-header">
-    <a href="#write_atom/2" class="detail-link" title="Link to this function">
+    <a href="#write_atom/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -474,7 +473,7 @@ GUIDES
 <section class="detail" id="write_back_ref/2">
 
   <div class="detail-header">
-    <a href="#write_back_ref/2" class="detail-link" title="Link to this function">
+    <a href="#write_back_ref/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -491,7 +490,7 @@ GUIDES
 <section class="detail" id="write_length/2">
 
   <div class="detail-header">
-    <a href="#write_length/2" class="detail-link" title="Link to this function">
+    <a href="#write_length/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -515,43 +514,40 @@ GUIDES
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/nock/jam.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

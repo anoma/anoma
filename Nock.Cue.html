@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Nock.Cue — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Nock.Cue — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,39 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Nock.Cue</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Nock.Cue</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -145,7 +144,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:cue_tag/0" translate="no">cue_tag()</a>
+        <a href="#t:cue_tag/0" data-no-tooltip translate="no">cue_tag()</a>
 
       </div>
 
@@ -153,7 +152,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -167,7 +166,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bit_width_tag/2" translate="no">bit_width_tag(binary, env)</a>
+        <a href="#bit_width_tag/2" data-no-tooltip translate="no">bit_width_tag(binary, env)</a>
 
       </div>
 
@@ -175,7 +174,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bit_width_tag/3" translate="no">bit_width_tag(list, env, counter)</a>
+        <a href="#bit_width_tag/3" data-no-tooltip translate="no">bit_width_tag(list, env, counter)</a>
 
       </div>
 
@@ -183,7 +182,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#cue/1" translate="no">cue(number)</a>
+        <a href="#cue/1" data-no-tooltip translate="no">cue(number)</a>
 
       </div>
 
@@ -191,7 +190,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#cue!/1" translate="no">cue!(number)</a>
+        <a href="#cue!/1" data-no-tooltip translate="no">cue!(number)</a>
 
       </div>
 
@@ -199,7 +198,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#cue_tag/2" translate="no">cue_tag(list, env)</a>
+        <a href="#cue_tag/2" data-no-tooltip translate="no">cue_tag(list, env)</a>
 
       </div>
 
@@ -207,7 +206,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parse/1" translate="no">parse(bit_stream)</a>
+        <a href="#parse/1" data-no-tooltip translate="no">parse(bit_stream)</a>
 
       </div>
 
@@ -215,7 +214,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parse/2" translate="no">parse(bit_stream, cue_env)</a>
+        <a href="#parse/2" data-no-tooltip translate="no">parse(bit_stream, cue_env)</a>
 
       </div>
 
@@ -223,7 +222,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parse_single/2" translate="no">parse_single(arg, pos_before_parse)</a>
+        <a href="#parse_single/2" data-no-tooltip translate="no">parse_single(arg, pos_before_parse)</a>
 
       </div>
 
@@ -231,7 +230,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#rub_no_index/2" translate="no">rub_no_index(bit_stream, env)</a>
+        <a href="#rub_no_index/2" data-no-tooltip translate="no">rub_no_index(bit_stream, env)</a>
 
       </div>
 
@@ -253,7 +252,7 @@ GUIDES
 <section class="detail" id="t:cue_tag/0">
 
   <div class="detail-header">
-    <a href="#t:cue_tag/0" class="detail-link" title="Link to this type">
+    <a href="#t:cue_tag/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -276,7 +275,7 @@ GUIDES
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -314,7 +313,7 @@ GUIDES
 <section class="detail" id="bit_width_tag/2">
 
   <div class="detail-header">
-    <a href="#bit_width_tag/2" class="detail-link" title="Link to this function">
+    <a href="#bit_width_tag/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -337,7 +336,7 @@ GUIDES
 <section class="detail" id="bit_width_tag/3">
 
   <div class="detail-header">
-    <a href="#bit_width_tag/3" class="detail-link" title="Link to this function">
+    <a href="#bit_width_tag/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -361,7 +360,7 @@ GUIDES
 <section class="detail" id="cue/1">
 
   <div class="detail-header">
-    <a href="#cue/1" class="detail-link" title="Link to this function">
+    <a href="#cue/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -384,7 +383,7 @@ GUIDES
 <section class="detail" id="cue!/1">
 
   <div class="detail-header">
-    <a href="#cue!/1" class="detail-link" title="Link to this function">
+    <a href="#cue!/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -407,7 +406,7 @@ GUIDES
 <section class="detail" id="cue_tag/2">
 
   <div class="detail-header">
-    <a href="#cue_tag/2" class="detail-link" title="Link to this function">
+    <a href="#cue_tag/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -430,7 +429,7 @@ GUIDES
 <section class="detail" id="parse/1">
 
   <div class="detail-header">
-    <a href="#parse/1" class="detail-link" title="Link to this function">
+    <a href="#parse/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -453,7 +452,7 @@ GUIDES
 <section class="detail" id="parse/2">
 
   <div class="detail-header">
-    <a href="#parse/2" class="detail-link" title="Link to this function">
+    <a href="#parse/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -476,7 +475,7 @@ GUIDES
 <section class="detail" id="parse_single/2">
 
   <div class="detail-header">
-    <a href="#parse_single/2" class="detail-link" title="Link to this function">
+    <a href="#parse_single/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -500,7 +499,7 @@ GUIDES
 <section class="detail" id="rub_no_index/2">
 
   <div class="detail-header">
-    <a href="#rub_no_index/2" class="detail-link" title="Link to this function">
+    <a href="#rub_no_index/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -524,43 +523,40 @@ GUIDES
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/nock/cue.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

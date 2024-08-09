@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Crypto.Symmetric — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Crypto.Symmetric — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,39 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Crypto.Symmetric</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Crypto.Symmetric</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -145,7 +144,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -155,7 +154,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:xchacha/0" translate="no">xchacha()</a>
+        <a href="#t:xchacha/0" data-no-tooltip translate="no">xchacha()</a>
 
       </div>
 
@@ -163,7 +162,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:xchacha_key/0" translate="no">xchacha_key()</a>
+        <a href="#t:xchacha_key/0" data-no-tooltip translate="no">xchacha_key()</a>
 
       </div>
 
@@ -171,7 +170,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:xchacha_nonce/0" translate="no">xchacha_nonce()</a>
+        <a href="#t:xchacha_nonce/0" data-no-tooltip translate="no">xchacha_nonce()</a>
 
       </div>
 
@@ -185,7 +184,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#decrypt/2" translate="no">decrypt(binary, sym)</a>
+        <a href="#decrypt/2" data-no-tooltip translate="no">decrypt(binary, sym)</a>
 
       </div>
 
@@ -193,7 +192,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#decrypt_raw/2" translate="no">decrypt_raw(binary, arg)</a>
+        <a href="#decrypt_raw/2" data-no-tooltip translate="no">decrypt_raw(binary, arg)</a>
 
       </div>
 
@@ -201,17 +200,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#encrypt/2" translate="no">encrypt(message, sym)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I encrypt data given any known schema and a message.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#encrypt_raw/2" translate="no">encrypt_raw(binary, arg)</a>
+        <a href="#encrypt/2" data-no-tooltip translate="no">encrypt(message, sym)</a>
 
       </div>
 
@@ -221,7 +210,17 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#random_xchacha/0" translate="no">random_xchacha()</a>
+        <a href="#encrypt_raw/2" data-no-tooltip translate="no">encrypt_raw(binary, arg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I encrypt data given any known schema and a message.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#random_xchacha/0" data-no-tooltip translate="no">random_xchacha()</a>
 
       </div>
 
@@ -229,7 +228,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#random_xchacha_key/0" translate="no">random_xchacha_key()</a>
+        <a href="#random_xchacha_key/0" data-no-tooltip translate="no">random_xchacha_key()</a>
 
       </div>
 
@@ -237,7 +236,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#random_xchacha_nonce/0" translate="no">random_xchacha_nonce()</a>
+        <a href="#random_xchacha_nonce/0" data-no-tooltip translate="no">random_xchacha_nonce()</a>
 
       </div>
 
@@ -259,7 +258,7 @@ GUIDES
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -282,7 +281,7 @@ GUIDES
 <section class="detail" id="t:xchacha/0">
 
   <div class="detail-header">
-    <a href="#t:xchacha/0" class="detail-link" title="Link to this type">
+    <a href="#t:xchacha/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -305,7 +304,7 @@ GUIDES
 <section class="detail" id="t:xchacha_key/0">
 
   <div class="detail-header">
-    <a href="#t:xchacha_key/0" class="detail-link" title="Link to this type">
+    <a href="#t:xchacha_key/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -328,7 +327,7 @@ GUIDES
 <section class="detail" id="t:xchacha_nonce/0">
 
   <div class="detail-header">
-    <a href="#t:xchacha_nonce/0" class="detail-link" title="Link to this type">
+    <a href="#t:xchacha_nonce/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -363,7 +362,7 @@ GUIDES
 <section class="detail" id="decrypt/2">
 
   <div class="detail-header">
-    <a href="#decrypt/2" class="detail-link" title="Link to this function">
+    <a href="#decrypt/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -386,7 +385,7 @@ GUIDES
 <section class="detail" id="decrypt_raw/2">
 
   <div class="detail-header">
-    <a href="#decrypt_raw/2" class="detail-link" title="Link to this function">
+    <a href="#decrypt_raw/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -409,7 +408,7 @@ GUIDES
 <section class="detail" id="encrypt/2">
 
   <div class="detail-header">
-    <a href="#encrypt/2" class="detail-link" title="Link to this function">
+    <a href="#encrypt/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -433,7 +432,7 @@ so please do not turn it to binary before hand.</p>
 <section class="detail" id="encrypt_raw/2">
 
   <div class="detail-header">
-    <a href="#encrypt_raw/2" class="detail-link" title="Link to this function">
+    <a href="#encrypt_raw/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -457,7 +456,7 @@ know what you are doing.</p>
 <section class="detail" id="random_xchacha/0">
 
   <div class="detail-header">
-    <a href="#random_xchacha/0" class="detail-link" title="Link to this function">
+    <a href="#random_xchacha/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -480,7 +479,7 @@ know what you are doing.</p>
 <section class="detail" id="random_xchacha_key/0">
 
   <div class="detail-header">
-    <a href="#random_xchacha_key/0" class="detail-link" title="Link to this function">
+    <a href="#random_xchacha_key/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -503,7 +502,7 @@ know what you are doing.</p>
 <section class="detail" id="random_xchacha_nonce/0">
 
   <div class="detail-header">
-    <a href="#random_xchacha_nonce/0" class="detail-link" title="Link to this function">
+    <a href="#random_xchacha_nonce/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -527,43 +526,40 @@ know what you are doing.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/crypto/symmetric.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

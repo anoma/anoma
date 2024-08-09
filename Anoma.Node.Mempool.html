@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Node.Mempool — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Node.Mempool — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,40 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Node.Mempool</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Node.Mempool</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>I am the Mempool Engine.</p><p>I provide the interface for transaction management including
 communication with the Executor engine to create transaction candidates
 with given code, executing said transactions, and creating appropriate
@@ -141,8 +139,9 @@ blocks.</p><h3 id="module-public-api" class="section-heading">
   <span class="text">Public API</span>
 </h3>
 <p>I provide the following public functionality:</p><ul><li><a href="#execute/1"><code class="inline">execute/1</code></a></li><li><a href="#soft_reset/1"><code class="inline">soft_reset/1</code></a></li><li><a href="#hard_reset/1"><code class="inline">hard_reset/1</code></a></li><li><a href="#tx/2"><code class="inline">tx/2</code></a></li></ul>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -158,7 +157,7 @@ blocks.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -168,7 +167,7 @@ blocks.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:transactions/0" translate="no">transactions()</a>
+        <a href="#t:transactions/0" data-no-tooltip translate="no">transactions()</a>
 
       </div>
 
@@ -184,7 +183,7 @@ blocks.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
 
       </div>
 
@@ -194,7 +193,7 @@ blocks.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#choose_and_execute_ordering/2" translate="no">choose_and_execute_ordering(state, transactions)</a>
+        <a href="#choose_and_execute_ordering/2" data-no-tooltip translate="no">choose_and_execute_ordering(state, transactions)</a>
 
       </div>
 
@@ -206,7 +205,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#execute/1" translate="no">execute(server)</a>
+        <a href="#execute/1" data-no-tooltip translate="no">execute(server)</a>
 
       </div>
 
@@ -216,7 +215,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_cast/3" translate="no">handle_cast(arg1, from, state)</a>
+        <a href="#handle_cast/3" data-no-tooltip translate="no">handle_cast(arg1, from, state)</a>
 
       </div>
 
@@ -224,7 +223,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_execute/1" translate="no">handle_execute(state)</a>
+        <a href="#handle_execute/1" data-no-tooltip translate="no">handle_execute(state)</a>
 
       </div>
 
@@ -234,7 +233,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_tx/3" translate="no">handle_tx(tx_code, state, reply_to)</a>
+        <a href="#handle_tx/3" data-no-tooltip translate="no">handle_tx(tx_code, state, reply_to)</a>
 
       </div>
 
@@ -244,7 +243,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#hard_reset/1" translate="no">hard_reset(server)</a>
+        <a href="#hard_reset/1" data-no-tooltip translate="no">hard_reset(server)</a>
 
       </div>
 
@@ -254,7 +253,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" translate="no">init(state)</a>
+        <a href="#init/1" data-no-tooltip translate="no">init(state)</a>
 
       </div>
 
@@ -264,7 +263,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#kill_transactions/1" translate="no">kill_transactions(state)</a>
+        <a href="#kill_transactions/1" data-no-tooltip translate="no">kill_transactions(state)</a>
 
       </div>
 
@@ -274,7 +273,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#order/2" translate="no">order(executing, next_order)</a>
+        <a href="#order/2" data-no-tooltip translate="no">order(executing, next_order)</a>
 
       </div>
 
@@ -284,7 +283,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#order_format/2" translate="no">order_format(transaction, order)</a>
+        <a href="#order_format/2" data-no-tooltip translate="no">order_format(transaction, order)</a>
 
       </div>
 
@@ -294,7 +293,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#persistent_transaction/1" translate="no">persistent_transaction(trans)</a>
+        <a href="#persistent_transaction/1" data-no-tooltip translate="no">persistent_transaction(trans)</a>
 
       </div>
 
@@ -304,7 +303,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#produce_block/2" translate="no">produce_block(state, trans)</a>
+        <a href="#produce_block/2" data-no-tooltip translate="no">produce_block(state, trans)</a>
 
       </div>
 
@@ -314,7 +313,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#reset_blocks/1" translate="no">reset_blocks(state)</a>
+        <a href="#reset_blocks/1" data-no-tooltip translate="no">reset_blocks(state)</a>
 
       </div>
 
@@ -324,7 +323,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#reset_state/1" translate="no">reset_state(state)</a>
+        <a href="#reset_state/1" data-no-tooltip translate="no">reset_state(state)</a>
 
       </div>
 
@@ -334,7 +333,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#save_block/2" translate="no">save_block(state, block)</a>
+        <a href="#save_block/2" data-no-tooltip translate="no">save_block(state, block)</a>
 
       </div>
 
@@ -344,7 +343,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#soft_reset/1" translate="no">soft_reset(server)</a>
+        <a href="#soft_reset/1" data-no-tooltip translate="no">soft_reset(server)</a>
 
       </div>
 
@@ -354,7 +353,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#tx/3" translate="no">tx(server, tx_code, reply_to \\ nil)</a>
+        <a href="#tx/3" data-no-tooltip translate="no">tx(server, tx_code, reply_to \\ nil)</a>
 
       </div>
 
@@ -378,7 +377,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -413,13 +412,13 @@ transaction candidate creation, execution, and ordering requests.</p><h3 id="t:t
 </h3>
 <ul><li><code class="inline">:ordering</code> - The Ordering Engine Address.</li><li><code class="inline">:executor</code> - The Executor Engine Address.</li><li><code class="inline">:block_storage</code> - The name of the storage for created blocks.<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">Anoma.Block</span><span class="err">`</span></code></pre></li><li><code class="inline">:transactions</code> - List of transaction candidates. Currently these do<pre><code class="makeup elixir" translate="no"><span class="w">              </span><span class="ow">not</span><span class="w"> </span><span class="n">have</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="n">info</span><span class="o">.</span><span class="w"> </span><span class="nc">That</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">handled</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">the</span><span class="w">
               </span><span class="nc">Ordering</span><span class="w"> </span><span class="n">engine</span><span class="o">.</span><span class="w">
-              </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8055098298-1">[</span><span class="p" data-group-id="8055098298-1">]</span></code></pre></li><li><code class="inline">:round</code> - The block round information.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><code class="inline">:topic</code> - The topic address for broadcasting.</li><li><code class="inline">:key</code> - The key used for block creation.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">:crypto</span><span class="o">.</span><span class="n">generate_key</span><span class="p" data-group-id="8729928137-1">(</span><span class="ss">:rsa</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8729928137-2">{</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">65537</span><span class="p" data-group-id="8729928137-2">}</span><span class="err">`</span></code></pre></li><li><code class="inline">:logger</code> - The address of the Logger Engine.<pre><code class="makeup elixir" translate="no"><span class="w">        </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
+              </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0945685198-1">[</span><span class="p" data-group-id="0945685198-1">]</span></code></pre></li><li><code class="inline">:round</code> - The block round information.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><code class="inline">:topic</code> - The topic address for broadcasting.</li><li><code class="inline">:key</code> - The key used for block creation.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">:crypto</span><span class="o">.</span><span class="n">generate_key</span><span class="p" data-group-id="6778833112-1">(</span><span class="ss">:rsa</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6778833112-2">{</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">65537</span><span class="p" data-group-id="6778833112-2">}</span><span class="err">`</span></code></pre></li><li><code class="inline">:logger</code> - The address of the Logger Engine.<pre><code class="makeup elixir" translate="no"><span class="w">        </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="t:transactions/0">
 
   <div class="detail-header">
-    <a href="#t:transactions/0" class="detail-link" title="Link to this type">
+    <a href="#t:transactions/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -454,7 +453,7 @@ transaction candidate creation, execution, and ordering requests.</p><h3 id="t:t
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -471,7 +470,7 @@ transaction candidate creation, execution, and ordering requests.</p><h3 id="t:t
 <section class="detail" id="choose_and_execute_ordering/2">
 
   <div class="detail-header">
-    <a href="#choose_and_execute_ordering/2" class="detail-link" title="Link to this function">
+    <a href="#choose_and_execute_ordering/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -496,7 +495,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 <section class="detail" id="execute/1">
 
   <div class="detail-header">
-    <a href="#execute/1" class="detail-link" title="Link to this function">
+    <a href="#execute/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -520,7 +519,7 @@ ordering them using the specified Ordering Engine.</p>
 <section class="detail" id="handle_cast/3">
 
   <div class="detail-header">
-    <a href="#handle_cast/3" class="detail-link" title="Link to this function">
+    <a href="#handle_cast/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -537,7 +536,7 @@ ordering them using the specified Ordering Engine.</p>
 <section class="detail" id="handle_execute/1">
 
   <div class="detail-header">
-    <a href="#handle_execute/1" class="detail-link" title="Link to this function">
+    <a href="#handle_execute/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -562,7 +561,7 @@ into the execution and a new appropriately changed state.</p>
 <section class="detail" id="handle_tx/3">
 
   <div class="detail-header">
-    <a href="#handle_tx/3" class="detail-link" title="Link to this function">
+    <a href="#handle_tx/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -587,7 +586,7 @@ a new transaction with a randomly generated transaction ID.</p><p>I reply with a
 <section class="detail" id="hard_reset/1">
 
   <div class="detail-header">
-    <a href="#hard_reset/1" class="detail-link" title="Link to this function">
+    <a href="#hard_reset/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -613,7 +612,7 @@ before.</p>
 <section class="detail" id="init/1">
 
   <div class="detail-header">
-    <a href="#init/1" class="detail-link" title="Link to this function">
+    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -654,7 +653,7 @@ before.</p>
 <section class="detail" id="kill_transactions/1">
 
   <div class="detail-header">
-    <a href="#kill_transactions/1" class="detail-link" title="Link to this function">
+    <a href="#kill_transactions/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -678,7 +677,7 @@ Executor engine to kill each one in the list.</p>
 <section class="detail" id="order/2">
 
   <div class="detail-header">
-    <a href="#order/2" class="detail-link" title="Link to this function">
+    <a href="#order/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -703,7 +702,7 @@ transactions, and index them starting with the given order number.</p>
 <section class="detail" id="order_format/2">
 
   <div class="detail-header">
-    <a href="#order_format/2" class="detail-link" title="Link to this function">
+    <a href="#order_format/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -727,7 +726,7 @@ the input as its <code class="inline">:index</code> field value.</p>
 <section class="detail" id="persistent_transaction/1">
 
   <div class="detail-header">
-    <a href="#persistent_transaction/1" class="detail-link" title="Link to this function">
+    <a href="#persistent_transaction/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -752,7 +751,7 @@ id of the transaction. The second element is the transaction code.</p>
 <section class="detail" id="produce_block/2">
 
   <div class="detail-header">
-    <a href="#produce_block/2" class="detail-link" title="Link to this function">
+    <a href="#produce_block/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -775,7 +774,7 @@ id of the transaction. The second element is the transaction code.</p>
 <section class="detail" id="reset_blocks/1">
 
   <div class="detail-header">
-    <a href="#reset_blocks/1" class="detail-link" title="Link to this function">
+    <a href="#reset_blocks/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -798,7 +797,7 @@ id of the transaction. The second element is the transaction code.</p>
 <section class="detail" id="reset_state/1">
 
   <div class="detail-header">
-    <a href="#reset_state/1" class="detail-link" title="Link to this function">
+    <a href="#reset_state/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -821,7 +820,7 @@ id of the transaction. The second element is the transaction code.</p>
 <section class="detail" id="save_block/2">
 
   <div class="detail-header">
-    <a href="#save_block/2" class="detail-link" title="Link to this function">
+    <a href="#save_block/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -845,7 +844,7 @@ at the specified mnesia table.</p>
 <section class="detail" id="soft_reset/1">
 
   <div class="detail-header">
-    <a href="#soft_reset/1" class="detail-link" title="Link to this function">
+    <a href="#soft_reset/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -871,7 +870,7 @@ Engine, asking the linked Executor to kill relevant transaction Workers.</p>
     <span id="tx/2"></span>
 
   <div class="detail-header">
-    <a href="#tx/3" class="detail-link" title="Link to this function">
+    <a href="#tx/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -904,43 +903,40 @@ adding the transaction.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node/mempool.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Examples.ENode — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Examples.ENode — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,40 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Examples.ENode</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Examples.ENode</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>I give examples of the ENode.</p><p>Currently I make networks in <code class="inline">Phase_1</code> of the example. Meaning that
 network configurations I provide, are not cloned. The given storage
 names will be written over for any shared set of storage.</p><p>When <code class="inline">phase_2</code> of the changes come in, the signature and examples of
@@ -139,8 +137,9 @@ persistent networks that other examples can use
 non-destructively. And thus every example can simply add on to
 another. However since we don't have this examples, are expected to
 clean out the state before running.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -156,7 +155,7 @@ clean out the state before running.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#attach_socks/2" translate="no">attach_socks(node, options \\ [])</a>
+        <a href="#attach_socks/2" data-no-tooltip translate="no">attach_socks(node, options \\ [])</a>
 
       </div>
 
@@ -164,7 +163,7 @@ clean out the state before running.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#base_snapshot_path/0" translate="no">base_snapshot_path()</a>
+        <a href="#base_snapshot_path/0" data-no-tooltip translate="no">base_snapshot_path()</a>
 
       </div>
 
@@ -172,7 +171,7 @@ clean out the state before running.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fresh_full_node/3" translate="no">fresh_full_node(storage, name, configuration \\ nil)</a>
+        <a href="#fresh_full_node/3" data-no-tooltip translate="no">fresh_full_node(storage, name, configuration \\ nil)</a>
 
       </div>
 
@@ -182,7 +181,7 @@ clean out the state before running.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#intent/1" translate="no">intent(node)</a>
+        <a href="#intent/1" data-no-tooltip translate="no">intent(node)</a>
 
       </div>
 
@@ -190,7 +189,7 @@ clean out the state before running.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#simple_ordering/1" translate="no">simple_ordering(storage)</a>
+        <a href="#simple_ordering/1" data-no-tooltip translate="no">simple_ordering(storage)</a>
 
       </div>
 
@@ -200,7 +199,7 @@ clean out the state before running.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#simple_router/0" translate="no">simple_router()</a>
+        <a href="#simple_router/0" data-no-tooltip translate="no">simple_router()</a>
 
       </div>
 
@@ -210,7 +209,7 @@ clean out the state before running.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#simple_storage/1" translate="no">simple_storage(storage)</a>
+        <a href="#simple_storage/1" data-no-tooltip translate="no">simple_storage(storage)</a>
 
       </div>
 
@@ -220,7 +219,7 @@ clean out the state before running.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#simple_storage_topic/1" translate="no">simple_storage_topic(storage)</a>
+        <a href="#simple_storage_topic/1" data-no-tooltip translate="no">simple_storage_topic(storage)</a>
 
       </div>
 
@@ -230,7 +229,7 @@ clean out the state before running.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#solver/1" translate="no">solver(node)</a>
+        <a href="#solver/1" data-no-tooltip translate="no">solver(node)</a>
 
       </div>
 
@@ -238,7 +237,7 @@ clean out the state before running.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#zero_clock/0" translate="no">zero_clock()</a>
+        <a href="#zero_clock/0" data-no-tooltip translate="no">zero_clock()</a>
 
       </div>
 
@@ -264,7 +263,7 @@ clean out the state before running.</p>
     <span id="attach_socks/1"></span>
 
   <div class="detail-header">
-    <a href="#attach_socks/2" class="detail-link" title="Link to this function">
+    <a href="#attach_socks/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -288,7 +287,7 @@ clean out the state before running.</p>
 <section class="detail" id="base_snapshot_path/0">
 
   <div class="detail-header">
-    <a href="#base_snapshot_path/0" class="detail-link" title="Link to this function">
+    <a href="#base_snapshot_path/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -313,7 +312,7 @@ clean out the state before running.</p>
     <span id="fresh_full_node/2"></span>
 
   <div class="detail-header">
-    <a href="#fresh_full_node/3" class="detail-link" title="Link to this function">
+    <a href="#fresh_full_node/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -340,7 +339,7 @@ clean out the state before running.</p>
 <section class="detail" id="intent/1">
 
   <div class="detail-header">
-    <a href="#intent/1" class="detail-link" title="Link to this function">
+    <a href="#intent/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -364,7 +363,7 @@ clean out the state before running.</p>
 <section class="detail" id="simple_ordering/1">
 
   <div class="detail-header">
-    <a href="#simple_ordering/1" class="detail-link" title="Link to this function">
+    <a href="#simple_ordering/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -387,7 +386,7 @@ clean out the state before running.</p>
 <section class="detail" id="simple_router/0">
 
   <div class="detail-header">
-    <a href="#simple_router/0" class="detail-link" title="Link to this function">
+    <a href="#simple_router/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -410,7 +409,7 @@ clean out the state before running.</p>
 <section class="detail" id="simple_storage/1">
 
   <div class="detail-header">
-    <a href="#simple_storage/1" class="detail-link" title="Link to this function">
+    <a href="#simple_storage/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -433,7 +432,7 @@ clean out the state before running.</p>
 <section class="detail" id="simple_storage_topic/1">
 
   <div class="detail-header">
-    <a href="#simple_storage_topic/1" class="detail-link" title="Link to this function">
+    <a href="#simple_storage_topic/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -456,7 +455,7 @@ clean out the state before running.</p>
 <section class="detail" id="solver/1">
 
   <div class="detail-header">
-    <a href="#solver/1" class="detail-link" title="Link to this function">
+    <a href="#solver/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -481,7 +480,7 @@ clean out the state before running.</p>
 <section class="detail" id="zero_clock/0">
 
   <div class="detail-header">
-    <a href="#zero_clock/0" class="detail-link" title="Link to this function">
+    <a href="#zero_clock/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -499,43 +498,40 @@ clean out the state before running.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/examples/enode.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

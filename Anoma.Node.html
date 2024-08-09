@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Node — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Node — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,40 +94,41 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Node</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Node</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>I act as a registry for Anoma Nodes</p><p>There are two ways to launch a Node. Either with minimal
 arguments or having the full specification for all the
 engines, including their external ID's.</p><p>All inputs should come in format of a list of atom-value
@@ -152,8 +150,9 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
   <span class="text">Created Tables</span>
 </h3>
 <ul><li><code class="inline">storage.qualified</code></li><li><code class="inline">storage.order</code></li><li><code class="inline">block_storage</code></li></ul>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -169,25 +168,17 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:configuration/0" translate="no">configuration()</a>
+        <a href="#t:configuration/0" data-no-tooltip translate="no">configuration()</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>I am the configuration type for the <a href="Anoma.Node.html#content"><code class="inline">Anoma.Node</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the configuration type for the <a href="Anoma.Node.html"><code class="inline">Anoma.Node</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:engine_configuration/0" translate="no">engine_configuration()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:min_engine_configuration/0" translate="no">min_engine_configuration()</a>
+        <a href="#t:engine_configuration/0" data-no-tooltip translate="no">engine_configuration()</a>
 
       </div>
 
@@ -195,7 +186,15 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:node_settings/0" translate="no">node_settings()</a>
+        <a href="#t:min_engine_configuration/0" data-no-tooltip translate="no">min_engine_configuration()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:node_settings/0" data-no-tooltip translate="no">node_settings()</a>
 
       </div>
 
@@ -205,7 +204,7 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -219,7 +218,7 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
 
       </div>
 
@@ -229,7 +228,7 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" translate="no">init(args)</a>
+        <a href="#init/1" data-no-tooltip translate="no">init(args)</a>
 
       </div>
 
@@ -239,7 +238,7 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#raw_storage/1" translate="no">raw_storage(node)</a>
+        <a href="#raw_storage/1" data-no-tooltip translate="no">raw_storage(node)</a>
 
       </div>
 
@@ -249,7 +248,7 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_link/1" translate="no">start_link(args)</a>
+        <a href="#start_link/1" data-no-tooltip translate="no">start_link(args)</a>
 
       </div>
 
@@ -264,7 +263,7 @@ the settings.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_link_or_find_instance/1" translate="no">start_link_or_find_instance(args)</a>
+        <a href="#start_link_or_find_instance/1" data-no-tooltip translate="no">start_link_or_find_instance(args)</a>
 
       </div>
 
@@ -275,7 +274,7 @@ if the node is already started.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_min/1" translate="no">start_min(args)</a>
+        <a href="#start_min/1" data-no-tooltip translate="no">start_min(args)</a>
 
       </div>
 
@@ -286,7 +285,7 @@ if the node is already started.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#state/1" translate="no">state(nodes)</a>
+        <a href="#state/1" data-no-tooltip translate="no">state(nodes)</a>
 
       </div>
 
@@ -308,7 +307,7 @@ if the node is already started.</p></div>
 <section class="detail" id="t:configuration/0">
 
   <div class="detail-header">
-    <a href="#t:configuration/0" class="detail-link" title="Link to this type">
+    <a href="#t:configuration/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -330,8 +329,8 @@ if the node is already started.</p></div>
 
       </div>
 
-<p>I am the configuration type for the <a href="Anoma.Node.html#content"><code class="inline">Anoma.Node</code></a>.</p><p>Ι contain information necessary for tweaking the behavior of the
-<a href="Anoma.Node.html#content"><code class="inline">Anoma.Node</code></a> application. See my <code class="inline">Fields</code> section for more
+<p>I am the configuration type for the <a href="Anoma.Node.html"><code class="inline">Anoma.Node</code></a>.</p><p>Ι contain information necessary for tweaking the behavior of the
+<a href="Anoma.Node.html"><code class="inline">Anoma.Node</code></a> application. See my <code class="inline">Fields</code> section for more
 information on how my behavior changes the node.</p><h3 id="t:configuration/0-fields" class="section-heading">
   <a href="#t:configuration/0-fields" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -348,7 +347,7 @@ the standard socket over the current <a href="Anoma.html"><code class="inline">A
 <section class="detail" id="t:engine_configuration/0">
 
   <div class="detail-header">
-    <a href="#t:engine_configuration/0" class="detail-link" title="Link to this type">
+    <a href="#t:engine_configuration/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -384,7 +383,7 @@ the standard socket over the current <a href="Anoma.html"><code class="inline">A
 <section class="detail" id="t:min_engine_configuration/0">
 
   <div class="detail-header">
-    <a href="#t:min_engine_configuration/0" class="detail-link" title="Link to this type">
+    <a href="#t:min_engine_configuration/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -414,7 +413,7 @@ the standard socket over the current <a href="Anoma.html"><code class="inline">A
 <section class="detail" id="t:node_settings/0">
 
   <div class="detail-header">
-    <a href="#t:node_settings/0" class="detail-link" title="Link to this type">
+    <a href="#t:node_settings/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -443,7 +442,7 @@ configuration information as well.</p>
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
@@ -494,7 +493,7 @@ configuration information as well.</p>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -511,7 +510,7 @@ configuration information as well.</p>
 <section class="detail" id="init/1">
 
   <div class="detail-header">
-    <a href="#init/1" class="detail-link" title="Link to this function">
+    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -534,7 +533,7 @@ configuration information as well.</p>
 <section class="detail" id="raw_storage/1">
 
   <div class="detail-header">
-    <a href="#raw_storage/1" class="detail-link" title="Link to this function">
+    <a href="#raw_storage/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -557,7 +556,7 @@ configuration information as well.</p>
 <section class="detail" id="start_link/1">
 
   <div class="detail-header">
-    <a href="#start_link/1" class="detail-link" title="Link to this function">
+    <a href="#start_link/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -589,7 +588,7 @@ If :use_rocks has value true, I use rocksdb as storage backend.</p>
 <section class="detail" id="start_link_or_find_instance/1">
 
   <div class="detail-header">
-    <a href="#start_link_or_find_instance/1" class="detail-link" title="Link to this function">
+    <a href="#start_link_or_find_instance/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -614,7 +613,7 @@ rerunning.</p>
 <section class="detail" id="start_min/1">
 
   <div class="detail-header">
-    <a href="#start_min/1" class="detail-link" title="Link to this function">
+    <a href="#start_min/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -638,7 +637,7 @@ rerunning.</p>
 <section class="detail" id="state/1">
 
   <div class="detail-header">
-    <a href="#state/1" class="detail-link" title="Link to this function">
+    <a href="#state/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -656,43 +655,40 @@ rerunning.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/node.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

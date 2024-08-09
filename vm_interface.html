@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma VM interface — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma VM interface — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="extras" class="page-livemd">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,42 +94,43 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
 
-  <span>Anoma VM interface</span>
-</h1>
+    <span>Anoma VM interface</span>
+  </h1>
 
-  <div class="livebook-badge-container">
-    <a href="#" class="livebook-badge">
-      <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
-    </a>
-  </div>
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
 
 <h2 id="index" class="section-heading">
   <a href="#index" class="hover-link">
@@ -150,12 +148,12 @@ GUIDES
 resource machine context.</li></ul><p>An additional mode is planned for the shielded resource machine, when
 integrated; and <code class="inline">kv</code> mode is an early prototype of what will evolve into
 the content-addressed blob storage facility.</p><p><code class="inline">kv</code> and <code class="inline">rm</code> modes share the same execution interface: they expect a Nock
-<code class="inline">gate</code>. A <code class="inline">gate</code> is a function-like object with the following form:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2650955087-1">[</span><span class="n">code</span><span class="w"> </span><span class="p" data-group-id="2650955087-2">[</span><span class="n">sample</span><span class="w"> </span><span class="n">context</span><span class="p" data-group-id="2650955087-2">]</span><span class="p" data-group-id="2650955087-1">]</span></code></pre><p><code class="inline">code</code> is a Nock formula intended to be run with the gate as subject, while
+<code class="inline">gate</code>. A <code class="inline">gate</code> is a function-like object with the following form:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3275628303-1">[</span><span class="n">code</span><span class="w"> </span><span class="p" data-group-id="3275628303-2">[</span><span class="n">sample</span><span class="w"> </span><span class="n">context</span><span class="p" data-group-id="3275628303-2">]</span><span class="p" data-group-id="3275628303-1">]</span></code></pre><p><code class="inline">code</code> is a Nock formula intended to be run with the gate as subject, while
 <code class="inline">sample</code> is a placeholder for arguments to the gate. <code class="inline">context</code> contains any
 additional code or data referenced; this includes at least the standard
 library, but may be larger than it.</p><p>In both <code class="inline">kv</code> and <code class="inline">rm</code> modes, the submitted transaction is a gate, and the
 argument placed in the sample is its opaque order ID. The output expected
-is the following tuple:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="4503336891-1">[</span><span class="p" data-group-id="4503336891-2">[</span><span class="n">read</span><span class="o">-</span><span class="n">keyspaces</span><span class="w"> </span><span class="n">write</span><span class="o">-</span><span class="n">keyspaces</span><span class="p" data-group-id="4503336891-2">]</span><span class="w"> </span><span class="n">second</span><span class="o">-</span><span class="n">gate</span><span class="p" data-group-id="4503336891-1">]</span></code></pre><p>In <code class="inline">kv</code> mode, <code class="inline">read-keyspaces</code> and <code class="inline">write-keyspaces</code> are subspaces of the
+is the following tuple:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="7753612886-1">[</span><span class="p" data-group-id="7753612886-2">[</span><span class="n">read</span><span class="o">-</span><span class="n">keyspaces</span><span class="w"> </span><span class="n">write</span><span class="o">-</span><span class="n">keyspaces</span><span class="p" data-group-id="7753612886-2">]</span><span class="w"> </span><span class="n">second</span><span class="o">-</span><span class="n">gate</span><span class="p" data-group-id="7753612886-1">]</span></code></pre><p>In <code class="inline">kv</code> mode, <code class="inline">read-keyspaces</code> and <code class="inline">write-keyspaces</code> are subspaces of the
 key-value store which the transaction plans to read or write, respectively.
 The VM may use this information to place locks or otherwise prepare for
 transaction execution. It is an error to read outside the declared
@@ -176,7 +174,7 @@ mode, and a resource machine transaction in <code class="inline">rm</code> mode.
 <p>When the VM's resource machine implementation processes a resource
 transaction, this includes the execution of resource logics in each
 resource. Shielded resource transactions will proceed similarly, but
-within the shielded VM rather than the Nock VM.</p><p>A resource logic is also a gate, and the arguments it takes are the tuple</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="7737597456-1">[</span><span class="n">self</span><span class="w"> </span><span class="n">resource</span><span class="o">-</span><span class="n">transaction</span><span class="p" data-group-id="7737597456-1">]</span></code></pre><p>where <code class="inline">self</code> is a copy of the entire resource running the logic, and
+within the shielded VM rather than the Nock VM.</p><p>A resource logic is also a gate, and the arguments it takes are the tuple</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="6341172650-1">[</span><span class="n">self</span><span class="w"> </span><span class="n">resource</span><span class="o">-</span><span class="n">transaction</span><span class="p" data-group-id="6341172650-1">]</span></code></pre><p>where <code class="inline">self</code> is a copy of the entire resource running the logic, and
 <code class="inline">resource-transaction</code> is the Nock serialization of the entire resource
 transaction (which includes all resources, in the transparent resource
 machine).</p><p>Its output is a simple boolean: <code class="inline">0</code> for success, <code class="inline">1</code> for failure.</p><h2 id="gas-metering" class="section-heading">
@@ -188,7 +186,9 @@ machine).</p><p>Its output is a simple boolean: <code class="inline">0</code> fo
 <p>All Nock execution is metered simply: starting with a meter value of 0,
 incrementing by 1 for each recursion back into simple Nock evaluation,
 and incrementing by a defined per-jet constant for each jet invoked.</p>
-<div class="bottom-actions">
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
   <div class="bottom-actions-item">
 
       <a href="data.html" class="bottom-actions-button" rel="prev">
@@ -214,43 +214,42 @@ Examples over Testing
 
   </div>
 </div>
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/documentation/vm_interface.livemd">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.19.1/show/documentation/vm_interface.livemd">current file</a>)
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

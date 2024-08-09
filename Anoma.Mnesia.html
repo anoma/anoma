@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Anoma.Mnesia — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Anoma.Mnesia — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,47 +94,48 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-  <span translate="no">Anoma.Mnesia</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.19.0)</small>
+    <span translate="no">Anoma.Mnesia</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>I help with various queries around <em>Mnesia</em>.</p><h3 id="module-usage" class="section-heading">
   <a href="#module-usage" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Usage</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="n">i</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">init</span><span class="p" data-group-id="5129016491-1">(</span><span class="p" data-group-id="5129016491-1">)</span></code></pre><h3 id="module-initialization" class="section-heading">
+<pre><code class="makeup elixir" translate="no"><span class="n">i</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">init</span><span class="p" data-group-id="2633991234-1">(</span><span class="p" data-group-id="2633991234-1">)</span></code></pre><h3 id="module-initialization" class="section-heading">
   <a href="#module-initialization" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -152,8 +150,9 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
   <span class="text">Querying</span>
 </h3>
 <p>I have the following functions that can help query data</p><ul><li><code class="inline">dirt_dump/1</code></li></ul>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -169,7 +168,7 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#attach/0" translate="no">attach()</a>
+        <a href="#attach/0" data-no-tooltip translate="no">attach()</a>
 
       </div>
 
@@ -177,7 +176,7 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dirty_dump/1" translate="no">dirty_dump(table)</a>
+        <a href="#dirty_dump/1" data-no-tooltip translate="no">dirty_dump(table)</a>
 
       </div>
 
@@ -187,7 +186,7 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dump/1" translate="no">dump(table)</a>
+        <a href="#dump/1" data-no-tooltip translate="no">dump(table)</a>
 
       </div>
 
@@ -197,7 +196,7 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fresh_storage/0" translate="no">fresh_storage()</a>
+        <a href="#fresh_storage/0" data-no-tooltip translate="no">fresh_storage()</a>
 
       </div>
 
@@ -207,7 +206,7 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/0" translate="no">init()</a>
+        <a href="#init/0" data-no-tooltip translate="no">init()</a>
 
       </div>
 
@@ -229,7 +228,7 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
 <section class="detail" id="attach/0">
 
   <div class="detail-header">
-    <a href="#attach/0" class="detail-link" title="Link to this function">
+    <a href="#attach/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -246,7 +245,7 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
 <section class="detail" id="dirty_dump/1">
 
   <div class="detail-header">
-    <a href="#dirty_dump/1" class="detail-link" title="Link to this function">
+    <a href="#dirty_dump/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -263,18 +262,18 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
   </a>
   <span class="text">Example</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="w"> </span><span class="gp unselectable">iex(15)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">create_table</span><span class="p" data-group-id="2105711869-1">(</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2105711869-2">[</span><span class="ss">attributes</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2105711869-3">[</span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">:name</span><span class="p">,</span><span class="w"> </span><span class="ss">:job</span><span class="p" data-group-id="2105711869-3">]</span><span class="p" data-group-id="2105711869-2">]</span><span class="p" data-group-id="2105711869-1">)</span><span class="w">
- </span><span class="p" data-group-id="2105711869-4">{</span><span class="ss">:atomic</span><span class="p">,</span><span class="w"> </span><span class="ss">:ok</span><span class="p" data-group-id="2105711869-4">}</span><span class="w">
- </span><span class="gp unselectable">iex(16)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">dirty_write</span><span class="p" data-group-id="2105711869-5">(</span><span class="p" data-group-id="2105711869-6">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="2105711869-6">}</span><span class="p" data-group-id="2105711869-5">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="w"> </span><span class="gp unselectable">iex(15)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">create_table</span><span class="p" data-group-id="1845103102-1">(</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1845103102-2">[</span><span class="ss">attributes</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1845103102-3">[</span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">:name</span><span class="p">,</span><span class="w"> </span><span class="ss">:job</span><span class="p" data-group-id="1845103102-3">]</span><span class="p" data-group-id="1845103102-2">]</span><span class="p" data-group-id="1845103102-1">)</span><span class="w">
+ </span><span class="p" data-group-id="1845103102-4">{</span><span class="ss">:atomic</span><span class="p">,</span><span class="w"> </span><span class="ss">:ok</span><span class="p" data-group-id="1845103102-4">}</span><span class="w">
+ </span><span class="gp unselectable">iex(16)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">dirty_write</span><span class="p" data-group-id="1845103102-5">(</span><span class="p" data-group-id="1845103102-6">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="1845103102-6">}</span><span class="p" data-group-id="1845103102-5">)</span><span class="w">
  </span><span class="ss">:ok</span><span class="w">
- </span><span class="gp unselectable">iex(17)&gt; </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">dirty_dump</span><span class="p" data-group-id="2105711869-7">(</span><span class="ss">:test</span><span class="p" data-group-id="2105711869-7">)</span><span class="w">
- </span><span class="p" data-group-id="2105711869-8">[</span><span class="p" data-group-id="2105711869-9">[</span><span class="p" data-group-id="2105711869-10">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="2105711869-10">}</span><span class="p" data-group-id="2105711869-9">]</span><span class="p" data-group-id="2105711869-8">]</span></code></pre>
+ </span><span class="gp unselectable">iex(17)&gt; </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">dirty_dump</span><span class="p" data-group-id="1845103102-7">(</span><span class="ss">:test</span><span class="p" data-group-id="1845103102-7">)</span><span class="w">
+ </span><span class="p" data-group-id="1845103102-8">[</span><span class="p" data-group-id="1845103102-9">[</span><span class="p" data-group-id="1845103102-10">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="1845103102-10">}</span><span class="p" data-group-id="1845103102-9">]</span><span class="p" data-group-id="1845103102-8">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="dump/1">
 
   <div class="detail-header">
-    <a href="#dump/1" class="detail-link" title="Link to this function">
+    <a href="#dump/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -291,7 +290,7 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
 <section class="detail" id="fresh_storage/0">
 
   <div class="detail-header">
-    <a href="#fresh_storage/0" class="detail-link" title="Link to this function">
+    <a href="#fresh_storage/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -308,7 +307,7 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
 <section class="detail" id="init/0">
 
   <div class="detail-header">
-    <a href="#init/0" class="detail-link" title="Link to this function">
+    <a href="#init/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
@@ -326,43 +325,40 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/lib/anoma/mnesia.ex">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

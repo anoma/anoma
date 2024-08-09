@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.19.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.19.1">
 
 
-    <title>Style Guide — Anoma v0.19.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <title>Style Guide — Anoma v0.19.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-142A9862.js"></script>
-
-      <script src="./.doc-versions.js"></script>
-
-    <script async src="dist/html-CILPWI2Q.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="extras" class="page-livemd">
@@ -37,9 +34,9 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
@@ -53,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.0
+          v0.19.1
         </div>
       </div>
     </div>
@@ -97,42 +94,43 @@ GUIDES
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Anoma</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
-      <div class="autocomplete">
-      </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
 
-  <span>Style Guide</span>
-</h1>
+    <span>Style Guide</span>
+  </h1>
 
-  <div class="livebook-badge-container">
-    <a href="#" class="livebook-badge">
-      <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
-    </a>
-  </div>
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
 
 <h2 id="index" class="section-heading">
   <a href="#index" class="hover-link">
@@ -146,7 +144,7 @@ GUIDES
   </a>
   <span class="text">Structural Rules</span>
 </h2>
-<p>A module is <strong>documented</strong> if</p><ul><li>It has nonempty module documentation.</li><li>All of its public functions capable of having documentation have nonempty documentation.</li><li>All of its public functions capable of having types assigned have assigned types.</li><li>All types have type documentation.</li></ul><h4>Rule 1.1</h4><p>Any module which is specified under the Node directory ought to be <strong>documented</strong>.</p><h4>Rule 1.2</h4><p>Any public function which is used in a public function by a module specified under the Node directory ought to have nonempty documentation.</p><h4>Rule 1.3</h4><p>Documentation should be given in first person.</p><h4>Rule 1.4</h4><p>If <code class="inline">foo</code> uses <code class="inline">bar</code> in the same module in the Node dir then <code class="inline">foo</code> is placed higher than <code class="inline">bar</code> in the module.</p><p>Exceptions might exist but should be noted explicitly in PR and commit messages.</p><h4>Rule 1.5</h4><p>If <code class="inline">foo</code> uses Router or GenServer functionality, it should be a <code class="inline">call</code> if and only if it does not change any underlying state, otherwise it should use <code class="inline">cast</code>.</p><h4>Rule 1.6</h4><p>If <code class="inline">foo</code> uses <code class="inline">call</code> functionality then the corresponding <code class="inline">handle_call</code> shall have body</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3357166112-1">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="n">do_foo</span><span class="p" data-group-id="3357166112-2">(</span><span class="n">...</span><span class="p" data-group-id="3357166112-2">)</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="3357166112-1">}</span></code></pre><p>with <code class="inline">do_foo</code> implementing core logic.</p><h4>Rule 1.7</h4><p>Every actor module should have mandatory <code class="inline">Public RPC API</code>, <code class="inline">GenServer Behavior</code>, and <code class="inline">GenServer Implementation</code> sections with following formatting:</p><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="c1">############################################################</span><span class="w">
+<p>A module is <strong>documented</strong> if</p><ul><li>It has nonempty module documentation.</li><li>All of its public functions capable of having documentation have nonempty documentation.</li><li>All of its public functions capable of having types assigned have assigned types.</li><li>All types have type documentation.</li></ul><h4>Rule 1.1</h4><p>Any module which is specified under the Node directory ought to be <strong>documented</strong>.</p><h4>Rule 1.2</h4><p>Any public function which is used in a public function by a module specified under the Node directory ought to have nonempty documentation.</p><h4>Rule 1.3</h4><p>Documentation should be given in first person.</p><h4>Rule 1.4</h4><p>If <code class="inline">foo</code> uses <code class="inline">bar</code> in the same module in the Node dir then <code class="inline">foo</code> is placed higher than <code class="inline">bar</code> in the module.</p><p>Exceptions might exist but should be noted explicitly in PR and commit messages.</p><h4>Rule 1.5</h4><p>If <code class="inline">foo</code> uses Router or GenServer functionality, it should be a <code class="inline">call</code> if and only if it does not change any underlying state, otherwise it should use <code class="inline">cast</code>.</p><h4>Rule 1.6</h4><p>If <code class="inline">foo</code> uses <code class="inline">call</code> functionality then the corresponding <code class="inline">handle_call</code> shall have body</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="4474266378-1">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="n">do_foo</span><span class="p" data-group-id="4474266378-2">(</span><span class="n">...</span><span class="p" data-group-id="4474266378-2">)</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="4474266378-1">}</span></code></pre><p>with <code class="inline">do_foo</code> implementing core logic.</p><h4>Rule 1.7</h4><p>Every actor module should have mandatory <code class="inline">Public RPC API</code>, <code class="inline">GenServer Behavior</code>, and <code class="inline">GenServer Implementation</code> sections with following formatting:</p><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="c1">############################################################</span><span class="w">
   </span><span class="c1">#                      Public RPC API                      #</span><span class="w">
   </span><span class="c1">############################################################</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="c1">############################################################</span><span class="w">
   </span><span class="c1">#                    Genserver Behavior                    #</span><span class="w">
@@ -177,7 +175,7 @@ GUIDES
   </a>
   <span class="text">Example</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Anoma.Node.Clock</span><span class="w"> </span><span class="k" data-group-id="3481229807-1">do</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Anoma.Node.Clock</span><span class="w"> </span><span class="k" data-group-id="5788351556-1">do</span><span class="w">
     </span><span class="na">@moduledoc</span><span class="w"> </span><span class="s">&quot;&quot;&quot;
     I am the Clock module implementing the Local Wall Clock Engine.
 
@@ -220,7 +218,7 @@ GUIDES
   </a>
   <span class="text">Example</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="n">typedstruct</span><span class="w"> </span><span class="k" data-group-id="5510988415-1">do</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="n">typedstruct</span><span class="w"> </span><span class="k" data-group-id="6403047841-1">do</span><span class="w">
     </span><span class="na">@typedoc</span><span class="w"> </span><span class="s">&quot;&quot;&quot;
     I am the type of the Pinger Engine.
 
@@ -233,9 +231,9 @@ GUIDES
                 Default: `:no_timer`
     &quot;&quot;&quot;</span><span class="w">
 
-    </span><span class="n">field</span><span class="p" data-group-id="5510988415-2">(</span><span class="ss">:mempool</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5510988415-3">(</span><span class="p" data-group-id="5510988415-3">)</span><span class="p" data-group-id="5510988415-2">)</span><span class="w">
-    </span><span class="n">field</span><span class="p" data-group-id="5510988415-4">(</span><span class="ss">:time</span><span class="p">,</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="5510988415-5">(</span><span class="p" data-group-id="5510988415-5">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">atom</span><span class="p" data-group-id="5510988415-6">(</span><span class="p" data-group-id="5510988415-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="ss">:no_timer</span><span class="p" data-group-id="5510988415-4">)</span><span class="w">
-  </span><span class="k" data-group-id="5510988415-1">end</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="6403047841-2">(</span><span class="ss">:mempool</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="6403047841-3">(</span><span class="p" data-group-id="6403047841-3">)</span><span class="p" data-group-id="6403047841-2">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="6403047841-4">(</span><span class="ss">:time</span><span class="p">,</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="6403047841-5">(</span><span class="p" data-group-id="6403047841-5">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">atom</span><span class="p" data-group-id="6403047841-6">(</span><span class="p" data-group-id="6403047841-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="ss">:no_timer</span><span class="p" data-group-id="6403047841-4">)</span><span class="w">
+  </span><span class="k" data-group-id="6403047841-1">end</span><span class="w">
 
   </span><span class="na">@typedoc</span><span class="w"> </span><span class="s">&quot;&quot;&quot;
   I control options for `launch_min/2`.
@@ -253,9 +251,9 @@ GUIDES
     this has on the node.
   &quot;&quot;&quot;</span><span class="w">
   </span><span class="na">@type</span><span class="w"> </span><span class="n">launch_option</span><span class="w"> </span><span class="o">::</span><span class="w">
-          </span><span class="p" data-group-id="5510988415-7">{</span><span class="ss">:use_rocksdb</span><span class="p">,</span><span class="w"> </span><span class="n">boolean</span><span class="p" data-group-id="5510988415-8">(</span><span class="p" data-group-id="5510988415-8">)</span><span class="p" data-group-id="5510988415-7">}</span><span class="w">
-          </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="5510988415-9">{</span><span class="ss">:supervisor</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5510988415-10">[</span><span class="nc">Supervisor</span><span class="o">.</span><span class="n">option</span><span class="p" data-group-id="5510988415-11">(</span><span class="p" data-group-id="5510988415-11">)</span><span class="p" data-group-id="5510988415-10">]</span><span class="p" data-group-id="5510988415-9">}</span><span class="w">
-          </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="5510988415-12">{</span><span class="ss">:testing</span><span class="p">,</span><span class="w"> </span><span class="n">boolean</span><span class="p" data-group-id="5510988415-13">(</span><span class="p" data-group-id="5510988415-13">)</span><span class="p" data-group-id="5510988415-12">}</span></code></pre><h2 id="function-documentation" class="section-heading">
+          </span><span class="p" data-group-id="6403047841-7">{</span><span class="ss">:use_rocksdb</span><span class="p">,</span><span class="w"> </span><span class="n">boolean</span><span class="p" data-group-id="6403047841-8">(</span><span class="p" data-group-id="6403047841-8">)</span><span class="p" data-group-id="6403047841-7">}</span><span class="w">
+          </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="6403047841-9">{</span><span class="ss">:supervisor</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6403047841-10">[</span><span class="nc">Supervisor</span><span class="o">.</span><span class="n">option</span><span class="p" data-group-id="6403047841-11">(</span><span class="p" data-group-id="6403047841-11">)</span><span class="p" data-group-id="6403047841-10">]</span><span class="p" data-group-id="6403047841-9">}</span><span class="w">
+          </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="6403047841-12">{</span><span class="ss">:testing</span><span class="p">,</span><span class="w"> </span><span class="n">boolean</span><span class="p" data-group-id="6403047841-13">(</span><span class="p" data-group-id="6403047841-13">)</span><span class="p" data-group-id="6403047841-12">}</span></code></pre><h2 id="function-documentation" class="section-heading">
   <a href="#function-documentation" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -263,9 +261,9 @@ GUIDES
 </h2>
 <h4>Rule 4.1</h4><p>The function documentation should begin with stating its purpose in one sentence. If the function is an implementation of a specs-related function, it should mention this by name.</p><ul><li><code class="inline">I am delete_key function, implementing DeleteValueKVStorage functionality.</code></li><li><code class="inline">Given a server S and time T, I change the timer set for the struct connected to S setting it to T.</code></li></ul><h4>Rule 4.2</h4><p>If a documented function has functions of same arity in the same module which pattern match arguments differently, they should be listed in a <code class="inline">### Pattern-Match Variations</code> section in the following format:</p><p>If function <code class="inline">foo</code> has a variation <code class="inline">foo(x1, ... , xn)</code> where <code class="inline">x1,...,xn</code> are some Elixir object capable of being pattern-matched to, we present it in a list as <code class="inline">- foo(x1, ... ,xn) -</code> followed by a short description.</p><p>If the arguments are not pattern-matched, provide the variable names as in the definition.</p><ul><li><pre><code class="makeup elixir" translate="no"><span class="c1">### Pattern-Matching Variations</span><span class="w">
 
-</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">init</span><span class="p" data-group-id="4314100378-1">(</span><span class="p" data-group-id="4314100378-2">%</span><span class="nc" data-group-id="4314100378-2">Clock</span><span class="p" data-group-id="4314100378-2">{</span><span class="p" data-group-id="4314100378-2">}</span><span class="p" data-group-id="4314100378-1">)</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">initialize</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">given</span><span class="w"> </span><span class="n">state</span><span class="o">.</span><span class="w">
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">init</span><span class="p" data-group-id="9388279384-1">(</span><span class="p" data-group-id="9388279384-2">%</span><span class="nc" data-group-id="9388279384-2">Clock</span><span class="p" data-group-id="9388279384-2">{</span><span class="p" data-group-id="9388279384-2">}</span><span class="p" data-group-id="9388279384-1">)</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">initialize</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">given</span><span class="w"> </span><span class="n">state</span><span class="o">.</span><span class="w">
 
-</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">init</span><span class="p" data-group-id="4314100378-3">(</span><span class="n">args</span><span class="p" data-group-id="4314100378-3">)</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">expect</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">keylist</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">check</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="ss">:start</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="n">then</span><span class="w">
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">init</span><span class="p" data-group-id="9388279384-3">(</span><span class="n">args</span><span class="p" data-group-id="9388279384-3">)</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">expect</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">keylist</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">check</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="ss">:start</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="n">then</span><span class="w">
                  </span><span class="n">launch</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Clock</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">said</span><span class="w"> </span><span class="n">setting</span><span class="o">.</span></code></pre></li></ul><h4>Rule 4.3</h4><p>Any function application which a non-constant output and an appropriate EModule example, it should have a reference to the appropriate example function in the codebase.</p><h3 id="example-2" class="section-heading">
   <a href="#example-2" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -282,15 +280,17 @@ GUIDES
   - `init(args)` - I expect a keylist and check for the :start key then
                    launch the Clock with said setting.
   &quot;&quot;&quot;</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="5889376182-1">(</span><span class="p" data-group-id="5889376182-2">%</span><span class="nc" data-group-id="5889376182-2">Clock</span><span class="p" data-group-id="5889376182-2">{</span><span class="p" data-group-id="5889376182-2">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="5889376182-1">)</span><span class="w"> </span><span class="k" data-group-id="5889376182-3">do</span><span class="w">
-    </span><span class="p" data-group-id="5889376182-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="5889376182-4">}</span><span class="w">
-  </span><span class="k" data-group-id="5889376182-3">end</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="7063864786-1">(</span><span class="p" data-group-id="7063864786-2">%</span><span class="nc" data-group-id="7063864786-2">Clock</span><span class="p" data-group-id="7063864786-2">{</span><span class="p" data-group-id="7063864786-2">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="7063864786-1">)</span><span class="w"> </span><span class="k" data-group-id="7063864786-3">do</span><span class="w">
+    </span><span class="p" data-group-id="7063864786-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="7063864786-4">}</span><span class="w">
+  </span><span class="k" data-group-id="7063864786-3">end</span><span class="w">
 
-  </span><span class="na">@spec</span><span class="w"> </span><span class="n">init</span><span class="p" data-group-id="5889376182-5">(</span><span class="n">list</span><span class="p" data-group-id="5889376182-6">(</span><span class="p" data-group-id="5889376182-7">{</span><span class="ss">:start</span><span class="p">,</span><span class="w"> </span><span class="n">integer</span><span class="p" data-group-id="5889376182-8">(</span><span class="p" data-group-id="5889376182-8">)</span><span class="p" data-group-id="5889376182-7">}</span><span class="p" data-group-id="5889376182-6">)</span><span class="p" data-group-id="5889376182-5">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="5889376182-9">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="nc">Clock</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5889376182-10">(</span><span class="p" data-group-id="5889376182-10">)</span><span class="p" data-group-id="5889376182-9">}</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="5889376182-11">(</span><span class="n">args</span><span class="p" data-group-id="5889376182-11">)</span><span class="w"> </span><span class="k" data-group-id="5889376182-12">do</span><span class="w">
-    </span><span class="p" data-group-id="5889376182-13">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5889376182-14">%</span><span class="nc" data-group-id="5889376182-14">Clock</span><span class="p" data-group-id="5889376182-14">{</span><span class="ss">start</span><span class="p">:</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="5889376182-15">[</span><span class="ss">:start</span><span class="p" data-group-id="5889376182-15">]</span><span class="p" data-group-id="5889376182-14">}</span><span class="p" data-group-id="5889376182-13">}</span><span class="w">
-  </span><span class="k" data-group-id="5889376182-12">end</span></code></pre>
-<div class="bottom-actions">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">init</span><span class="p" data-group-id="7063864786-5">(</span><span class="n">list</span><span class="p" data-group-id="7063864786-6">(</span><span class="p" data-group-id="7063864786-7">{</span><span class="ss">:start</span><span class="p">,</span><span class="w"> </span><span class="n">integer</span><span class="p" data-group-id="7063864786-8">(</span><span class="p" data-group-id="7063864786-8">)</span><span class="p" data-group-id="7063864786-7">}</span><span class="p" data-group-id="7063864786-6">)</span><span class="p" data-group-id="7063864786-5">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="7063864786-9">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="nc">Clock</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="7063864786-10">(</span><span class="p" data-group-id="7063864786-10">)</span><span class="p" data-group-id="7063864786-9">}</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="7063864786-11">(</span><span class="n">args</span><span class="p" data-group-id="7063864786-11">)</span><span class="w"> </span><span class="k" data-group-id="7063864786-12">do</span><span class="w">
+    </span><span class="p" data-group-id="7063864786-13">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7063864786-14">%</span><span class="nc" data-group-id="7063864786-14">Clock</span><span class="p" data-group-id="7063864786-14">{</span><span class="ss">start</span><span class="p">:</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="7063864786-15">[</span><span class="ss">:start</span><span class="p" data-group-id="7063864786-15">]</span><span class="p" data-group-id="7063864786-14">}</span><span class="p" data-group-id="7063864786-13">}</span><span class="w">
+  </span><span class="k" data-group-id="7063864786-12">end</span></code></pre>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
   <div class="bottom-actions-item">
 
       <a href="observer.html" class="bottom-actions-button" rel="prev">
@@ -316,43 +316,42 @@ Testing
 
   </div>
 </div>
-      <footer class="footer">
-        <p>
-
-            <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.19.0" class="footer-hex-package">Hex Package</a>
-
-              <a href="https://preview.hex.pm/preview/anoma/0.19.0">Hex Preview</a>
-
-                (<a href="https://preview.hex.pm/preview/anoma/0.19.0/show/documentation/contributing/style-guide.livemd">current file</a>)
-
-            </span>
+    <footer class="footer">
+      <p>
 
           <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
 
-              <a href="Anoma.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.19.1/show/documentation/contributing/style-guide.livemd">current file</a>)
 
           </span>
-        </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
