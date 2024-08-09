@@ -1,4 +1,21 @@
 defmodule Anoma.Node.Transport do
+  @moduledoc """
+  I am the Transport Engine.
+
+  I implement the transport layer for communication between nodes. Connections
+  between nodes are established by means of a two-step handshake protocol.
+
+  ### Public API
+  I provide the following public functionality:
+  - `start_server/2`
+  - `receive_chunk/2`
+  - `learn_node/3`
+  - `learn_engine/3`
+  - `send/3`
+  - `new_connection/2`
+  - `disconnect/2`
+  """
+
   alias __MODULE__
   alias Anoma.Node.Transport.Connection
   alias Anoma.Node.Router
@@ -8,22 +25,56 @@ defmodule Anoma.Node.Transport do
   use Router.Engine
   use TypedStruct
 
-  # cap messages at 1mb.  todo should be a configuration parameter, maybe more sophisticated policy, etc.
+  # cap messages at 1mb. TODO should be a configuration parameter, maybe more sophisticated policy, etc.
   @max_message_size 1_000_000
 
+  @typedoc """
+  I am a transport type.
+
+  ### Option
+  - `:tcp` - TCP socket
+  - `:unix` - Unix socket
+  """
   @type transport_type :: :tcp | :unix
-  # host, port
+
+  @typedoc """
+  I am a transport address type.
+
+  ### Options
+  - `:tcp` - I provide host and port number for TCP socket.
+  - `:unix` - I provide file path for Unix socket.
+  """
   @type transport_addr ::
-          {:tcp, binary(), non_neg_integer()}
-          # file path
+          {:tcp, binary(), :inet.port_number()}
           | {:unix, binary()}
-  # host, port
+
+  @typedoc """
+  I am a listener address type.
+
+  ### Options
+  - `:tcp` - I provide host and port number for TCP socket.
+  - `:unix` - I provide file path for Unix socket.
+  """
   @type listen_addr ::
-          {:tcp, binary(), non_neg_integer()}
-          # file path
+          {:tcp, binary(), :inet.port_number()}
           | {:unix, binary()}
 
   typedstruct module: ConnectionState do
+    @typedoc """
+    I am the type of connection state.
+
+    I keep information about connection from Transport point of view.
+
+    ### Fields
+    - `:type` - Type of connection: TCP socket or Unix socket.
+    - `:connection` - Address of the correspondent that I establish connection to.
+    - `:state` - Connection status.
+    - `:id` - Public id of the correspondent node.
+    - `:partial_message` - Incomplete message received so far.
+    - `:outgoing_nonce` - Outgoing nonce used in the initial handshake message.
+    - `:incoming_nonce` - Incoming nonce used in the correspondent's initial
+      handshake message.
+    """
     field(:type, Anoma.Node.Transport.transport_type())
     field(:connection, Router.addr())
 
@@ -41,6 +92,36 @@ defmodule Anoma.Node.Transport do
   end
 
   typedstruct do
+    @typedoc """
+    I am the type of the Transport Engine.
+
+    ### Fields
+    - `:router` - The address of the Router Engine that the Transport Engine
+      instance serves to.
+    - `:logger` - The Logger Engine address. Enforced: false.
+    - `:node_internal_id` - Id of this node.
+    - `:transport_internal_id` - Id of the Transport Engine.
+    - `:connection_pool` - The supervisor which manages the connection pool that
+      the TCPConnection Engine instance belongs to.
+    - `:node_connections` - For every current node connection, maps the
+      correspondent id to their address. Default: empty.
+    - `:connection_states` - Maps current connections to their respective
+      connection states. Default: empty.
+    - `:pending_outgoing_messages` - For every node, to which we have not
+      established a connection yet, store a list of messages addressed to the node.
+      Default: empty.
+    - `:pending_outgoing_engine_messages` - For every engine, whose node
+      location is not known yet, store a list of messages addressed to the
+      engine. Default: empty.
+    - `:servers` - Stores a set of transport servers that the Transport Engine
+      is currently running. Every transport server is mapped to an external
+      transport address, by which messages may reach the Engine through this
+      server.
+    - `:known_nodes` - Maps every known node (indexed by its public id) to a
+      set of transport addresses through which the node can be reached.
+    - `:known_engines` - Stores a set of known engines by their public id: every
+      engine id is mapped to a public id of a node that the engine belongs to.
+    """
     field(:router, Router.addr())
     field(:logger, Router.addr())
     field(:node_internal_id, Id.t())
@@ -55,9 +136,6 @@ defmodule Anoma.Node.Transport do
       default: %{}
     )
 
-    # node -> messages that we would like to send to it, but we haven't
-    # established a connection to it yet
-    # could just as well be a MapSet
     field(:pending_outgoing_messages, %{Id.Extern.t() => [binary()]},
       default: %{}
     )
@@ -68,16 +146,13 @@ defmodule Anoma.Node.Transport do
       default: %{}
     )
 
-    # a transport server we are currently running -> a set of external
-    # transport addresses by which messages might reach us through this server
     field(:servers, %{transport_addr => Router.addr()}, default: %{})
 
-    # pidgin network identity store; should become its own engine
+    # TODO should become its own engine
     field(:known_nodes, MapSetMap.t(Id.Extern.t(), transport_addr()),
       default: MapSetMap.new()
     )
 
-    # engine => its node
     field(:known_engines, %{Id.Extern.t() => Id.Extern.t()}, default: %{})
   end
 
@@ -91,22 +166,15 @@ defmodule Anoma.Node.Transport do
      }}
   end
 
-  @spec transport_type(transport_addr()) :: transport_type()
-  def transport_type(addr) do
-    elem(addr, 0)
-  end
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
 
   @doc """
-  You are a connection, and want to notify the transport that you have received
-  a chunk of data.
-  """
-  @spec receive_chunk(Router.addr(), binary()) :: :ok
-  def receive_chunk(transport, chunk) do
-    Router.cast(transport, {:receive_chunk, chunk})
-  end
+  I try to start a new transport server listening on the specified address.
 
-  @doc """
-  Attempt to start a new transport server listening on the specified address.
+  If a new transport server fails to start, the Transport Engine state does not
+  change.
   """
   @spec start_server(Router.addr(), listen_addr()) :: :ok
   def start_server(transport, addr) do
@@ -114,8 +182,11 @@ defmodule Anoma.Node.Transport do
   end
 
   @doc """
-  Notify the transport that the specified node can be reached by the specified
-  transport address.
+  I notify the Transport Engine that the node specified by the given public id
+  can be reached through the specified transport address.
+
+  If there are pending outgoing messages addressed to the node, I try to
+  initiate a new connection to the node.
   """
   @spec learn_node(Router.addr(), Id.Extern.t(), transport_addr()) :: :ok
   def learn_node(transport, id, addr) do
@@ -123,7 +194,8 @@ defmodule Anoma.Node.Transport do
   end
 
   @doc """
-  Notify the transport that the specified engine lives on the specified node.
+  I notify the Transport Engine that the specified engine lives on the
+  specified node.
   """
   @spec learn_engine(Router.addr(), Id.Extern.t(), Id.Extern.t()) :: :ok
   def learn_engine(transport, engine, node) do
@@ -131,16 +203,7 @@ defmodule Anoma.Node.Transport do
   end
 
   @doc """
-  Attempt to send the specified message to the node with the specified id,
-  somehow.
-  """
-  @spec send(Router.addr(), Id.Extern.t(), binary()) :: :ok
-  def send(transport, dst, msg) do
-    Router.cast(transport, {:send, dst, msg})
-  end
-
-  @doc """
-  Notify the transport that you, a local engine, are now managing a new
+  I notify the Transport Engine that you, a local engine, are now managing a new
   incoming connection of the specified type.
   """
   @spec new_connection(Router.addr(), transport_type()) :: :ok
@@ -148,16 +211,39 @@ defmodule Anoma.Node.Transport do
     Router.cast(transport, {:new_connection, trans_type})
   end
 
-  # notify the transport that the connection you were managing has died
+  # I notify the Transport Engine that the connection you were managing has died.
   @spec disconnected(Router.addr(), binary()) :: :ok
   def disconnected(transport, reason) do
     Router.cast(transport, {:disconnected, reason})
   end
 
+  @doc """
+  I send the specified message to the node with the specified id.
+  """
+  @spec send(Router.addr(), Id.Extern.t(), binary()) :: :ok
+  def send(transport, dst, msg) do
+    Router.cast(transport, {:send, dst, msg})
+  end
+
+  @doc """
+  I notify the Transport Engine that the given chunk of data has been received.
+
+  I am normally called by a Transport Connection instance.
+  """
+  @spec receive_chunk(Router.addr(), binary()) :: :ok
+  def receive_chunk(transport, chunk) do
+    Router.cast(transport, {:receive_chunk, chunk})
+  end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+
   def handle_cast({:receive_chunk, chunk}, from, s) do
     state = Map.get(s.connection_states, from)
-    # message still in queue from dropped connection
+
     if state == nil do
+      # message still in queue from dropped connection; ignore
       {:noreply, s}
     else
       # over-large message; drop connection
@@ -233,7 +319,8 @@ defmodule Anoma.Node.Transport do
 
     s =
       if Map.has_key?(s.pending_outgoing_messages, node) do
-        # have anything to send?  try to initiate a connection
+        # if we have any pending outgoing messages addressed to the node,
+        # try to initiate a connection
         add_connection(s, node, addr)
       else
         s
@@ -243,8 +330,9 @@ defmodule Anoma.Node.Transport do
     handle_cast({:learn_engine, node, node}, Router.self_addr(), s)
   end
 
-  # if an engine claims to be associated with a node, believe it (_not_ the other way around); and of course we believe local advertisements
-  # todo condition should perhaps be id signsfor engine, not id == engine?
+  # if an engine claims to be associated with a node, believe it (_not_ the
+  # other way around); and of course we believe local advertisements
+  # TODO condition should perhaps be id signsfor engine, not id == engine?
   def handle_cast(
         {:learn_engine, engine, node},
         %Router.Addr{server: server, id: id},
@@ -275,7 +363,12 @@ defmodule Anoma.Node.Transport do
     {:reply, :pong, s}
   end
 
-  def handle_recv_chunk(s, from, data) do
+  ############################################################
+  #                  Genserver Implementation                #
+  ############################################################
+
+  @spec handle_recv_chunk(t(), Router.addr(), binary()) :: t()
+  defp handle_recv_chunk(s, from, data) do
     case :msgpack.unpack_stream(data) do
       # message still incomplete; enqueue (todo: the partial_message <> chunk
       # catenation above could force us to do quadratic work if they send a
@@ -300,6 +393,7 @@ defmodule Anoma.Node.Transport do
     end
   end
 
+  @spec send_initial_handshake(t(), ConnectionState.t()) :: :ok
   defp send_initial_handshake(s, %ConnectionState{
          connection: conn,
          outgoing_nonce: nonce
@@ -317,52 +411,6 @@ defmodule Anoma.Node.Transport do
 
     message = Anoma.Serialise.pack(%{data: packed, sig: signature})
     Connection.send(conn, message)
-  end
-
-  @spec learn_connection(t(), Router.addr(), Id.Extern.t()) :: t()
-  defp learn_connection(s, conn, id) do
-    # if there were any messages we were waiting to send to this node, send them now
-    {messages, pending_outgoing_messages} =
-      Map.pop(s.pending_outgoing_messages, id, [])
-
-    Enum.each(messages, &Connection.send(conn, &1))
-    state = Map.fetch!(s.connection_states, conn)
-    log_info({:connected, state.id, state.type, s.logger})
-
-    %{
-      s
-      | node_connections: MapSetMap.add(s.node_connections, id, conn),
-        connection_states:
-          Map.update!(s.connection_states, conn, fn state ->
-            %{state | state: :connected}
-          end),
-        pending_outgoing_messages: pending_outgoing_messages
-    }
-  end
-
-  @spec drop_connection(t(), Router.addr(), binary()) :: t()
-  defp drop_connection(s, conn, reason) do
-    Connection.shutdown(conn)
-    connection_dropped(s, conn, reason)
-  end
-
-  @spec connection_dropped(t(), Router.addr(), binary()) :: t()
-  defp connection_dropped(s, conn, reason) do
-    log_info({:disconnected, conn, reason, s.logger})
-    {state, connection_states} = Map.pop(s.connection_states, conn)
-
-    node_connections =
-      if state do
-        MapSetMap.remove(s.node_connections, state.id, conn)
-      else
-        s.node_connections
-      end
-
-    %{
-      s
-      | connection_states: connection_states,
-        node_connections: node_connections
-    }
   end
 
   @spec handle_handshake(t(), term(), ConnectionState.t()) :: t()
@@ -406,7 +454,7 @@ defmodule Anoma.Node.Transport do
            Anoma.Serialise.from_msgpack(data) do
       with {:ok, %{nonce: other_nonce, id: other_id}} <-
              Anoma.Serialise.unpack(packed) do
-        # todo check structure of nonce/id
+        # TODO check structure of nonce/id
         if (state.id == nil || state.id === other_id) &&
              Anoma.Crypto.Sign.verify_detached(
                signature,
@@ -445,6 +493,7 @@ defmodule Anoma.Node.Transport do
     end
   end
 
+  @spec handle_second_handshake(t(), term(), ConnectionState.t()) :: boolean()
   defp handle_second_handshake(s, data, state) do
     with %{data: packed, sig: signature} <- data do
       with {:ok,
@@ -464,7 +513,7 @@ defmodule Anoma.Node.Transport do
 
     if node === nil do
       log_info({:queued, dst, nil, nil, s.logger})
-      # todo limit queue size
+      # TODO limit queue size
       %{
         s
         | pending_outgoing_engine_messages:
@@ -504,7 +553,7 @@ defmodule Anoma.Node.Transport do
       else
         # no current connections--whether pending or active--so try to open one
         # just pick the first address and try to open a new connection to it
-        # todo more sophisticated strategy--if the first address doesn't work,
+        # TODO more sophisticated strategy--if the first address doesn't work,
         # try more; ask if anyone else knows more addresses; tune effort
         # according to message priority (qos and
         # https://github.com/anoma/anoma/issues/328 again); exponential backoff
@@ -514,7 +563,7 @@ defmodule Anoma.Node.Transport do
           log_info({:queued, dst, node, addr, s.logger})
           add_connection(s, node, addr)
         else
-          # todo attempt to discover an address; should limit outgoing queue
+          # TODO attempt to discover an address; should limit outgoing queue
           # size, with lower priority for messages for nodes whose addresses we
           # don't know
           log_info({:queued, dst, node, nil, s.logger})
@@ -569,6 +618,64 @@ defmodule Anoma.Node.Transport do
     end
   end
 
+  @spec learn_connection(t(), Router.addr(), Id.Extern.t()) :: t()
+  defp learn_connection(s, conn, id) do
+    # if there were any messages we were waiting to send to this node, send them now
+    {messages, pending_outgoing_messages} =
+      Map.pop(s.pending_outgoing_messages, id, [])
+
+    Enum.each(messages, &Connection.send(conn, &1))
+    state = Map.fetch!(s.connection_states, conn)
+    log_info({:connected, state.id, state.type, s.logger})
+
+    %{
+      s
+      | node_connections: MapSetMap.add(s.node_connections, id, conn),
+        connection_states:
+          Map.update!(s.connection_states, conn, fn state ->
+            %{state | state: :connected}
+          end),
+        pending_outgoing_messages: pending_outgoing_messages
+    }
+  end
+
+  @spec drop_connection(t(), Router.addr(), binary()) :: t()
+  defp drop_connection(s, conn, reason) do
+    Connection.shutdown(conn)
+    connection_dropped(s, conn, reason)
+  end
+
+  @spec connection_dropped(t(), Router.addr(), binary()) :: t()
+  defp connection_dropped(s, conn, reason) do
+    log_info({:disconnected, conn, reason, s.logger})
+    {state, connection_states} = Map.pop(s.connection_states, conn)
+
+    node_connections =
+      if state do
+        MapSetMap.remove(s.node_connections, state.id, conn)
+      else
+        s.node_connections
+      end
+
+    %{
+      s
+      | connection_states: connection_states,
+        node_connections: node_connections
+    }
+  end
+
+  ############################################################
+  #                          Helpers                         #
+  ############################################################
+
+  @doc """
+  I return transport type of the given transport address.
+  """
+  @spec transport_type(transport_addr() | listen_addr()) :: transport_type()
+  def transport_type(addr) do
+    elem(addr, 0)
+  end
+
   defp trans_connection_mod(type) do
     %{
       tcp: Transport.TCPConnection,
@@ -586,6 +693,10 @@ defmodule Anoma.Node.Transport do
   defp new_nonce() do
     :crypto.strong_rand_bytes(32)
   end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
 
   defp log_info({:queued, engine, node, addr, logger}) do
     Logger.add(

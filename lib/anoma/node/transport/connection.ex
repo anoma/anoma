@@ -1,6 +1,15 @@
 defmodule Anoma.Node.Transport.Connection do
   @moduledoc """
-  I am an abstract interface that connections obey.
+  I am the Transport Connection module.
+
+  I am an abstract interface that connection implementations obey.
+
+  ### Public API
+
+  I provide the following public functionality:
+
+  - `send/2`
+  - `shutdown/1`
   """
 
   alias Anoma.Node.Router
@@ -13,13 +22,20 @@ defmodule Anoma.Node.Transport.Connection do
     end
   end
 
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+
+  @doc """
+  I send messages to the given connection.
+  """
   @spec send(Router.addr(), binary()) :: :ok
   def send(conn, msg) do
     Router.cast(conn, {:send, msg})
   end
 
   @doc """
-  Asynchronously initiate a shutdown.  Idempotent.
+  I asynchronously initiate the connection shutdown.
   """
   @spec shutdown(Router.addr()) :: :ok
   def shutdown(conn) do
