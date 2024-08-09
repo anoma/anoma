@@ -4,17 +4,7 @@ defmodule EventBroker.Registry do
 
   I am the central registry of all the topic subscirptions and filters. I
   am responsible for spawning filter agents, (un)subscribing to them, and
-  keeping track of relations between them. All public API other than
-  message-sending is handle by me.
-
-  ### Public API
-
-  I have the following public functionality:
-
-  - `subscribe_me/1`
-  - `unsubscribe_me/1`
-  - `subscribe/2`
-  - `unsubscribe/2`
+  keeping track of relations between them.
   """
 
   alias __MODULE__
@@ -22,20 +12,12 @@ defmodule EventBroker.Registry do
   use GenServer
   use TypedStruct
 
-  @typedoc """
-  I am a filter dependency specification, I am a list of filter specs listed
-  in the order in which the filter agents implementing said specs should be
-  subscribed to one another.
-  """
-
-  @type filter_spec_list :: list(struct())
-
   @doc """
   I am the type of the registered filters, matching a filter agent to its
   PID.
   """
 
-  @type registered_filters :: %{filter_spec_list => pid()}
+  @type registered_filters :: %{EventBroker.filter_spec_list() => pid()}
 
   typedstruct enforce: true do
     @typedoc """
@@ -75,87 +57,6 @@ defmodule EventBroker.Registry do
        supervisor: args[:dyn_sup_name],
        registered_filters: %{[] => pid}
      }}
-  end
-
-  ############################################################
-  #                      Public RPC API                      #
-  ############################################################
-
-  @doc """
-  I am the subscription function.
-
-  Given a PID and a list of filter specs, I ensure that all the actors
-  corresponding to each spec given in the list is launched and subscribed
-  to each other in the appropriate order - e.g. given `[spec1, spec2]` I
-  ensure that agents implemented `spec1` and `spec2` are launched and that
-  the former is subscribed to the top broker, while the latter is subscribed
-  to the former.
-
-  I also do this in a minimal fashion, that is, if some starting subchain of
-  filter spec dependency has already been registered, I launch the minimal
-  chain remaining to build the full dependency.
-
-  Note that each filter actor is hence not only determined by the filtering
-  functionality it has but also on the chain of dependencies it is spawned
-  with. Hence `[spec1, spec2]` corresponds to an agent different from
-  `[spec2]`.
-
-  Afterwards, I subscribe the given PID to the final filter agent in the
-  dependency chain and register all the new agents in the map by putting
-  the filter agent PIDs as values to their dependency filter specification.
-
-  If I notice that any of the filter structures do not have an appropriate
-  public filter functionality exposed, I return the list of such modules
-  back to the user and do nothing with respect to agent-spawning or
-  registration.
-  """
-
-  @spec subscribe(pid(), atom() | pid(), filter_spec_list) :: :ok | String.t()
-  def subscribe(pid, registry, filter_spec_list) do
-    GenServer.call(registry, {:subscribe, pid, filter_spec_list})
-  end
-
-  @doc """
-  I am a subscription function specifically for `self()`
-
-  I call `subscribe/2` where the first argument is `self()`
-  """
-
-  @spec subscribe_me(atom() | pid(), filter_spec_list) :: :ok | String.t()
-  def subscribe_me(registry, filter_spec_list) do
-    subscribe(self(), registry, filter_spec_list)
-  end
-
-  @doc """
-  I am the unsubscription function.
-
-  Given a PID and a list of filter specs, I get the PID of the related
-  filter agent by looking in my state, then ask it to unsubscribe the
-  given PID from it. In case the agent has other subscribers, I return the
-  base state.
-
-  Otherwise, it will shut down, prompting to recursively send unsubscription
-  requests to its parent filters and processing their termination
-  appropriately in a synchronous manner.
-
-  After all the requests have been sent and terminations recorded, I remove
-  all agents which have shut down from my registry map and return `:ok`
-  """
-
-  @spec unsubscribe(pid(), atom() | pid(), filter_spec_list) :: :ok
-  def unsubscribe(pid, registry, filter_spec_list) do
-    GenServer.call(registry, {:unsubscribe, pid, filter_spec_list})
-  end
-
-  @doc """
-  I am the unsubscription function specifically for `self()`
-
-  I call `unsubscribe/2` where the first argument is `self()`
-  """
-
-  @spec unsubscribe_me(atom() | pid(), filter_spec_list) :: :ok
-  def unsubscribe_me(registry, filter_spec_list) do
-    unsubscribe(self(), registry, filter_spec_list)
   end
 
   ############################################################
@@ -221,8 +122,12 @@ defmodule EventBroker.Registry do
   #                          Helpers                         #
   ############################################################
 
-  @spec iterate_sub(%{filter_spec_list => pid}, filter_spec_list, atom()) ::
-          {filter_spec_list, registered_filters}
+  @spec iterate_sub(
+          %{EventBroker.filter_spec_list() => pid},
+          EventBroker.filter_spec_list(),
+          atom()
+        ) ::
+          {EventBroker.filter_spec_list(), registered_filters}
   defp iterate_sub(registered, filter_spec_list, supervisor) do
     existing_prefix =
       registered
@@ -255,7 +160,11 @@ defmodule EventBroker.Registry do
     end
   end
 
-  @spec do_unsubscribe(pid(), filter_spec_list, registered_filters) ::
+  @spec do_unsubscribe(
+          pid(),
+          EventBroker.filter_spec_list(),
+          registered_filters
+        ) ::
           registered_filters
   defp do_unsubscribe(pid, filter_spec_list, registered_filters) do
     filter_pid = Map.get(registered_filters, filter_spec_list)

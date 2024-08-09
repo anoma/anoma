@@ -5,15 +5,6 @@ defmodule EventBroker.Broker do
   I specify the behavior of the server acting as a central broker of the
   PubSub servive. My functionality is minimal. I wait for messages and
   relay them to my subscribers.
-
-  We assume that there is only one local entity named EventBroker for
-  proper functionality.
-
-  ### Public API
-
-  I provide the following public functionality:
-
-  - `event/1`
   """
 
   use GenServer
@@ -40,22 +31,6 @@ defmodule EventBroker.Broker do
 
   def init(_opts) do
     {:ok, %EventBroker.Broker{}}
-  end
-
-  ############################################################
-  #                      Public RPC API                      #
-  ############################################################
-
-  @doc """
-  I am the Event Broker event function.
-
-  I process any incoming events by sending them to all of my subscribers
-  using the `send/2` functionality.
-  """
-
-  @spec event(EventBroker.Event.t()) :: :ok
-  def event(event = %EventBroker.Event{}) do
-    GenServer.cast(__MODULE__, {:event, event})
   end
 
   ############################################################
