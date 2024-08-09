@@ -539,21 +539,24 @@ defmodule Anoma.Node.Transport do
   defp add_connection(s, node, addr) do
     conn = init_connection(s, addr)
 
-    state = %ConnectionState{
-      type: transport_type(addr),
-      id: node,
-      state: :pending
-    }
+    if conn != nil do
+      state = %ConnectionState{
+        type: transport_type(addr),
+        id: node,
+        state: :pending
+      }
 
-    %{
+      %{
+        s
+        | connection_states: Map.put(s.connection_states, conn, state),
+          node_connections: MapSetMap.add(s.node_connections, node, conn)
+      }
+    else
       s
-      | connection_states: Map.put(s.connection_states, conn, state),
-        node_connections: MapSetMap.add(s.node_connections, node, conn)
-    }
+    end
   end
 
-  @spec init_connection(t(), transport_addr()) ::
-          {Router.addr(), transport_type()} | nil
+  @spec init_connection(t(), transport_addr()) :: Router.addr() | nil
   defp init_connection(s = %__MODULE__{}, trans) do
     case Router.start_engine(
            s.router,
@@ -561,7 +564,7 @@ defmodule Anoma.Node.Transport do
            {:client, s.router, Router.self_addr(), trans, s.connection_pool},
            supervisor: s.connection_pool
          ) do
-      {:ok, addr} -> {addr, transport_type(trans)}
+      {:ok, addr} -> addr
       _ -> nil
     end
   end
