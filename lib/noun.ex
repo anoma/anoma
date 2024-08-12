@@ -159,6 +159,11 @@ defmodule Noun do
     []
   end
 
+  @spec list_nock_to_erlang(<<>>) :: []
+  def list_nock_to_erlang(<<>>) do
+    []
+  end
+
   @spec list_nock_to_erlang([]) :: []
   def list_nock_to_erlang([]) do
     []
