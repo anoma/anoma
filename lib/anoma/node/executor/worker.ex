@@ -232,8 +232,8 @@ defmodule Anoma.Node.Executor.Worker do
          {:ok, vm_resource_tx} <- mod.from_noun(resource_tx),
          true_order = wait_for_ready(s),
          true <- Transaction.verify(vm_resource_tx),
-         # TODO: add root existence check. The roots must be traceable
-         # in historical records.
+         true <-
+           Transaction.resource_existence_check(vm_resource_tx, storage),
          true <-
            rm_nullifier_check(
              storage,
@@ -279,9 +279,9 @@ defmodule Anoma.Node.Executor.Worker do
       log_info({:put, cm_key, logger})
     end
 
-    CommitmentTree.add(cm_tree, commitments)
+    {_ct, anchor} = CommitmentTree.add(cm_tree, commitments)
 
-    Storage.put(storage, ["rm", "commitment_root"], cm_tree.root)
+    Storage.put(storage, ["rm", "commitment_root", anchor], true)
 
     for nullifier <- Transaction.storage_nullifiers(vm_resource_tx) do
       nf_key = ["rm", "nullifiers", nullifier]
