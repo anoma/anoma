@@ -79,6 +79,10 @@ success or failure of the operation.
 
 #### Rule 1.7
 
+Calling a callback function from another callback functions is _not_ allowed.
+
+#### Rule 1.8
+
 Every actor module should have mandatory `Public RPC API`, `GenServer Behavior`, and `GenServer Implementation` sections with following formatting:
 
 ```
