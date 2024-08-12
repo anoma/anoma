@@ -109,6 +109,18 @@ where
 
 Extra functions can be contained in the latter section or can further be separated into `Helper` functions.
 
+#### Rule 1.9
+
+Actor module may have an optional `Logging Info` section with following formatting:
+
+```
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+```
+
+that contains functions related to logging.
+
 ## Module Documentation
 
 #### Rule 2.1
