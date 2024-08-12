@@ -92,12 +92,12 @@ Every actor module should have mandatory `Public RPC API`, `GenServer Behavior`,
 ```
 ```
   ############################################################
-  #                    Genserver Behavior                    #
+  #                    GenServer Behavior                    #
   ############################################################
 ```
 ```
   ############################################################
-  #                  Genserver Implementation                #
+  #                  GenServer Implementation                #
   ############################################################
 ```
 
