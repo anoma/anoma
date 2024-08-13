@@ -1,3 +1,15 @@
+# v0.19.0
+
+- Refactor and reformat various components to comply with the updated
+  style guide.
+- Add examples to the CLI modules.
+- Store logs by the `encrypt` field rather than the ID.
+- Store properly type-compliant nouns in logs.
+- Correct the representation of shielded proof records.
+- Support absent values for deleted keys in storage.
+- Support silent CLI operation.
+- Support truncated inspection of node transactions.
+
 # v0.18.0
 ## Major Features
 ## Execution Environments

@@ -1,7 +1,7 @@
 defmodule Anoma.Node.Router do
   @moduledoc """
-
-  I have a few use cases and APIs throughout an Anoma application:
+  I am the Router, the central networking component of Anoma. My
+  functionality includes several services:
 
   1. I provide central routing infrastructure for inter-node and
      intra-node communication
@@ -14,7 +14,7 @@ defmodule Anoma.Node.Router do
      messaging
 
 
-  ## Router Topology
+  ### Router Topology
 
   A good view of my topology and how various
   `Anoma.Node.Router.Engine` and topic's relate to me can be seen by
@@ -42,12 +42,12 @@ defmodule Anoma.Node.Router do
   [`Engine`](`Anoma.Node.Router.Engine`), and messages sent via
   `call/3` or `cast/2` as being routed through myself.
 
-  ## Server Terminology
+  ### Server Terminology
 
   For the sake of this document, the word `Server` will refer to both
   [`Engines`](`Anoma.Node.Router.Engine`) and `Topics`.
 
-  ## Router PIDs
+  ### Router PIDs
 
   The IDs of the various topics and
   [engines](`Anoma.Node.Router.Engine`), are not regular Erlang
@@ -55,33 +55,58 @@ defmodule Anoma.Node.Router do
   `Anoma.Node.Router.Addr`. Further information can also be found in
   our specs (link to specs when they are online).
 
-  ## Router API
+  ### Public API
+
+  I provide the following public functionality:
+
+  #### Router API
 
   I offer an API for anyone wishing to call me. These functions are:
 
   - `start/0`
   - `start/1`
   - `new_topic/1`
+  - `subscribe_topic/2`
   - `start_engine/3`
   - `start_engine/4`
-  - `subscribe_topic/2`
   - `subscribe_topic/3`
 
-  ## Server APIs
+  #### Server APIs
 
   When writing server code, My module acts as a `GenServer` behavior,
   in that one should be using these functions when writing code to
   talk to the `Server`:
 
   - `call/2`
-  - `call/3`
   - `cast/2`
+  - `call/3`
 
   The API I offer is very reminiscent of `GenServer`'s API, however
   please read the [examples](#module-examples) section to get a sense
   on how the server code differs.
 
-  ## Client/Server APIs
+  #### Self-Cast/Call API
+
+  I have separate API for assisting myself upon message reception from
+  myself as a GenServer.
+
+  - `handle_self_cast/3`
+  - `handle_self_call/3`
+
+  #### Other
+
+  - `stop/0`
+  - `self_addr/0`
+  - `router/0`
+  - `shutdown_node/1`
+  - `dump_state/1`
+  - `set_logger/2`
+  - `send_raw/2`
+  - `process_name/2`
+  - `do_handle_external_cast/3`
+  - `send_response/4`
+
+  ### Client/Server APIs
 
   Much like `GenServer`, user's typically don't call my `call/3` or
   `cast/2` directly. Instead the user wraps the calls in new functions
@@ -147,11 +172,11 @@ defmodule Anoma.Node.Router do
 
   1. There is currently no `GenServer.start_link/3` for the Router
 
-  1. Even `handle_cast`'s take a `from` parameter
+  2. Even `handle_cast`'s take a `from` parameter
 
-  1. We use `Anoma.Node.Router.Engine` and not `GenServer`
+  3. We use `Anoma.Node.Router.Engine` and not `GenServer`
 
-  1. Further `call/2` by default has an :infinite timeout
+  4. Further `call/2` by default has an :infinite timeout
 
   ### Summarizing the interactions between Server and Clients
 
@@ -236,7 +261,22 @@ defmodule Anoma.Node.Router do
   alias Anoma.Node.Router.Addr
   alias Anoma.Node.{Transport, Logger}
 
+  @typedoc """
+  I am the type of an Engine address.
+  """
+
   @type addr() :: Addr.t()
+
+  @typedoc """
+  I am the type of Engine identification.
+
+  ### Options
+
+  - `{:id, Id.t()}` - Identify the engine by its full Anoma ID.
+  - `{:id, Id.Extern.t()}` - Identify the engine by its external ID.
+  - `{:supervisor, Supervisor.supervisor}` - Identify as supervisor.
+  - `{:supervisor_mod, atom()}` - Identify as supervisor given a name.
+  """
 
   @type engine_options() ::
           {:id, Id.t()}
@@ -245,6 +285,40 @@ defmodule Anoma.Node.Router do
           | {:supvisor_mod, atom()}
 
   typedstruct do
+    @typedoc """
+    I am the type of the Anoma Router. I contain all necessary information
+    for coordination of the Anoma network, including all registered local
+    engines, topics, subscriptions, the message queues, message counter, as
+    well as local identification information.
+
+    ### Fileds
+
+    - `:local_engines` - The map of local engines external IDs to their full
+                         IDs alonsgide their global process identifications.
+    - `:topic_table` - The map of local topic external IDs to the set of their
+                       subscribers.
+                       Default: %{}
+    - `:waiting_engines` - Map whose keys are external IDs of engines who make
+                           a call and whose values are the external ID to whom
+                           the message gets sent to alongside the message
+                           counter.
+                           Default : %{}
+    - `:max_call_id` - The latest message counter.
+                       Default: 0
+    - `:local_engine_subs` - Similar to `:topic_table` but for local engine
+                             addresses and the values are individual external
+                             IDs.
+                             Default: %{}
+    - `:id` - Router external ID.
+    - `:internal_id` - Full Router Anoma ID.
+    - `:addr` - Router Address.
+    - `:supervisor` - Supervisor name.
+    - `:transport` - Name of the used Transaport.
+    - `:msg_queue` - Map of IDs to the list of pending messages.
+                     Default: %{}
+    - `:logger` - The Logger Engine address for Event keeping.
+    """
+
     # slightly space-inefficient (duplicates extern), but more convenient
     field(:local_engines, %{Id.Extern.t() => {Id.t(), Process.dest()}})
     # mapping of TopicId -> subscriber addrs
@@ -304,8 +378,29 @@ defmodule Anoma.Node.Router do
   ############################################################
 
   @doc """
-  Starts a new router with the given cryptographic ID for itself, and another
-  for the transport engine.  On success, returns {:ok, router_addr, transport_addr}
+  I am the minimal start function.
+
+  I call `start/1` with a random `Anoma.Crypto.Id` and default state.
+  """
+  @spec start() :: :ignore | {:error, any()} | {:ok, Addr.t(), Addr.t()}
+  def start() do
+    start({Id.new_keypair(), Id.new_keypair(), %Router{}})
+  end
+
+  @doc """
+  I am the Router start function.
+
+  I start a new router using the specified Anoma ID for the Router and the
+  transaport. (Additionally, you can feed me a router state)
+
+  Using the fed in external ID, I name the supervisor using `process_name/2`
+  and start it as a Dynamical Supervisor with approrpiate name.
+
+  Similarly, I create the router name and address using the external ID and
+  start the Router and Transport structures as children to the specified
+  supervisor.
+
+  On success, return {:ok, router_addr, transport_addr}
   """
   @spec start({Id.t(), Id.t(), Router.t()}) ::
           :ignore
@@ -355,14 +450,6 @@ defmodule Anoma.Node.Router do
     end
   end
 
-  @doc """
-  Starts a new router, with a random `Anoma.Crypto.Id`.
-  """
-  @spec start() :: :ignore | {:error, any()} | {:ok, Addr.t(), Addr.t()}
-  def start() do
-    start({Id.new_keypair(), Id.new_keypair(), %Router{}})
-  end
-
   ############################################################
   #                      Public RPC API                      #
   ############################################################
@@ -370,12 +457,20 @@ defmodule Anoma.Node.Router do
   # not sure exactly how this will work for real, but it's convenient
   # to have for testing right now
   @doc """
-  Creates a new topic. Takes the address of the router.
+  I am the topic-creation function.
+
+  I create a new topic with a new random external key.
   """
   @spec new_topic(Addr.t()) :: {:ok, Addr.t()} | {:error, :already_exists}
   def new_topic(router) do
     call(router, {:create_topic, Id.new_keypair().external, :local})
   end
+
+  @doc """
+  I am the topic-creation function.
+
+  I create a new ropic with specified external ID from a full Anoma ID.
+  """
 
   @spec new_topic(Addr.t(), Id.t()) ::
           {:ok, Addr.t()} | {:error, :already_exists}
@@ -384,7 +479,11 @@ defmodule Anoma.Node.Router do
   end
 
   @doc """
-  Starts a new Engine
+  I am the function launching a new Anoma Engine instance
+
+  I start the Engine using `Anoma.Node.Router.Engine` with the base settings
+  from the ROuter. As a server, I start it as a new child to the router
+  supervisor.
 
   ### Arguments
   - `router` - the Router
@@ -438,7 +537,7 @@ defmodule Anoma.Node.Router do
   end
 
   @doc """
-  I Forcibly stops an engine.
+  I forcibly stop an engine by calling `terminate_child/2`.
 
   TODO, please try to be more friendly to the engine, try to send a
   `:shutdown` and waiting.
@@ -470,11 +569,25 @@ defmodule Anoma.Node.Router do
     end
   end
 
+  @doc """
+  I do nothing.
+  """
+
+  @spec stop(addr()) :: nil
   def stop(_router) do
   end
 
+  @doc """
+  I am the logger-setting function.
+
+  After the Logger Engine has been started, we can add it to the Router to
+  log events using it. To avoid recursive calls, some logging utilizes only
+  the internal Elixir logger.
+  """
+
+  @spec set_logger(addr(), addr()) :: :ok
   def set_logger(router, logger) do
-    Router.cast(router, {:set_logger, logger})
+    cast(router, {:set_logger, logger})
   end
 
   ############################################################
@@ -482,7 +595,7 @@ defmodule Anoma.Node.Router do
   ############################################################
 
   @doc """
-  Send a message directly using Kernel.send/1 to the local process, assuming
+  I send a message directly using Kernel.send/1 to the local process, assuming
   there is one.
   """
   @spec send_raw(Addr.t(), term()) :: :ok
@@ -492,15 +605,17 @@ defmodule Anoma.Node.Router do
   end
 
   @doc """
-  Makes a synchronous call to the `Server` and waits for a reply.
+  I am the Router cast function.
+
+  I make a asynchronous cast to the `Server`.
 
   Call has a few interesting cases we can consider
 
   1. Casting to a local [`Engine`](`Anoma.Node.Router.Engine`)
 
-  1. Calling to a non local [`Engine`](`Anoma.Node.Router.Engine`)
+  2. Casting to a non local [`Engine`](`Anoma.Node.Router.Engine`)
 
-  1. Casting to a `Topic`
+  3. Casting to a `Topic`
 
 
   For the local [`Engine`](`Anoma.Node.Router.Engine`), then their
@@ -508,7 +623,7 @@ defmodule Anoma.Node.Router do
   will be called on the [`Engine`](`Anoma.Node.Router.Engine`) to
   handle the request.
 
-  Calling a non local [`Engine`](`Anoma.Node.Router.Engine`) isn't
+  Casting a non local [`Engine`](`Anoma.Node.Router.Engine`) isn't
   handled yet.
 
   For `Topics` any `cast/2` sent, then triggers a series of `cast/2`
@@ -532,7 +647,10 @@ defmodule Anoma.Node.Router do
   end
 
   @doc """
-  See `call/3` for documentation.
+  I am a call function.
+
+  I use `call/3` with the specified address and message and set the default
+  timeout o 5000.
   """
   @spec call(Addr.t(), term()) :: term()
   def call(addr, msg) do
@@ -541,13 +659,15 @@ defmodule Anoma.Node.Router do
   end
 
   @doc """
-  Makes a synchronous call to the `Server` and waits for a reply.
+  I am the Router call function.
+
+  I make a synchronous call to the `Server` and wait for a reply.
 
   Call has a few interesting cases we can consider
 
   1. Calling a local [`Engine`](`Anoma.Node.Router.Engine`)
 
-  1. Calling a non local [`Engine`](`Anoma.Node.Router.Engine`)
+  2. Calling a non local [`Engine`](`Anoma.Node.Router.Engine`)
 
   We can not `call/3` a `Topic`, and thus those instances are not
   handled.
@@ -607,9 +727,10 @@ defmodule Anoma.Node.Router do
   end
 
   @doc """
-  Send a response to an externally received call.
-  This is a low-level routine, intended to be called only by the internals of
-  Router and Engine.
+  I am a function sending responses.
+
+  I send a response to an externally received call. This is a low-level
+  routine, intended to be called only by the internals of Router and Engine.
   """
   @spec send_response(Addr.t(), Addr.t(), non_neg_integer(), binary()) :: :ok
   def send_response(router, dst, cookie, encoded_response) do
@@ -617,16 +738,28 @@ defmodule Anoma.Node.Router do
   end
 
   @doc """
-  Shuts down the entire router and Elixir node it's in.
+  I am a function for Node shutdown.
+
+  As an Anoma Node is associated with a specific Router, I can cast a
+  message to shut down all local Engines, the Router, and the Node
+  itself using only the Router.
 
   We should tweak this in the future, with a mode to just shut down
-  the Anoma node itself.
-
+  the Anoma Node itself.
   """
+
+  @spec shutdown_node(addr()) :: :ok
   def shutdown_node(router) do
     Router.cast(router, :shutdown_everything)
   end
 
+  @doc """
+  I am the state cleanup function.
+
+  I empty the entire state of the Router whose Address I receive.
+  """
+
+  @spec dump_state(addr()) :: Router.t()
   def dump_state(router) do
     GenServer.call(router, :dump)
   end
@@ -682,6 +815,79 @@ defmodule Anoma.Node.Router do
     end
   end
 
+  def handle_call({:router_call, src, msg}, _, s) do
+    {res, s} = handle_self_call(msg, src, s)
+    {:reply, res, s}
+  end
+
+  # TODO Find a better way of dumping
+  def handle_call(:dump, _, s) do
+    {:reply,
+     %__MODULE__{
+       s
+       | local_engine_subs: %{},
+         topic_table: %{},
+         waiting_engines: %{},
+         msg_queue: %{}
+     }, s}
+  end
+
+  def handle_info({:timeout_message, src_addr, call_id}, s) do
+    {
+      :noreply,
+      # we have to check the call id matches; otherwise this could spuriously
+      # fail.  there are some other potential ways of dealing with timeouts,
+      # but meh
+      case Map.get(s.waiting_engines, Addr.id(src_addr)) do
+        {^call_id, _} ->
+          send_raw(src_addr, {:router_call_response, {:error, :timed_out}})
+
+          %{
+            s
+            | waiting_engines:
+                Map.delete(s.waiting_engines, Addr.id(src_addr))
+          }
+
+        _ ->
+          s
+      end
+    }
+  end
+
+  ############################################################
+  #                  Genserver Implementation                #
+  ############################################################
+
+  @doc """
+  I am a handle_self_cast function.
+
+  Once `cast/2` or `do_cast` gets done finding the appropriate server to
+  send the message to, some of them get forwarded back to the Router
+  through itself. I am the helper function helping to process such
+  interactions.
+
+  ### Pattern-Matching Variations
+
+  - `handle_self_cast{:set_logger, logger}, src, s` -
+      Assigns the specified Logger Engine address to the Router.
+  - `handle_self_cast(:shutdown_everything, _, _)` -
+      Calls `System.stop` to shutdown the entire system.
+  - `handle_self_cast({:send_reponse, _, _, _}, _, _)` -
+      Sends the response message to transaport with specified cookie.
+  - `handle_self_cast({:p2p_raw, _, _}, _, _)` -
+      Handles p2p messaging, either sending raw messages or post-processing
+      them using Router functionality. Note that unknown message formats get
+      dropped. The droppages get logged.
+  """
+
+  @spec handle_self_cast(
+          :shutdown_everything
+          | {:set_logger, addr()}
+          | {:p2p_raw, any(), any()}
+          | {:send_response, addr(), any(), any()},
+          any(),
+          Router.t()
+        ) :: Router.t() | :ok
   def handle_self_cast({:set_logger, logger}, _src, s) do
     %Router{s | logger: logger}
   end
@@ -789,27 +995,45 @@ defmodule Anoma.Node.Router do
     end
   end
 
-  def handle_call({:router_call, src, msg}, _, s) do
-    {res, s} = handle_self_call(msg, src, s)
-    {:reply, res, s}
-  end
+  @doc """
+  I am a handle_self_call function.
 
-  # TODO Find a better way of dumping
-  def handle_call(:dump, _, s) do
-    {:reply,
-     %__MODULE__{
-       s
-       | local_engine_subs: %{},
-         topic_table: %{},
-         waiting_engines: %{},
-         msg_queue: %{}
-     }, s}
-  end
+  Once `call/2` or `do_call` gets done finding the appropriate server to
+  send the message to, some of them get forwarded back to the Router
+  through itself. I am the helper function helping to process such
+  interactions.
 
-  ############################################################
-  #                  Genserver Implementation                #
-  ############################################################
+  ### Pattern-Matching Variations
 
+  - `handle_self_call(:supervisor, src, s)` -
+      Asks for a supervisor of the router.
+  - `handle_self_call({:create_topic, id, :local}, _, _)` -
+      Unless the topic has already been added to the topic table, puts it
+      to the table with an empty set of subscribers and return the new
+      structure with specified ID.
+  - `handle_self_call({:subscribe_topic, topic, :local}, _, _)` -
+      Updates the topic tables and engine subscriber fields in the Router to
+      include the new specified subscriber.
+  - `handle_self_call({:unsubscribe_topic, topic, :local}, _, _)` -
+      Updates the topic tables and engine subscriber fields in the Router to
+      remove the specified subscriber information.
+  """
+
+  @spec(
+    handle_self_call(
+      :supervisor
+      | {:create_topic, Id.Extern.t(), :local}
+      | {:subscribe_topic, Id.Extern.t(), :local}
+      | {:unsubscribe_topic, Id.Extern.t(), :local},
+      addr(),
+      Router.t()
+    ) ::
+      {atom, Router.t()}
+      | {:ok, Router.t()}
+      | {{:error, :no_such_topic}, Router.t()}
+      | {{:error, :already_exists}, Router.t()},
+    {{:ok, Id.Extern.t()}, Router.t()}
+  )
   def handle_self_call(:supervisor, _, s) do
     {s.supervisor, s}
   end
@@ -912,6 +1136,8 @@ defmodule Anoma.Node.Router do
     end
   end
 
+  @spec call_remote(Router.t(), Id.Extern.t(), addr(), any, :erlang.timeout()) ::
+          t()
   # call to remote address
   defp call_remote(s, dst_id, src_addr, msg, timeout) do
     src_id = Addr.id(src_addr)
@@ -936,33 +1162,20 @@ defmodule Anoma.Node.Router do
     }
   end
 
+  @doc """
+  I am a function handling non-local casts to the Router.
+
+  Currently I only process a message to shut everything down by calling
+  `System.stop/0`
+  """
+
+  @spec do_handle_external_cast(:shutdown_everything, any(), t()) :: :ok
   def do_handle_external_cast(:shutdown_everything, _src, s) do
     log_info({:shutdown, s.logger})
     System.stop()
   end
 
-  def handle_info({:timeout_message, src_addr, call_id}, s) do
-    {
-      :noreply,
-      # we have to check the call id matches; otherwise this could spuriously
-      # fail.  there are some other potential ways of dealing with timeouts,
-      # but meh
-      case Map.get(s.waiting_engines, Addr.id(src_addr)) do
-        {^call_id, _} ->
-          send_raw(src_addr, {:router_call_response, {:error, :timed_out}})
-
-          %{
-            s
-            | waiting_engines:
-                Map.delete(s.waiting_engines, Addr.id(src_addr))
-          }
-
-        _ ->
-          s
-      end
-    }
-  end
-
+  @spec send_to_transport(t(), Id.Extern.t(), any(), any()) :: :ok
   defp send_to_transport(s, dst, src, msg) do
     msg = Anoma.Serialise.pack([dst, src, msg])
     {internal_id, _} = Map.fetch!(s.local_engines, src)
@@ -998,6 +1211,7 @@ defmodule Anoma.Node.Router do
 
   # A module name A.B is represented by an atom with name
   # "Elixir.A.B"; strip away the "Elixir." part
+  @spec atom_to_nice_string(atom()) :: binary()
   defp atom_to_nice_string(atom) do
     res = Atom.to_string(atom)
 
@@ -1008,6 +1222,7 @@ defmodule Anoma.Node.Router do
     end
   end
 
+  @spec id_to_addr(t(), Id.Extern.t()) :: addr()
   defp id_to_addr(s, id) do
     %{
       s.addr
@@ -1016,12 +1231,26 @@ defmodule Anoma.Node.Router do
     }
   end
 
+  @doc """
+  I am a function formulating a process name.
+
+  Given a module name and an external ID, I append to the module name the
+  encoded sign field of the ID and return it as an atom.
+  """
+
   @spec process_name(atom(), Id.Extern.t()) :: atom()
   def process_name(module, id) do
     :erlang.binary_to_atom(
       atom_to_nice_string(module) <> " " <> Base.encode64(id.sign)
     )
   end
+
+  @doc """
+  I am a function providing the default address to the process which runs
+  me.
+
+  My server is either the specified engine server or my PID.
+  """
 
   @spec self_addr() :: Addr.t()
   def self_addr() do
@@ -1030,6 +1259,10 @@ defmodule Anoma.Node.Router do
       server: Process.get(:engine_server) || self()
     }
   end
+
+  @doc """
+  I am a function to search for the Engine Router inside an Engine.
+  """
 
   @spec router() :: Addr.t()
   def router() do

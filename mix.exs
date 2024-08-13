@@ -1,7 +1,7 @@
 defmodule Anoma.MixProject do
   use Mix.Project
 
-  @version "0.18.0"
+  @version "0.19.1"
 
   def project do
     [
@@ -78,7 +78,7 @@ defmodule Anoma.MixProject do
       {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
       {:dialyxir, "~> 1.3", only: [:dev], runtime: false},
       {:optimus, "~> 0.2"},
-      {:burrito, "~> 1.0.4"},
+      {:burrito, "~> 1.1.0"},
       {:toml, "~> 0.7"},
       {:cairo,
        git: "https://github.com/anoma/aarm-cairo",

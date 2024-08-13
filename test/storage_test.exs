@@ -14,6 +14,7 @@ defmodule AnomaTest.Storage do
     EStorage.deleting_nothing_works_fine()
     EStorage.blocking_for_put()
     EStorage.august_node()
+    EStorage.august_replaced_keyspace()
     EStorage.reserved_august()
     EStorage.august_node_proper()
     EStorage.londo_speaks_for_alice()

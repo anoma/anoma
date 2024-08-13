@@ -12,6 +12,7 @@ defmodule Anoma.Transaction do
 
   @type execution() :: Worker.transaction()
 
+  @derive {Inspect, only: [:index, :id, :addr]}
   typedstruct do
     @typedoc """
     I am the type of the Anoma Transaction at the Engine level.

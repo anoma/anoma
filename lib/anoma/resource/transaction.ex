@@ -22,7 +22,6 @@ defmodule Anoma.Resource.Transaction do
     field(:commitments, list(binary()), default: [])
     field(:nullifiers, list(binary()), default: [])
     field(:proofs, list(ProofRecord.t()), default: [])
-    field(:compliance_proofs, list({binary(), binary()}), default: [])
     field(:delta, Delta.t(), default: Delta.new(%{}))
     field(:extra, list(binary()), default: [])
     field(:preference, term(), default: nil)
@@ -34,7 +33,6 @@ defmodule Anoma.Resource.Transaction do
         commitments,
         nullifiers,
         proofs,
-        compliance_proofs,
         delta,
         extra | _preference
       ]) do
@@ -52,10 +50,6 @@ defmodule Anoma.Resource.Transaction do
            commitments: list_nock_to_erlang(commitments),
            nullifiers: list_nock_to_erlang(nullifiers),
            proofs: proofs,
-           compliance_proofs:
-             for [a | b] <- list_nock_to_erlang(compliance_proofs) do
-               {a, b}
-             end,
            delta: delta,
            extra: list_nock_to_erlang(extra),
            preference: nil
@@ -78,7 +72,6 @@ defmodule Anoma.Resource.Transaction do
         commitments: tx1.commitments ++ tx2.commitments,
         nullifiers: tx1.nullifiers ++ tx2.nullifiers,
         proofs: tx1.proofs ++ tx2.proofs,
-        compliance_proofs: tx1.compliance_proofs ++ tx2.compliance_proofs,
         delta: Delta.add(tx1.delta, tx2.delta),
         extra: tx1.extra ++ tx2.extra
         # preference
@@ -189,7 +182,6 @@ defmodule Anoma.Resource.Transaction do
         transaction.commitments,
         transaction.nullifiers,
         transaction.proofs,
-        transaction.compliance_proofs,
         transaction.delta,
         transaction.extra,
         [[1 | 0], 0 | 0]

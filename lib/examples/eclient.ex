@@ -26,12 +26,14 @@ defmodule Examples.EClient do
     {anode, socks} = ENode.attach_socks(anode, cleanup: false)
     client_node = ENode.simple_router()
 
+    silent = true
+
     {:ok, c_addr} =
       Router.start_engine(
         client_node.router,
         Client,
         {client_node.router, client_node.transport, anode, socks,
-         {:get_key, EStorage.miki_key()}}
+         {:get_key, EStorage.miki_key()}, silent}
       )
 
     assert 0 == Client.error_code(c_addr)
@@ -55,23 +57,66 @@ defmodule Examples.EClient do
 
     sub_memexec(anode)
 
+    # initialize key 423 with value 0
     assert {:ok, c_addr} =
              EParser.zero_submit_423()
              |> Cli.run_commands(client_info)
 
     assert 0 == Client.error_code(c_addr)
 
-    assert_receive {:"$gen_cast", {_, _, {:submitted, zero}}}
+    assert_receive {:"$gen_cast", {_, _, {:submitted, zero_worker}}}
 
     Mempool.execute(anode.mempool)
 
-    TestHelper.Worker.wait_for_worker(zero.addr)
+    TestHelper.Worker.wait_for_worker(zero_worker.addr)
 
+    # increment the value of key 423 by one
+    assert {:ok, c_addr} =
+             EParser.inc_submit_423()
+             |> Cli.run_commands(client_info)
+
+    assert 0 == Client.error_code(c_addr)
+
+    assert_receive {:"$gen_cast", {_, _, {:submitted, inc_worker}}}
+
+    Mempool.execute(anode.mempool)
+
+    TestHelper.Worker.wait_for_worker(inc_worker.addr)
+
+    # submit read-only transaction that returns the value of key 423
+    assert {:ok, c_addr} =
+             EParser.get_ro_submit_423()
+             |> Cli.run_commands(client_info)
+
+    assert_receive {:"$gen_cast", {_, _, {:submitted, ro_worker}}}
+
+    Mempool.execute(anode.mempool)
+
+    TestHelper.Worker.wait_for_worker(ro_worker.addr)
+
+    assert 0 == Client.error_code(c_addr)
+    assert 1 == Client.return_value(c_addr)
+
+    # submit read-only transaction that returns the value of key 423 plus one
+    assert {:ok, c_addr} =
+             EParser.plus_one_ro_submit_423()
+             |> Cli.run_commands(client_info)
+
+    assert_receive {:"$gen_cast", {_, _, {:submitted, plus_one_ro_worker}}}
+
+    Mempool.execute(anode.mempool)
+
+    TestHelper.Worker.wait_for_worker(plus_one_ro_worker.addr)
+
+    assert 0 == Client.error_code(c_addr)
+    assert 2 == Client.return_value(c_addr)
+
+    # get the value of key 423 directly from the storage
     assert {:ok, c_addr} =
              EParser.get_423()
              |> Cli.run_commands(client_info)
 
-    assert 0 == Client.return_value(c_addr)
+    assert 1 == Client.return_value(c_addr)
 
     unsub_memexec(anode)
     cleanup(socks, cleanup)
