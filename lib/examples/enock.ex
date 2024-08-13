@@ -53,7 +53,7 @@ defmodule Examples.ENock do
     assert {:ok, term = [1 | 2]} = Noun.Format.parse("[1 2]"),
            "Noun should parse sensibly"
 
-    term
+    Noun.normalize_noun(term)
   end
 
   @spec nesting_noun() :: Noun.t()

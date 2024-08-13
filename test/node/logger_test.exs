@@ -62,8 +62,8 @@ defmodule AnomaTest.Node.Logger do
 
     {log, ord, _time, atom} = List.to_tuple(list)
 
-    assert log == logger.id
-    assert ord == id
-    assert atom == :debug
+    assert log == Noun.Nounable.to_noun(logger.id)
+    assert ord == Noun.Nounable.to_noun(id)
+    assert atom == Noun.Nounable.to_noun(:debug)
   end
 end

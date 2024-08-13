@@ -114,7 +114,8 @@ defmodule Anoma.Node.Storage do
   @typedoc """
   I designate the type of keys for Qualified table queries.
   """
-  @type qualified_key() :: nonempty_improper_list(any(), non_neg_integer())
+  @type qualified_key() ::
+          nonempty_improper_list(any(), non_neg_integer() | binary())
 
   @typedoc """
   I designate the type of values of Keys for Qualified table queries.
@@ -356,15 +357,19 @@ defmodule Anoma.Node.Storage do
   ############################################################
 
   def handle_call({:get, key}, _, storage) do
-    {:reply, do_get(storage, key), storage}
+    {:reply, do_get(storage, Noun.to_normalized_noun(key)), storage}
   end
 
   def handle_call({:get_keyspace, key_space}, _, storage) do
-    {:reply, do_get_keyspace(storage, key_space), storage}
+    {:reply,
+     do_get_keyspace(
+       storage,
+       key_space |> Enum.map(&Noun.to_normalized_noun/1)
+     ), storage}
   end
 
   def handle_call({:read_order_tx, key}, _, storage) do
-    {:reply, do_read_order_tx(storage, key), storage}
+    {:reply, do_read_order_tx(storage, Noun.to_normalized_noun(key)), storage}
   end
 
   def handle_call(:snapshot_order, _, storage) do
@@ -372,7 +377,9 @@ defmodule Anoma.Node.Storage do
   end
 
   def handle_call({:read_at_order_tx, key, order}, _, storage) do
-    {:reply, do_read_at_order_tx(storage, key, order), storage}
+    {:reply,
+     do_read_at_order_tx(storage, Noun.to_normalized_noun(key), order),
+     storage}
   end
 
   def handle_cast(:remove, _, storage) do
@@ -391,17 +398,17 @@ defmodule Anoma.Node.Storage do
   end
 
   def handle_cast({:put, key, value}, _, storage) do
-    do_put(storage, key, value)
+    do_put(storage, Noun.to_normalized_noun(key), value)
     {:noreply, storage}
   end
 
   def handle_cast({:put_snapshot, key}, _, storage) do
-    do_put_snapshot(storage, key)
+    do_put_snapshot(storage, Noun.to_normalized_noun(key))
     {:noreply, storage}
   end
 
   def handle_cast({:delete, key}, _, storage) do
-    do_delete_key(storage, key)
+    do_delete_key(storage, Noun.to_normalized_noun(key))
     {:noreply, storage}
   end
 
@@ -551,8 +558,15 @@ defmodule Anoma.Node.Storage do
       absent_predicate = &(elem(&1, 0) == :absent)
 
       latest_keys =
-        Enum.map(orders, fn [key, order] ->
+        Stream.map(orders, fn [key, order] ->
           checked_read_at_absent_details(storage, key, order)
+        end)
+        # Convert it to an elixir value to be returned
+        # This preserves the fact that it's a list on the Erlang side
+        # meaning the fact that it's a Nock List isn't exposed
+        |> Enum.map(fn
+          {key, value} -> {Noun.list_nock_to_erlang(key), value}
+          any -> any
         end)
 
       if Enum.any?(latest_keys, absent_predicate) do
@@ -613,7 +627,7 @@ defmodule Anoma.Node.Storage do
   [n | snapshot_path] where `n` is a natural number representing the `n`-th
   transaction candidate - i.e. the order of the transaction the Worker is
   occupied with - and snapshot_path is a Nock list, i.e. an improper list
-  of form `[... | 0]`.
+  of form `[... | <<>>]`.
 
   My main functionality is to make sure that the value of said transaction
   has been recorded suscessfully in the Qualified table in the following
@@ -633,8 +647,10 @@ defmodule Anoma.Node.Storage do
 
   @spec blocking_read(Router.Addr.t(), qualified_key()) ::
           :error | {:ok, any()}
-  def blocking_read(storage, key) do
-    do_blocking_read(Router.Engine.get_state(storage), key)
+  def blocking_read(storage, [order | key]) do
+    do_blocking_read(Router.Engine.get_state(storage), [
+      order | Noun.to_normalized_noun(key)
+    ])
   end
 
   @spec do_blocking_read(t(), qualified_key()) :: :error | {:ok, any()}
@@ -686,9 +702,10 @@ defmodule Anoma.Node.Storage do
   @spec get_at_snapshot(snapshot(), order_key()) ::
           :absent | {:ok, qualified_value()}
   def get_at_snapshot(snapshot = {storage, _}, key) do
-    position = in_snapshot(snapshot, key)
+    normalized_key = Noun.normalize_noun(key)
+    position = in_snapshot(snapshot, normalized_key)
 
-    checked_read_at(storage, key, position)
+    checked_read_at(storage, normalized_key, position)
   end
 
   @doc """
@@ -731,7 +748,7 @@ defmodule Anoma.Node.Storage do
   defp checked_read_at(storage = %Storage{}, key, order) do
     log_info({:get_order, order})
 
-    with {:atomic, [{_, [^order, ^key | 0], value}]} <-
+    with {:atomic, [{_, [^order, ^key | <<>>], value}]} <-
            do_read_at_order_tx(storage, key, order) do
       case value do
         # the key has been removed
@@ -843,13 +860,13 @@ defmodule Anoma.Node.Storage do
 
   # Add a namespace to a qualified key
   @spec namespace_qualified_key(t(), qualified_key()) :: qualified_key()
-  defp namespace_qualified_key(storage = %__MODULE__{}, [hd, key | tl]) do
+  def namespace_qualified_key(storage = %__MODULE__{}, [hd, key | tl]) do
     [hd, namespace_key(storage, key) | tl]
   end
 
   # Add a namespace to a key
   @spec namespace_key(t(), Noun.t()) :: Noun.t()
-  defp namespace_key(storage = %__MODULE__{}, key) do
+  def namespace_key(storage = %__MODULE__{}, key) do
     storage.namespace ++ key
   end
 
@@ -897,7 +914,7 @@ defmodule Anoma.Node.Storage do
   defp improper_drop(_, _), do: :error
 
   @spec qualified_key(Noun.t(), non_neg_integer()) :: qualified_key()
-  defp qualified_key(key, order), do: [order, key | 0]
+  defp qualified_key(key, order), do: [order, key | <<>>]
 
   @spec read_keyspace_at(any(), list()) :: result(list(list(any())))
   defp read_keyspace_at(table, key_query) do
