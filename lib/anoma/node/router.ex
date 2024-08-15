@@ -721,7 +721,7 @@ defmodule Anoma.Node.Router do
       {:router_call_response, res} ->
         case Anoma.Serialise.unpack(res) do
           {:ok, decoded} -> decoded
-          _ -> {:error, :message_encoding}
+          {:error, error} -> {:error, {:message_encoding, error}}
         end
     end
   end
@@ -810,8 +810,8 @@ defmodule Anoma.Node.Router do
       {:ok, msg} ->
         do_handle_external_cast(msg, src, s)
 
-      :error ->
-        log_info({:message_detect, s.logger})
+      {:error, error} ->
+        log_info({:message_encoding, error, s.logger})
     end
   end
 
@@ -983,8 +983,8 @@ defmodule Anoma.Node.Router do
               end
             end
 
-          _ ->
-            log_info({:drop_form_2, logger, Anoma.Serialise.unpack(data)})
+          {:error, error} ->
+            log_info({:drop_form_2, logger, error})
 
             s
         end
@@ -1309,8 +1309,12 @@ defmodule Anoma.Node.Router do
     Logger.add(nil, :info, "Calling non-local addr #{inspect(addr)}")
   end
 
-  defp log_info({:message_detect, logger}) do
-    Logger.add(logger, :debug, "Not able to detect message")
+  defp log_info({:message_encoding, error, logger}) do
+    Logger.add(
+      logger,
+      :debug,
+      "Not able to decode message: #{inspect(error)}"
+    )
   end
 
   defp log_info({:shutdown, logger}) do

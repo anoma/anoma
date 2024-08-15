@@ -71,7 +71,7 @@ defmodule Anoma.Serialise do
     end
   end
 
-  @spec from_msgpack(term()) :: {:ok, term()} | :error
+  @spec from_msgpack(term()) :: {:ok, term()} | {:error, term()}
   def from_msgpack(o) when is_integer(o) or is_binary(o) or is_boolean(o) do
     {:ok, o}
   end
@@ -104,7 +104,7 @@ defmodule Anoma.Serialise do
          magnitude
        end}
     else
-      :error
+      {:error, :malformed_integer}
     end
   end
 
@@ -142,8 +142,8 @@ defmodule Anoma.Serialise do
     from_map(Enum.to_list(map), %{})
   end
 
-  def from_msgpack(_) do
-    :error
+  def from_msgpack(o) do
+    {:error, {:unrecognised, o}}
   end
 
   defp from_map([], acc) do
@@ -179,12 +179,12 @@ defmodule Anoma.Serialise do
     try do
       {:ok, String.to_existing_atom(x)}
     rescue
-      _ -> :error
+      _ -> {:error, {:no_such_atom, x}}
     end
   end
 
-  defp atom_from_binary(_) do
-    :error
+  defp atom_from_binary(x) do
+    {:error, {:not_binary_or_atom, x}}
   end
 
   defp improper_to_proper_list([x | xs]) do
