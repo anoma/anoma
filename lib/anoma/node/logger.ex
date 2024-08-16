@@ -255,7 +255,7 @@ defmodule Anoma.Node.Logger do
     end || id |> Router.Addr.server() |> Atom.to_string()
   end
 
-  defp init_table(table) do
+  def init_table(table) do
     :mnesia.create_table(table, attributes: [:engine, :time, :msg])
     :mnesia.add_table_index(table, :engine)
   end

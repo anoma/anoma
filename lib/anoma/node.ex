@@ -128,7 +128,7 @@ defmodule Anoma.Node do
           mempool: {Id.Extern.t() | nil, Mempool.t()},
           storage: {Id.Extern.t() | nil, Storage.t()},
           dumper: {Id.Extern.t() | nil, Dumper.t()},
-          storage_data: {Storage.t(), atom()},
+          storage_data: {Storage.t(), atom(), atom()},
           snapshot_path: Noun.t()
         }
 
@@ -169,13 +169,15 @@ defmodule Anoma.Node do
 
     node_settings = {kind, settings} = args[:settings]
 
-    {storage, block_storage} = storage_data(node_settings)
-    storage_setup(storage, block_storage, rocks)
+    {storage, block_storage, log_table} = storage_data(node_settings)
+    storage_setup(storage, block_storage, log_table, rocks)
 
     case kind do
       :from_dump ->
         tables =
-          settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
+          settings[:qualified] ++
+            settings[:order] ++
+            settings[:block_storage] ++ settings[:logger_table]
 
         tables
         |> Enum.map(fn x ->
@@ -391,12 +393,13 @@ defmodule Anoma.Node do
     env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
     storage = args[:storage_data]
     block_storage = args[:block_storage]
+    log_table = args[:logger_table]
 
     %{
       clock: {nil, %Clock{}},
       configuration:
         {nil, %Anoma.Node.Configuration{configuration: args[:configuration]}},
-      logger: {nil, %Logger{table: Anoma.Node.Logger}},
+      logger: {nil, %Logger{table: log_table}},
       ordering: {nil, %Ordering{}},
       executor: {nil, %Executor{ambiant_env: env}},
       mempool: {nil, %Mempool{block_storage: args[:block_storage]}},
@@ -407,7 +410,7 @@ defmodule Anoma.Node do
          %Dumper{
            count: args[:count]
          }},
-      storage_data: {storage, block_storage},
+      storage_data: {storage, block_storage, log_table},
       snapshot_path: args[:snapshot_path]
     }
   end
@@ -431,15 +434,19 @@ defmodule Anoma.Node do
     {:reply, state, state}
   end
 
-  @spec storage_data(node_settings()) :: {Storage.t(), atom()}
+  @spec storage_data(node_settings()) :: {Storage.t(), atom(), atom()}
   defp storage_data(node_settings) do
     case node_settings do
       {_flag, settings} -> settings[:storage_data]
     end
   end
 
-  defp storage_setup(storage, block_storage, rocks) do
+  defp storage_setup(storage, block_storage, logger, rocks) do
     Storage.do_ensure_new(storage, rocks)
+
+    :mnesia.delete_table(logger)
+    Anoma.Node.Logger.init_table(logger)
+
     :mnesia.delete_table(block_storage)
     Anoma.Block.create_table(block_storage, rocks)
   end

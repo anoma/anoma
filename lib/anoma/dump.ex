@@ -187,7 +187,7 @@ defmodule Anoma.Dump do
   @type ex_eng :: {Id.Extern.t(), Executor.t()}
   @type storage_eng :: {Id.Extern.t(), Storage.t()}
   @type configuration_eng :: {Id.Extern.t(), Anoma.Node.Configuration.t()}
-  @type stores :: {Storage.t(), atom()}
+  @type stores :: {Storage.t(), atom(), atom()}
 
   @type dump() :: %{
           router: Id.t(),
@@ -211,7 +211,7 @@ defmodule Anoma.Dump do
           qualified: list(),
           order: list(),
           block_storage: list(),
-          logger: list(),
+          logger_table: list(),
           use_rocks: boolean()
         }
 
@@ -340,7 +340,7 @@ defmodule Anoma.Dump do
           qualified: list(),
           order: list(),
           block_storage: list(),
-          logger: list(),
+          logger_table: list(),
           use_rocks: boolean()
         }
   def get_tables(node) do
@@ -359,7 +359,7 @@ defmodule Anoma.Dump do
       end
 
     {q, o, b, l} =
-      [qual, ord, block, l]
+      [qual, ord, block, logger]
       |> Enum.map(fn x ->
         with {:ok, lst} <- Mnesia.dump(x) do
           Enum.map(lst, fn x -> hd(x) end)
@@ -368,11 +368,11 @@ defmodule Anoma.Dump do
       |> List.to_tuple()
 
     %{
-      storage_data: {storage, block},
+      storage_data: {storage, block, logger},
       qualified: q,
       order: o,
       block_storage: b,
-      logger: l,
+      logger_table: l,
       use_rocks: rocks
     }
   end
