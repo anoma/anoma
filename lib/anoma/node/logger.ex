@@ -23,9 +23,7 @@ defmodule Anoma.Node.Logger do
   """
 
   alias List
-  alias Anoma.Node.Storage
-  alias Anoma.Node.Router
-  alias Anoma.Node.Clock
+  alias Anoma.Node.{Storage, Router, Clock}
   alias Anoma.Crypto.Id
 
   use TypedStruct
@@ -42,13 +40,13 @@ defmodule Anoma.Node.Logger do
 
     ### Fields
 
-    - `:storage` - The Storage Engine address used for storing.
     - `:clock` - The Clock Engine address used for timestamping.
+    - `:table` - The table names used for persistent logging.
     - `:topic` - The topic address for broadcasting.
     """
 
-    field(:storage, Router.Addr.t())
     field(:clock, Router.Addr.t())
+    field(:table, atom())
     field(:topic, Router.Addr.t())
   end
 
@@ -64,23 +62,27 @@ defmodule Anoma.Node.Logger do
   """
 
   @spec init(Anoma.Node.Logger.t()) :: {:ok, Anoma.Node.Logger.t()}
-  def init(%Anoma.Node.Logger{} = state) do
+  def init(%Anoma.Node.Logger{table: table} = state) do
+    init_table(table)
     {:ok, state}
   end
 
   @spec init(
           list(
-            {:storage, Storage.t()}
+            {:table, atom()}
             | {:clock, Router.addr()}
             | {:topic, Router.addr()}
           )
         ) ::
           {:ok, Anoma.Node.Logger.t()}
   def init(args) do
+    table = args[:table]
+    init_table(table)
+
     {:ok,
      %Anoma.Node.Logger{
-       storage: args[:storage],
        clock: args[:clock],
+       table: table,
        topic: args[:topic]
      }}
   end
@@ -139,7 +141,7 @@ defmodule Anoma.Node.Logger do
           | nil
   def get(logger) do
     unless logger == nil do
-      Router.call(logger, {:get_all, logger})
+      Router.call(logger, :get_all)
     end
   end
 
@@ -161,7 +163,7 @@ defmodule Anoma.Node.Logger do
           | nil
   def get(logger, engine) do
     unless logger == nil do
-      Router.call(logger, {:get, logger, engine})
+      Router.call(logger, {:get, engine})
     end
   end
 
@@ -174,12 +176,12 @@ defmodule Anoma.Node.Logger do
     {:noreply, state}
   end
 
-  def handle_call({:get_all, logger}, _from, state) do
-    {:reply, do_get(logger.id.encrypt, state.storage), state}
+  def handle_call(:get_all, _from, state) do
+    {:reply, do_get(state.table), state}
   end
 
-  def handle_call({:get, logger, engine}, _from, state) do
-    {:reply, do_get(logger.id.encrypt, state.storage, engine), state}
+  def handle_call({:get, engine}, _from, state) do
+    {:reply, do_get(state.table, engine), state}
   end
 
   ############################################################
@@ -200,16 +202,9 @@ defmodule Anoma.Node.Logger do
 
     addr = encrypt_or_server(id)
 
-    Storage.put(
-      state.storage,
-      [
-        logger.id.encrypt,
-        addr,
-        Clock.get_time(state.clock),
-        Atom.to_string(atom)
-      ],
-      msg
-    )
+    :mnesia.transaction(fn ->
+      :mnesia.write({state.table, Clock.get_time(state.clock), addr, msg})
+    end)
 
     if logger != nil and
          logger |> Router.Addr.pid() |> Process.alive?() do
@@ -219,18 +214,34 @@ defmodule Anoma.Node.Logger do
     log_fun({atom, msg})
   end
 
-  @spec do_get(binary(), Router.Addr.t(), pid() | Router.Addr.t() | nil) ::
+  @spec do_get(atom(), pid() | Router.Addr.t() | nil) ::
           :absent
           | list({any(), Storage.qualified_value()})
           | {:atomic, any()}
-  defp do_get(id, storage, engine \\ nil) do
-    keyspace =
-      cond do
-        engine == nil -> [id]
-        true -> [id, encrypt_or_server(engine)]
-      end
+  defp do_get(table, engine \\ nil) do
+    cond do
+      engine == nil ->
+        with {:atomic, list} <-
+               :mnesia.transaction(fn ->
+                 :mnesia.match_object({table, :_, :_, :_})
+               end) do
+          list
+        else
+          msg -> msg
+        end
 
-    Storage.get_keyspace(storage, keyspace)
+      true ->
+        with {:atomic, list} <-
+               :mnesia.transaction(fn ->
+                 :mnesia.match_object(
+                   {table, :_, encrypt_or_server(engine), :engine}
+                 )
+               end) do
+          list
+        else
+          msg -> msg
+        end
+    end
   end
 
   ############################################################
@@ -242,6 +253,11 @@ defmodule Anoma.Node.Logger do
     if id do
       id.encrypt
     end || id |> Router.Addr.server() |> Atom.to_string()
+  end
+
+  defp init_table(table) do
+    :mnesia.create_table(table, attributes: [:engine, :time, :msg])
+    :mnesia.add_table_index(table, :engine)
   end
 
   defp log_fun({:debug, msg}), do: Logger.debug(msg)

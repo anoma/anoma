@@ -23,7 +23,7 @@ defmodule AnomaTest.Node.Logger do
 
     {:ok, logger} =
       Router.start_engine(router, Anoma.Node.Logger,
-        storage: storage,
+        table: Logger.Test,
         clock: clock,
         topic: logger_topic
       )
@@ -58,12 +58,10 @@ defmodule AnomaTest.Node.Logger do
       5000
     )
 
-    {list, _msg} = Anoma.Node.Logger.get(logger) |> hd()
+    {name, _time, addr, msg} = Anoma.Node.Logger.get(logger) |> hd()
 
-    {log, ord, _time, atom} = List.to_tuple(list)
-
-    assert log == logger.id.encrypt
-    assert ord == id
-    assert atom == "debug"
+    assert name == Logger.Test
+    assert addr == id
+    assert String.starts_with?(msg, "Requested reset.")
   end
 end

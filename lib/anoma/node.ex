@@ -271,7 +271,7 @@ defmodule Anoma.Node do
       start_engine(
         router,
         Logger,
-        %Logger{log_st | clock: clock, storage: storage, topic: logger_topic},
+        %Logger{log_st | clock: clock, topic: logger_topic},
         id: log_id
       )
 
@@ -396,7 +396,7 @@ defmodule Anoma.Node do
       clock: {nil, %Clock{}},
       configuration:
         {nil, %Anoma.Node.Configuration{configuration: args[:configuration]}},
-      logger: {nil, %Logger{}},
+      logger: {nil, %Logger{table: Anoma.Node.Logger}},
       ordering: {nil, %Ordering{}},
       executor: {nil, %Executor{ambiant_env: env}},
       mempool: {nil, %Mempool{block_storage: args[:block_storage]}},
