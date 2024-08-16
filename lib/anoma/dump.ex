@@ -211,6 +211,7 @@ defmodule Anoma.Dump do
           qualified: list(),
           order: list(),
           block_storage: list(),
+          logger: list(),
           use_rocks: boolean()
         }
 
@@ -339,12 +340,14 @@ defmodule Anoma.Dump do
           qualified: list(),
           order: list(),
           block_storage: list(),
+          logger: list(),
           use_rocks: boolean()
         }
   def get_tables(node) do
     node = node |> Node.state()
     storage = Engine.get_state(Engine.get_state(node.ordering).storage)
     block = Engine.get_state(node.mempool).block_storage
+    logger = Engine.get_state(node.logger).table
     qual = storage.qualified
     ord = storage.order
     # TODO more robust checking here
@@ -355,8 +358,8 @@ defmodule Anoma.Dump do
         true
       end
 
-    {q, o, b} =
-      [qual, ord, block]
+    {q, o, b, l} =
+      [qual, ord, block, l]
       |> Enum.map(fn x ->
         with {:ok, lst} <- Mnesia.dump(x) do
           Enum.map(lst, fn x -> hd(x) end)
@@ -369,6 +372,7 @@ defmodule Anoma.Dump do
       qualified: q,
       order: o,
       block_storage: b,
+      logger: l,
       use_rocks: rocks
     }
   end
