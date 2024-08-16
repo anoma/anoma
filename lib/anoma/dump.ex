@@ -107,6 +107,8 @@ defmodule Anoma.Dump do
   - qualified
   - order
   - block_storage
+  - logger_storage
+  - rocks
 
   All engines have info on their states and id's so that checkpointing
   the system will keep all adresses used in the previous session.
@@ -333,6 +335,8 @@ defmodule Anoma.Dump do
   - qualified
   - order
   - block_storage
+  - logger
+  - rocks options
   """
 
   @spec get_tables(atom()) :: %{
