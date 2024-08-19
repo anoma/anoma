@@ -19,6 +19,14 @@ defmodule Anoma.Node.Transport.TCPConnection do
   use Transport.Connection
   use TypedStruct
 
+  @num_connect_retries 8
+
+  @typedoc """
+  I am the type of :gen_tcp.connect() result.
+  """
+  @type tcp_connect_result ::
+          {:ok, :gen_tcp.socket()} | {:error, :timeout | :inet.posix()}
+
   typedstruct do
     @typedoc """
     I am the type of the TCPConnection Engine.
@@ -94,16 +102,7 @@ defmodule Anoma.Node.Transport.TCPConnection do
   ############################################################
 
   def handle_continue({:init_connection, address}, s) do
-    res =
-      case address do
-        {:unix, path} ->
-          :gen_tcp.connect({:local, path}, 0, mode: :binary)
-
-        {:tcp, host, port} ->
-          :gen_tcp.connect(to_charlist(host), port, mode: :binary)
-      end
-
-    case res do
+    case try_connect(address) do
       {:ok, conn} ->
         Transport.new_connection(
           s.transport,
@@ -169,5 +168,42 @@ defmodule Anoma.Node.Transport.TCPConnection do
       {:listener, s.router, s.transport, s.listener, s.connection_pool},
       supervisor: s.connection_pool
     )
+  end
+
+  @spec try_connect(Transport.transport_addr()) :: tcp_connect_result()
+  defp try_connect(address) do
+    0..(@num_connect_retries - 1)
+    |> Enum.reduce_while(nil, fn x, _acc ->
+      do_backoff(x)
+
+      case tcp_connect(address) do
+        {:ok, socket} -> {:halt, {:ok, socket}}
+        {:error, :timeout} -> {:cont, {:error, :timeout}}
+        # TODO refine the case
+        {:error, err_posix} -> {:halt, {:error, err_posix}}
+      end
+    end)
+  end
+
+  ############################################################
+  #                          Helpers                         #
+  ############################################################
+
+  @spec do_backoff(non_neg_integer()) :: :ok
+  defp do_backoff(i) do
+    if i > 0 do
+      Integer.pow(2, i - 1)
+      |> :timer.seconds()
+      |> :timer.sleep()
+    end
+  end
+
+  @spec tcp_connect(Transport.transport_addr()) :: tcp_connect_result()
+  defp tcp_connect({:unix, path}) do
+    :gen_tcp.connect({:local, path}, 0, mode: :binary)
+  end
+
+  defp tcp_connect({:tcp, host, port}) do
+    :gen_tcp.connect(to_charlist(host), port, mode: :binary)
   end
 end
