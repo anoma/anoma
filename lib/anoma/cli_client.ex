@@ -181,10 +181,12 @@ defmodule Anoma.Cli.Client do
 
   defp perform(:snapshot, server_engines, _output) do
     Anoma.Node.Configuration.snapshot(server_engines.configuration)
+    {0, nil}
   end
 
   defp perform(:delete_dump, server_engines, _output) do
     Anoma.Node.Configuration.delete_dump(server_engines.configuration)
+    {0, nil}
   end
 
   defp perform(_, _, _) do
