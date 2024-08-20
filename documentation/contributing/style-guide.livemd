@@ -57,9 +57,12 @@ If `foo` uses `bar` in the same module in the Node dir then `foo` is placed high
 
 Exceptions might exist but should be noted explicitly in PR and commit messages.
 
-#### Rule 1.5
+#### Rule 1.5 (CQRS)
 
-If `foo` uses Router or GenServer functionality, it should be a `call` if and only if it does not change any underlying state, otherwise it should use `cast`.
+If `foo` uses Router or GenServer functionality, it should be a `call` if and only if either
+
+1. The underlying state is unchanged by calling `foo`
+2. There are synchronizaton requirements that `foo` has to fullfill.
 
 #### Rule 1.6
 
@@ -70,6 +73,9 @@ If `foo` uses `call` functionality then the corresponding `handle_call` shall ha
 ```
 
 with `do_foo` implementing core logic.
+
+If `foo` has synchronization requirements, the return of `do_foo` should only contain information regarding the
+success or failure of the operation.
 
 #### Rule 1.7
 
