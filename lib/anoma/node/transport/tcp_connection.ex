@@ -119,10 +119,10 @@ defmodule Anoma.Node.Transport.TCPConnection do
 
   def handle_continue(:accept_connection, s) do
     res = :gen_tcp.accept(s.listener)
-    start_listener(s)
 
     case res do
       {:ok, conn} ->
+        start_listener(s)
         # need to figure out if unix or tcp
         Transport.new_connection(s.transport, :unix)
         {:noreply, %{s | conn: conn}}
