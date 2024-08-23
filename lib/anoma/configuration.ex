@@ -27,7 +27,7 @@ defmodule Anoma.Configuration do
   ############################################################
 
   @type section_format() :: [{String.t(), (term() -> boolean()), term()}]
-  @type configruation() :: [{String.t(), section_format()}]
+  @type configuration() :: [{String.t(), section_format()}]
 
   @type section_map() :: %{String.t() => term()}
   @type configuration_map() :: %{String.t() => section_map()}
@@ -72,7 +72,7 @@ defmodule Anoma.Configuration do
   ]
   @configuration_format [{"dump", @dump_format}, {"node", @node_format}]
 
-  @spec configuration_format() :: configruation
+  @spec configuration_format() :: configuration
   def configuration_format(), do: @configuration_format
 
   @spec default_configuration_location() :: Path.t()
