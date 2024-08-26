@@ -85,8 +85,8 @@ defmodule Anoma.Node.Configuration do
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_cast(:snapshot, _caller, config = %__MODULE__{}) do
-    do_snapshot(config)
+  def handle_cast(:snapshot, caller, config = %__MODULE__{}) do
+    do_snapshot(config, caller)
 
     {:noreply, config}
   end
@@ -97,27 +97,36 @@ defmodule Anoma.Node.Configuration do
     {:noreply, config}
   end
 
+  def handle_info({:snapshot_done, addr}, config = %__MODULE__{}) do
+    Router.cast(addr, :snapshot_done)
+
+    {:noreply, config}
+  end
+
   ############################################################
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec do_snapshot(Configuration.t()) :: :ok | pid()
-  defp do_snapshot(config) do
+  @spec do_snapshot(Configuration.t(), Router.addr()) :: :ok | nil | Task.t()
+  defp do_snapshot(config, caller) do
     configuration = config.configuration
-    logger = config.logger
-    dump_path = configuration["dump"]["dump"]
-    node_name = configuration["node"]["name"] |> String.to_atom()
 
     if configuration do
-      spawn(fn ->
-        case Anoma.Dump.dump_full_path(dump_path, node_name) do
-          {:ok, :ok} ->
-            log_info({:dump_ok, dump_path, node_name, logger})
+      with logger = config.logger,
+           dump_path = configuration["dump"]["dump"],
+           node_name = configuration["node"]["name"] |> String.to_atom(),
+           this = self() do
+        Task.start(fn ->
+          case Anoma.Dump.dump_full_path(dump_path, node_name) do
+            {:ok, :ok} ->
+              send(this, {:snapshot_done, caller})
+              log_info({:dump_ok, dump_path, node_name, logger})
 
-          {:error, reason} ->
-            log_info({:dump_error, dump_path, node_name, reason, logger})
-        end
-      end)
+            {:error, reason} ->
+              log_info({:dump_error, dump_path, node_name, reason, logger})
+          end
+        end)
+      end
     else
       log_info({:no_config, config.logger})
     end
