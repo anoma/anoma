@@ -179,8 +179,20 @@ defmodule Anoma.Cli.Client do
     end
   end
 
-  defp perform(:snapshot, server_engines, _output) do
+  defp perform(:snapshot, server_engines, output) do
     Anoma.Node.Configuration.snapshot(server_engines.configuration)
+
+    receive do
+      {:"$gen_cast", {:router_external_cast, _, payload}} ->
+        case Anoma.Serialise.unpack(payload) do
+          {:ok, :snapshot_done} ->
+            IO.puts(output, "Snapshot done")
+
+          _ ->
+            IO.puts(output, "Unexpected response")
+        end
+    end
+
     {0, nil}
   end
 
