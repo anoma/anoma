@@ -6,8 +6,11 @@ defmodule Anoma.Resource do
   `%{Anoma.Resource.new | ...}` for random nonce and seed.
   """
 
+  @behaviour Noun.Nounable.Kind
+
   require Logger
 
+  alias Noun.Nounable
   alias Anoma.Resource.Delta
   alias __MODULE__
   use TypedStruct
@@ -60,7 +63,7 @@ defmodule Anoma.Resource do
   @spec commitment(t()) :: binary()
   @doc "A commitment to the given resource."
   def commitment(resource = %Resource{}) do
-    [@commitment_atom | resource |> to_noun()]
+    [@commitment_atom | resource |> Noun.Nounable.to_noun()]
     |> Nock.Jam.jam()
     |> Noun.atom_integer_to_binary()
   end
@@ -77,7 +80,7 @@ defmodule Anoma.Resource do
   """
   def nullifier(resource = %Resource{}, secret) do
     jammed_nullified_resource =
-      [@nullifier_atom | to_noun(resource)]
+      [@nullifier_atom | Noun.Nounable.to_noun(resource)]
       |> Nock.Jam.jam()
       |> Noun.atom_integer_to_binary()
 
@@ -116,7 +119,7 @@ defmodule Anoma.Resource do
   def transparent_committed_resource(commitment) do
     with {:ok, [@commitment_atom | commitment_resource]} <-
            Nock.Cue.cue(commitment) do
-      {:ok, from_noun(commitment_resource)}
+      from_noun(commitment_resource)
     else
       _ -> :error
     end
@@ -146,7 +149,7 @@ defmodule Anoma.Resource do
            Nock.Cue.cue(nullifier),
          {:ok, [@nullifier_atom | nullified_resource]} <-
            Nock.Cue.cue(jammed_nullified_resource) do
-      from_noun(nullified_resource) == resource &&
+      from_noun(nullified_resource) == {:ok, resource} &&
         Sign.verify_detached(
           Noun.atom_integer_to_binary(signature, 64),
           Noun.atom_integer_to_binary(jammed_nullified_resource),
@@ -163,8 +166,8 @@ defmodule Anoma.Resource do
 
   def transparent_run_resource_logic(transaction, resource) do
     logic = resource.logic
-    self = Anoma.Resource.to_noun(resource)
-    tx = Anoma.Resource.Transaction.to_noun(transaction)
+    self = Noun.Nounable.to_noun(resource)
+    tx = Noun.Nounable.to_noun(transaction)
     arg = [self | tx]
     result = Nock.nock(logic, [9, 2, 10, [6, 1 | arg], 0 | 1])
     Logger.debug("resource logic nock result: #{inspect(result)}")
@@ -178,41 +181,42 @@ defmodule Anoma.Resource do
     end
   end
 
-  @doc """
-  The resource as a noun.
-  """
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(resource = %Resource{}) do
-    [
-      resource.logic,
-      resource.label,
-      resource.quantity,
-      resource.data,
-      if resource.eph do
-        0
-      else
-        1
-      end,
-      resource.nonce,
-      resource.npk
-      | resource.rseed
-    ]
-  end
-
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([logic, label, quantity, data, eph, nonce, npk | rseed]) do
-    %Resource{
+    wip_resource = %Resource{
       logic: logic,
       label: Noun.atom_integer_to_binary(label),
       quantity: quantity,
       data: Noun.atom_integer_to_binary(data),
-      eph:
-        case eph do
-          0 -> true
-          1 -> false
-        end,
+      eph: false,
       nonce: Noun.atom_integer_to_binary(nonce, 32),
       npk: Noun.atom_integer_to_binary(npk, 32),
       rseed: Noun.atom_integer_to_binary(rseed, 32)
     }
+
+    case eph do
+      0 -> {:ok, %Resource{wip_resource | eph: true}}
+      1 -> {:ok, %Resource{wip_resource | eph: false}}
+      _ -> :error
+    end
+  end
+
+  defimpl Nounable, for: Resource do
+    @doc """
+    The resource as a noun.
+    """
+    def to_noun(resource = %Resource{}) do
+      {
+        resource.logic,
+        resource.label,
+        resource.quantity,
+        resource.data,
+        resource.eph,
+        resource.nonce,
+        resource.npk,
+        resource.rseed
+      }
+      |> Noun.Nounable.to_noun()
+    end
   end
 end

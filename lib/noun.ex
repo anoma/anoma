@@ -147,18 +147,6 @@ defmodule Noun do
     |> :xxhash.hash64(6_780_269)
   end
 
-  # maybe obviate these by treating [] as a zero?
-  @spec list_erlang_to_nock([]) :: 0
-  def list_erlang_to_nock([]) do
-    0
-  end
-
-  @spec list_erlang_to_nock(nonempty_list(t())) ::
-          nonempty_improper_list(t(), t())
-  def list_erlang_to_nock([h | t]) do
-    [h | list_erlang_to_nock(t)]
-  end
-
   @spec list_nock_to_erlang(0) :: []
   def list_nock_to_erlang(0) do
     []

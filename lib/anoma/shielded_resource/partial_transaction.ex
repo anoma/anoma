@@ -3,6 +3,8 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
   I am a shielded resource machine partial transaction.
   """
 
+  @behaviour Noun.Nounable.Kind
+
   require Logger
 
   alias __MODULE__
@@ -14,33 +16,30 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
     field(:compliance_proofs, list(ProofRecord.t()), default: [])
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(ptx = %PartialTransaction{}) do
-    [
-      for proof <- ptx.logic_proofs do
-        ProofRecord.to_noun(proof)
-      end,
-      for proof <- ptx.compliance_proofs do
-        ProofRecord.to_noun(proof)
-      end
-    ]
-  end
-
-  @spec from_noun(Noun.t()) :: t()
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
-        logic_proofs,
-        compliance_proofs
+        logic_proofs
+        | compliance_proofs
       ]) do
-    %PartialTransaction{
-      logic_proofs:
-        for proof <- logic_proofs do
-          ProofRecord.from_noun(proof)
-        end,
-      compliance_proofs:
-        for proof <- compliance_proofs do
-          ProofRecord.from_noun(proof)
-        end
-    }
+    to_noun_list = fn xs ->
+      xs
+      |> Noun.list_nock_to_erlang()
+      |> Enum.map(&ProofRecord.from_noun/1)
+    end
+
+    logic = to_noun_list.(logic_proofs)
+    compilance = to_noun_list.(compliance_proofs)
+    checked = Enum.all?(logic ++ compilance, &(elem(&1, 0) == :ok))
+
+    with true <- checked do
+      {:ok,
+       %PartialTransaction{
+         logic_proofs: Enum.map(logic, &elem(&1, 1)),
+         compliance_proofs: Enum.map(compilance, &elem(&1, 1))
+       }}
+    else
+      false -> :error
+    end
   end
 
   @spec verify(t()) :: boolean()
@@ -77,5 +76,12 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
       end
 
     all_logic_proofs_valid && all_compliance_proofs_valid
+  end
+
+  defimpl Noun.Nounable, for: __MODULE__ do
+    def to_noun(ptx = %PartialTransaction{}) do
+      {ptx.logic_proofs, ptx.compliance_proofs}
+      |> Noun.Nounable.to_noun()
+    end
   end
 end

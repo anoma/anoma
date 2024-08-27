@@ -3,6 +3,8 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
   I am a shielded resource machine transaction.
   """
 
+  @behaviour Noun.Nounable.Kind
+
   require Logger
 
   alias __MODULE__
@@ -20,37 +22,33 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
     field(:delta, binary(), default: %{})
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(transaction = %ShieldedTransaction{}) do
-    [
-      transaction.roots,
-      transaction.commitments,
-      transaction.nullifiers,
-      for ptx <- transaction.partial_transactions do
-        PartialTransaction.to_noun(ptx)
-      end,
-      transaction.delta
-    ]
-  end
-
-  @spec from_noun(Noun.t()) :: t()
+  @spec from_noun(Noun.t()) :: {:ok, t()}
   def from_noun([
         roots,
         commitments,
         nullifiers,
-        partial_transactions,
-        delta
+        partial_transactions
+        | delta
       ]) do
-    %ShieldedTransaction{
-      roots: roots,
-      commitments: commitments,
-      nullifiers: nullifiers,
-      partial_transactions:
-        for ptx <- partial_transactions do
-          PartialTransaction.from_noun(ptx)
-        end,
-      delta: delta
-    }
+    ptxs =
+      partial_transactions
+      |> Noun.list_nock_to_erlang()
+      |> Enum.map(&PartialTransaction.from_noun/1)
+
+    checked = Enum.all?(ptxs, &(elem(&1, 0) == :ok))
+
+    if checked do
+      {:ok,
+       %ShieldedTransaction{
+         roots: roots,
+         commitments: commitments |> Noun.list_nock_to_erlang(),
+         nullifiers: nullifiers |> Noun.list_nock_to_erlang(),
+         partial_transactions: Enum.map(ptxs, &elem(&1, 1)),
+         delta: delta
+       }}
+    else
+      :error
+    end
   end
 
   @spec compose(t(), t()) :: t()
@@ -76,7 +74,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
   # boolean value so that we can get rid of them in the ShieldedTransaction struct. We
   # can apply the same improvement to the transparent Transaction.
   @spec verify(t()) :: boolean()
-  def verify(transaction) do
+  def verify(transaction = %__MODULE__{}) do
     # check proofs
     all_proofs_valid =
       for ptx <- transaction.partial_transactions,
@@ -138,5 +136,18 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
       resource_logics_from_compliance == resource_logic_from_program
 
     all_proofs_valid && delta_valid && resource_logic_valid
+  end
+
+  defimpl Noun.Nounable, for: __MODULE__ do
+    def to_noun(transaction = %ShieldedTransaction{}) do
+      {
+        transaction.roots,
+        transaction.commitments,
+        transaction.nullifiers,
+        transaction.partial_transactions,
+        transaction.delta
+      }
+      |> Noun.Nounable.to_noun()
+    end
   end
 end

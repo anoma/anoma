@@ -12,7 +12,10 @@ defmodule Examples.EProofRecord do
   @spec a10_space_proof() :: ProofRecord.t()
   def a10_space_proof() do
     resource = ProofRecord.prove(EResource.a10_space_resource())
-    assert resource == ProofRecord.from_noun(ProofRecord.to_noun(resource))
+
+    assert {:ok, resource} ==
+             ProofRecord.from_noun(Noun.Nounable.to_noun(resource))
+
     resource
   end
 

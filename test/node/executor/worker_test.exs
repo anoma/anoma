@@ -241,7 +241,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       delta: Delta.empty()
     }
 
-    rm_tx_noun = Transaction.to_noun(rm_tx)
+    rm_tx_noun = Noun.Nounable.to_noun(rm_tx)
     rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
 
     {:ok, spawn} =
@@ -405,7 +405,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       delta: delta
     }
 
-    rm_tx_noun = ShieldedTransaction.to_noun(rm_tx)
+    rm_tx_noun = Noun.Nounable.to_noun(rm_tx)
     rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
 
     {:ok, spawn} =

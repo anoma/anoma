@@ -125,9 +125,7 @@ defmodule Anoma.Node.Solver do
       for tx <- solved do
         Router.cast(
           mempool,
-          {:tx,
-           {:rm, [[1 | Anoma.Resource.Transaction.to_noun(hd(tx))], 0 | 0]},
-           nil}
+          {:tx, {:rm, [[1 | Noun.Nounable.to_noun(hd(tx))], 0 | 0]}, nil}
         )
       end
     end
