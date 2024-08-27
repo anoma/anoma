@@ -28,12 +28,12 @@ defmodule Anoma.Resource.Transaction do
   @spec to_noun(t()) :: Noun.t()
   def to_noun(transaction = %Transaction{}) do
     [
-      transaction.roots,
-      transaction.commitments,
-      transaction.nullifiers,
+      transaction.roots ++ 0,
+      transaction.commitments ++ 0,
+      transaction.nullifiers ++ 0,
       for proof <- transaction.proofs do
         ProofRecord.to_noun(proof)
-      end,
+      end ++ 0,
       Delta.to_noun(transaction.delta),
       transaction.extra
       | [[1 | 0], 0 | 0]
