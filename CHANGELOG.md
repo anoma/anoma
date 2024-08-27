@@ -1,3 +1,8 @@
+# v0.20.0
+
+- The shielded RM is now merged.
+- The event broker is now merged.
+
 # v0.19.0
 
 - Refactor and reformat various components to comply with the updated
