@@ -22,6 +22,7 @@
   "mint": {:hex, :mint, "1.6.2", "af6d97a4051eee4f05b5500671d47c3a67dac7386045d87a904126fd4bbcea2e", [:mix], [{:castore, "~> 0.1.0 or ~> 1.0", [hex: :castore, repo: "hexpm", optional: true]}, {:hpax, "~> 0.1.1 or ~> 0.2.0 or ~> 1.0", [hex: :hpax, repo: "hexpm", optional: false]}], "hexpm", "5ee441dffc1892f1ae59127f74afe8fd82fda6587794278d924e4d90ea3d63f9"},
   "mnesia_rocksdb": {:git, "https://github.com/mariari/mnesia_rocksdb", "b07f7438af140947efed633c0391f0db839d95fb", []},
   "msgpack": {:hex, :msgpack, "0.8.1", "deb35c13291eafe56ad9870374c2eaa92323dc5503d50432ebcaf47052e6d343", [:rebar3], [], "hexpm", "04d9a75bc6f4bed8627ee1e7aa9df37601f510fdc786a84fe932bb21d765565f"},
+  "murmur": {:hex, :murmur, "2.0.0", "ffd64af879014b51c449aec38e2d460547270b88280f052cecda0a0ce4589188", [:mix], [], "hexpm", "2e96baf65a1a8b5af82ee509d6089ddf717af7e8ce0ed80d4c53819ca2fc2ffd"},
   "nimble_options": {:hex, :nimble_options, "1.1.1", "e3a492d54d85fc3fd7c5baf411d9d2852922f66e69476317787a7b2bb000a61b", [:mix], [], "hexpm", "821b2470ca9442c4b6984882fe9bb0389371b8ddec4d45a9504f00a66f650b44"},
   "nimble_parsec": {:hex, :nimble_parsec, "1.4.0", "51f9b613ea62cfa97b25ccc2c1b4216e81df970acd8e16e8d1bdc58fef21370d", [:mix], [], "hexpm", "9c565862810fb383e9838c1dd2d7d2c437b3d13b267414ba6af33e50d2d1cf28"},
   "nimble_pool": {:hex, :nimble_pool, "1.1.0", "bf9c29fbdcba3564a8b800d1eeb5a3c58f36e1e11d7b7fb2e084a643f645f06b", [:mix], [], "hexpm", "af2e4e6b34197db81f7aad230c1118eac993acc0dae6bc83bac0126d4ae0813a"},

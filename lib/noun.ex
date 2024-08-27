@@ -139,7 +139,7 @@ defmodule Noun do
   def mug(noun) do
     :erlang.term_to_binary(noun)
     # seed: %mug
-    |> :xxhash.hash64(6_780_269)
+    |> Murmur.hash_x86_32(6_780_269)
   end
 
   # maybe obviate these by treating [] as a zero?
