@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.19.1">
+    <meta name="project" content="Anoma v0.20.0">
 
 
-    <title>Mnesia Vs Actor State — Anoma v0.19.1</title>
+    <title>Mnesia Vs Actor State — Anoma v0.20.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="dist/sidebar_items-568468CB.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.1
+          v0.20.0
         </div>
       </div>
     </div>
@@ -156,12 +156,12 @@ GUIDES
   </a>
   <span class="text">Actor Storage</span>
 </h2>
-<p>Actor storage on the other hand are for things we don't wish the user to be able to query. Thus implementaiton details about the execution should be omitted from user visible storage, and would be better served stored on the Actor.</p><p>A good example of this is the old ordering logic.</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="n">typedstruct</span><span class="w"> </span><span class="k" data-group-id="4504113832-1">do</span><span class="w">
-    </span><span class="n">field</span><span class="p" data-group-id="4504113832-2">(</span><span class="ss">:table</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="4504113832-3">(</span><span class="p" data-group-id="4504113832-3">)</span><span class="p" data-group-id="4504113832-2">)</span><span class="w">
-    </span><span class="n">field</span><span class="p" data-group-id="4504113832-4">(</span><span class="ss">:next_order</span><span class="p">,</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="4504113832-5">(</span><span class="p" data-group-id="4504113832-5">)</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="4504113832-4">)</span><span class="w">
-    </span><span class="n">field</span><span class="p" data-group-id="4504113832-6">(</span><span class="ss">:hash_to_order</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4504113832-7">%{</span><span class="n">key</span><span class="p" data-group-id="4504113832-8">(</span><span class="p" data-group-id="4504113832-8">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="4504113832-9">(</span><span class="p" data-group-id="4504113832-9">)</span><span class="p" data-group-id="4504113832-7">}</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4504113832-10">%{</span><span class="p" data-group-id="4504113832-10">}</span><span class="p" data-group-id="4504113832-6">)</span><span class="w">
-    </span><span class="n">field</span><span class="p" data-group-id="4504113832-11">(</span><span class="ss">:logger</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="4504113832-12">(</span><span class="p" data-group-id="4504113832-12">)</span><span class="p">,</span><span class="w"> </span><span class="ss">enforce</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p" data-group-id="4504113832-11">)</span><span class="w">
-  </span><span class="k" data-group-id="4504113832-1">end</span></code></pre><p>In this example, we store things like specific order information, the live router addresses for storage and for the logger. None of this is relevant to the users and are just coincidental with how we wrote the system.</p>
+<p>Actor storage on the other hand are for things we don't wish the user to be able to query. Thus implementaiton details about the execution should be omitted from user visible storage, and would be better served stored on the Actor.</p><p>A good example of this is the old ordering logic.</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="n">typedstruct</span><span class="w"> </span><span class="k" data-group-id="7862547899-1">do</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="7862547899-2">(</span><span class="ss">:table</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="7862547899-3">(</span><span class="p" data-group-id="7862547899-3">)</span><span class="p" data-group-id="7862547899-2">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="7862547899-4">(</span><span class="ss">:next_order</span><span class="p">,</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="7862547899-5">(</span><span class="p" data-group-id="7862547899-5">)</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7862547899-4">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="7862547899-6">(</span><span class="ss">:hash_to_order</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7862547899-7">%{</span><span class="n">key</span><span class="p" data-group-id="7862547899-8">(</span><span class="p" data-group-id="7862547899-8">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="7862547899-9">(</span><span class="p" data-group-id="7862547899-9">)</span><span class="p" data-group-id="7862547899-7">}</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7862547899-10">%{</span><span class="p" data-group-id="7862547899-10">}</span><span class="p" data-group-id="7862547899-6">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="7862547899-11">(</span><span class="ss">:logger</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="7862547899-12">(</span><span class="p" data-group-id="7862547899-12">)</span><span class="p">,</span><span class="w"> </span><span class="ss">enforce</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p" data-group-id="7862547899-11">)</span><span class="w">
+  </span><span class="k" data-group-id="7862547899-1">end</span></code></pre><p>In this example, we store things like specific order information, the live router addresses for storage and for the logger. None of this is relevant to the users and are just coincidental with how we wrote the system.</p>
 </div>
 
 <div class="bottom-actions" id="bottom-actions">
@@ -194,11 +194,11 @@ Observer
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
 
-              (<a href="https://preview.hex.pm/preview/anoma/0.19.1/show/documentation/contributing/mnesia-vs-actor-state.livemd">current file</a>)
+              (<a href="https://preview.hex.pm/preview/anoma/0.20.0/show/documentation/contributing/mnesia-vs-actor-state.livemd">current file</a>)
 
           </span>
 

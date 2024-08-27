@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.19.1">
+    <meta name="project" content="Anoma v0.20.0">
 
 
-    <title>API Reference — Anoma v0.19.1</title>
+    <title>API Reference — Anoma v0.20.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="dist/sidebar_items-568468CB.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.1
+          v0.20.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
 
-    <span>API Reference <small class="app-vsn">Anoma v0.19.1</small></span>
+    <span>API Reference <small class="app-vsn">Anoma v0.20.0</small></span>
   </h1>
 
 
@@ -189,6 +189,13 @@ the local administration engine on another node running on the same system.</p><
 
     <div class="summary-synopsis"><p>I am a configuration module. I read the provided TOML configuration file
 and feed the apporpriate info for Node launching</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Constants.html" translate="no">Anoma.Constants</a>
+
+  </div>
 
 </div>
 <div class="summary-row">
@@ -423,6 +430,24 @@ information in order to choose how to verify a commitment.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Anoma.Node.Event.html" translate="no">Anoma.Node.Event</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am an Anoma node specific event. I go inside the body field of an EventBroker.Event.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Event.Filters.SourceEngine.html" translate="no">Anoma.Node.Event.Filters.SourceEngine</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I filter Anoma node events by source engine.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Anoma.Node.Executor.html" translate="no">Anoma.Node.Executor</a>
 
   </div>
@@ -608,6 +633,22 @@ networking used by the Router.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Anoma.RM.Trans.html" translate="no">Anoma.RM.Trans</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.RM.Transaction.html" translate="no">Anoma.RM.Transaction</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Transaction protocol.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Anoma.Resource.html" translate="no">Anoma.Resource</a>
 
   </div>
@@ -665,20 +706,20 @@ terms as well!</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Anoma.SheildedResource.ComplianceOutput.html" translate="no">Anoma.SheildedResource.ComplianceOutput</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>I represent a resource's output.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="Anoma.ShieldedResource.html" translate="no">Anoma.ShieldedResource</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>I am a placeholder, but will represent a shielded resource in the future.</p></div>
+    <div class="summary-synopsis"><p>I am a shielded resource.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.ComplianceOutput.html" translate="no">Anoma.ShieldedResource.ComplianceOutput</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I represent a resource's output.</p></div>
 
 </div>
 <div class="summary-row">
@@ -778,6 +819,98 @@ commitment tree.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>A specification for a commitment tree.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.html" translate="no">EventBroker</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the EventBroker Application Module.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Broker.html" translate="no">EventBroker.Broker</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a Broker module.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Event.html" translate="no">EventBroker.Event</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am an Event module for the Event Broker.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filter.html" translate="no">EventBroker.Filter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a filter module for the Event Broker. I provide the callbacks for
+all the filters used in the PubSub system.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.FilterAgent.html" translate="no">EventBroker.FilterAgent</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a Filter Agent module.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filters.LessTrivial.html" translate="no">EventBroker.Filters.LessTrivial</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I represent a filter which filters a message based on the value I store
+in my struct.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filters.SourceModule.html" translate="no">EventBroker.Filters.SourceModule</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I filter an event based on its source module.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filters.Trivial.html" translate="no">EventBroker.Filters.Trivial</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the trivial filter. I always return true.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Registry.html" translate="no">EventBroker.Registry</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Registry for the PubSub system.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Supervisor.html" translate="no">EventBroker.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the EventBroker Supervisor for PubSub.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1016,6 +1149,20 @@ the identity.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Noun.Nounable.html" translate="no">Noun.Nounable</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Noun.Nounable.Kind.html" translate="no">Noun.Nounable.Kind</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="TestHelper.Executor.html" translate="no">TestHelper.Executor</a>
 
   </div>
@@ -1122,9 +1269,9 @@ Anoma
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
 
           </span>
 

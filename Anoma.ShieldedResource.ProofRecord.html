@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.19.1">
+    <meta name="project" content="Anoma v0.20.0">
 
 
-    <title>Anoma.ShieldedResource.ProofRecord — Anoma v0.19.1</title>
+    <title>Anoma.ShieldedResource.ProofRecord — Anoma v0.20.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="dist/sidebar_items-568468CB.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.1
+          v0.20.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.ShieldedResource.ProofRecord</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
 
   </h1>
 
@@ -162,15 +162,17 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#from_noun/1" data-no-tooltip translate="no">from_noun(list)</a>
+        <a href="#from_noun/1" data-no-tooltip translate="no">from_noun(arg1)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="Noun.Nounable.Kind.html#c:from_noun/1"><code class="inline">Noun.Nounable.Kind.from_noun/1</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#to_noun/1" data-no-tooltip translate="no">to_noun(proof_record)</a>
+        <a href="#generate_compliance_proof/1" data-no-tooltip translate="no">generate_compliance_proof(compliance_inputs)</a>
 
       </div>
 
@@ -234,24 +236,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">from_noun(list)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="to_noun/1">
-
-  <div class="detail-header">
-    <a href="#to_noun/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">to_noun(proof_record)</h1>
+    <h1 class="signature" translate="no">from_noun(arg1)</h1>
 
 
   </div>
@@ -260,7 +245,30 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> to_noun(<a href="#t:t/0">t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> from_noun(<a href="Noun.html#t:t/0">Noun.t</a>()) :: {:ok, <a href="#t:t/0">t</a>()} | :error</pre>
+
+      </div>
+
+<p>Callback implementation for <a href="Noun.Nounable.Kind.html#c:from_noun/1"><code class="inline">Noun.Nounable.Kind.from_noun/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="generate_compliance_proof/1">
+
+  <div class="detail-header">
+    <a href="#generate_compliance_proof/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">generate_compliance_proof(compliance_inputs)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> generate_compliance_proof(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: {:ok, <a href="#t:t/0">t</a>()} | :error</pre>
 
       </div>
 
@@ -275,9 +283,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
 
           </span>
 

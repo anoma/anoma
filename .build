@@ -30,6 +30,7 @@ Anoma.Block.html
 Anoma.Cli.Client.html
 Anoma.Cli.html
 Anoma.Configuration.html
+Anoma.Constants.html
 Anoma.Crypto.Encrypt.html
 Anoma.Crypto.Id.Extern.html
 Anoma.Crypto.Id.Intern.html
@@ -55,6 +56,8 @@ Anoma.Mnesia.html
 Anoma.Node.Clock.html
 Anoma.Node.Configuration.html
 Anoma.Node.Dumper.html
+Anoma.Node.Event.Filters.SourceEngine.html
+Anoma.Node.Event.html
 Anoma.Node.Executor.Worker.html
 Anoma.Node.Executor.html
 Anoma.Node.Identity.Commitment.html
@@ -77,6 +80,8 @@ Anoma.Node.Transport.TCPConnection.html
 Anoma.Node.Transport.TCPServer.html
 Anoma.Node.Transport.html
 Anoma.Node.html
+Anoma.RM.Trans.html
+Anoma.RM.Transaction.html
 Anoma.Resource.Delta.html
 Anoma.Resource.Proof.html
 Anoma.Resource.ProofRecord.html
@@ -84,7 +89,7 @@ Anoma.Resource.Transaction.html
 Anoma.Resource.html
 Anoma.Serialise.html
 Anoma.Serializer.html
-Anoma.SheildedResource.ComplianceOutput.html
+Anoma.ShieldedResource.ComplianceOutput.html
 Anoma.ShieldedResource.PartialTransaction.html
 Anoma.ShieldedResource.ProofRecord.html
 Anoma.ShieldedResource.ShieldedTransaction.html
@@ -98,6 +103,16 @@ CommitmentTree.Node.html
 CommitmentTree.Proof.html
 CommitmentTree.Spec.html
 CommitmentTree.html
+EventBroker.Broker.html
+EventBroker.Event.html
+EventBroker.Filter.html
+EventBroker.FilterAgent.html
+EventBroker.Filters.LessTrivial.html
+EventBroker.Filters.SourceModule.html
+EventBroker.Filters.Trivial.html
+EventBroker.Registry.html
+EventBroker.Supervisor.html
+EventBroker.html
 Examples.EBlock.html
 Examples.EClient.html
 Examples.ECommitmentTree.html
@@ -130,6 +145,8 @@ Nock.Jam.html
 Nock.Jets.html
 Nock.html
 Noun.Format.html
+Noun.Nounable.Kind.html
+Noun.Nounable.html
 Noun.html
 TestHelper.Executor.html
 TestHelper.Mempool.html
@@ -160,8 +177,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-08417D3A.js
-dist/sidebar_items-234C49EB.js
+dist/search_data-0DE7C346.js
+dist/sidebar_items-568468CB.js
 dumping.html
 examples-over-testing.html
 fema-analysis-pinger.html

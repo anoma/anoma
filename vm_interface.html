@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.19.1">
+    <meta name="project" content="Anoma v0.20.0">
 
 
-    <title>Anoma VM interface — Anoma v0.19.1</title>
+    <title>Anoma VM interface — Anoma v0.20.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="dist/sidebar_items-568468CB.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.1
+          v0.20.0
         </div>
       </div>
     </div>
@@ -148,12 +148,12 @@ GUIDES
 resource machine context.</li></ul><p>An additional mode is planned for the shielded resource machine, when
 integrated; and <code class="inline">kv</code> mode is an early prototype of what will evolve into
 the content-addressed blob storage facility.</p><p><code class="inline">kv</code> and <code class="inline">rm</code> modes share the same execution interface: they expect a Nock
-<code class="inline">gate</code>. A <code class="inline">gate</code> is a function-like object with the following form:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3275628303-1">[</span><span class="n">code</span><span class="w"> </span><span class="p" data-group-id="3275628303-2">[</span><span class="n">sample</span><span class="w"> </span><span class="n">context</span><span class="p" data-group-id="3275628303-2">]</span><span class="p" data-group-id="3275628303-1">]</span></code></pre><p><code class="inline">code</code> is a Nock formula intended to be run with the gate as subject, while
+<code class="inline">gate</code>. A <code class="inline">gate</code> is a function-like object with the following form:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="4158494629-1">[</span><span class="n">code</span><span class="w"> </span><span class="p" data-group-id="4158494629-2">[</span><span class="n">sample</span><span class="w"> </span><span class="n">context</span><span class="p" data-group-id="4158494629-2">]</span><span class="p" data-group-id="4158494629-1">]</span></code></pre><p><code class="inline">code</code> is a Nock formula intended to be run with the gate as subject, while
 <code class="inline">sample</code> is a placeholder for arguments to the gate. <code class="inline">context</code> contains any
 additional code or data referenced; this includes at least the standard
 library, but may be larger than it.</p><p>In both <code class="inline">kv</code> and <code class="inline">rm</code> modes, the submitted transaction is a gate, and the
 argument placed in the sample is its opaque order ID. The output expected
-is the following tuple:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="7753612886-1">[</span><span class="p" data-group-id="7753612886-2">[</span><span class="n">read</span><span class="o">-</span><span class="n">keyspaces</span><span class="w"> </span><span class="n">write</span><span class="o">-</span><span class="n">keyspaces</span><span class="p" data-group-id="7753612886-2">]</span><span class="w"> </span><span class="n">second</span><span class="o">-</span><span class="n">gate</span><span class="p" data-group-id="7753612886-1">]</span></code></pre><p>In <code class="inline">kv</code> mode, <code class="inline">read-keyspaces</code> and <code class="inline">write-keyspaces</code> are subspaces of the
+is the following tuple:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3216100513-1">[</span><span class="p" data-group-id="3216100513-2">[</span><span class="n">read</span><span class="o">-</span><span class="n">keyspaces</span><span class="w"> </span><span class="n">write</span><span class="o">-</span><span class="n">keyspaces</span><span class="p" data-group-id="3216100513-2">]</span><span class="w"> </span><span class="n">second</span><span class="o">-</span><span class="n">gate</span><span class="p" data-group-id="3216100513-1">]</span></code></pre><p>In <code class="inline">kv</code> mode, <code class="inline">read-keyspaces</code> and <code class="inline">write-keyspaces</code> are subspaces of the
 key-value store which the transaction plans to read or write, respectively.
 The VM may use this information to place locks or otherwise prepare for
 transaction execution. It is an error to read outside the declared
@@ -174,7 +174,7 @@ mode, and a resource machine transaction in <code class="inline">rm</code> mode.
 <p>When the VM's resource machine implementation processes a resource
 transaction, this includes the execution of resource logics in each
 resource. Shielded resource transactions will proceed similarly, but
-within the shielded VM rather than the Nock VM.</p><p>A resource logic is also a gate, and the arguments it takes are the tuple</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="6341172650-1">[</span><span class="n">self</span><span class="w"> </span><span class="n">resource</span><span class="o">-</span><span class="n">transaction</span><span class="p" data-group-id="6341172650-1">]</span></code></pre><p>where <code class="inline">self</code> is a copy of the entire resource running the logic, and
+within the shielded VM rather than the Nock VM.</p><p>A resource logic is also a gate, and the arguments it takes are the tuple</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="4809513963-1">[</span><span class="n">self</span><span class="w"> </span><span class="n">resource</span><span class="o">-</span><span class="n">transaction</span><span class="p" data-group-id="4809513963-1">]</span></code></pre><p>where <code class="inline">self</code> is a copy of the entire resource running the logic, and
 <code class="inline">resource-transaction</code> is the Nock serialization of the entire resource
 transaction (which includes all resources, in the transparent resource
 machine).</p><p>Its output is a simple boolean: <code class="inline">0</code> for success, <code class="inline">1</code> for failure.</p><h2 id="gas-metering" class="section-heading">
@@ -218,11 +218,11 @@ Examples over Testing
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
 
-              (<a href="https://preview.hex.pm/preview/anoma/0.19.1/show/documentation/vm_interface.livemd">current file</a>)
+              (<a href="https://preview.hex.pm/preview/anoma/0.20.0/show/documentation/vm_interface.livemd">current file</a>)
 
           </span>
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.19.1">
+    <meta name="project" content="Anoma v0.20.0">
 
 
-    <title>Anoma.Resource.Delta — Anoma v0.19.1</title>
+    <title>Anoma.Resource.Delta — Anoma v0.20.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="dist/sidebar_items-568468CB.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.1
+          v0.20.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Resource.Delta</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
 
   </h1>
 
@@ -158,7 +158,15 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add/2" data-no-tooltip translate="no">add(d1, d2)</a>
+        <a href="#add/2" data-no-tooltip translate="no">add(delta1, delta2)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#empty/0" data-no-tooltip translate="no">empty()</a>
 
       </div>
 
@@ -170,11 +178,21 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>Callback implementation for <a href="Noun.Nounable.Kind.html#c:from_noun/1"><code class="inline">Noun.Nounable.Kind.from_noun/1</code></a>.</p></div>
+
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#negate/1" data-no-tooltip translate="no">negate(r)</a>
+        <a href="#negate/1" data-no-tooltip translate="no">negate(delta)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new/1" data-no-tooltip translate="no">new(map)</a>
 
       </div>
 
@@ -183,14 +201,6 @@ GUIDES
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#sub/2" data-no-tooltip translate="no">sub(d1, d2)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#to_noun/1" data-no-tooltip translate="no">to_noun(delta)</a>
 
       </div>
 
@@ -225,7 +235,7 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %{required(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()}</pre>
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Resource.Delta{deltas: %{required(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()}}</pre>
 
       </div>
 
@@ -251,7 +261,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">add(d1, d2)</h1>
+    <h1 class="signature" translate="no">add(delta1, delta2)</h1>
 
 
   </div>
@@ -261,6 +271,29 @@ GUIDES
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> add(<a href="#t:t/0">t</a>(), <a href="#t:t/0">t</a>()) :: <a href="#t:t/0">t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="empty/0">
+
+  <div class="detail-header">
+    <a href="#empty/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">empty()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> empty() :: <a href="#t:t/0">t</a>()</pre>
 
       </div>
 
@@ -283,11 +316,11 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> from_noun(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="#t:t/0">t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> from_noun(noun :: <a href="Noun.html#t:t/0">Noun.t</a>()) :: {:ok, <a href="#t:t/0">t</a>()} | :error</pre>
 
       </div>
 
-
+<p>Callback implementation for <a href="Noun.Nounable.Kind.html#c:from_noun/1"><code class="inline">Noun.Nounable.Kind.from_noun/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="negate/1">
@@ -297,7 +330,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">negate(r)</h1>
+    <h1 class="signature" translate="no">negate(delta)</h1>
 
 
   </div>
@@ -307,6 +340,29 @@ GUIDES
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> negate(<a href="#t:t/0">t</a>()) :: <a href="#t:t/0">t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="new/1">
+
+  <div class="detail-header">
+    <a href="#new/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">new(map)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new(%{required(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()}) :: <a href="#t:t/0">t</a>()</pre>
 
       </div>
 
@@ -336,29 +392,6 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="to_noun/1">
-
-  <div class="detail-header">
-    <a href="#to_noun/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">to_noun(delta)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> to_noun(<a href="#t:t/0">t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
 
     </div>
   </section>
@@ -367,9 +400,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
 
           </span>
 

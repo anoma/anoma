@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.19.1">
+    <meta name="project" content="Anoma v0.20.0">
 
 
-    <title>Anoma.ShieldedResource — Anoma v0.19.1</title>
+    <title>Anoma.ShieldedResource — Anoma v0.20.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-234C49EB.js"></script>
+    <script src="dist/sidebar_items-568468CB.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.19.1
+          v0.20.0
         </div>
       </div>
     </div>
@@ -123,13 +123,13 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.ShieldedResource</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.19.1)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>I am a placeholder, but will represent a shielded resource in the future.</p>
+<p>I am a shielded resource.</p>
     </section>
 
 </div>
@@ -151,6 +151,53 @@ GUIDES
         <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#commitment/1" data-no-tooltip translate="no">commitment(resource)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>A commitment to the given resource.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#nullifier/1" data-no-tooltip translate="no">nullifier(resource)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The nullifier of the given resource.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#random/1" data-no-tooltip translate="no">random(r)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Randomizes the rseed of a resource.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#set_nonce/2" data-no-tooltip translate="no">set_nonce(r, nonce)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Set the nonce of a resource, the nonce of output resource comes from the
+nullifer of input recource in the compliance proof.</p></div>
 
     </div>
 
@@ -183,7 +230,16 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.ShieldedResource{}</pre>
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.ShieldedResource{
+  data: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
+  eph: bool(),
+  label: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
+  logic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
+  nonce: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
+  npk: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
+  quantity: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
+  rseed: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()
+}</pre>
 
       </div>
 
@@ -194,13 +250,106 @@ GUIDES
     </div>
   </section>
 
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="commitment/1">
+
+  <div class="detail-header">
+    <a href="#commitment/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">commitment(resource)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> commitment(<a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+
+      </div>
+
+<p>A commitment to the given resource.</p>
+  </section>
+</section>
+<section class="detail" id="nullifier/1">
+
+  <div class="detail-header">
+    <a href="#nullifier/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">nullifier(resource)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nullifier(<a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+
+      </div>
+
+<p>The nullifier of the given resource.</p>
+  </section>
+</section>
+<section class="detail" id="random/1">
+
+  <div class="detail-header">
+    <a href="#random/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">random(r)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Randomizes the rseed of a resource.</p>
+  </section>
+</section>
+<section class="detail" id="set_nonce/2">
+
+  <div class="detail-header">
+    <a href="#set_nonce/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">set_nonce(r, nonce)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Set the nonce of a resource, the nonce of output resource comes from the
+nullifer of input recource in the compliance proof.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
     <footer class="footer">
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.19.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.19.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
 
           </span>
 
