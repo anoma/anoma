@@ -1,6 +1,7 @@
 defmodule AnomaTest.Node.Executor.Worker do
   use TestHelper.TestMacro, async: true
 
+  alias Anoma.Resource.Delta
   alias Anoma.Node.{Storage, Ordering, Router}
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Router.Engine
@@ -237,7 +238,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       commitments: [cm_out],
       nullifiers: [nf_in],
       proofs: [pf_in, pf_out],
-      delta: %{}
+      delta: Delta.empty()
     }
 
     rm_tx_noun = Transaction.to_noun(rm_tx)
