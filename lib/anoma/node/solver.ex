@@ -3,7 +3,7 @@ defmodule Anoma.Node.Solver do
   I am a strawman intent solver for testing purposes.
   """
 
-  alias Anoma.Resource.Transaction
+  alias Anoma.RM.Transaction
   alias Anoma.Node.{Router, Logger}
   alias __MODULE__
 

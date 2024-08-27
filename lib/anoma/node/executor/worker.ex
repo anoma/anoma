@@ -18,8 +18,8 @@ defmodule Anoma.Node.Executor.Worker do
   - `rm_nullifier_check/2`
   """
 
-  alias Anoma.Resource
-  alias Anoma.Resource.Transaction
+  alias Anoma.Resource.Transaction, as: TTransaction
+  alias Anoma.RM.Transaction
   alias Anoma.ShieldedResource.ShieldedTransaction
   alias Anoma.Node.{Storage, Ordering, Logger, Router}
   alias __MODULE__
@@ -33,10 +33,6 @@ defmodule Anoma.Node.Executor.Worker do
   @type backend() :: :kv | :rm | :cairo | :ro
 
   @type transaction() :: {backend(), Noun.t() | binary()}
-
-  # TODO :: Please replace with a verify protocol
-  @type verify_fun(trans) :: (trans -> boolean())
-  @type from_noun(trans) :: (Noun.t() -> {:ok, trans} | :error)
 
   typedstruct do
     @typedoc """
@@ -138,14 +134,11 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   defp run(s = %__MODULE__{tx: {:rm, _}}) do
-    execute_rm_tx(s, {&Transaction.from_noun/1, &Transaction.verify/1})
+    execute_rm_tx(s, TTransaction)
   end
 
   defp run(s = %__MODULE__{tx: {:cairo, _}}) do
-    execute_rm_tx(
-      s,
-      {&ShieldedTransaction.from_noun/1, &ShieldedTransaction.verify/1}
-    )
+    execute_rm_tx(s, ShieldedTransaction)
   end
 
   @spec execute_key_value_tx(t(), fun()) :: :ok | :error
@@ -226,13 +219,9 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
-  @spec execute_rm_tx(t(), {verify_fun(trans), from_noun(trans)}) ::
-          :ok | :error
-        when trans: any()
-  defp execute_rm_tx(
-         s = %__MODULE__{id: id, tx: {_, gate}, env: env},
-         {from_noun, verify_fun}
-       ) do
+  # Must be passed a from noun
+  @spec execute_rm_tx(t(), module) :: :ok | :error
+  defp execute_rm_tx(s = %__MODULE__{id: id, tx: {_, gate}, env: env}, mod) do
     logger = env.logger
 
     log_info({:dispatch, id, logger})
@@ -240,12 +229,16 @@ defmodule Anoma.Node.Executor.Worker do
 
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | id], 0 | 1], env),
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
-         {:ok, vm_resource_tx} <- from_noun.(resource_tx),
+         {:ok, vm_resource_tx} <- mod.from_noun(resource_tx),
          true_order = wait_for_ready(s),
-         true <- verify_fun.(vm_resource_tx),
+         true <- Transaction.verify(vm_resource_tx),
          # TODO: add root existence check. The roots must be traceable
          # in historical records.
-         true <- rm_nullifier_check(storage, vm_resource_tx.nullifiers) do
+         true <-
+           rm_nullifier_check(
+             storage,
+             Transaction.storage_nullifiers(vm_resource_tx)
+           ) do
       persist(env, true_order, vm_resource_tx)
     else
       # The failure had to be on the true match above, which is after
@@ -282,22 +275,21 @@ defmodule Anoma.Node.Executor.Worker do
       )
 
     new_tree =
-      for commitment <- vm_resource_tx.commitments, reduce: cm_tree do
+      for commitment <- Transaction.storage_commitments(vm_resource_tx),
+          reduce: cm_tree do
         tree ->
-          commit_hash = Resource.commitment_hash(commitment)
-          cm_key = ["rm", "commitments", commit_hash]
+          cm_key = ["rm", "commitments", commitment]
 
           Storage.put(storage, cm_key, true)
-          CommitmentTree.add(tree, [commit_hash])
+          CommitmentTree.add(tree, [commitment])
           log_info({:put, cm_key, logger})
           tree
       end
 
     Storage.put(storage, ["rm", "commitment_root"], new_tree.root)
 
-    for nullifier <- vm_resource_tx.nullifiers do
-      nullifier_hash = Resource.nullifier_hash(nullifier)
-      nf_key = ["rm", "nullifiers", nullifier_hash]
+    for nullifier <- Transaction.storage_nullifiers(vm_resource_tx) do
+      nf_key = ["rm", "nullifiers", nullifier]
       Storage.put(storage, nf_key, true)
       log_info({:put, nf_key, logger})
     end
@@ -314,13 +306,13 @@ defmodule Anoma.Node.Executor.Worker do
   @doc """
   I perform the nullifier check for a resource machine transaction.
 
-  Given a storage and a list of nullifiers I check their placing in storage.
+  Given a storage and a list of stored nullifiers I check their placing in storage.
   """
   @spec rm_nullifier_check(Router.addr(), list(binary())) :: bool()
   def rm_nullifier_check(storage, nullifiers) do
     for nullifier <- nullifiers, reduce: true do
       acc ->
-        nf_key = ["rm", "nullifiers", Resource.nullifier_hash(nullifier)]
+        nf_key = ["rm", "nullifiers", nullifier]
         acc && Storage.get(storage, nf_key) == :absent
     end
   end

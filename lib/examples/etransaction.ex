@@ -4,7 +4,9 @@ defmodule Examples.ETransaction do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Anoma.Resource.{Delta, Transaction}
+  alias Anoma.Resource.Delta
+  alias Anoma.Resource.Transaction, as: TTransaction
+  alias Anoma.RM.Transaction
 
   alias Examples.{EResource, EProofRecord}
 
@@ -23,7 +25,7 @@ defmodule Examples.ETransaction do
 
   @spec empty_transaction() :: Transaction.t()
   def empty_transaction() do
-    trans = %Transaction{}
+    trans = %TTransaction{}
     Transaction.verify(trans)
     trans
   end
@@ -34,7 +36,7 @@ defmodule Examples.ETransaction do
 
   @spec unbalanced_transaction() :: Transaction.t()
   def unbalanced_transaction() do
-    trans = %Transaction{
+    trans = %TTransaction{
       commitments: [EResource.a5_space_commit()],
       nullifiers: [EResource.a10_space_nullifier()],
       proofs: [EProofRecord.a10_space_proof(), EProofRecord.a5_space_proof()],
@@ -47,7 +49,7 @@ defmodule Examples.ETransaction do
 
   @spec invalid_proofs_transaction() :: Transaction.t()
   def invalid_proofs_transaction() do
-    trans = %Transaction{
+    trans = %TTransaction{
       commitments: [EResource.b10_space_commit()],
       nullifiers: [EResource.a10_space_nullifier()],
       proofs: [EProofRecord.a10_space_proof(), EProofRecord.a5_space_proof()],
@@ -60,7 +62,7 @@ defmodule Examples.ETransaction do
 
   @spec invalid_logic_check() :: Transaction.t()
   def invalid_logic_check() do
-    trans = %Transaction{
+    trans = %TTransaction{
       nullifiers: [EResource.a10_d0_nullifier()],
       proofs: [EProofRecord.a10_d0_proof()],
       # TODO Abstract this out
@@ -76,7 +78,7 @@ defmodule Examples.ETransaction do
   ####################################################################
 
   def ax_for_y() do
-    trans = %Transaction{
+    trans = %TTransaction{
       nullifiers: [EResource.ax_nullifier()],
       commitments: [EResource.ay_commit()],
       # get proof records
@@ -90,7 +92,7 @@ defmodule Examples.ETransaction do
   end
 
   def by_for_x() do
-    trans = %Transaction{
+    trans = %TTransaction{
       nullifiers: [EResource.by_nullifier()],
       commitments: [EResource.bx_commit()],
       # get proof records
@@ -118,7 +120,7 @@ defmodule Examples.ETransaction do
     invalid = invalid_logic_check()
 
     trans =
-      %Transaction{
+      %TTransaction{
         invalid
         | commitments: [EResource.b10_d0_commit()],
           delta: zero_delta(),
@@ -131,7 +133,7 @@ defmodule Examples.ETransaction do
 
   @spec balanced_transaction() :: Transaction.t()
   def balanced_transaction() do
-    trans = %Transaction{
+    trans = %TTransaction{
       commitments: [EResource.b10_space_commit()],
       nullifiers: [EResource.a10_space_nullifier()],
       proofs: [EProofRecord.a10_space_proof(), EProofRecord.b10_space_proof()],
@@ -144,7 +146,7 @@ defmodule Examples.ETransaction do
 
   @spec increment_counter_transaction() :: Transaction.t()
   def increment_counter_transaction() do
-    trans = %Transaction{
+    trans = %TTransaction{
       commitments: [EResource.a1_counter_commit()],
       nullifiers: [EResource.a0_counter_nullifier()],
       proofs: [
