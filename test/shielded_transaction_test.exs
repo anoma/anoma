@@ -5,13 +5,23 @@ defmodule AnomaTest.ShieldedTransaction do
   alias Burrito.Util.ERTSUniversalMachineFetcher
   alias Examples.EShieldedTransaction
 
-  test "examples" do
+  test "valid shielded transaction" do
     EShieldedTransaction.setup_environment()
     EShieldedTransaction.generate_compliance_proof()
     EShieldedTransaction.create_partial_transaction()
     EShieldedTransaction.create_shielded_transaction()
-    EShieldedTransaction.prepare_executor_transaction()
+    EShieldedTransaction.prepare_executor_transaction(:valid)
     EShieldedTransaction.start_worker()
-    EShieldedTransaction.execute_transaction()
+    assert {:ok, :valid_transaction_executed} = EShieldedTransaction.execute_transaction()
+  end
+
+  test "invalid shielded transaction" do
+    EShieldedTransaction.setup_environment()
+    EShieldedTransaction.generate_compliance_proof()
+    EShieldedTransaction.create_partial_transaction()
+    EShieldedTransaction.create_invalid_shielded_transaction()
+    EShieldedTransaction.prepare_executor_transaction(:invalid)
+    EShieldedTransaction.start_worker()
+    assert {:ok, :invalid_transaction_rejected} = EShieldedTransaction.execute_transaction()
   end
 end

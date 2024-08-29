@@ -111,19 +111,38 @@ defmodule Examples.EShieldedTransaction do
     :ok
   end
 
-  @spec prepare_executor_transaction() :: :ok
-  def prepare_executor_transaction do
-    shielded_tx = Process.get(:shielded_transaction)
+  @spec create_invalid_shielded_transaction() :: :ok
+  def create_invalid_shielded_transaction do
+    ptx = Process.get(:partial_transaction)
+    # Use an invalid private key (all zeros) to create an invalid transaction
+    invalid_priv_keys = :binary.copy(<<0>>, 32)
+
+    invalid_shielded_tx =
+      %ShieldedTransaction{
+        partial_transactions: [ptx],
+        delta: invalid_priv_keys
+      }
+      |> ShieldedTransaction.finalize()
+
+    Process.put(:invalid_shielded_transaction, invalid_shielded_tx)
+    :ok
+  end
+  @spec prepare_executor_transaction(atom()) :: :ok
+  def prepare_executor_transaction(type \\ :valid) do
+    shielded_tx = case type do
+      :valid -> Process.get(:shielded_transaction)
+      :invalid -> Process.get(:invalid_shielded_transaction)
+    end
     rm_tx_noun = Noun.Nounable.to_noun(shielded_tx)
     executor_tx = [[1 | rm_tx_noun], 0 | 0]
-    Process.put(:executor_transaction, executor_tx)
+    Process.put(:executor_transaction, {type, executor_tx})
     :ok
   end
 
   @spec start_worker() :: :ok
   def start_worker do
     %{env: env, router: router, id: id, topic: topic} = Process.get(:test_env)
-    executor_tx = Process.get(:executor_transaction)
+    {type, executor_tx} = Process.get(:executor_transaction)
 
     {:ok, spawn} =
       Router.start_engine(
@@ -132,21 +151,42 @@ defmodule Examples.EShieldedTransaction do
         {id, {:cairo, executor_tx}, env, topic, nil}
       )
 
-    Process.put(:worker_spawn, spawn)
+    Process.put(:worker_spawn, {type, spawn})
     :ok
   end
 
-  @spec execute_transaction() :: :ok
+
+  @spec execute_transaction() :: {:ok, atom()} | {:error, any()}
   def execute_transaction do
     %{env: env, router: router, id: id, topic: topic} = Process.get(:test_env)
-    spawn = Process.get(:worker_spawn)
+    {type, spawn} = Process.get(:worker_spawn)
 
     Ordering.new_order(env.ordering, [
       Anoma.Transaction.new_with_order(0, id, spawn)
     ])
     Router.send_raw(spawn, {:write_ready, 0})
-    TestHelper.Worker.wait_for_worker(spawn, :ok)
+
+    result = wait_for_worker_result(spawn)
     :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
+
+    case {type, result} do
+      {:valid, :ok} -> {:ok, :valid_transaction_executed}
+      {:invalid, :error} -> {:ok, :invalid_transaction_rejected}
+      {:valid, :error} -> {:error, :valid_transaction_failed}
+      {:invalid, :ok} -> {:error, :invalid_transaction_accepted}
+      _ -> {:error, {:unexpected_result, result}}
+    end
   end
+
+  defp wait_for_worker_result(worker_addr) do
+    receive do
+      {:"$gen_cast", {:router_cast, _, {:worker_done, ^worker_addr, status}}} ->
+        status
+    after
+      5000 ->
+        {:error, :timeout}
+    end
+  end
+
 
 end
