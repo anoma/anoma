@@ -492,25 +492,60 @@ defmodule Examples.ENock do
   ##                      Block Cores                       ##
   ############################################################
 
+  @doc """
+  I am an lash arm in the block door.
+
+  My index inside the door can be seen by asking to dump the logic of
+  =llsh   =>  logics  |=  a=@  lsh:block
+  """
+
   @spec lsh(Noun.t()) :: Noun.t()
   def lsh(value) do
     block_calling_biop(value, 90)
   end
+
+  @doc """
+  I am an lash arm in the block door.
+
+  My index inside the door can be seen by asking to dump the logic of
+  =lmet   =>  logics  |=  a=@  met:block
+  """
 
   @spec met(Noun.t()) :: Noun.t()
   def met(value) do
     block_calling_mono(value, 190)
   end
 
+  @doc """
+  I am an lash arm in the block door.
+
+  My index inside the door can be seen by asking to dump the logic of
+  =luend   =>  logics  |=  a=@  luend:block
+  """
+
   @spec uend(Noun.t()) :: Noun.t()
   def uend(value) do
     block_calling_biop(value, 367)
   end
 
+  @doc """
+  I am an lash arm in the block door.
+
+  My index inside the door can be seen by asking to dump the logic of
+  =rsh   =>  logics  |=  a=@  rsh:block
+  """
+
   @spec rsh(Noun.t()) :: Noun.t()
   def rsh(value) do
     block_calling_biop(value, 767)
   end
+
+  @doc """
+  I evaluate met at block size 0 and gate-input 28.
+
+  met(0) evaluates the gate of the block door at block size 0,
+  [6 1 28] replaces the sample with 28.
+  """
 
   @spec met0() :: Noun.t()
   def met0() do
@@ -519,12 +554,26 @@ defmodule Examples.ENock do
     met
   end
 
+  @doc """
+  I evaluate met at block size 1 and gate-input 28.
+
+  met(1) evaluates the gate of the block door at block size 1,
+  [6 1 28] replaces the sample with 28.
+  """
+
   @spec met1() :: Noun.t()
   def met1() do
     met = met(1)
     assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 3}
     met
   end
+
+  @doc """
+  I evaluate met at block size 2 and gate-input 28.
+
+  met(2) evaluates the gate of the block door at block size 2,
+  [6 1 28] replaces the sample with 28.
+  """
 
   @spec met2() :: Noun.t()
   def met2() do
@@ -533,12 +582,27 @@ defmodule Examples.ENock do
     met
   end
 
+  @doc """
+  I evaluate uend at block size 0 and gate-input [5 80].
+
+  uend(0) evaluates the gate of the block door at block size 0,
+  [6 1 5 80] replaces the sample with [5 80].
+  """
+
   @spec uend0() :: Noun.t()
   def uend0() do
     uend = uend(0)
     assert {:ok, 16} == Nock.nock(uend, [9, 2, 10, [6, 1, 5 | 80], 0 | 1])
     uend
   end
+
+  @doc """
+  I evaluate uend at block size 1 and gate-input [3 80] and [4 80].
+
+  uend(1) evaluates the gate of the block door at block size 1,
+  [6 1 3 80] replaces the sample with [3 80],
+  [6 1 4 80] replaces the sample with [3 80]
+  """
 
   @spec uend1() :: Noun.t()
   def uend1() do
@@ -548,12 +612,26 @@ defmodule Examples.ENock do
     uend
   end
 
+  @doc """
+  I evaluate lsh at block size 0 and gate-input [2 6].
+
+  lsh(0) evaluates the gate of the block door at block size 0,
+  [6 1 2 6] replaces the sample with [2 6].
+  """
+
   @spec lsh0() :: Noun.t()
   def lsh0() do
     lsh = lsh(0)
     assert {:ok, 24} == Nock.nock(lsh, [9, 2, 10, [6, 1, 2 | 6], 0 | 1])
     lsh
   end
+
+  @doc """
+  I evaluate lsh at block size 1 and gate-input [2 6].
+
+  lsh(1) evaluates the gate of the block door at block size 1,
+  [6 1 2 6] replaces the sample with [2 6].
+  """
 
   @spec lsh1() :: Noun.t()
   def lsh1() do
@@ -562,12 +640,26 @@ defmodule Examples.ENock do
     lsh
   end
 
+  @doc """
+  I evaluate lsh at block size 1 and gate-input [2 6].
+
+  lsh(2) evaluates the gate of the block door at block size 2,
+  [6 1 2 6] replaces the sample with [2 6].
+  """
+
   @spec lsh2() :: Noun.t()
   def lsh2() do
     lsh = lsh(2)
     assert {:ok, 1536} == Nock.nock(lsh, [9, 2, 10, [6, 1, 2 | 6], 0 | 1])
     lsh
   end
+
+  @doc """
+  I evaluate rsh at block size 0 and gate-input [2 40].
+
+  rsh(0) evaluates the gate of the block door at block size 0,
+  [6 1 2 40] replaces the sample with [2 40].
+  """
 
   @spec rsh0() :: Noun.t()
   def rsh0() do
@@ -576,12 +668,26 @@ defmodule Examples.ENock do
     rsh
   end
 
+  @doc """
+  I evaluate rsh at block size 1 and gate-input [2 40].
+
+  rsh(1) evaluates the gate of the block door at block size 1,
+  [6 1 2 40] replaces the sample with [2 40].
+  """
+
   @spec rsh1() :: Noun.t()
   def rsh1() do
     rsh = rsh(1)
     assert {:ok, 2} == Nock.nock(rsh, [9, 2, 10, [6, 1, 2 | 40], 0 | 1])
     rsh
   end
+
+  @doc """
+  I evaluate rsh at block size 2 and gate-input [2 40].
+
+  rsh(2) evaluates the gate of the block door at block size 2,
+  [6 1 1 40] replaces the sample with [1 40].
+  """
 
   @spec rsh2() :: Noun.t()
   def rsh2() do
@@ -645,6 +751,17 @@ defmodule Examples.ENock do
 
   @spec block_calling_biop(Noun.t(), Noun.t()) :: Noun.t()
   defp block_calling_biop(value, index) do
+    # get the battery for calling a 2-argument gate located at index
+    # `index` at a block door evaluated with block size value `value`
+
+    # check the index of the block by defining block locally
+    # =lblock   =>  logics  |=  a=@  block
+    # then check the gate index by dumping
+    # =lgateblock   =>  logics  |=  a=@  gate:block
+    # finally check how the door inputs its block-size by evaluating
+    # =>  logics  !=(~(gate block val))
+    # with different values
+
     arm =
       Noun.Format.parse_always(
         "[8 [8 [9 10 0 127] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
@@ -656,6 +773,17 @@ defmodule Examples.ENock do
 
   @spec block_calling_mono(Noun.t(), Noun.t()) :: Noun.t()
   defp block_calling_mono(value, index) do
+    # get the battery for calling a 2-argument gate located at index
+    # `index` at a block door evaluated with block size value `value`
+
+    # check the index of the block by defining block locally
+    # =lblock   =>  logics  |=  a=@  block
+    # then check the gate index by dumping
+    # =lgateblock   =>  logics  |=  a=@  gate:block
+    # finally check how the door inputs its block-size by evaluating
+    # =>  logics  !=(~(gate block val))
+    # with different values
+
     arm =
       Noun.Format.parse_always(
         "[8 [8 [9 10 0 127] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
