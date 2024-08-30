@@ -1,3 +1,22 @@
+# v0.21.0
+
+- [Normalize values going into storage](https://github.com/anoma/anoma/pull/791)
+- [Added Shielded resource existence check](https://github.com/anoma/anoma/pull/788)
+- [Have the TCP client preform exponential backoff](https://github.com/anoma/anoma/pull/802)
+- [Bump the Cairo dependency such that dialyzer does not error](https://github.com/anoma/anoma/pull/825)
+
+## CLI Changes
+
+- [Fixed a bug where snapshotting would not give a proper error code to the client](https://github.com/anoma/anoma/pull/805)
+- [The Erlang node will now phone back to the client when the Snapshot is done, allowing the client to wait until that is finished](https://github.com/anoma/anoma/pull/816)
+
+## Documentation
+- [Made diagrams for how the TCP Modules work](https://github.com/anoma/anoma/pull/814)
+
+## Internal Changes
+- [Fixed running storage examples multiple times](https://github.com/anoma/anoma/pull/758)
+- [Added Logging messages to the TCP module](https://github.com/anoma/anoma/pull/777)
+
 # v0.20.0
 
 - The shielded RM is now merged.
