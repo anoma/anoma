@@ -57,6 +57,10 @@ defmodule Anoma.Serialise do
     %{"__tag__" => "atom", "contents" => Atom.to_string(o)}
   end
 
+  def to_msgpack(addr = %Anoma.Node.Router.Addr{}) do
+    exit("can't serialise addr #{inspect(addr)}")
+  end
+
   def to_msgpack(o) when is_map(o) do
     if Enum.all?(Map.keys(o), &is_atom/1) do
       # no 'map over values' builtin?  grumble
