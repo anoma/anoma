@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.20.0">
+    <meta name="project" content="Anoma v0.21.0">
 
 
-    <title>Anoma.Node.Transport — Anoma v0.20.0</title>
+    <title>Anoma.Node.Transport — Anoma v0.21.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-568468CB.js"></script>
+    <script src="dist/sidebar_items-0BF4767F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.20.0
+          v0.21.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transport</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
 
   </h1>
 
@@ -136,7 +136,7 @@ between nodes are established by means of a two-step handshake protocol.</p><h3 
   </a>
   <span class="text">Public API</span>
 </h3>
-<p>I provide the following public functionality:</p><ul><li><a href="#start_server/2"><code class="inline">start_server/2</code></a></li><li><a href="#receive_chunk/2"><code class="inline">receive_chunk/2</code></a></li><li><a href="#learn_node/3"><code class="inline">learn_node/3</code></a></li><li><a href="#learn_engine/3"><code class="inline">learn_engine/3</code></a></li><li><a href="#send/3"><code class="inline">send/3</code></a></li><li><a href="#new_connection/2"><code class="inline">new_connection/2</code></a></li><li><code class="inline">disconnect/2</code></li></ul>
+<p>I provide the following public functionality:</p><ul><li><a href="#start_server/2"><code class="inline">start_server/2</code></a></li><li><a href="#learn_node/3"><code class="inline">learn_node/3</code></a></li><li><a href="#learn_engine/3"><code class="inline">learn_engine/3</code></a></li><li><a href="#new_connection/2"><code class="inline">new_connection/2</code></a></li><li><code class="inline">disconnect/2</code></li><li><a href="#send/3"><code class="inline">send/3</code></a></li><li><a href="#receive_chunk/2"><code class="inline">receive_chunk/2</code></a></li></ul>
     </section>
 
 </div>
@@ -219,7 +219,7 @@ between nodes are established by means of a two-step handshake protocol.</p><h3 
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_cast/3" data-no-tooltip translate="no">handle_cast(arg, from, s)</a>
+        <a href="#handle_cast/3" data-no-tooltip translate="no">handle_cast(msg, from, s)</a>
 
       </div>
 
@@ -254,6 +254,16 @@ specified node.</p></div>
 
         <div class="summary-synopsis"><p>I notify the Transport Engine that the node specified by the given public id
 can be reached through the specified transport address.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lookup_server/2" data-no-tooltip translate="no">lookup_server(transport, server)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I locate a given transport server, taking the specified address</p></div>
 
     </div>
 
@@ -381,11 +391,9 @@ incoming connection of the specified type.</p></div>
     <a href="MapSetMap.html#t:t/2">MapSetMap.t</a>(<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()),
   node_internal_id: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>() | nil,
   pending_outgoing_engine_messages: %{
-    required(<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()) =&gt; [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()]
+    required(<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()) =&gt; <a href="https://hexdocs.pm/qex/0.5.1/Qex.html#t:t/0">Qex.t</a>()
   },
-  pending_outgoing_messages: %{
-    required(<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()) =&gt; [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()]
-  },
+  pending_outgoing_messages: %{required(<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()) =&gt; <a href="https://hexdocs.pm/qex/0.5.1/Qex.html#t:t/0">Qex.t</a>()},
   router: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
   servers: %{required(<a href="#t:transport_addr/0">transport_addr</a>()) =&gt; <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()},
   transport_internal_id: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>() | nil
@@ -404,15 +412,17 @@ instance serves to.</li><li><code class="inline">:logger</code> - The Logger Eng
 the TCPConnection Engine instance belongs to.</li><li><code class="inline">:node_connections</code> - For every current node connection, maps the
 correspondent id to their address. Default: empty.</li><li><code class="inline">:connection_states</code> - Maps current connections to their respective
 connection states. Default: empty.</li><li><code class="inline">:pending_outgoing_messages</code> - For every node, to which we have not
-established a connection yet, store a list of messages addressed to the node.
+established a connection yet, store a queue of messages addressed to the node.
 Default: empty.</li><li><code class="inline">:pending_outgoing_engine_messages</code> - For every engine, whose node
-location is not known yet, store a list of messages addressed to the
+location is not known yet, store a queue of messages addressed to the
 engine. Default: empty.</li><li><code class="inline">:servers</code> - Stores a set of transport servers that the Transport Engine
 is currently running. Every transport server is mapped to an external
 transport address, by which messages may reach the Engine through this
-server.</li><li><code class="inline">:known_nodes</code> - Maps every known node (indexed by its public id) to a
-set of transport addresses through which the node can be reached.</li><li><code class="inline">:known_engines</code> - Stores a set of known engines by their public id: every
-engine id is mapped to a public id of a node that the engine belongs to.</li></ul>
+server. Default: empty.</li><li><code class="inline">:known_nodes</code> - Maps every known node (indexed by its public id) to a
+set of transport addresses through which the node can be reached.
+Default: empty.</li><li><code class="inline">:known_engines</code> - Stores a set of known engines by their public id: every
+engine id is mapped to a public id of a node that the engine belongs to.
+Default: empty.</li></ul>
   </section>
 </section>
 <section class="detail" id="t:transport_addr/0">
@@ -532,7 +542,7 @@ engine id is mapped to a public id of a node that the engine belongs to.</li></u
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">handle_cast(arg, from, s)</h1>
+    <h1 class="signature" translate="no">handle_cast(msg, from, s)</h1>
 
 
   </div>
@@ -615,6 +625,23 @@ specified node.</p>
 <p>I notify the Transport Engine that the node specified by the given public id
 can be reached through the specified transport address.</p><p>If there are pending outgoing messages addressed to the node, I try to
 initiate a new connection to the node.</p>
+  </section>
+</section>
+<section class="detail" id="lookup_server/2">
+
+  <div class="detail-header">
+    <a href="#lookup_server/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lookup_server(transport, server)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I locate a given transport server, taking the specified address</p>
   </section>
 </section>
 <section class="detail" id="new_connection/2">
@@ -705,6 +732,9 @@ incoming connection of the specified type.</p>
 
           <pre translate="no"><span class="attribute">@spec</span> start_server(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="#t:listen_addr/0">listen_addr</a>()) :: :ok</pre>
 
+          <pre translate="no"><span class="attribute">@spec</span> start_server(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="#t:listen_addr/0">listen_addr</a>()) ::
+  <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil</pre>
+
       </div>
 
 <p>I try to start a new transport server listening on the specified address.</p><p>If a new transport server fails to start, the Transport Engine state does not
@@ -742,9 +772,9 @@ change.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
 
           </span>
 

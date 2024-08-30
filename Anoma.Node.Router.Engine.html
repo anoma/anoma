@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.20.0">
+    <meta name="project" content="Anoma v0.21.0">
 
 
-    <title>Anoma.Node.Router.Engine — Anoma v0.20.0</title>
+    <title>Anoma.Node.Router.Engine — Anoma v0.21.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-568468CB.js"></script>
+    <script src="dist/sidebar_items-0BF4767F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.20.0
+          v0.21.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Router.Engine</span> <small>behaviour</small>
-    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
 
   </h1>
 
@@ -132,7 +132,7 @@ GUIDES
 <p>I am the general Engine module.</p><p>I possess info on how all Engines are set up and process messages through
 the Router. Moreover, I provide access to Engine-wide API.</p><p>Note other that the coordination info, such as a Router address and
 module name of an engine instance, I provide an actual storage of an
-Engine state and all state transformaations correspond to the changes one
+Engine state and all state transformations correspond to the changes one
 can observe in my code.</p><h3 id="module-public-api" class="section-heading">
   <a href="#module-public-api" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -482,7 +482,7 @@ arguments.</p>
       </div>
 
 <p>I am an Engine-wide function for getting the router address associated
-with the given Engine.</p><p>I provide it by simply dumping the <code class="inline">:router</code> field of the asssociated
+with the given Engine.</p><p>I provide it by simply dumping the <code class="inline">:router</code> field of the associated
 Engine server.</p>
   </section>
 </section>
@@ -564,7 +564,7 @@ stored in the Engine structure associated with the given server name.</p>
 <p>I am an Engine instance initialization function. I setup the initial
 state of an Engine structure based on the state of an actual Engine
 instance.</p><p>I first cast a message to initialize a local engine to the connected
-eoutwe, then store the engine ID, server, and router information in the
+router, then store the engine ID, server, and router information in the
 Process dictionary.</p><p>Afterwards, I call the actual (module) Engine instance initialization
 function, and put it as the initial state alongside the router and module
 information directly provided on startup.</p>
@@ -618,7 +618,7 @@ afterwards.</p>
 
       </div>
 
-<p>I am an engine termination function.</p><p>I provide the main functionality to shut down an engine.</p><p>I first use the GenSercer functionality to route a message to clean up
+<p>I am an engine termination function.</p><p>I provide the main functionality to shut down an engine.</p><p>I first use the GenServer functionality to route a message to clean up
 the local engine info stored inside the specified Router and then stop
 the Engine process with a given reason.</p>
   </section>
@@ -631,9 +631,9 @@ the Engine process with a given reason.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
 
           </span>
 

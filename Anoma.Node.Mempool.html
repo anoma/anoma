@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.20.0">
+    <meta name="project" content="Anoma v0.21.0">
 
 
-    <title>Anoma.Node.Mempool — Anoma v0.20.0</title>
+    <title>Anoma.Node.Mempool — Anoma v0.21.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-568468CB.js"></script>
+    <script src="dist/sidebar_items-0BF4767F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.20.0
+          v0.21.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Mempool</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
 
   </h1>
 
@@ -403,7 +403,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
       </div>
 
-<p>I am the type of the Mempool Engine.</p><p>My fields store information necessary to succesfully call for
+<p>I am the type of the Mempool Engine.</p><p>My fields store information necessary to successfully call for
 transaction candidate creation, execution, and ordering requests.</p><h3 id="t:t/0-fields" class="section-heading">
   <a href="#t:t/0-fields" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -412,7 +412,7 @@ transaction candidate creation, execution, and ordering requests.</p><h3 id="t:t
 </h3>
 <ul><li><code class="inline">:ordering</code> - The Ordering Engine Address.</li><li><code class="inline">:executor</code> - The Executor Engine Address.</li><li><code class="inline">:block_storage</code> - The name of the storage for created blocks.<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">Anoma.Block</span><span class="err">`</span></code></pre></li><li><code class="inline">:transactions</code> - List of transaction candidates. Currently these do<pre><code class="makeup elixir" translate="no"><span class="w">              </span><span class="ow">not</span><span class="w"> </span><span class="n">have</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="n">info</span><span class="o">.</span><span class="w"> </span><span class="nc">That</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">handled</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">the</span><span class="w">
               </span><span class="nc">Ordering</span><span class="w"> </span><span class="n">engine</span><span class="o">.</span><span class="w">
-              </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2710766510-1">[</span><span class="p" data-group-id="2710766510-1">]</span></code></pre></li><li><code class="inline">:round</code> - The block round information.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><code class="inline">:topic</code> - The topic address for broadcasting.</li><li><code class="inline">:key</code> - The key used for block creation.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">:crypto</span><span class="o">.</span><span class="n">generate_key</span><span class="p" data-group-id="6920788267-1">(</span><span class="ss">:rsa</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6920788267-2">{</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">65537</span><span class="p" data-group-id="6920788267-2">}</span><span class="err">`</span></code></pre></li><li><code class="inline">:logger</code> - The address of the Logger Engine.<pre><code class="makeup elixir" translate="no"><span class="w">        </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
+              </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3371224667-1">[</span><span class="p" data-group-id="3371224667-1">]</span></code></pre></li><li><code class="inline">:round</code> - The block round information.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><code class="inline">:topic</code> - The topic address for broadcasting.</li><li><code class="inline">:key</code> - The key used for block creation.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">:crypto</span><span class="o">.</span><span class="n">generate_key</span><span class="p" data-group-id="9011432121-1">(</span><span class="ss">:rsa</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9011432121-2">{</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">65537</span><span class="p" data-group-id="9011432121-2">}</span><span class="err">`</span></code></pre></li><li><code class="inline">:logger</code> - The address of the Logger Engine.<pre><code class="makeup elixir" translate="no"><span class="w">        </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="t:transactions/0">
@@ -907,9 +907,9 @@ adding the transaction.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
 
           </span>
 

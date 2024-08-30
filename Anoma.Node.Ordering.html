@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.20.0">
+    <meta name="project" content="Anoma v0.21.0">
 
 
-    <title>Anoma.Node.Ordering — Anoma v0.20.0</title>
+    <title>Anoma.Node.Ordering — Anoma v0.21.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-568468CB.js"></script>
+    <script src="dist/sidebar_items-0BF4767F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.20.0
+          v0.21.0
         </div>
       </div>
     </div>
@@ -123,14 +123,14 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Ordering</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
 <p>I am the Ordering Engine.</p><p>My main functionality is to calculate transaction ordering and keep track
-of said odering relative to the transaction id's.</p><h3 id="module-public-api" class="section-heading">
+of said ordering relative to the transaction id's.</p><h3 id="module-public-api" class="section-heading">
   <a href="#module-public-api" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -223,7 +223,7 @@ of said odering relative to the transaction id's.</p><h3 id="module-public-api" 
 
       </div>
 
-        <div class="summary-synopsis"><p>I handle the new ordered transactions comming in to the Ordering Engine.</p></div>
+        <div class="summary-synopsis"><p>I handle the new ordered transactions coming in to the Ordering Engine.</p></div>
 
     </div>
 
@@ -362,14 +362,14 @@ of said odering relative to the transaction id's.</p><h3 id="module-public-api" 
       </div>
 
 <p>I am the type of the Ordering Engine.</p><p>I have basic fields relating to upcoming ordering for the incoming
-transactions as well as mapping of transaction ID's to their orders.</p><h3 id="t:t/0-fileds" class="section-heading">
-  <a href="#t:t/0-fileds" class="hover-link">
+transactions as well as mapping of transaction ID's to their orders.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">Fileds</span>
+  <span class="text">Fields</span>
 </h3>
 <ul><li><code class="inline">:storage</code> - The address of the storage engine</li><li><code class="inline">:next_order</code> - The integer referencing the order to be given to the<pre><code class="makeup elixir" translate="no"><span class="w">            </span><span class="n">next</span><span class="w"> </span><span class="n">incoming</span><span class="w"> </span><span class="n">transaction</span><span class="o">.</span><span class="w">
-            </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span></code></pre></li><li><code class="inline">:hash_to_order</code> - A map of transaction ID's and their orders.<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8724528746-1">%{</span><span class="p" data-group-id="8724528746-1">}</span></code></pre></li><li><code class="inline">:logger</code> - The Logger Engine address.</li></ul>
+            </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span></code></pre></li><li><code class="inline">:hash_to_order</code> - A map of transaction ID's and their orders.<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8852742338-1">%{</span><span class="p" data-group-id="8852742338-1">}</span></code></pre></li><li><code class="inline">:logger</code> - The Logger Engine address.</li></ul>
   </section>
 </section>
 
@@ -475,7 +475,7 @@ appropriate arguments.</p><h3 id="caller_blocking_read_id/2-pattern-matching-var
 
       </div>
 
-<p>I handle the new ordered transactions comming in to the Ordering Engine.</p><p>I send read_ready messages regarding the transaction orders, then add the
+<p>I handle the new ordered transactions coming in to the Ordering Engine.</p><p>I send read_ready messages regarding the transaction orders, then add the
 length of the incoming transaction list to the <code class="inline">:next_order</code> value,
 finally updating the <code class="inline">:hash_to_order</code> map with new key-values.</p><p>I return a tuple where the first argument is the new proposed next order
 while the second argument is the new map of ID's to orders.</p>
@@ -533,11 +533,11 @@ re-launched and put a new snapshot specified by the second argument.</p>
 
       </div>
 
-<p>I am the initialization function for a Ordering Engine instance.</p><h3 id="init/1-pattern-macthing-variations" class="section-heading">
-  <a href="#init/1-pattern-macthing-variations" class="hover-link">
+<p>I am the initialization function for a Ordering Engine instance.</p><h3 id="init/1-pattern-matching-variations" class="section-heading">
+  <a href="#init/1-pattern-matching-variations" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">Pattern-Macthing Variations</span>
+  <span class="text">Pattern-Matching Variations</span>
 </h3>
 <ul><li><code class="inline">init(%Ordering{})</code> - I initialize the Engine with the given state.</li><li><code class="inline">init(args)</code> - I expect a keylist with the <code class="inline">:logger</code> and <code class="inline">:storage</code><pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="n">keys</span><span class="o">.</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">ask</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Storage</span><span class="w"> </span><span class="n">engine</span><span class="w"> </span><span class="n">given</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">keyword</span><span class="w">
            </span><span class="n">to</span><span class="w"> </span><span class="n">setup</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">return</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">appropriate</span><span class="w"> </span><span class="n">initialization</span><span class="w">
@@ -565,9 +565,9 @@ re-launched and put a new snapshot specified by the second argument.</p>
       </div>
 
 <p>I am the function dealing with new ordered transactions.</p><p>Given a list of ordered transactions, I update the Ordering Engine state
-appropritaely by changing the <code class="inline">:next_order</code> field and filling in the
+appropriately by changing the <code class="inline">:next_order</code> field and filling in the
 <code class="inline">:hash_to_order</code> field with new key-value pairs pairing the new ID's with
-their asigned orderings.</p>
+their assigned orderings.</p>
   </section>
 </section>
 <section class="detail" id="reset/1">
@@ -627,9 +627,9 @@ ID.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
 
           </span>
 

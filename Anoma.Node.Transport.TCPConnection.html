@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.20.0">
+    <meta name="project" content="Anoma v0.21.0">
 
 
-    <title>Anoma.Node.Transport.TCPConnection — Anoma v0.20.0</title>
+    <title>Anoma.Node.Transport.TCPConnection — Anoma v0.21.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-568468CB.js"></script>
+    <script src="dist/sidebar_items-0BF4767F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.20.0
+          v0.21.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transport.TCPConnection</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
 
   </h1>
 
@@ -133,7 +133,70 @@ GUIDES
 to a server, or as a listener, waiting to accept and then accepting a
 connection on a server.
 In the latter case, since accepting the connection marks me as its owner and
-handoff is complicated, I start up a new listener once I accept a connection.</p>
+handoff is complicated, I start up a new listener once I accept a connection.</p><h3 id="module-how-i-work" class="section-heading">
+  <a href="#module-how-i-work" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">How I work</span>
+</h3>
+<p>A good general overview of how I work at a high level with my
+environment can be seen in <a href="Anoma.Node.Transport.TCPServer.html"><code class="inline">Anoma.Node.Transport.TCPServer</code></a>.</p><p>The diagrams I'll include in my documentation are more focused on my D2D inner workings</p><pre><code class="mermaid">graph LR;
+
+%% Role Setup
+TCPConnection:::TCPConnection
+Child_Process(Child Connection):::Listener
+Listener1(A TCP Listener Node):::Listener
+Transport(Our Transport):::Transport
+
+
+%% Note Relationship between TCPConnection and the outside
+:accept_connection -- start_listener --- Child_Process
+Transport -- handshake ---Listener1
+
+
+subgraph TCPConnection
+  direction TB
+  :accept_connection:::Listener
+  :init_connection:::Client
+
+  init -- is a Listener --&gt;:accept_connection
+  init -- is a Client --&gt;:init_connection
+
+  :accept_connection -- &quot;:gen_tcp.accept&quot; --- :accept_connection
+
+
+  :accept_connection &amp; :init_connection -- failure --&gt; sd(Shut down)
+  :accept_connection &amp; :init_connection -- successful --&gt; Standby
+
+end
+
+
+%% Note Relationship between TCPConnection and the outside
+:init_connection -- &quot;:gen_tcp.connect&quot; --- Listener1
+:init_connection -- begin handshake ---Transport
+
+
+
+%% Styling
+classDef Listener      fill:#add8e6
+classDef TCPConnection fill:#fff9ca
+classDef Client        fill:#e6add8
+classDef Transport     fill:#d8e6ad
+
+
+%% Linking
+
+click Transport &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.html&quot;
+click init &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html#init/1&quot;
+click Child_Process &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html&quot;
+click :init_connection &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html&quot;
+click :accept_connection &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html&quot;
+click Listener1 &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html&quot;</code></pre><p>This diagram uses the following Color Codes:</p><ol><li>Blue Nodes represent TCP Connections running in the listening mode.</li><li>Purple Node represents TCP Connection running in the client mode.</li><li>Green Nodes is the Transport Server.</li></ol><p>We can see that my behavior differs drastically if I'm in the client
+mode or a listening mode.</p><p>If I'm listening then I'll block calling <a href="https://www.erlang.org/doc/apps/kernel/gen_tcp.html#accept/1"><code class="inline">:gen_tcp.accept/1</code></a>, if
+that works, then we create another
+<a href="Anoma.Node.Transport.TCPConnection.html"><code class="inline">Anoma.Node.Transport.TCPConnection</code></a>. If not we shutdown</p><p>Likewise for the client behavior, we try using
+<a href="https://www.erlang.org/doc/apps/kernel/gen_tcp.html#connect/3"><code class="inline">:gen_tcp.connect/3</code></a>. If this fails then we shutdown.</p><p>If we do successfully connect, then we begin the handshake process,
+which is best explained in a diagram in <a href="Anoma.Node.Transport.html"><code class="inline">Anoma.Node.Transport</code></a>.</p>
     </section>
 
 </div>
@@ -157,6 +220,16 @@ handoff is complicated, I start up a new listener once I accept a connection.</p
       </div>
 
         <div class="summary-synopsis"><p>I am the type of the TCPConnection Engine.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:tcp_connect_result/0" data-no-tooltip translate="no">tcp_connect_result()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the type of :gen_tcp.connect() result.</p></div>
 
     </div>
 
@@ -237,6 +310,7 @@ handoff is complicated, I start up a new listener once I accept a connection.</p
   conn: (<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">reference</a>() | nil) | nil,
   connection_pool: <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>() | nil,
   listener: (<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">reference</a>() | nil) | nil,
+  logger: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
   mode: (:client | :listener) | nil,
   router: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
   transport: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil
@@ -254,8 +328,32 @@ handoff is complicated, I start up a new listener once I accept a connection.</p
 instance serves to.</li><li><code class="inline">:transport</code> - The address of the Transport server managing the
 connection.</li><li><code class="inline">:connection_pool</code> - The supervisor which manages the connection pool that
 the TCPConnection Engine instance belongs to.</li><li><code class="inline">:mode</code> - The mode of the connection: client or listener.</li><li><code class="inline">:listener</code> - The listening socket that accepts incoming connection
-requests.  Must be provided in the listener mode. Default: nil</li><li><code class="inline">:conn</code> - Socket of the established connection for the listener mode.
-Initially, nil. Filled in as soon as a connection is established.</li></ul>
+requests. Must be provided in the listener mode. Default: nil</li><li><code class="inline">:conn</code> - Socket of the established connection for the listener mode.
+Initially, nil. Filled in as soon as a connection is established.</li><li><code class="inline">:logger</code> - The Logger Engine address. Enforced: false.</li></ul>
+  </section>
+</section>
+<section class="detail" id="t:tcp_connect_result/0">
+
+  <div class="detail-header">
+    <a href="#t:tcp_connect_result/0" class="detail-link" data-no-tooltip title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">tcp_connect_result()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> tcp_connect_result() ::
+  {:ok, <a href="https://www.erlang.org/doc/apps/kernel/gen_tcp.html#t:socket/0">:gen_tcp.socket</a>()} | {:error, :timeout | <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:posix/0">:inet.posix</a>()}</pre>
+
+      </div>
+
+<p>I am the type of :gen_tcp.connect() result.</p>
   </section>
 </section>
 
@@ -339,12 +437,13 @@ Initially, nil. Filled in as soon as a connection is established.</li></ul>
 
           <pre translate="no"><span class="attribute">@spec</span> init(
   {:client, <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
-   <a href="Anoma.Node.Transport.html#t:transport_addr/0">Anoma.Node.Transport.transport_addr</a>(), <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>()}
+   <a href="Anoma.Node.Transport.html#t:transport_addr/0">Anoma.Node.Transport.transport_addr</a>(), <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>(),
+   <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()}
 ) :: {:ok, <a href="#t:t/0">t</a>(), {:continue, {:init_connection, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}}}</pre>
 
           <pre translate="no"><span class="attribute">@spec</span> init(
   {:listener, <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">reference</a>(),
-   <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>()}
+   <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>(), <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()}
 ) :: {:ok, <a href="#t:t/0">t</a>(), {:continue, :accept_connection}}</pre>
 
       </div>
@@ -355,8 +454,8 @@ Initially, nil. Filled in as soon as a connection is established.</li></ul>
   </a>
   <span class="text">Pattern-Matching Variations</span>
 </h3>
-<ul><li><p><code class="inline">init({:client, router, transport, address, connection_pool})</code> -
-create a TCP connection as a client.</p></li><li><p><code class="inline">init({:listener, router, transport, listener, connection_pool})</code> -
+<ul><li><p><code class="inline">init({:client, router, transport, address, connection_pool, logger})</code> -
+create a TCP connection as a client.</p></li><li><p><code class="inline">init({:listener, router, transport, listener, connection_pool, logger})</code> -
 create a TCP connection as a listener.</p></li></ul>
   </section>
 </section>
@@ -368,9 +467,9 @@ create a TCP connection as a listener.</p></li></ul>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
 
           </span>
 

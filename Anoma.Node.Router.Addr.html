@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.20.0">
+    <meta name="project" content="Anoma v0.21.0">
 
 
-    <title>Anoma.Node.Router.Addr — Anoma v0.20.0</title>
+    <title>Anoma.Node.Router.Addr — Anoma v0.21.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-568468CB.js"></script>
+    <script src="dist/sidebar_items-0BF4767F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.20.0
+          v0.21.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Router.Addr</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
 
   </h1>
 
@@ -131,14 +131,14 @@ GUIDES
     <section id="moduledoc">
 <p>I am a module providing address information for the Engine and Node
 networking used by the Router.</p><p>The server, if known, is a local actor which can receive it directly;
-otherwise, the mssage will be sent via the central router.</p><p>If the server is known, but the id is not, then this is a local-only
+otherwise, the message will be sent via the central router.</p><p>If the server is known, but the id is not, then this is a local-only
 engine, which can only talk to other local engines.</p><h3 id="module-public-api" class="section-heading">
   <a href="#module-public-api" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Public API</span>
 </h3>
-<p>I provide the follwing public functionality:</p><ul><li><a href="#id/1"><code class="inline">id/1</code></a></li><li><a href="#id!/1"><code class="inline">id!/1</code></a></li><li><a href="#server/1"><code class="inline">server/1</code></a></li><li><a href="#server!/1"><code class="inline">server!/1</code></a></li><li><a href="#pid/1"><code class="inline">pid/1</code></a></li><li><a href="#pid!/1"><code class="inline">pid!/1</code></a></li><li><a href="#noncanonical_server/1"><code class="inline">noncanonical_server/1</code></a></li></ul>
+<p>I provide the following public functionality:</p><ul><li><a href="#id/1"><code class="inline">id/1</code></a></li><li><a href="#id!/1"><code class="inline">id!/1</code></a></li><li><a href="#server/1"><code class="inline">server/1</code></a></li><li><a href="#server!/1"><code class="inline">server!/1</code></a></li><li><a href="#pid/1"><code class="inline">pid/1</code></a></li><li><a href="#pid!/1"><code class="inline">pid!/1</code></a></li><li><a href="#noncanonical_server/1"><code class="inline">noncanonical_server/1</code></a></li></ul>
     </section>
 
 </div>
@@ -197,7 +197,7 @@ engine, which can only talk to other local engines.</p><h3 id="module-public-api
 
       </div>
 
-        <div class="summary-synopsis"><p>I return some Process destination without attempting to canonalize the
+        <div class="summary-synopsis"><p>I return some Process destination without attempting to canonicalize the
 result, that is, I may return a PID.</p></div>
 
     </div>
@@ -283,7 +283,7 @@ find its canonical registered name.</p></div>
 
       </div>
 
-<p>I am the type for general process identifications.</p><p>I posess the minimal information needed to send some agent a message
+<p>I am the type for general process identifications.</p><p>I possess the minimal information needed to send some agent a message
 through the Anoma networking structure.</p><h3 id="t:t/0-options" class="section-heading">
   <a href="#t:t/0-options" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -378,7 +378,7 @@ does not exist.</p>
 
       </div>
 
-<p>I return some Process destination without attempting to canonalize the
+<p>I return some Process destination without attempting to canonicalize the
 result, that is, I may return a PID.</p><h3 id="noncanonical_server/1-pattern-matching-variations" class="section-heading">
   <a href="#noncanonical_server/1-pattern-matching-variations" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -459,7 +459,7 @@ does not exist.</p>
 
 <p>I am a function printing the server of the given Address attempting to
 find its canonical registered name.</p><p>Given an address, I use <a href="#noncanonical_server/1"><code class="inline">noncanonical_server/1</code></a> to see its associated pid
-or name. If I get a pidm then I print the name of the process associated
+or name. If I get a pid then I print the name of the process associated
 with said pid by checking Erlang's <code class="inline">process_info/2</code> in case there is any,
 otherwise returning the original PID.</p><p>Else, I print the returned value (<code class="inline">nil</code>).</p>
   </section>
@@ -496,9 +496,9 @@ ID does not exist.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
 
           </span>
 

@@ -8,7 +8,7 @@
     <meta name="project" content="Anoma v0.21.0">
 
 
-    <title>TestHelper.Mempool — Anoma v0.21.0</title>
+    <title>Examples.ENode.ETransport.ETCP — Anoma v0.21.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
@@ -122,7 +122,7 @@ GUIDES
 <div id="top-content">
   <h1>
 
-    <span translate="no">TestHelper.Mempool</span> 
+    <span translate="no">Examples.ENode.ETransport.ETCP</span> 
     <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
 
   </h1>
@@ -144,11 +144,17 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#wait_for_tx/4" data-no-tooltip translate="no">wait_for_tx(mempool, tx_code, timeout \\ nil, reply_to \\ nil)</a>
+        <a href="#cleanup/2" data-no-tooltip translate="no">cleanup(arg1, bool)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>I am a helper function waiting for launching transaction code.</p></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#shutdown_from_outside/1" data-no-tooltip translate="no">shutdown_from_outside(cleanup \\ true)</a>
+
+      </div>
 
     </div>
 
@@ -165,27 +171,46 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="wait_for_tx/4">
-
-    <span id="wait_for_tx/2"></span>
-
-    <span id="wait_for_tx/3"></span>
+<section class="detail" id="cleanup/2">
 
   <div class="detail-header">
-    <a href="#wait_for_tx/4" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#cleanup/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">wait_for_tx(mempool, tx_code, timeout \\ nil, reply_to \\ nil)</h1>
+    <h1 class="signature" translate="no">cleanup(arg1, bool)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-<p>I am a helper function waiting for launching transaction code.</p><p>I ask the mempool to use it's <code class="inline">tx/2</code> functionality with the given
-transaction code. I then await for a <code class="inline">:submitted</code> message in the mailbox
-for a timeout-specified ammount of time.</p><p>Afterwards I return the pending transaction structure.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cleanup(<a href="Anoma.Node.Transport.html#t:transport_addr/0">Anoma.Node.Transport.transport_addr</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="shutdown_from_outside/1">
+
+    <span id="shutdown_from_outside/0"></span>
+
+  <div class="detail-header">
+    <a href="#shutdown_from_outside/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">shutdown_from_outside(cleanup \\ true)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 

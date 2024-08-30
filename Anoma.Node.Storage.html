@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.20.0">
+    <meta name="project" content="Anoma v0.21.0">
 
 
-    <title>Anoma.Node.Storage — Anoma v0.20.0</title>
+    <title>Anoma.Node.Storage — Anoma v0.21.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-568468CB.js"></script>
+    <script src="dist/sidebar_items-0BF4767F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.20.0
+          v0.21.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Storage</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
 
   </h1>
 
@@ -236,7 +236,7 @@ that the base read events read only the latest value of a given key.</p><h3 id="
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#blocking_read/2" data-no-tooltip translate="no">blocking_read(storage, key)</a>
+        <a href="#blocking_read/2" data-no-tooltip translate="no">blocking_read(storage, list)</a>
 
       </div>
 
@@ -353,6 +353,22 @@ snapshot.</p></div>
       </div>
 
         <div class="summary-synopsis"><p>I am the initialization function for a Storage Engine Instance.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#namespace_key/2" data-no-tooltip translate="no">namespace_key(storage, key)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#namespace_qualified_key/2" data-no-tooltip translate="no">namespace_qualified_key(storage, list)</a>
+
+      </div>
 
     </div>
 
@@ -531,7 +547,7 @@ snapshot.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> qualified_key() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">nonempty_improper_list</a>(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>())</pre>
+          <pre translate="no"><span class="attribute">@type</span> qualified_key() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">nonempty_improper_list</a>(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>())</pre>
 
       </div>
 
@@ -624,6 +640,7 @@ snapshot.</p></div>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Storage{
+  cairo_rm_commitments: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
   namespace: [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()],
   order: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
   qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
@@ -640,7 +657,7 @@ read/write actions.</p><h3 id="t:t/0-fields" class="section-heading">
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:qualified</code> - The name of the Qualified table.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Qualified</span></code></pre></li><li><code class="inline">:order</code> - The name of the Ordering table.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Order</span></code></pre></li><li><code class="inline">:rm_commitments</code> - The name of the Reource Machine Commitments table.<pre><code class="makeup elixir" translate="no"><span class="w">                </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.RMCommitments</span></code></pre></li><li><code class="inline">:namespace</code> - The namespace used for writing functionality.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2518273189-1">[</span><span class="p" data-group-id="2518273189-1">]</span></code></pre></li><li><code class="inline">:topic</code> - The subscription topic.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
+<ul><li><code class="inline">:qualified</code> - The name of the Qualified table.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Qualified</span></code></pre></li><li><code class="inline">:order</code> - The name of the Ordering table.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Order</span></code></pre></li><li><code class="inline">:rm_commitments</code> - The name of the Resource Machine Commitments table.<pre><code class="makeup elixir" translate="no"><span class="w">                </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.RMCommitments</span></code></pre></li><li><code class="inline">:cairo_rm_commitments</code> - The name of the Cairo RM Commitments table.</li><li><code class="inline">:namespace</code> - The namespace used for writing functionality.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7022302253-1">[</span><span class="p" data-group-id="7022302253-1">]</span></code></pre></li><li><code class="inline">:topic</code> - The subscription topic.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -662,7 +679,7 @@ read/write actions.</p><h3 id="t:t/0-fields" class="section-heading">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">blocking_read(storage, key)</h1>
+    <h1 class="signature" translate="no">blocking_read(storage, list)</h1>
 
 
   </div>
@@ -683,13 +700,13 @@ necessary for transaction-execution.</p><h3 id="blocking_read/2-general-usage" c
   </a>
   <span class="text">General Usage</span>
 </h3>
-<p>I expect a Storage Engine address alingside with a key. Given a key which
+<p>I expect a Storage Engine address alongside with a key. Given a key which
 isn't a list, I error. Given a key which is a list starting with 0, I
 error following Nock and Ordering semantics. Given any other list, I
 subscribe to a Qualified table that is attached to the given Storage and
 read it in the Qualified table.</p><p>If the key has a non-empty value in the table, I return <code class="inline">{:ok, value}</code>
 and unsubscribe from the table.</p><p>If the key does not have a value in the table, I wait until I receive a
-<code class="inline">:write</code> message from the table, where the key written is exactlythe key
+<code class="inline">:write</code> message from the table, where the key written is exactly the key
 supplied. Given the message, I return the written value as <code class="inline">{:ok, value}</code>
 and unsubscribe from the table.</p><h3 id="blocking_read/2-anoma-intended-semantics" class="section-heading">
   <a href="#blocking_read/2-anoma-intended-semantics" class="hover-link">
@@ -702,8 +719,8 @@ assigned for block-generation. The key here is given as a cell of form
 [n | snapshot_path] where <code class="inline">n</code> is a natural number representing the <code class="inline">n</code>-th
 transaction candidate - i.e. the order of the transaction the Worker is
 occupied with - and snapshot_path is a Nock list, i.e. an improper list
-of form <code class="inline">[... | 0]</code>.</p><p>My main functionality is to make sure that the value of said transaction
-has been recorded suscessfully in the Qualified table in the following
+of form <code class="inline">[... | &lt;&lt;&gt;&gt;]</code>.</p><p>My main functionality is to make sure that the value of said transaction
+has been recorded successfully in the Qualified table in the following
 way:</p><p>After subscribing to the appropriate Qualified table, I first check the
 fed-in Nock noun. If it starts with 0, I produce <code class="inline">:error</code>, per standard
 semantics. Given another Nock cell, we then read it as a key inside our
@@ -917,7 +934,7 @@ returning said value in the standard mnesia format.</p>
 
 <p>I am the keyspace reading function for the Storage Engine.</p><p>Given a storage address and a list of keys in the appropriate format, I
 first look up whether the keys appear in any qualified key in the
-Qualified table. If so, look up all apropriate latest values of all such
+Qualified table. If so, look up all appropriate latest values of all such
 keys and return them as a list of table query responses in a standard
 mnesia format. If no values are present, I return an empty list.</p>
   </section>
@@ -989,6 +1006,7 @@ snapshot-taking.</p>
     qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
     order: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
     rm_commitments: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+    cairo_rm_commitments: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
     namespace: [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()],
     topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()
   ]
@@ -996,6 +1014,7 @@ snapshot-taking.</p>
       qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
       order: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
       rm_commitments: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+      cairo_rm_commitments: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
       namespace: [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()],
       topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()
     }
@@ -1003,14 +1022,60 @@ snapshot-taking.</p>
 
       </div>
 
-<p>I am the initialization function for a Storage Engine Instance.</p><h3 id="init/1-pattern-macthing-variations" class="section-heading">
-  <a href="#init/1-pattern-macthing-variations" class="hover-link">
+<p>I am the initialization function for a Storage Engine Instance.</p><h3 id="init/1-pattern-matching-variations" class="section-heading">
+  <a href="#init/1-pattern-matching-variations" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">Pattern-Macthing Variations</span>
+  <span class="text">Pattern-Matching Variations</span>
 </h3>
 <ul><li><code class="inline">init(%Storage{})</code> - I initialize the Engine with the given state.</li><li><code class="inline">init(args)</code> - I expect a keylist/map with all the keywords matching<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="n">the</span><span class="w"> </span><span class="nc">Storage</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="n">fields</span><span class="o">.</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">setup</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">tables</span><span class="w">
            </span><span class="ow">and</span><span class="w"> </span><span class="n">return</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">appropriate</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">startup</span><span class="o">.</span></code></pre></li></ul>
+  </section>
+</section>
+<section class="detail" id="namespace_key/2">
+
+  <div class="detail-header">
+    <a href="#namespace_key/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">namespace_key(storage, key)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> namespace_key(<a href="#t:t/0">t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="namespace_qualified_key/2">
+
+  <div class="detail-header">
+    <a href="#namespace_qualified_key/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">namespace_qualified_key(storage, list)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> namespace_qualified_key(<a href="#t:t/0">t</a>(), <a href="#t:qualified_key/0">qualified_key</a>()) :: <a href="#t:qualified_key/0">qualified_key</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
 <section class="detail" id="put/3">
@@ -1038,7 +1103,7 @@ the underlying table structure.</p><p>That is, given a key and a value, I first 
 namespace info from the appropriate storage state. Secondly, I re-write
 the order-value assigned to said namespaced key, incrementing its value.
 Finally, I write the value given to me to the Qualified table, assigning
-it to the namspaced key with appropriate new order attached,
+it to the namespaced key with appropriate new order attached,
 corresponding to the one in the Ordering table.</p>
   </section>
 </section>
@@ -1285,9 +1350,9 @@ returned in a mnesia result format and the attached storage structure.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
 
           </span>
 

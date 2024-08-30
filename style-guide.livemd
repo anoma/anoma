@@ -68,7 +68,9 @@ If `foo` uses Router or GenServer functionality, it should be a `call` if and on
 
 If `foo` uses `call` functionality then the corresponding `handle_call` shall have body
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
 {:reply, do_foo(...), state}
 ```
 
@@ -81,17 +83,25 @@ success or failure of the operation.
 
 Every actor module should have mandatory `Public RPC API`, `GenServer Behavior`, and `GenServer Implementation` sections with following formatting:
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
   ############################################################
   #                      Public RPC API                      #
   ############################################################
 ```
-```
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 ```
-```
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
   ############################################################
   #                  Genserver Implementation                #
   ############################################################
@@ -144,7 +154,9 @@ If subsections were used yet not all functions feature in their lists, the rest 
 
 ### Example
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
   defmodule Anoma.Node.Clock do
     @moduledoc """
     I am the Clock module implementing the Local Wall Clock Engine.
@@ -214,7 +226,9 @@ Given an option `:option` we list it as ``` - `:option` - ``` followed by a shor
 
 ### Example
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
   typedstruct do
     @typedoc """
     I am the type of the Pinger Engine.
@@ -286,7 +300,9 @@ Any function application which a non-constant output and an appropriate EModule 
 
 ### Example
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
   @doc """
   I am the initialization function of the Clock Engine.
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.20.0">
+    <meta name="project" content="Anoma v0.21.0">
 
 
-    <title>Anoma.Dump — Anoma v0.20.0</title>
+    <title>Anoma.Dump — Anoma v0.21.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-568468CB.js"></script>
+    <script src="dist/sidebar_items-0BF4767F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.20.0
+          v0.21.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Dump</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
 
   </h1>
 
@@ -447,6 +447,7 @@ given configuration.</p></div>
   qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
   order: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
   block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  logger_table: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
   use_rocks: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()
 }</pre>
 
@@ -666,7 +667,7 @@ this has on the node</p></li></ul>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> stores() :: {<a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+          <pre translate="no"><span class="attribute">@type</span> stores() :: {<a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
 
       </div>
 
@@ -709,7 +710,7 @@ this has on the node</p></li></ul>
 so that the resulting file will be created as name.txt in the
 appropriate data directory. As a second argument I accept a node
 name whose info presented as a map I dump as a binary.</p><p>Note that if the environment is <code class="inline">test</code> we do not use the XDG format
-for storing data and instead dump the files in the immadiate app
+for storing data and instead dump the files in the immediate app
 folder.</p><p>The map typing can be seen in <code class="inline">get_all</code></p>
   </section>
 </section>
@@ -816,12 +817,13 @@ And turn the info into a tuple</li></ul>
   qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
   order: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
   block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  logger_table: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
   use_rocks: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()
 }</pre>
 
       </div>
 
-<p>I get the node tables in order:</p><ul><li>storage (names)</li><li>qualified</li><li>order</li><li>block_storage</li></ul>
+<p>I get the node tables in order:</p><ul><li>storage (names)</li><li>qualified</li><li>order</li><li>block_storage</li><li>logger</li><li>rocks options</li></ul>
   </section>
 </section>
 <section class="detail" id="launch/3">
@@ -866,9 +868,9 @@ And turn the info into a tuple</li></ul>
       </div>
 
 <p>I launch a node given a file containing a binary version of an 12-tuple
-with appropriate info in the following order:</p><ul><li>router id</li><li>mempool topic id</li><li>executor topic id</li><li>dumper</li><li>storage</li><li>logger</li><li>clock</li><li>ordering</li><li>mempool</li><li>pinger</li><li>executor</li><li>storage names</li><li>qualified</li><li>order</li><li>block_storage</li></ul><p>All engines have info on their states and id's so that checkpointing
-the system will keep all adresses used in the previous session.
-Note that I ensure that the apporpriate tables are new.</p><p>Moreover, I ensure that the mempool and block storage are in sync.
+with appropriate info in the following order:</p><ul><li>router id</li><li>mempool topic id</li><li>executor topic id</li><li>dumper</li><li>storage</li><li>logger</li><li>clock</li><li>ordering</li><li>mempool</li><li>pinger</li><li>executor</li><li>storage names</li><li>qualified</li><li>order</li><li>block_storage</li><li>logger_storage</li><li>rocks</li></ul><p>All engines have info on their states and id's so that checkpointing
+the system will keep all addresses used in the previous session.
+Note that I ensure that the appropriate tables are new.</p><p>Moreover, I ensure that the mempool and block storage are in sync.
 In particular, I check that the order of the last block is less than
 that of the mempool dumped. If not, I manually remove the last block.</p><p>Check whether your transactions have had an assigned worker. If not,
 relaunch them directly. If blocks were out of sync with mempool,
@@ -929,7 +931,7 @@ I currently allow for atom creation in the loaded term.</p>
       </div>
 
 <p>Removes the given dump files at the specified address and with the
-given configuration.</p><p>See <a href="Anoma.System.Directories.html"><code class="inline">Anoma.System.Directories</code></a> for more informaiton about the path
+given configuration.</p><p>See <a href="Anoma.System.Directories.html"><code class="inline">Anoma.System.Directories</code></a> for more information about the path
 resolution and for the second atom.</p>
   </section>
 </section>
@@ -941,9 +943,9 @@ resolution and for the second atom.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
 
           </span>
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.20.0">
+    <meta name="project" content="Anoma v0.21.0">
 
 
-    <title>Anoma.Node.Logger — Anoma v0.20.0</title>
+    <title>Anoma.Node.Logger — Anoma v0.21.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-568468CB.js"></script>
+    <script src="dist/sidebar_items-0BF4767F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.20.0
+          v0.21.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Logger</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.20.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
 
   </h1>
 
@@ -229,6 +229,14 @@ the Local Logging Engine of the Anoma Specification.</p></div>
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#init_table/1" data-no-tooltip translate="no">init_table(table)</a>
+
+      </div>
+
+    </div>
+
 </div>
 
   </section>
@@ -260,7 +268,7 @@ the Local Logging Engine of the Anoma Specification.</p></div>
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Logger{
   clock: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
-  storage: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
+  table: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | nil,
   topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil
 }</pre>
 
@@ -273,7 +281,7 @@ specified storage.</p><h3 id="t:t/0-fields" class="section-heading">
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:storage</code> - The Storage Engine address used for storing.</li><li><code class="inline">:clock</code> - The Clock Engine address used for timestamping.</li><li><code class="inline">:topic</code> - The topic address for broadcasting.</li></ul>
+<ul><li><code class="inline">:clock</code> - The Clock Engine address used for timestamping.</li><li><code class="inline">:table</code> - The table names used for persistent logging.</li><li><code class="inline">:topic</code> - The topic address for broadcasting.</li></ul>
   </section>
 </section>
 
@@ -386,7 +394,7 @@ message. Its right element will be the message.</p>
       </div>
 
 <p>I am the Logger get function of two arguments.</p><p>Given a non-nil logger address and an engine address, I get the keyspace
-which conatins all the info stored by the logger about the supplied
+which contains all the info stored by the logger about the supplied
 engine using <code class="inline">Storage.get_keyspace/2</code></p><p>I return a list of 2-tuples. Its left element will be a list whose
 head is the ID of the specified logger, followed by the engine ID (or
 worker PID), the timestamp, and an atom specifying urgency of the logging
@@ -429,10 +437,11 @@ message. Its right element will be the message.</p>
           <pre translate="no"><span class="attribute">@spec</span> init(<a href="#t:t/0">t</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
 
           <pre translate="no"><span class="attribute">@spec</span> init(
-  storage: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(),
+  table: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
   clock: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
   topic: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()
-) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+) ::
+  {:ok, <a href="#t:t/0">t</a>()}</pre>
 
       </div>
 
@@ -446,6 +455,23 @@ message. Its right element will be the message.</p>
            </span><span class="n">state</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
+<section class="detail" id="init_table/1">
+
+  <div class="detail-header">
+    <a href="#init_table/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">init_table(table)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 
     </div>
   </section>
@@ -454,9 +480,9 @@ message. Its right element will be the message.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.20.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.20.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
 
           </span>
 
