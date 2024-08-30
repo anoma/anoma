@@ -128,7 +128,7 @@ defmodule Anoma.Dump do
   """
 
   @dialyzer {:no_return, launch: 2}
-  @spec launch(String.t(), atom(), [launch_option()]) ::
+  @spec launch(Path.t(), atom(), [launch_option()]) ::
           {:ok, %Node{}} | any()
   def launch(file, name, options \\ []) do
     load = file |> load()
@@ -162,7 +162,7 @@ defmodule Anoma.Dump do
   I currently allow for atom creation in the loaded term.
   """
 
-  @spec load(String.t()) :: any() | dump()
+  @spec load(Path.t()) :: any() | dump()
   def load(name) do
     {:ok, bin} = File.read(name)
     Plug.Crypto.non_executable_binary_to_term(bin)
@@ -175,6 +175,7 @@ defmodule Anoma.Dump do
   See `Anoma.System.Directories` for more information about the path
   resolution and for the second atom.
   """
+
   @spec remove_dump(Path.t()) :: :ok
   @spec remove_dump(Path.t(), atom()) :: :ok
   def remove_dump(file, env \\ Application.get_env(:anoma, :env)) do
