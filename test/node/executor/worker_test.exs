@@ -341,6 +341,12 @@ defmodule AnomaTest.Node.Executor.Worker do
       }
       |> ShieldedTransaction.finalize()
 
+    # Mock root history: insert the cuurent roots to the storage
+    rm_tx.roots
+    |> Enum.each(fn root ->
+      Storage.put(storage, ["rm", "commitment_root", root], true)
+    end)
+
     rm_tx_noun = Noun.Nounable.to_noun(rm_tx)
     rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
 

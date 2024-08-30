@@ -205,5 +205,10 @@ defmodule Anoma.Resource.Transaction do
         Anoma.Node.Router.Engine.get_state(storage).rm_commitments
       )
     end
+
+    # TODO: add the check for transparent resources
+    def resource_existence_check(_transaction, _storage) do
+      true
+    end
   end
 end

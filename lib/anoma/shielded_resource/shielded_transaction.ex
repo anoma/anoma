@@ -11,6 +11,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
   use TypedStruct
   alias Anoma.ShieldedResource.PartialTransaction
   alias Anoma.ShieldedResource.ComplianceOutput
+  alias Anoma.Node.Storage
 
   typedstruct enforce: true do
     # TODO: The roots, commitments, and nullifiers can be eliminated. We can
@@ -44,7 +45,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
     if checked do
       {:ok,
        %ShieldedTransaction{
-         roots: roots,
+         roots: roots |> Noun.list_nock_to_erlang(),
          commitments: commitments |> Noun.list_nock_to_erlang(),
          nullifiers: nullifiers |> Noun.list_nock_to_erlang(),
          partial_transactions: Enum.map(ptxs, &elem(&1, 1)),
@@ -157,6 +158,14 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
         CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
         Anoma.Node.Router.Engine.get_state(storage).cairo_rm_commitments
       )
+    end
+
+    def resource_existence_check(transaction, storage) do
+      for root <- transaction.roots, reduce: true do
+        acc ->
+          root_key = ["rm", "commitment_root", root]
+          acc && Storage.get(storage, root_key) == {:ok, true}
+      end
     end
 
     @spec get_binding_pub_keys(list(binary())) :: list(byte())
