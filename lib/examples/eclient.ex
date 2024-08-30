@@ -85,7 +85,7 @@ defmodule Examples.EClient do
 
     # submit read-only transaction that returns the value of key 423
     assert {:ok, c_addr} =
-             EParser.get_ro_submit_423()
+             EParser.get_ro_submit_423(true)
              |> Cli.run_commands(client_info)
 
     assert_receive {:"$gen_cast", {_, _, {:submitted, ro_worker}}}
@@ -99,7 +99,7 @@ defmodule Examples.EClient do
 
     # submit read-only transaction that returns the value of key 423 plus one
     assert {:ok, c_addr} =
-             EParser.plus_one_ro_submit_423()
+             EParser.plus_one_ro_submit_423(true)
              |> Cli.run_commands(client_info)
 
     assert_receive {:"$gen_cast", {_, _, {:submitted, plus_one_ro_worker}}}
@@ -113,7 +113,7 @@ defmodule Examples.EClient do
 
     # get the value of key 423 directly from the storage
     assert {:ok, c_addr} =
-             EParser.get_423()
+             EParser.get_423(true)
              |> Cli.run_commands(client_info)
 
     assert 1 == Client.return_value(c_addr)
