@@ -63,10 +63,12 @@ defmodule Anoma.Dump do
           | {:testing, boolean()}
 
   @doc """
-  I dump the current state with storage. I accept a string as a name,
-  so that the resulting file will be created as name.txt in the
+  I dump the current state with storage and node public information.
+  As a first argument, I accept a path to dump file and, optionally,
+  a path to public dump file, that will be created relative to the
   appropriate data directory. As a second argument I accept a node
-  name whose info presented as a map I dump as a binary.
+  name whose full info and, optionally, public info, both presented
+  as maps, I dump in binary format.
 
   Note that if the environment is `test` we do not use the XDG format
   for storing data and instead dump the files in the immediate app
@@ -75,17 +77,36 @@ defmodule Anoma.Dump do
   The map typing can be seen in `get_all`
   """
 
-  @spec dump(Path.t(), atom()) :: {:ok, :ok} | {:error, any()}
-  def dump(name, node) do
-    dump_full_path(Directories.data(name), node)
+  @spec dump({Path.t(), Path.t()}, atom()) :: {:ok, :ok} | {:error, any()}
+  def dump({dump_file, pub_info_file}, node) do
+    {dump_file |> Directories.data(), pub_info_file |> Directories.data()}
+    |> dump_full_path(node)
   end
 
-  def dump_full_path(name, node) do
-    term = node |> get_all() |> :erlang.term_to_binary()
+  @spec dump(Path.t(), atom()) :: {:ok, :ok} | {:error, any()}
+  def dump(dump_file, node) do
+    dump_file
+    |> Directories.data()
+    |> dump_full_path(node)
+  end
 
-    name
+  def dump_full_path({dump_path, pub_info_path}, node) do
+    {dump, pub_info} = node |> get_all()
+
+    dump |> :erlang.term_to_binary() |> write_to_file(dump_path)
+    pub_info |> :erlang.term_to_binary() |> write_to_file(pub_info_path)
+  end
+
+  def dump_full_path(dump_path, node) do
+    {dump, _pub_info} = node |> get_all()
+
+    dump |> :erlang.term_to_binary() |> write_to_file(dump_path)
+  end
+
+  defp write_to_file(data, path) do
+    path
     |> File.open([:write], fn file ->
-      file |> IO.binwrite(term)
+      file |> IO.binwrite(data)
     end)
   end
 
@@ -217,8 +238,16 @@ defmodule Anoma.Dump do
           use_rocks: boolean()
         }
 
+  @type pub_info() :: %{
+          router: Id.Extern.t(),
+          transport: Id.Extern.t(),
+          mempool: Id.Extern.t(),
+          storage: Id.Extern.t(),
+          configuration: Id.Extern.t()
+        }
+
   @doc """
-  I get all the info on the node tables and engines in order:
+  I return all the info on the node tables and the following engines:
   - router
   - logger
   - clock
@@ -230,12 +259,26 @@ defmodule Anoma.Dump do
   - qualified
   - order
   - block_storage
-  And turn the info into a tuple
+  as well as the node public info, which is sufficient for clients to
+  connect to the node.
   """
 
-  @spec get_all(atom()) :: dump()
+  @spec get_all(atom()) :: {dump(), pub_info()}
   def get_all(node) do
-    Map.merge(get_state(node), get_tables(node))
+    node_state = node |> get_state()
+    node_tables = node |> get_tables()
+    node_all = Map.merge(node_state, node_tables)
+
+    pub_info =
+      %{
+        transport: node_state.transport |> Id.external_id(),
+        router: node_state.router |> Id.external_id(),
+        mempool: node_state.mempool |> elem(0),
+        storage: node_state.storage |> elem(0),
+        configuration: node_state.configuration |> elem(0)
+      }
+
+    {node_all, pub_info}
   end
 
   @doc """
