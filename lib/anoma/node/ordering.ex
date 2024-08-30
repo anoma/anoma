@@ -3,7 +3,7 @@ defmodule Anoma.Node.Ordering do
   I am the Ordering Engine.
 
   My main functionality is to calculate transaction ordering and keep track
-  of said odering relative to the transaction id's.
+  of said ordering relative to the transaction id's.
 
   ### Public API
 
@@ -54,7 +54,7 @@ defmodule Anoma.Node.Ordering do
     I have basic fields relating to upcoming ordering for the incoming
     transactions as well as mapping of transaction ID's to their orders.
 
-    ### Fileds
+    ### Fields
 
     - `:storage` - The address of the storage engine
     - `:next_order` - The integer referencing the order to be given to the
@@ -74,7 +74,7 @@ defmodule Anoma.Node.Ordering do
   @doc """
   I am the initialization function for a Ordering Engine instance.
 
-  ### Pattern-Macthing Variations
+  ### Pattern-Matching Variations
 
   - `init(%Ordering{})` - I initialize the Engine with the given state.
   - `init(args)` - I expect a keylist with the `:logger` and `:storage`
@@ -128,9 +128,9 @@ defmodule Anoma.Node.Ordering do
   I am the function dealing with new ordered transactions.
 
   Given a list of ordered transactions, I update the Ordering Engine state
-  appropritaely by changing the `:next_order` field and filling in the
+  appropriately by changing the `:next_order` field and filling in the
   `:hash_to_order` field with new key-value pairs pairing the new ID's with
-  their asigned orderings.
+  their assigned orderings.
   """
 
   @spec new_order(Router.Addr.t(), ordered_transactions()) ::
@@ -208,7 +208,7 @@ defmodule Anoma.Node.Ordering do
   end
 
   @doc """
-  I handle the new ordered transactions comming in to the Ordering Engine.
+  I handle the new ordered transactions coming in to the Ordering Engine.
 
   I send read_ready messages regarding the transaction orders, then add the
   length of the incoming transaction list to the `:next_order` value,

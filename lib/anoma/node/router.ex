@@ -291,10 +291,10 @@ defmodule Anoma.Node.Router do
     engines, topics, subscriptions, the message queues, message counter, as
     well as local identification information.
 
-    ### Fileds
+    ### Fields
 
     - `:local_engines` - The map of local engines external IDs to their full
-                         IDs alonsgide their global process identifications.
+                         IDs alongside their global process identifications.
     - `:topic_table` - The map of local topic external IDs to the set of their
                        subscribers.
                        Default: %{}
@@ -313,7 +313,7 @@ defmodule Anoma.Node.Router do
     - `:internal_id` - Full Router Anoma ID.
     - `:addr` - Router Address.
     - `:supervisor` - Supervisor name.
-    - `:transport` - Name of the used Transaport.
+    - `:transport` - Name of the used Transport.
     - `:msg_queue` - Map of IDs to the list of pending messages.
                      Default: %{}
     - `:logger` - The Logger Engine address for Event keeping.
@@ -391,10 +391,10 @@ defmodule Anoma.Node.Router do
   I am the Router start function.
 
   I start a new router using the specified Anoma ID for the Router and the
-  transaport. (Additionally, you can feed me a router state)
+  transport. (Additionally, you can feed me a router state)
 
   Using the fed in external ID, I name the supervisor using `process_name/2`
-  and start it as a Dynamical Supervisor with approrpiate name.
+  and start it as a Dynamical Supervisor with appropriate name.
 
   Similarly, I create the router name and address using the external ID and
   start the Router and Transport structures as children to the specified
@@ -469,7 +469,7 @@ defmodule Anoma.Node.Router do
   @doc """
   I am the topic-creation function.
 
-  I create a new ropic with specified external ID from a full Anoma ID.
+  I create a new topic with specified external ID from a full Anoma ID.
   """
 
   @spec new_topic(Addr.t(), Id.t()) ::
@@ -872,8 +872,8 @@ defmodule Anoma.Node.Router do
       Assigns the specified Logger Engine address to the Router.
   - `handle_self_cast(:shutdown_everything, _, _)` -
       Calls `System.stop` to shutdown the entire system.
-  - `handle_self_cast({:send_reponse, _, _, _}, _, _)` -
-      Sends the response message to transaport with specified cookie.
+  - `handle_self_cast({:send_response, _, _, _}, _, _)` -
+      Sends the response message to transport with specified cookie.
   - `handle_self_cast({:p2p_raw, _, _}, _, _)` -
       Handles p2p messaging, either sending raw messages or post-processing
       them using Router functionality. Note that unknown message formats get

@@ -4,7 +4,7 @@ defmodule Anoma.Cli.Client do
   the local administration engine on another node running on the same system.
 
   I have to be a dedicated engine because of the protocol design: every message
-  must originate in a partcular engine with its own id.  (Proposed specs
+  must originate in a particular engine with its own id. (Proposed specs
   changes may obviate this in the future.)
   """
 

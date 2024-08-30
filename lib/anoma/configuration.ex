@@ -1,7 +1,7 @@
 defmodule Anoma.Configuration do
   @moduledoc """
   I am a configuration module. I read the provided TOML configuration file
-  and feed the apporpriate info for Node launching
+  and feed the appropriate info for Node launching
 
   The codebase has a corresponding file that can inform the user of the
   format I expect.
@@ -154,7 +154,7 @@ defmodule Anoma.Configuration do
           GenServer.on_start()
   @doc """
   Given a parsed map with minimal node startup info I launch the node with
-  the appopriate name
+  the appropriate name
 
   ### Options
   see `t:launch_option/0` for the full list of optional arguments

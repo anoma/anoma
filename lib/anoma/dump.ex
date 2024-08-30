@@ -69,7 +69,7 @@ defmodule Anoma.Dump do
   name whose info presented as a map I dump as a binary.
 
   Note that if the environment is `test` we do not use the XDG format
-  for storing data and instead dump the files in the immadiate app
+  for storing data and instead dump the files in the immediate app
   folder.
 
   The map typing can be seen in `get_all`
@@ -109,8 +109,8 @@ defmodule Anoma.Dump do
   - block_storage
 
   All engines have info on their states and id's so that checkpointing
-  the system will keep all adresses used in the previous session.
-  Note that I ensure that the apporpriate tables are new.
+  the system will keep all addresses used in the previous session.
+  Note that I ensure that the appropriate tables are new.
 
   Moreover, I ensure that the mempool and block storage are in sync.
   In particular, I check that the order of the last block is less than
@@ -169,7 +169,7 @@ defmodule Anoma.Dump do
   Removes the given dump files at the specified address and with the
   given configuration.
 
-  See `Anoma.System.Directories` for more informaiton about the path
+  See `Anoma.System.Directories` for more information about the path
   resolution and for the second atom.
   """
   @spec remove_dump(Path.t()) :: :ok

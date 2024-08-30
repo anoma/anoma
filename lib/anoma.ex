@@ -36,7 +36,7 @@ defmodule Anoma do
   configuration refers to a dumped session, we launch it directly.
   Otherwise we launch it with minimal settings.
 
-  If no configuraton was found, I provide basic setup for a new Node and
+  If no configuration was found, I provide basic setup for a new Node and
   start it under supervision.
   """
   def start_logic(use_rocks: rocks_flag) do
