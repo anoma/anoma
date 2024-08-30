@@ -26,6 +26,7 @@ defmodule AnomaTest.Node.Dump do
              snapshot_path: snapshot_path,
              storage_data: storage,
              block_storage: :dump_blocks,
+             logger_table: :dump_log,
              ping_time: :no_timer
            ]
            |> Anoma.Node.start_min()}

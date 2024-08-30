@@ -107,6 +107,8 @@ defmodule Anoma.Dump do
   - qualified
   - order
   - block_storage
+  - logger_storage
+  - rocks
 
   All engines have info on their states and id's so that checkpointing
   the system will keep all addresses used in the previous session.
@@ -187,7 +189,7 @@ defmodule Anoma.Dump do
   @type ex_eng :: {Id.Extern.t(), Executor.t()}
   @type storage_eng :: {Id.Extern.t(), Storage.t()}
   @type configuration_eng :: {Id.Extern.t(), Anoma.Node.Configuration.t()}
-  @type stores :: {Storage.t(), atom()}
+  @type stores :: {Storage.t(), atom(), atom()}
 
   @type dump() :: %{
           router: Id.t(),
@@ -211,6 +213,7 @@ defmodule Anoma.Dump do
           qualified: list(),
           order: list(),
           block_storage: list(),
+          logger_table: list(),
           use_rocks: boolean()
         }
 
@@ -332,6 +335,8 @@ defmodule Anoma.Dump do
   - qualified
   - order
   - block_storage
+  - logger
+  - rocks options
   """
 
   @spec get_tables(atom()) :: %{
@@ -339,12 +344,14 @@ defmodule Anoma.Dump do
           qualified: list(),
           order: list(),
           block_storage: list(),
+          logger_table: list(),
           use_rocks: boolean()
         }
   def get_tables(node) do
     node = node |> Node.state()
     storage = Engine.get_state(Engine.get_state(node.ordering).storage)
     block = Engine.get_state(node.mempool).block_storage
+    logger = Engine.get_state(node.logger).table
     qual = storage.qualified
     ord = storage.order
     # TODO more robust checking here
@@ -355,8 +362,8 @@ defmodule Anoma.Dump do
         true
       end
 
-    {q, o, b} =
-      [qual, ord, block]
+    {q, o, b, l} =
+      [qual, ord, block, logger]
       |> Enum.map(fn x ->
         with {:ok, lst} <- Mnesia.dump(x) do
           Enum.map(lst, fn x -> hd(x) end)
@@ -365,10 +372,11 @@ defmodule Anoma.Dump do
       |> List.to_tuple()
 
     %{
-      storage_data: {storage, block},
+      storage_data: {storage, block, logger},
       qualified: q,
       order: o,
       block_storage: b,
+      logger_table: l,
       use_rocks: rocks
     }
   end
