@@ -107,7 +107,7 @@ defmodule Anoma.Node.Configuration do
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec do_snapshot(Configuration.t(), Router.addr()) :: :ok | nil | Task.t()
+  @spec do_snapshot(Configuration.t(), Router.addr()) :: :ok | nil | pid()
   defp do_snapshot(config, caller) do
     configuration = config.configuration
 
