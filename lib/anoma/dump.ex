@@ -12,6 +12,7 @@ defmodule Anoma.Dump do
   I give access to following public dumping functionality:
 
   - `dump/2`
+  - `dump_full_path/2`
   - `get_all/1`
   - `get_state/1`
   - `get_tables/1`
@@ -239,18 +240,22 @@ defmodule Anoma.Dump do
   end
 
   @doc """
-  I get the engine states in order:
+  I get the following engine states:
   - router
-  - mempool topic
-  - executor topic
-  - dumper
-  - storage
+  - transport
+  - configuration
   - logger
   - clock
   - ordering
   - mempool
   - pinger
   - executor
+  - storage
+  - dumper
+  - mempool topic
+  - executor topic
+  - logger topic
+  - storage topic
   """
 
   @spec get_state(atom()) ::
