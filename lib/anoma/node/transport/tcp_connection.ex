@@ -95,9 +95,9 @@ defmodule Anoma.Node.Transport.TCPConnection do
 
   alias Anoma.Node.Router
   alias Anoma.Node.Transport
+  alias Anoma.Node.Logger
   alias __MODULE__
 
-  require Logger
   use Transport.Connection
   use TypedStruct
 
@@ -125,6 +125,7 @@ defmodule Anoma.Node.Transport.TCPConnection do
       requests. Must be provided in the listener mode. Default: nil
     - `:conn` - Socket of the established connection for the listener mode.
       Initially, nil. Filled in as soon as a connection is established.
+    - `:logger` - The Logger Engine address. Enforced: false.
     """
     field(:router, Router.addr())
     field(:transport, Router.addr())
@@ -132,6 +133,7 @@ defmodule Anoma.Node.Transport.TCPConnection do
     field(:mode, :client | :listener)
     field(:listener, reference() | nil)
     field(:conn, reference() | nil)
+    field(:logger, Router.addr(), enforce: false)
   end
 
   # TODO: annoyingly, we can't initiate tcp connections asynchronously, so it's
@@ -144,38 +146,40 @@ defmodule Anoma.Node.Transport.TCPConnection do
 
   ### Pattern-Matching Variations
 
-  - `init({:client, router, transport, address, connection_pool})` -
+  - `init({:client, router, transport, address, connection_pool, logger})` -
     create a TCP connection as a client.
 
-  - `init({:listener, router, transport, listener, connection_pool})` -
+  - `init({:listener, router, transport, listener, connection_pool, logger})` -
     create a TCP connection as a listener.
   """
   @spec init(
           {:client, Router.addr(), Router.addr(), Transport.transport_addr(),
-           Supervisor.supervisor()}
+           Supervisor.supervisor(), Router.addr()}
         ) :: {:ok, t(), {:continue, {:init_connection, any()}}}
-  def init({:client, router, transport, address, connection_pool}) do
+  def init({:client, router, transport, address, connection_pool, logger}) do
     {:ok,
      %TCPConnection{
        router: router,
        transport: transport,
        connection_pool: connection_pool,
-       mode: :client
+       mode: :client,
+       logger: logger
      }, {:continue, {:init_connection, address}}}
   end
 
   @spec init(
           {:listener, Router.addr(), Router.addr(), reference(),
-           Supervisor.supervisor()}
+           Supervisor.supervisor(), Router.addr()}
         ) :: {:ok, t(), {:continue, :accept_connection}}
-  def init({:listener, router, transport, listener, connection_pool}) do
+  def init({:listener, router, transport, listener, connection_pool, logger}) do
     {:ok,
      %TCPConnection{
        router: router,
        transport: transport,
        connection_pool: connection_pool,
        mode: :listener,
-       listener: listener
+       listener: listener,
+       logger: logger
      }, {:continue, :accept_connection}}
   end
 
@@ -184,7 +188,9 @@ defmodule Anoma.Node.Transport.TCPConnection do
   ############################################################
 
   def handle_continue({:init_connection, address}, s) do
-    case try_connect(address) do
+    logger = s.logger
+
+    case try_connect(address, logger) do
       {:ok, conn} ->
         Transport.new_connection(
           s.transport,
@@ -193,8 +199,9 @@ defmodule Anoma.Node.Transport.TCPConnection do
 
         {:noreply, %{s | conn: conn}}
 
-      err ->
-        die(s, inspect(err))
+      {:error, reason} ->
+        log_info({:error_connect, reason, logger})
+        die(s, inspect(reason))
     end
   end
 
@@ -208,8 +215,10 @@ defmodule Anoma.Node.Transport.TCPConnection do
         Transport.new_connection(s.transport, :unix)
         {:noreply, %{s | conn: conn}}
 
-      err ->
-        die(s, inspect(err))
+      {:error, reason} ->
+        logger = s.logger
+        log_info({:error_accept, reason, logger})
+        die(s, inspect(reason))
     end
   end
 
@@ -247,18 +256,20 @@ defmodule Anoma.Node.Transport.TCPConnection do
     Router.start_engine(
       s.router,
       __MODULE__,
-      {:listener, s.router, s.transport, s.listener, s.connection_pool},
+      {:listener, s.router, s.transport, s.listener, s.connection_pool,
+       s.logger},
       supervisor: s.connection_pool
     )
   end
 
-  @spec try_connect(Transport.transport_addr()) :: tcp_connect_result()
-  defp try_connect(address) do
+  @spec try_connect(Transport.transport_addr(), Router.addr()) ::
+          tcp_connect_result()
+  defp try_connect(address, logger) do
     0..(@num_connect_retries - 1)
     |> Enum.reduce_while(nil, fn x, _acc ->
       do_backoff(x)
 
-      case tcp_connect(address) do
+      case tcp_connect(address, logger) do
         {:ok, socket} -> {:halt, {:ok, socket}}
         {:error, :timeout} -> {:cont, {:error, :timeout}}
         # TODO refine the case
@@ -280,12 +291,52 @@ defmodule Anoma.Node.Transport.TCPConnection do
     end
   end
 
-  @spec tcp_connect(Transport.transport_addr()) :: tcp_connect_result()
-  defp tcp_connect({:unix, path}) do
+  @spec tcp_connect(Transport.transport_addr(), Router.addr()) ::
+          tcp_connect_result()
+  defp tcp_connect({:unix, path}, logger) do
+    log_info({:connect_unix, path, logger})
     :gen_tcp.connect({:local, path}, 0, mode: :binary)
   end
 
-  defp tcp_connect({:tcp, host, port}) do
-    :gen_tcp.connect(to_charlist(host), port, mode: :binary)
+  defp tcp_connect({:tcp, host, port}, logger) do
+    host = to_charlist(host)
+    log_info({:connect_tcp, host, port, logger})
+    :gen_tcp.connect(host, port, mode: :binary)
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:error_connect, reason, logger}) do
+    Logger.add(
+      logger,
+      :error,
+      "Failed to connect to a socket: #{inspect(reason)}."
+    )
+  end
+
+  defp log_info({:error_accept, reason, logger}) do
+    Logger.add(
+      logger,
+      :error,
+      "Failed to accept connection to a socket: #{inspect(reason)}."
+    )
+  end
+
+  defp log_info({:connect_unix, path, logger}) do
+    Logger.add(
+      logger,
+      :info,
+      "Connecting to a Unix socket on path #{path}"
+    )
+  end
+
+  defp log_info({:connect_tcp, host, port, logger}) do
+    Logger.add(
+      logger,
+      :info,
+      "Connecting to a TCP socket on #{inspect(host)}:#{inspect(port)}"
+    )
   end
 end
