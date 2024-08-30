@@ -3,7 +3,54 @@ defmodule Anoma.Node.Transport.TCPServer do
   I am TCPServer Engine.
 
   I open a listening TCP connection in server mode on the specified address.
+
+  ### How I work
+
+  A good way to understand how I work is by looking at the diagram of my behavior below:
+
+  ```mermaid
+  graph TB;
+  Client1(Client 1):::Client
+  Client2(Client 2):::Client
+  subgraph Dynamic Supervisor
+  TCPServer:::Server-- :start_listener---Conn1
+  Conn1(Listener 1):::Connection-- start_listener---Conn2
+  Conn2(Listener 2):::Connection-- start_listener---Conn3
+  Conn3(Listener 3):::Connection-- :gen_tcp.accept---Conn3
+  end
+  Client1-. ":gen_tcp.connect()" .->Conn1
+  Client2-. ":gen_tcp.connect()" .->Conn2
+
+  classDef Server      fill:#d8e6ad
+  classDef Connection  fill:#add8e6
+  classDef Client      fill:#e6add8
+
+  click TCPServer "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPServer.html" "Anoma.Node.Transport.TCPServer"
+
+  click Conn1 "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html" "Anoma.Node.Transport.TCPConnection"
+  click Conn2 "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html" "Anoma.Node.Transport.TCPConnection"
+  click Conn3 "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html" "Anoma.Node.Transport.TCPConnection"
+
+  click Client1 "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html" "Anoma.Node.Transport.TCPConnection"
+  click Client2 "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html" "Anoma.Node.Transport.TCPConnection"
+
+  click Dynamic Supervisor "https://anoma.github.io/anoma/Anoma.Node.Transport.Supervisor.html"
+  ```
+
+  This diagram uses the following Color Codes:
+  1. Blue Nodes represent TCP Connections running in the listening mode.
+  2. Purple Nodes represent TCP Connections running in the client mode.
+  3. Green Node is the TCP Server.
+
+  Here we can see that I manage the TCP Server by spawning
+  `Anoma.Node.Transport.TCPConnection` instances that other TCP Clients can
+  talk to.
+
+  See `Anoma.Node.Transport.TCPConnection` for further information on
+  the specifics for how my connections work.
+
   """
+
   alias Anoma.Node.{Router, Transport, Logger}
   alias __MODULE__
 

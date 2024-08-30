@@ -9,6 +9,88 @@ defmodule Anoma.Node.Transport.TCPConnection do
   connection on a server.
   In the latter case, since accepting the connection marks me as its owner and
   handoff is complicated, I start up a new listener once I accept a connection.
+
+
+  ### How I work
+
+  A good general overview of how I work at a high level with my
+  environment can be seen in `Anoma.Node.Transport.TCPServer`.
+
+  The diagrams I'll include in my documentation are more focused on my D2D inner workings
+
+  ```mermaid
+  graph LR;
+
+  %% Role Setup
+  TCPConnection:::TCPConnection
+  Child_Process(Child Connection):::Listener
+  Listener1(A TCP Listener Node):::Listener
+  Transport(Our Transport):::Transport
+
+
+  %% Note Relationship between TCPConnection and the outside
+  :accept_connection -- start_listener --- Child_Process
+  Transport -- handshake ---Listener1
+
+
+  subgraph TCPConnection
+    direction TB
+    :accept_connection:::Listener
+    :init_connection:::Client
+
+    init -- is a Listener -->:accept_connection
+    init -- is a Client -->:init_connection
+
+    :accept_connection -- ":gen_tcp.accept" --- :accept_connection
+
+
+    :accept_connection & :init_connection -- failure --> sd(Shut down)
+    :accept_connection & :init_connection -- successful --> Standby
+
+  end
+
+
+  %% Note Relationship between TCPConnection and the outside
+  :init_connection -- ":gen_tcp.connect" --- Listener1
+  :init_connection -- begin handshake ---Transport
+
+
+
+  %% Styling
+  classDef Listener      fill:#add8e6
+  classDef TCPConnection fill:#fff9ca
+  classDef Client        fill:#e6add8
+  classDef Transport     fill:#d8e6ad
+
+
+  %% Linking
+
+  click Transport "https://anoma.github.io/anoma/Anoma.Node.Transport.html"
+  click init "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html#init/1"
+  click Child_Process "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html"
+  click :init_connection "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html"
+  click :accept_connection "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html"
+  click Listener1 "https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html"
+  ```
+
+  This diagram uses the following Color Codes:
+  1. Blue Nodes represent TCP Connections running in the listening mode.
+  2. Purple Node represents TCP Connection running in the client mode.
+  3. Green Nodes is the Transport Server.
+
+  We can see that my behavior differs drastically if I'm in the client
+  mode or a listening mode.
+
+  If I'm listening then I'll block calling `:gen_tcp.accept/1`, if
+  that works, then we create another
+  `Anoma.Node.Transport.TCPConnection`. If not we shutdown
+
+  Likewise for the client behavior, we try using
+  `:gen_tcp.connect/3`. If this fails then we shutdown.
+
+  If we do successfully connect, then we begin the handshake process,
+  which is best explained in a diagram in `Anoma.Node.Transport`.
+
   """
 
   alias Anoma.Node.Router
