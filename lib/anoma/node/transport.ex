@@ -335,28 +335,24 @@ defmodule Anoma.Node.Transport do
       end
 
     # and, of course, a node's id is also the id of its router, so learn that
-    handle_cast({:learn_engine, node, node}, Router.self_addr(), s)
+    {:noreply,
+     do_handle_cast_learn_engine(
+       s,
+       {:learn_engine, node, node},
+       Router.self_addr()
+     )}
   end
 
   # if an engine claims to be associated with a node, believe it (_not_ the
   # other way around); and of course we believe local advertisements
   # TODO condition should perhaps be id signsfor engine, not id == engine?
   def handle_cast(
-        {:learn_engine, engine, node},
-        %Router.Addr{server: server, id: id},
+        msg = {:learn_engine, engine, _node},
+        addr = %Router.Addr{server: server, id: id},
         s
       )
       when server != nil or id == engine do
-    log_info({:learned_engine, engine, node, id, s.logger})
-    s = %{s | known_engines: Map.put(s.known_engines, engine, node)}
-
-    {messages, pending_outgoing_engine_messages} =
-      Map.pop(s.pending_outgoing_engine_messages, engine, [])
-
-    Enum.each(messages, &send(Router.self_addr(), engine, &1))
-
-    {:noreply,
-     %{s | pending_outgoing_engine_messages: pending_outgoing_engine_messages}}
+    {:noreply, do_handle_cast_learn_engine(s, msg, addr)}
   end
 
   def handle_cast({:disconnected, reason}, from, s) do
@@ -378,6 +374,24 @@ defmodule Anoma.Node.Transport do
   ############################################################
   #                  Genserver Implementation                #
   ############################################################
+
+  @spec do_handle_cast_learn_engine(t(), any(), Router.addr()) :: t()
+  defp do_handle_cast_learn_engine(
+         s,
+         {:learn_engine, engine, node},
+         %Router.Addr{server: server, id: id}
+       )
+       when server != nil or id == engine do
+    log_info({:learned_engine, engine, node, id, s.logger})
+    s = %{s | known_engines: Map.put(s.known_engines, engine, node)}
+
+    {messages, pending_outgoing_engine_messages} =
+      Map.pop(s.pending_outgoing_engine_messages, engine, [])
+
+    Enum.each(messages, &send(Router.self_addr(), engine, &1))
+
+    %{s | pending_outgoing_engine_messages: pending_outgoing_engine_messages}
+  end
 
   @spec handle_recv_chunk(t(), Router.addr(), binary()) :: t()
   defp handle_recv_chunk(s, from, data) do
