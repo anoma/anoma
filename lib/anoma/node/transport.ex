@@ -108,10 +108,10 @@ defmodule Anoma.Node.Transport do
     - `:connection_states` - Maps current connections to their respective
       connection states. Default: empty.
     - `:pending_outgoing_messages` - For every node, to which we have not
-      established a connection yet, store a list of messages addressed to the node.
+      established a connection yet, store a queue of messages addressed to the node.
       Default: empty.
     - `:pending_outgoing_engine_messages` - For every engine, whose node
-      location is not known yet, store a list of messages addressed to the
+      location is not known yet, store a queue of messages addressed to the
       engine. Default: empty.
     - `:servers` - Stores a set of transport servers that the Transport Engine
       is currently running. Every transport server is mapped to an external
@@ -138,13 +138,13 @@ defmodule Anoma.Node.Transport do
       default: %{}
     )
 
-    field(:pending_outgoing_messages, %{Id.Extern.t() => [binary()]},
+    field(:pending_outgoing_messages, %{Id.Extern.t() => Qex.t()},
       default: %{}
     )
 
     # engine -> messages we would like to send to it, but we don't know which
     # node it belongs to yet
-    field(:pending_outgoing_engine_messages, %{Id.Extern.t() => [binary()]},
+    field(:pending_outgoing_engine_messages, %{Id.Extern.t() => Qex.t()},
       default: %{}
     )
 
@@ -678,8 +678,8 @@ defmodule Anoma.Node.Transport do
           Map.update(
             s.pending_outgoing_engine_messages,
             dst,
-            [msg],
-            fn msgs -> [msg | msgs] end
+            Qex.new([msg]),
+            fn msgs -> Qex.push(msgs, msg) end
           )
     }
   end
@@ -692,8 +692,8 @@ defmodule Anoma.Node.Transport do
           Map.update(
             s.pending_outgoing_messages,
             node,
-            [msg],
-            fn msgs -> [msg | msgs] end
+            Qex.new([msg]),
+            fn msgs -> Qex.push(msgs, msg) end
           )
     }
   end
