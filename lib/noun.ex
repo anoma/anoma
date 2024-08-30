@@ -128,6 +128,13 @@ defmodule Noun do
     [normalize_noun(h) | normalize_noun(t)]
   end
 
+  @spec to_normalized_noun(Noun.Nounable.t()) :: Noun.t()
+  def to_normalized_noun(value) do
+    value
+    |> Noun.Nounable.to_noun()
+    |> normalize_noun()
+  end
+
   @spec index_to_offset(non_neg_integer()) :: non_neg_integer()
   @doc """
   Calculates the index from the given access offset

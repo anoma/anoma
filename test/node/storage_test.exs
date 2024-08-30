@@ -92,7 +92,7 @@ defmodule AnomaTest.Node.Storage do
   describe "User Blocking API" do
     test "properly get same snapshot", %{ordering: ordering} do
       sstore = :babylon_2
-      testing_atom = System.unique_integer()
+      testing_atom = System.unique_integer([:positive])
       storage = Engine.get_state(ordering).storage
 
       Ordering.reset(ordering)
@@ -122,7 +122,7 @@ defmodule AnomaTest.Node.Storage do
 
     test "properly waits until it's turn", %{ordering: ordering} do
       sstore = :babylon_3
-      testing_atom = System.unique_integer()
+      testing_atom = System.unique_integer([:positive])
       storage = Engine.get_state(ordering).storage
 
       Ordering.reset(ordering)
@@ -159,7 +159,7 @@ defmodule AnomaTest.Node.Storage do
       ordering: ordering
     } do
       sstore = :babylon_4
-      testing_atom = System.unique_integer()
+      testing_atom = System.unique_integer([:positive])
       storage = Engine.get_state(ordering).storage
 
       Ordering.reset(ordering)

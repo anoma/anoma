@@ -110,6 +110,19 @@ defmodule Anoma.Crypto.Id do
     key |> Base.encode16(case: :lower) |> String.slice(0..5)
   end
 
+  defimpl Noun.Nounable, for: __MODULE__ do
+    def to_noun(term = %Anoma.Crypto.Id{}) do
+      {term.internal, term.external, term.kind_sign, term.kind_encrypt}
+      |> Noun.Nounable.to_noun()
+    end
+  end
+
+  defimpl Noun.Nounable, for: [Extern, Intern] do
+    def to_noun(extern) do
+      {extern.sign, extern.encrypt} |> Noun.Nounable.to_noun()
+    end
+  end
+
   defimpl Inspect, for: Extern do
     def inspect(term, _options) do
       e = Anoma.Crypto.Id.truncated_key_string(term.encrypt)
