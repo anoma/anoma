@@ -26,21 +26,33 @@ defmodule Examples.ENock do
     Format.parse_always("[[5 [1 0] [0 446]] 0 0]")
   end
 
+  @doc """
+  The counter arm.
+
+  Availiable through `counter:logics` core.
+  """
+
+  @spec counter_arm() :: Noun.t()
+  def counter_arm() do
+    """
+    [ 6
+      [5 [1 1] 8 [9 1.406 0 511] 9 2 10 [6 0 118] 0 2]
+      [6
+        [5 [1 1] 8 [9 1.406 0 511] 9 2 10 [6 0 238] 0 2]
+        [6
+          [5 [1 1] 8 [9 1.406 0 511] 9 2 10 [6 0 958] 0 2]
+          [6 [5 [1 0] 0 446] [0 0] 6 [0 3.570] [1 0] 1 1] 1 1] 1 1]
+          1
+          1
+        ]
+    """
+    |> Format.parse_always()
+  end
+
   @spec counter_logic() :: Noun.t()
   def counter_logic() do
     [
-      Format.parse_always("""
-      [ 6
-        [5 [1 1] 8 [9 1.406 0 511] 9 2 10 [6 0 118] 0 2]
-        [6
-          [5 [1 1] 8 [9 1.406 0 511] 9 2 10 [6 0 238] 0 2]
-          [6
-            [5 [1 1] 8 [9 1.406 0 511] 9 2 10 [6 0 958] 0 2]
-            [6 [5 [1 0] 0 446] [0 0] 6 [0 3.570] [1 0] 1 1] 1 1] 1 1]
-            1
-            1
-          ]
-      """),
+      counter_arm(),
       0 | Nock.logics_core()
     ]
   end
@@ -173,11 +185,21 @@ defmodule Examples.ENock do
   ##                          Jetted Cores                          ##
   ##    Requires special testing to ensure they behave properly.    ##
   ####################################################################
+
+  @doc """
+  The decrement arm in the tests core.
+
+  Availiable through `use-dec:tests` core.
+  """
+  @spec dec_arm() :: Noun.t()
+  def dec_arm() do
+    "[8 [9 342 0 1.023] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
+  end
+
   @spec dec() :: Noun.t()
   def dec() do
-    arm = Noun.Format.parse_always("[8 [9 342 0 1.023] 9 2 10 [6 0 14] 0 2]")
     sample = 999
-    core = [arm, sample | Nock.logics_core()]
+    core = [dec_arm(), sample | Nock.logics_core()]
 
     assert Nock.nock(core, [9, 2, 0 | 1]) == {:ok, 998}
 
@@ -189,31 +211,72 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  A cue arm for taking cue:anoma out of the logics core environment.
+
+  Can be gotten by defining gate locally as
+
+  =localcue   =>  logics  |=  a=@  (cue a)
+
+  and then grabbing the arm of localcue.
+  """
+
+  @spec cue_arm() :: Noun.t()
+  def cue_arm() do
+    "[8 [9 94 0 63] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
+  end
+
   @spec cue() :: Noun.t()
   def cue() do
-    arm = Noun.Format.parse_always("[8 [9 94 0 63] 9 2 10 [6 0 14] 0 2]")
     sample = 999
-    core = [arm, sample | Nock.logics_core()]
+    core = [cue_arm(), sample | Nock.logics_core()]
 
     core
+  end
+
+  @doc """
+  A cue arm for taking jam:anoma out of the logics core environment.
+
+  Can be gotten by defining gate locally as
+
+  =localjam   =>  logics  |=  a=@  (jam a)
+
+  and then grabbing the arm of localjam.
+  """
+
+  @spec jam_arm() :: Noun.t()
+  def jam_arm() do
+    "[8 [9 22 0 63] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
   end
 
   @spec jam() :: Noun.t()
   def jam() do
-    arm = Noun.Format.parse_always("[8 [9 22 0 63] 9 2 10 [6 0 14] 0 2]")
     sample = 999
-    core = [arm, sample | Nock.logics_core()]
+    core = [jam_arm(), sample | Nock.logics_core()]
 
     core
   end
 
+  @doc """
+  The sign arm for taking sign:anoma from the logics core environment.
+
+  Can be gotten by defining gate locally as:
+
+  =localsign   =>  logics  |=  [a=@ b=@]  (sign [a b])
+
+  and then grabbing the arm of localsign.
+  """
+
+  @spec sign_arm() :: Noun.t()
+  def sign_arm() do
+    "[8 [9 10 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Format.parse_always()
+  end
+
   @spec sign() :: Noun.t()
   def sign() do
-    arm =
-      Noun.Format.parse_always("[8 [9 10 0 31] 9 2 10 [6 [0 28] 0 29] 0 2]")
-
     sample = [999 | 888]
-    core = [arm, sample | Nock.logics_core()]
+    core = [sign_arm(), sample | Nock.logics_core()]
 
     valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
     invalid_args = [ECrypto.blood_msg() | ECrypto.londo().external.sign]
@@ -228,13 +291,26 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  The verify arm for taking verify:anoma from the logics core environment.
+
+  Can be gotten by defining gate locally as:
+
+  =localverify   =>  logics  |=  [a=@ b=@]  (verify [a b])
+
+  and then grabbing the arm of localverify.
+  """
+
+  @spec verify_arm() :: Noun.t()
+  def verify_arm() do
+    "[8 [9 4 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Format.parse_always()
+  end
+
   @spec verify() :: Noun.t()
   def verify() do
-    arm =
-      Noun.Format.parse_always("[8 [9 4 0 31] 9 2 10 [6 [0 28] 0 29] 0 2]")
-
     sample = [999 | 888]
-    core = [arm, sample | Nock.logics_core()]
+    core = [verify_arm(), sample | Nock.logics_core()]
 
     valid_args = [ECrypto.blood_l_signed() | ECrypto.londo().external.sign]
     invalid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
@@ -249,13 +325,26 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  The sign-detatched arm for taking sign-detached:anoma from the logics core environment.
+
+  Can be gotten by defining gate locally as:
+
+  =localsigndetached   =>  logics  |=  [a=@ b=@]  (sign-detached [a b])
+
+  and then grabbing the arm of localsighdetached.
+  """
+
+  @spec sign_detatched_arm() :: Noun.t()
+  def sign_detatched_arm() do
+    "[8 [9 23 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Format.parse_always()
+  end
+
   @spec sign_detatched() :: Noun.t()
   def sign_detatched() do
-    arm =
-      Noun.Format.parse_always("[8 [9 23 0 31] 9 2 10 [6 [0 28] 0 29] 0 2]")
-
     sample = [999 | 888]
-    core = [arm, sample | Nock.logics_core()]
+    core = [sign_detatched_arm(), sample | Nock.logics_core()]
 
     valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign()]
 
@@ -268,15 +357,26 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  The verify-detatched arm for taking verify-detached:anoma from the logics core environment.
+
+  Can be gotten by defining gate locally as:
+
+  =localverifydetached   =>  logics  |=  [a=@ b=@ c=@]  (verify-detached [a b])
+
+  and then grabbing the arm of localverifydetached.
+  """
+
+  @spec verify_detatched_arm() :: Noun.t()
+  def verify_detatched_arm() do
+    "[8 [9 22 0 31] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+    |> Format.parse_always()
+  end
+
   @spec verify_detatched() :: Noun.t()
   def verify_detatched() do
-    arm =
-      Noun.Format.parse_always(
-        "[8 [9 22 0 31] 9 2 10 [6 [0 28] [0 58] 0 59] 0 2]"
-      )
-
     sample = [999 | 888]
-    core = [arm, sample | Nock.logics_core()]
+    core = [verify_detatched_arm(), sample | Nock.logics_core()]
 
     sign = ECrypto.blood_l_signed_detached()
     valid = [sign, ECrypto.blood_msg() | ECrypto.londo().external.sign]
@@ -308,13 +408,25 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  The bex arm for taking bex:anoma from the logics core environment.
+
+  Can be gotten by defining gate locally as:
+
+  =localbex   =>  logics  |=  a=@  (bex a)
+
+  and then grabbing the arm of localbex.
+  """
+
+  @spec bex_arm() :: Noun.t()
+  def bex_arm() do
+    "[8 [9 4 0 127] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
+  end
+
   @spec bex() :: Noun.t()
   def bex() do
-    arm =
-      Noun.Format.parse_always("[8 [9 4 0 127] 9 2 10 [6 0 14] 0 2]")
-
     sample = 888
-    core = [arm, sample | Nock.logics_core()]
+    core = [bex_arm(), sample | Nock.logics_core()]
 
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 2], 0 | 1]) == {:ok, 4}
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 5], 0 | 1]) == {:ok, 32}
@@ -325,13 +437,26 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  The mix arm for taking mix:anoma from the logics core environment.
+
+  Can be gotten by defining gate locally as:
+
+  =localmix   =>  logics  |=  [a=@ b=@]  (mix [a b])
+
+  and then grabbing the arm of locamix.
+  """
+
+  @spec mix_arm() :: Noun.t()
+  def mix_arm() do
+    "[8 [9 4 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Format.parse_always()
+  end
+
   @spec mix() :: Noun.t()
   def mix() do
-    arm =
-      Noun.Format.parse_always("[8 [9 4 0 63] 9 2 10 [6 [0 28] 0 29] 0 2]")
-
     sample = [0 | 0]
-    core = [arm, sample | Nock.logics_core()]
+    core = [mix_arm(), sample | Nock.logics_core()]
 
     assert {:ok, 6} == Nock.nock(core, [9, 2, 10, [6, 1, 3 | 5], 0 | 1])
     assert {:ok, 0} == Nock.nock(core, [9, 2, 10, [6, 1, 11 | 11], 0 | 1])
@@ -339,14 +464,26 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  The mat arm for taking mat:anoma from the logics core environment.
+
+  Can be gotten by defining gate locally as:
+
+  =localmat   =>  logics  |=  a  (mat a)
+
+  and then grabbing the arm of locamix.
+  """
+
+  @spec mat_arm() :: Noun.t()
+  def mat_arm() do
+    "[8 [9 43 0 63] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
+  end
+
   # Please make some assertions ☹
   @spec mat() :: Noun.t()
   def mat() do
-    arm =
-      Noun.Format.parse_always("[8 [9 43 0 63] 9 2 10 [6 0 14] 0 2]")
-
     sample = 0
-    core = [arm, sample | Nock.logics_core()]
+    core = [mat_arm(), sample | Nock.logics_core()]
 
     core
   end
@@ -355,25 +492,60 @@ defmodule Examples.ENock do
   ##                      Block Cores                       ##
   ############################################################
 
+  @doc """
+  I am an lash arm in the block door.
+
+  My index inside the door can be seen by asking to dump the logic of
+  =llsh   =>  logics  |=  a=@  lsh:block
+  """
+
   @spec lsh(Noun.t()) :: Noun.t()
   def lsh(value) do
     block_calling_biop(value, 90)
   end
+
+  @doc """
+  I am an lash arm in the block door.
+
+  My index inside the door can be seen by asking to dump the logic of
+  =lmet   =>  logics  |=  a=@  met:block
+  """
 
   @spec met(Noun.t()) :: Noun.t()
   def met(value) do
     block_calling_mono(value, 190)
   end
 
+  @doc """
+  I am an lash arm in the block door.
+
+  My index inside the door can be seen by asking to dump the logic of
+  =luend   =>  logics  |=  a=@  luend:block
+  """
+
   @spec uend(Noun.t()) :: Noun.t()
   def uend(value) do
     block_calling_biop(value, 367)
   end
 
+  @doc """
+  I am an lash arm in the block door.
+
+  My index inside the door can be seen by asking to dump the logic of
+  =rsh   =>  logics  |=  a=@  rsh:block
+  """
+
   @spec rsh(Noun.t()) :: Noun.t()
   def rsh(value) do
     block_calling_biop(value, 767)
   end
+
+  @doc """
+  I evaluate met at block size 0 and gate-input 28.
+
+  met(0) evaluates the gate of the block door at block size 0,
+  [6 1 28] replaces the sample with 28.
+  """
 
   @spec met0() :: Noun.t()
   def met0() do
@@ -382,12 +554,26 @@ defmodule Examples.ENock do
     met
   end
 
+  @doc """
+  I evaluate met at block size 1 and gate-input 28.
+
+  met(1) evaluates the gate of the block door at block size 1,
+  [6 1 28] replaces the sample with 28.
+  """
+
   @spec met1() :: Noun.t()
   def met1() do
     met = met(1)
     assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 3}
     met
   end
+
+  @doc """
+  I evaluate met at block size 2 and gate-input 28.
+
+  met(2) evaluates the gate of the block door at block size 2,
+  [6 1 28] replaces the sample with 28.
+  """
 
   @spec met2() :: Noun.t()
   def met2() do
@@ -396,12 +582,27 @@ defmodule Examples.ENock do
     met
   end
 
+  @doc """
+  I evaluate uend at block size 0 and gate-input [5 80].
+
+  uend(0) evaluates the gate of the block door at block size 0,
+  [6 1 5 80] replaces the sample with [5 80].
+  """
+
   @spec uend0() :: Noun.t()
   def uend0() do
     uend = uend(0)
     assert {:ok, 16} == Nock.nock(uend, [9, 2, 10, [6, 1, 5 | 80], 0 | 1])
     uend
   end
+
+  @doc """
+  I evaluate uend at block size 1 and gate-input [3 80] and [4 80].
+
+  uend(1) evaluates the gate of the block door at block size 1,
+  [6 1 3 80] replaces the sample with [3 80],
+  [6 1 4 80] replaces the sample with [3 80]
+  """
 
   @spec uend1() :: Noun.t()
   def uend1() do
@@ -411,12 +612,26 @@ defmodule Examples.ENock do
     uend
   end
 
+  @doc """
+  I evaluate lsh at block size 0 and gate-input [2 6].
+
+  lsh(0) evaluates the gate of the block door at block size 0,
+  [6 1 2 6] replaces the sample with [2 6].
+  """
+
   @spec lsh0() :: Noun.t()
   def lsh0() do
     lsh = lsh(0)
     assert {:ok, 24} == Nock.nock(lsh, [9, 2, 10, [6, 1, 2 | 6], 0 | 1])
     lsh
   end
+
+  @doc """
+  I evaluate lsh at block size 1 and gate-input [2 6].
+
+  lsh(1) evaluates the gate of the block door at block size 1,
+  [6 1 2 6] replaces the sample with [2 6].
+  """
 
   @spec lsh1() :: Noun.t()
   def lsh1() do
@@ -425,12 +640,26 @@ defmodule Examples.ENock do
     lsh
   end
 
+  @doc """
+  I evaluate lsh at block size 1 and gate-input [2 6].
+
+  lsh(2) evaluates the gate of the block door at block size 2,
+  [6 1 2 6] replaces the sample with [2 6].
+  """
+
   @spec lsh2() :: Noun.t()
   def lsh2() do
     lsh = lsh(2)
     assert {:ok, 1536} == Nock.nock(lsh, [9, 2, 10, [6, 1, 2 | 6], 0 | 1])
     lsh
   end
+
+  @doc """
+  I evaluate rsh at block size 0 and gate-input [2 40].
+
+  rsh(0) evaluates the gate of the block door at block size 0,
+  [6 1 2 40] replaces the sample with [2 40].
+  """
 
   @spec rsh0() :: Noun.t()
   def rsh0() do
@@ -439,12 +668,26 @@ defmodule Examples.ENock do
     rsh
   end
 
+  @doc """
+  I evaluate rsh at block size 1 and gate-input [2 40].
+
+  rsh(1) evaluates the gate of the block door at block size 1,
+  [6 1 2 40] replaces the sample with [2 40].
+  """
+
   @spec rsh1() :: Noun.t()
   def rsh1() do
     rsh = rsh(1)
     assert {:ok, 2} == Nock.nock(rsh, [9, 2, 10, [6, 1, 2 | 40], 0 | 1])
     rsh
   end
+
+  @doc """
+  I evaluate rsh at block size 2 and gate-input [2 40].
+
+  rsh(2) evaluates the gate of the block door at block size 2,
+  [6 1 1 40] replaces the sample with [1 40].
+  """
 
   @spec rsh2() :: Noun.t()
   def rsh2() do
@@ -457,9 +700,17 @@ defmodule Examples.ENock do
   ##                          Normal Cores                          ##
   ####################################################################
 
-  @spec factorial() :: Noun.t()
-  def factorial() do
-    arm = Noun.Format.parse_always("
+  @doc """
+  I am the battery of the fib:tests gate of the anoma stadard library.
+
+  You can dump me by calling
+
+  .*  fib:tests  [0 2]
+  """
+
+  @spec factorial_arm() :: Noun.t()
+  def factorial_arm() do
+    "
     [ 8
       [1 1 0]
       8
@@ -480,9 +731,13 @@ defmodule Examples.ENock do
       2
       0
       1
-    ]")
+    ]" |> Format.parse_always()
+  end
+
+  @spec factorial() :: Noun.t()
+  def factorial() do
     sample = 1
-    core = [arm, sample | Nock.logics_core()]
+    core = [factorial_arm(), sample | Nock.logics_core()]
 
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 7], 0 | 1]) == {:ok, 13},
            "calling into the standard library works well"
@@ -496,6 +751,17 @@ defmodule Examples.ENock do
 
   @spec block_calling_biop(Noun.t(), Noun.t()) :: Noun.t()
   defp block_calling_biop(value, index) do
+    # get the battery for calling a 2-argument gate located at index
+    # `index` at a block door evaluated with block size value `value`
+
+    # check the index of the block by defining block locally
+    # =lblock   =>  logics  |=  a=@  block
+    # then check the gate index by dumping
+    # =lgateblock   =>  logics  |=  a=@  gate:block
+    # finally check how the door inputs its block-size by evaluating
+    # =>  logics  !=(~(gate block val))
+    # with different values
+
     arm =
       Noun.Format.parse_always(
         "[8 [8 [9 10 0 127] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
@@ -507,6 +773,17 @@ defmodule Examples.ENock do
 
   @spec block_calling_mono(Noun.t(), Noun.t()) :: Noun.t()
   defp block_calling_mono(value, index) do
+    # get the battery for calling a 2-argument gate located at index
+    # `index` at a block door evaluated with block size value `value`
+
+    # check the index of the block by defining block locally
+    # =lblock   =>  logics  |=  a=@  block
+    # then check the gate index by dumping
+    # =lgateblock   =>  logics  |=  a=@  gate:block
+    # finally check how the door inputs its block-size by evaluating
+    # =>  logics  !=(~(gate block val))
+    # with different values
+
     arm =
       Noun.Format.parse_always(
         "[8 [8 [9 10 0 127] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
