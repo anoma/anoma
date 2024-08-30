@@ -182,6 +182,14 @@ defmodule Anoma.Node.Transport do
   end
 
   @doc """
+  I locate a given transport server, taking the specified address
+  """
+  @spec start_server(Router.addr(), listen_addr()) :: Router.addr() | nil
+  def lookup_server(transport, server) do
+    Router.call(transport, {:lookup_server, server})
+  end
+
+  @doc """
   I notify the Transport Engine that the node specified by the given public id
   can be reached through the specified transport address.
 
@@ -361,6 +369,10 @@ defmodule Anoma.Node.Transport do
 
   def handle_call(:ping, _, s) do
     {:reply, :pong, s}
+  end
+
+  def handle_call({:lookup_server, server}, _from, state) do
+    {:reply, Map.get(state.servers, server), state}
   end
 
   ############################################################
