@@ -198,5 +198,12 @@ defmodule Anoma.Resource.Transaction do
 
       {MapSet.to_list(committed_set), MapSet.to_list(nullified_set)}
     end
+
+    def cm_tree(_tx, storage) do
+      CommitmentTree.new(
+        CommitmentTree.Spec.cm_tree_spec(),
+        Anoma.Node.Router.Engine.get_state(storage).rm_commitments
+      )
+    end
   end
 end

@@ -152,6 +152,13 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
       all_proofs_valid && delta_valid && resource_logic_valid
     end
 
+    def cm_tree(_tx, storage) do
+      CommitmentTree.new(
+        CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
+        Anoma.Node.Router.Engine.get_state(storage).cairo_rm_commitments
+      )
+    end
+
     @spec get_binding_pub_keys(list(binary())) :: list(byte())
     defp get_binding_pub_keys(compliance_outputs) do
       compliance_outputs

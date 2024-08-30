@@ -83,6 +83,7 @@ defmodule Anoma.Node.Storage do
                  Default: Anoma.Node.Storage.Order
     - `:rm_commitments` - The name of the Reource Machine Commitments table.
                           Default: Anoma.Node.Storage.RMCommitments
+    - `:cairo_rm_commitments` - The name of the Cairo RM Commitments table.
     - `:namespace` - The namespace used for writing functionality.
                      Default: []
     - `:topic` - The subscription topic.
@@ -92,6 +93,11 @@ defmodule Anoma.Node.Storage do
     field(:qualified, atom(), default: Anoma.Node.Storage.Qualified)
     field(:order, atom(), default: Anoma.Node.Storage.Order)
     field(:rm_commitments, atom(), default: Anoma.Node.Storage.RMCommitments)
+
+    field(:cairo_rm_commitments, atom(),
+      default: Anoma.Node.Storage.CairoRMCommitments
+    )
+
     field(:namespace, list(binary()), default: [])
     field(:topic, Router.Addr.t(), enforce: false)
   end
@@ -148,6 +154,7 @@ defmodule Anoma.Node.Storage do
             {:qualified, atom}
             | {:order, atom()}
             | {:rm_commitments, atom()}
+            | {:cairo_rm_commitments, atom()}
             | {:namespace, list(binary())}
             | {:topic, Router.Addr.t()}
           )
@@ -155,6 +162,7 @@ defmodule Anoma.Node.Storage do
               qualified: atom(),
               order: atom(),
               rm_commitments: atom(),
+              cairo_rm_commitments: atom(),
               namespace: list(binary()),
               topic: Router.Addr.t()
             }
@@ -166,6 +174,8 @@ defmodule Anoma.Node.Storage do
       qualified: opts[:qualified] || return.qualified,
       order: opts[:order] || return.order,
       rm_commitments: opts[:rm_commitments] || return.rm_commitments,
+      cairo_rm_commitments:
+        opts[:cairo_rm_commitments] || return.cairo_rm_commitments,
       namespace: opts[:namespace] || return.namespace,
       topic: opts[:topic] || return.namespace
     }
@@ -438,6 +448,7 @@ defmodule Anoma.Node.Storage do
     _del_q = :mnesia.delete_table(storage.qualified)
     _del_o = :mnesia.delete_table(storage.order)
     _del_c = :mnesia.delete_table(storage.rm_commitments)
+    _del_cairo = :mnesia.delete_table(storage.cairo_rm_commitments)
 
     # unless topic == nil do
     #  [
@@ -484,8 +495,18 @@ defmodule Anoma.Node.Storage do
            :mnesia.create_table(
              t.rm_commitments,
              add_rocks.(attributes: [:index, :hash])
+           ),
+         {:atomic, :ok} <-
+           :mnesia.create_table(
+             t.cairo_rm_commitments,
+             add_rocks.(attributes: [:index, :hash])
            ) do
       CommitmentTree.new(CommitmentTree.Spec.cm_tree_spec(), t.rm_commitments)
+
+      CommitmentTree.new(
+        CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
+        t.cairo_rm_commitments
+      )
     else
       # It is a question as to if we should reset the storage
       # schema... Instead we ask the user to do it if we notice the
