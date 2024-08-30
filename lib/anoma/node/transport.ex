@@ -8,12 +8,12 @@ defmodule Anoma.Node.Transport do
   ### Public API
   I provide the following public functionality:
   - `start_server/2`
-  - `receive_chunk/2`
   - `learn_node/3`
   - `learn_engine/3`
-  - `send/3`
   - `new_connection/2`
   - `disconnect/2`
+  - `send/3`
+  - `receive_chunk/2`
   """
 
   alias __MODULE__
@@ -116,14 +116,16 @@ defmodule Anoma.Node.Transport do
     - `:servers` - Stores a set of transport servers that the Transport Engine
       is currently running. Every transport server is mapped to an external
       transport address, by which messages may reach the Engine through this
-      server.
+      server. Default: empty.
     - `:known_nodes` - Maps every known node (indexed by its public id) to a
       set of transport addresses through which the node can be reached.
+      Default: empty.
     - `:known_engines` - Stores a set of known engines by their public id: every
       engine id is mapped to a public id of a node that the engine belongs to.
+      Default: empty.
     """
     field(:router, Router.addr())
-    field(:logger, Router.addr())
+    field(:logger, Router.addr(), enforce: false)
     field(:node_internal_id, Id.t())
     field(:transport_internal_id, Id.t())
     field(:connection_pool, Supervisor.supervisor())
@@ -481,7 +483,7 @@ defmodule Anoma.Node.Transport do
       with {:ok, %{nonce: other_nonce, id: other_id}} <-
              Anoma.Serialise.unpack(packed) do
         # TODO check structure of nonce/id
-        if (state.id == nil || state.id === other_id) &&
+        if (state.id == nil or state.id == other_id) and
              Anoma.Crypto.Sign.verify_detached(
                signature,
                packed,
@@ -525,9 +527,9 @@ defmodule Anoma.Node.Transport do
       with {:ok,
             %{mynonce: incoming_nonce, yournonce: outgoing_nonce, yourid: id}} <-
              Anoma.Serialise.unpack(packed) do
-        incoming_nonce === state.incoming_nonce &&
-          outgoing_nonce === state.outgoing_nonce &&
-          id === s.node_internal_id.external &&
+        incoming_nonce == state.incoming_nonce and
+          outgoing_nonce == state.outgoing_nonce and
+          id == s.node_internal_id.external and
           Anoma.Crypto.Sign.verify_detached(signature, packed, state.id.sign)
       end
     end
@@ -539,17 +541,8 @@ defmodule Anoma.Node.Transport do
 
     if node === nil do
       log_info({:queued, dst, nil, nil, s.logger})
-      # TODO limit queue size
-      %{
-        s
-        | pending_outgoing_engine_messages:
-            Map.update(
-              s.pending_outgoing_engine_messages,
-              dst,
-              [msg],
-              fn msgs -> [msg | msgs] end
-            )
-      }
+
+      enqueue_outgoing_engine_message(s, dst, msg)
     else
       conns = MapSetMap.get(s.node_connections, node)
 
@@ -565,16 +558,7 @@ defmodule Anoma.Node.Transport do
           Connection.send(active_conn, msg)
           s
         else
-          %{
-            s
-            | pending_outgoing_messages:
-                Map.update(
-                  s.pending_outgoing_messages,
-                  node,
-                  [msg],
-                  fn msgs -> [msg | msgs] end
-                )
-          }
+          enqueue_outgoing_message(s, node, msg)
         end
       else
         # no current connections--whether pending or active--so try to open one
@@ -596,16 +580,7 @@ defmodule Anoma.Node.Transport do
           s
         end
 
-        %{
-          s
-          | pending_outgoing_messages:
-              Map.update(
-                s.pending_outgoing_messages,
-                node,
-                [msg],
-                fn msgs -> [msg | msgs] end
-              )
-        }
+        enqueue_outgoing_message(s, node, msg)
       end
     end
   end
@@ -693,6 +668,35 @@ defmodule Anoma.Node.Transport do
   ############################################################
   #                          Helpers                         #
   ############################################################
+
+  @spec enqueue_outgoing_engine_message(t(), Id.Extern.t(), binary()) :: t()
+  defp enqueue_outgoing_engine_message(s, dst, msg) do
+    # TODO limit queue size
+    %{
+      s
+      | pending_outgoing_engine_messages:
+          Map.update(
+            s.pending_outgoing_engine_messages,
+            dst,
+            [msg],
+            fn msgs -> [msg | msgs] end
+          )
+    }
+  end
+
+  @spec enqueue_outgoing_message(t(), Id.Extern.t(), binary()) :: t()
+  defp enqueue_outgoing_message(s, node, msg) do
+    %{
+      s
+      | pending_outgoing_messages:
+          Map.update(
+            s.pending_outgoing_messages,
+            node,
+            [msg],
+            fn msgs -> [msg | msgs] end
+          )
+    }
+  end
 
   @doc """
   I return transport type of the given transport address.
