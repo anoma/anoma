@@ -23,7 +23,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
 
     # When the tx is not finalized, the delta is the collection of private keys
     # When the tx is finalized, the delta is the binding signature
-    field(:delta, binary(), default: %{})
+    field(:delta, binary(), default: <<>>)
   end
 
   @spec from_noun(Noun.t()) :: {:ok, t()}
@@ -173,7 +173,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
     end)
   end
 
-  @spec get_binding_messages(ShieldedTransaction.t()) :: list(byte())
+  @spec get_binding_messages(ShieldedTransaction.t()) :: list(list(byte()))
   def get_binding_messages(tx = %ShieldedTransaction{}) do
     (tx.nullifiers ++ tx.commitments)
     |> Enum.map(&:binary.bin_to_list/1)
