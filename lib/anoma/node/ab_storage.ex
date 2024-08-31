@@ -7,6 +7,8 @@ defmodule Anoma.Node.AbStorage do
   use TypedStruct
   require EventBroker.Event
 
+  alias __MODULE__
+
   @type bare_key() :: list(String.t())
   @type qualified_key() :: {integer(), bare_key()}
 
@@ -37,12 +39,12 @@ defmodule Anoma.Node.AbStorage do
     field(:value, term())
   end
 
-  def start_link() do
-    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   def init(_) do
-    {:ok, %__MODULE__{}}
+    {:ok, %AbStorage{}}
   end
 
   def handle_call({:read, {height, key}}, from, state) do
@@ -84,6 +86,38 @@ defmodule Anoma.Node.AbStorage do
         | uncommitted: new_kv,
           uncommitted_height: height,
           uncommitted_updates: new_updates
+      }
+
+      write_event =
+        EventBroker.Event.new_with_body(%__MODULE__.WriteEvent{
+          height: height,
+          key: key,
+          value: value
+        })
+
+      EventBroker.event(write_event)
+
+      {:noreply, new_state}
+    end
+  end
+
+  # fixme dedupe code with above
+  def handle_cast({:append, {height, key}, value}, state) do
+    unless height == state.uncommitted_height + 1 do
+      {:noreply, state}
+    else
+      key_old_updates = Map.get(state.uncommitted_updates, key, [])
+      key_new_updates = [height | key_old_updates]
+      new_updates = Map.put(state.uncommitted_updates, key, key_new_updates)
+      old_set_value = Map.get(state.uncommitted_updates, key, MapSet.new())
+      new_set_value = MapSet.put(old_set_value, value)
+      new_kv = Map.put_new(state.uncommitted, {height, key}, new_set_value)
+
+      new_state = %{
+        state
+      | uncommitted: new_kv,
+        uncommitted_height: height,
+        uncommitted_updates: new_updates
       }
 
       write_event =
