@@ -1,4 +1,4 @@
-defmodule SerialisationTest do
+defmodule AnomaTest.Serialisation do
   alias Examples.ESerialisation
   use TestHelper.TestMacro
   doctest Anoma.Serialise
