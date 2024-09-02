@@ -573,5 +573,23 @@
   ~/  %shas
   |=  [sal=@ ruz=@]
   (shax (mix sal (shax ruz)))
+++  og
+  ~/  %og
+  |_  a=@
+  ++  raw  :: Random bit generation
+    ~/  %raw
+    |=  b=@  ^-  @
+    =,  shim
+    %+  can
+      0
+    =+  c=(shas %og-a (mix b a))
+    |-  ^-  (list [@ @])
+    ?:  =(0 b)
+      ~
+    =+  d=(shas %og-b (mix b (mix a c)))
+    ?:  (lth b 256)
+      [[b (end [0 b] d)] ~]
+    [[256 d] $(c d, b (sub b 256))]
+  --
 --
 ==
