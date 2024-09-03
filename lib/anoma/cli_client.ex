@@ -8,6 +8,7 @@ defmodule Anoma.Cli.Client do
   changes may obviate this in the future.)
   """
 
+  alias Anoma.Crypto.Id
   alias Anoma.Resource
   alias Anoma.Resource.Transaction
   alias Anoma.Dump
@@ -67,7 +68,7 @@ defmodule Anoma.Cli.Client do
     else
       learn_about_the_server(server, transport, sock_addr)
 
-      server_engines = server_engines(server, router)
+      server_engines = server_engines(server)
 
       # tell the other router how to reach us
       Transport.learn_engine(
@@ -241,12 +242,11 @@ defmodule Anoma.Cli.Client do
   ############################################################
 
   @spec learn_about_the_server(
-          Anoma.Node.t() | Dump.dump(),
+          Anoma.Node.t() | Dump.pub_info(),
           Router.addr(),
           Transport.transport_addr()
-        ) ::
-          any()
-  defp learn_about_the_server(server = %Anoma.Node{}, transport, sock_path) do
+        ) :: any()
+  defp learn_about_the_server(server, transport, sock_path) do
     # tell our transport how to reach the node
     Transport.learn_node(
       transport,
@@ -254,7 +254,8 @@ defmodule Anoma.Cli.Client do
       sock_path
     )
 
-    # and how to reach its transport engine and mempool and storage
+    # and how to reach its transport, mempool, storage, configuration
+    # and router engines
     [
       server.transport,
       server.mempool,
@@ -266,61 +267,32 @@ defmodule Anoma.Cli.Client do
     |> learn_list(transport, server.router |> Addr.id())
   end
 
-  defp learn_about_the_server(server = %{}, transport, sock_path) do
-    # tell our transport how to reach the node
-    Transport.learn_node(
-      transport,
-      server.router.external,
-      sock_path
-    )
-
-    # and how to reach its transport engine and mempool and storage
-    [
-      server.transport_id,
-      elem(server.mempool, 0),
-      elem(server.storage, 0),
-      elem(server.configuration, 0),
-      server.router.external
-    ]
-    |> learn_list(transport, server.router.external)
-  end
-
   defp learn_list(xs, transport, router_id) when is_list(xs) do
     xs
     |> Enum.each(&Transport.learn_engine(transport, &1, router_id))
   end
 
-  @spec server_engines(Anoma.Node.t() | Dump.dump(), Router.addr()) :: %{
+  @spec server_engines(Anoma.Node.t() | Dump.pub_info()) :: %{
           atom() => Router.addr()
         }
-  defp server_engines(server = %Anoma.Node{}, our_r) do
+  defp server_engines(server) do
     %{
-      transport: %{our_r | server: nil, id: server.transport |> Addr.id()},
-      router: %{our_r | server: nil, id: server.router |> Addr.id()},
-      storage: %{our_r | server: nil, id: server.storage |> Addr.id()},
-      configuration: %{
-        our_r
-        | server: nil,
-          id: server.configuration |> Addr.id()
-      },
-      mempool: %{our_r | server: nil, id: server.mempool |> Addr.id()}
-    }
-  end
-
-  defp server_engines(server = %{}, our_r) do
-    # form an address.  this should be abstracted properly
-    %{
-      transport: %{our_r | server: nil, id: server.transport_id},
-      router: %{our_r | server: nil, id: server.router.external},
-      storage: %{our_r | server: nil, id: elem(server.storage, 0)},
-      configuration: %{our_r | server: nil, id: elem(server.configuration, 0)},
-      mempool: %{our_r | server: nil, id: elem(server.mempool, 0)}
+      transport: server.transport |> to_full_addr(),
+      mempool: server.mempool |> to_full_addr(),
+      storage: server.storage |> to_full_addr(),
+      configuration: server.configuration |> to_full_addr(),
+      router: server.router |> to_full_addr()
     }
   end
 
   ############################################################
   #                        Helper                            #
   ############################################################
+
+  @spec to_full_addr(Id.Extern.t() | Addr.t()) :: Addr.t()
+  defp to_full_addr(id_or_addr) do
+    %Addr{server: nil, id: id_or_addr |> Addr.id()}
+  end
 
   defp base64_storage_check(
          path_prefix,

@@ -257,9 +257,9 @@ defmodule Anoma.Cli do
     # load info of the running node, erroring if it appears not to exist, and
     # attempt to introduce ourselves to it
     # there should be a better way to find out its id(s)
-    dump_path = Anoma.System.Directories.data("node_keys.dmp")
+    pub_info_path = Anoma.System.Directories.data("pub_info.dmp")
     sock_path = Anoma.System.Directories.data("local.sock")
-    server = Anoma.Dump.load(dump_path)
+    server = Anoma.Dump.load(pub_info_path)
     {router, transport, server, {:unix, sock_path}}
   end
 

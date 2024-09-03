@@ -203,7 +203,7 @@ defmodule Anoma.Node do
 
       if should_socket? do
         # dump the initial state so our keys are persisted
-        Anoma.Dump.dump("node_keys.dmp", name)
+        Anoma.Dump.dump({"node_keys.dmp", "pub_info.dmp"}, name)
       end
 
       {:ok, pid}
