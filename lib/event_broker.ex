@@ -43,7 +43,7 @@ defmodule EventBroker do
   """
 
   @spec event(GenServer.server(), EventBroker.Event.t()) :: :ok
-  def event(broker, event = %EventBroker.Event{}) do
+  def event(event = %EventBroker.Event{}, broker \\ EventBroker.Broker) do
     GenServer.cast(broker, {:event, event})
   end
 
@@ -80,7 +80,7 @@ defmodule EventBroker do
 
   @spec subscribe(pid(), GenServer.server(), filter_spec_list) ::
           :ok | String.t()
-  def subscribe(pid, registry, filter_spec_list) do
+  def subscribe(pid, filter_spec_list, registry \\ EventBroker.Registry) do
     GenServer.call(registry, {:subscribe, pid, filter_spec_list})
   end
 
@@ -91,8 +91,8 @@ defmodule EventBroker do
   """
 
   @spec subscribe_me(GenServer.server(), filter_spec_list) :: :ok | String.t()
-  def subscribe_me(registry, filter_spec_list) do
-    subscribe(self(), registry, filter_spec_list)
+  def subscribe_me(filter_spec_list, registry \\ EventBroker.Registry) do
+    subscribe(self(), filter_spec_list, registry)
   end
 
   @doc """
@@ -112,7 +112,7 @@ defmodule EventBroker do
   """
 
   @spec unsubscribe(pid(), GenServer.server(), filter_spec_list) :: :ok
-  def unsubscribe(pid, registry, filter_spec_list) do
+  def unsubscribe(pid, filter_spec_list, registry \\ EventBroker.Registry) do
     GenServer.call(registry, {:unsubscribe, pid, filter_spec_list})
   end
 
@@ -123,7 +123,7 @@ defmodule EventBroker do
   """
 
   @spec unsubscribe_me(GenServer.server(), filter_spec_list) :: :ok
-  def unsubscribe_me(registry, filter_spec_list) do
-    unsubscribe(self(), registry, filter_spec_list)
+  def unsubscribe_me(filter_spec_list, registry \\ EventBroker.Registry) do
+    unsubscribe(self(), filter_spec_list, registry)
   end
 end
