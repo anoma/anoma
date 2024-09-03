@@ -12,6 +12,7 @@ defmodule Anoma.Dump do
   I give access to following public dumping functionality:
 
   - `dump/2`
+  - `dump_full_path/2`
   - `get_all/1`
   - `get_state/1`
   - `get_tables/1`
@@ -148,7 +149,7 @@ defmodule Anoma.Dump do
   """
 
   @dialyzer {:no_return, launch: 2}
-  @spec launch(String.t(), atom(), [launch_option()]) ::
+  @spec launch(Path.t(), atom(), [launch_option()]) ::
           {:ok, %Node{}} | any()
   def launch(file, name, options \\ []) do
     load = file |> load()
@@ -182,7 +183,7 @@ defmodule Anoma.Dump do
   I currently allow for atom creation in the loaded term.
   """
 
-  @spec load(String.t()) :: any() | dump()
+  @spec load(Path.t()) :: any() | dump()
   def load(name) do
     {:ok, bin} = File.read(name)
     Plug.Crypto.non_executable_binary_to_term(bin)
@@ -195,6 +196,7 @@ defmodule Anoma.Dump do
   See `Anoma.System.Directories` for more information about the path
   resolution and for the second atom.
   """
+
   @spec remove_dump(Path.t()) :: :ok
   @spec remove_dump(Path.t(), atom()) :: :ok
   def remove_dump(file, env \\ Application.get_env(:anoma, :env)) do
@@ -282,18 +284,22 @@ defmodule Anoma.Dump do
   end
 
   @doc """
-  I get the engine states in order:
+  I get the following engine states:
   - router
-  - mempool topic
-  - executor topic
-  - dumper
-  - storage
+  - transport
+  - configuration
   - logger
   - clock
   - ordering
   - mempool
   - pinger
   - executor
+  - storage
+  - dumper
+  - mempool topic
+  - executor topic
+  - logger topic
+  - storage topic
   """
 
   @spec get_state(atom()) ::
