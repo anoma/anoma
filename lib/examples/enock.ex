@@ -484,6 +484,36 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  The shax arm for taking shax:anoma from the logics core environment.
+
+  Can be gotten by defining gate locally as:
+
+  =localshax   =>  logics  |=  a=@  (shax a)
+
+  and then grabbing the arm of localshax.
+  """
+
+  @spec shax_arm() :: Noun.t()
+  def shax_arm() do
+    "[8 [9 22 0 31] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
+  end
+
+  def shax() do
+    sample = 0
+    core = [shax_arm(), sample | Nock.logics_core()]
+
+    assert {:ok,
+            38_772_261_170_797_515_502_142_737_251_560_910_253_885_555_854_579_348_417_967_781_179_871_348_437_219} ==
+             Nock.nock(core, [9, 2, 0 | 1])
+
+    assert {:ok,
+            55_140_411_965_103_990_925_642_572_973_048_070_470_495_109_172_463_110_593_783_713_869_232_563_762_634} ==
+             Nock.nock(core, [9, 2, 10, [6, 1 | 7], 0 | 1])
+
+    core
+  end
+
   ############################################################
   ##                      Block Cores                       ##
   ############################################################

@@ -16,6 +16,7 @@ defmodule AnomaTest.Nock do
     ENock.verify()
     ENock.bex()
     ENock.mix()
+    ENock.shax()
     ENock.met0()
     ENock.met1()
     ENock.met2()
