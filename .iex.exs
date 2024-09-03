@@ -15,6 +15,15 @@ alias Node.{
 
 alias Router.{Addr, Engine}
 
+alias Anoma.Crypto
+alias Anoma.Crypto.{
+  Encrypt,
+  Id,
+  Randomness,
+  Sign,
+  Symmetric
+}
+
 alias Examples.{
   EBlock,
   EClient,
