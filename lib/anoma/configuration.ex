@@ -141,8 +141,8 @@ defmodule Anoma.Configuration do
   end
 
   @spec locate_dump_file(configuration_map()) :: Path.t() | nil
-  def locate_dump_file(path) do
-    dump_path = path["dump"]["dump"]
+  def locate_dump_file(config) do
+    dump_path = config["dump"]["dump"]
 
     if dump_path && File.exists?(dump_path) do
       dump_path
