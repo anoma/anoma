@@ -35,6 +35,7 @@ defmodule Nock do
   @layer_4_context_mug 1_869_390_925
   @layer_5_context_mug 4_018_337_361
   @layer_6_context_mug 3_932_234_981
+  @layer_7_context_mug 3_812_982_048
   @layer_4_block_context_mug 2_756_805_836
 
   # hardcoded jet registry
@@ -81,6 +82,8 @@ defmodule Nock do
       {"jam", 7, @layer_5_context_mug, &Nock.Jets.jam/1, :enabled, 50},
     3_271_615_052 =>
       {"cue", 7, @layer_5_context_mug, &Nock.Jets.cue/1, :enabled, 50},
+    1_423_749_879 =>
+      {"shax", 7, @layer_7_context_mug, &Nock.Jets.shax/1, :enabled, 100},
     1_761_078_299 =>
       {"met", 14, @layer_4_block_context_mug, &Nock.Jets.met/1, :enabled, 20},
     3_976_423_375 =>

@@ -454,4 +454,13 @@ defmodule Nock.Jets do
         :error
     end
   end
+
+  def shax(core) do
+    with {:ok, noun} when is_noun_atom(noun) <- sample(core),
+         sample <- Noun.atom_integer_to_binary(noun) do
+      {:ok, :crypto.hash(:sha256, sample) |> Noun.atom_binary_to_integer()}
+    else
+      _ -> :error
+    end
+  end
 end
