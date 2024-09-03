@@ -515,6 +515,39 @@ defmodule Examples.ENock do
   end
 
   ############################################################
+  ##                      OG Cores                          ##
+  ############################################################
+
+  @doc """
+  I represent the raw gate call as a 2-argument gate.
+
+  Can be gotten by defining
+
+  =lraw   =>  logics  |=   [a=@ b=@]  (~(raw og a) b)
+  """
+
+  @spec raw_arm() :: Noun.t()
+  def raw_arm() do
+    arm =
+      "[8 [8 [9 47 0 31] 9 2 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      |> Format.parse_always()
+
+    sample = [0, 0]
+
+    [arm, sample | Nock.logics_core()]
+  end
+
+  @doc """
+  I am function calling the raw gate of the og door with specified
+  seed and bitwidth.
+  """
+
+  @spec raw_call(Noun.t(), Noun.t()) :: {:ok, Noun.t()}
+  def raw_call(seed, width) do
+    Nock.nock(raw_arm(), [9, 2, 10, [6, 1 | [seed | width]], 0 | 1])
+  end
+
+  ############################################################
   ##                      Block Cores                       ##
   ############################################################
 
