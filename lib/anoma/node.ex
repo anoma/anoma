@@ -189,7 +189,7 @@ defmodule Anoma.Node do
     end
 
     with {:ok, pid} <-
-           GenServer.start_link(__MODULE__, settings, name: name) do
+           GenServer.start_link(__MODULE__, args, name: name) do
       case kind do
         :new_storage ->
           snap = settings[:snapshot_path]
@@ -230,8 +230,10 @@ defmodule Anoma.Node do
     end
   end
 
-  @spec init(engine_configuration() | Anoma.Dump.dump()) :: any()
-  def init(args) do
+  @spec init(configuration()) :: any()
+  def init(configuration) do
+    {_, args} = configuration[:settings]
+    testing = configuration[:testing]
     {log_id, log_st} = args[:logger]
     {clock_id, _clock_st} = args[:clock]
     {config_id, config_st} = args[:configuration]
@@ -357,7 +359,7 @@ defmodule Anoma.Node do
     Dumper.start(dumper)
     Anoma.Node.Router.set_logger(router, logger)
 
-    if Mix.env() in [:dev, :prod] do
+    if Mix.env() in [:dev, :prod] and not testing do
       Anoma.Node.Transport.start_server(
         transport,
         {:unix, Anoma.System.Directories.data("local.sock")}
