@@ -66,12 +66,11 @@ defmodule Nock.Jets do
   This value should match Nock.@layer_1_contex_mug
   """
   @spec calculate_mug_of_layer(non_neg_integer()) :: non_neg_integer()
-  def calculate_mug_of_layer(parent_layer) do
-    # A core with a single gate will always have index 4 populated by
-    # a gate
-    with {:ok, core} <- calculate_core(4, parent_layer),
-         {:ok, parent} <- Noun.axis(7, core) do
-      Noun.mug(parent)
+  def calculate_mug_of_layer(layer) do
+    context_axis = Integer.pow(2, Nock.stdlib_layers() - layer + 1) - 1
+
+    with {:ok, context} <- Noun.axis(context_axis, Nock.stdlib_core()) do
+      mug(context)
     end
   end
 
