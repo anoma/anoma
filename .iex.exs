@@ -1,15 +1,15 @@
 alias Anoma.{Node, Block, Dump, Mnesia}
 
 alias Node.{
-  Router,
-  Transport,
-  Ordering,
-  Executor,
-  Mempool,
-  Pinger,
   Clock,
+  Executor,
   Logger,
-  Storage
+  Mempool,
+  Ordering,
+  Pinger,
+  Router,
+  Storage,
+  Transport
 }
 
 alias Router.Engine
