@@ -2,6 +2,7 @@ alias Anoma.{Node, Block, Dump, Mnesia}
 
 alias Node.{
   Clock,
+  Dumper,
   Executor,
   Logger,
   Mempool,
@@ -12,7 +13,7 @@ alias Node.{
   Transport
 }
 
-alias Router.Engine
+alias Router.{Addr, Engine}
 
 alias Examples.{
   EBlock,
