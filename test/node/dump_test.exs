@@ -56,7 +56,8 @@ defmodule AnomaTest.Node.Dump do
 
     block_store_old = Mnesia.dump(:dump_blocks)
 
-    Anoma.Dump.dump("dump_test.dmp", name)
+    dump_file = "dump_test.dmp"
+    Anoma.Dump.dump(dump_file, name)
 
     id = node.router.id
     sname = Anoma.Node.Router.process_name(:supervisor, id)
@@ -69,9 +70,7 @@ defmodule AnomaTest.Node.Dump do
     assert Process.whereis(sname) == nil
 
     {:ok, pid} =
-      Anoma.Dump.launch(Directories.data("dump_test.dmp"), :dump_new,
-        testing: true
-      )
+      Anoma.Dump.launch(Directories.data(dump_file), :dump_new, testing: true)
 
     new_node = Anoma.Node.state(:dump_new)
 
@@ -83,6 +82,6 @@ defmodule AnomaTest.Node.Dump do
     DynamicSupervisor.stop(sname, :normal)
     GenServer.stop(pid, :normal)
 
-    Anoma.Dump.remove_dump("dump_test.dmp")
+    Anoma.Dump.remove_dump(dump_file)
   end
 end
