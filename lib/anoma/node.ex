@@ -149,6 +149,14 @@ defmodule Anoma.Node do
 
   @spec start_link(configuration()) :: GenServer.on_start()
   def start_link(args) do
+    args =
+      Keyword.validate!(args, [
+        :name,
+        :settings,
+        use_rocks: true,
+        testing: false
+      ])
+
     # strawman pending proper lockfiles
     # also need to clean this up once we're done
     unix_path = Anoma.System.Directories.data("local.sock")
