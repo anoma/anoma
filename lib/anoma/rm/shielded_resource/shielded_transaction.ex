@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource.ShieldedTransaction do
+defmodule Anoma.RM.ShieldedResource.ShieldedTransaction do
   @moduledoc """
   I am a shielded resource machine transaction.
   """
@@ -9,8 +9,8 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
 
   alias __MODULE__
   use TypedStruct
-  alias Anoma.ShieldedResource.PartialTransaction
-  alias Anoma.ShieldedResource.ComplianceOutput
+  alias Anoma.RM.ShieldedResource.PartialTransaction
+  alias Anoma.RM.ShieldedResource.ComplianceOutput
   alias Anoma.Node.Storage
 
   typedstruct enforce: true do

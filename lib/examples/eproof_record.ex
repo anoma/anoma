@@ -4,7 +4,7 @@ defmodule Examples.EProofRecord do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Anoma.Resource.ProofRecord
+  alias Anoma.RM.Resource.ProofRecord
 
   alias Examples.EResource
 

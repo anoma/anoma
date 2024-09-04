@@ -8,8 +8,8 @@ defmodule Anoma.Cli.Client do
   changes may obviate this in the future.)
   """
 
-  alias Anoma.Resource
-  alias Anoma.Resource.Transaction
+  alias Anoma.RM.Resource
+  alias Anoma.RM.Resource.Transaction
   alias Anoma.Dump
   alias Anoma.Node.Router
   alias Anoma.Node.Transport

@@ -1,9 +1,9 @@
-defmodule Anoma.Resource do
+defmodule Anoma.RM.Resource do
   @moduledoc """
   Ι represent a resource.
 
-  Do not create with `%Anoma.Resource{}` directly, instead use
-  `%{Anoma.Resource.new | ...}` for random nonce and seed.
+  Do not create with `%Anoma.RM.Resource{}` directly, instead use
+  `%{Anoma.RM.Resource.new | ...}` for random nonce and seed.
   """
 
   @behaviour Noun.Nounable.Kind
@@ -11,7 +11,7 @@ defmodule Anoma.Resource do
   require Logger
 
   alias Noun.Nounable
-  alias Anoma.Resource.Delta
+  alias Anoma.RM.Resource.Delta
   alias __MODULE__
   use TypedStruct
 

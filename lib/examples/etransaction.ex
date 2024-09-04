@@ -4,8 +4,8 @@ defmodule Examples.ETransaction do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Anoma.Resource.Delta
-  alias Anoma.Resource.Transaction, as: TTransaction
+  alias Anoma.RM.Resource.Delta
+  alias Anoma.RM.Resource.Transaction, as: TTransaction
   alias Anoma.RM.Transaction
 
   alias Examples.{EResource, EProofRecord}

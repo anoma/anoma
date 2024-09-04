@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource do
+defmodule Anoma.RM.ShieldedResource do
   @moduledoc """
   I am a shielded resource.
   """

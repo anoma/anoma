@@ -1,7 +1,7 @@
 defmodule AnomaTest.Node.Executor.Worker do
   use TestHelper.TestMacro, async: true
 
-  alias Anoma.Resource.Delta
+  alias Anoma.RM.Resource.Delta
   alias Anoma.Node.{Storage, Ordering, Router}
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Router.Engine
@@ -199,9 +199,9 @@ defmodule AnomaTest.Node.Executor.Worker do
     env: env,
     router: router
   } do
-    import Anoma.Resource
-    alias Anoma.Resource.ProofRecord
-    alias Anoma.Resource.Transaction
+    import Anoma.RM.Resource
+    alias Anoma.RM.Resource.ProofRecord
+    alias Anoma.RM.Resource.Transaction
 
     {:ok, topic} = Router.new_topic(router)
     :ok = Router.call(router, {:subscribe_topic, topic, :local})
@@ -276,9 +276,9 @@ defmodule AnomaTest.Node.Executor.Worker do
   end
 
   test "worker verifies cairo proofs", %{env: env, router: router} do
-    alias Anoma.ShieldedResource.ShieldedTransaction
-    alias Anoma.ShieldedResource.PartialTransaction
-    alias Anoma.ShieldedResource.ProofRecord
+    alias Anoma.RM.ShieldedResource.ShieldedTransaction
+    alias Anoma.RM.ShieldedResource.PartialTransaction
+    alias Anoma.RM.ShieldedResource.ProofRecord
 
     id = System.unique_integer([:positive])
 

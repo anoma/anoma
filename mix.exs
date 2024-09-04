@@ -111,7 +111,7 @@ defmodule Anoma.MixProject do
 
   def group_for_modules() do
     [
-      "Resource Machine": [~r/^Nock.?/, ~r/^Noun.?/, ~r/^Anoma.Resource.?/],
+      "Resource Machine": [~r/^Nock.?/, ~r/^Noun.?/, ~r/^Anoma.RM.Resource.?/],
       "Anoma Actors": [Anoma.Node],
       Mempool: ~r/^Anoma.Node.Mempool.?/,
       Executor: ~r/^Anoma.Node.Executor.?/,

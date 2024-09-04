@@ -1,4 +1,4 @@
-defmodule Anoma.Resource.Transaction do
+defmodule Anoma.RM.Resource.Transaction do
   @moduledoc """
   I represent a resource machine transaction
   """
@@ -11,10 +11,10 @@ defmodule Anoma.Resource.Transaction do
   alias __MODULE__
   use TypedStruct
 
-  import Anoma.Resource
-  alias Anoma.Resource
-  alias Anoma.Resource.Delta
-  alias Anoma.Resource.ProofRecord
+  import Anoma.RM.Resource
+  alias Anoma.RM.Resource
+  alias Anoma.RM.Resource.Delta
+  alias Anoma.RM.Resource.ProofRecord
   import Noun
 
   # doesn't have all the fields yet.

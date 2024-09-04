@@ -4,7 +4,7 @@ defmodule Examples.EResource do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Anoma.Resource
+  alias Anoma.RM.Resource
 
   alias Examples.{ENock, ECrypto}
 
