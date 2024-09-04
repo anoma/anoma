@@ -279,6 +279,9 @@ defmodule AnomaTest.Node.Executor.Worker do
     alias Anoma.ShieldedResource.ShieldedTransaction
     alias Anoma.ShieldedResource.PartialTransaction
     alias Anoma.ShieldedResource.ProofRecord
+    alias Anoma.ShieldedResource
+    alias Anoma.Constants
+    alias Anoma.ShieldedResource.ComplianceInput
 
     id = System.unique_integer([:positive])
 
@@ -289,34 +292,58 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.ensure_new(storage)
     Ordering.reset(env.ordering)
 
-    compliance_inputs = """
-    {
-    "input": {
-        "logic" : "0x78641adee85319d58ec95e4d1d4127d96a9ca365e77b5e06f286e71f9d6ca70",
-        "label" : "0x12",
-        "quantity" : "0x13",
-        "data" : "0x14",
-        "eph" : true,
-        "nonce" : "0x26",
-        "npk" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
-        "rseed" : "0x48"
-    },
-    "output": {
-        "logic" : "0x78641adee85319d58ec95e4d1d4127d96a9ca365e77b5e06f286e71f9d6ca70",
-        "label" : "0x12",
-        "quantity" : "0x13",
-        "data" : "0x812",
-        "eph" : true,
-        "nonce" : "0x104",
-        "npk" : "0x195",
-        "rseed" : "0x16"
-    },
-    "input_nf_key": "0x1",
-    "merkle_path": [{"fst": "0x33", "snd": true}, {"fst": "0x83", "snd": false}, {"fst": "0x73", "snd": false}, {"fst": "0x23", "snd": false}, {"fst": "0x33", "snd": false}, {"fst": "0x43", "snd": false}, {"fst": "0x53", "snd": false}, {"fst": "0x3", "snd": false}, {"fst": "0x36", "snd": false}, {"fst": "0x37", "snd": false}, {"fst": "0x118", "snd": false}, {"fst": "0x129", "snd": false}, {"fst": "0x12", "snd": true}, {"fst": "0x33", "snd": false}, {"fst": "0x43", "snd": false}, {"fst": "0x156", "snd": true}, {"fst": "0x63", "snd": false}, {"fst": "0x128", "snd": false}, {"fst": "0x32", "snd": false}, {"fst": "0x230", "snd": true}, {"fst": "0x3", "snd": false}, {"fst": "0x33", "snd": false}, {"fst": "0x223", "snd": false}, {"fst": "0x2032", "snd": true}, {"fst": "0x32", "snd": false}, {"fst": "0x323", "snd": false}, {"fst": "0x3223", "snd": false}, {"fst": "0x203", "snd": true}, {"fst": "0x31", "snd": false}, {"fst": "0x32", "snd": false}, {"fst": "0x22", "snd": false}, {"fst": "0x23", "snd": true}],
-    "rcv": "0x3",
-    "eph_root": "0x4"
+    # create an input resource
+    input_resource = %ShieldedResource{
+      # we don't have a real resource logic, use the compliance circuit as resource logic
+      logic: Constants.cairo_compliance_program_hash(),
+      label: Cairo.random_felt() |> :binary.list_to_bin(),
+      quantity: :binary.copy(<<0>>, 31) <> <<5>>,
+      data: Cairo.random_felt() |> :binary.list_to_bin(),
+      eph: false,
+      nonce: Cairo.random_felt() |> :binary.list_to_bin(),
+      # TODO: add an API to generate the npk from input_nf_key
+      npk:
+        <<7, 117, 37, 130, 197, 74, 66, 254, 15, 163, 92, 64, 240, 114, 147,
+          187, 125, 142, 254, 144, 226, 29, 141, 44, 6, 167, 219, 82, 215,
+          217, 183, 161>>,
+      rseed: Cairo.random_felt() |> :binary.list_to_bin()
     }
-    """
+
+    input_nf_key = :binary.copy(<<0>>, 31) <> <<1>>
+    eph_root = Cairo.random_felt() |> :binary.list_to_bin()
+
+    # create an output resource
+    input_nf = ShieldedResource.nullifier(input_resource)
+    output_resource = ShieldedResource.set_nonce(input_resource, input_nf)
+
+    rcv = :binary.copy(<<0>>, 31) <> <<3>>
+
+    # Mock cm tree history
+    cm_tree =
+      CommitmentTree.new(
+        CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
+        Anoma.Node.Router.Engine.get_state(storage).cairo_rm_commitments
+      )
+
+    input_resource_cm = ShieldedResource.commitment(input_resource)
+    # Insert the input resouce to the tree
+    {ct, anchor} = CommitmentTree.add(cm_tree, [input_resource_cm])
+    # Get the merkle proof of the input resource
+    merkle_proof = CommitmentTree.prove(ct, 0)
+    # Insert the cuurent root to the storage
+    Storage.put(storage, ["rm", "commitment_root", anchor], true)
+
+    # Generate the compliance inputs
+    compliance_inputs =
+      %ComplianceInput{
+        input_resource: input_resource,
+        merkel_proof: merkle_proof,
+        output_resource: output_resource,
+        input_nf_key: input_nf_key,
+        eph_root: eph_root,
+        rcv: rcv
+      }
+      |> ComplianceInput.to_json_string()
 
     {:ok, compliance_proof} =
       ProofRecord.generate_compliance_proof(compliance_inputs)
@@ -340,12 +367,6 @@ defmodule AnomaTest.Node.Executor.Worker do
         delta: priv_keys
       }
       |> ShieldedTransaction.finalize()
-
-    # Mock root history: insert the cuurent roots to the storage
-    rm_tx.roots
-    |> Enum.each(fn root ->
-      Storage.put(storage, ["rm", "commitment_root", root], true)
-    end)
 
     rm_tx_noun = Noun.Nounable.to_noun(rm_tx)
     rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
