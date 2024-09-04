@@ -547,6 +547,14 @@ defmodule Examples.ENock do
     Nock.nock(raw_arm(), [9, 2, 10, [6, 1 | [seed | width]], 0 | 1])
   end
 
+  @spec raw_27_4() :: {:ok, Noun.t()}
+  def raw_27_4() do
+    call = raw_call(27, 4)
+    {:ok, 9} = call
+
+    call
+  end
+
   ############################################################
   ##                      Block Cores                       ##
   ############################################################

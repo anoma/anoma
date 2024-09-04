@@ -28,6 +28,7 @@ defmodule AnomaTest.Nock do
     ENock.rsh2()
     ENock.uend0()
     ENock.uend1()
+    ENock.raw_27_4()
     # Next one calls this... so uneeded but who cares
     ENock.successful_inc()
     ENock.unsuccessful_inc()
