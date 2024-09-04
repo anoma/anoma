@@ -5,7 +5,7 @@ defmodule AnomaTest.Node do
 
   test "node works" do
     # Node.start_link(:anoma)
-    # resource_1 = %Anoma.RM.Resource{quantity: 1}
+    # resource_1 = %Anoma.RM.Transparent.Resource{quantity: 1}
     # Communicator.new_intent(:anoma_com, resource_1)
     # Primary.dump_state(:anoma)
   end

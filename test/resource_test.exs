@@ -1,6 +1,6 @@
 defmodule AnomaTest.Resource do
   use TestHelper.TestMacro, async: true
-  doctest Anoma.RM.Resource
+  doctest Anoma.RM.Transparent.Resource
 
   alias Examples.{EResource, EProofRecord, ETransaction}
 

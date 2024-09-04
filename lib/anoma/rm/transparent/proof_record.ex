@@ -4,7 +4,7 @@ defmodule Anoma.RM.Transparent.ProofRecord do
 
   @behaviour Noun.Nounable.Kind
 
-  alias Anoma.RM.Resource
+  alias Anoma.RM.Transparent.Resource
   alias Anoma.RM.Transparent.Proof
 
   typedstruct enforce: true do

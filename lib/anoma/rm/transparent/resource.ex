@@ -1,9 +1,9 @@
-defmodule Anoma.RM.Resource do
+defmodule Anoma.RM.Transparent.Resource do
   @moduledoc """
   Ι represent a resource.
 
-  Do not create with `%Anoma.RM.Resource{}` directly, instead use
-  `%{Anoma.RM.Resource.new | ...}` for random nonce and seed.
+  Do not create with `%Anoma.RM.Transparent.Resource{}` directly, instead use
+  `%{Anoma.RM.Transparent.Resource.new | ...}` for random nonce and seed.
   """
 
   @behaviour Noun.Nounable.Kind

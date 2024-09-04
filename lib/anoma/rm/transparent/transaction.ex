@@ -11,8 +11,8 @@ defmodule Anoma.RM.Transparent.Transaction do
   alias __MODULE__
   use TypedStruct
 
-  import Anoma.RM.Resource
-  alias Anoma.RM.Resource
+  import Anoma.RM.Transparent.Resource
+  alias Anoma.RM.Transparent.Resource
   alias Anoma.RM.Transparent.Delta
   alias Anoma.RM.Transparent.ProofRecord
   import Noun

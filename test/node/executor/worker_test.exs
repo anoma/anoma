@@ -199,7 +199,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     env: env,
     router: router
   } do
-    import Anoma.RM.Resource
+    import Anoma.RM.Transparent.Resource
     alias Anoma.RM.Transparent.ProofRecord
     alias Anoma.RM.Transparent.Transaction
 
