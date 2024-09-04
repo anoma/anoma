@@ -24,6 +24,19 @@ alias Anoma.Crypto.{
   Symmetric
 }
 
+alias Anoma.Identity
+alias Anoma.Identity.{
+  Backend,
+  Capabilities,
+  Encapsulated,
+  Evidence,
+  Manager,
+  Name,
+  Parameters,
+  SignsFor,
+  Verification
+}
+
 alias Examples.{
   EBlock,
   EClient,
