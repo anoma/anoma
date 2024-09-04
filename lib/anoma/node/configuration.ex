@@ -14,7 +14,7 @@ defmodule Anoma.Node.Configuration do
 
   alias __MODULE__
   alias Anoma.Node.Router
-  alias Anoma.Node.Logger
+  alias Anoma.Node.EventLogger
 
   use TypedStruct
   use Router.Engine
@@ -148,7 +148,7 @@ defmodule Anoma.Node.Configuration do
   ############################################################
 
   defp log_info({:dump_ok, dump_path, node_name, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Dump successful. Snapshot path: #{inspect(dump_path)}. Node name: #{inspect(node_name)}"
@@ -156,7 +156,7 @@ defmodule Anoma.Node.Configuration do
   end
 
   defp log_info({:dump_error, dump_path, node_name, reason, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :error,
       "Dump failed. Snapshot path: #{inspect(dump_path)}.
@@ -165,7 +165,7 @@ defmodule Anoma.Node.Configuration do
   end
 
   defp log_info({:no_config, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :error,
       "No configuration provided, Not performing action"

@@ -4,7 +4,7 @@ defmodule Anoma.Node.Solver do
   """
 
   alias Anoma.RM.Transaction
-  alias Anoma.Node.{Router, Logger}
+  alias Anoma.Node.{Router, EventLogger}
   alias __MODULE__
 
   use TypedStruct
@@ -190,7 +190,7 @@ defmodule Anoma.Node.Solver do
   ############################################################
 
   defp log_info({:solve, unsolved, solved, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Solved. Unsolved: #{inspect(unsolved)}. Solved: #{inspect(solved)}."
@@ -198,7 +198,7 @@ defmodule Anoma.Node.Solver do
   end
 
   defp log_info({:add, intent, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Request to add intent: #{inspect(intent)}."
@@ -206,7 +206,7 @@ defmodule Anoma.Node.Solver do
   end
 
   defp log_info({:del, intent, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Request to delete intent: #{inspect(intent)}."
@@ -214,13 +214,13 @@ defmodule Anoma.Node.Solver do
   end
 
   defp log_info({:del_solved, nolonger_solved, logger}) do
-    Logger.add(logger, :debug, "After intent deletion,
+    EventLogger.add(logger, :debug, "After intent deletion,
     following transactions are no longer solved:
     #{inspect(nolonger_solved)}.")
   end
 
   defp log_info({:get, solved, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Request to get solved: #{inspect(solved)}."

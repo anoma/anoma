@@ -28,7 +28,7 @@ defmodule Anoma.Node.Ordering do
   - `handle_new_order/2`
   """
 
-  alias Anoma.Node.{Router, Logger, Storage}
+  alias Anoma.Node.{Router, EventLogger, Storage}
   alias Anoma.Transaction
   alias __MODULE__
 
@@ -295,7 +295,7 @@ defmodule Anoma.Node.Ordering do
   ############################################################
 
   defp log_info({true, state, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Requested true order: #{inspect(state)}"
@@ -303,12 +303,12 @@ defmodule Anoma.Node.Ordering do
   end
 
   defp log_info({:new, order, map, logger}) do
-    Logger.add(logger, :info, "Requested new order.
+    EventLogger.add(logger, :info, "Requested new order.
       Next order: #{inspect(order)}. New hash: #{inspect(map)}")
   end
 
   defp log_info({:reset, state, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Requested reset. Storage: #{inspect(state)}"
@@ -316,16 +316,16 @@ defmodule Anoma.Node.Ordering do
   end
 
   defp log_info({:hard_reset, storage, snap, logger}) do
-    Logger.add(logger, :debug, "Requested hard reset.
+    EventLogger.add(logger, :debug, "Requested hard reset.
       Storage: #{inspect(storage)}. Snapshot: #{inspect(snap)}")
   end
 
   defp log_info({:new_handle, state, logger}) do
-    Logger.add(logger, :info, "New tx count: #{inspect(state)}")
+    EventLogger.add(logger, :info, "New tx count: #{inspect(state)}")
   end
 
   defp log_info({:ready_handle, state, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Sending read ready to: #{inspect(state)}"

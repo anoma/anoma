@@ -13,7 +13,7 @@ defmodule Anoma.Node.Pinger do
   - `set_timer/2`
   """
   alias Anoma.Node.Router
-  alias Anoma.Node.Logger
+  alias Anoma.Node.EventLogger
   alias Anoma.Node.Mempool
   alias __MODULE__
 
@@ -151,10 +151,10 @@ defmodule Anoma.Node.Pinger do
   ############################################################
 
   defp log_info({:set, time, logger}) do
-    Logger.add(logger, :info, "Timer set to #{inspect(time)}")
+    EventLogger.add(logger, :info, "Timer set to #{inspect(time)}")
   end
 
   defp log_info({:launch, logger}) do
-    Logger.add(logger, :info, "Pinger launched")
+    EventLogger.add(logger, :info, "Pinger launched")
   end
 end

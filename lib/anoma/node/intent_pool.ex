@@ -4,7 +4,7 @@ defmodule Anoma.Node.IntentPool do
   """
 
   alias __MODULE__
-  alias Anoma.Node.{Router, Logger}
+  alias Anoma.Node.{Router, EventLogger}
 
   use TypedStruct
   use Router.Engine
@@ -80,7 +80,7 @@ defmodule Anoma.Node.IntentPool do
   ############################################################
 
   defp log_info({:all, intents, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Intents viewed in pool: #{inspect(intents)}"
@@ -88,7 +88,7 @@ defmodule Anoma.Node.IntentPool do
   end
 
   defp log_info({:remove_t, intent, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Intent removed from pool: #{inspect(intent)}"
@@ -96,7 +96,7 @@ defmodule Anoma.Node.IntentPool do
   end
 
   defp log_info({:remove_f, intent, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Request to remove intent,
@@ -105,7 +105,7 @@ defmodule Anoma.Node.IntentPool do
   end
 
   defp log_info({:new_t, intent, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Intent added to pool: #{inspect(intent)}"
@@ -113,7 +113,7 @@ defmodule Anoma.Node.IntentPool do
   end
 
   defp log_info({:new_f, intent, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Request to add new intent,

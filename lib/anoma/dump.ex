@@ -29,7 +29,7 @@ defmodule Anoma.Dump do
   alias Anoma.Node
 
   alias Anoma.Node.{
-    Logger,
+    EventLogger,
     Pinger,
     Mempool,
     Executor,
@@ -181,7 +181,7 @@ defmodule Anoma.Dump do
   end
 
   @type dump_eng :: {Id.Extern.t(), Dumper.t()}
-  @type log_eng :: {Id.Extern.t(), Logger.t()}
+  @type log_eng :: {Id.Extern.t(), EventLogger.t()}
   @type clock_eng :: {Id.Extern.t(), Clock.t()}
   @type ord_eng :: {Id.Extern.t(), Ordering.t()}
   @type mem_eng :: {Id.Extern.t(), Mempool.t()}

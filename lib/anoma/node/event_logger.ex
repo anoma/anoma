@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Logger do
+defmodule Anoma.Node.EventLogger do
   @moduledoc """
   I am the Logger Engine, an implementation of the Local Logging Engine.
 
@@ -61,8 +61,8 @@ defmodule Anoma.Node.Logger do
                    state.
   """
 
-  @spec init(Anoma.Node.Logger.t()) :: {:ok, Anoma.Node.Logger.t()}
-  def init(%Anoma.Node.Logger{table: table} = state) do
+  @spec init(Anoma.Node.EventLogger.t()) :: {:ok, Anoma.Node.EventLogger.t()}
+  def init(%Anoma.Node.EventLogger{table: table} = state) do
     init_table(table)
     {:ok, state}
   end
@@ -74,13 +74,13 @@ defmodule Anoma.Node.Logger do
             | {:topic, Router.addr()}
           )
         ) ::
-          {:ok, Anoma.Node.Logger.t()}
+          {:ok, Anoma.Node.EventLogger.t()}
   def init(args) do
     table = args[:table]
     init_table(table)
 
     {:ok,
-     %Anoma.Node.Logger{
+     %Anoma.Node.EventLogger{
        clock: args[:clock],
        table: table,
        topic: args[:topic]
@@ -193,7 +193,7 @@ defmodule Anoma.Node.Logger do
           atom(),
           String.t(),
           Router.Addr.t(),
-          Anoma.Node.Logger.t()
+          Anoma.Node.EventLogger.t()
         ) :: :ok
   defp do_add(logger, atom, msg, addr, state) do
     topic = state.topic

@@ -22,7 +22,7 @@ defmodule AnomaTest.Node.Logger do
     {:ok, logger_topic} = Router.new_topic(router)
 
     {:ok, logger} =
-      Router.start_engine(router, Anoma.Node.Logger,
+      Router.start_engine(router, Anoma.Node.EventLogger,
         table: Logger.Test,
         clock: clock,
         topic: logger_topic
@@ -58,7 +58,7 @@ defmodule AnomaTest.Node.Logger do
       5000
     )
 
-    {name, _time, addr, msg} = Anoma.Node.Logger.get(logger) |> hd()
+    {name, _time, addr, msg} = Anoma.Node.EventLogger.get(logger) |> hd()
 
     assert name == Logger.Test
     assert addr == id

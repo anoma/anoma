@@ -19,7 +19,7 @@ defmodule Anoma.Node.Mempool do
 
   alias Anoma.{Block, Transaction, Serializer}
   alias Anoma.Block.Base
-  alias Anoma.Node.{Router, Logger, Executor, Ordering}
+  alias Anoma.Node.{Router, EventLogger, Executor, Ordering}
   alias Router.Engine
   alias __MODULE__
 
@@ -428,7 +428,7 @@ defmodule Anoma.Node.Mempool do
 
   @dialyzer {:nowarn_function, [log_info: 1]}
   defp log_info({:tx, state, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Transaction added. New pool: #{inspect(state)})"
@@ -436,29 +436,29 @@ defmodule Anoma.Node.Mempool do
   end
 
   defp log_info({:execute, logger}) do
-    Logger.add(logger, :info, "Requested execution")
+    EventLogger.add(logger, :info, "Requested execution")
   end
 
   defp log_info({:soft, logger}) do
-    Logger.add(logger, :debug, "Requested soft reset")
+    EventLogger.add(logger, :debug, "Requested soft reset")
   end
 
   defp log_info({:hard, logger}) do
-    Logger.add(logger, :debug, "Requested hard reset")
+    EventLogger.add(logger, :debug, "Requested hard reset")
   end
 
   defp log_info({:fire, ex, id, logger}) do
-    Logger.add(logger, :info, "Requested transaction fire.
+    EventLogger.add(logger, :info, "Requested transaction fire.
       Executor: #{inspect(ex)}.
       Id : #{inspect(id)}")
   end
 
   defp log_info({:execute_handle, state, logger}) do
-    Logger.add(logger, :info, "New state: #{inspect(state)})")
+    EventLogger.add(logger, :info, "New state: #{inspect(state)})")
   end
 
   defp log_info({:order, ordering, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Requested ordering from: #{inspect(ordering)})"
@@ -466,7 +466,7 @@ defmodule Anoma.Node.Mempool do
   end
 
   defp log_info({:write, length, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Sending :write_ready to #{inspect(length)} processes"
@@ -474,7 +474,7 @@ defmodule Anoma.Node.Mempool do
   end
 
   defp log_info({:produce, trans, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Producing block. Transsactions: #{inspect(trans)}"
@@ -482,11 +482,11 @@ defmodule Anoma.Node.Mempool do
   end
 
   defp log_info({:encode_block, block, logger}) do
-    Logger.add(logger, :info, "Encoding block: #{inspect(block)}")
+    EventLogger.add(logger, :info, "Encoding block: #{inspect(block)}")
   end
 
   defp log_info({:delete_table, storage, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Deleting table: #{inspect(storage)} processes"
@@ -494,7 +494,7 @@ defmodule Anoma.Node.Mempool do
   end
 
   defp log_info({:kill, length, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Got Kill Signal killing #{inspect(length)} processes"
@@ -502,6 +502,6 @@ defmodule Anoma.Node.Mempool do
   end
 
   defp log_info({:killing_pid, pid, logger}) do
-    Logger.add(logger, :debug, "Killing: #{inspect(pid)}")
+    EventLogger.add(logger, :debug, "Killing: #{inspect(pid)}")
   end
 end

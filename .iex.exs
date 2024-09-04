@@ -3,8 +3,8 @@ alias Anoma.{Node, Block, Dump, Mnesia}
 alias Node.{
   Clock,
   Dumper,
+  EventLogger,
   Executor,
-  Logger,
   Mempool,
   Ordering,
   Pinger,

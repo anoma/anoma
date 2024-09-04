@@ -19,7 +19,7 @@ defmodule Anoma.Node.Transport do
   alias __MODULE__
   alias Anoma.Node.Transport.Connection
   alias Anoma.Node.Router
-  alias Anoma.Node.Logger
+  alias Anoma.Node.EventLogger
   alias Anoma.Crypto.Id
 
   use Router.Engine
@@ -730,7 +730,7 @@ defmodule Anoma.Node.Transport do
   ############################################################
 
   defp log_info({:queued, engine, node, addr, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "queued message for engine #{inspect(engine)} at node #{if node do
@@ -746,7 +746,7 @@ defmodule Anoma.Node.Transport do
   end
 
   defp log_info({:connected, node_id, trans_type, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Connected to node #{inspect(node_id)} via #{inspect(trans_type)}"
@@ -754,7 +754,7 @@ defmodule Anoma.Node.Transport do
   end
 
   defp log_info({:disconnected, conn, reason, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "dropped connection #{inspect(conn)}: #{reason}"
@@ -762,7 +762,7 @@ defmodule Anoma.Node.Transport do
   end
 
   defp log_info({:learned_engine, engine, node, id, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Learned engine #{inspect(engine)} is associated with node #{inspect(node)} from #{inspect(id)}"

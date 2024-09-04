@@ -17,7 +17,7 @@ defmodule Anoma.Node.Dumper do
 
   alias __MODULE__
   alias Anoma.Node.Router
-  alias Anoma.Node.Logger
+  alias Anoma.Node.EventLogger
 
   use Router.Engine
   use TypedStruct
@@ -243,11 +243,11 @@ defmodule Anoma.Node.Dumper do
   ############################################################
 
   defp log_info({:shutting_down, task, logger}) do
-    Logger.add(logger, :debug, "Task shut down: #{inspect(task)}")
+    EventLogger.add(logger, :debug, "Task shut down: #{inspect(task)}")
   end
 
   defp log_info({:shutting_down_reply, task, reply, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Task shutting down with reply. Task: #{inspect(task)}. Reply: #{inspect(reply)}"
@@ -255,7 +255,7 @@ defmodule Anoma.Node.Dumper do
   end
 
   defp log_info({:shutting_down_exit, task, reason, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :error,
       "Task shutting down with exit flag. Task: #{inspect(task)}. Reason: #{inspect(reason)}"
@@ -263,15 +263,19 @@ defmodule Anoma.Node.Dumper do
   end
 
   defp log_info({:new_task, task, logger}) do
-    Logger.add(logger, :debug, "New task created. Task: #{inspect(task)}")
+    EventLogger.add(
+      logger,
+      :debug,
+      "New task created. Task: #{inspect(task)}"
+    )
   end
 
   defp log_info({:stop, logger}) do
-    Logger.add(logger, :debug, "Stopping the dumper")
+    EventLogger.add(logger, :debug, "Stopping the dumper")
   end
 
   defp log_info({:dump, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Dumping call succesful from worker."

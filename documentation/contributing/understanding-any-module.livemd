@@ -147,7 +147,7 @@ node
 ```
 %Anoma.Node{
   logger: %Anoma.Node.Router.Addr{
-    server: :"Anoma.Node.Logger 0UFKnKepVKxm8B1uH/QkoKh0hLuVQ8TrRGf+4dFY+Zw=",
+    server: :"Anoma.Node.EventLogger 0UFKnKepVKxm8B1uH/QkoKh0hLuVQ8TrRGf+4dFY+Zw=",
     id: %Anoma.Crypto.Id.Extern{
       encrypt: <<49, 47, 91, 248, 87, 123, 100, 79, 0, 37, 176, 239, 240, 27, 218, 11, 63, 251, 170,
         244, 75, 20, 116, 142, 149, 64, 1, 81, 42, 139, 210, 44>>,
