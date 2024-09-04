@@ -4,7 +4,7 @@ defmodule Examples.ENode.EIntent do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Anoma.Resource
+  alias Anoma.RM.Transparent.Resource
   alias Examples.{ETransaction, ENode, ENode.EStorage, EResource}
   alias Anoma.Symbol
   alias Anoma.Node

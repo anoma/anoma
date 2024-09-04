@@ -64,4 +64,10 @@ alias Examples.ENode.{
   ETransport.ETCP
 }
 
+# We now alias the RM work
+alias Anoma.Transaction
+
+# refer to an rm transaction, as RM.Transaction
+alias Anoma.RM
+
 import_file_if_available("~/.iex.exs")

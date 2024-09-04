@@ -1,4 +1,4 @@
-defmodule Anoma.Resource.Transaction do
+defmodule Anoma.RM.Transparent.Transaction do
   @moduledoc """
   I represent a resource machine transaction
   """
@@ -11,10 +11,10 @@ defmodule Anoma.Resource.Transaction do
   alias __MODULE__
   use TypedStruct
 
-  import Anoma.Resource
-  alias Anoma.Resource
-  alias Anoma.Resource.Delta
-  alias Anoma.Resource.ProofRecord
+  import Anoma.RM.Transparent.Resource
+  alias Anoma.RM.Transparent.Resource
+  alias Anoma.RM.Transparent.Delta
+  alias Anoma.RM.Transparent.ProofRecord
   import Noun
 
   # doesn't have all the fields yet.
@@ -89,7 +89,7 @@ defmodule Anoma.Resource.Transaction do
 
     def compose(tx1, tx2) do
       # I still don't know if proofs have to be unique...
-      unless Anoma.RM.Trans.compose_pre_check(tx1, tx2) do
+      unless Anoma.RM.Transaction.Helpers.compose_pre_check(tx1, tx2) do
         nil
       else
         %Transaction{

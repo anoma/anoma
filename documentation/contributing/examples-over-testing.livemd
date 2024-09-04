@@ -271,9 +271,9 @@ defmodule AnomaTest.Node.Executor.Worker do
   end
 
   test "worker evaluates resource transaction", %{env: env} do
-    import Anoma.Resource
-    alias Anoma.Resource.ProofRecord
-    alias Anoma.Resource.Transaction
+    import Anoma.RM.Transparent
+    alias Anoma.RM.Transparent.ProofRecord
+    alias Anoma.RM.Transparent.Transaction
 
     id = System.unique_integer([:positive])
 
