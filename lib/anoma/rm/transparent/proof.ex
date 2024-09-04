@@ -1,4 +1,4 @@
-defmodule Anoma.RM.Resource.Proof do
+defmodule Anoma.RM.Transparent.Proof do
   use TypedStruct
 
   # a transparent resource logic proof is just the resource

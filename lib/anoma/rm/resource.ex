@@ -11,7 +11,7 @@ defmodule Anoma.RM.Resource do
   require Logger
 
   alias Noun.Nounable
-  alias Anoma.RM.Resource.Delta
+  alias Anoma.RM.Transparent.Delta
   alias __MODULE__
   use TypedStruct
 

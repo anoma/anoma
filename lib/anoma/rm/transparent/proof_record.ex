@@ -1,11 +1,11 @@
-defmodule Anoma.RM.Resource.ProofRecord do
+defmodule Anoma.RM.Transparent.ProofRecord do
   alias __MODULE__
   use TypedStruct
 
   @behaviour Noun.Nounable.Kind
 
   alias Anoma.RM.Resource
-  alias Anoma.RM.Resource.Proof
+  alias Anoma.RM.Transparent.Proof
 
   typedstruct enforce: true do
     field(:proof, Proof.t())

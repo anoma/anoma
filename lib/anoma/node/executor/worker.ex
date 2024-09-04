@@ -18,7 +18,7 @@ defmodule Anoma.Node.Executor.Worker do
   - `rm_nullifier_check/2`
   """
 
-  alias Anoma.RM.Resource.Transaction, as: TTransaction
+  alias Anoma.RM.Transparent.Transaction, as: TTransaction
   alias Anoma.RM.Transaction
   alias Anoma.RM.ShieldedResource.ShieldedTransaction
   alias Anoma.Node.{Storage, Ordering, Logger, Router}

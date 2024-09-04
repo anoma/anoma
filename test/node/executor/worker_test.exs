@@ -1,7 +1,7 @@
 defmodule AnomaTest.Node.Executor.Worker do
   use TestHelper.TestMacro, async: true
 
-  alias Anoma.RM.Resource.Delta
+  alias Anoma.RM.Transparent.Delta
   alias Anoma.Node.{Storage, Ordering, Router}
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Router.Engine
@@ -200,8 +200,8 @@ defmodule AnomaTest.Node.Executor.Worker do
     router: router
   } do
     import Anoma.RM.Resource
-    alias Anoma.RM.Resource.ProofRecord
-    alias Anoma.RM.Resource.Transaction
+    alias Anoma.RM.Transparent.ProofRecord
+    alias Anoma.RM.Transparent.Transaction
 
     {:ok, topic} = Router.new_topic(router)
     :ok = Router.call(router, {:subscribe_topic, topic, :local})

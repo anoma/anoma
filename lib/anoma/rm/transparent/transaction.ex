@@ -1,4 +1,4 @@
-defmodule Anoma.RM.Resource.Transaction do
+defmodule Anoma.RM.Transparent.Transaction do
   @moduledoc """
   I represent a resource machine transaction
   """
@@ -13,8 +13,8 @@ defmodule Anoma.RM.Resource.Transaction do
 
   import Anoma.RM.Resource
   alias Anoma.RM.Resource
-  alias Anoma.RM.Resource.Delta
-  alias Anoma.RM.Resource.ProofRecord
+  alias Anoma.RM.Transparent.Delta
+  alias Anoma.RM.Transparent.ProofRecord
   import Noun
 
   # doesn't have all the fields yet.
