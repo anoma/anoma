@@ -276,9 +276,9 @@ defmodule AnomaTest.Node.Executor.Worker do
   end
 
   test "worker verifies cairo proofs", %{env: env, router: router} do
-    alias Anoma.RM.ShieldedResource.ShieldedTransaction
-    alias Anoma.RM.ShieldedResource.PartialTransaction
-    alias Anoma.RM.ShieldedResource.ProofRecord
+    alias Anoma.RM.Shielded.ShieldedTransaction
+    alias Anoma.RM.Shielded.PartialTransaction
+    alias Anoma.RM.Shielded.ProofRecord
 
     id = System.unique_integer([:positive])
 

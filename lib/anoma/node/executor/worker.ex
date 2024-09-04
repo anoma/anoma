@@ -20,7 +20,7 @@ defmodule Anoma.Node.Executor.Worker do
 
   alias Anoma.RM.Transparent.Transaction, as: TTransaction
   alias Anoma.RM.Transaction
-  alias Anoma.RM.ShieldedResource.ShieldedTransaction
+  alias Anoma.RM.Shielded.ShieldedTransaction
   alias Anoma.Node.{Storage, Ordering, Logger, Router}
   alias __MODULE__
 
