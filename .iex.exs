@@ -5,6 +5,7 @@ alias Node.{
   Dumper,
   EventLogger,
   Executor,
+  LiveConfiguration,
   Mempool,
   Ordering,
   Pinger,
