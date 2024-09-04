@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Configuration do
+defmodule Anoma.Node.LiveConfiguration do
   @moduledoc """
   I am the implementation of the Configuration Engine.
 
@@ -12,7 +12,6 @@ defmodule Anoma.Node.Configuration do
   - `delete_dump/1`
   """
 
-  alias __MODULE__
   alias Anoma.Node.Router
   alias Anoma.Node.EventLogger
 
@@ -46,7 +45,7 @@ defmodule Anoma.Node.Configuration do
   with the fed-in state.
   """
 
-  @spec init(Configuration.t()) :: {:ok, Configuration.t()}
+  @spec init(t()) :: {:ok, t()}
   def init(%__MODULE__{} = state) do
     {:ok, state}
   end
@@ -107,7 +106,7 @@ defmodule Anoma.Node.Configuration do
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec do_snapshot(Configuration.t(), Router.addr()) :: :ok | nil | Task.t()
+  @spec do_snapshot(t(), Router.addr()) :: :ok | nil | Task.t()
   defp do_snapshot(config, caller) do
     configuration = config.configuration
 
@@ -132,7 +131,7 @@ defmodule Anoma.Node.Configuration do
     end
   end
 
-  @spec do_delete(Configuration.t()) :: :ok | {:error, atom()}
+  @spec do_delete(t()) :: :ok | {:error, atom()}
   defp do_delete(config) do
     configuration = config.configuration
 

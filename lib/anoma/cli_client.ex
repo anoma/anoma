@@ -180,7 +180,7 @@ defmodule Anoma.Cli.Client do
   end
 
   defp perform(:snapshot, server_engines, output) do
-    Anoma.Node.Configuration.snapshot(server_engines.configuration)
+    Anoma.Node.LiveConfiguration.snapshot(server_engines.configuration)
 
     receive do
       {:"$gen_cast", {:router_external_cast, _, payload}} ->
@@ -197,7 +197,7 @@ defmodule Anoma.Cli.Client do
   end
 
   defp perform(:delete_dump, server_engines, _output) do
-    Anoma.Node.Configuration.delete_dump(server_engines.configuration)
+    Anoma.Node.LiveConfiguration.delete_dump(server_engines.configuration)
     {0, nil}
   end
 

@@ -214,7 +214,7 @@ defmodule Anoma.Node.Dumper do
        {:write, {^block_table, _, _, n, _, _}, {:tid, _, _}}} ->
         # We start count from the zeroeth block
         if rem(n + 1, count) == 0 do
-          Anoma.Node.Configuration.snapshot(config)
+          Anoma.Node.LiveConfiguration.snapshot(config)
           log_info({:dump, logger})
         end
 

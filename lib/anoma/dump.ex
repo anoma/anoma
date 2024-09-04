@@ -188,7 +188,7 @@ defmodule Anoma.Dump do
   @type ping_eng :: {Id.Extern.t(), Pinger.t()}
   @type ex_eng :: {Id.Extern.t(), Executor.t()}
   @type storage_eng :: {Id.Extern.t(), Storage.t()}
-  @type configuration_eng :: {Id.Extern.t(), Anoma.Node.Configuration.t()}
+  @type configuration_eng :: {Id.Extern.t(), Anoma.Node.LiveConfiguration.t()}
   @type stores :: {Storage.t(), atom(), atom()}
 
   @type dump() :: %{

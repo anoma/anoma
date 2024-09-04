@@ -120,7 +120,8 @@ defmodule Anoma.Node do
 
   @type engine_configuration() :: %{
           clock: {Id.Extern.t() | nil, Clock.t()},
-          configuration: {Id.Extern.t() | nil, Anoma.Node.Configuration.t()},
+          configuration:
+            {Id.Extern.t() | nil, Anoma.Node.LiveConfiguration.t()},
           pinger: {Id.Extern.t() | nil, Pinger.t()},
           logger: {Id.Extern.t() | nil, EventLogger.t()},
           ordering: {Id.Extern.t() | nil, Ordering.t()},
@@ -280,8 +281,8 @@ defmodule Anoma.Node do
     {:ok, configuration} =
       start_engine(
         router,
-        Anoma.Node.Configuration,
-        %Anoma.Node.Configuration{config_st | logger: logger},
+        Anoma.Node.LiveConfiguration,
+        %Anoma.Node.LiveConfiguration{config_st | logger: logger},
         id: config_id
       )
 
@@ -398,7 +399,8 @@ defmodule Anoma.Node do
     %{
       clock: {nil, %Clock{}},
       configuration:
-        {nil, %Anoma.Node.Configuration{configuration: args[:configuration]}},
+        {nil,
+         %Anoma.Node.LiveConfiguration{configuration: args[:configuration]}},
       logger: {nil, %EventLogger{table: log_table}},
       ordering: {nil, %Ordering{}},
       executor: {nil, %Executor{ambiant_env: env}},
