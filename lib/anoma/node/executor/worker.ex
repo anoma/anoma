@@ -19,8 +19,8 @@ defmodule Anoma.Node.Executor.Worker do
   """
 
   alias Anoma.RM.Transparent.Transaction, as: TTransaction
+  alias Anoma.RM.Shielded.Transaction, as: STransaction
   alias Anoma.RM.Transaction
-  alias Anoma.RM.Shielded.ShieldedTransaction
   alias Anoma.Node.{Storage, Ordering, Logger, Router}
   alias __MODULE__
 
@@ -138,7 +138,7 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   defp run(s = %__MODULE__{tx: {:cairo, _}}) do
-    execute_rm_tx(s, ShieldedTransaction)
+    execute_rm_tx(s, STransaction)
   end
 
   @spec execute_key_value_tx(t(), fun()) :: :ok | :error

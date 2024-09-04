@@ -1,4 +1,4 @@
-defmodule Anoma.RM.Shielded.ShieldedTransaction do
+defmodule Anoma.RM.Shielded.Transaction do
   @moduledoc """
   I am a shielded resource machine transaction.
   """
@@ -44,7 +44,7 @@ defmodule Anoma.RM.Shielded.ShieldedTransaction do
 
     if checked do
       {:ok,
-       %ShieldedTransaction{
+       %Transaction{
          roots: roots |> Noun.list_nock_to_erlang(),
          commitments: commitments |> Noun.list_nock_to_erlang(),
          nullifiers: nullifiers |> Noun.list_nock_to_erlang(),
@@ -57,7 +57,7 @@ defmodule Anoma.RM.Shielded.ShieldedTransaction do
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
-    def to_noun(transaction = %ShieldedTransaction{}) do
+    def to_noun(transaction = %Transaction{}) do
       {
         transaction.roots,
         transaction.commitments,
@@ -70,8 +70,8 @@ defmodule Anoma.RM.Shielded.ShieldedTransaction do
   end
 
   defimpl Anoma.RM.Transaction, for: __MODULE__ do
-    def commitments(%ShieldedTransaction{commitments: cm}), do: cm
-    def nullifiers(%ShieldedTransaction{nullifiers: nf}), do: nf
+    def commitments(%Transaction{commitments: cm}), do: cm
+    def nullifiers(%Transaction{nullifiers: nf}), do: nf
 
     def storage_commitments(tx), do: commitments(tx)
     def storage_nullifiers(tx), do: nullifiers(tx)
@@ -80,7 +80,7 @@ defmodule Anoma.RM.Shielded.ShieldedTransaction do
       unless Anoma.RM.Trans.compose_pre_check(tx1, tx2) do
         nil
       else
-        %ShieldedTransaction{
+        %Transaction{
           roots: tx1.roots ++ tx2.roots,
           commitments: tx1.commitments ++ tx2.commitments,
           nullifiers: tx1.nullifiers ++ tx2.nullifiers,
@@ -92,9 +92,9 @@ defmodule Anoma.RM.Shielded.ShieldedTransaction do
     end
 
     # TODO: We can return roots, commitments, and nullifiers instead of just a
-    # boolean value so that we can get rid of them in the ShieldedTransaction struct. We
+    # boolean value so that we can get rid of them in the Transaction struct. We
     # can apply the same improvement to the transparent Transaction.
-    def verify(transaction = %ShieldedTransaction{}) do
+    def verify(transaction = %Transaction{}) do
       # check proofs
       all_proofs_valid =
         for ptx <- transaction.partial_transactions,
@@ -119,7 +119,7 @@ defmodule Anoma.RM.Shielded.ShieldedTransaction do
       binding_pub_keys = get_binding_pub_keys(compliance_outputs)
 
       # Collect binding signature msgs
-      binding_messages = ShieldedTransaction.get_binding_messages(transaction)
+      binding_messages = Transaction.get_binding_messages(transaction)
 
       delta_valid =
         Cairo.sig_verify(
@@ -189,15 +189,15 @@ defmodule Anoma.RM.Shielded.ShieldedTransaction do
     end)
   end
 
-  @spec get_binding_messages(ShieldedTransaction.t()) :: list(list(byte()))
-  def get_binding_messages(tx = %ShieldedTransaction{}) do
+  @spec get_binding_messages(Transaction.t()) :: list(list(byte()))
+  def get_binding_messages(tx = %Transaction{}) do
     (tx.nullifiers ++ tx.commitments)
     |> Enum.map(&:binary.bin_to_list/1)
   end
 
   # sign(binding signature) the transation when the transaction is balanced and finalized
-  @spec sign(ShieldedTransaction.t()) :: ShieldedTransaction.t()
-  defp sign(tx = %ShieldedTransaction{}) do
+  @spec sign(Transaction.t()) :: Transaction.t()
+  defp sign(tx = %Transaction{}) do
     msgs = get_binding_messages(tx)
 
     binding_signature =
@@ -206,18 +206,18 @@ defmodule Anoma.RM.Shielded.ShieldedTransaction do
       |> Cairo.sign(msgs)
       |> :binary.list_to_bin()
 
-    %ShieldedTransaction{tx | delta: binding_signature}
+    %Transaction{tx | delta: binding_signature}
   end
 
   # complete and sign the tx
-  @spec finalize(ShieldedTransaction.t()) :: ShieldedTransaction.t()
-  def finalize(tx = %ShieldedTransaction{}) do
+  @spec finalize(Transaction.t()) :: Transaction.t()
+  def finalize(tx = %Transaction{}) do
     compliance_outputs = get_compliance_outputs(tx)
     roots = Enum.map(compliance_outputs, & &1.root)
     commitments = Enum.map(compliance_outputs, & &1.output_cm)
     nullifiers = Enum.map(compliance_outputs, & &1.nullifier)
 
-    %ShieldedTransaction{
+    %Transaction{
       tx
       | roots: roots,
         commitments: commitments,

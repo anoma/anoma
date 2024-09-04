@@ -276,7 +276,7 @@ defmodule AnomaTest.Node.Executor.Worker do
   end
 
   test "worker verifies cairo proofs", %{env: env, router: router} do
-    alias Anoma.RM.Shielded.ShieldedTransaction
+    alias Anoma.RM.Shielded.Transaction
     alias Anoma.RM.Shielded.PartialTransaction
     alias Anoma.RM.Shielded.ProofRecord
 
@@ -335,11 +335,11 @@ defmodule AnomaTest.Node.Executor.Worker do
     priv_keys = :binary.copy(<<0>>, 31) <> <<3>>
 
     rm_tx =
-      %ShieldedTransaction{
+      %Transaction{
         partial_transactions: [ptx],
         delta: priv_keys
       }
-      |> ShieldedTransaction.finalize()
+      |> Transaction.finalize()
 
     # Mock root history: insert the cuurent roots to the storage
     rm_tx.roots
