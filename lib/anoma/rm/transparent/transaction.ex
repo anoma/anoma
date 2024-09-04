@@ -89,7 +89,7 @@ defmodule Anoma.RM.Transparent.Transaction do
 
     def compose(tx1, tx2) do
       # I still don't know if proofs have to be unique...
-      unless Anoma.RM.Trans.compose_pre_check(tx1, tx2) do
+      unless Anoma.RM.Transaction.Helpers.compose_pre_check(tx1, tx2) do
         nil
       else
         %Transaction{
