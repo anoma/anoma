@@ -1,73 +1,12 @@
 defmodule Anoma.Node.Storage do
   @moduledoc """
-  I am the Anoma Storage Engine.
-
-  The Anoma database usage is separated into two parts:
-
-  1) The Ordering table provides info on the order of appropriate keys.
-     That is, it has info about how many times the key has been assigned to
-     some value.
-
-  2) The Qualified table provides a representation of all stored key-values
-     in a particular format. Each entry has inside it
-
-     1) The table name attached
-     2) The order of the key given by the Ordering
-     3) The namespace idenifying the Storage Engine
-     4) The key itself as provided by the user.
-
-  As a Storage Engine, I provide the appropriate functionality
-  to coordinate the Ordering and Qualified tables of a launched Anoma Node.
-
-  That is, I help with writing things respecting the ordering of events
-  while providing appropriate reading capabilities of the tables used, so
-  that the base read events read only the latest value of a given key.
-
-  ### Public API
-
-  I provide the following public functionality:
-
-  #### Setup
-
-  - `setup/1`
-  - `remove/1`
-  - `do_setup/1`
-  - `ensure_new/2`
-  - `do_ensure_new/2`
-
-  #### Writing
-
-  - `put_snapshot/2`
-  - `delete_key/2`
-  - `put/3`
-
-  #### Reading
-
-  - `snapshot_order/1`
-  - `get/2`
-  - `get_keyspace/2`
-  - `get_at_snapshot/2`
-  - `in_snapshot/2`
-  - `read_order/2`
-  - `read_order_tx/2`
-  - `read_at_order/3`
-  - `read_at_order_tx/3`
-
-
-  #### Blocking
-
-  - `blocking_read/2`
-
-  #### Other
-
-  - `cm_tree_spec/0`
+ 
   """
 
   alias Anoma.Node.{Router, Logger}
   alias __MODULE__
 
   use TypedStruct
-  use Router.Engine
 
   @typedoc """
   I am the type of the Storage Engine.

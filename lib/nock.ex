@@ -22,7 +22,6 @@ defmodule Nock do
   """
   typedstruct do
     field(:ordering, Router.Addr.t() | nil, default: nil)
-    field(:snapshot_path, Noun.t() | nil, default: nil)
     field(:logger, Router.Addr.t(), enforce: false)
     field(:meter_pid, pid() | nil, default: nil)
   end

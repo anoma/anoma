@@ -1,6 +1,6 @@
 defmodule Anoma.Node.Executor.Worker do
   @moduledoc """
-  I am the Worker Engine.
+  I am the Worker.
 
   My instance gets launched by the Executor and is connected to a unique
   transaction.

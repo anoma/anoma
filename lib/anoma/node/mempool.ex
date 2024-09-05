@@ -31,6 +31,8 @@ defmodule Anoma.Node.Mempool do
   """
   @type transactions :: list(Transaction.t())
 
+  @type tx_result :: pid() | {:ok, Noun.t()} | :error
+
   typedstruct do
     @typedoc """
     I am the type of the Mempool Engine.
@@ -57,12 +59,11 @@ defmodule Anoma.Node.Mempool do
                   Enforced: false
     """
 
-    field(:ordering, Router.Addr.t())
-    field(:executor, Router.Addr.t())
+    field(:ordering, pid())
+    field(:storage, pid())
     field(:block_storage, atom(), default: Anoma.Block)
-    field(:transactions, transactions, default: [])
+    field(:transactions, %{binary() =>  {Noun.t(), tx_result()}})
     field(:round, non_neg_integer(), default: 0)
-    field(:topic, Router.Addr.t())
 
     field(:key, {Serializer.public_key(), Serializer.private_key()},
       default: :crypto.generate_key(:rsa, {1024, 65537})
@@ -72,40 +73,12 @@ defmodule Anoma.Node.Mempool do
   end
 
   @doc """
-  I am the initialization function for a Mempool Engine instance.
-
-  ### Pattern-Macthing Variations
-
-  - `init(%Mempool{})` - I initialize the Engine with the given state.
-  - `init(args)` - I expect a keylist with all keys in the structure fields
-                   listed necessary for the Mempool Engine to start. I then
-                   create a table with the given `:block_storage` argument
-                   and initialize an instance with given parameters.
+  
   """
 
-  @spec init(Mempool.t()) :: {:ok, Mempool.t()}
-  def init(%Mempool{} = state) do
-    {:ok, state}
-  end
-
-  @spec init(
-          list(
-            {:ordering, Router.Addr.t()}
-            | {:executor, Router.Addr.t()}
-            | {:block_storage, atom()}
-            | {:round, non_neg_integer()}
-            | {:topic, Router.Addr.t()}
-            | {:key, {Serializer.public_key(), Serializer.private_key()}}
-            | {:logger, Router.Addr.t()}
-          )
-        ) :: {:ok, Mempool.t()}
-  def init(args) do
-    primary =
-      Map.merge(%Mempool{}, args |> Enum.into(%{}))
-
-    # TODO add a flag in storage for yes if we want rocksdb copies
-    Block.create_table(primary.block_storage, false)
-    {:ok, primary}
+  @spec init(any()) :: {:ok, Mempool.t()}
+  def init(_arg) do
+    {:ok, %Mempool{ordering: Anoma.Node.Ordering |> Process.whereis(), storage: Anoma.Node.Storage |> Process.whereis()}}
   end
 
   ############################################################
@@ -178,9 +151,17 @@ defmodule Anoma.Node.Mempool do
   end
 
   def handle_cast({:tx, tx_code, reply_to}, _from, state) do
-    ntrans = handle_tx(tx_code, state, reply_to)
-    nstate = %Mempool{state | transactions: [ntrans | state.transactions]}
-    Router.cast(state.topic, {:submitted, ntrans})
+       random_tx_id =
+      :crypto.strong_rand_bytes(16)
+
+    log_info({:fire, ex, random_tx_id, state.logger})
+
+       {:ok, pid} =
+      Task.start(fn ->
+        Mempool.Backend.execute(tx_w_backend, %Nock{ordering: state.ordering, logger: state.logger}, random_tx_id, reply_to) end)
+    nstate =
+      %Mempool{state |
+               transactions: Map.put(state.transactions, random_tx_id, {tx_code, pid})}
     log_info({:tx, nstate.transactions, state.logger})
     {:noreply, nstate}
   end
@@ -205,49 +186,6 @@ defmodule Anoma.Node.Mempool do
   ############################################################
   #                  Genserver Implementation                #
   ############################################################
-
-  @doc """
-  I handle the transaction candidate creation.
-
-  Given transaction code and the Mempool state, I ask the Executor to fire
-  a new transaction with a randomly generated transaction ID.
-
-  I reply with a newly created transaction and specified Worker.
-  """
-
-  @spec handle_tx(Transaction.execution(), t(), Router.addr() | nil) ::
-          Transaction.t()
-  @dialyzer {:nowarn_function, [handle_tx: 3]}
-  def handle_tx(tx_code, state, reply_to) do
-    random_tx_id =
-      :crypto.strong_rand_bytes(16)
-      |> Noun.atom_binary_to_integer()
-
-    ex = state.executor
-
-    log_info({:fire, ex, random_tx_id, state.logger})
-
-    ex_topic = Engine.get_state(ex).topic
-
-    :ok =
-      Router.call(
-        Engine.get_router(ex),
-        {:subscribe_topic, ex_topic, :local}
-      )
-
-    Executor.fire_new_transaction(ex, random_tx_id, tx_code, reply_to)
-
-    receive do
-      {:"$gen_cast", {_, _, {:worker_spawned, addr}}} ->
-        :ok =
-          Router.call(
-            Engine.get_router(ex),
-            {:unsubscribe_topic, ex_topic, :local}
-          )
-
-        Transaction.new(random_tx_id, addr, tx_code)
-    end
-  end
 
   @doc """
   I handle Mempool execution.

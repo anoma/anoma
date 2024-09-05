@@ -1,31 +1,6 @@
 defmodule Anoma.Node.Ordering do
   @moduledoc """
-  I am the Ordering Engine.
-
-  My main functionality is to calculate transaction ordering and keep track
-  of said ordering relative to the transaction id's.
-
-  ### Public API
-
-  I provide the following public functionality:
-
-  #### Ordering
-
-  - `true_order/2`
-  - `new_order/2`
-
-  #### Reset
-
-  - `reset/1`
-  - `hard_reset/2`
-
-  #### Blocking
-
-  - `caller_blocking_read_id/2`
-
-  #### Other
-
-  - `handle_new_order/2`
+  
   """
 
   alias Anoma.Node.{Router, Logger, Storage}
@@ -33,7 +8,6 @@ defmodule Anoma.Node.Ordering do
   alias __MODULE__
 
   use TypedStruct
-  use Router.Engine
 
   @typedoc """
   I am a list of ordered transactions.
@@ -65,51 +39,30 @@ defmodule Anoma.Node.Ordering do
     - `:logger` - The Logger Engine address.
     """
 
-    field(:storage, Router.Addr.t())
+    field(:storage, pid())
     field(:next_order, non_neg_integer(), default: 1)
-    field(:hash_to_order, %{key() => non_neg_integer()}, default: %{})
+    field(:hash_to_order, %{binary() => non_neg_integer()}, default: %{})
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
-  @doc """
-  I am the initialization function for a Ordering Engine instance.
 
-  ### Pattern-Matching Variations
-
-  - `init(%Ordering{})` - I initialize the Engine with the given state.
-  - `init(args)` - I expect a keylist with the `:logger` and `:storage`
-                   keys. I then ask the Storage engine given by the keyword
-                   to setup and return the appropriate initialization
-                   state.
-  """
-
-  @spec init(Ordering.t()) ::
-          {:ok, Ordering.t()}
-  def init(%Ordering{} = state) do
-    {:ok, state}
-  end
-
-  @spec init(
-          list(
-            {:storage, Router.Addr.t()}
-            | {:logger, Router.Addr.t()}
-            | any()
-          )
-        ) :: {:ok, Ordering.t()}
-  def init(opts) do
-    return = %Ordering{
-      storage: opts[:storage],
-      logger: opts[:logger]
-    }
-
-    # idempotent
-    Storage.setup(return.storage)
-    {:ok, return}
+  def init(_args) do
+    {:ok, %Ordering{storage: Process.whereis(Anoma.Node.Storage)}}
   end
 
   ############################################################
   #                      Public RPC API                      #
   ############################################################
+
+  def read(pid, id, key) do
+    GenServer.call(pid, {:read, {id, key}})
+  end
+
+  def handle_cast({:read, {id, key}}, _from, state) do
+    order = Map.get(state.hash_to_order, id)
+    {:ok, value} = Storage.read({order, key})
+    {:reply, :ok, value}
+  end
 
   @doc """
   I am the true order function.
@@ -137,30 +90,6 @@ defmodule Anoma.Node.Ordering do
           :ok
   def new_order(ordering, ordered) do
     Router.cast(ordering, {:new_order, ordered})
-  end
-
-  @doc """
-  I am the Ordering Engine reset function.
-
-  I get rid of all hot state fields of the Ordering Engine leaving only the
-  Storage and Logger address intact.
-  """
-
-  @spec reset(Router.Addr.t()) :: :ok
-  def reset(ordering) do
-    Router.cast(ordering, :reset)
-  end
-
-  @doc """
-  I hard reset the Ordering Engine.
-
-  Similarly to `reset/1` I get rid of all hot state fields in the Ordering
-  Engine. Moreover, I ask the Storage engine to ensure that the tables are
-  re-launched and put a new snapshot specified by the second argument.
-  """
-  @spec hard_reset(Router.Addr.t(), atom()) :: :ok
-  def hard_reset(ordering, initial_snapshot) do
-    Router.cast(ordering, {:hard_reset, initial_snapshot})
   end
 
   ############################################################

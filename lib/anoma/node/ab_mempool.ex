@@ -50,8 +50,8 @@ defmodule Anoma.Node.AbMempool do
   end
 
   def handle_info({:finished, id}, state) do
-    {tx, _worker} = Map.get(state.pool, tx_id)
-    new_pool = Map.put(state.pool, tx_id, {tx, true})
+    {tx, _worker} = Map.get(state.pool, id)
+    new_pool = Map.put(state.pool, id, {tx, true})
     {:noreply, %{state | pool: new_pool}}
   end
 
