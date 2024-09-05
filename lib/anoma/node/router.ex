@@ -259,7 +259,7 @@ defmodule Anoma.Node.Router do
   alias __MODULE__
   alias Anoma.Crypto.Id
   alias Anoma.Node.Router.Addr
-  alias Anoma.Node.{Transport, Logger}
+  alias Anoma.Node.{Transport, EventLogger}
 
   @typedoc """
   I am the type of an Engine address.
@@ -1302,15 +1302,15 @@ defmodule Anoma.Node.Router do
   ############################################################
 
   defp log_info({:casting, addr}) do
-    Logger.add(nil, :info, "Casting to non-local addr #{inspect(addr)}")
+    EventLogger.add(nil, :info, "Casting to non-local addr #{inspect(addr)}")
   end
 
   defp log_info({:calling, addr}) do
-    Logger.add(nil, :info, "Calling non-local addr #{inspect(addr)}")
+    EventLogger.add(nil, :info, "Calling non-local addr #{inspect(addr)}")
   end
 
   defp log_info({:message_encoding, error, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Not able to decode message: #{inspect(error)}"
@@ -1318,19 +1318,19 @@ defmodule Anoma.Node.Router do
   end
 
   defp log_info({:shutdown, logger}) do
-    Logger.add(logger, :info, "Shutting down the system")
+    EventLogger.add(logger, :info, "Shutting down the system")
   end
 
   defp log_info({:drop_sig, logger}) do
-    Logger.add(logger, :debug, "Dropping message; bad signature")
+    EventLogger.add(logger, :debug, "Dropping message; bad signature")
   end
 
   defp log_info({:drop_eng, logger}) do
-    Logger.add(logger, :debug, "Dropping message; unknown engine")
+    EventLogger.add(logger, :debug, "Dropping message; unknown engine")
   end
 
   defp log_info({:drop_call, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Dropping message; response but no corresponding call"
@@ -1338,7 +1338,7 @@ defmodule Anoma.Node.Router do
   end
 
   defp log_info({:drop_form_1, logger, msg}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Dropping message (1); invalid format #{inspect(msg)}"
@@ -1346,7 +1346,7 @@ defmodule Anoma.Node.Router do
   end
 
   defp log_info({:drop_form_2, logger, data}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Dropping message (2); invalid format #{inspect(data)}"
@@ -1354,7 +1354,7 @@ defmodule Anoma.Node.Router do
   end
 
   defp log_info({:drop_form_3, logger, msg}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :debug,
       "Dropping message (3); invalid format #{inspect(msg)}"
@@ -1362,6 +1362,6 @@ defmodule Anoma.Node.Router do
   end
 
   defp log_info({:dir_cast, dst}) do
-    Logger.add(nil, :info, "Cast to #{inspect(dst)}")
+    EventLogger.add(nil, :info, "Cast to #{inspect(dst)}")
   end
 end

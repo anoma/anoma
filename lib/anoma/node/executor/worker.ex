@@ -21,7 +21,7 @@ defmodule Anoma.Node.Executor.Worker do
   alias Anoma.Resource.Transaction, as: TTransaction
   alias Anoma.RM.Transaction
   alias Anoma.ShieldedResource.ShieldedTransaction
-  alias Anoma.Node.{Storage, Ordering, Logger, Router}
+  alias Anoma.Node.{Storage, Ordering, EventLogger, Router}
   alias __MODULE__
 
   use Router.Engine, restart: :temporary
@@ -352,33 +352,33 @@ defmodule Anoma.Node.Executor.Worker do
   ############################################################
 
   defp log_info({:dispatch, id, logger}) do
-    Logger.add(logger, :info, "Worker dispatched.
+    EventLogger.add(logger, :info, "Worker dispatched.
     Order id: #{inspect(id)}")
   end
 
   defp log_info({:writing, order, logger}) do
-    Logger.add(logger, :info, "Worker writing.
+    EventLogger.add(logger, :info, "Worker writing.
     True order: #{inspect(order)}")
   end
 
   defp log_info({:fail, error, logger}) do
-    Logger.add(logger, :error, "Worker failed! #{inspect(error)}")
+    EventLogger.add(logger, :error, "Worker failed! #{inspect(error)}")
   end
 
   defp log_info({:get, value, logger}) do
-    Logger.add(logger, :info, "Getting value #{inspect(value)}")
+    EventLogger.add(logger, :info, "Getting value #{inspect(value)}")
   end
 
   defp log_info({:put, key, logger}) do
-    Logger.add(logger, :info, "Putting #{inspect(key)}")
+    EventLogger.add(logger, :info, "Putting #{inspect(key)}")
   end
 
   defp log_info({:success_run, logger}) do
-    Logger.add(logger, :info, "Run successful!")
+    EventLogger.add(logger, :info, "Run successful!")
   end
 
   defp log_info({:ensure_read, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "#{inspect(self())}: making sure the snapshot is ready"
@@ -386,7 +386,7 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   defp log_info({:waiting_write_ready, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "#{inspect(self())}: waiting for a write ready"
@@ -394,7 +394,7 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   defp log_info({:write_ready, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "#{inspect(self())}: write ready"
@@ -402,7 +402,7 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   defp log_info({:snap, {s, ss}, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Taking snapshot key #{inspect(ss)} in storage #{inspect(s)}"

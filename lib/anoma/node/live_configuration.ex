@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Configuration do
+defmodule Anoma.Node.LiveConfiguration do
   @moduledoc """
   I am the implementation of the Configuration Engine.
 
@@ -12,9 +12,8 @@ defmodule Anoma.Node.Configuration do
   - `delete_dump/1`
   """
 
-  alias __MODULE__
   alias Anoma.Node.Router
-  alias Anoma.Node.Logger
+  alias Anoma.Node.EventLogger
 
   use TypedStruct
   use Router.Engine
@@ -46,7 +45,7 @@ defmodule Anoma.Node.Configuration do
   with the fed-in state.
   """
 
-  @spec init(Configuration.t()) :: {:ok, Configuration.t()}
+  @spec init(t()) :: {:ok, t()}
   def init(%__MODULE__{} = state) do
     {:ok, state}
   end
@@ -107,7 +106,7 @@ defmodule Anoma.Node.Configuration do
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec do_snapshot(Configuration.t(), Router.addr()) :: :ok | nil | Task.t()
+  @spec do_snapshot(t(), Router.addr()) :: :ok | nil | Task.t()
   defp do_snapshot(config, caller) do
     configuration = config.configuration
 
@@ -132,7 +131,7 @@ defmodule Anoma.Node.Configuration do
     end
   end
 
-  @spec do_delete(Configuration.t()) :: :ok | {:error, atom()}
+  @spec do_delete(t()) :: :ok | {:error, atom()}
   defp do_delete(config) do
     configuration = config.configuration
 
@@ -148,7 +147,7 @@ defmodule Anoma.Node.Configuration do
   ############################################################
 
   defp log_info({:dump_ok, dump_path, node_name, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Dump successful. Snapshot path: #{inspect(dump_path)}. Node name: #{inspect(node_name)}"
@@ -156,7 +155,7 @@ defmodule Anoma.Node.Configuration do
   end
 
   defp log_info({:dump_error, dump_path, node_name, reason, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :error,
       "Dump failed. Snapshot path: #{inspect(dump_path)}.
@@ -165,7 +164,7 @@ defmodule Anoma.Node.Configuration do
   end
 
   defp log_info({:no_config, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :error,
       "No configuration provided, Not performing action"

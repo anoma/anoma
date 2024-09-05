@@ -51,7 +51,7 @@ defmodule Anoma.Node.Transport.TCPServer do
 
   """
 
-  alias Anoma.Node.{Router, Transport, Logger}
+  alias Anoma.Node.{Router, Transport, EventLogger}
   alias __MODULE__
 
   use Transport.Server
@@ -147,7 +147,7 @@ defmodule Anoma.Node.Transport.TCPServer do
   ############################################################
 
   defp log_info({:error, reason, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :error,
       "Failed to create a listen socket: #{inspect(reason)}."
@@ -155,7 +155,7 @@ defmodule Anoma.Node.Transport.TCPServer do
   end
 
   defp log_info({:listen_unix, path, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Creating a listen Unix socket on path #{path}"
@@ -163,7 +163,7 @@ defmodule Anoma.Node.Transport.TCPServer do
   end
 
   defp log_info({:listen_port, port, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Creating a listen socket on port #{inspect(port)}."

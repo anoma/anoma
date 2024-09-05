@@ -45,7 +45,7 @@ defmodule Examples.ENode.EDumper do
 
     assert File.exists?(path) == true
 
-    assert Anoma.Node.Configuration.delete_dump(anode.configuration) ==
+    assert Anoma.Node.LiveConfiguration.delete_dump(anode.configuration) ==
              :ok
 
     assert :ok ==

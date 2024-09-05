@@ -95,7 +95,7 @@ defmodule Anoma.Node.Transport.TCPConnection do
 
   alias Anoma.Node.Router
   alias Anoma.Node.Transport
-  alias Anoma.Node.Logger
+  alias Anoma.Node.EventLogger
   alias __MODULE__
 
   use Transport.Connection
@@ -309,7 +309,7 @@ defmodule Anoma.Node.Transport.TCPConnection do
   ############################################################
 
   defp log_info({:error_connect, reason, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :error,
       "Failed to connect to a socket: #{inspect(reason)}."
@@ -317,7 +317,7 @@ defmodule Anoma.Node.Transport.TCPConnection do
   end
 
   defp log_info({:error_accept, reason, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :error,
       "Failed to accept connection to a socket: #{inspect(reason)}."
@@ -325,7 +325,7 @@ defmodule Anoma.Node.Transport.TCPConnection do
   end
 
   defp log_info({:connect_unix, path, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Connecting to a Unix socket on path #{path}"
@@ -333,7 +333,7 @@ defmodule Anoma.Node.Transport.TCPConnection do
   end
 
   defp log_info({:connect_tcp, host, port, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Connecting to a TCP socket on #{inspect(host)}:#{inspect(port)}"

@@ -63,7 +63,7 @@ defmodule Anoma.Node.Storage do
   - `cm_tree_spec/0`
   """
 
-  alias Anoma.Node.{Router, Logger}
+  alias Anoma.Node.{Router, EventLogger}
   alias __MODULE__
 
   use TypedStruct
@@ -946,27 +946,31 @@ defmodule Anoma.Node.Storage do
   ############################################################
 
   defp log_info({:get_order, order}) do
-    Logger.add(nil, :debug, "Getting at order: #{inspect(order)}")
+    EventLogger.add(nil, :debug, "Getting at order: #{inspect(order)}")
   end
 
   defp log_info({:put_order, order}) do
-    Logger.add(nil, :debug, "Putting at order: #{inspect(order)}")
+    EventLogger.add(nil, :debug, "Putting at order: #{inspect(order)}")
   end
 
   defp log_info({:read, key}) do
-    Logger.add(nil, :info, "Regular blocking read at key: #{inspect(key)}")
+    EventLogger.add(
+      nil,
+      :info,
+      "Regular blocking read at key: #{inspect(key)}"
+    )
   end
 
   defp log_info({:read_all, keys}) do
-    Logger.add(nil, :info, "Reading key_space at: #{inspect(keys)}")
+    EventLogger.add(nil, :info, "Reading key_space at: #{inspect(keys)}")
   end
 
   defp log_info({:delete_key, key}) do
-    Logger.add(nil, :debug, "Deleting key: #{inspect(key)}")
+    EventLogger.add(nil, :debug, "Deleting key: #{inspect(key)}")
   end
 
   defp log_info({:restarting_storage, table}) do
-    Logger.add(
+    EventLogger.add(
       nil,
       :error,
       "Table: #{inspect(table)} is in an inconsistent state." <>

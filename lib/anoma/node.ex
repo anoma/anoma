@@ -37,7 +37,7 @@ defmodule Anoma.Node do
 
   alias Anoma.Node.{
     Router,
-    Logger,
+    EventLogger,
     Clock,
     Executor,
     Mempool,
@@ -120,9 +120,10 @@ defmodule Anoma.Node do
 
   @type engine_configuration() :: %{
           clock: {Id.Extern.t() | nil, Clock.t()},
-          configuration: {Id.Extern.t() | nil, Anoma.Node.Configuration.t()},
+          configuration:
+            {Id.Extern.t() | nil, Anoma.Node.LiveConfiguration.t()},
           pinger: {Id.Extern.t() | nil, Pinger.t()},
-          logger: {Id.Extern.t() | nil, Logger.t()},
+          logger: {Id.Extern.t() | nil, EventLogger.t()},
           ordering: {Id.Extern.t() | nil, Ordering.t()},
           executor: {Id.Extern.t() | nil, Executor.t()},
           mempool: {Id.Extern.t() | nil, Mempool.t()},
@@ -282,16 +283,16 @@ defmodule Anoma.Node do
     {:ok, logger} =
       start_engine(
         router,
-        Logger,
-        %Logger{log_st | clock: clock, topic: logger_topic},
+        EventLogger,
+        %EventLogger{log_st | clock: clock, topic: logger_topic},
         id: log_id
       )
 
     {:ok, configuration} =
       start_engine(
         router,
-        Anoma.Node.Configuration,
-        %Anoma.Node.Configuration{config_st | logger: logger},
+        Anoma.Node.LiveConfiguration,
+        %Anoma.Node.LiveConfiguration{config_st | logger: logger},
         id: config_id
       )
 
@@ -408,8 +409,9 @@ defmodule Anoma.Node do
     %{
       clock: {nil, %Clock{}},
       configuration:
-        {nil, %Anoma.Node.Configuration{configuration: args[:configuration]}},
-      logger: {nil, %Logger{table: log_table}},
+        {nil,
+         %Anoma.Node.LiveConfiguration{configuration: args[:configuration]}},
+      logger: {nil, %EventLogger{table: log_table}},
       ordering: {nil, %Ordering{}},
       executor: {nil, %Executor{ambiant_env: env}},
       mempool: {nil, %Mempool{block_storage: args[:block_storage]}},
@@ -455,7 +457,7 @@ defmodule Anoma.Node do
     Storage.do_ensure_new(storage, rocks)
 
     :mnesia.delete_table(logger)
-    Anoma.Node.Logger.init_table(logger)
+    Anoma.Node.EventLogger.init_table(logger)
 
     :mnesia.delete_table(block_storage)
     Anoma.Block.create_table(block_storage, rocks)

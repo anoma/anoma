@@ -18,7 +18,7 @@ defmodule Anoma.Node.Executor do
   alias __MODULE__
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Router
-  alias Anoma.Node.Logger
+  alias Anoma.Node.EventLogger
 
   use TypedStruct
   use Router.Engine
@@ -191,11 +191,11 @@ defmodule Anoma.Node.Executor do
   ############################################################
 
   defp log_info({:snap, hd, logger}) do
-    Logger.add(logger, :info, "Requested snapshot: #{inspect(hd)}")
+    EventLogger.add(logger, :info, "Requested snapshot: #{inspect(hd)}")
   end
 
   defp log_info({:tx_call_addr, pid, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Spawned transaction. Address: #{inspect(pid)}"
@@ -203,7 +203,7 @@ defmodule Anoma.Node.Executor do
   end
 
   defp log_info({:spawn, order, logger}) do
-    Logger.add(
+    EventLogger.add(
       logger,
       :info,
       "Spawning worker with order: #{inspect(order)}"

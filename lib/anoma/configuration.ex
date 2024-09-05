@@ -68,7 +68,7 @@ defmodule Anoma.Configuration do
     {"ping_time", &__MODULE__.is_pinger/1,
      if(Mix.env() == :prod, do: 10000, else: "no_timer")},
     {"qualified", &is_binary/1, "Anoma.Qualified"},
-    {"logger_table", &is_binary/1, "Anoma.Logger"},
+    {"logger_table", &is_binary/1, "Anoma.EventLogger"},
     {"snapshot_path", &is_binary/1, "my_special_nock_snapshot"}
   ]
   @configuration_format [{"dump", @dump_format}, {"node", @node_format}]

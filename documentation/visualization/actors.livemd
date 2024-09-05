@@ -45,7 +45,7 @@ Kino.Process.render_sup_tree(pid2, direction: :left_right)
 graph LR;
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 1(Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 2(Anoma.Node.Clock plaqCqOIQ4LLCT9MAmEMV+qkqZq4+qZV2KSpqSxRZu0=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 3(Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 3(Anoma.Node.EventLogger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 4(Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 5(Anoma.Node.Executor po4ivXyVtjQ9jvTtra0D2DbKIpM8YOClCmfk8JLp31k=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 6(Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=):::worker
@@ -99,7 +99,7 @@ Kino.Process.render_sup_tree(pid2, direction: :left_right)
 graph LR;
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 1(Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 2(Anoma.Node.Clock plaqCqOIQ4LLCT9MAmEMV+qkqZq4+qZV2KSpqSxRZu0=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 3(Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 3(Anoma.Node.EventLogger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 4(Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 5(Anoma.Node.Executor po4ivXyVtjQ9jvTtra0D2DbKIpM8YOClCmfk8JLp31k=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 6(Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=):::worker
@@ -132,7 +132,7 @@ participant 3 AS code_server;
 participant 7 AS mnesia_locker;
 participant 6 AS mnesia_tm;
 participant 8 AS Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=;
-participant 2 AS Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=;
+participant 2 AS Anoma.Node.EventLogger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=;
 participant 4 AS Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=;
 participant 1 AS Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=;
 participant 0 AS self();
@@ -201,7 +201,7 @@ Kino.Process.render_seq_trace(
 ```elixir
 Kino.Process.render_seq_trace(
   :all,
-  fn -> Anoma.Node.Logger.add(node.logger, :info, "help") end,
+  fn -> Anoma.Node.EventLogger.add(node.logger, :info, "help") end,
   message_label: &Anoma.Utility.message_label/1
 )
 ```
