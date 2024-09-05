@@ -1,6 +1,6 @@
 {
     "input": {
-        "logic" : "0x78641adee85319d58ec95e4d1d4127d96a9ca365e77b5e06f286e71f9d6ca70",
+        "logic" : "0x1bb25d53e5210d855101409f88a55bf5c95e4e4d77639affb3fa640906bf03d",
         "label" : "0x12",
         "quantity" : "0x13",
         "data" : "0x14",
@@ -10,7 +10,7 @@
         "rseed" : "0x48"
     },
     "output": {
-        "logic" : "0x78641adee85319d58ec95e4d1d4127d96a9ca365e77b5e06f286e71f9d6ca70",
+        "logic" : "0x1bb25d53e5210d855101409f88a55bf5c95e4e4d77639affb3fa640906bf03d",
         "label" : "0x12",
         "quantity" : "0x13",
         "data" : "0x812",
