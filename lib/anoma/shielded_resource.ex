@@ -132,4 +132,16 @@ defmodule Anoma.ShieldedResource do
 
     binaries |> :binary.bin_to_list()
   end
+
+  @spec get_npk(binary()) :: binary()
+  @doc """
+  Generate the nullifier public key from the nulliffier (private)key.
+  """
+  def get_npk(nk) do
+    Cairo.poseidon(
+      nk |> :binary.bin_to_list(),
+      Constants.felt_zero() |> :binary.bin_to_list()
+    )
+    |> :binary.list_to_bin()
+  end
 end

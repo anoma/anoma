@@ -293,6 +293,8 @@ defmodule AnomaTest.Node.Executor.Worker do
     Ordering.reset(env.ordering)
 
     # create an input resource
+    input_nf_key = :binary.copy(<<0>>, 31) <> <<1>>
+
     input_resource = %ShieldedResource{
       # we don't have a real resource logic, use the compliance circuit as resource logic
       logic: Constants.cairo_compliance_program_hash(),
@@ -301,21 +303,17 @@ defmodule AnomaTest.Node.Executor.Worker do
       data: Cairo.random_felt() |> :binary.list_to_bin(),
       eph: false,
       nonce: Cairo.random_felt() |> :binary.list_to_bin(),
-      # TODO: add an API to generate the npk from input_nf_key
-      npk:
-        <<7, 117, 37, 130, 197, 74, 66, 254, 15, 163, 92, 64, 240, 114, 147,
-          187, 125, 142, 254, 144, 226, 29, 141, 44, 6, 167, 219, 82, 215,
-          217, 183, 161>>,
+      npk: ShieldedResource.get_npk(input_nf_key),
       rseed: Cairo.random_felt() |> :binary.list_to_bin()
     }
 
-    input_nf_key = :binary.copy(<<0>>, 31) <> <<1>>
     eph_root = Cairo.random_felt() |> :binary.list_to_bin()
 
     # create an output resource
     input_nf = ShieldedResource.nullifier(input_resource)
     output_resource = ShieldedResource.set_nonce(input_resource, input_nf)
 
+    # rcv is used to generate the binding signature(delta proof)
     rcv = :binary.copy(<<0>>, 31) <> <<3>>
 
     # Mock cm tree history
