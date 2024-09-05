@@ -9,8 +9,8 @@ defmodule Anoma.Cli.Client do
   """
 
   alias Anoma.Crypto.Id
-  alias Anoma.Resource
-  alias Anoma.Resource.Transaction
+  alias Anoma.RM.Transparent.Resource
+  alias Anoma.RM.Transparent.Transaction
   alias Anoma.Dump
   alias Anoma.Node.Router
   alias Anoma.Node.Transport

@@ -1,4 +1,4 @@
-defmodule Anoma.Resource.Delta do
+defmodule Anoma.RM.Transparent.Delta do
   import Noun
   use TypedStruct
 
@@ -54,7 +54,7 @@ defmodule Anoma.Resource.Delta do
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
-    def to_noun(%Anoma.Resource.Delta{deltas: delta}) do
+    def to_noun(%Anoma.RM.Transparent.Delta{deltas: delta}) do
       delta
       |> Map.new(fn {k, v} ->
         {k,

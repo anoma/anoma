@@ -38,7 +38,7 @@ defprotocol Anoma.RM.Transaction do
   def resource_existence_check(transaction, storage)
 end
 
-defmodule Anoma.RM.Trans do
+defmodule Anoma.RM.Transaction.Helpers do
   alias Anoma.RM.Transaction
   @spec compose_pre_check(Transaction.t(), Transaction.t()) :: boolean()
   # I still don't know if proofs have to be unique...

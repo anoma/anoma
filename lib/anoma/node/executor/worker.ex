@@ -18,9 +18,8 @@ defmodule Anoma.Node.Executor.Worker do
   - `rm_nullifier_check/2`
   """
 
-  alias Anoma.Resource.Transaction, as: TTransaction
+  alias Anoma.RM
   alias Anoma.RM.Transaction
-  alias Anoma.ShieldedResource.ShieldedTransaction
   alias Anoma.Node.{Storage, Ordering, EventLogger, Router}
   alias __MODULE__
 
@@ -134,11 +133,11 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   defp run(s = %__MODULE__{tx: {:rm, _}}) do
-    execute_rm_tx(s, TTransaction)
+    execute_rm_tx(s, RM.Transparent.Transaction)
   end
 
   defp run(s = %__MODULE__{tx: {:cairo, _}}) do
-    execute_rm_tx(s, ShieldedTransaction)
+    execute_rm_tx(s, RM.Shielded.Transaction)
   end
 
   @spec execute_key_value_tx(t(), fun()) :: :ok | :error
