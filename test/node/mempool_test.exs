@@ -3,7 +3,8 @@ defmodule AnomaTest.Node.Mempool do
 
   alias Examples.ENode.EMempool
   alias Anoma.Node.{Storage, Mempool, Router}
-  import TestHelper.{Nock, Mempool}
+  import TestHelper.Mempool
+  import Examples.ENock
 
   test "examples" do
     EMempool.increment_pool()
@@ -44,7 +45,7 @@ defmodule AnomaTest.Node.Mempool do
     key = 555
     increment = increment_counter_val(key)
     zero = zero_counter(key)
-    plus_one = counter_val_plus_one(key)
+    plus_one = TestHelper.Nock.counter_val_plus_one(key)
 
     :ok =
       Router.call(
