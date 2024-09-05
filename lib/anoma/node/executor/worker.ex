@@ -202,19 +202,28 @@ defmodule Anoma.Node.Executor.Worker do
   @spec store_value(t(), Noun.t(), Router.addr()) :: any()
   defp store_value(
          s = %__MODULE__{tx: {:kv, _}, env: env},
-         key_value,
+         kv_list,
          storage
        ) do
-    with [key | value] <- key_value do
-      true_order = wait_for_ready(s)
+    true_order = wait_for_ready(s)
 
-      logger = env.logger
-      log_info({:writing, true_order, logger})
-      Storage.put(storage, key, value)
-      log_info({:put, key, logger})
+    with {:ok, list} <- kv_list |> Noun.list_nock_to_erlang_safe(),
+         true <-
+           Enum.all?(list, fn
+             [_ | _] -> true
+             _ -> false
+           end) do
+      Enum.map(list, fn [key | value] ->
+        logger = env.logger
+        log_info({:writing, true_order, logger})
+        Storage.put(storage, key, value)
+        log_info({:put, key, logger})
+      end)
+
       :ok
     else
-      e -> e
+      false -> {:hd_not_cell, kv_list}
+      _e -> {:tx_result_not_nock_list, kv_list}
     end
   end
 

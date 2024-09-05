@@ -4,7 +4,8 @@ defmodule AnomaTest.Node.Dump do
   alias Anoma.Node.{Mempool, Router}
   alias Anoma.Mnesia
   alias Anoma.System.Directories
-  import TestHelper.{Nock, Mempool}
+  import TestHelper.Mempool
+  import Examples.ENock
 
   setup_all do
     storage = %Anoma.Node.Storage{

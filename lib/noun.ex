@@ -174,6 +174,22 @@ defmodule Noun do
     [h | list_nock_to_erlang(t)]
   end
 
+  @doc """
+  I try to turn an Elixir term to a proper list.
+
+  If the term is a nock list, return {:ok, result}
+  Otheriwse :error
+  """
+
+  @spec list_nock_to_erlang_safe(any()) :: {:ok, Noun.t()} | :error
+  def list_nock_to_erlang_safe(x) do
+    try do
+      {:ok, list_nock_to_erlang(x)}
+    rescue
+      _e -> :error
+    end
+  end
+
   # Return binary if it's already long enough
   @spec pad_trailing(binary(), non_neg_integer()) :: binary()
   def pad_trailing(binary, len)

@@ -5,7 +5,7 @@ defmodule AnomaTest.Node.Executor.Worker do
   alias Anoma.Node.{Storage, Ordering, Router}
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Router.Engine
-  import TestHelper.Nock
+  import Examples.ENock
 
   setup_all do
     storage = %Storage{
@@ -132,7 +132,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     order_id = System.unique_integer([:positive])
 
     storage = Engine.get_state(env.ordering).storage
-    plus_one = counter_val_plus_one(key)
+    plus_one = TestHelper.Nock.counter_val_plus_one(key)
 
     Storage.ensure_new(storage)
     Ordering.reset(env.ordering)

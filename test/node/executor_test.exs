@@ -2,11 +2,10 @@ defmodule AnomaTest.Node.Executor do
   use TestHelper.TestMacro, async: true
 
   alias Anoma.Transaction
-  alias Anoma.Node.Storage
-  alias Anoma.Node.Ordering
-  alias Anoma.Node.Router
+  alias Anoma.Node.{Storage, Ordering, Router}
   alias Router
-  import TestHelper.{Nock, Executor}
+  import TestHelper.Executor
+  import Examples.ENock
 
   setup_all do
     storage = %Storage{
