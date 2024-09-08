@@ -8,6 +8,7 @@ defmodule Anoma.Node.AbMempool do
 
   alias __MODULE__
   alias Anoma.Node.AbStorage
+  alias Anoma.Node.AbOrdering
 
   # placeholder transaction; read at key, write key/value
   @type transaction() :: {AbStorage.bare_key(), term()}
@@ -40,16 +41,16 @@ defmodule Anoma.Node.AbMempool do
     {:noreply, %{state | pool: new_pool}}
   end
 
-  def handle_cast(:clear, state) do
+  def handle_cast(:clear, _state) do
     # todo: logic to make sure this only clears out completed txs with true as value here
-    {:noreply, %{pool: %{}}}
+    {:noreply, %__MODULE__{pool: %{}}}
   end
 
   def handle_cast(_msg, state) do
     {:noreply, state}
   end
 
-  def handle_info({:finished, id}, state) do
+  def handle_info({:finished, tx_id}, state) do
     {tx, _worker} = Map.get(state.pool, tx_id)
     new_pool = Map.put(state.pool, tx_id, {tx, true})
     {:noreply, %{state | pool: new_pool}}
@@ -60,9 +61,9 @@ defmodule Anoma.Node.AbMempool do
   end
 
   # fixme use a result event instead
-  def ab_worker(pid, id, tx = {key, value}) do
-    _old_value = Ordering.read(id, key)
-    Ordering.write(id, key, value)
+  def ab_worker(pid, id, _tx = {key, value}) do
+    _old_value = AbOrdering.read({id, key})
+    AbOrdering.write({id, key}, value)
     send(pid, {:finished, id})
   end
 
