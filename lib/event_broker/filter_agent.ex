@@ -72,7 +72,7 @@ defmodule EventBroker.FilterAgent do
   end
 
   def handle_info(event = %EventBroker.Event{}, state) do
-    if state.spec.__struct__.filter(event, state.spec) do
+    if state.spec.__struct__.filter(state.spec, event) do
       for pid <- state.subscribers do
         send(pid, event)
       end

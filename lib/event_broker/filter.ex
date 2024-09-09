@@ -99,8 +99,8 @@ defmodule EventBroker.Filter do
         defstruct unquote(module_fields_names)
 
         # apply function to test an instance of this filter against an event
-        @spec apply(__MODULE__.t(), EventBroker.Event.t()) :: bool()
-        def apply(filter_instance, event) do
+        @spec filter(__MODULE__.t(), EventBroker.Event.t()) :: bool()
+        def filter(filter_instance, event) do
           var!(filter_instance) = filter_instance
           # avoid unused variable warnings by assigning to _
           _ = var!(filter_instance)
