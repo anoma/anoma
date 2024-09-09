@@ -6,6 +6,7 @@ defmodule Examples.EShieldedTransaction do
     ProofRecord,
     ShieldedTransaction
   }
+  alias Anoma.RM.Transaction
 
   @spec setup_environment() :: :ok
   def setup_environment do
@@ -111,6 +112,30 @@ defmodule Examples.EShieldedTransaction do
     :ok
   end
 
+  @spec create_shielded_transaction() :: :ok
+  def create_shielded_transaction_2 do
+    ptx = Process.get(:partial_transaction)
+    priv_keys = :binary.copy(<<0>>, 31) <> <<3>>
+
+    shielded_tx_1 =
+      %ShieldedTransaction{
+        partial_transactions: [ptx],
+        delta: priv_keys
+      }
+
+    shielded_tx_2 =
+      %ShieldedTransaction{
+        partial_transactions: [ptx],
+        delta: priv_keys
+      }
+
+    composed_shielded_tx = Transaction.compose(shielded_tx_1,shielded_tx_2)
+     |> ShieldedTransaction.finalize()
+
+    Process.put(:shielded_transaction, composed_shielded_tx)
+    :ok
+  end
+
   @spec create_invalid_shielded_transaction() :: :ok
   def create_invalid_shielded_transaction do
     ptx = Process.get(:partial_transaction)
@@ -127,22 +152,25 @@ defmodule Examples.EShieldedTransaction do
     Process.put(:invalid_shielded_transaction, invalid_shielded_tx)
     :ok
   end
-  @spec prepare_executor_transaction(atom()) :: :ok
-  def prepare_executor_transaction(type \\ :valid) do
+
+  @spec execute_transaction(atom()) :: :ok
+  def execute_transaction(type \\ :valid) do
+
+    %{env: env, router: router, id: id, topic: topic, storage: storage} = Process.get(:test_env)
+
     shielded_tx = case type do
       :valid -> Process.get(:shielded_transaction)
       :invalid -> Process.get(:invalid_shielded_transaction)
     end
+
+    # Mock root history: insert the curent roots to the storage
+    shielded_tx.roots
+    |> Enum.each(fn root ->
+      Storage.put(storage, ["rm", "commitment_root", root], true)
+    end)
+
     rm_tx_noun = Noun.Nounable.to_noun(shielded_tx)
     executor_tx = [[1 | rm_tx_noun], 0 | 0]
-    Process.put(:executor_transaction, {type, executor_tx})
-    :ok
-  end
-
-  @spec start_worker() :: :ok
-  def start_worker do
-    %{env: env, router: router, id: id, topic: topic} = Process.get(:test_env)
-    {type, executor_tx} = Process.get(:executor_transaction)
 
     {:ok, spawn} =
       Router.start_engine(
@@ -151,42 +179,19 @@ defmodule Examples.EShieldedTransaction do
         {id, {:cairo, executor_tx}, env, topic, nil}
       )
 
-    Process.put(:worker_spawn, {type, spawn})
-    :ok
-  end
-
-
-  @spec execute_transaction() :: {:ok, atom()} | {:error, any()}
-  def execute_transaction do
-    %{env: env, router: router, id: id, topic: topic} = Process.get(:test_env)
-    {type, spawn} = Process.get(:worker_spawn)
-
     Ordering.new_order(env.ordering, [
       Anoma.Transaction.new_with_order(0, id, spawn)
     ])
     Router.send_raw(spawn, {:write_ready, 0})
 
-    result = wait_for_worker_result(spawn)
+    expected_result = case type do
+      :valid -> :ok
+      :invalid -> :error
+    end
+
+    TestHelper.Worker.wait_for_worker(spawn, expected_result)
     :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
 
-    case {type, result} do
-      {:valid, :ok} -> {:ok, :valid_transaction_executed}
-      {:invalid, :error} -> {:ok, :invalid_transaction_rejected}
-      {:valid, :error} -> {:error, :valid_transaction_failed}
-      {:invalid, :ok} -> {:error, :invalid_transaction_accepted}
-      _ -> {:error, {:unexpected_result, result}}
-    end
   end
-
-  defp wait_for_worker_result(worker_addr) do
-    receive do
-      {:"$gen_cast", {:router_cast, _, {:worker_done, ^worker_addr, status}}} ->
-        status
-    after
-      5000 ->
-        {:error, :timeout}
-    end
-  end
-
 
 end
