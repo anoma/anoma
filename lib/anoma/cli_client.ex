@@ -340,16 +340,17 @@ defmodule Anoma.Cli.Client do
   end
 
   defp do_submit(path, server_engines, kind, output, reply_to \\ nil) do
-    with {:ok, tx} <- File.read(path),
-         {:ok, tx} <- Noun.Format.parse(tx) do
-      jammed = Nock.Jam.jam(tx)
+    with {:ok, tx_function} <- File.read(path),
+         {:ok, tx_function} <- Noun.Format.parse(tx_function) do
+      jammed = Nock.Jam.jam(tx_function)
 
       case kind do
         :rm ->
-          # We don't want to be proving online so this shouldn't be
-          # scrying. We should design something better for V2
-          {:ok, tx} = Nock.nock(tx, [9, 2, 0 | 1])
-          tx_proper = Transaction.from_noun(tx)
+          # Submitted transaction functions must be evaluated in the same way as
+          # the worker to extract the commitments and nullifiers.
+          {:ok, tx_function_with_id} = Nock.nock(tx_function, [10, [6, 1 | 0], 0 | 1])
+          {:ok, tx} = Nock.nock(tx_function_with_id, [9, 2, 0 | 1])
+          {:ok, tx_proper} = Transaction.from_noun(tx)
 
           for commitment <- tx_proper.commitments do
             IO.puts(
