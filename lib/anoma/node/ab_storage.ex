@@ -20,11 +20,7 @@ defmodule Anoma.Node.AbStorage do
   # - committed/uncommitted distinction
   # - reads to "future" block rather than yielding an old value
 
-  # committed is basically a dummy representing mnesia-backed final state
   typedstruct enforce: true do
-    field(:committed, %{qualified_key() => term()}, default: %{})
-    field(:committed_height, integer(), default: 0)
-    field(:committed_updates, %{bare_key() => list(integer())}, default: %{})
     field(:uncommitted, %{qualified_key() => term()}, default: %{})
     field(:uncommitted_height, integer(), default: 0)
 
@@ -44,6 +40,8 @@ defmodule Anoma.Node.AbStorage do
   end
 
   def init(_) do
+    :mnesia.create_table(__MODULE__.Values)
+    :mnesia.create_table(__MODULE__.Updates)
     {:ok, %AbStorage{}}
   end
 
@@ -65,6 +63,21 @@ defmodule Anoma.Node.AbStorage do
 
       {:noreply, state}
     end
+  end
+
+  def handle_call(:commit, _from, state) do
+    mnesia_tx = fn ->
+      for {key, value} <- state.uncommitted do
+        :mnesia.write(__MODULE__.Values, key, value)
+      end
+      for {key, value} <- state.uncommitted_updates do
+        old_updates = :mnesia.read(__MODULE__.Updates, key)
+        new_updates = value ++ old_updates
+        :mnesia.write(__MODULE__.Updates, key, new_updates)
+      end
+    end
+    :mnesia.transaction(mnesia_tx)
+    {:noreply, %__MODULE__{uncommitted_height: state.uncommitted_height}}
   end
 
   def handle_call(_msg, _from, state) do
@@ -147,6 +160,10 @@ defmodule Anoma.Node.AbStorage do
 
   def write({height, key}, value) do
     GenServer.cast(__MODULE__, {:write, {height, key}, value})
+  end
+
+  def commit() do
+    GenServer.call(__MODULE__, :commit)
   end
 
   defp blocking_read(height, key, from) do

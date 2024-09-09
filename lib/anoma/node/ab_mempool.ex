@@ -60,7 +60,8 @@ defmodule Anoma.Node.AbMempool do
     {:noreply, state}
   end
 
-  # fixme use a result event instead
+  # fixme generate a loggable result event instead,
+  # that can be used by the mempool rather than waiting for a random send()
   def ab_worker(pid, id, _tx = {key, value}) do
     _old_value = AbOrdering.read({id, key})
     AbOrdering.write({id, key}, value)
