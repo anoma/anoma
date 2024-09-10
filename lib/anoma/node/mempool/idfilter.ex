@@ -19,6 +19,6 @@ defmodule Anoma.Node.Mempool.Ordering.IdFilter do
   end
 
   def filter(msg, filter_params) do
-    msg.id == filter_params.id
+    msg.body.id == filter_params.id
   end
 end

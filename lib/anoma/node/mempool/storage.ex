@@ -99,11 +99,8 @@ defmodule Anoma.Node.Mempool.Storage do
     {:noreply, %__MODULE__{uncommitted_height: state.uncommitted_height}}
   end
 
-  def handle_call(_msg, _from, state) do
-    {:reply, :ok, state}
-  end
-
   def handle_call({:write, {height, key}, value}, from, state) do
+    IO.puts("==============STORAGE WRITE REACHED=============")
     unless height == state.uncommitted_height + 1 do
       {:ok, pid} =
         Task.start(fn -> blocking_write(height, key, value, from) end)
@@ -114,7 +111,7 @@ defmodule Anoma.Node.Mempool.Storage do
       ])
 
       {:noreply, state}
-    else
+    else IO.puts("=================write directly=============")
       key_old_updates = Map.get(state.uncommitted_updates, key, [])
       key_new_updates = [height | key_old_updates]
       new_updates = Map.put(state.uncommitted_updates, key, key_new_updates)
@@ -135,7 +132,7 @@ defmodule Anoma.Node.Mempool.Storage do
         })
 
       EventBroker.event(write_event)
-
+      IO.puts("=================REACHES END OF WRITING============")
       {:reply, :ok, new_state}
     end
   end
@@ -175,8 +172,12 @@ defmodule Anoma.Node.Mempool.Storage do
 
       EventBroker.event(write_event)
 
-      {:noreply, new_state}
+      {:reply, :ok, new_state}
     end
+  end
+
+   def handle_call(_msg, _from, state) do
+    {:reply, :ok, state}
   end
 
   def handle_cast(_msg, state) do

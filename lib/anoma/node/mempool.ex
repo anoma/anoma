@@ -51,7 +51,7 @@ defmodule Anoma.Node.Mempool do
   end
 
   def execute(server) do
-    GenServer.call(server, :execute)
+    GenServer.cast(server, :execute)
   end
 
   ############################################################
@@ -61,14 +61,13 @@ defmodule Anoma.Node.Mempool do
   def handle_cast({:tx, tx_code, reply_to}, state) do
     tx_id = :crypto.strong_rand_bytes(16)
 
-    worker =
-      Task.start(fn ->
-        Anoma.Node.Mempool.Backends.execute(tx_code, tx_id, reply_to)
-      end)
+    Task.start(fn ->
+      Anoma.Node.Mempool.Backends.execute(tx_code, tx_id, reply_to)
+    end)
 
     nstate = %Mempool{
       state
-      | transactions: Map.put(state.transactions, tx_id, {tx_code, worker})
+      | transactions: Map.put(state.transactions, tx_id, tx_code)
     }
 
     {:noreply, nstate}
@@ -76,7 +75,7 @@ defmodule Anoma.Node.Mempool do
 
   def handle_cast(:execute, state) do
     # if no reply within specified time all crashes
-    res_list = state.transactions |> Ordering.order()
+    res_list = state.transactions |> Map.keys() |> Ordering.order()
 
     {writes, rem} = for {res, id, height} <- res_list,
       reduce: {[], state.transactions} do
