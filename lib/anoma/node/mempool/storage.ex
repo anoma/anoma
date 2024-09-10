@@ -47,30 +47,40 @@ defmodule Anoma.Node.Mempool.Storage do
   end
 
   def handle_call({:read, {height, key}}, from, state) do
-    if height <= state.uncommitted_height do
+    IO.puts("==============STORAGE READ REACHED=============")
+
+    if height <= state.uncommitted_height + 1 do
       # relies on this being a reverse-ordered list
+      IO.puts("==============SEARCH READ IN HISTORY=============")
 
       res =
-        case Map.get(state.uncommitted_updates, key)
-             |> Enum.find(fn a -> a <= height end) do
+        case Map.get(state.uncommitted_updates, key) do
           nil ->
-            tx = fn ->
-              height =
-                :mnesia.read(__MODULE__.Updates, key)
-                |> Enum.find(fn a -> a <= height end)
+            IO.puts("==============GET READ FROM STORAGE=============")
+            tx1 = fn -> :mnesia.read(__MODULE__.Updates, key) end
 
-              :mnesia.read(__MODULE__.Values, {height, key})
-            end
+            {:atomic, [{__MODULE__.Updates, _key, height_upds}]} =
+              :mnesia.transaction(tx1)
 
-            {:ok, res} = :mnesia.tx(tx)
+            height = height_upds |> Enum.find(fn a -> a <= height end)
+
+            tx2 = fn -> :mnesia.read(__MODULE__.Values, {height, key}) end
+
+            {:atomic, [{__MODULE__.Values, {_height, _key}, res}]} =
+              :mnesia.transaction(tx2)
+
             res
 
           res ->
-            res
+            IO.puts("==============GET READ FROM UNCOMMITTED=============")
+            height = res |> Enum.find(fn a -> a <= height end)
+            Map.get(state.uncommitted, {height, key})
         end
 
-      {:reply, Map.get(state.uncommitted, {res, key}), state}
+      IO.puts("============READ RESULT #{inspect(res)}===========")
+      {:reply, {:ok, res}, state}
     else
+      IO.puts("==============READ IN THE FUTURE=============")
       {:ok, pid} = Task.start(fn -> blocking_read(height, key, from) end)
 
       EventBroker.subscribe(pid, [
@@ -85,12 +95,20 @@ defmodule Anoma.Node.Mempool.Storage do
   def handle_call(:commit, _from, state) do
     mnesia_tx = fn ->
       for {key, value} <- state.uncommitted do
-        :mnesia.write(__MODULE__.Values, key, value)
+        :mnesia.write({__MODULE__.Values, key, value})
       end
 
       for {key, value} <- state.uncommitted_updates do
-        old_updates = :mnesia.read(__MODULE__.Updates, key)
-        new_updates = value ++ old_updates
+        {:atomic, res} =
+          fn -> :mnesia.read(__MODULE__.Updates, key) end
+          |> :mnesia.transaction()
+
+        new_updates =
+          case res do
+            [] -> value
+            [{__MODULE__.Updates, _key, list}] -> value ++ list
+          end
+
         :mnesia.write({__MODULE__.Updates, key, new_updates})
       end
     end
@@ -101,6 +119,7 @@ defmodule Anoma.Node.Mempool.Storage do
 
   def handle_call({:write, {height, key}, value}, from, state) do
     IO.puts("==============STORAGE WRITE REACHED=============")
+
     unless height == state.uncommitted_height + 1 do
       {:ok, pid} =
         Task.start(fn -> blocking_write(height, key, value, from) end)
@@ -111,7 +130,8 @@ defmodule Anoma.Node.Mempool.Storage do
       ])
 
       {:noreply, state}
-    else IO.puts("=================storage write directly=============")
+    else
+      IO.puts("=================storage write directly=============")
       key_old_updates = Map.get(state.uncommitted_updates, key, [])
       key_new_updates = [height | key_old_updates]
       new_updates = Map.put(state.uncommitted_updates, key, key_new_updates)
@@ -132,7 +152,11 @@ defmodule Anoma.Node.Mempool.Storage do
         })
 
       EventBroker.event(write_event)
-      IO.puts("=================REACHES END OF WRITING Storage return :ok============")
+
+      IO.puts(
+        "=================REACHES END OF WRITING Storage return :ok============"
+      )
+
       {:reply, :ok, new_state}
     end
   end
@@ -176,7 +200,7 @@ defmodule Anoma.Node.Mempool.Storage do
     end
   end
 
-   def handle_call(_msg, _from, state) do
+  def handle_call(_msg, _from, state) do
     {:reply, :ok, state}
   end
 
@@ -232,7 +256,7 @@ defmodule Anoma.Node.Mempool.Storage do
       %EventBroker.Event{
         body: %__MODULE__.WriteEvent{height: ^awaited_height}
       } ->
-        write({height, key}, value)
+        GenServer.reply(from, write({height, key}, value))
     end
 
     EventBroker.unsubscribe_me([

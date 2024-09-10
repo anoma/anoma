@@ -2423,12 +2423,16 @@ defmodule Nock do
   ############################################################
 
   @spec read_with_id(Noun.t(), t()) :: {:ok, Noun.t()} | :error
-  def read_with_id(id_key_list, env) do
-    ordering = env.ordering
+  def read_with_id(id_key_list, _env) do
+    IO.puts(
+      "==================SCRY 12 #{inspect(id_key_list)}=================="
+    )
 
-    if ordering && id_key_list do
+    if id_key_list do
+      IO.puts("==================reached list}==================")
+
       with [id, key | 0] <- id_key_list,
-           {:ok, value} <- Ordering.read({id, key}) do
+           {:ok, value} <- Anoma.Node.Mempool.Ordering.read({id, key}) do
         instrument({:got_value, value})
         {:ok, value}
       else
@@ -2437,10 +2441,6 @@ defmodule Nock do
     else
       :error
     end
-  end
-
-  defp instrument({:snapshot, snap}) do
-    Logger.info("got snapshot: #{inspect(snap)}")
   end
 
   defp instrument({:got_value, value}) do

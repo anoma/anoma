@@ -29,7 +29,6 @@ defmodule Anoma.Node.Mempool do
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
-
   def start_link(default) do
     GenServer.start_link(__MODULE__, default, name: Mempool)
   end
@@ -77,23 +76,29 @@ defmodule Anoma.Node.Mempool do
     # if no reply within specified time all crashes
     res_list = state.transactions |> Map.keys() |> Ordering.order()
 
-    {writes, rem} = for {res, id, height} <- res_list,
-      reduce: {[], state.transactions} do
-        {block_writes, _remaining_txs} -> res = case res do
-                                                  :ok ->
-                                                    {height, Map.get(state.transactions, id)}
-                                                  :error -> {:error, Map.get(state.transactions, id)}
-                                                end
+    {writes, rem} =
+      for {res, id, height} <- res_list,
+          reduce: {[], state.transactions} do
+        {block_writes, _remaining_txs} ->
+          res =
+            case res do
+              :ok ->
+                {height, Map.get(state.transactions, id)}
+
+              :error ->
+                {:error, Map.get(state.transactions, id)}
+            end
+
           {[res | block_writes], Map.delete(state.transactions, id)}
-    end
+      end
 
     tx = fn -> :mnesia.write({__MODULE__.Blocks, state.round, writes}) end
     :mnesia.transaction(tx)
 
     Mempool.Storage.commit()
+    IO.puts("==============BLOCK FINISHED<>COMMIT FINISHED=============")
 
-    {:noreply,
-     %__MODULE__{state | transactions: rem, round: state.round + 1}}
+    {:noreply, %__MODULE__{state | transactions: rem, round: state.round + 1}}
   end
 
   def handle_call(_, _, state) do

@@ -26,12 +26,12 @@ defmodule Anoma.Node.Mempool.Ordering do
   end
 
   def init(_opts) do
-    {:ok,
-     %Ordering{}}
+    {:ok, %Ordering{}}
   end
 
   def handle_call({:read, {id, key}}, from, state) do
-     IO.puts("==============Read Reached=============")
+    IO.puts("==============Read Reached=============")
+
     with {:ok, height} <- Map.fetch(state.hash_to_order, id) do
       {:ok, value} = Storage.read({height, key})
       {:reply, {:ok, value}, state}
@@ -39,31 +39,33 @@ defmodule Anoma.Node.Mempool.Ordering do
       _ ->
         {:ok, pid} = Task.start(fn -> blocking_read(id, key, from) end)
 
-      EventBroker.subscribe(pid, [
-        this_module_filter(),
-        id_filter(id)
-      ])
+        EventBroker.subscribe(pid, [
+          this_module_filter(),
+          id_filter(id)
+        ])
 
-      {:noreply, state}
+        {:noreply, state}
     end
   end
 
   def handle_call({:write, {id, key}, value}, from, state) do
     IO.puts("==============Write Reached Ordering=============")
+
     with {:ok, height} <- Map.fetch(state.hash_to_order, id) do
       :ok = Storage.write({height, key}, value)
       IO.puts("=============STORAGE RETURN WRITE VALUE TO ORDER==========")
       {:reply, :ok, state}
     else
       _ ->
-        {:ok, pid} = Task.start(fn -> blocking_write(id, key, value, from) end)
+        {:ok, pid} =
+          Task.start(fn -> blocking_write(id, key, value, from) end)
 
-      EventBroker.subscribe(pid, [
-        this_module_filter(),
-        id_filter(id)
-      ])
+        EventBroker.subscribe(pid, [
+          this_module_filter(),
+          id_filter(id)
+        ])
 
-      {:noreply, state}
+        {:noreply, state}
     end
   end
 
@@ -81,14 +83,14 @@ defmodule Anoma.Node.Mempool.Ordering do
 
     for id <- to_order do
       EventBroker.subscribe(pid, [
-            worker_module_filter(),
-            id_filter(id)
-          ])
+        worker_module_filter(),
+        id_filter(id)
+      ])
 
       order_event =
         EventBroker.Event.new_with_body(%__MODULE__.OrderEvent{
-              id: id
-})
+          id: id
+        })
 
       EventBroker.event(order_event)
     end
@@ -110,24 +112,24 @@ defmodule Anoma.Node.Mempool.Ordering do
   end
 
   def read({id, key}) do
-     IO.puts("==============READ CALL Reached=============")
+    IO.puts("==============READ CALL Reached=============")
     GenServer.call(__MODULE__, {:read, {id, key}}, :infinity)
   end
 
   def write({id, key}, value) do
-     IO.puts("==============Write CALL Reached=============")
+    IO.puts("==============Write CALL Reached=============")
     GenServer.call(__MODULE__, {:write, {id, key}, value}, :infinity)
   end
 
   def order(txs) do
-     IO.puts("==============Order CALL Reached=============")
+    IO.puts("==============Order CALL Reached=============")
     GenServer.call(__MODULE__, {:order, txs})
   end
 
-  def blocking_read(id, key, _from) do
+  def blocking_read(id, key, from) do
     receive do
       %EventBroker.Event{body: %__MODULE__.OrderEvent{id: ^id}} ->
-        read({id, key})
+        GenServer.reply(from, read({id, key}))
     end
 
     EventBroker.unsubscribe_me([
