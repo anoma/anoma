@@ -123,13 +123,7 @@ defmodule Anoma.Node do
           configuration: {Id.Extern.t() | nil, Anoma.Node.Configuration.t()},
           pinger: {Id.Extern.t() | nil, Pinger.t()},
           logger: {Id.Extern.t() | nil, Logger.t()},
-          ordering: {Id.Extern.t() | nil, Ordering.t()},
-          executor: {Id.Extern.t() | nil, Executor.t()},
-          mempool: {Id.Extern.t() | nil, Mempool.t()},
-          storage: {Id.Extern.t() | nil, Storage.t()},
-          dumper: {Id.Extern.t() | nil, Dumper.t()},
-          storage_data: {Storage.t(), atom(), atom()},
-          snapshot_path: Noun.t()
+          mempool: {Id.Extern.t() | nil, Mempool.t()}
         }
 
   @doc """
@@ -147,67 +141,8 @@ defmodule Anoma.Node do
   If :use_rocks has value true, I use rocksdb as storage backend.
   """
 
-  @spec start_link(configuration()) :: GenServer.on_start()
-  def start_link(args) do
-    # strawman pending proper lockfiles
-    # also need to clean this up once we're done
-    unix_path = Anoma.System.Directories.data("local.sock")
-
-    testing = args[:testing] || false
-    should_socket? = Mix.env() in [:dev, :prod] and not testing
-
-    if should_socket? && File.exists?(unix_path) do
-      File.rm(unix_path)
-
-      IO.puts(
-        "Node Already Running, Replacing #{unix_path} to send messages to this node"
-      )
-    end
-
-    name = args[:name]
-    rocks = args[:use_rocks]
-
-    node_settings = {kind, settings} = args[:settings]
-
-    {storage, block_storage, log_table} = storage_data(node_settings)
-    storage_setup(storage, block_storage, log_table, rocks)
-
-    case kind do
-      :from_dump ->
-        tables =
-          settings[:qualified] ++
-            settings[:order] ++
-            settings[:block_storage] ++ settings[:logger_table]
-
-        tables
-        |> Enum.map(fn x ->
-          fn -> :mnesia.write(x) end |> :mnesia.transaction()
-        end)
-
-      _ ->
-        nil
-    end
-
-    with {:ok, pid} <-
-           GenServer.start_link(__MODULE__, settings, name: name) do
-      case kind do
-        :new_storage ->
-          snap = settings[:snapshot_path]
-
-          node = state(pid)
-          Storage.put_snapshot(node.storage, hd(snap))
-
-        _ ->
-          :ok
-      end
-
-      if should_socket? do
-        # dump the initial state so our keys are persisted
-        Anoma.Dump.dump("node_keys.dmp", name)
-      end
-
-      {:ok, pid}
-    end
+  def start_link(_args) do
+    GenServer.start(__MODULE__, :anoma)
   end
 
   @doc """
@@ -230,159 +165,82 @@ defmodule Anoma.Node do
     end
   end
 
-  @spec init(engine_configuration() | Anoma.Dump.dump()) :: any()
-  def init(args) do
-    {log_id, log_st} = args[:logger]
-    {clock_id, _clock_st} = args[:clock]
-    {config_id, config_st} = args[:configuration]
-    {ord_id, ord_st} = args[:ordering]
-    {mem_id, mem_st} = args[:mempool]
-    {ping_id, ping_st} = args[:pinger]
-    {ex_id, ex_st} = args[:executor]
-    {storage_id, storage_st} = args[:storage]
-    {dump_id, dump_st} = args[:dumper]
+  # @spec init(engine_configuration() | Anoma.Dump.dump()) :: any()
+  # def init(args) do
+  #   {log_id, log_st} = args[:logger]
+  #   {clock_id, _clock_st} = args[:clock]
+  #   {config_id, config_st} = args[:configuration]
+  #   {mem_id, _mem_st} = args[:mempool]
+  #   {ping_id, ping_st} = args[:pinger]
 
-    {:ok, router, transport} =
-      start_router(args[:router], args[:transport], args[:router_state])
+  #   {:ok, router, transport} =
+  #     start_router(args[:router], args[:transport], args[:router_state])
 
-    {:ok, storage_topic} = new_topic(router, args[:storage_topic])
+  #   {:ok, clock} =
+  #     start_engine(
+  #       router,
+  #       Clock,
+  #       [start: System.monotonic_time(:millisecond)],
+  #       id: clock_id
+  #     )
 
-    {:ok, storage} =
-      start_engine(
-        router,
-        Storage,
-        %Storage{
-          storage_st
-          | namespace: [router.id.encrypt],
-            topic: storage_topic
-        },
-        id: storage_id
-      )
+  #   {:ok, logger} =
+  #     start_engine(
+  #       router,
+  #       Logger,
+  #       %Logger{log_st | clock: clock},
+  #       id: log_id
+  #     )
 
-    {:ok, clock} =
-      start_engine(
-        router,
-        Clock,
-        [start: System.monotonic_time(:millisecond)],
-        id: clock_id
-      )
+  #   {:ok, configuration} =
+  #     start_engine(
+  #       router,
+  #       Anoma.Node.Configuration,
+  #       %Anoma.Node.Configuration{config_st | logger: logger},
+  #       id: config_id
+  #     )
 
-    {:ok, logger_topic} = new_topic(router, args[:logger_topic])
+  #   {:ok, mempool} =
+  #     start_engine(
+  #       router,
+  #       Mempool,
+  #       nil,
+  #       id: mem_id
+  #     )
 
-    {:ok, logger} =
-      start_engine(
-        router,
-        Logger,
-        %Logger{log_st | clock: clock, topic: logger_topic},
-        id: log_id
-      )
+  #   {:ok, pinger} =
+  #     start_engine(
+  #       router,
+  #       Pinger,
+  #       %Pinger{
+  #         ping_st
+  #         | mempool: mempool,
+  #           logger: logger
+  #       },
+  #       id: ping_id
+  #     )
 
-    {:ok, configuration} =
-      start_engine(
-        router,
-        Anoma.Node.Configuration,
-        %Anoma.Node.Configuration{config_st | logger: logger},
-        id: config_id
-      )
+  #   Anoma.Node.Pinger.start(pinger)
+  #   Anoma.Node.Router.set_logger(router, logger)
 
-    {:ok, ordering} =
-      start_engine(
-        router,
-        Ordering,
-        %Ordering{ord_st | logger: logger, storage: storage},
-        id: ord_id
-      )
+  #   if Mix.env() in [:dev, :prod] do
+  #     Anoma.Node.Transport.start_server(
+  #       transport,
+  #       {:unix, Anoma.System.Directories.data("local.sock")}
+  #     )
+  #   end
 
-    {:ok, executor_topic} = new_topic(router, args[:executor_topic])
-
-    {:ok, executor} =
-      start_engine(
-        router,
-        Executor,
-        %Executor{
-          ex_st
-          | router: router,
-            logger: logger,
-            topic: executor_topic,
-            ambiant_env: %Nock{
-              ex_st.ambiant_env
-              | logger: logger,
-                ordering: ordering
-            }
-        },
-        id: ex_id
-      )
-
-    {:ok, mempool_topic} = new_topic(router, args[:mempool_topic])
-
-    {:ok, mempool} =
-      start_engine(
-        router,
-        Mempool,
-        %Mempool{
-          mem_st
-          | logger: logger,
-            topic: mempool_topic,
-            ordering: ordering,
-            executor: executor
-        },
-        id: mem_id
-      )
-
-    {:ok, pinger} =
-      start_engine(
-        router,
-        Pinger,
-        %Pinger{
-          ping_st
-          | mempool: mempool,
-            logger: logger
-        },
-        id: ping_id
-      )
-
-    {:ok, dumper} =
-      start_engine(
-        router,
-        Dumper,
-        %Dumper{
-          dump_st
-          | configuration: configuration,
-            logger: logger
-        },
-        id: dump_id
-      )
-
-    Anoma.Node.Pinger.start(pinger)
-    Dumper.start(dumper)
-    Anoma.Node.Router.set_logger(router, logger)
-
-    if Mix.env() in [:dev, :prod] do
-      Anoma.Node.Transport.start_server(
-        transport,
-        {:unix, Anoma.System.Directories.data("local.sock")}
-      )
-    end
-
-    {:ok,
-     %Node{
-       router: router,
-       transport: transport,
-       ordering: ordering,
-       executor: executor,
-       mempool: mempool,
-       pinger: pinger,
-       clock: clock,
-       configuration: configuration,
-       logger: logger,
-       logger_topic: logger_topic,
-       executor_topic: executor_topic,
-       mempool_topic: mempool_topic,
-       storage: storage,
-       storage_topic: storage_topic,
-       dumper: dumper
-     }}
-  end
+  #   {:ok,
+  #    %Node{
+  #      router: router,
+  #      transport: transport,
+  #      mempool: mempool,
+  #      pinger: pinger,
+  #      clock: clock,
+  #      configuration: configuration,
+  #      logger: logger
+  #    }}
+  # end
 
   @doc """
   Given minimal arguments, I create appropriate setup for the
@@ -390,9 +248,6 @@ defmodule Anoma.Node do
   """
   @spec start_min(min_engine_configuration()) :: engine_configuration()
   def start_min(args) do
-    env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
-    storage = args[:storage_data]
-    block_storage = args[:block_storage]
     log_table = args[:logger_table]
 
     %{
@@ -400,30 +255,9 @@ defmodule Anoma.Node do
       configuration:
         {nil, %Anoma.Node.Configuration{configuration: args[:configuration]}},
       logger: {nil, %Logger{table: log_table}},
-      ordering: {nil, %Ordering{}},
-      executor: {nil, %Executor{ambiant_env: env}},
-      mempool: {nil, %Mempool{block_storage: args[:block_storage]}},
-      pinger: {nil, %Pinger{time: args[:ping_time]}},
-      storage: {nil, storage},
-      dumper:
-        {nil,
-         %Dumper{
-           count: args[:count]
-         }},
-      storage_data: {storage, block_storage, log_table},
-      snapshot_path: args[:snapshot_path]
+      mempool: {nil, %Mempool{}},
+      pinger: {nil, %Pinger{time: args[:ping_time]}}
     }
-  end
-
-  @doc """
-  I give the storage from a node.
-
-  This is useful when we want to bring storage to a new node.
-  """
-  @spec raw_storage(t()) :: Storage.t()
-  def raw_storage(node = %__MODULE__{storage: storage}) when storage != nil do
-    storage = node.storage |> Engine.get_state()
-    %Storage{storage | topic: nil}
   end
 
   def state(nodes) do

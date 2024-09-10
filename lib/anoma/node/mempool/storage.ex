@@ -1,4 +1,4 @@
-defmodule Anoma.Node.AbStorage do
+defmodule Anoma.Node.Mempool.Storage do
   @moduledoc """
   abstorage genserver
   """
@@ -31,7 +31,7 @@ defmodule Anoma.Node.AbStorage do
 
   typedstruct enforce: true, module: WriteEvent do
     field(:height, integer())
-    field(:key, Anoma.Node.AbStorage.bare_key())
+    field(:key, Anoma.Node.Mempool.Storage.bare_key())
     field(:value, term())
   end
 
@@ -40,19 +40,36 @@ defmodule Anoma.Node.AbStorage do
   end
 
   def init(_) do
-    :mnesia.create_table(__MODULE__.Values)
-    :mnesia.create_table(__MODULE__.Updates)
-    {:ok, %AbStorage{}}
+    :mnesia.create_table(__MODULE__.Values, attributes: [:key, :value])
+    :mnesia.create_table(__MODULE__.Updates, attributes: [:key, :value])
+    :mnesia.create_table(__MODULE__.RM)
+    {:ok, %Storage{}}
   end
 
   def handle_call({:read, {height, key}}, from, state) do
     if height <= state.uncommitted_height do
       # relies on this being a reverse-ordered list
-      real_time =
-        Map.get(state.uncommitted_updates, key)
-        |> Enum.find(fn a -> a <= height end)
 
-      {:reply, Map.get(state.uncommitted, {real_time, key}), state}
+      res =
+        case Map.get(state.uncommitted_updates, key)
+             |> Enum.find(fn a -> a <= height end) do
+          nil ->
+            tx = fn ->
+              height =
+                :mnesia.read(__MODULE__.Updates, key)
+                |> Enum.find(fn a -> a <= height end)
+
+              :mnesia.read(__MODULE__.Values, {height, key})
+            end
+
+            {:ok, res} = :mnesia.tx(tx)
+            res
+
+          res ->
+            res
+        end
+
+      {:reply, Map.get(state.uncommitted, {res, key}), state}
     else
       {:ok, pid} = Task.start(fn -> blocking_read(height, key, from) end)
 
@@ -86,9 +103,16 @@ defmodule Anoma.Node.AbStorage do
     {:reply, :ok, state}
   end
 
-  # fixme do out of order writes correctly
-  def handle_cast({:write, {height, key}, value}, state) do
+  def handle_call({:write, {height, key}, value}, from, state) do
     unless height == state.uncommitted_height + 1 do
+      {:ok, pid} =
+        Task.start(fn -> blocking_write(height, key, value, from) end)
+
+      EventBroker.subscribe(pid, [
+        this_module_filter(),
+        height_filter(height - 1)
+      ])
+
       {:noreply, state}
     else
       key_old_updates = Map.get(state.uncommitted_updates, key, [])
@@ -112,13 +136,20 @@ defmodule Anoma.Node.AbStorage do
 
       EventBroker.event(write_event)
 
-      {:noreply, new_state}
+      {:reply, :ok, new_state}
     end
   end
 
-  # fixme dedupe code with above
-  def handle_cast({:append, {height, key}, value}, state) do
+  def handle_call({:append, {height, key}, value}, from, state) do
     unless height == state.uncommitted_height + 1 do
+      {:ok, pid} =
+        Task.start(fn -> blocking_write(height, key, value, from) end)
+
+      EventBroker.subscribe(pid, [
+        this_module_filter(),
+        height_filter(height - 1)
+      ])
+
       {:noreply, state}
     else
       key_old_updates = Map.get(state.uncommitted_updates, key, [])
@@ -161,7 +192,7 @@ defmodule Anoma.Node.AbStorage do
   end
 
   def write({height, key}, value) do
-    GenServer.cast(__MODULE__, {:write, {height, key}, value})
+    GenServer.call(__MODULE__, {:write, {height, key}, value})
   end
 
   def commit() do
@@ -185,6 +216,22 @@ defmodule Anoma.Node.AbStorage do
 
       _ ->
         IO.puts("this should be unreachable")
+    end
+
+    EventBroker.unsubscribe_me([
+      this_module_filter(),
+      height_filter(height)
+    ])
+  end
+
+  def blocking_write(height, key, value, from) do
+    awaited_height = height - 1
+
+    receive do
+      %EventBroker.Event{
+        body: %__MODULE__.WriteEvent{height: ^awaited_height}
+      } ->
+        write({height, key}, value)
     end
 
     EventBroker.unsubscribe_me([

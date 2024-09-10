@@ -21,8 +21,10 @@ defmodule Nock do
 
   """
   typedstruct do
-    field(:ordering, Router.Addr.t() | nil, default: nil)
-    field(:snapshot_path, Noun.t() | nil, default: nil)
+    field(:ordering, pid() | nil,
+      default: Anoma.Node.Mempool.Ordering |> Process.whereis()
+    )
+
     field(:logger, Router.Addr.t(), enforce: false)
     field(:meter_pid, pid() | nil, default: nil)
   end
@@ -2421,15 +2423,12 @@ defmodule Nock do
   ############################################################
 
   @spec read_with_id(Noun.t(), t()) :: {:ok, Noun.t()} | :error
-  def read_with_id(id, env) do
+  def read_with_id(id_key_list, env) do
     ordering = env.ordering
 
-    if ordering && env.snapshot_path && id do
-      with [id, key | 0] <- id,
-           snap_id = [id | env.snapshot_path],
-           {:ok, snap} <- Ordering.caller_blocking_read_id(ordering, snap_id),
-           instrument({:snapshot, snap}),
-           {:ok, value} <- Storage.get_at_snapshot(snap, key) do
+    if ordering && id_key_list do
+      with [id, key | 0] <- id_key_list,
+           {:ok, value} <- Ordering.read({id, key}) do
         instrument({:got_value, value})
         {:ok, value}
       else

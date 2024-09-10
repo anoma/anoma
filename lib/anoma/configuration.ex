@@ -64,10 +64,8 @@ defmodule Anoma.Configuration do
   @node_format [
     {"block_storage", &is_binary/1, "anoma_block"},
     {"name", &is_binary/1, "anoma"},
-    {"order", &is_binary/1, "Anoma.Order"},
     {"ping_time", &__MODULE__.is_pinger/1,
      if(Mix.env() == :prod, do: 10000, else: "no_timer")},
-    {"qualified", &is_binary/1, "Anoma.Qualified"},
     {"logger_table", &is_binary/1, "Anoma.Logger"},
     {"snapshot_path", &is_binary/1, "my_special_nock_snapshot"}
   ]
@@ -121,11 +119,6 @@ defmodule Anoma.Configuration do
     [
       {:name, node["name"] |> String.to_atom()},
       {:snapshot_path, [path | 0]},
-      {:storage_data,
-       %Anoma.Node.Storage{
-         qualified: node["qualified"] |> String.to_atom(),
-         order: node["order"] |> String.to_atom()
-       }},
       {:block_storage, node["block_storage"] |> String.to_atom()},
       {:logger_table, node["logger_table"] |> String.to_atom()},
       {:ping_time, node["ping_time"] |> maybe_ping()},
