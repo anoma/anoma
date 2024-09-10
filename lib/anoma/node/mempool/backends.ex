@@ -7,10 +7,11 @@ defmodule Anoma.Node.Mempool.Backends do
   alias Anoma.Resource.Transaction, as: TTransaction
   alias Anoma.RM.Transaction
   alias Anoma.ShieldedResource.ShieldedTransaction
+  alias Anoma.Node.Mempool.Ordering
 
   import Nock
   require Noun
-  require EventBroker
+  require EventBroker.Event
   use TypedStruct
 
   @type backend() :: :kv | :rm | :cairo | :ro
@@ -34,7 +35,7 @@ defmodule Anoma.Node.Mempool.Backends do
   end
 
   def execute({:ro, tx}, id, reply_to) do
-    execute_kv_ro(tx, id, reply_to, &send_value/2)
+    execute_kv_ro(tx, id, reply_to, &send_value/3)
   end
 
   def execute({:kv, tx}, id, nil) do
@@ -63,7 +64,7 @@ defmodule Anoma.Node.Mempool.Backends do
 
     with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
          {:ok, result} <- gate_call(stage_2_tx, env, id),
-         :ok <- process.(result, env, reply_to) do
+         :ok <- process.(id, result, reply_to) do
       ok_event =
         EventBroker.Event.new_with_body(%__MODULE__.CompleteEvent{
           id: id,
@@ -83,15 +84,15 @@ defmodule Anoma.Node.Mempool.Backends do
     end
   end
 
-  defp send_value(result, reply_to) do
+  defp send_value(_id, result, reply_to) do
     # send the value to reply-to address and the topic
     reply_msg = {:read_value, result}
     send_if_addr(reply_to, reply_msg)
   end
 
-  defp store_value(result, env, _reply_to) do
+  defp store_value(id, result, _reply_to) do
     with [key | value] <- result do
-      Ordering.write({key, value})
+      Ordering.write({id, key}, value)
       :ok
     else
       e -> e

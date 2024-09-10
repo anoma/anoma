@@ -169,15 +169,15 @@ defmodule Anoma.Node.Mempool.Ordering do
     GenServer.reply(res_list, from)
   end
 
-  defp this_module_filter() do
+  def this_module_filter() do
     %EventBroker.Filters.SourceModule{module: __MODULE__}
   end
 
-  defp worker_module_filter() do
+  def worker_module_filter() do
     %EventBroker.Filters.SourceModule{module: Anoma.Node.Mempool.Backends}
   end
 
-  defp id_filter(id) do
+  def id_filter(id) do
     %__MODULE__.IdFilter{id: id}
   end
 end
