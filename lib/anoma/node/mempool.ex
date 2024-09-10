@@ -90,6 +90,8 @@ defmodule Anoma.Node.Mempool do
     tx = fn -> :mnesia.write({__MODULE__.Blocks, state.round, writes}) end
     :mnesia.transaction(tx)
 
+    Mempool.Storage.commit()
+
     {:noreply,
      %__MODULE__{state | transactions: rem, round: state.round + 1}}
   end

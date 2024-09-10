@@ -91,12 +91,12 @@ defmodule Anoma.Node.Mempool.Storage do
       for {key, value} <- state.uncommitted_updates do
         old_updates = :mnesia.read(__MODULE__.Updates, key)
         new_updates = value ++ old_updates
-        :mnesia.write(__MODULE__.Updates, key, new_updates)
+        :mnesia.write({__MODULE__.Updates, key, new_updates})
       end
     end
 
     :mnesia.transaction(mnesia_tx)
-    {:noreply, %__MODULE__{uncommitted_height: state.uncommitted_height}}
+    {:reply, :ok, %__MODULE__{uncommitted_height: state.uncommitted_height}}
   end
 
   def handle_call({:write, {height, key}, value}, from, state) do
