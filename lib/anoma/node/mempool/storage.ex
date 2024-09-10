@@ -111,7 +111,7 @@ defmodule Anoma.Node.Mempool.Storage do
       ])
 
       {:noreply, state}
-    else IO.puts("=================write directly=============")
+    else IO.puts("=================storage write directly=============")
       key_old_updates = Map.get(state.uncommitted_updates, key, [])
       key_new_updates = [height | key_old_updates]
       new_updates = Map.put(state.uncommitted_updates, key, key_new_updates)
@@ -132,7 +132,7 @@ defmodule Anoma.Node.Mempool.Storage do
         })
 
       EventBroker.event(write_event)
-      IO.puts("=================REACHES END OF WRITING============")
+      IO.puts("=================REACHES END OF WRITING Storage return :ok============")
       {:reply, :ok, new_state}
     end
   end

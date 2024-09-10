@@ -19,6 +19,6 @@ defmodule Anoma.Node.Mempool.Storage.HeightFilter do
   end
 
   def filter(msg, filter_params) do
-    msg.height == filter_params.height
+    msg.body.height == filter_params.height
   end
 end

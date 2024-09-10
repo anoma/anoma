@@ -70,7 +70,7 @@ defmodule Anoma.Node.Mempool.Backends do
           id: id,
           result: :ok
         })
-      
+
       EventBroker.event(ok_event)
     else
       _e ->
@@ -92,9 +92,7 @@ defmodule Anoma.Node.Mempool.Backends do
 
   defp store_value(id, result, _reply_to) do
     with [key | value] <- result do
-      :ok = Ordering.write({id, key}, value)
-      IO.puts("=============WRITE DONE==========")
-      :ok
+      Ordering.write({id, key}, value)
     else
       e -> e
     end

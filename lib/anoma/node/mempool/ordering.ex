@@ -49,7 +49,7 @@ defmodule Anoma.Node.Mempool.Ordering do
   end
 
   def handle_call({:write, {id, key}, value}, from, state) do
-    IO.puts("==============Write Reached=============")
+    IO.puts("==============Write Reached Ordering=============")
     with {:ok, height} <- Map.fetch(state.hash_to_order, id) do
       :ok = Storage.write({height, key}, value)
       IO.puts("=============STORAGE RETURN WRITE VALUE TO ORDER==========")
@@ -136,10 +136,10 @@ defmodule Anoma.Node.Mempool.Ordering do
     ])
   end
 
-  def blocking_write(id, key, value, _from) do
+  def blocking_write(id, key, value, from) do
     receive do
       %EventBroker.Event{body: %__MODULE__.OrderEvent{id: ^id}} ->
-        write({id, key}, value)
+        GenServer.reply(from, write({id, key}, value))
     end
 
     EventBroker.unsubscribe_me([
@@ -182,7 +182,7 @@ defmodule Anoma.Node.Mempool.Ordering do
           end
       end
 
-    GenServer.reply(res_list, from)
+    GenServer.reply(from, res_list)
   end
 
   def this_module_filter() do
