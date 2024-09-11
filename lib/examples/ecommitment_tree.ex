@@ -1,6 +1,7 @@
 defmodule Examples.ECommitmentTree do
   require ExUnit.Assertions
   import ExUnit.Assertions
+  alias Examples.{EShieldedResource, ECommitmentTree}
 
   def tree_storage() do
     :cmtree_test
@@ -126,5 +127,21 @@ defmodule Examples.ECommitmentTree do
            "adding 2,500 keys in batches and one at the time is the same"
 
     ct_batches
+  end
+
+  @spec a_merkle_proof() :: {CommitmentTree.t(), CommitmentTree.Proof.t(), any()}
+  def a_merkle_proof() do
+
+    cairo_spec = ECommitmentTree.cairo_poseidon_spec()
+
+    cm_tree = ECommitmentTree.empty_mnesia_backed_ct(cairo_spec)
+    input_resource_cm = EShieldedResource.a_resource_commitment()
+
+    # Insert the input resource to the tree
+    {ct, anchor} = CommitmentTree.add(cm_tree, [input_resource_cm])
+    # Get the merkle proof of the input resource
+    merkle_proof = CommitmentTree.prove(ct, 0)
+
+    {ct, merkle_proof, anchor}
   end
 end
