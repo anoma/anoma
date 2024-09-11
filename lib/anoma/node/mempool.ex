@@ -57,16 +57,16 @@ defmodule Anoma.Node.Mempool do
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_cast({:tx, tx_code, reply_to}, state) do
+  def handle_cast({:tx, tx_code_w_backend, reply_to}, state) do
     tx_id = :crypto.strong_rand_bytes(16)
 
     Task.start(fn ->
-      Anoma.Node.Mempool.Backends.execute(tx_code, tx_id, reply_to)
+      Anoma.Node.Mempool.Backends.execute(tx_code_w_backend, tx_id, reply_to)
     end)
 
     nstate = %Mempool{
       state
-      | transactions: Map.put(state.transactions, tx_id, tx_code)
+      | transactions: Map.put(state.transactions, tx_id, tx_code_w_backend)
     }
 
     {:noreply, nstate}

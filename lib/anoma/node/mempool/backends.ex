@@ -93,6 +93,8 @@ defmodule Anoma.Node.Mempool.Backends do
   defp store_value(id, result, _reply_to) do
     with [key | value] <- result do
       Ordering.write({id, key}, value)
+      IO.puts("===========Worker concluded writing succesfully========")
+      :ok
     else
       e -> e
     end

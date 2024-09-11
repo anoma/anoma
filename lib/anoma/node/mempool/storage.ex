@@ -46,6 +46,31 @@ defmodule Anoma.Node.Mempool.Storage do
     {:ok, %Storage{}}
   end
 
+  def handle_call(:commit, _from, state) do
+    mnesia_tx = fn ->
+      for {key, value} <- state.uncommitted do
+        :mnesia.write({__MODULE__.Values, key, value})
+      end
+
+      for {key, value} <- state.uncommitted_updates do
+        {:atomic, res} =
+          fn -> :mnesia.read(__MODULE__.Updates, key) end
+          |> :mnesia.transaction()
+
+        new_updates =
+          case res do
+            [] -> value
+            [{__MODULE__.Updates, _key, list}] -> value ++ list
+          end
+
+        :mnesia.write({__MODULE__.Updates, key, new_updates})
+      end
+    end
+
+    :mnesia.transaction(mnesia_tx)
+    {:reply, :ok, %__MODULE__{uncommitted_height: state.uncommitted_height}}
+  end
+
   def handle_call({:read, {height, key}}, from, state) do
     IO.puts("==============STORAGE READ REACHED=============")
 
@@ -81,77 +106,63 @@ defmodule Anoma.Node.Mempool.Storage do
       {:reply, {:ok, res}, state}
     else
       IO.puts("==============READ IN THE FUTURE=============")
-      {:ok, pid} = Task.start(fn -> blocking_read(height, key, from) end)
-
-      EventBroker.subscribe(pid, [
-        this_module_filter(),
-        height_filter(height)
-      ])
-
+      block_spawn(height, fn -> blocking_read(height, key, from) end)
       {:noreply, state}
     end
   end
 
-  def handle_call(:commit, _from, state) do
-    mnesia_tx = fn ->
-      for {key, value} <- state.uncommitted do
-        :mnesia.write({__MODULE__.Values, key, value})
+  def abwrite(flag, {height, key}, value, state) do
+    key_old_updates = Map.get(state.uncommitted_updates, key, [])
+    key_new_updates = [height | key_old_updates]
+    new_updates = Map.put(state.uncommitted_updates, key, key_new_updates)
+
+    {new_kv, value} =
+      case flag do
+        :append ->
+          old_set_value =
+            Map.get(state.uncommitted_updates, key, MapSet.new())
+
+          new_set_value = MapSet.put(old_set_value, value)
+
+          new_kv =
+            Map.put_new(state.uncommitted, {height, key}, new_set_value)
+
+          {new_kv, new_set_value}
+
+        :write ->
+          new_kv = Map.put_new(state.uncommitted, {height, key}, value)
+          {new_kv, value}
       end
 
-      for {key, value} <- state.uncommitted_updates do
-        {:atomic, res} =
-          fn -> :mnesia.read(__MODULE__.Updates, key) end
-          |> :mnesia.transaction()
+    write_event =
+      EventBroker.Event.new_with_body(%__MODULE__.WriteEvent{
+        height: height,
+        key: key,
+        value: value
+      })
 
-        new_updates =
-          case res do
-            [] -> value
-            [{__MODULE__.Updates, _key, list}] -> value ++ list
-          end
+    EventBroker.event(write_event)
 
-        :mnesia.write({__MODULE__.Updates, key, new_updates})
-      end
-    end
-
-    :mnesia.transaction(mnesia_tx)
-    {:reply, :ok, %__MODULE__{uncommitted_height: state.uncommitted_height}}
+    %__MODULE__{
+      state
+      | uncommitted: new_kv,
+        uncommitted_height: height,
+        uncommitted_updates: new_updates
+    }
   end
 
   def handle_call({:write, {height, key}, value}, from, state) do
     IO.puts("==============STORAGE WRITE REACHED=============")
 
     unless height == state.uncommitted_height + 1 do
-      {:ok, pid} =
-        Task.start(fn -> blocking_write(height, key, value, from) end)
-
-      EventBroker.subscribe(pid, [
-        this_module_filter(),
-        height_filter(height - 1)
-      ])
+      block_spawn(height - 1, fn ->
+        blocking_write(height, key, value, from)
+      end)
 
       {:noreply, state}
     else
       IO.puts("=================storage write directly=============")
-      key_old_updates = Map.get(state.uncommitted_updates, key, [])
-      key_new_updates = [height | key_old_updates]
-      new_updates = Map.put(state.uncommitted_updates, key, key_new_updates)
-      new_kv = Map.put_new(state.uncommitted, {height, key}, value)
-
-      new_state = %{
-        state
-        | uncommitted: new_kv,
-          uncommitted_height: height,
-          uncommitted_updates: new_updates
-      }
-
-      write_event =
-        EventBroker.Event.new_with_body(%__MODULE__.WriteEvent{
-          height: height,
-          key: key,
-          value: value
-        })
-
-      EventBroker.event(write_event)
+      new_state = abwrite(:write, {height, key}, value, state)
 
       IO.puts(
         "=================REACHES END OF WRITING Storage return :ok============"
@@ -163,41 +174,24 @@ defmodule Anoma.Node.Mempool.Storage do
 
   def handle_call({:append, {height, key}, value}, from, state) do
     unless height == state.uncommitted_height + 1 do
-      {:ok, pid} =
-        Task.start(fn -> blocking_write(height, key, value, from) end)
-
-      EventBroker.subscribe(pid, [
-        this_module_filter(),
-        height_filter(height - 1)
-      ])
+      block_spawn(height, fn -> blocking_write(height, key, value, from) end)
 
       {:noreply, state}
     else
-      key_old_updates = Map.get(state.uncommitted_updates, key, [])
-      key_new_updates = [height | key_old_updates]
-      new_updates = Map.put(state.uncommitted_updates, key, key_new_updates)
-      old_set_value = Map.get(state.uncommitted_updates, key, MapSet.new())
-      new_set_value = MapSet.put(old_set_value, value)
-      new_kv = Map.put_new(state.uncommitted, {height, key}, new_set_value)
-
-      new_state = %{
-        state
-        | uncommitted: new_kv,
-          uncommitted_height: height,
-          uncommitted_updates: new_updates
-      }
-
-      write_event =
-        EventBroker.Event.new_with_body(%__MODULE__.WriteEvent{
-          height: height,
-          key: key,
-          value: value
-        })
-
-      EventBroker.event(write_event)
+      new_state = abwrite(:append, {height, key}, value, state)
 
       {:reply, :ok, new_state}
     end
+  end
+
+  def block_spawn(height, call) do
+    {:ok, pid} =
+      Task.start(call)
+
+    EventBroker.subscribe(pid, [
+      this_module_filter(),
+      height_filter(height)
+    ])
   end
 
   def handle_call(_msg, _from, state) do

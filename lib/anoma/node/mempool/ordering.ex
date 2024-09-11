@@ -37,13 +37,7 @@ defmodule Anoma.Node.Mempool.Ordering do
       {:reply, {:ok, value}, state}
     else
       _ ->
-        {:ok, pid} = Task.start(fn -> blocking_read(id, key, from) end)
-
-        EventBroker.subscribe(pid, [
-          this_module_filter(),
-          id_filter(id)
-        ])
-
+        block_spawn(id, fn -> blocking_read({id, key}, from) end)
         {:noreply, state}
     end
   end
@@ -57,16 +51,19 @@ defmodule Anoma.Node.Mempool.Ordering do
       {:reply, :ok, state}
     else
       _ ->
-        {:ok, pid} =
-          Task.start(fn -> blocking_write(id, key, value, from) end)
-
-        EventBroker.subscribe(pid, [
-          this_module_filter(),
-          id_filter(id)
-        ])
-
+        block_spawn(id, fn -> blocking_write({id, key}, value, from) end)
         {:noreply, state}
     end
+  end
+
+  def block_spawn(id, call) do
+    {:ok, pid} =
+      Task.start(call)
+
+    EventBroker.subscribe(pid, [
+      this_module_filter(),
+      id_filter(id)
+    ])
   end
 
   def handle_call({:order, txs}, from, state) do
@@ -112,36 +109,39 @@ defmodule Anoma.Node.Mempool.Ordering do
   end
 
   def read({id, key}) do
-    IO.puts("==============READ CALL Reached=============")
     GenServer.call(__MODULE__, {:read, {id, key}}, :infinity)
   end
 
   def write({id, key}, value) do
-    IO.puts("==============Write CALL Reached=============")
     GenServer.call(__MODULE__, {:write, {id, key}, value}, :infinity)
   end
 
   def order(txs) do
-    IO.puts("==============Order CALL Reached=============")
     GenServer.call(__MODULE__, {:order, txs})
   end
 
-  def blocking_read(id, key, from) do
-    receive do
-      %EventBroker.Event{body: %__MODULE__.OrderEvent{id: ^id}} ->
-        GenServer.reply(from, read({id, key}))
-    end
-
-    EventBroker.unsubscribe_me([
-      this_module_filter(),
-      id_filter(id)
-    ])
+  def blocking_read({id, key}, from) do
+    block(from, id, fn -> read({id, key}) end)
   end
 
-  def blocking_write(id, key, value, from) do
+  def blocking_write({id, key}, value, from) do
+    block(from, id, fn ->
+      IO.puts(
+        "=============================TASK #{inspect(self())} ==================="
+      )
+
+      write({id, key}, value)
+    end)
+  end
+
+  def block(from, id, call) do
     receive do
       %EventBroker.Event{body: %__MODULE__.OrderEvent{id: ^id}} ->
-        GenServer.reply(from, write({id, key}, value))
+        IO.puts(
+          "==========ORDER GOTTEN REPLY TO #{inspect(from)}============="
+        )
+
+        GenServer.reply(from, call.())
     end
 
     EventBroker.unsubscribe_me([
