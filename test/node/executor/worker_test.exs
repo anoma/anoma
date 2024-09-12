@@ -282,6 +282,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     alias Anoma.ShieldedResource
     alias Anoma.Constants
     alias Anoma.ShieldedResource.ComplianceInput
+    alias Anoma.ShieldedResource.ResourceTree
 
     id = System.unique_integer([:positive])
 
@@ -296,15 +297,15 @@ defmodule AnomaTest.Node.Executor.Worker do
     input_nf_key = :binary.copy(<<0>>, 31) <> <<1>>
 
     input_resource = %ShieldedResource{
-      # we don't have a real resource logic, use the compliance circuit as resource logic
-      logic: Constants.cairo_compliance_program_hash(),
-      label: Cairo.random_felt() |> :binary.list_to_bin(),
+      # There is a trivial resource logic, params/trivial_resource_logic.juvix
+      logic: Constants.cairo_trivial_resource_logic_hash(),
+      label: <<0::256>>,
       quantity: :binary.copy(<<0>>, 31) <> <<5>>,
-      data: Cairo.random_felt() |> :binary.list_to_bin(),
+      data: <<0::256>>,
       eph: false,
-      nonce: Cairo.random_felt() |> :binary.list_to_bin(),
+      nonce: <<0::256>>,
       npk: ShieldedResource.get_npk(input_nf_key),
-      rseed: Cairo.random_felt() |> :binary.list_to_bin()
+      rseed: <<0::256>>
     }
 
     eph_root = Cairo.random_felt() |> :binary.list_to_bin()
@@ -312,6 +313,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     # create an output resource
     input_nf = ShieldedResource.nullifier(input_resource)
     output_resource = ShieldedResource.set_nonce(input_resource, input_nf)
+    output_cm = ShieldedResource.commitment(output_resource)
 
     # rcv is used to generate the binding signature(delta proof)
     rcv = :binary.copy(<<0>>, 31) <> <<3>>
@@ -346,12 +348,72 @@ defmodule AnomaTest.Node.Executor.Worker do
     {:ok, compliance_proof} =
       ProofRecord.generate_compliance_proof(compliance_inputs)
 
-    # TODO: make up real logic proofs when building a client
-    input_resource_logic = compliance_proof
-    output_resource_logic = compliance_proof
+    # Build resource logic proofs
+    {:ok, resource_logic_circuit} =
+      File.read("./params/trivial_resource_logic.json")
+
+    # Build resource merkle tree
+    rt =
+      ResourceTree.construct(
+        CommitmentTree.Spec.cairo_poseidon_resource_tree_spec(),
+        [input_nf, output_cm]
+      )
+
+    _input_resource_path = ResourceTree.prove(rt, input_nf)
+    # IO.inspect(_input_resource_path)
+
+    # Application developers should be responsible to define and fill up the input_resource_logic_inputs json
+    input_resource_logic_inputs = """
+    {
+      "self_resource": {
+          "logic" : "0x1e3a7d104e0f5f7cec0e9a750ad7df223df65163bed9451fad655ebae92964a",
+          "label" : "0x0",
+          "quantity" : "0x5",
+          "data" : "0x0",
+          "eph" : false,
+          "nonce" : "0x0",
+          "npk" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
+          "rseed" : "0x0"
+      },
+      "resource_nf_key": "0x1",
+      "merkle_path": [{"fst": "0x1e15dfe74215466d6038437c7e0c27f9c71353b90f51f586898f515d3d3f7d1", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}]
+    }
+    """
+
+    {:ok, input_resource_logic_proof} =
+      ProofRecord.generate_cairo_proof(
+        resource_logic_circuit,
+        input_resource_logic_inputs
+      )
+
+    _output_resource_path_ = ResourceTree.prove(rt, output_cm)
+    # IO.inspect(_output_resource_path_)
+
+    output_resource_logic_inputs = """
+    {
+      "self_resource": {
+          "logic" : "0x1e3a7d104e0f5f7cec0e9a750ad7df223df65163bed9451fad655ebae92964a",
+          "label" : "0x0",
+          "quantity" : "0x5",
+          "data" : "0x0",
+          "eph" : false,
+          "nonce" : "0x512202c0970b0ec15a9eeee086927b8021d03c4c2e76cbcd41ef5f4f59a3847",
+          "npk" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
+          "rseed" : "0x0"
+      },
+      "resource_nf_key": "0x1",
+      "merkle_path": [{"fst": "0x512202c0970b0ec15a9eeee086927b8021d03c4c2e76cbcd41ef5f4f59a3847", "snd": true}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}]
+    }
+    """
+
+    {:ok, output_resource_logic_proof} =
+      ProofRecord.generate_cairo_proof(
+        resource_logic_circuit,
+        output_resource_logic_inputs
+      )
 
     ptx = %PartialTransaction{
-      logic_proofs: [input_resource_logic, output_resource_logic],
+      logic_proofs: [input_resource_logic_proof, output_resource_logic_proof],
       compliance_proofs: [compliance_proof]
     }
 
