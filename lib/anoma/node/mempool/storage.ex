@@ -174,7 +174,9 @@ defmodule Anoma.Node.Mempool.Storage do
 
   def handle_call({:append, {height, key}, value}, from, state) do
     unless height == state.uncommitted_height + 1 do
-      block_spawn(height, fn -> blocking_write(height, key, value, from) end)
+      block_spawn(height - 1, fn ->
+        blocking_write(height, key, value, from)
+      end)
 
       {:noreply, state}
     else
