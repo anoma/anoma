@@ -14,7 +14,7 @@ defmodule Anoma.Node.Mempool.Backends do
   require EventBroker.Event
   use TypedStruct
 
-  @type backend() :: :kv | :rm | :cairo | :ro
+  @type backend() :: :kv | :rm | :cairo | :ro | :blob
 
   @type transaction() :: {backend(), Noun.t() | binary()}
 
@@ -40,6 +40,10 @@ defmodule Anoma.Node.Mempool.Backends do
 
   def execute({:kv, tx}, id, nil) do
     execute_kv_ro(tx, id, nil, &store_value/3)
+  end
+
+  def execute({:blob, tx}, id, nil) do
+    execute_kv_ro(tx, id, nil, &blob_store/3)
   end
 
   # def execute({:rm, tx}, id, nil) do
@@ -88,6 +92,11 @@ defmodule Anoma.Node.Mempool.Backends do
     # send the value to reply-to address and the topic
     reply_msg = {:read_value, result}
     send_if_addr(reply_to, reply_msg)
+  end
+
+  def blob_store(id, result, _reply_to) do
+    key = :crypto.hash(:sha256, :erlang.term_to_binary(result))
+    Ordering.write({id, key}, result)
   end
 
   defp store_value(id, result, _reply_to) do
