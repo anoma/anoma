@@ -72,7 +72,7 @@ defmodule Anoma.Node.Mempool.Backends do
       ok_event =
         EventBroker.Event.new_with_body(%__MODULE__.CompleteEvent{
           id: id,
-          result: :ok
+          result: {:ok, result}
         })
 
       EventBroker.event(ok_event)

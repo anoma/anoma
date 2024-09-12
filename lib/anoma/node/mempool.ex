@@ -37,7 +37,6 @@ defmodule Anoma.Node.Mempool do
   def init(_arg) do
     __MODULE__.Ordering.start_link(nil)
     __MODULE__.Storage.start_link(nil)
-    :mnesia.create_table(__MODULE__.Blocks, attributes: [:round, :block])
     {:ok, %__MODULE__{}}
   end
 
@@ -45,20 +44,34 @@ defmodule Anoma.Node.Mempool do
   #                      Public RPC API                      #
   ############################################################
 
-  def tx(server, tx_w_backend, reply_to \\ nil) do
-    GenServer.cast(server, {:tx, tx_w_backend, reply_to})
+  def tx_dump(server) do
+    GenServer.call(server, :dump)
   end
 
-  def execute(server) do
-    GenServer.cast(server, :execute)
+  def tx(server, tx_w_backend, reply_to \\ nil, id \\ nil) do
+    GenServer.cast(server, {:tx, tx_w_backend, reply_to, id})
+  end
+
+  # list of ids seen as ordered transactions
+  @spec execute(GenServer.server(), list(binary())) :: :ok
+  def execute(server, ordered_list_of_txs) do
+    GenServer.cast(server, {:execute, ordered_list_of_txs})
   end
 
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_cast({:tx, tx_code_w_backend, reply_to}, state) do
-    tx_id = :crypto.strong_rand_bytes(16)
+  def handle_call(:dump, _from, state) do
+    {:reply, state.transactions |> Map.keys()}
+  end
+
+  def handle_cast({:tx, tx_code_w_backend, reply_to, id}, state) do
+    tx_id =
+      case id do
+        nil -> :crypto.strong_rand_bytes(16)
+        id -> id
+      end
 
     Task.start(fn ->
       Anoma.Node.Mempool.Backends.execute(tx_code_w_backend, tx_id, reply_to)
@@ -72,33 +85,35 @@ defmodule Anoma.Node.Mempool do
     {:noreply, nstate}
   end
 
-  def handle_cast(:execute, state) do
-    # if no reply within specified time all crashes
-    res_list = state.transactions |> Map.keys() |> Ordering.order()
+  def handle_cast({:execute, list}, state) do
+    with true <-
+           list |> Enum.all(fn x -> Map.has_key?(state.transactions, x) end) do
+      res_list = Ordering.order(list)
 
-    {writes, rem} =
-      for {res, id, height} <- res_list,
-          reduce: {[], state.transactions} do
-        {block_writes, _remaining_txs} ->
-          res =
-            case res do
-              :ok ->
-                {height, Map.get(state.transactions, id)}
+      {writes, rem} =
+        for {res, id, height} <- res_list,
+            reduce: {[], state.transactions} do
+          {block_writes, _remaining_txs} ->
+            res =
+              case res do
+                {:ok, res} ->
+                  {{height, res}, Map.get(state.transactions, id)}
 
-              :error ->
-                {:error, Map.get(state.transactions, id)}
-            end
+                :error ->
+                  {:error, Map.get(state.transactions, id)}
+              end
 
-          {[res | block_writes], Map.delete(state.transactions, id)}
-      end
+            {[res | block_writes], Map.delete(state.transactions, id)}
+        end
 
-    tx = fn -> :mnesia.write({__MODULE__.Blocks, state.round, writes}) end
-    :mnesia.transaction(tx)
+      Mempool.Storage.commit(state.round, writes)
+      IO.puts("==============BLOCK FINISHED<>COMMIT FINISHED=============")
 
-    Mempool.Storage.commit()
-    IO.puts("==============BLOCK FINISHED<>COMMIT FINISHED=============")
-
-    {:noreply, %__MODULE__{state | transactions: rem, round: state.round + 1}}
+      {:noreply,
+       %__MODULE__{state | transactions: rem, round: state.round + 1}}
+    else
+      false -> {:noreply, state}
+    end
   end
 
   def handle_call(_, _, state) do

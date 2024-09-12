@@ -42,11 +42,12 @@ defmodule Anoma.Node.Mempool.Storage do
   def init(_) do
     :mnesia.create_table(__MODULE__.Values, attributes: [:key, :value])
     :mnesia.create_table(__MODULE__.Updates, attributes: [:key, :value])
+    :mnesia.create_table(__MODULE__.Blocks, attributes: [:round, :block])
     :mnesia.create_table(__MODULE__.RM)
     {:ok, %Storage{}}
   end
 
-  def handle_call(:commit, _from, state) do
+  def handle_call({:commit, round, writes}, _from, state) do
     mnesia_tx = fn ->
       for {key, value} <- state.uncommitted do
         :mnesia.write({__MODULE__.Values, key, value})
@@ -64,6 +65,7 @@ defmodule Anoma.Node.Mempool.Storage do
           end
 
         :mnesia.write({__MODULE__.Updates, key, new_updates})
+        :mnesia.write({__MODULE__.Blocks, round, writes})
       end
     end
 
@@ -216,8 +218,8 @@ defmodule Anoma.Node.Mempool.Storage do
     GenServer.call(__MODULE__, {:write, {height, key}, value})
   end
 
-  def commit() do
-    GenServer.call(__MODULE__, :commit)
+  def commit(block_round, writes) do
+    GenServer.call(__MODULE__, {:commit, block_round, writes})
   end
 
   defp blocking_read(height, key, from) do

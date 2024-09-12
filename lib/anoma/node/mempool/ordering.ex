@@ -66,19 +66,17 @@ defmodule Anoma.Node.Mempool.Ordering do
     ])
   end
 
-  def handle_call({:order, txs}, from, state) do
-    {to_order, _left} = txs |> Enum.shuffle() |> Enum.split(10)
-
+  def handle_call({:order, id_list}, from, state) do
     {map, next_order} =
-      for id <- to_order,
+      for id <- id_list,
           reduce: {state.hash_to_order, state.next_height} do
         {map, order} ->
           {Map.put(map, id, order), order + 1}
       end
 
-    {:ok, pid} = Task.start(fn -> blocking_complete(to_order, map, from) end)
+    {:ok, pid} = Task.start(fn -> blocking_complete(id_list, map, from) end)
 
-    for id <- to_order do
+    for id <- id_list do
       EventBroker.subscribe(pid, [
         worker_module_filter(),
         id_filter(id)
@@ -159,7 +157,7 @@ defmodule Anoma.Node.Mempool.Ordering do
             %EventBroker.Event{
               body: %Anoma.Node.Mempool.Backends.CompleteEvent{
                 id: id,
-                result: :ok
+                result: {:ok, res}
               }
             } ->
               EventBroker.unsubscribe_me([
@@ -167,7 +165,7 @@ defmodule Anoma.Node.Mempool.Ordering do
                 id_filter(id)
               ])
 
-              [{:ok, id, Map.get(map, id)} | list]
+              [{{:ok, res}, id, Map.get(map, id)} | list]
 
             %EventBroker.Event{
               body: %Anoma.Node.Mempool.Backends.CompleteEvent{
