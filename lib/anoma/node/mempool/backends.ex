@@ -14,7 +14,7 @@ defmodule Anoma.Node.Mempool.Backends do
   require EventBroker.Event
   use TypedStruct
 
-  @type backend() :: :kv | :rm | :cairo | :ro | :blob
+  @type backend() :: :kv | :rm | :cairo | {:ro, pid} | :blob
 
   @type transaction() :: {backend(), Noun.t() | binary()}
 
@@ -23,26 +23,26 @@ defmodule Anoma.Node.Mempool.Backends do
     field(:result, :ok | :error)
   end
 
-  def execute({backend, tx}, env, id, reply_to)
+  def execute({backend, tx}, id)
       when Noun.is_noun_atom(tx) do
     case Nock.Cue.cue(tx) do
       {:ok, tx} ->
-        execute({backend, tx}, env, id, reply_to)
+        execute({backend, tx}, id)
 
       :error ->
         :error
     end
   end
 
-  def execute({:ro, tx}, id, reply_to) do
-    execute_kv_ro(tx, id, reply_to, &send_value/3)
+  def execute({{:ro, pid}, tx}, id) do
+    execute_kv_ro(tx, id, pid, &send_value/3)
   end
 
-  def execute({:kv, tx}, id, nil) do
+  def execute({:kv, tx}, id) do
     execute_kv_ro(tx, id, nil, &store_value/3)
   end
 
-  def execute({:blob, tx}, id, nil) do
+  def execute({:blob, tx}, id) do
     execute_kv_ro(tx, id, nil, &blob_store/3)
   end
 
@@ -88,9 +88,10 @@ defmodule Anoma.Node.Mempool.Backends do
     end
   end
 
-  defp send_value(_id, result, reply_to) do
+  defp send_value(id, result, reply_to) do
     # send the value to reply-to address and the topic
     reply_msg = {:read_value, result}
+    Ordering.write({id, nil}, nil)
     send(reply_to, reply_msg)
   end
 

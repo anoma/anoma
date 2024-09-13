@@ -11,15 +11,13 @@ defmodule Anoma.Node.Mempool do
 
   use TypedStruct
 
-  @typedoc """
-  I am a list of transaction candidates.
-  """
-  @type transactions :: list(Transaction.t())
-
-  @type tx_result :: pid() | {:ok, Noun.t()} | :error
-
   typedstruct do
-    field(:transactions, %{binary() => Noun.t()}, default: %{})
+    field(
+      :transactions,
+      %{binary() => {__MODULE__.Backends.backend(), Noun.t()}},
+      default: %{}
+    )
+
     field(:round, non_neg_integer(), default: 0)
 
     field(:key, {Serializer.public_key(), Serializer.private_key()},
@@ -48,8 +46,13 @@ defmodule Anoma.Node.Mempool do
     GenServer.call(__MODULE__, :dump)
   end
 
-  def tx(tx_w_backend, options \\ []) do
-    GenServer.cast(__MODULE__, {:tx, tx_w_backend, options})
+  def tx(tx_w_backend) do
+    tx(tx_w_backend, :crypto.strong_rand_bytes(16))
+  end
+
+  # only to be called by Logging replays directly
+  def tx(tx_w_backend, id) do
+    GenServer.cast(__MODULE__, {:tx, tx_w_backend, id})
   end
 
   # list of ids seen as ordered transactions
@@ -63,17 +66,13 @@ defmodule Anoma.Node.Mempool do
   ############################################################
 
   def handle_call(:dump, _from, state) do
-    {:reply, state.transactions |> Map.keys()}
+    {:reply, state.transactions |> Map.keys(), state}
   end
 
-  # the id should not coinside with any existing ids
-  def handle_cast({:tx, tx_code_w_backend, options}, state) do
-    {:ok, val_opt} = Keyword.validate(options, [:reply_to, id: :crypto.strong_rand_bytes(16)])
-    reply_to = val_opt[:reply_to]
-    tx_id = val_opt[:id]
-
+  # the pid for ro backend now needs to be specified inside the backend
+  def handle_cast({:tx, tx_code_w_backend, tx_id}, state) do
     Task.start(fn ->
-      Anoma.Node.Mempool.Backends.execute(tx_code_w_backend, tx_id, reply_to)
+      Anoma.Node.Mempool.Backends.execute(tx_code_w_backend, tx_id)
     end)
 
     nstate = %Mempool{
