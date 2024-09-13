@@ -11,7 +11,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
   use TypedStruct
   alias Anoma.ShieldedResource.PartialTransaction
   alias Anoma.ShieldedResource.ComplianceOutput
-  alias Anoma.Node.Storage
+  alias Anoma.Node.DummyStorage, as: Storage
 
   typedstruct enforce: true do
     # TODO: The roots, commitments, and nullifiers can be eliminated. We can
@@ -153,10 +153,10 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
       all_proofs_valid && delta_valid && resource_logic_valid
     end
 
-    def cm_tree(_tx, storage) do
+    def cm_tree(_tx, _storage) do
       CommitmentTree.new(
         CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
-        Anoma.Node.Router.Engine.get_state(storage).cairo_rm_commitments
+        nil
       )
     end
 

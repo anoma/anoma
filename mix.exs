@@ -5,7 +5,7 @@ defmodule Anoma.MixProject do
 
   def project do
     [
-      app: :anoma,
+      app: :anoma_node,
       version: @version,
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
@@ -46,7 +46,7 @@ defmodule Anoma.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Anoma, []},
+      mod: {Anoma.Node, []},
       extra_applications: [
         :logger,
         :crypto,

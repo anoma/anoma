@@ -8,10 +8,7 @@ defmodule Nock do
 
   use TypedStruct
 
-  alias Anoma.Node.Storage
   alias __MODULE__
-  alias Anoma.Node.Ordering
-  alias Anoma.Node.Router
 
   @typedoc """
   I contain environmental information on how Nock shall be evaluated.
@@ -218,11 +215,11 @@ defmodule Nock do
   end
 
   # scry: magically read from storage.
-  def nock(subject, [twelve, type_formula | subformula], environemnt)
+  def nock(subject, [twelve, type_formula | sub_formula], env)
       when twelve in [12, <<12>>] do
-    with {:ok, _type_result} <- nock(subject, type_formula, environemnt),
-         {:ok, sub_result} <- nock(subject, subformula, environemnt) do
-      read_with_id(sub_result, environemnt)
+    with {:ok, _type_result} <- nock(subject, type_formula, env),
+         {:ok, _sub_result} <- nock(subject, sub_formula, env) do
+      :error
     else
       _ -> :error
     end
@@ -2420,31 +2417,5 @@ defmodule Nock do
   #                          Helpers                         #
   ############################################################
 
-  @spec read_with_id(Noun.t(), t()) :: {:ok, Noun.t()} | :error
-  def read_with_id(id, env) do
-    ordering = env.ordering
-
-    if ordering && env.snapshot_path && id do
-      with [id, key | 0] <- id,
-           snap_id = [id | env.snapshot_path],
-           {:ok, snap} <- Ordering.caller_blocking_read_id(ordering, snap_id),
-           instrument({:snapshot, snap}),
-           {:ok, value} <- Storage.get_at_snapshot(snap, key) do
-        instrument({:got_value, value})
-        {:ok, value}
-      else
-        _ -> :error
-      end
-    else
-      :error
-    end
-  end
-
-  defp instrument({:snapshot, snap}) do
-    Logger.info("got snapshot: #{inspect(snap)}")
-  end
-
-  defp instrument({:got_value, value}) do
-    Logger.info("got value: #{inspect(value)}")
-  end
+  # this section temporarily empty
 end

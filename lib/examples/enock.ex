@@ -4,16 +4,7 @@ defmodule Examples.ENock do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Examples.ENode.EStorage
-  alias Anoma.Transaction
-  alias Anoma.Node.{Router, Ordering}
-  alias Anoma.Node.Executor.Worker
-  alias Examples.ENode
   alias Examples.ECrypto
-  alias Noun.Format
-
-  alias Anoma.Node
-  alias Anoma.Node.Storage
 
   ####################################################################
   ##                        Resource Logics                         ##
@@ -23,7 +14,7 @@ defmodule Examples.ENock do
   # bad pattern?
   @spec zero_delta_logic() :: Noun.t()
   defmemo zero_delta_logic() do
-    Format.parse_always("[[5 [1 0] [0 446]] 0 0]")
+    Noun.Format.parse_always("[[5 [1 0] [0 446]] 0 0]")
   end
 
   @doc """
@@ -46,7 +37,7 @@ defmodule Examples.ENock do
           1
         ]
     """
-    |> Format.parse_always()
+    |> Noun.Format.parse_always()
   end
 
   @spec counter_logic() :: Noun.t()
@@ -120,68 +111,6 @@ defmodule Examples.ENock do
   end
 
   ####################################################################
-  ##                       Scrying: Phase 1                         ##
-  ####################################################################
-
-  @spec successful_inc :: {Node.t(), Nock.t()}
-  def successful_inc() do
-    storage = Node.raw_storage(EStorage.august_node("successful_inc"))
-    {node, env} = {anode(storage), env(storage)}
-
-    node.ordering
-    |> Ordering.new_order([
-      %Transaction{
-        index: 1,
-        id: EStorage.random_id(),
-        addr: Router.self_addr()
-      }
-    ])
-
-    formula = [9, 2, 10, [6, 1 | EStorage.random_id()], 0 | 1]
-
-    assert {:ok, [EStorage.miki_key() | EStorage.lucky_value() + 1]} ==
-             Nock.nock(miki_increment(), formula, env),
-           "We should be scrying the right place"
-
-    {node, env}
-  end
-
-  @spec unsuccessful_inc :: Node.t()
-  def unsuccessful_inc() do
-    # sets up the network nicely
-    {node, env} = successful_inc()
-    # no devil key ☹
-    formula = [9, 2, 10, [6, 1 | EStorage.random_id()], 0 | 1]
-
-    assert :error == Nock.nock(devil_increment(), formula, env),
-           "Key ought not to be found"
-
-    node
-  end
-
-  @spec miki_increment_kv_tx() :: Worker.transaction()
-  def miki_increment_kv_tx() do
-    {:kv, miki_increment_candidate()}
-  end
-
-  def miki_increment_candidate() do
-    increment_counter_val(EStorage.miki_key())
-  end
-
-  def miki_increment() do
-    assert {:ok, increment} =
-             Nock.nock(miki_increment_candidate(), [9, 2, 0 | 1], env())
-
-    increment
-  end
-
-  def devil_increment() do
-    devil_formula = increment_counter_val(EStorage.devil_key())
-    assert {:ok, increment} = Nock.nock(devil_formula, [9, 2, 0 | 1], env())
-    increment
-  end
-
-  ####################################################################
   ##                          Jetted Cores                          ##
   ##    Requires special testing to ensure they behave properly.    ##
   ####################################################################
@@ -193,7 +122,7 @@ defmodule Examples.ENock do
   """
   @spec dec_arm() :: Noun.t()
   def dec_arm() do
-    "[8 [9 342 0 1.023] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
+    "[8 [9 342 0 1.023] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec dec() :: Noun.t()
@@ -223,7 +152,7 @@ defmodule Examples.ENock do
 
   @spec cue_arm() :: Noun.t()
   def cue_arm() do
-    "[8 [9 94 0 63] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
+    "[8 [9 94 0 63] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec cue() :: Noun.t()
@@ -246,7 +175,7 @@ defmodule Examples.ENock do
 
   @spec jam_arm() :: Noun.t()
   def jam_arm() do
-    "[8 [9 22 0 63] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
+    "[8 [9 22 0 63] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec jam() :: Noun.t()
@@ -270,7 +199,7 @@ defmodule Examples.ENock do
   @spec sign_arm() :: Noun.t()
   def sign_arm() do
     "[8 [9 10 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
-    |> Format.parse_always()
+    |> Noun.Format.parse_always()
   end
 
   @spec sign() :: Noun.t()
@@ -304,7 +233,7 @@ defmodule Examples.ENock do
   @spec verify_arm() :: Noun.t()
   def verify_arm() do
     "[8 [9 4 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
-    |> Format.parse_always()
+    |> Noun.Format.parse_always()
   end
 
   @spec verify() :: Noun.t()
@@ -338,7 +267,7 @@ defmodule Examples.ENock do
   @spec sign_detatched_arm() :: Noun.t()
   def sign_detatched_arm() do
     "[8 [9 23 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
-    |> Format.parse_always()
+    |> Noun.Format.parse_always()
   end
 
   @spec sign_detatched() :: Noun.t()
@@ -370,7 +299,7 @@ defmodule Examples.ENock do
   @spec verify_detatched_arm() :: Noun.t()
   def verify_detatched_arm() do
     "[8 [9 22 0 31] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
-    |> Format.parse_always()
+    |> Noun.Format.parse_always()
   end
 
   @spec verify_detatched() :: Noun.t()
@@ -420,7 +349,7 @@ defmodule Examples.ENock do
 
   @spec bex_arm() :: Noun.t()
   def bex_arm() do
-    "[8 [9 4 0 127] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
+    "[8 [9 4 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec bex() :: Noun.t()
@@ -450,7 +379,7 @@ defmodule Examples.ENock do
   @spec mix_arm() :: Noun.t()
   def mix_arm() do
     "[8 [9 4 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
-    |> Format.parse_always()
+    |> Noun.Format.parse_always()
   end
 
   @spec mix() :: Noun.t()
@@ -476,7 +405,7 @@ defmodule Examples.ENock do
 
   @spec mat_arm() :: Noun.t()
   def mat_arm() do
-    "[8 [9 43 0 63] 9 2 10 [6 0 14] 0 2]" |> Format.parse_always()
+    "[8 [9 43 0 63] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   # Please make some assertions ☹
@@ -731,7 +660,7 @@ defmodule Examples.ENock do
       2
       0
       1
-    ]" |> Format.parse_always()
+    ]" |> Noun.Format.parse_always()
   end
 
   @spec factorial() :: Noun.t()
@@ -890,32 +819,5 @@ defmodule Examples.ENock do
   def jam_and_cue(jam_value, cue_value) do
     assert Noun.equal(jam_value, Nock.Cue.cue!(cue_value))
     assert cue_value == Nock.Jam.jam(Noun.normalize_noun(jam_value))
-  end
-
-  ####################################################################
-  ##                             Phase 1                            ##
-  ####################################################################
-
-  @spec anode() :: Node.t()
-  @spec anode(Storage.t()) :: Node.t()
-  defmemo anode(storage \\ raw_storage()) do
-    ENode.simple_ordering(storage)
-  end
-
-  @spec env() :: Nock.t()
-  @spec env(Storage.t()) :: Nock.t()
-  def env(storage \\ raw_storage()) do
-    %Nock{
-      snapshot_path: ENode.base_snapshot_path(),
-      ordering: anode(storage).ordering
-    }
-  end
-
-  @spec raw_storage() :: Storage.t()
-  def raw_storage() do
-    %Storage{
-      qualified: __MODULE__.Qualified,
-      order: __MODULE__.Order
-    }
   end
 end
