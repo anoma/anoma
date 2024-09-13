@@ -91,7 +91,7 @@ defmodule Anoma.Node.Mempool.Backends do
   defp send_value(_id, result, reply_to) do
     # send the value to reply-to address and the topic
     reply_msg = {:read_value, result}
-    send_if_addr(reply_to, reply_msg)
+    send(reply_to, reply_msg)
   end
 
   def blob_store(id, result, _reply_to) do
@@ -180,11 +180,4 @@ defmodule Anoma.Node.Mempool.Backends do
   #       acc && Ordering.read({id, nf_key}) == :absent
   #   end
   # end
-
-  @spec send_if_addr(Router.addr() | nil, any()) :: :ok | nil
-  defp send_if_addr(addr, msg) do
-    if addr do
-      Router.cast(addr, msg)
-    end
-  end
 end
