@@ -44,18 +44,18 @@ defmodule Anoma.Node.Mempool do
   #                      Public RPC API                      #
   ############################################################
 
-  def tx_dump(server) do
-    GenServer.call(server, :dump)
+  def tx_dump() do
+    GenServer.call(__MODULE__, :dump)
   end
 
-  def tx(server, tx_w_backend, reply_to \\ nil, id \\ nil) do
-    GenServer.cast(server, {:tx, tx_w_backend, reply_to, id})
+  def tx(tx_w_backend, options \\ []) do
+    GenServer.cast(__MODULE__, {:tx, tx_w_backend, options})
   end
 
   # list of ids seen as ordered transactions
-  @spec execute(GenServer.server(), list(binary())) :: :ok
-  def execute(server, ordered_list_of_txs) do
-    GenServer.cast(server, {:execute, ordered_list_of_txs})
+  @spec execute(list(binary())) :: :ok
+  def execute(ordered_list_of_txs) do
+    GenServer.cast(__MODULE__, {:execute, ordered_list_of_txs})
   end
 
   ############################################################
@@ -66,12 +66,11 @@ defmodule Anoma.Node.Mempool do
     {:reply, state.transactions |> Map.keys()}
   end
 
-  def handle_cast({:tx, tx_code_w_backend, reply_to, id}, state) do
-    tx_id =
-      case id do
-        nil -> :crypto.strong_rand_bytes(16)
-        id -> id
-      end
+  # the id should not coinside with any existing ids
+  def handle_cast({:tx, tx_code_w_backend, options}, state) do
+    {:ok, val_opt} = Keyword.validate(options, [:reply_to, id: :crypto.strong_rand_bytes(16)])
+    reply_to = val_opt[:reply_to]
+    tx_id = val_opt[:id]
 
     Task.start(fn ->
       Anoma.Node.Mempool.Backends.execute(tx_code_w_backend, tx_id, reply_to)
@@ -87,7 +86,7 @@ defmodule Anoma.Node.Mempool do
 
   def handle_cast({:execute, list}, state) do
     with true <-
-           list |> Enum.all(fn x -> Map.has_key?(state.transactions, x) end) do
+           list |> Enum.all?(fn x -> Map.has_key?(state.transactions, x) end) do
       res_list = Ordering.order(list)
 
       {writes, rem} =
