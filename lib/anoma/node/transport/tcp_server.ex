@@ -65,23 +65,36 @@ defmodule Anoma.Node.Transport.TCPServer do
     - `:router` - The address of the Router Engine that the Transport Engine
       instance serves to.
     - `:transport` - The address of the Transport server managing the server.
-    - `:connection_pool` - The supervisor which manages the connection pool that
-      the TCPServer Engine instance belongs to.
+    - `:connection_pool` - The supervisor which manages connection pool
+      of the TCP server.
+    - `:server_supervisor` - The supervisor that manages the TCP server and its
+      connection pool.
     - `:listener` - The socket listening on the specified host, port.
     - `:logger` - The Logger Engine address. Enforced: false.
     """
     field(:router, Router.addr())
     field(:transport, Router.addr())
+    field(:server_supervisor, Supervisor.supervisor())
     field(:connection_pool, Supervisor.supervisor())
     field(:listener, reference())
     field(:logger, Router.addr(), enforce: false)
   end
 
+  def child_spec(args) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [args]},
+      restart: :temporary
+    }
+  end
+
   @spec init(
           {Router.addr(), Router.addr(), Transport.listen_addr(),
-           Supervisor.supervisor(), Router.addr()}
+           Supervisor.supervisor(), Supervisor.supervisor(), Router.addr()}
         ) :: {:ok, t()} | {:error, any()}
-  def init({router, transport, addr, connection_pool, logger}) do
+  def init(
+        {router, transport, addr, server_supervisor, connection_pool, logger}
+      ) do
     res =
       case addr do
         {:unix, path} ->
@@ -101,6 +114,7 @@ defmodule Anoma.Node.Transport.TCPServer do
            router: router,
            transport: transport,
            listener: l,
+           server_supervisor: server_supervisor,
            connection_pool: connection_pool,
            logger: logger
          }, {:continue, :start_listener}}
@@ -122,6 +136,10 @@ defmodule Anoma.Node.Transport.TCPServer do
     Router.call(server, :listener)
   end
 
+  def shutdown(server) do
+    Router.cast(server, :shutdown)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -140,6 +158,13 @@ defmodule Anoma.Node.Transport.TCPServer do
 
   def handle_call(:listener, _from, s) do
     {:reply, s.listener, s}
+  end
+
+  def handle_cast(:shutdown, _from, s) do
+    DynamicSupervisor.terminate_child(s.server_supervisor, s.connection_pool)
+    :gen_tcp.close(s.listener)
+    Transport.server_terminated(s.transport, "shutdown")
+    {:stop, :normal, s}
   end
 
   ############################################################

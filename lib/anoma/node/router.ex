@@ -437,14 +437,19 @@ defmodule Anoma.Node.Router do
              {__MODULE__,
               {router_id, router_addr, transport_addr, router_state}}
            ),
-         {:ok, connection_pool} <-
+         # starting client connection pool
+         {:ok, client_connection_pool} <-
+           DynamicSupervisor.start_child(supervisor, Transport.Supervisor),
+         # starting server pool
+         {:ok, server_pool} <-
            DynamicSupervisor.start_child(supervisor, Transport.Supervisor),
          {:ok, _} <-
            DynamicSupervisor.start_child(
              supervisor,
              {Anoma.Node.Router.Engine,
               {router_addr, Transport, transport_id,
-               {router_addr, router_id, transport_id, connection_pool}}}
+               {router_addr, router_id, transport_id, client_connection_pool,
+                server_pool}}}
            ) do
       {:ok, router_addr, transport_addr}
     end

@@ -101,8 +101,9 @@ defmodule Anoma.Node.Transport do
     - `:logger` - The Logger Engine address. Enforced: false.
     - `:node_internal_id` - Id of this node.
     - `:transport_internal_id` - Id of the Transport Engine.
-    - `:connection_pool` - The supervisor which manages the connection pool that
-      the TCPConnection Engine instance belongs to.
+    - `:client_connection_pool` - The supervisor which manages the pool of
+      node connections made as client.
+    - `:server_pool` - The supervisor which manages the node servers.
     - `:node_connections` - For every current node connection, maps the
       correspondent id to their address. Default: empty.
     - `:connection_states` - Maps current connections to their respective
@@ -117,6 +118,8 @@ defmodule Anoma.Node.Transport do
       is currently running. Every transport server is mapped to an external
       transport address, by which messages may reach the Engine through this
       server. Default: empty.
+    - `:server_supervisors` - Maps every server address to the supervisor
+      managing the server and its connection pool.
     - `:known_nodes` - Maps every known node (indexed by its public id) to a
       set of transport addresses through which the node can be reached.
       Default: empty.
@@ -128,7 +131,8 @@ defmodule Anoma.Node.Transport do
     field(:logger, Router.addr(), enforce: false)
     field(:node_internal_id, Id.t())
     field(:transport_internal_id, Id.t())
-    field(:connection_pool, Supervisor.supervisor())
+    field(:client_connection_pool, Supervisor.supervisor())
+    field(:server_pool, Supervisor.supervisor())
 
     field(:node_connections, MapSetMap.t(Id.Extern.t(), Router.addr()),
       default: MapSetMap.new()
@@ -150,6 +154,10 @@ defmodule Anoma.Node.Transport do
 
     field(:servers, %{transport_addr => Router.addr()}, default: %{})
 
+    field(:server_supervisors, %{Router.addr() => Supervisor.supervisor()},
+      default: %{}
+    )
+
     # TODO should become its own engine
     field(:known_nodes, MapSetMap.t(Id.Extern.t(), transport_addr()),
       default: MapSetMap.new()
@@ -158,13 +166,17 @@ defmodule Anoma.Node.Transport do
     field(:known_engines, %{Id.Extern.t() => Id.Extern.t()}, default: %{})
   end
 
-  def init({router, node_internal_id, transport_id, transport_pool}) do
+  def init(
+        {router, node_internal_id, transport_id, client_connection_pool,
+         server_pool}
+      ) do
     {:ok,
      %Transport{
        router: router,
        node_internal_id: node_internal_id,
        transport_internal_id: transport_id,
-       connection_pool: transport_pool
+       client_connection_pool: client_connection_pool,
+       server_pool: server_pool
      }}
   end
 
@@ -225,6 +237,12 @@ defmodule Anoma.Node.Transport do
   @spec disconnected(Router.addr(), binary()) :: :ok
   def disconnected(transport, reason) do
     Router.cast(transport, {:disconnected, reason})
+  end
+
+  # I notify the Transport Engine that the server has terminated.
+  @spec server_terminated(Router.addr(), binary()) :: :ok
+  def server_terminated(transport, reason) do
+    Router.cast(transport, {:server_terminated, reason})
   end
 
   @doc """
@@ -308,17 +326,7 @@ defmodule Anoma.Node.Transport do
   end
 
   def handle_cast({:start_server, trans}, _, s) do
-    {:noreply,
-     case Router.start_engine(
-            s.router,
-            trans_server_mod(transport_type(trans)),
-            {s.router, Router.self_addr(), trans, s.connection_pool,
-             s.logger},
-            supervisor: s.connection_pool
-          ) do
-       {:ok, server} -> %{s | servers: Map.put(s.servers, trans, server)}
-       _ -> s
-     end}
+    {:noreply, do_start_server(s, trans)}
   end
 
   def handle_cast({:learn_node, node, addr}, _, s) do
@@ -361,6 +369,10 @@ defmodule Anoma.Node.Transport do
     {:noreply, connection_dropped(s, from, reason)}
   end
 
+  def handle_cast({:server_terminated, reason}, from, s) do
+    {:noreply, server_terminated(s, from, reason)}
+  end
+
   def handle_cast({:send, dst, msg}, _, s) do
     {:noreply, send_msg(s, dst, msg)}
   end
@@ -376,6 +388,34 @@ defmodule Anoma.Node.Transport do
   ############################################################
   #                  Genserver Implementation                #
   ############################################################
+
+  @spec do_start_server(t(), transport_addr()) :: t()
+  def do_start_server(s, trans_addr) do
+    with {:ok, server_supervisor} <-
+           DynamicSupervisor.start_child(s.server_pool, Transport.Supervisor),
+         {:ok, server_connection_pool} <-
+           DynamicSupervisor.start_child(
+             server_supervisor,
+             Transport.Supervisor
+           ),
+         {:ok, server} <-
+           Router.start_engine(
+             s.router,
+             trans_server_mod(transport_type(trans_addr)),
+             {s.router, Router.self_addr(), trans_addr, server_supervisor,
+              server_connection_pool, s.logger},
+             supervisor: server_supervisor
+           ) do
+      %{
+        s
+        | servers: Map.put(s.servers, trans_addr, server),
+          server_supervisors:
+            Map.put(s.server_supervisors, server, server_supervisor)
+      }
+    else
+      _ -> s
+    end
+  end
 
   @spec do_handle_cast_learn_engine(t(), any(), Router.addr()) :: t()
   defp do_handle_cast_learn_engine(
@@ -611,9 +651,9 @@ defmodule Anoma.Node.Transport do
     case Router.start_engine(
            s.router,
            trans_connection_mod(transport_type(trans)),
-           {:client, s.router, Router.self_addr(), trans, s.connection_pool,
-            s.logger},
-           supervisor: s.connection_pool
+           {:client, s.router, Router.self_addr(), trans,
+            s.client_connection_pool, s.logger},
+           supervisor: s.client_connection_pool
          ) do
       {:ok, addr} -> addr
       _ -> nil
@@ -664,6 +704,24 @@ defmodule Anoma.Node.Transport do
       | connection_states: connection_states,
         node_connections: node_connections
     }
+  end
+
+  @spec server_terminated(t(), Router.addr(), binary()) :: t()
+  defp server_terminated(s, server, reason) do
+    # clean the server-supervisors mapping
+    {supervisor, server_supervisors} = Map.pop(s.server_supervisors, server)
+
+    DynamicSupervisor.terminate_child(s.server_pool, supervisor)
+
+    # clean the address-to-server mapping
+    {server_transport_addr, _} =
+      s.servers |> Enum.find(fn {_key, val} -> val == server end)
+
+    servers = Map.delete(s.servers, server_transport_addr)
+
+    log_info({:server_terminated, server_transport_addr, reason, s.logger})
+
+    %{s | servers: servers, server_supervisors: server_supervisors}
   end
 
   ############################################################
@@ -758,6 +816,14 @@ defmodule Anoma.Node.Transport do
       logger,
       :debug,
       "dropped connection #{inspect(conn)}: #{reason}"
+    )
+  end
+
+  defp log_info({:server_terminated, addr, reason, logger}) do
+    Logger.add(
+      logger,
+      :debug,
+      "server terminated, listening on #{inspect(addr)}: #{reason}"
     )
   end
 

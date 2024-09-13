@@ -189,37 +189,15 @@ defmodule Anoma.Node.Transport.TCPConnection do
 
   def handle_continue({:init_connection, address}, s) do
     logger = s.logger
+    start_connecting_task(address, self(), logger)
 
-    case try_connect(address, logger) do
-      {:ok, conn} ->
-        Transport.new_connection(
-          s.transport,
-          Transport.transport_type(address)
-        )
-
-        {:noreply, %{s | conn: conn}}
-
-      {:error, reason} ->
-        log_info({:error_connect, reason, logger})
-        die(s, inspect(reason))
-    end
+    {:noreply, s}
   end
 
   def handle_continue(:accept_connection, s) do
-    res = :gen_tcp.accept(s.listener)
+    start_accepting_task(s.listener, self())
 
-    case res do
-      {:ok, conn} ->
-        start_listener(s)
-        # need to figure out if unix or tcp
-        Transport.new_connection(s.transport, :unix)
-        {:noreply, %{s | conn: conn}}
-
-      {:error, reason} ->
-        logger = s.logger
-        log_info({:error_accept, reason, logger})
-        die(s, inspect(reason))
-    end
+    {:noreply, s}
   end
 
   def handle_cast({:send, msg}, _, s) do
@@ -234,6 +212,40 @@ defmodule Anoma.Node.Transport.TCPConnection do
     {:noreply, s}
   end
 
+  def handle_info({_, {:accept_done, res}}, s) do
+    case res do
+      {:ok, conn} ->
+        start_listener(s)
+        # need to figure out if unix or tcp
+        Transport.new_connection(s.transport, :unix)
+        {:noreply, %{s | conn: conn}}
+
+      {:error, :closed} ->
+        die(s, inspect(:closed))
+
+      {:error, reason} ->
+        logger = s.logger
+        log_info({:error_accept, reason, logger})
+        die(s, inspect(reason))
+    end
+  end
+
+  def handle_info({_, {:connect_done, address, res}}, s) do
+    case res do
+      {:ok, conn} ->
+        Transport.new_connection(
+          s.transport,
+          Transport.transport_type(address)
+        )
+
+        {:noreply, %{s | conn: conn}}
+
+      {:error, reason} ->
+        log_info({:error_connect, reason, s.logger})
+        die(s, inspect(reason))
+    end
+  end
+
   def handle_info({:tcp_closed, _}, s) do
     die(s, "connection shutdown")
   end
@@ -243,9 +255,64 @@ defmodule Anoma.Node.Transport.TCPConnection do
     {:noreply, s}
   end
 
+  # handle DOWN message from the accepting / connecting task
+  def handle_info({:DOWN, _, _, _, _}, s) do
+    {:noreply, s}
+  end
+
+  # handle EXIT message from the accepting / connecting task
+  def handle_info({:EXIT, _, _}, s) do
+    {:noreply, s}
+  end
+
+  def terminate(_, s) do
+    if s.conn do
+      :gen_tcp.shutdown(s.conn, :read_write)
+
+      receive do
+        {:tcp_closed, _} ->
+          Transport.disconnected(s.transport, "connection shutdown")
+      end
+    else
+      Transport.disconnected(s.transport, "connection shutdown")
+    end
+  end
+
   ############################################################
   #                  Genserver Implementation                #
   ############################################################
+
+  defp start_connecting_task(address, control_proc, logger) do
+    Task.async(fn ->
+      res = try_connect(address, logger)
+
+      case res do
+        {:ok, conn} ->
+          :gen_tcp.controlling_process(conn, control_proc)
+
+        _ ->
+          nil
+      end
+
+      {:connect_done, address, res}
+    end)
+  end
+
+  defp start_accepting_task(listen_sock, control_proc) do
+    Task.async(fn ->
+      res = :gen_tcp.accept(listen_sock)
+
+      case res do
+        {:ok, conn} ->
+          :gen_tcp.controlling_process(conn, control_proc)
+
+        _ ->
+          nil
+      end
+
+      {:accept_done, res}
+    end)
+  end
 
   defp die(s, reason) do
     Transport.disconnected(s.transport, reason)
