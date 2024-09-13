@@ -186,7 +186,7 @@ defmodule Anoma.Node.Transport do
   @doc """
   I locate a given transport server, taking the specified address
   """
-  @spec start_server(Router.addr(), listen_addr()) :: Router.addr() | nil
+  @spec lookup_server(Router.addr(), listen_addr()) :: Router.addr() | nil
   def lookup_server(transport, server) do
     Router.call(transport, {:lookup_server, server})
   end
