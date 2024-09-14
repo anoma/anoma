@@ -215,8 +215,8 @@ defmodule Nock do
   def nock(subject, [twelve, type_formula | sub_formula], env)
       when twelve in [12, <<12>>] do
     with {:ok, _type_result} <- nock(subject, type_formula, env),
-         {:ok, _sub_result} <- nock(subject, sub_formula, env) do
-      :error
+         {:ok, sub_result} <- nock(subject, sub_formula, env) do
+      read_with_id(sub_result, env)
     else
       _ -> :error
     end
@@ -226,6 +226,20 @@ defmodule Nock do
   @spec nock(Noun.t(), Noun.t(), t()) :: {:ok, Noun.t()} | :error
   def nock(subject, formula, environment) do
     naive_nock(subject, formula, environment)
+  end
+
+  @spec read_with_id(Noun.t(), t()) :: {:ok, Noun.t()} | :error
+  def read_with_id(id_key_list, _env) do
+    if id_key_list do
+      with [id, key] <- id_key_list,
+           {:ok, value} <- Anoma.Node.Transaction.Ordering.read({id, key}) do
+        {:ok, value}
+      else
+        _ -> :error
+      end
+    else
+      :error
+    end
   end
 
   # metered nock: a hack until nock VMs become their own agents.
