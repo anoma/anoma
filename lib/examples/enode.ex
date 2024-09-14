@@ -60,16 +60,21 @@ defmodule Examples.ENode do
     Node.state(nodes)
   end
 
+  def fresh_socket_addr() do
+    socket_path =
+      ((:enacl.randombytes(8) |> Base.encode32()) <> ".sock")
+      |> Anoma.System.Directories.data()
+
+    {socket_path, {:unix, socket_path}}
+  end
+
   @spec attach_socks(Node.t()) :: {Node.t(), Transport.transport_addr()}
   @spec attach_socks(Node.t(), Keyword.t()) ::
           {Node.t(), Transport.transport_addr()}
   def attach_socks(node, options \\ []) do
     assert {:ok, keys} = Keyword.validate(options, cleanup: true)
 
-    socket_name = (:enacl.randombytes(8) |> Base.encode32()) <> ".sock"
-
-    socket_path = Anoma.System.Directories.data(socket_name)
-    socket_addr = {:unix, socket_path}
+    {socket_path, socket_addr} = fresh_socket_addr()
 
     Transport.start_server(node.transport, socket_addr)
 
