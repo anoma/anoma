@@ -1,10 +1,12 @@
 defmodule Examples.ENode.ETransport.ETCP do
   use Memoize
 
+  alias Anoma.Node.Router
   alias Anoma.Node.Transport
   alias Examples.ENode
 
   require ExUnit.Assertions
+  import ExUnit.Assertions
 
   # ── Section ──
 
@@ -22,6 +24,35 @@ defmodule Examples.ENode.ETransport.ETCP do
 
     # We should assert that the TCP Server and the pool is dead when
     # that code is in, for now don't assert anything
+
+    anode
+  end
+
+  def server_shutdown(cleanup \\ true) do
+    anode = ENode.simple_router()
+
+    {anode, socks1} = ENode.attach_socks(anode, cleanup: false)
+    server_1 = Transport.lookup_server(anode.transport, socks1)
+    pid_1 = Router.Addr.pid(server_1)
+    assert Process.alive?(pid_1) == true
+
+    {anode, socks2} = ENode.attach_socks(anode, cleanup: false)
+    server_2 = Transport.lookup_server(anode.transport, socks2)
+    pid_2 = Router.Addr.pid(server_2)
+    assert Process.alive?(pid_2) == true
+
+    Transport.TCPServer.shutdown(server_1)
+    Process.sleep(500)
+    assert Process.alive?(pid_1) == false
+    assert Process.alive?(pid_2) == true
+
+    Transport.TCPServer.shutdown(server_2)
+    Process.sleep(500)
+    assert Process.alive?(pid_1) == false
+    assert Process.alive?(pid_2) == false
+
+    cleanup(socks1, cleanup)
+    cleanup(socks2, cleanup)
 
     anode
   end
