@@ -4,5 +4,6 @@ defmodule Anoma.Node.DummyStorage do
   """
 
   def get(_, _) do
+    {:ok, true}
   end
 end

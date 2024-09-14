@@ -11,8 +11,6 @@ defprotocol Anoma.RM.Transaction do
   I compose two transactions into a new transaction
   """
 
-  alias Anoma.Node.Router
-
   @spec compose(t(), t()) :: t()
   def compose(tx1, tx2)
 
@@ -34,7 +32,7 @@ defprotocol Anoma.RM.Transaction do
   @spec cm_tree(t(), term()) :: CommitmentTree.t()
   def cm_tree(transaction, storage)
 
-  @spec resource_existence_check(t(), Router.addr()) :: boolean()
+  @spec resource_existence_check(t(), pid()) :: boolean()
   def resource_existence_check(transaction, storage)
 end
 
