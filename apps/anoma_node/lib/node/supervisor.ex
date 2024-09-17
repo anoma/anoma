@@ -10,6 +10,10 @@ defmodule Anoma.Node.Supervisor do
   end
 
   def init(_args) do
-    Supervisor.init([], strategy: :one_for_all)
+    children = [
+      Anoma.Node.Transport.Supervisor
+    ]
+
+    Supervisor.init(children, strategy: :one_for_all)
   end
 end
