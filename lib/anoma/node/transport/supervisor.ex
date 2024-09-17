@@ -11,7 +11,8 @@ defmodule Anoma.Node.Transport.Supervisor do
   def init(_arg) do
     DynamicSupervisor.init(
       strategy: :one_for_one,
-      max_restarts: 10_000_000,
+      # max_restarts: 10_000_000,
+      # max_restarts: 10_000_000,
       max_seconds: 1
     )
   end

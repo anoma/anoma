@@ -259,7 +259,7 @@ defmodule Anoma.Node.Router do
   alias __MODULE__
   alias Anoma.Crypto.Id
   alias Anoma.Node.Router.Addr
-  alias Anoma.Node.{Transport, Logger}
+  alias Anoma.Node.{Transport, Logger, Transport2}
 
   @typedoc """
   I am the type of an Engine address.
@@ -438,14 +438,16 @@ defmodule Anoma.Node.Router do
               {router_id, router_addr, transport_addr, router_state}}
            ),
          {:ok, connection_pool} <-
-           DynamicSupervisor.start_child(supervisor, Transport.Supervisor),
+           DynamicSupervisor.start_child(supervisor, Transport2.Supervisor),
          {:ok, _} <-
            DynamicSupervisor.start_child(
              supervisor,
              {Anoma.Node.Router.Engine,
               {router_addr, Transport, transport_id,
                {router_addr, router_id, transport_id, connection_pool}}}
-           ) do
+           )
+           |> tap(fn x -> IO.inspect(x, label: "engine router") end) do
+      IO.inspect({router_addr, router_id, transport_id, connection_pool})
       {:ok, router_addr, transport_addr}
     end
   end

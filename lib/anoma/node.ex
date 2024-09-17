@@ -357,12 +357,12 @@ defmodule Anoma.Node do
     Dumper.start(dumper)
     Anoma.Node.Router.set_logger(router, logger)
 
-    if Mix.env() in [:dev, :prod] do
-      Anoma.Node.Transport.start_server(
-        transport,
-        {:unix, Anoma.System.Directories.data("local.sock")}
-      )
-    end
+    # if Mix.env() in [:dev, :prod] do
+    #   Anoma.Node.Transport.start_server(
+    #     transport,
+    #     {:unix, Anoma.System.Directories.data("local.sock")}
+    #   )
+    # end
 
     {:ok,
      %Node{

@@ -183,6 +183,18 @@ defmodule Anoma.Node.Transport do
     Router.cast(transport, {:start_server, addr})
   end
 
+  @spec lookup_server(
+          atom()
+          | pid()
+          | %{
+              :__struct__ => Anoma.Crypto.Id.Extern | Anoma.Node.Router.Addr,
+              optional(:encrypt) => nil | <<_::256>>,
+              optional(:id) => Anoma.Crypto.Id.Extern.t(),
+              optional(:server) => atom() | pid() | port() | {atom(), atom()},
+              optional(:sign) => nil | <<_::256>>
+            },
+          any()
+        ) :: any()
   @doc """
   I locate a given transport server, taking the specified address
   """

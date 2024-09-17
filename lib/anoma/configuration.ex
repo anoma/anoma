@@ -182,7 +182,8 @@ defmodule Anoma.Configuration do
 
     case keys[:supervisor] do
       nil ->
-        Anoma.Node.start_link(full_node_settings)
+        # Anoma.Node.start_link(full_node_settings)
+        :ok
 
       sup_settings ->
         [{Anoma.Node, full_node_settings}]

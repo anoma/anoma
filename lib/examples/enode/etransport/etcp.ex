@@ -3,8 +3,26 @@ defmodule Examples.ENode.ETransport.ETCP do
 
   alias Anoma.Node.Transport
   alias Examples.ENode
+  alias Anoma.Node.Transport2.Router
 
   require ExUnit.Assertions
+
+  ############################################################
+  #    Nodes talking via TCP                                 #
+  ############################################################
+
+  def test_tcp_server_1() do
+    # ask the router to start up a new tcp server on the port thats specified
+    # in its config
+    # note: if you want to change/fix this port, you have to change this in the config
+    #       in anoma.ex
+    Router.start_tcp_server()
+  end
+
+  def test_tcp_server_2() do
+    # attempt to connect to the node that was started in the previous test
+    Router.start_tcp_client({0, 0, 0, 0}, 1234)
+  end
 
   # ── Section ──
 
