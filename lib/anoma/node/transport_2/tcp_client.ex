@@ -7,6 +7,8 @@ defmodule Anoma.Node.Transport2.TCPClient do
   use GenServer
   use TypedStruct
 
+  require Logger
+
   alias __MODULE__
   alias Anoma.Crypto.Id
   alias Anoma.Node.Transport2.Discovery
@@ -114,6 +116,7 @@ defmodule Anoma.Node.Transport2.TCPClient do
 
       # failed to connect
       {:error, :timeout} ->
+        Logger.debug("failed connection attempt, retrying")
         message = {:try_connect, attempts - 1}
         timeout = backoff_interval(attempts)
         Process.send_after(self(), message, timeout)
@@ -134,7 +137,7 @@ defmodule Anoma.Node.Transport2.TCPClient do
   # I handle an incoming TCP message from the socket.
   # """
   def handle_info({:tcp, _, bytes}, state) do
-    IO.puts(">> #{inspect(self())} :: #{inspect(bytes)}")
+    Logger.debug(">> #{inspect(self())} :: #{inspect(bytes)}")
     {:ok, state} = handle_bytes(bytes, state)
     {:noreply, state}
   end
@@ -145,14 +148,14 @@ defmodule Anoma.Node.Transport2.TCPClient do
   # If the message fails to send, I terminate the connection normally.
   # """
   def handle_info({:send, message}, state) do
-    IO.puts("<< #{inspect(self())} :: #{inspect(message)}")
+    Logger.debug("<< #{inspect(self())} :: #{inspect(message)}")
 
     case :gen_tcp.send(state.socket, encode_message(message)) do
       :ok ->
         {:noreply, state}
 
       {:error, err} ->
-        IO.puts("failed to send bytes to socket, terminating")
+        Logger.debug("failed to send bytes to socket, terminating")
         state = handle_fatal_error(err, state)
         {:stop, :normal, state}
     end
@@ -163,7 +166,7 @@ defmodule Anoma.Node.Transport2.TCPClient do
   # When the socket is closed I stop the connection normally.
   # """
   def handle_info({:tcp_closed, _}, state) do
-    IO.puts("#{inspect(self())} :: socket closed")
+    Logger.debug("#{inspect(self())} :: socket closed")
     state = handle_fatal_error(:socket_closed, state)
     {:stop, :normal, state}
   end
@@ -195,7 +198,7 @@ defmodule Anoma.Node.Transport2.TCPClient do
   # """
   @spec handle_message(term()) :: :ok
   defp handle_message(message) do
-    IO.puts("decoded message: #{inspect(message)}")
+    Logger.debug("decoded message: #{inspect(message)}")
 
     case message do
       %{type: :inform} ->
@@ -262,7 +265,7 @@ defmodule Anoma.Node.Transport2.TCPClient do
   # """
   @spec handle_fatal_error(any(), t()) :: t()
   defp handle_fatal_error(reason, state) do
-    IO.puts(
+    Logger.debug(
       "failed connection to #{inspect(state.host)}:#{state.port} (#{inspect(reason)})"
     )
 

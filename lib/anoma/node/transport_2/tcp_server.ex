@@ -91,7 +91,7 @@ defmodule Anoma.Node.Transport2.TCPServer do
   """
   def init(host: host, port: port, router_key: router_key) do
     Process.flag(:trap_exit, true)
-    IO.puts("starting tcp server #{inspect(host)}:#{port}")
+    Logger.debug("starting tcp server #{inspect(host)}:#{port}")
 
     state = %TCPServer{host: host, port: port, router_key: router_key}
 
@@ -99,14 +99,17 @@ defmodule Anoma.Node.Transport2.TCPServer do
     case create_socket(state) do
       {:ok, listen_socket} ->
         {:ok, port} = :inet.port(listen_socket)
+        Logger.debug("listening on port #{port}")
+
         new_state = %{state | listen_socket: listen_socket, port: port}
-        IO.puts("#{inspect(self())} :: listening on port #{port}")
+
         send(self(), :accept)
 
         {:ok, new_state}
 
       {:error, :failed_to_create_socket, reason} ->
-        IO.puts("failed to create listening socket: #{inspect(reason)}")
+        Logger.error("failed to create listening socket: #{inspect(reason)}")
+
         _state = handle_fatal_error(reason, state)
         {:stop, :normal}
     end
@@ -114,7 +117,7 @@ defmodule Anoma.Node.Transport2.TCPServer do
 
   def init(%TCPServer{connection_socket: _socket} = state) do
     Process.flag(:trap_exit, true)
-    IO.puts("#{inspect(self())} :: starting connection process")
+    Logger.debug("starting connection process")
 
     send(self(), :connected)
 
@@ -126,7 +129,7 @@ defmodule Anoma.Node.Transport2.TCPServer do
   # I am called when the genserver terminates.
   # """
   def terminate(reason, _state) do
-    IO.puts("#{inspect(self())} :: terminated #{inspect(reason)}")
+    Logger.warning("terminated #{inspect(reason)}")
     :ok
   end
 
@@ -136,7 +139,7 @@ defmodule Anoma.Node.Transport2.TCPServer do
   # """
   @impl true
   def handle_cast({:send, message}, state) do
-    IO.puts("<< #{inspect(self())} :: #{inspect(message)}")
+    Logger.debug("<< #{inspect(message)}")
 
     case handle_send(message, state) do
       {:ok, :sent} ->
@@ -171,7 +174,7 @@ defmodule Anoma.Node.Transport2.TCPServer do
   # I do the initial handshaking and discovery process.
   # """
   def handle_info(:connected, state) do
-    IO.puts("#{inspect(self())} :: connected")
+    Logger.debug("client connected")
     handle_connection_established(state)
     {:noreply, state}
   end
@@ -183,7 +186,7 @@ defmodule Anoma.Node.Transport2.TCPServer do
   # I handle an incoming TCP packet.
   # """
   def handle_info({:tcp, _, bytes}, state) do
-    IO.puts(">> #{inspect(self())} :: #{inspect(bytes)}")
+    Logger.debug(">> #{inspect(bytes)}")
     {:ok, state} = handle_bytes(bytes, state)
     {:noreply, state}
   end
@@ -193,7 +196,7 @@ defmodule Anoma.Node.Transport2.TCPServer do
   # I first encode the message, and then send the bytes over the write.
   # """
   def handle_info({:send, message}, state) do
-    IO.puts("<< #{inspect(self())} :: #{inspect(message)}")
+    Logger.debug("<< #{inspect(self())} :: #{inspect(message)}")
 
     case handle_send(message, state) do
       {:ok, :sent} ->
@@ -211,7 +214,7 @@ defmodule Anoma.Node.Transport2.TCPServer do
   # If this happens I stop the connection normally.
   # """
   def handle_info({:tcp_closed, _}, state) do
-    IO.puts("#{inspect(self())} :: socket closed")
+    Logger.debug("socket closed")
     state = handle_fatal_error(:tcp_closed, state)
     {:stop, :normal, state}
   end
@@ -255,18 +258,17 @@ defmodule Anoma.Node.Transport2.TCPServer do
   # """
   @spec handle_message(term()) :: :ok
   defp handle_message(message) do
-    IO.puts("decoded message: #{inspect(message)}")
+    Logger.debug("decoded message: #{inspect(message)}")
 
     case message do
       %{type: :inform} ->
         Discovery.remember_node(message.router_id)
         Discovery.register_as_tcp_for_node(message.router_id)
+        :ok
 
       _ ->
         :ok
     end
-
-    :ok
   end
 
   # @doc """
@@ -362,7 +364,7 @@ defmodule Anoma.Node.Transport2.TCPServer do
   # """
   @spec handle_fatal_error(any(), t()) :: t()
   defp handle_fatal_error(reason, state) do
-    IO.puts(
+    Logger.error(
       "failed connection to #{inspect(state.host)}:#{state.port} (#{inspect(reason)})"
     )
 
