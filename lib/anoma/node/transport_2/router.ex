@@ -21,6 +21,8 @@ defmodule Anoma.Node.Transport2.Router do
   alias Anoma.Node.Transport2.TCPServer
   alias Anoma.Node.Transport2.TCPSupervisor
 
+  import Anoma.Node.Transport2.Addressing
+
   ############################################################
   #                    State                                 #
   ############################################################
@@ -64,7 +66,7 @@ defmodule Anoma.Node.Transport2.Router do
 
   @spec start_proxy_engine(any()) :: :ok
   @doc """
-  I start a new TCP client to connect to a remote node.
+  I start a new TCP client to connect to a remote node at the given host and port.
   """
   @spec start_tcp_client(
           :inet.socket_address() | :inet.hostname(),
@@ -76,25 +78,30 @@ defmodule Anoma.Node.Transport2.Router do
 
   @doc """
   Given the id of an engine, I start a proxy engine for this id.
+  This proxy can be used to route messages to a remote node.
   """
   @spec start_proxy_engine(Id.t()) :: :ok
-  def start_proxy_engine(router_id) do
-    GenServer.cast(__MODULE__, {:start_proxy_engine, router_id})
+  def start_proxy_engine(engine_id) do
+    GenServer.cast(__MODULE__, {:start_proxy_engine, engine_id})
   end
 
-  def lookup_engine(id, engine_type) do
-    GenServer.call(__MODULE__, {:lookup_engine, id, engine_type})
+  @doc """
+  Given the id of a node and engine type, I lookup the address of the engine's proxy.
+  """
+  def lookup_engine(engine_id, engine_type) do
+    GenServer.call(__MODULE__, {:lookup_engine, engine_id, engine_type})
   end
 
-  # @doc """
-  # I send an async message to an engine by sending it to its proxy.
-  # The proxy will then forward it to via a connection (e.g., TCP).
-  # """
+  @doc """
+  I send an async message to an engine by sending it to its proxy.
+  The proxy will then forward it to via a connection (e.g., TCP).
+  """
   @spec async_send(Id.t(), atom(), any()) :: :ok
-  def async_send(id, type, message) do
-    key = %{type: type, remote_id: id}
-    address = {:via, Registry, {ProxyRegister, key}}
-    GenServer.cast(address, {:send_async, message})
+  def async_send(engine_id, engine_type, message) do
+    GenServer.cast(
+      get_address_for(engine_id, engine_type),
+      {:send_async, message}
+    )
   end
 
   # @doc """
@@ -103,10 +110,12 @@ defmodule Anoma.Node.Transport2.Router do
   # **NOTE**: this function just sends an async now.
   # """
   @spec sync_send(Id.t(), atom(), any()) :: term()
-  def sync_send(id, type, message, timeout \\ 0) do
-    key = %{type: type, remote_id: id}
-    address = {:via, Registry, {ProxyRegister, key}}
-    GenServer.call(address, {:send_sync, message, timeout}, timeout)
+  def sync_send(engine_id, engine_type, message, timeout \\ 0) do
+    GenServer.call(
+      get_address_for(engine_id, engine_type),
+      {:send_sync, message, timeout},
+      timeout
+    )
   end
 
   ############################################################
@@ -119,7 +128,6 @@ defmodule Anoma.Node.Transport2.Router do
   @impl true
   @spec init(router_config()) :: {:ok, Router.t()}
   def init(config) do
-    Logger.debug("router starting (arguments: #{inspect(config)})")
     state = %__MODULE__{config: config}
     {:ok, state}
   end
@@ -129,7 +137,6 @@ defmodule Anoma.Node.Transport2.Router do
   # I start a new TCP server.
   # """
   def handle_cast({:start_tcp_server}, state) do
-    Logger.debug("starting new tcp server")
     handle_start_tcp_server(state)
     {:noreply, state}
   end
@@ -138,7 +145,6 @@ defmodule Anoma.Node.Transport2.Router do
   # I start a new TCP client.
   # """
   def handle_cast({:start_tcp_client, host, port}, state) do
-    Logger.debug("starting tcp client to #{inspect(host)}:#{port}")
     {:ok, state} = handle_start_tcp_client(host, port, state)
     {:noreply, state}
   end
@@ -172,10 +178,6 @@ defmodule Anoma.Node.Transport2.Router do
           {:ok, t()} | {:error, :failed_to_start_tcp_server, t()}
   def handle_start_tcp_server(state) do
     %{config: %{network: network, router_key: router_key}} = state
-
-    Logger.debug(
-      "start tcp server (#{inspect(network.host)}:#{network.port})"
-    )
 
     args = [
       host: network.host,

@@ -62,5 +62,7 @@ defmodule Anoma.Node.Transport2.Discovery do
        {ProxyRegister, %{remote_id: remote_id, type: :router}}},
       {:new_connection, self()}
     )
+
+    res
   end
 end
