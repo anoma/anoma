@@ -61,7 +61,7 @@ defmodule Anoma.Node.Transport2.Router do
   """
   @spec start_tcp_server() :: :ok
   def start_tcp_server() do
-    GenServer.cast(__MODULE__, {:start_tcp_server})
+    GenServer.call(__MODULE__, {:start_tcp_server})
   end
 
   @spec start_proxy_engine(any()) :: :ok
@@ -73,7 +73,7 @@ defmodule Anoma.Node.Transport2.Router do
           :inet.port_number()
         ) :: :ok
   def start_tcp_client(host, port) do
-    GenServer.cast(__MODULE__, {:start_tcp_client, host, port})
+    GenServer.call(__MODULE__, {:start_tcp_client, host, port})
   end
 
   @doc """
@@ -133,21 +133,6 @@ defmodule Anoma.Node.Transport2.Router do
   end
 
   @impl true
-  # @doc """
-  # I start a new TCP server.
-  # """
-  def handle_cast({:start_tcp_server}, state) do
-    handle_start_tcp_server(state)
-    {:noreply, state}
-  end
-
-  # @doc """
-  # I start a new TCP client.
-  # """
-  def handle_cast({:start_tcp_client, host, port}, state) do
-    {:ok, state} = handle_start_tcp_client(host, port, state)
-    {:noreply, state}
-  end
 
   # @doc """
   # I start a new proxy engine.
@@ -157,10 +142,30 @@ defmodule Anoma.Node.Transport2.Router do
     {:noreply, state}
   end
 
+  @impl true
+  # @doc """
+  # I start a new TCP server.
+  # """
+  def handle_call({:start_tcp_server}, _from, state) do
+    case handle_start_tcp_server(state) do
+      {:ok, state} ->
+        {:reply, :ok, state}
+
+      {:error, reason, state} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  # @doc """
+  # I start a new TCP client.
+  # """
+  def handle_call({:start_tcp_client, host, port}, _from, state) do
+    {:reply, handle_start_tcp_client(host, port, state), state}
+  end
+
   # @doc """
   # I lookup the pid of a proxy engine for a given id and type.
   # """
-  @impl true
   def handle_call({:lookup_engine, id, type}, _from, state) do
     {:reply, handle_lookup_engine(id, type), state}
   end
