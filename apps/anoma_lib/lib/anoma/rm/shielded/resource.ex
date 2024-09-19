@@ -12,21 +12,21 @@ defmodule Anoma.RM.Shielded.Resource do
 
   typedstruct enforce: true do
     # resource logic
-    field(:logic, binary(), default: <<>>)
+    field(:logic, binary(), default: <<0::256>>)
     # fungibility label
-    field(:label, binary(), default: <<>>)
+    field(:label, binary(), default: <<0::256>>)
     # quantity
-    field(:quantity, binary(), default: <<>>)
+    field(:quantity, binary(), default: <<0::256>>)
     # arbitrary data
-    field(:data, binary(), default: <<>>)
+    field(:data, binary(), default: <<0::256>>)
     # ephemerality flag
     field(:eph, bool(), default: false)
     # resource nonce
-    field(:nonce, binary(), default: <<>>)
+    field(:nonce, binary(), default: <<0::256>>)
     # nullifier public key
-    field(:npk, binary(), default: <<>>)
+    field(:npk, binary(), default: <<0::256>>)
     # random seed
-    field(:rseed, binary(), default: <<>>)
+    field(:rseed, binary(), default: <<0::256>>)
   end
 
   @doc "Randomizes the rseed of a resource."

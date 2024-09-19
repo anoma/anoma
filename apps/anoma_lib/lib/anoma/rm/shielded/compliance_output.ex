@@ -7,18 +7,18 @@ defmodule Anoma.RM.Shielded.ComplianceOutput do
 
   typedstruct enforce: true do
     # Nullifier
-    field(:nullifier, binary())
+    field(:nullifier, binary(), default: <<0::256>>)
     # Output output commitment
-    field(:output_cm, binary())
+    field(:output_cm, binary(), default: <<0::256>>)
     # Resource commitment Merkle tree root
-    field(:root, binary())
+    field(:root, binary(), default: <<0::256>>)
     # Resource delta
-    field(:delta_x, binary())
-    field(:delta_y, binary())
+    field(:delta_x, binary(), default: <<0::256>>)
+    field(:delta_y, binary(), default: <<0::256>>)
     # Input Resource logic
-    field(:input_logic, binary())
+    field(:input_logic, binary(), default: <<0::256>>)
     # Output Resource logic
-    field(:output_logic, binary())
+    field(:output_logic, binary(), default: <<0::256>>)
   end
 
   @spec from_public_input(binary()) ::
