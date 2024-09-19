@@ -27,15 +27,11 @@ defmodule Examples.ENock do
   def counter_arm() do
     """
     [ 6
-      [5 [1 1] 8 [9 1.406 0 511] 9 2 10 [6 0 118] 0 2]
-      [6
-        [5 [1 1] 8 [9 1.406 0 511] 9 2 10 [6 0 238] 0 2]
-        [6
-          [5 [1 1] 8 [9 1.406 0 511] 9 2 10 [6 0 958] 0 2]
-          [6 [5 [1 0] 0 446] [0 0] 6 [0 3.570] [1 0] 1 1] 1 1] 1 1]
-          1
-          1
-        ]
+    [5 [1 1] 8 [9 1.406 0 1.023] 9 2 10 [6 0 118] 0 2]
+    [6 [5 [1 1] 8 [9 1.406 0 1.023] 9 2 10 [6 0 238] 0 2] [6 [5 [1 1] 8 [9 1.406 0 1.023] 9 2 10 [6 0 958] 0 2] [6 [5 [1 0] 0 446] [0 0] 6 [0 3.570] [1 0] 1 1] 1 1] 1 1]
+    1
+    1
+    ]
     """
     |> Noun.Format.parse_always()
   end
@@ -122,7 +118,7 @@ defmodule Examples.ENock do
   """
   @spec dec_arm() :: Noun.t()
   def dec_arm() do
-    "[8 [9 342 0 1.023] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 342 0 2.047] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec dec() :: Noun.t()
@@ -152,7 +148,7 @@ defmodule Examples.ENock do
 
   @spec cue_arm() :: Noun.t()
   def cue_arm() do
-    "[8 [9 94 0 63] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 94 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec cue() :: Noun.t()
@@ -175,7 +171,7 @@ defmodule Examples.ENock do
 
   @spec jam_arm() :: Noun.t()
   def jam_arm() do
-    "[8 [9 22 0 63] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 22 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec jam() :: Noun.t()
@@ -198,7 +194,7 @@ defmodule Examples.ENock do
 
   @spec sign_arm() :: Noun.t()
   def sign_arm() do
-    "[8 [9 10 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 10 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -232,7 +228,7 @@ defmodule Examples.ENock do
 
   @spec verify_arm() :: Noun.t()
   def verify_arm() do
-    "[8 [9 4 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 4 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -266,7 +262,7 @@ defmodule Examples.ENock do
 
   @spec sign_detatched_arm() :: Noun.t()
   def sign_detatched_arm() do
-    "[8 [9 23 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 23 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -298,7 +294,7 @@ defmodule Examples.ENock do
 
   @spec verify_detatched_arm() :: Noun.t()
   def verify_detatched_arm() do
-    "[8 [9 22 0 31] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+    "[8 [9 22 0 63] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -349,7 +345,7 @@ defmodule Examples.ENock do
 
   @spec bex_arm() :: Noun.t()
   def bex_arm() do
-    "[8 [9 4 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 4 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec bex() :: Noun.t()
@@ -378,7 +374,7 @@ defmodule Examples.ENock do
 
   @spec mix_arm() :: Noun.t()
   def mix_arm() do
-    "[8 [9 4 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 4 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -405,7 +401,7 @@ defmodule Examples.ENock do
 
   @spec mat_arm() :: Noun.t()
   def mat_arm() do
-    "[8 [9 43 0 63] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 43 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   # Please make some assertions ☹
@@ -415,6 +411,77 @@ defmodule Examples.ENock do
     core = [mat_arm(), sample | Nock.logics_core()]
 
     core
+  end
+
+  @doc """
+  The shax arm for taking shax:anoma from the logics core environment.
+
+  Can be gotten by defining gate locally as:
+
+  =localshax   =>  logics  |=  a=@  (shax a)
+
+  and then grabbing the arm of localshax.
+  """
+
+  @spec shax_arm() :: Noun.t()
+  def shax_arm() do
+    "[8 [9 22 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+  end
+
+  def shax() do
+    sample = 0
+    core = [shax_arm(), sample | Nock.logics_core()]
+
+    assert {:ok,
+            38_772_261_170_797_515_502_142_737_251_560_910_253_885_555_854_579_348_417_967_781_179_871_348_437_219} ==
+             Nock.nock(core, [9, 2, 0 | 1])
+
+    assert {:ok,
+            55_140_411_965_103_990_925_642_572_973_048_070_470_495_109_172_463_110_593_783_713_869_232_563_762_634} ==
+             Nock.nock(core, [9, 2, 10, [6, 1 | 7], 0 | 1])
+
+    core
+  end
+
+  ############################################################
+  ##                      OG Cores                          ##
+  ############################################################
+
+  @doc """
+  I represent the raw gate call as a 2-argument gate.
+
+  Can be gotten by defining
+
+  =lraw   =>  logics  |=   [a=@ b=@]  (~(raw og a) b)
+  """
+
+  @spec raw_arm() :: Noun.t()
+  def raw_arm() do
+    arm =
+      "[8 [8 [9 47 0 31] 9 2 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0, 0]
+
+    [arm, sample | Nock.logics_core()]
+  end
+
+  @doc """
+  I am function calling the raw gate of the og door with specified
+  seed and bitwidth.
+  """
+
+  @spec raw_call(Noun.t(), Noun.t()) :: {:ok, Noun.t()}
+  def raw_call(seed, width) do
+    Nock.nock(raw_arm(), [9, 2, 10, [6, 1 | [seed | width]], 0 | 1])
+  end
+
+  @spec raw_27_4() :: {:ok, Noun.t()}
+  def raw_27_4() do
+    call = raw_call(27, 4)
+    {:ok, 9} = call
+
+    call
   end
 
   ############################################################
@@ -650,9 +717,9 @@ defmodule Examples.ENock do
         9
         2
         10
-        [30 8 [9 342 0 4.095] 9 2 10 [6 0 62] 0 2]
+        [30 8 [9 342 0 8.191] 9 2 10 [6 0 62] 0 2]
         10
-        [6 [8 [9 20 0 4.095] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+        [6 [8 [9 20 0 8.191] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
         0
         1
       ]
@@ -693,7 +760,7 @@ defmodule Examples.ENock do
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 127] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
+        "[8 [8 [9 10 0 255] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
       )
 
     sample = [999 | 888]
@@ -702,7 +769,7 @@ defmodule Examples.ENock do
 
   @spec block_calling_mono(Noun.t(), Noun.t()) :: Noun.t()
   defp block_calling_mono(value, index) do
-    # get the battery for calling a 2-argument gate located at index
+    # get the battery for calling a 1-argument gate located at index
     # `index` at a block door evaluated with block size value `value`
 
     # check the index of the block by defining block locally
@@ -715,7 +782,7 @@ defmodule Examples.ENock do
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 127] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
+        "[8 [8 [9 10 0 255] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
       )
 
     sample = 999
