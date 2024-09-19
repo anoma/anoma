@@ -87,7 +87,7 @@ defmodule Anoma.RM.Shielded.Transaction do
           nullifiers: tx1.nullifiers ++ tx2.nullifiers,
           partial_transactions:
             tx1.partial_transactions ++ tx2.partial_transactions,
-          delta: tx1.delta ++ tx2.delta
+          delta: tx1.delta <> tx2.delta
         }
       end
     end
