@@ -42,7 +42,7 @@ defmodule EventBroker do
   using the `send/2` functionality.
   """
 
-  @spec event(GenServer.server(), EventBroker.Event.t()) :: :ok
+  @spec event(EventBroker.Event.t()) :: :ok
   def event(event = %EventBroker.Event{}, broker \\ EventBroker.Broker) do
     GenServer.cast(broker, {:event, event})
   end
@@ -78,8 +78,7 @@ defmodule EventBroker do
   Filter Agent spawning is handled via DynamicSupervisor.
   """
 
-  @spec subscribe(pid(), GenServer.server(), filter_spec_list) ::
-          :ok | String.t()
+  @spec subscribe(pid(), filter_spec_list) :: :ok | String.t()
   def subscribe(pid, filter_spec_list, registry \\ EventBroker.Registry) do
     GenServer.call(registry, {:subscribe, pid, filter_spec_list})
   end
@@ -90,7 +89,7 @@ defmodule EventBroker do
   I call `subscribe/2` where the first argument is `self()`
   """
 
-  @spec subscribe_me(GenServer.server(), filter_spec_list) :: :ok | String.t()
+  @spec subscribe_me(filter_spec_list) :: :ok | String.t()
   def subscribe_me(filter_spec_list, registry \\ EventBroker.Registry) do
     subscribe(self(), filter_spec_list, registry)
   end
@@ -111,7 +110,7 @@ defmodule EventBroker do
   all agents which have shut down from my registry map and return `:ok`
   """
 
-  @spec unsubscribe(pid(), GenServer.server(), filter_spec_list) :: :ok
+  @spec unsubscribe(pid(), filter_spec_list) :: :ok
   def unsubscribe(pid, filter_spec_list, registry \\ EventBroker.Registry) do
     GenServer.call(registry, {:unsubscribe, pid, filter_spec_list})
   end
@@ -122,7 +121,7 @@ defmodule EventBroker do
   I call `unsubscribe/2` where the first argument is `self()`
   """
 
-  @spec unsubscribe_me(GenServer.server(), filter_spec_list) :: :ok
+  @spec unsubscribe_me(filter_spec_list) :: :ok
   def unsubscribe_me(filter_spec_list, registry \\ EventBroker.Registry) do
     unsubscribe(self(), filter_spec_list, registry)
   end
