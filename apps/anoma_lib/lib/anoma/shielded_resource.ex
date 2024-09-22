@@ -56,6 +56,7 @@ defmodule Anoma.ShieldedResource do
       ]
       |> Enum.map(&:binary.bin_to_list/1)
       |> Cairo.poseidon_many()
+      |> :binary.list_to_bin()
 
     rcm =
       [
@@ -66,6 +67,7 @@ defmodule Anoma.ShieldedResource do
       ]
       |> Enum.map(&:binary.bin_to_list/1)
       |> Cairo.poseidon_many()
+      |> :binary.list_to_bin()
 
     eph_field =
       if resource.eph do
@@ -104,10 +106,42 @@ defmodule Anoma.ShieldedResource do
       ]
       |> Enum.map(&:binary.bin_to_list/1)
       |> Cairo.poseidon_many()
+      |> :binary.list_to_bin()
 
     [resource.npk, resource.nonce, psi, commitment(resource)]
     |> Enum.map(&:binary.bin_to_list/1)
     |> Cairo.poseidon_many()
+    |> :binary.list_to_bin()
+  end
+
+  @spec to_bytes(Anoma.ShieldedResource.t()) :: [byte()]
+  def to_bytes(resource = %ShieldedResource{}) do
+    binaries =
+      resource.logic <>
+        resource.label <>
+        resource.quantity <>
+        resource.data <>
+        resource.nonce <> resource.npk <> resource.rseed
+
+    binaries =
+      if resource.eph do
+        binaries <> <<1>>
+      else
+        binaries <> <<0>>
+      end
+
+    binaries |> :binary.bin_to_list()
+  end
+
+  @spec get_npk(binary()) :: binary()
+  @doc """
+  Generate the nullifier public key from the nulliffier (private)key.
+  """
+  def get_npk(nk) do
+    Cairo.poseidon(
+      nk |> :binary.bin_to_list(),
+      Constants.felt_zero() |> :binary.bin_to_list()
+    )
     |> :binary.list_to_bin()
   end
 end
