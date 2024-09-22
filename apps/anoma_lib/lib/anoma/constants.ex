@@ -1,7 +1,7 @@
 defmodule Anoma.Constants do
-  def felt_zero, do: :binary.copy(<<0>>, 32)
+  def felt_zero, do: <<0::256>>
 
-  def felt_one, do: :binary.copy(<<0>>, 31) <> <<1>>
+  def felt_one, do: <<1::256>>
 
   def prf_expand_personalization_felt,
     do:
