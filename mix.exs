@@ -74,16 +74,26 @@ defmodule Anoma.MixProject do
 
   def group_for_modules() do
     [
-      "Resource Machine": [~r/^Nock.?/, ~r/^Noun.?/, ~r/^Anoma.Resource.?/],
+      "Resource Machine": [
+        ~r/^Anoma.RM.?/,
+        ~r/^Anoma.Resource.?/,
+        ~r/^Anoma.ShieldedResource.?/
+      ],
       "Anoma Actors": [Anoma.Node],
       Mempool: ~r/^Anoma.Node.Mempool.?/,
       Executor: ~r/^Anoma.Node.Executor.?/,
       Identity: [~r/^Anoma.Identity.?/, ~r/^Anoma.Node.Identity.?/],
       Intents: ~r/^Anoma.Node.Intent.?/,
       Storage: [~r/^Anoma.Node.Storage.?/, Anoma.Node.Storage, Anoma.Order],
+      Transport: ~r/^Anoma.Node.Transport.?/,
+      Examples: ~r/^Examples.?/,
       "Cryptographic Primitives": [~r/^Anoma.Crypto.?/],
       Solver: [~r/^Anoma.Node.Solver.?/],
+      "General Engines": [~r/^Anoma.Node.?/],
+      "CLI Engine": [~r/^Anoma.Cli.?/],
+      Nock: [~r/^Nock.?/, ~r/^Noun.?/],
       CommitmentTree: [~r/^CommitmentTree.?/],
+      EventBroker: ~r/^EventBroker.?/,
       Utilities: [Anoma.Utility, Anoma.Mnesia, Anoma.Communicator],
       "Test Helpers": ~r/^TestHelper.?/
     ]
