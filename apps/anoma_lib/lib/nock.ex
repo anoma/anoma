@@ -234,7 +234,7 @@ defmodule Nock do
   @spec read_with_id(Noun.t(), t()) :: {:ok, Noun.t()} | :error
   def read_with_id(id_key_list, _env) do
     if id_key_list do
-      with [id, key] <- id_key_list,
+      with [id, key] <- id_key_list |> Noun.list_nock_to_erlang(),
            {:ok, value} <- Anoma.Node.Transaction.Ordering.read({id, key}) do
         {:ok, value}
       else
