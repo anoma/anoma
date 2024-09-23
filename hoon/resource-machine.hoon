@@ -9,7 +9,7 @@
     logic=resource-logic
     label=@t
     quantity=@
-    data=@
+    value=@
     eph=?
     nonce=@
     npk=@
