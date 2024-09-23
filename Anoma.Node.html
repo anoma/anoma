@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.21.0">
+    <meta name="project" content="Anoma v0.22.0">
 
 
-    <title>Anoma.Node — Anoma v0.21.0</title>
+    <title>Anoma.Node — Anoma v0.22.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-0BF4767F.js"></script>
+    <script src="dist/sidebar_items-FA573553.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.21.0
+          v0.22.0
         </div>
       </div>
     </div>
@@ -123,34 +123,10 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.22.0)</small>
 
   </h1>
 
-
-    <section id="moduledoc">
-<p>I act as a registry for Anoma Nodes</p><p>There are two ways to launch a Node. Either with minimal
-arguments or having the full specification for all the
-engines, including their external ID's.</p><p>All inputs should come in format of a list of atom-value
-2-tuples, <code class="inline">{:settings, map()}</code> specifying the info on
-all relevant engines and storages possibly including their
-tables presented in a dumped format, <code class="inline">{:name, atom()}</code>
-specifying the name of the node, and <code class="inline">{:new_storage, bool()}</code>
-specifying whether the table names, if supplied, need to be
-set-up without any deletions.</p><p>For more info on format check <a href="#start_min/1"><code class="inline">start_min/1</code></a></p><h2 id="module-minimal-arguments" class="section-heading">
-  <a href="#module-minimal-arguments" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Minimal Arguments</span>
-</h2>
-<ul><li><code class="inline">name</code> - name for this process</li><li><p><code class="inline">snapshot_path</code> : [<code class="inline">atom()</code> | 0]</p><ul><li>A snapshot location for the service (used in the worker)</li></ul></li><li><code class="inline">storage</code> : <code class="inline">Anoma.Node.Storage.t()</code> - The Storage tables to use</li><li><code class="inline">block_storage</code> - a location to store the blocks produced</li></ul><h3 id="module-created-tables" class="section-heading">
-  <a href="#module-created-tables" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Created Tables</span>
-</h3>
-<ul><li><code class="inline">storage.qualified</code></li><li><code class="inline">storage.order</code></li><li><code class="inline">block_storage</code></li></ul>
-    </section>
 
 </div>
 
@@ -161,56 +137,6 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
       </a>
       <span class="text">Summary</span>
     </h1>
-<div class="summary-types summary">
-  <h2>
-    <a href="#types">Types</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:configuration/0" data-no-tooltip translate="no">configuration()</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I am the configuration type for the <a href="Anoma.Node.html"><code class="inline">Anoma.Node</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:engine_configuration/0" data-no-tooltip translate="no">engine_configuration()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:min_engine_configuration/0" data-no-tooltip translate="no">min_engine_configuration()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:node_settings/0" data-no-tooltip translate="no">node_settings()</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I am the node settings</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
-
-      </div>
-
-    </div>
-
-</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -218,76 +144,11 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
+        <a href="#start/2" data-no-tooltip translate="no">start(type, args)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#init/1" data-no-tooltip translate="no">init(args)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#raw_storage/1" data-no-tooltip translate="no">raw_storage(node)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I give the storage from a node.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#start_link/1" data-no-tooltip translate="no">start_link(args)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I assume I am fed a list with atom-value 2-tuples
-:name, :settings, :use_rocks. The value of :settings is a 2-tuple
-with the first component matching either :new_storage or :from_dump.
-If the former case, I need a :snapshot_path key in the settings.
-For the latter case, check Anoma.Dump for format descriptions of
-the settings.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#start_link_or_find_instance/1" data-no-tooltip translate="no">start_link_or_find_instance(args)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I work just like <a href="#start_link/1"><code class="inline">start_link/1</code></a> except I give back the pid directly
-if the node is already started.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#start_min/1" data-no-tooltip translate="no">start_min(args)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Given minimal arguments, I create appropriate setup for the
-<code class="inline">:settings</code> argument for Node initialization.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#state/1" data-no-tooltip translate="no">state(nodes)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/Application.html#c:start/2"><code class="inline">Application.start/2</code></a>.</p></div>
 
     </div>
 
@@ -295,192 +156,6 @@ if the node is already started.</p></div>
 
   </section>
 
-
-  <section id="types" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#types">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Types</span>
-    </h1>
-    <div class="types-list">
-<section class="detail" id="t:configuration/0">
-
-  <div class="detail-header">
-    <a href="#t:configuration/0" class="detail-link" data-no-tooltip title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">configuration()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> configuration() :: [
-  name: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
-  use_rocks: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(),
-  settings: <a href="#t:node_settings/0">node_settings</a>(),
-  testing: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>() | nil
-]</pre>
-
-      </div>
-
-<p>I am the configuration type for the <a href="Anoma.Node.html"><code class="inline">Anoma.Node</code></a>.</p><p>Ι contain information necessary for tweaking the behavior of the
-<a href="Anoma.Node.html"><code class="inline">Anoma.Node</code></a> application. See my <code class="inline">Fields</code> section for more
-information on how my behavior changes the node.</p><h3 id="t:configuration/0-fields" class="section-heading">
-  <a href="#t:configuration/0-fields" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Fields</span>
-</h3>
-<ul><li><p><code class="inline">:use_rocks</code> - determines if we wish to use rocksdb, or use mnesia
-in memory database</p></li><li><p><code class="inline">:settings</code> - are the engine specific and anoma node configuration
-settings. See <code class="inline">node_settings/0</code> for more details</p></li><li><p><code class="inline">:testing</code> is a flag that specifies if the node being launched is
-for testing purposes. Currently this just affects if we take up
-the standard socket over the current <a href="Anoma.html"><code class="inline">Anoma</code></a> instance or not.</p></li></ul>
-  </section>
-</section>
-<section class="detail" id="t:engine_configuration/0">
-
-  <div class="detail-header">
-    <a href="#t:engine_configuration/0" class="detail-link" data-no-tooltip title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">engine_configuration()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> engine_configuration() :: %{
-  clock: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | nil, <a href="Anoma.Node.Clock.html#t:t/0">Anoma.Node.Clock.t</a>()},
-  configuration:
-    {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | nil, <a href="Anoma.Node.Configuration.html#t:t/0">Anoma.Node.Configuration.t</a>()},
-  pinger: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | nil, <a href="Anoma.Node.Pinger.html#t:t/0">Anoma.Node.Pinger.t</a>()},
-  logger: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | nil, <a href="Anoma.Node.Logger.html#t:t/0">Anoma.Node.Logger.t</a>()},
-  ordering: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | nil, <a href="Anoma.Node.Ordering.html#t:t/0">Anoma.Node.Ordering.t</a>()},
-  executor: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | nil, <a href="Anoma.Node.Executor.html#t:t/0">Anoma.Node.Executor.t</a>()},
-  mempool: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | nil, <a href="Anoma.Node.Mempool.html#t:t/0">Anoma.Node.Mempool.t</a>()},
-  storage: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | nil, <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()},
-  dumper: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | nil, <a href="Anoma.Node.Dumper.html#t:t/0">Anoma.Node.Dumper.t</a>()},
-  storage_data: {<a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()},
-  snapshot_path: <a href="Noun.html#t:t/0">Noun.t</a>()
-}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="t:min_engine_configuration/0">
-
-  <div class="detail-header">
-    <a href="#t:min_engine_configuration/0" class="detail-link" data-no-tooltip title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">min_engine_configuration()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> min_engine_configuration() :: [
-  ping_time: :no_timer | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
-  name: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
-  snapshot_path: <a href="Noun.html#t:t/0">Noun.t</a>(),
-  storage_data: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(),
-  block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
-  configuration: <a href="Anoma.Configuration.html#t:configuration_map/0">Anoma.Configuration.configuration_map</a>() | nil
-]</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="t:node_settings/0">
-
-  <div class="detail-header">
-    <a href="#t:node_settings/0" class="detail-link" data-no-tooltip title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">node_settings()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> node_settings() ::
-  {:new_storage, <a href="#t:engine_configuration/0">engine_configuration</a>()} | {:from_dump, <a href="Anoma.Dump.html#t:dump/0">Anoma.Dump.dump</a>()}</pre>
-
-      </div>
-
-<p>I am the node settings</p><p>I can be resumed from two states, either from new/fresh storage in
-which I just have a <code class="inline">engine_configuration/0</code> or from a previously
-dumped configuration. In which case I contain <a href="Anoma.Dump.html#t:dump/0"><code class="inline">Anoma.Dump.dump/0</code></a>.</p><p>If the mode is in <code class="inline">:new_storage</code>, then Ι just contain <code class="inline">Engine</code>
-specific configuration settings. However if I'm a <code class="inline">:from_dump</code> then
-Ι have a superset of that information containing <code class="inline">mnesia</code> table
-configuration information as well.</p>
-  </section>
-</section>
-<section class="detail" id="t:t/0">
-
-  <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">t()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node{
-  clock: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  configuration: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  dumper: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  executor: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  executor_topic: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  logger: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  logger_topic: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  mempool: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  mempool_topic: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  ordering: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  pinger: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  router: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
-  storage: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  storage_topic: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  transport: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()
-}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -490,165 +165,21 @@ configuration information as well.</p>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="child_spec/1">
+<section class="detail" id="start/2">
 
   <div class="detail-header">
-    <a href="#child_spec/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#start/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">child_spec(init_arg)</h1>
+    <h1 class="signature" translate="no">start(type, args)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="init/1">
-
-  <div class="detail-header">
-    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">init(args)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> init(<a href="#t:engine_configuration/0">engine_configuration</a>() | <a href="Anoma.Dump.html#t:dump/0">Anoma.Dump.dump</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
-
-      </div>
-
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="raw_storage/1">
-
-  <div class="detail-header">
-    <a href="#raw_storage/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">raw_storage(node)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> raw_storage(<a href="#t:t/0">t</a>()) :: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()</pre>
-
-      </div>
-
-<p>I give the storage from a node.</p><p>This is useful when we want to bring storage to a new node.</p>
-  </section>
-</section>
-<section class="detail" id="start_link/1">
-
-  <div class="detail-header">
-    <a href="#start_link/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">start_link(args)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> start_link(<a href="#t:configuration/0">configuration</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
-
-      </div>
-
-<p>I assume I am fed a list with atom-value 2-tuples
-:name, :settings, :use_rocks. The value of :settings is a 2-tuple
-with the first component matching either :new_storage or :from_dump.
-If the former case, I need a :snapshot_path key in the settings.
-For the latter case, check Anoma.Dump for format descriptions of
-the settings.</p><p>I ensure that the storages are deleted and created.
-Afterwards, if the storage is truly new, I put the snapshot
-in the ordering. Otherwise, I simply repopulate the tables
-from a supplied list by the settings.
-If :use_rocks has value true, I use rocksdb as storage backend.</p>
-  </section>
-</section>
-<section class="detail" id="start_link_or_find_instance/1">
-
-  <div class="detail-header">
-    <a href="#start_link_or_find_instance/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">start_link_or_find_instance(args)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> start_link_or_find_instance(<a href="#t:configuration/0">configuration</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
-
-      </div>
-
-<p>I work just like <a href="#start_link/1"><code class="inline">start_link/1</code></a> except I give back the pid directly
-if the node is already started.</p><p>This is preferable in tests, as we wish to have them be robust upon
-rerunning.</p>
-  </section>
-</section>
-<section class="detail" id="start_min/1">
-
-  <div class="detail-header">
-    <a href="#start_min/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">start_min(args)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> start_min(<a href="#t:min_engine_configuration/0">min_engine_configuration</a>()) :: <a href="#t:engine_configuration/0">engine_configuration</a>()</pre>
-
-      </div>
-
-<p>Given minimal arguments, I create appropriate setup for the
-<code class="inline">:settings</code> argument for Node initialization.</p>
-  </section>
-</section>
-<section class="detail" id="state/1">
-
-  <div class="detail-header">
-    <a href="#state/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">state(nodes)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
+<p>Callback implementation for <a href="https://hexdocs.pm/elixir/Application.html#c:start/2"><code class="inline">Application.start/2</code></a>.</p>
   </section>
 </section>
 
@@ -659,9 +190,9 @@ rerunning.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.22.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.22.0">Hex Preview</a>
 
           </span>
 

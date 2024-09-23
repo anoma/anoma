@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.21.0">
+    <meta name="project" content="Anoma v0.22.0">
 
 
-    <title>EventBroker — Anoma v0.21.0</title>
+    <title>EventBroker — Anoma v0.22.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-0BF4767F.js"></script>
+    <script src="dist/sidebar_items-FA573553.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.21.0
+          v0.22.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">EventBroker</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.22.0)</small>
 
   </h1>
 
@@ -137,7 +137,7 @@ functionality provided by the Broker and the Registry.</p><h3 id="module-public-
   </a>
   <span class="text">Public API</span>
 </h3>
-<p>I have the following public functionality:</p><ul><li><code class="inline">event/1</code></li><li><code class="inline">subscribe_me/1</code></li><li><code class="inline">unsubscribe_me/1</code></li><li><code class="inline">subscribe/2</code></li><li><code class="inline">unsubscribe/2</code></li></ul>
+<p>I have the following public functionality:</p><ul><li><a href="#event/1"><code class="inline">event/1</code></a></li><li><a href="#subscribe_me/1"><code class="inline">subscribe_me/1</code></a></li><li><a href="#unsubscribe_me/1"><code class="inline">unsubscribe_me/1</code></a></li><li><a href="#subscribe/2"><code class="inline">subscribe/2</code></a></li><li><a href="#unsubscribe/2"><code class="inline">unsubscribe/2</code></a></li></ul>
     </section>
 
 </div>
@@ -174,7 +174,7 @@ subscribed to one another.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#event/2" data-no-tooltip translate="no">event(broker, event)</a>
+        <a href="#event/2" data-no-tooltip translate="no">event(event, broker \\ EventBroker.Broker)</a>
 
       </div>
 
@@ -194,7 +194,7 @@ subscribed to one another.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#subscribe/3" data-no-tooltip translate="no">subscribe(pid, registry, filter_spec_list)</a>
+        <a href="#subscribe/3" data-no-tooltip translate="no">subscribe(pid, filter_spec_list, registry \\ EventBroker.Registry)</a>
 
       </div>
 
@@ -204,7 +204,7 @@ subscribed to one another.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#subscribe_me/2" data-no-tooltip translate="no">subscribe_me(registry, filter_spec_list)</a>
+        <a href="#subscribe_me/2" data-no-tooltip translate="no">subscribe_me(filter_spec_list, registry \\ EventBroker.Registry)</a>
 
       </div>
 
@@ -214,7 +214,7 @@ subscribed to one another.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#unsubscribe/3" data-no-tooltip translate="no">unsubscribe(pid, registry, filter_spec_list)</a>
+        <a href="#unsubscribe/3" data-no-tooltip translate="no">unsubscribe(pid, filter_spec_list, registry \\ EventBroker.Registry)</a>
 
       </div>
 
@@ -224,7 +224,7 @@ subscribed to one another.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#unsubscribe_me/2" data-no-tooltip translate="no">unsubscribe_me(registry, filter_spec_list)</a>
+        <a href="#unsubscribe_me/2" data-no-tooltip translate="no">unsubscribe_me(filter_spec_list, registry \\ EventBroker.Registry)</a>
 
       </div>
 
@@ -284,23 +284,19 @@ subscribed to one another.</p>
     <div class="functions-list">
 <section class="detail" id="event/2">
 
+    <span id="event/1"></span>
+
   <div class="detail-header">
     <a href="#event/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">event(broker, event)</h1>
+    <h1 class="signature" translate="no">event(event, broker \\ EventBroker.Broker)</h1>
 
 
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> event(<a href="https://hexdocs.pm/elixir/GenServer.html#t:server/0">GenServer.server</a>(), <a href="EventBroker.Event.html#t:t/0">EventBroker.Event.t</a>()) :: :ok</pre>
-
-      </div>
 
 <p>I am the Event Broker event function.</p><p>I process any incoming events by sending them to all of Broker subscribers
 using the <a href="https://hexdocs.pm/elixir/Kernel.html#send/2"><code class="inline">send/2</code></a> functionality.</p>
@@ -327,23 +323,19 @@ using the <a href="https://hexdocs.pm/elixir/Kernel.html#send/2"><code class="in
 </section>
 <section class="detail" id="subscribe/3">
 
+    <span id="subscribe/2"></span>
+
   <div class="detail-header">
     <a href="#subscribe/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">subscribe(pid, registry, filter_spec_list)</h1>
+    <h1 class="signature" translate="no">subscribe(pid, filter_spec_list, registry \\ EventBroker.Registry)</h1>
 
 
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> subscribe(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>(), <a href="https://hexdocs.pm/elixir/GenServer.html#t:server/0">GenServer.server</a>(), <a href="#t:filter_spec_list/0">filter_spec_list</a>()) :: :ok | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
-
-      </div>
 
 <p>I am the subscription function.</p><p>Given a PID and a list of filter specs, I ensure that all the actors
 corresponding to each spec given in the list is launched and subscribed
@@ -365,46 +357,38 @@ registration.</p><p>Filter Agent spawning is handled via DynamicSupervisor.</p>
 </section>
 <section class="detail" id="subscribe_me/2">
 
+    <span id="subscribe_me/1"></span>
+
   <div class="detail-header">
     <a href="#subscribe_me/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">subscribe_me(registry, filter_spec_list)</h1>
+    <h1 class="signature" translate="no">subscribe_me(filter_spec_list, registry \\ EventBroker.Registry)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> subscribe_me(<a href="https://hexdocs.pm/elixir/GenServer.html#t:server/0">GenServer.server</a>(), <a href="#t:filter_spec_list/0">filter_spec_list</a>()) :: :ok | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
-
-      </div>
-
-<p>I am a subscription function specifically for <code class="inline">self()</code></p><p>I call <code class="inline">subscribe/2</code> where the first argument is <code class="inline">self()</code></p>
+<p>I am a subscription function specifically for <code class="inline">self()</code></p><p>I call <a href="#subscribe/2"><code class="inline">subscribe/2</code></a> where the first argument is <code class="inline">self()</code></p>
   </section>
 </section>
 <section class="detail" id="unsubscribe/3">
+
+    <span id="unsubscribe/2"></span>
 
   <div class="detail-header">
     <a href="#unsubscribe/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">unsubscribe(pid, registry, filter_spec_list)</h1>
+    <h1 class="signature" translate="no">unsubscribe(pid, filter_spec_list, registry \\ EventBroker.Registry)</h1>
 
 
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> unsubscribe(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>(), <a href="https://hexdocs.pm/elixir/GenServer.html#t:server/0">GenServer.server</a>(), <a href="#t:filter_spec_list/0">filter_spec_list</a>()) :: :ok</pre>
-
-      </div>
 
 <p>I am the unsubscription function.</p><p>Given a PID and a list of filter specs, I get the PID of the related
 filter agent by looking in my state, then ask it to unsubscribe the
@@ -417,25 +401,21 @@ all agents which have shut down from my registry map and return <code class="inl
 </section>
 <section class="detail" id="unsubscribe_me/2">
 
+    <span id="unsubscribe_me/1"></span>
+
   <div class="detail-header">
     <a href="#unsubscribe_me/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">unsubscribe_me(registry, filter_spec_list)</h1>
+    <h1 class="signature" translate="no">unsubscribe_me(filter_spec_list, registry \\ EventBroker.Registry)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> unsubscribe_me(<a href="https://hexdocs.pm/elixir/GenServer.html#t:server/0">GenServer.server</a>(), <a href="#t:filter_spec_list/0">filter_spec_list</a>()) :: :ok</pre>
-
-      </div>
-
-<p>I am the unsubscription function specifically for <code class="inline">self()</code></p><p>I call <code class="inline">unsubscribe/2</code> where the first argument is <code class="inline">self()</code></p>
+<p>I am the unsubscription function specifically for <code class="inline">self()</code></p><p>I call <a href="#unsubscribe/2"><code class="inline">unsubscribe/2</code></a> where the first argument is <code class="inline">self()</code></p>
   </section>
 </section>
 
@@ -446,9 +426,9 @@ all agents which have shut down from my registry map and return <code class="inl
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.22.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.22.0">Hex Preview</a>
 
           </span>
 

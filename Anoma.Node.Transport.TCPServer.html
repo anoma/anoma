@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.21.0">
+    <meta name="project" content="Anoma v0.22.0">
 
 
-    <title>Anoma.Node.Transport.TCPServer — Anoma v0.21.0</title>
+    <title>Anoma.Node.Transport.TCPServer — Anoma v0.22.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-0BF4767F.js"></script>
+    <script src="dist/sidebar_items-FA573553.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.21.0
+          v0.22.0
         </div>
       </div>
     </div>
@@ -123,47 +123,13 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transport.TCPServer</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.22.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>I am TCPServer Engine.</p><p>I open a listening TCP connection in server mode on the specified address.</p><h3 id="module-how-i-work" class="section-heading">
-  <a href="#module-how-i-work" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">How I work</span>
-</h3>
-<p>A good way to understand how I work is by looking at the diagram of my behavior below:</p><pre><code class="mermaid">graph TB;
-Client1(Client 1):::Client
-Client2(Client 2):::Client
-subgraph Dynamic Supervisor
-TCPServer:::Server-- :start_listener---Conn1
-Conn1(Listener 1):::Connection-- start_listener---Conn2
-Conn2(Listener 2):::Connection-- start_listener---Conn3
-Conn3(Listener 3):::Connection-- :gen_tcp.accept---Conn3
-end
-Client1-. &quot;:gen_tcp.connect()&quot; .-&gt;Conn1
-Client2-. &quot;:gen_tcp.connect()&quot; .-&gt;Conn2
-
-classDef Server      fill:#d8e6ad
-classDef Connection  fill:#add8e6
-classDef Client      fill:#e6add8
-
-click TCPServer &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPServer.html&quot; &quot;Anoma.Node.Transport.TCPServer&quot;
-
-click Conn1 &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html&quot; &quot;Anoma.Node.Transport.TCPConnection&quot;
-click Conn2 &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html&quot; &quot;Anoma.Node.Transport.TCPConnection&quot;
-click Conn3 &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html&quot; &quot;Anoma.Node.Transport.TCPConnection&quot;
-
-click Client1 &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html&quot; &quot;Anoma.Node.Transport.TCPConnection&quot;
-click Client2 &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.TCPConnection.html&quot; &quot;Anoma.Node.Transport.TCPConnection&quot;
-
-click Dynamic Supervisor &quot;https://anoma.github.io/anoma/Anoma.Node.Transport.Supervisor.html&quot;</code></pre><p>This diagram uses the following Color Codes:</p><ol><li>Blue Nodes represent TCP Connections running in the listening mode.</li><li>Purple Nodes represent TCP Connections running in the client mode.</li><li>Green Node is the TCP Server.</li></ol><p>Here we can see that I manage the TCP Server by spawning
-<a href="Anoma.Node.Transport.TCPConnection.html"><code class="inline">Anoma.Node.Transport.TCPConnection</code></a> instances that other TCP Clients can
-talk to.</p><p>See <a href="Anoma.Node.Transport.TCPConnection.html"><code class="inline">Anoma.Node.Transport.TCPConnection</code></a> for further information on
-the specifics for how my connections work.</p>
+<p>I am a TCP server. I listen on a given interface and port for incoming connections.</p><p>I decode the incoming data and encode outgoing data.</p>
     </section>
 
 </div>
@@ -186,7 +152,7 @@ the specifics for how my connections work.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>I am the type of the TCPServer Engine.</p></div>
+        <div class="summary-synopsis"><p>I am the state of a TCP server.</p></div>
 
     </div>
 
@@ -202,37 +168,27 @@ the specifics for how my connections work.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+        <div class="summary-synopsis"><p>I am the child spec for a TCP server.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_continue/2" data-no-tooltip translate="no">handle_continue(atom, s)</a>
+        <a href="#init/1" data-no-tooltip translate="no">init(state)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:handle_continue/2"><code class="inline">GenServer.handle_continue/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the init function for a TCP server.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" data-no-tooltip translate="no">init(arg)</a>
+        <a href="#start_link/1" data-no-tooltip translate="no">start_link(args)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#listener/1" data-no-tooltip translate="no">listener(server)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I expose the listener of the server</p></div>
+        <div class="summary-synopsis"><p>I create a new TCP server based on a host, port and key.</p></div>
 
     </div>
 
@@ -266,24 +222,22 @@ the specifics for how my connections work.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Transport.TCPServer{
-  connection_pool: <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>() | nil,
-  listener: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">reference</a>() | nil,
-  logger: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  router: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  transport: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil
+  connection_socket: <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:socket/0">:inet.socket</a>() | nil,
+  host: (<a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:socket_address/0">:inet.socket_address</a>() | <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:hostname/0">:inet.hostname</a>()) | nil,
+  listen_socket: <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:socket/0">:inet.socket</a>() | nil,
+  port: <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:port_number/0">:inet.port_number</a>() | nil,
+  router_key: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>() | nil
 }</pre>
 
       </div>
 
-<p>I am the type of the TCPServer Engine.</p><h3 id="t:t/0-fields" class="section-heading">
+<p>I am the state of a TCP server.</p><p>My fields contain information to facilitate the TCP connection with a remote node.</p><h3 id="t:t/0-fields" class="section-heading">
   <a href="#t:t/0-fields" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:router</code> - The address of the Router Engine that the Transport Engine
-instance serves to.</li><li><code class="inline">:transport</code> - The address of the Transport server managing the server.</li><li><code class="inline">:connection_pool</code> - The supervisor which manages the connection pool that
-the TCPServer Engine instance belongs to.</li><li><code class="inline">:listener</code> - The socket listening on the specified host, port.</li><li><code class="inline">:logger</code> - The Logger Engine address. Enforced: false.</li></ul>
+<ul><li><code class="inline">:host</code>          - The host address of the remote tcp server.</li><li><code class="inline">:port</code>          - The port of the remote tcp server.</li><li><code class="inline">:listen_socket</code> - The socket of the listening server.</li><li><code class="inline">:socket</code>        - The socket of an accepted connection.</li><li><code class="inline">:router_key</code>    - The key of this router. This value is used to announce myself to other<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="n">nodes</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -312,24 +266,7 @@ the TCPServer Engine instance belongs to.</li><li><code class="inline">:listener
 
   <section class="docstring">
 
-<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="handle_continue/2">
-
-  <div class="detail-header">
-    <a href="#handle_continue/2" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">handle_continue(atom, s)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:handle_continue/2"><code class="inline">GenServer.handle_continue/2</code></a>.</p>
+<p>I am the child spec for a TCP server.</p><p>I ensure that TCP server are not restarted if they terminate.</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -339,41 +276,40 @@ the TCPServer Engine instance belongs to.</li><li><code class="inline">:listener
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">init(arg)</h1>
+    <h1 class="signature" translate="no">init(state)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> init(
-  {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
-   <a href="Anoma.Node.Transport.html#t:listen_addr/0">Anoma.Node.Transport.listen_addr</a>(), <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>(),
-   <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()}
-) :: {:ok, <a href="#t:t/0">t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
-
-      </div>
-
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+<p>I am the init function for a TCP server.</p><p>I expect a host, port, and local router key to initialize the connection.</p><p>If I am called for a new TCP server, I start up a socket and start accepting connections.
+If I am called for an accepted connection, I wait for incoming messages.</p><h3 id="init/1-pattern-matching-variations" class="section-heading">
+  <a href="#init/1-pattern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Matching Variations</span>
+</h3>
+<ul><li><p><code class="inline">init([host: host, port: port, router_key: router_key])</code>
+I initialize a new TCP server with the given host, port and key.</p></li><li><p><code class="inline">init(%TCPServer{})</code>:
+I initialize a new TCP connection with the given state.</p></li></ul>
   </section>
 </section>
-<section class="detail" id="listener/1">
+<section class="detail" id="start_link/1">
 
   <div class="detail-header">
-    <a href="#listener/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#start_link/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">listener(server)</h1>
+    <h1 class="signature" translate="no">start_link(args)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-<p>I expose the listener of the server</p>
+<p>I create a new TCP server based on a host, port and key.</p>
   </section>
 </section>
 
@@ -384,9 +320,9 @@ the TCPServer Engine instance belongs to.</li><li><code class="inline">:listener
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.22.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.22.0">Hex Preview</a>
 
           </span>
 

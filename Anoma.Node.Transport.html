@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.21.0">
+    <meta name="project" content="Anoma v0.22.0">
 
 
-    <title>Anoma.Node.Transport — Anoma v0.21.0</title>
+    <title>Anoma.Node.Transport — Anoma v0.22.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-0BF4767F.js"></script>
+    <script src="dist/sidebar_items-FA573553.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.21.0
+          v0.22.0
         </div>
       </div>
     </div>
@@ -123,20 +123,13 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transport</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.22.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>I am the Transport Engine.</p><p>I implement the transport layer for communication between nodes. Connections
-between nodes are established by means of a two-step handshake protocol.</p><h3 id="module-public-api" class="section-heading">
-  <a href="#module-public-api" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Public API</span>
-</h3>
-<p>I provide the following public functionality:</p><ul><li><a href="#start_server/2"><code class="inline">start_server/2</code></a></li><li><a href="#learn_node/3"><code class="inline">learn_node/3</code></a></li><li><a href="#learn_engine/3"><code class="inline">learn_engine/3</code></a></li><li><a href="#new_connection/2"><code class="inline">new_connection/2</code></a></li><li><code class="inline">disconnect/2</code></li><li><a href="#send/3"><code class="inline">send/3</code></a></li><li><a href="#receive_chunk/2"><code class="inline">receive_chunk/2</code></a></li></ul>
+
     </section>
 
 </div>
@@ -148,52 +141,6 @@ between nodes are established by means of a two-step handshake protocol.</p><h3 
       </a>
       <span class="text">Summary</span>
     </h1>
-<div class="summary-types summary">
-  <h2>
-    <a href="#types">Types</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:listen_addr/0" data-no-tooltip translate="no">listen_addr()</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I am a listener address type.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I am the type of the Transport Engine.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:transport_addr/0" data-no-tooltip translate="no">transport_addr()</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I am a transport address type.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:transport_type/0" data-no-tooltip translate="no">transport_type()</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I am a transport type.</p></div>
-
-    </div>
-
-</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -201,17 +148,7 @@ between nodes are established by means of a two-step handshake protocol.</p><h3 
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#disconnected/2" data-no-tooltip translate="no">disconnected(transport, reason)</a>
+        <a href="#create_accepter/2" data-no-tooltip translate="no">create_accepter(listen_socket, id)</a>
 
       </div>
 
@@ -219,102 +156,31 @@ between nodes are established by means of a two-step handshake protocol.</p><h3 
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_cast/3" data-no-tooltip translate="no">handle_cast(msg, from, s)</a>
+        <a href="#create_engine_proxy/1" data-no-tooltip translate="no">create_engine_proxy(remote_id)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I create a new proxy engine to talk to remote engines.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" data-no-tooltip translate="no">init(arg)</a>
+        <a href="#start_tcp_client/1" data-no-tooltip translate="no">start_tcp_client(config)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I create a new TCP client</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#learn_engine/3" data-no-tooltip translate="no">learn_engine(transport, engine, node)</a>
+        <a href="#start_tcp_server/1" data-no-tooltip translate="no">start_tcp_server(config)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>I notify the Transport Engine that the specified engine lives on the
-specified node.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#learn_node/3" data-no-tooltip translate="no">learn_node(transport, id, addr)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I notify the Transport Engine that the node specified by the given public id
-can be reached through the specified transport address.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#lookup_server/2" data-no-tooltip translate="no">lookup_server(transport, server)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I locate a given transport server, taking the specified address</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#new_connection/2" data-no-tooltip translate="no">new_connection(transport, trans_type)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I notify the Transport Engine that you, a local engine, are now managing a new
-incoming connection of the specified type.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#receive_chunk/2" data-no-tooltip translate="no">receive_chunk(transport, chunk)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I notify the Transport Engine that the given chunk of data has been received.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#send/3" data-no-tooltip translate="no">send(transport, dst, msg)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I send the specified message to the node with the specified id.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#start_server/2" data-no-tooltip translate="no">start_server(transport, addr)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I try to start a new transport server listening on the specified address.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#transport_type/1" data-no-tooltip translate="no">transport_type(addr)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I return transport type of the given transport address.</p></div>
+        <div class="summary-synopsis"><p>I create a new TCP listening server under the transport supervisor.</p></div>
 
     </div>
 
@@ -322,170 +188,6 @@ incoming connection of the specified type.</p></div>
 
   </section>
 
-
-  <section id="types" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#types">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Types</span>
-    </h1>
-    <div class="types-list">
-<section class="detail" id="t:listen_addr/0">
-
-  <div class="detail-header">
-    <a href="#t:listen_addr/0" class="detail-link" data-no-tooltip title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">listen_addr()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> listen_addr() :: {:tcp, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:port_number/0">:inet.port_number</a>()} | {:unix, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()}</pre>
-
-      </div>
-
-<p>I am a listener address type.</p><h3 id="t:listen_addr/0-options" class="section-heading">
-  <a href="#t:listen_addr/0-options" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Options</span>
-</h3>
-<ul><li><code class="inline">:tcp</code> - I provide host and port number for TCP socket.</li><li><code class="inline">:unix</code> - I provide file path for Unix socket.</li></ul>
-  </section>
-</section>
-<section class="detail" id="t:t/0">
-
-  <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">t()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Transport{
-  connection_pool: <a href="https://hexdocs.pm/elixir/Supervisor.html#t:supervisor/0">Supervisor.supervisor</a>() | nil,
-  connection_states: %{
-    required(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()) =&gt;
-      <a href="Anoma.Node.Transport.ConnectionState.html#t:t/0">Anoma.Node.Transport.ConnectionState.t</a>()
-  },
-  known_engines: %{
-    required(<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()) =&gt; <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()
-  },
-  known_nodes: <a href="MapSetMap.html#t:t/2">MapSetMap.t</a>(<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="#t:transport_addr/0">transport_addr</a>()),
-  logger: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  node_connections:
-    <a href="MapSetMap.html#t:t/2">MapSetMap.t</a>(<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()),
-  node_internal_id: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>() | nil,
-  pending_outgoing_engine_messages: %{
-    required(<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()) =&gt; <a href="https://hexdocs.pm/qex/0.5.1/Qex.html#t:t/0">Qex.t</a>()
-  },
-  pending_outgoing_messages: %{required(<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()) =&gt; <a href="https://hexdocs.pm/qex/0.5.1/Qex.html#t:t/0">Qex.t</a>()},
-  router: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
-  servers: %{required(<a href="#t:transport_addr/0">transport_addr</a>()) =&gt; <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()},
-  transport_internal_id: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>() | nil
-}</pre>
-
-      </div>
-
-<p>I am the type of the Transport Engine.</p><h3 id="t:t/0-fields" class="section-heading">
-  <a href="#t:t/0-fields" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Fields</span>
-</h3>
-<ul><li><code class="inline">:router</code> - The address of the Router Engine that the Transport Engine
-instance serves to.</li><li><code class="inline">:logger</code> - The Logger Engine address. Enforced: false.</li><li><code class="inline">:node_internal_id</code> - Id of this node.</li><li><code class="inline">:transport_internal_id</code> - Id of the Transport Engine.</li><li><code class="inline">:connection_pool</code> - The supervisor which manages the connection pool that
-the TCPConnection Engine instance belongs to.</li><li><code class="inline">:node_connections</code> - For every current node connection, maps the
-correspondent id to their address. Default: empty.</li><li><code class="inline">:connection_states</code> - Maps current connections to their respective
-connection states. Default: empty.</li><li><code class="inline">:pending_outgoing_messages</code> - For every node, to which we have not
-established a connection yet, store a queue of messages addressed to the node.
-Default: empty.</li><li><code class="inline">:pending_outgoing_engine_messages</code> - For every engine, whose node
-location is not known yet, store a queue of messages addressed to the
-engine. Default: empty.</li><li><code class="inline">:servers</code> - Stores a set of transport servers that the Transport Engine
-is currently running. Every transport server is mapped to an external
-transport address, by which messages may reach the Engine through this
-server. Default: empty.</li><li><code class="inline">:known_nodes</code> - Maps every known node (indexed by its public id) to a
-set of transport addresses through which the node can be reached.
-Default: empty.</li><li><code class="inline">:known_engines</code> - Stores a set of known engines by their public id: every
-engine id is mapped to a public id of a node that the engine belongs to.
-Default: empty.</li></ul>
-  </section>
-</section>
-<section class="detail" id="t:transport_addr/0">
-
-  <div class="detail-header">
-    <a href="#t:transport_addr/0" class="detail-link" data-no-tooltip title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">transport_addr()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> transport_addr() :: {:tcp, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:port_number/0">:inet.port_number</a>()} | {:unix, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()}</pre>
-
-      </div>
-
-<p>I am a transport address type.</p><h3 id="t:transport_addr/0-options" class="section-heading">
-  <a href="#t:transport_addr/0-options" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Options</span>
-</h3>
-<ul><li><code class="inline">:tcp</code> - I provide host and port number for TCP socket.</li><li><code class="inline">:unix</code> - I provide file path for Unix socket.</li></ul>
-  </section>
-</section>
-<section class="detail" id="t:transport_type/0">
-
-  <div class="detail-header">
-    <a href="#t:transport_type/0" class="detail-link" data-no-tooltip title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">transport_type()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> transport_type() :: :tcp | :unix</pre>
-
-      </div>
-
-<p>I am a transport type.</p><h3 id="t:transport_type/0-option" class="section-heading">
-  <a href="#t:transport_type/0-option" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Option</span>
-</h3>
-<ul><li><code class="inline">:tcp</code> - TCP socket</li><li><code class="inline">:unix</code> - Unix socket</li></ul>
-  </section>
-</section>
-
-    </div>
-  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -495,54 +197,14 @@ Default: empty.</li></ul>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="child_spec/1">
+<section class="detail" id="create_accepter/2">
 
   <div class="detail-header">
-    <a href="#child_spec/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#create_accepter/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">child_spec(init_arg)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="disconnected/2">
-
-  <div class="detail-header">
-    <a href="#disconnected/2" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">disconnected(transport, reason)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> disconnected(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: :ok</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="handle_cast/3">
-
-  <div class="detail-header">
-    <a href="#handle_cast/3" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">handle_cast(msg, from, s)</h1>
+    <h1 class="signature" translate="no">create_accepter(listen_socket, id)</h1>
 
 
   </div>
@@ -552,216 +214,55 @@ Default: empty.</li></ul>
 
   </section>
 </section>
-<section class="detail" id="init/1">
+<section class="detail" id="create_engine_proxy/1">
 
   <div class="detail-header">
-    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#create_engine_proxy/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">init(arg)</h1>
+    <h1 class="signature" translate="no">create_engine_proxy(remote_id)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+<p>I create a new proxy engine to talk to remote engines.</p>
   </section>
 </section>
-<section class="detail" id="learn_engine/3">
+<section class="detail" id="start_tcp_client/1">
 
   <div class="detail-header">
-    <a href="#learn_engine/3" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#start_tcp_client/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">learn_engine(transport, engine, node)</h1>
+    <h1 class="signature" translate="no">start_tcp_client(config)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> learn_engine(
-  <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
-  <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
-  <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()
-) ::
-  :ok</pre>
-
-      </div>
-
-<p>I notify the Transport Engine that the specified engine lives on the
-specified node.</p>
+<p>I create a new TCP client</p>
   </section>
 </section>
-<section class="detail" id="learn_node/3">
+<section class="detail" id="start_tcp_server/1">
 
   <div class="detail-header">
-    <a href="#learn_node/3" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#start_tcp_server/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">learn_node(transport, id, addr)</h1>
+    <h1 class="signature" translate="no">start_tcp_server(config)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> learn_node(
-  <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
-  <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
-  <a href="#t:transport_addr/0">transport_addr</a>()
-) :: :ok</pre>
-
-      </div>
-
-<p>I notify the Transport Engine that the node specified by the given public id
-can be reached through the specified transport address.</p><p>If there are pending outgoing messages addressed to the node, I try to
-initiate a new connection to the node.</p>
-  </section>
-</section>
-<section class="detail" id="lookup_server/2">
-
-  <div class="detail-header">
-    <a href="#lookup_server/2" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">lookup_server(transport, server)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>I locate a given transport server, taking the specified address</p>
-  </section>
-</section>
-<section class="detail" id="new_connection/2">
-
-  <div class="detail-header">
-    <a href="#new_connection/2" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">new_connection(transport, trans_type)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> new_connection(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="#t:transport_type/0">transport_type</a>()) :: :ok</pre>
-
-      </div>
-
-<p>I notify the Transport Engine that you, a local engine, are now managing a new
-incoming connection of the specified type.</p>
-  </section>
-</section>
-<section class="detail" id="receive_chunk/2">
-
-  <div class="detail-header">
-    <a href="#receive_chunk/2" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">receive_chunk(transport, chunk)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> receive_chunk(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: :ok</pre>
-
-      </div>
-
-<p>I notify the Transport Engine that the given chunk of data has been received.</p><p>I am normally called by a Transport Connection instance.</p>
-  </section>
-</section>
-<section class="detail" id="send/3">
-
-  <div class="detail-header">
-    <a href="#send/3" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">send(transport, dst, msg)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> send(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: :ok</pre>
-
-      </div>
-
-<p>I send the specified message to the node with the specified id.</p>
-  </section>
-</section>
-<section class="detail" id="start_server/2">
-
-  <div class="detail-header">
-    <a href="#start_server/2" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">start_server(transport, addr)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> start_server(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="#t:listen_addr/0">listen_addr</a>()) :: :ok</pre>
-
-          <pre translate="no"><span class="attribute">@spec</span> start_server(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="#t:listen_addr/0">listen_addr</a>()) ::
-  <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil</pre>
-
-      </div>
-
-<p>I try to start a new transport server listening on the specified address.</p><p>If a new transport server fails to start, the Transport Engine state does not
-change.</p>
-  </section>
-</section>
-<section class="detail" id="transport_type/1">
-
-  <div class="detail-header">
-    <a href="#transport_type/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">transport_type(addr)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> transport_type(<a href="#t:transport_addr/0">transport_addr</a>() | <a href="#t:listen_addr/0">listen_addr</a>()) :: <a href="#t:transport_type/0">transport_type</a>()</pre>
-
-      </div>
-
-<p>I return transport type of the given transport address.</p>
+<p>I create a new TCP listening server under the transport supervisor.</p>
   </section>
 </section>
 
@@ -772,9 +273,9 @@ change.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.22.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.22.0">Hex Preview</a>
 
           </span>
 

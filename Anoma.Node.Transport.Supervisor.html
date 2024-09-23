@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.21.0">
+    <meta name="project" content="Anoma v0.22.0">
 
 
-    <title>Anoma.Node.Transport.Supervisor — Anoma v0.21.0</title>
+    <title>Anoma.Node.Transport.Supervisor — Anoma v0.22.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-0BF4767F.js"></script>
+    <script src="dist/sidebar_items-FA573553.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.21.0
+          v0.22.0
         </div>
       </div>
     </div>
@@ -123,14 +123,39 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transport.Supervisor</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.22.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>I am the Transport Supervisor module.</p><p>I serve as a supervision pool for various transport connections.
-My instance is created by the Anoma Node.</p>
+<p>I am the transport supervisor.</p><p>My main functionality is to supervise the physical transport connections
+in this node (e.g., TCP connections).</p><h2 id="module-registry" class="section-heading">
+  <a href="#module-registry" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Registry</span>
+</h2>
+<p>The registry maps process ids to names. For each external node connection
+a value is put into the register where the key is the remote key and the
+type of connection. For example, a TCP connection would be stored as
+<code class="inline">%{remote_id: remote_id, type: :tcp}</code> and a remote engine proxy is
+stored as <code class="inline">%{remote_id: remote_id, type: :router}</code>.</p><h2 id="module-tcp-supervisor" class="section-heading">
+  <a href="#module-tcp-supervisor" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">TCP Supervisor</span>
+</h2>
+<p>The TCP supervisor is a dynamic supervisor that supervises TCP connections.</p><h2 id="module-proxy-supervisor" class="section-heading">
+  <a href="#module-proxy-supervisor" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Proxy Supervisor</span>
+</h2>
+<p>The proxy supervisor is a dynamic supervisor that supervises proxy engine
+processes. A proxy engine is a process that acts as a message relay for a
+remote engine.</p><p>The proxy engine can receive messages and knows which physical connection
+should be used to relay the message to the remote engine.</p>
     </section>
 
 </div>
@@ -149,7 +174,7 @@ My instance is created by the Anoma Node.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(arg)</a>
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
 
       </div>
 
@@ -159,17 +184,7 @@ My instance is created by the Anoma Node.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" data-no-tooltip translate="no">init(arg)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/DynamicSupervisor.html#c:init/1"><code class="inline">DynamicSupervisor.init/1</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#start_link/1" data-no-tooltip translate="no">start_link(argument)</a>
+        <a href="#start_link/1" data-no-tooltip translate="no">start_link(init_arg)</a>
 
       </div>
 
@@ -195,7 +210,7 @@ My instance is created by the Anoma Node.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">child_spec(arg)</h1>
+    <h1 class="signature" translate="no">child_spec(init_arg)</h1>
 
 
   </div>
@@ -205,23 +220,6 @@ My instance is created by the Anoma Node.</p>
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="init/1">
-
-  <div class="detail-header">
-    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">init(arg)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/DynamicSupervisor.html#c:init/1"><code class="inline">DynamicSupervisor.init/1</code></a>.</p>
-  </section>
-</section>
 <section class="detail" id="start_link/1">
 
   <div class="detail-header">
@@ -229,18 +227,12 @@ My instance is created by the Anoma Node.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_link(argument)</h1>
+    <h1 class="signature" translate="no">start_link(init_arg)</h1>
 
 
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> start_link(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
-
-      </div>
 
 
   </section>
@@ -253,9 +245,9 @@ My instance is created by the Anoma Node.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.22.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.22.0">Hex Preview</a>
 
           </span>
 

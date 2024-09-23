@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.21.0">
+    <meta name="project" content="Anoma v0.22.0">
 
 
-    <title>Fema Analysis On the Pinger — Anoma v0.21.0</title>
+    <title>Fema Analysis On the Pinger — Anoma v0.22.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-0BF4767F.js"></script>
+    <script src="dist/sidebar_items-FA573553.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.21.0
+          v0.22.0
         </div>
       </div>
     </div>
@@ -144,27 +144,27 @@ GUIDES
   </a>
   <span class="text">Analysis</span>
 </h2>
-<p>This document contains a <a href="https://en.wikipedia.org/wiki/Failure_mode_and_effects_analysis">FEMA</a> analysis on <a href="Anoma.Node.Pinger.html"><code class="inline">Anoma.Node.Pinger</code></a>.</p><p>The pinger module is responsible for producing blocks at a set time.</p><p>In order to get a good feeling of the errors, this document will:</p><ol><li>Cover the traces of it's public API</li><li>Do a more indpeth analysis of the effects, inducing the key calls</li><li>Disect how the module could fail</li><li>Locate how the API could be misused and create a failure case</li><li>Look at the codebase for potential areas where this could occur</li><li>Note the nock-on effects on a failing actor on other actors in the <a href="Anoma.html"><code class="inline">Anoma</code></a> system.</li><li>Write out each bug in full effect.</li><li>Provide a summary of the findings with the precieved severity level</li></ol><h2 id="pinger-api-tracing" class="section-heading">
+<p>This document contains a <a href="https://en.wikipedia.org/wiki/Failure_mode_and_effects_analysis">FEMA</a> analysis on <code class="inline">Anoma.Node.Pinger</code>.</p><p>The pinger module is responsible for producing blocks at a set time.</p><p>In order to get a good feeling of the errors, this document will:</p><ol><li>Cover the traces of it's public API</li><li>Do a more indpeth analysis of the effects, inducing the key calls</li><li>Disect how the module could fail</li><li>Locate how the API could be misused and create a failure case</li><li>Look at the codebase for potential areas where this could occur</li><li>Note the nock-on effects on a failing actor on other actors in the <code class="inline">Anoma</code> system.</li><li>Write out each bug in full effect.</li><li>Provide a summary of the findings with the precieved severity level</li></ol><h2 id="pinger-api-tracing" class="section-heading">
   <a href="#pinger-api-tracing" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Pinger API Tracing</span>
 </h2>
-<p>Let us startup the Anoma Environment to run the code in.</p><pre><code class="makeup elixir" translate="no"><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="p" data-group-id="8072972620-1">{</span><span class="nc">Mempool</span><span class="p">,</span><span class="w"> </span><span class="nc">Router</span><span class="p">,</span><span class="w"> </span><span class="nc">Pinger</span><span class="p" data-group-id="8072972620-1">}</span><span class="w">
+<p>Let us startup the Anoma Environment to run the code in.</p><pre><code class="makeup elixir" translate="no"><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="p" data-group-id="6664237808-1">{</span><span class="nc">Mempool</span><span class="p">,</span><span class="w"> </span><span class="nc">Router</span><span class="p">,</span><span class="w"> </span><span class="nc">Pinger</span><span class="p" data-group-id="6664237808-1">}</span><span class="w">
 </span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Storage</span><span class="w">
 </span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Ordering</span><span class="w">
 </span><span class="kn">import</span><span class="w"> </span><span class="nc">TestHelper.Nock</span><span class="w">
 
 </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:anoma</span><span class="w">
-</span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="n">state</span><span class="p" data-group-id="8072972620-2">(</span><span class="n">name</span><span class="p" data-group-id="8072972620-2">)</span><span class="w">
-</span><span class="ss">:all_good</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:all_good</span></code></pre><p>The Pinger has 2 <code class="inline">public</code> methods that we can abuse <a href="Anoma.Node.Pinger.html#start/1"><code class="inline">Anoma.Node.Pinger.start/1</code></a> and <a href="Anoma.Node.Pinger.html#set_timer/2"><code class="inline">Anoma.Node.Pinger.set_timer/2</code></a>.</p><p>Let use begin by first tracing what all these methods do in depth</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="2401314379-1">(</span><span class="w">
-  </span><span class="p" data-group-id="2401314379-2">[</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="2401314379-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="2401314379-3">)</span><span class="p" data-group-id="2401314379-2">]</span><span class="p">,</span><span class="w">
-  </span><span class="k" data-group-id="2401314379-4">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+</span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="n">state</span><span class="p" data-group-id="6664237808-2">(</span><span class="n">name</span><span class="p" data-group-id="6664237808-2">)</span><span class="w">
+</span><span class="ss">:all_good</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:all_good</span></code></pre><p>The Pinger has 2 <code class="inline">public</code> methods that we can abuse <code class="inline">Anoma.Node.Pinger.start/1</code> and <code class="inline">Anoma.Node.Pinger.set_timer/2</code>.</p><p>Let use begin by first tracing what all these methods do in depth</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="6836472620-1">(</span><span class="w">
+  </span><span class="p" data-group-id="6836472620-2">[</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="6836472620-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="6836472620-3">)</span><span class="p" data-group-id="6836472620-2">]</span><span class="p">,</span><span class="w">
+  </span><span class="k" data-group-id="6836472620-4">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
     </span><span class="c1"># we should use the router, but pinger is special</span><span class="w">
-    </span><span class="nc">Pinger</span><span class="o">.</span><span class="n">set_timer</span><span class="p" data-group-id="2401314379-5">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p" data-group-id="2401314379-5">)</span><span class="w">
-  </span><span class="k" data-group-id="2401314379-4">end</span><span class="p">,</span><span class="w">
+    </span><span class="nc">Pinger</span><span class="o">.</span><span class="n">set_timer</span><span class="p" data-group-id="6836472620-5">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p" data-group-id="6836472620-5">)</span><span class="w">
+  </span><span class="k" data-group-id="6836472620-4">end</span><span class="p">,</span><span class="w">
   </span><span class="ss">message_label</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nc">Anoma.Utility</span><span class="o">.</span><span class="n">message_label</span><span class="o">/</span><span class="mi">1</span><span class="w">
-</span><span class="p" data-group-id="2401314379-1">)</span></code></pre><pre><code class="mermaid output">sequenceDiagram
+</span><span class="p" data-group-id="6836472620-1">)</span></code></pre><pre><code class="mermaid output">sequenceDiagram
 participant 0 AS self();
 participant 1 AS Anoma.Node.Pinger HFn/uuQ5P5oDd3yBKS2rDz+Nx++XqLKOL+zJdO70aJg=;
 0-&gt;&gt;1: CALL: set
@@ -175,15 +175,15 @@ participant 1 AS Anoma.Node.Pinger HFn/uuQ5P5oDd3yBKS2rDz+Nx++XqLKOL+zJdO70aJg=;
   </a>
   <span class="text">In Depth Analysis</span>
 </h2>
-<p>Now that we have seen the rough API of the Pinger, let us now look deeper at how the interactions work, and see what we can derive.</p><p>The first bit to note is that <code class="inline">set_timer</code> does not actually trigger the pinger to start sending</p><p>Analyzing the code, we can see that if <strong>state.time</strong> is set properly, then the pinger will handle a self call of <code class="inline">:execute</code>.</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="6405760533-1">(</span><span class="w">
-  </span><span class="p" data-group-id="6405760533-2">[</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="6405760533-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="6405760533-3">)</span><span class="p" data-group-id="6405760533-2">]</span><span class="p">,</span><span class="w">
-  </span><span class="k" data-group-id="6405760533-4">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+<p>Now that we have seen the rough API of the Pinger, let us now look deeper at how the interactions work, and see what we can derive.</p><p>The first bit to note is that <code class="inline">set_timer</code> does not actually trigger the pinger to start sending</p><p>Analyzing the code, we can see that if <strong>state.time</strong> is set properly, then the pinger will handle a self call of <code class="inline">:execute</code>.</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="5352974781-1">(</span><span class="w">
+  </span><span class="p" data-group-id="5352974781-2">[</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="5352974781-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="5352974781-3">)</span><span class="p" data-group-id="5352974781-2">]</span><span class="p">,</span><span class="w">
+  </span><span class="k" data-group-id="5352974781-4">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
     </span><span class="c1"># we should use the router, but pinger is special</span><span class="w">
-    </span><span class="n">send</span><span class="p" data-group-id="6405760533-5">(</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="6405760533-6">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="6405760533-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:execute</span><span class="p" data-group-id="6405760533-5">)</span><span class="w">
-    </span><span class="nc">:timer</span><span class="o">.</span><span class="n">sleep</span><span class="p" data-group-id="6405760533-7">(</span><span class="mi">1</span><span class="p" data-group-id="6405760533-7">)</span><span class="w">
-  </span><span class="k" data-group-id="6405760533-4">end</span><span class="p">,</span><span class="w">
+    </span><span class="n">send</span><span class="p" data-group-id="5352974781-5">(</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="5352974781-6">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="5352974781-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:execute</span><span class="p" data-group-id="5352974781-5">)</span><span class="w">
+    </span><span class="nc">:timer</span><span class="o">.</span><span class="n">sleep</span><span class="p" data-group-id="5352974781-7">(</span><span class="mi">1</span><span class="p" data-group-id="5352974781-7">)</span><span class="w">
+  </span><span class="k" data-group-id="5352974781-4">end</span><span class="p">,</span><span class="w">
   </span><span class="ss">message_label</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nc">Anoma.Utility</span><span class="o">.</span><span class="n">message_label</span><span class="o">/</span><span class="mi">1</span><span class="w">
-</span><span class="p" data-group-id="6405760533-1">)</span></code></pre><pre><code class="mermaid output">sequenceDiagram
+</span><span class="p" data-group-id="5352974781-1">)</span></code></pre><pre><code class="mermaid output">sequenceDiagram
 participant 2 AS Anoma.Node.Mempool 4/XLsEdgkzoiXSBYoBHJexd5ax8K1Sp7feQki1HV45k=;
 participant 0 AS self();
 participant 1 AS Anoma.Node.Pinger HFn/uuQ5P5oDd3yBKS2rDz+Nx++XqLKOL+zJdO70aJg=;
@@ -252,11 +252,11 @@ Contributing
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.22.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.22.0">Hex Preview</a>
 
-              (<a href="https://preview.hex.pm/preview/anoma/0.21.0/show/documentation/analysis/fema-analysis-pinger.livemd">current file</a>)
+              (<a href="https://preview.hex.pm/preview/anoma/0.22.0/show/documentation/analysis/fema-analysis-pinger.livemd">current file</a>)
 
           </span>
 
