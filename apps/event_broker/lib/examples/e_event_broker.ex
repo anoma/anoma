@@ -1,7 +1,7 @@
-defmodule Examples.EventBroker do
+defmodule Examples.EEventBroker do
   @moduledoc false
 
-  use TestHelper.TestMacro
+  use ExUnit.Case
   alias EventBroker.{Supervisor, Registry, Filters, Event}
 
   @doc """
@@ -423,6 +423,6 @@ defmodule Examples.EventBroker do
     unsub_all()
 
     assert "[Nock] do not export filtering functions" ==
-             EventBroker.subscribe_me(EventBroker.Registry, [%Nock{}])
+             EventBroker.subscribe_me([%{__struct__: Nock}])
   end
 end
