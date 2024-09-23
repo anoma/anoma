@@ -78,7 +78,7 @@ defmodule Anoma.RM.Shielded.Transaction do
     def storage_nullifiers(tx), do: nullifiers(tx)
 
     def compose(tx1, tx2) do
-      unless Anoma.RM.Trans.compose_pre_check(tx1, tx2) do
+      unless Anoma.RM.Transaction.Helpers.compose_pre_check(tx1, tx2) do
         nil
       else
         %Transaction{
