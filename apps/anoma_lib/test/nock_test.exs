@@ -30,8 +30,6 @@ defmodule AnomaTest.Nock do
     ENock.uend1()
     ENock.raw_27_4()
     # Next one calls this... so uneeded but who cares
-    ENock.successful_inc()
-    ENock.unsuccessful_inc()
     ENock.jamming_and_cueing()
     ENock.one_two()
     ENock.nesting_noun()
