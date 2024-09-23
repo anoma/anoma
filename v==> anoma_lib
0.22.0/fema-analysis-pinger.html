@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.22.0">
+
+
+    <title>Fema Analysis On the Pinger — Anoma v0.22.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-FA573553.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.22.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>Fema Analysis On the Pinger</span>
+  </h1>
+
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="user.html">User</a><ol><li><a href="data.html">Data</a></li></ol></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a><ol><li><a href="fema-analysis-pinger.html">Fema Analysis Pinger</a></li></ol></li><li><a href="logging.html">Logging</a></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="analysis" class="section-heading">
+  <a href="#analysis" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Analysis</span>
+</h2>
+<p>This document contains a <a href="https://en.wikipedia.org/wiki/Failure_mode_and_effects_analysis">FEMA</a> analysis on <code class="inline">Anoma.Node.Pinger</code>.</p><p>The pinger module is responsible for producing blocks at a set time.</p><p>In order to get a good feeling of the errors, this document will:</p><ol><li>Cover the traces of it's public API</li><li>Do a more indpeth analysis of the effects, inducing the key calls</li><li>Disect how the module could fail</li><li>Locate how the API could be misused and create a failure case</li><li>Look at the codebase for potential areas where this could occur</li><li>Note the nock-on effects on a failing actor on other actors in the <code class="inline">Anoma</code> system.</li><li>Write out each bug in full effect.</li><li>Provide a summary of the findings with the precieved severity level</li></ol><h2 id="pinger-api-tracing" class="section-heading">
+  <a href="#pinger-api-tracing" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pinger API Tracing</span>
+</h2>
+<p>Let us startup the Anoma Environment to run the code in.</p><pre><code class="makeup elixir" translate="no"><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="p" data-group-id="3310808869-1">{</span><span class="nc">Mempool</span><span class="p">,</span><span class="w"> </span><span class="nc">Router</span><span class="p">,</span><span class="w"> </span><span class="nc">Pinger</span><span class="p" data-group-id="3310808869-1">}</span><span class="w">
+</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Storage</span><span class="w">
+</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Ordering</span><span class="w">
+</span><span class="kn">import</span><span class="w"> </span><span class="nc">TestHelper.Nock</span><span class="w">
+
+</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:anoma</span><span class="w">
+</span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="n">state</span><span class="p" data-group-id="3310808869-2">(</span><span class="n">name</span><span class="p" data-group-id="3310808869-2">)</span><span class="w">
+</span><span class="ss">:all_good</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:all_good</span></code></pre><p>The Pinger has 2 <code class="inline">public</code> methods that we can abuse <code class="inline">Anoma.Node.Pinger.start/1</code> and <code class="inline">Anoma.Node.Pinger.set_timer/2</code>.</p><p>Let use begin by first tracing what all these methods do in depth</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="4310326511-1">(</span><span class="w">
+  </span><span class="p" data-group-id="4310326511-2">[</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="4310326511-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="4310326511-3">)</span><span class="p" data-group-id="4310326511-2">]</span><span class="p">,</span><span class="w">
+  </span><span class="k" data-group-id="4310326511-4">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="c1"># we should use the router, but pinger is special</span><span class="w">
+    </span><span class="nc">Pinger</span><span class="o">.</span><span class="n">set_timer</span><span class="p" data-group-id="4310326511-5">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p" data-group-id="4310326511-5">)</span><span class="w">
+  </span><span class="k" data-group-id="4310326511-4">end</span><span class="p">,</span><span class="w">
+  </span><span class="ss">message_label</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nc">Anoma.Utility</span><span class="o">.</span><span class="n">message_label</span><span class="o">/</span><span class="mi">1</span><span class="w">
+</span><span class="p" data-group-id="4310326511-1">)</span></code></pre><pre><code class="mermaid output">sequenceDiagram
+participant 0 AS self();
+participant 1 AS Anoma.Node.Pinger HFn/uuQ5P5oDd3yBKS2rDz+Nx++XqLKOL+zJdO70aJg=;
+0-&gt;&gt;1: CALL: set
+1-&gt;&gt;0: INFO: tuple
+</code></pre><pre><code class="makeup output" translate="no"><span class="s">&quot;Timer set to 20&quot;</span></code></pre><h2 id="in-depth-analysis" class="section-heading">
+  <a href="#in-depth-analysis" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">In Depth Analysis</span>
+</h2>
+<p>Now that we have seen the rough API of the Pinger, let us now look deeper at how the interactions work, and see what we can derive.</p><p>The first bit to note is that <code class="inline">set_timer</code> does not actually trigger the pinger to start sending</p><p>Analyzing the code, we can see that if <strong>state.time</strong> is set properly, then the pinger will handle a self call of <code class="inline">:execute</code>.</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="9048579876-1">(</span><span class="w">
+  </span><span class="p" data-group-id="9048579876-2">[</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="9048579876-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="9048579876-3">)</span><span class="p" data-group-id="9048579876-2">]</span><span class="p">,</span><span class="w">
+  </span><span class="k" data-group-id="9048579876-4">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="c1"># we should use the router, but pinger is special</span><span class="w">
+    </span><span class="n">send</span><span class="p" data-group-id="9048579876-5">(</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="9048579876-6">(</span><span class="n">node</span><span class="o">.</span><span class="n">pinger</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="9048579876-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:execute</span><span class="p" data-group-id="9048579876-5">)</span><span class="w">
+    </span><span class="nc">:timer</span><span class="o">.</span><span class="n">sleep</span><span class="p" data-group-id="9048579876-7">(</span><span class="mi">1</span><span class="p" data-group-id="9048579876-7">)</span><span class="w">
+  </span><span class="k" data-group-id="9048579876-4">end</span><span class="p">,</span><span class="w">
+  </span><span class="ss">message_label</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nc">Anoma.Utility</span><span class="o">.</span><span class="n">message_label</span><span class="o">/</span><span class="mi">1</span><span class="w">
+</span><span class="p" data-group-id="9048579876-1">)</span></code></pre><pre><code class="mermaid output">sequenceDiagram
+participant 2 AS Anoma.Node.Mempool 4/XLsEdgkzoiXSBYoBHJexd5ax8K1Sp7feQki1HV45k=;
+participant 0 AS self();
+participant 1 AS Anoma.Node.Pinger HFn/uuQ5P5oDd3yBKS2rDz+Nx++XqLKOL+zJdO70aJg=;
+0-&gt;&gt;1: INFO: execute
+1-&gt;&gt;2: CALL: execute
+</code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre><h2 id="potential-failure-modes" class="section-heading">
+  <a href="#potential-failure-modes" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Potential Failure Modes</span>
+</h2>
+<h2 id="failure-of-use-around-the-codebase" class="section-heading">
+  <a href="#failure-of-use-around-the-codebase" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Failure of use around the codebase</span>
+</h2>
+<h2 id="death-of-the-actor" class="section-heading">
+  <a href="#death-of-the-actor" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Death of the Actor</span>
+</h2>
+<p>If the actor dies, then the only effect is that blocks won't be producted like expected.</p><p>In production this is <strong>critical</strong> as the chain will halt.</p><p>On a developer's testing box this is rather benign, as block production should happen on demand, rather than on intervels.</p><h2 id="full-details-of-the-failure-modes" class="section-heading">
+  <a href="#full-details-of-the-failure-modes" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Full Details of the Failure modes</span>
+</h2>
+<h2 id="summary-of-failures" class="section-heading">
+  <a href="#summary-of-failures" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Summary Of Failures</span>
+</h2>
+<table><thead><tr><th style="text-align: left;">Failure States</th><th style="text-align: left;">Severity</th><th style="text-align: left;">Comment</th></tr></thead><tbody><tr><td style="text-align: left;">xyz</td><td style="text-align: left;">low</td><td style="text-align: left;">important for operation</td></tr></tbody></table>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="analysis.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Analysis
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="contributing.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Contributing
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.22.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.22.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.22.0/show/documentation/analysis/fema-analysis-pinger.livemd">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

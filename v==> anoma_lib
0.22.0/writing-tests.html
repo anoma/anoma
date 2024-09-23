@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.22.0">
+
+
+    <title>Writing Tests — Anoma v0.22.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-FA573553.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.22.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>Writing Tests</span>
+  </h1>
+
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="user.html">User</a><ol><li><a href="data.html">Data</a></li></ol></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a><ol><li><a href="fema-analysis-pinger.html">Fema Analysis Pinger</a></li></ol></li><li><a href="logging.html">Logging</a></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="conventions" class="section-heading">
+  <a href="#conventions" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Conventions</span>
+</h2>
+<p>Since the <a href="understanding-any-module.html">figuring out</a> page demonstrates that well laid out test files are the key to understanding how modules work, it is important to write tests so this can always be achieved.</p><p>The following sections will lay out how we can achieve this.</p><!-- livebook:{"branch_parent_index":1} --><h2 id="make-sure-names-from-the-test-matches-setup_all" class="section-heading">
+  <a href="#make-sure-names-from-the-test-matches-setup_all" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Make sure names from the test matches setup_all</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="nc">ExUnit</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="4396352404-1">(</span><span class="p" data-group-id="4396352404-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">AnomaTest.LiveBook.Nam</span><span class="w"> </span><span class="k" data-group-id="4912116201-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">ExUnit.Case</span><span class="w">
+
+  </span><span class="n">setup_all</span><span class="w"> </span><span class="k" data-group-id="4912116201-2">do</span><span class="w">
+    </span><span class="n">special</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="w">
+    </span><span class="p" data-group-id="4912116201-3">[</span><span class="ss">special</span><span class="p">:</span><span class="w"> </span><span class="n">special</span><span class="p" data-group-id="4912116201-3">]</span><span class="w">
+  </span><span class="k" data-group-id="4912116201-2">end</span><span class="w">
+
+  </span><span class="n">test</span><span class="w"> </span><span class="s">&quot;this is acceptable&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4912116201-4">%{</span><span class="ss">special</span><span class="p">:</span><span class="w"> </span><span class="n">special</span><span class="p" data-group-id="4912116201-4">}</span><span class="w"> </span><span class="k" data-group-id="4912116201-5">do</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">special</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">3</span><span class="w">
+  </span><span class="k" data-group-id="4912116201-5">end</span><span class="w">
+
+  </span><span class="n">test</span><span class="w"> </span><span class="s">&quot;this test is not acceptable&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4912116201-6">%{</span><span class="ss">special</span><span class="p">:</span><span class="w"> </span><span class="n">spec</span><span class="p" data-group-id="4912116201-6">}</span><span class="w"> </span><span class="k" data-group-id="4912116201-7">do</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">spec</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">3</span><span class="w">
+  </span><span class="k" data-group-id="4912116201-7">end</span><span class="w">
+</span><span class="k" data-group-id="4912116201-1">end</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="0004916535-1">{</span><span class="ss">:module</span><span class="p">,</span><span class="w"> </span><span class="nc">AnomaTest.LiveBook.Nam</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0004916535-2">&lt;&lt;</span><span class="mi">70</span><span class="p">,</span><span class="w"> </span><span class="mi">79</span><span class="p">,</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w"> </span><span class="mi">49</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="0004916535-2">&gt;&gt;</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="0004916535-3">{</span><span class="ss">:&quot;test this test is not acceptable&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="0004916535-3">}</span><span class="p" data-group-id="0004916535-1">}</span></code></pre><p>If this convention is not followed, then the user can not simply be
+copy and paste the lines to figure out how to use the module.</p><!-- livebook:{"branch_parent_index":1} --><h2 id="write-setup_all-to-not-crash-on-reevaluation" class="section-heading">
+  <a href="#write-setup_all-to-not-crash-on-reevaluation" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Write setup_all to not crash on reevaluation</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">AnomaTest.LiveBook.NoCrash</span><span class="w"> </span><span class="k" data-group-id="5920921712-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">ExUnit.Case</span><span class="w">
+
+  </span><span class="n">setup_all</span><span class="w"> </span><span class="k" data-group-id="5920921712-2">do</span><span class="w">
+    </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:intent_example</span><span class="w">
+
+    </span><span class="k">unless</span><span class="w"> </span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="5920921712-3">(</span><span class="n">name</span><span class="p" data-group-id="5920921712-3">)</span><span class="w"> </span><span class="k" data-group-id="5920921712-4">do</span><span class="w">
+      </span><span class="nc">Anoma.Node.Intent</span><span class="o">.</span><span class="n">init</span><span class="p" data-group-id="5920921712-5">(</span><span class="n">name</span><span class="p" data-group-id="5920921712-5">)</span><span class="w">
+    </span><span class="k" data-group-id="5920921712-4">end</span><span class="w">
+
+    </span><span class="p" data-group-id="5920921712-6">[</span><span class="ss">intent_pool</span><span class="p">:</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="5920921712-6">]</span><span class="w">
+  </span><span class="k" data-group-id="5920921712-2">end</span><span class="w">
+</span><span class="k" data-group-id="5920921712-1">end</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">warning</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Intent</span><span class="o">.</span><span class="n">init</span><span class="o">/</span><span class="mi">1</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">undefined</span><span class="w"> </span><span class="p" data-group-id="9696387312-1">(</span><span class="n">module</span><span class="w"> </span><span class="nc">Anoma.Node.Intent</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">available</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">yet</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">defined</span><span class="p" data-group-id="9696387312-1">)</span><span class="w">
+  </span><span class="n">documentation</span><span class="o">/</span><span class="n">contributing</span><span class="o">/</span><span class="n">testing</span><span class="o">.</span><span class="n">livemd</span><span class="c1">#cell:qbrtwwd53rvqgtpz:8: AnomaTest.LiveBook.NoCrash.__ex_unit_setup_all_0/1</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="4098345477-1">{</span><span class="ss">:module</span><span class="p">,</span><span class="w"> </span><span class="nc">AnomaTest.LiveBook.NoCrash</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4098345477-2">&lt;&lt;</span><span class="mi">70</span><span class="p">,</span><span class="w"> </span><span class="mi">79</span><span class="p">,</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w"> </span><span class="mi">49</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="4098345477-2">&gt;&gt;</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="4098345477-3">{</span><span class="ss">:__ex_unit_setup_all_0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="4098345477-3">}</span><span class="p" data-group-id="4098345477-1">}</span></code></pre><ul><li>Here we check if the process is running. This way if it is
+already in IEX we simply don't disturb it but rename it to point
+to the correct one we wish to operate over.</li><li>If we did not do this check the other commands may fail and IEX
+may not be trapped to continue.</li><li><a href="https://hexdocs.pm/mix/Mix.Tasks.Test.html"><code class="inline">mix test</code></a> will not catch this</li></ul><!-- livebook:{"branch_parent_index":1} --><h2 id="try-to-make-tests-idempotent" class="section-heading">
+  <a href="#try-to-make-tests-idempotent" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Try to make tests idempotent</span>
+</h2>
+<p>Let us demonstrate this point, by making a simple queue service.</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Queue</span><span class="w"> </span><span class="k" data-group-id="4634373912-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">GenServer</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="4634373912-2">(</span><span class="c">_init</span><span class="p" data-group-id="4634373912-2">)</span><span class="w"> </span><span class="k" data-group-id="4634373912-3">do</span><span class="w">
+    </span><span class="p" data-group-id="4634373912-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="nc">:queue</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="4634373912-5">(</span><span class="p" data-group-id="4634373912-5">)</span><span class="p" data-group-id="4634373912-4">}</span><span class="w">
+  </span><span class="k" data-group-id="4634373912-3">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">start_link</span><span class="p" data-group-id="4634373912-6">(</span><span class="n">arg</span><span class="p" data-group-id="4634373912-6">)</span><span class="w"> </span><span class="k" data-group-id="4634373912-7">do</span><span class="w">
+    </span><span class="nc">GenServer</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="4634373912-8">(</span><span class="bp">__MODULE__</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p">,</span><span class="w"> </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="n">arg</span><span class="p" data-group-id="4634373912-8">)</span><span class="w">
+  </span><span class="k" data-group-id="4634373912-7">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">reset</span><span class="p" data-group-id="4634373912-9">(</span><span class="n">queue</span><span class="p" data-group-id="4634373912-9">)</span><span class="w"> </span><span class="k" data-group-id="4634373912-10">do</span><span class="w">
+    </span><span class="nc">GenServer</span><span class="o">.</span><span class="n">cast</span><span class="p" data-group-id="4634373912-11">(</span><span class="n">queue</span><span class="p">,</span><span class="w"> </span><span class="ss">:reset</span><span class="p" data-group-id="4634373912-11">)</span><span class="w">
+  </span><span class="k" data-group-id="4634373912-10">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">enqueue</span><span class="p" data-group-id="4634373912-12">(</span><span class="n">queue</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="4634373912-12">)</span><span class="w"> </span><span class="k" data-group-id="4634373912-13">do</span><span class="w">
+    </span><span class="nc">GenServer</span><span class="o">.</span><span class="n">cast</span><span class="p" data-group-id="4634373912-14">(</span><span class="n">queue</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4634373912-15">{</span><span class="ss">:enqueue</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="4634373912-15">}</span><span class="p" data-group-id="4634373912-14">)</span><span class="w">
+  </span><span class="k" data-group-id="4634373912-13">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">pop</span><span class="p" data-group-id="4634373912-16">(</span><span class="n">queue</span><span class="p" data-group-id="4634373912-16">)</span><span class="w"> </span><span class="k" data-group-id="4634373912-17">do</span><span class="w">
+    </span><span class="nc">GenServer</span><span class="o">.</span><span class="n">call</span><span class="p" data-group-id="4634373912-18">(</span><span class="n">queue</span><span class="p">,</span><span class="w"> </span><span class="ss">:pop</span><span class="p" data-group-id="4634373912-18">)</span><span class="w">
+  </span><span class="k" data-group-id="4634373912-17">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_cast</span><span class="p" data-group-id="4634373912-19">(</span><span class="ss">:reset</span><span class="p">,</span><span class="w"> </span><span class="c">_pool</span><span class="p" data-group-id="4634373912-19">)</span><span class="w"> </span><span class="k" data-group-id="4634373912-20">do</span><span class="w">
+    </span><span class="p" data-group-id="4634373912-21">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="nc">:queue</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="4634373912-22">(</span><span class="p" data-group-id="4634373912-22">)</span><span class="p" data-group-id="4634373912-21">}</span><span class="w">
+  </span><span class="k" data-group-id="4634373912-20">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_cast</span><span class="p" data-group-id="4634373912-23">(</span><span class="p" data-group-id="4634373912-24">{</span><span class="ss">:enqueue</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p" data-group-id="4634373912-24">}</span><span class="p">,</span><span class="w"> </span><span class="n">pool</span><span class="p" data-group-id="4634373912-23">)</span><span class="w"> </span><span class="k" data-group-id="4634373912-25">do</span><span class="w">
+    </span><span class="p" data-group-id="4634373912-26">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="nc">:queue</span><span class="o">.</span><span class="n">cons</span><span class="p" data-group-id="4634373912-27">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="n">pool</span><span class="p" data-group-id="4634373912-27">)</span><span class="p" data-group-id="4634373912-26">}</span><span class="w">
+  </span><span class="k" data-group-id="4634373912-25">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_call</span><span class="p" data-group-id="4634373912-28">(</span><span class="ss">:pop</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">queue</span><span class="p" data-group-id="4634373912-28">)</span><span class="w"> </span><span class="k" data-group-id="4634373912-29">do</span><span class="w">
+    </span><span class="p" data-group-id="4634373912-30">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="nc">:queue</span><span class="o">.</span><span class="n">get_r</span><span class="p" data-group-id="4634373912-31">(</span><span class="n">queue</span><span class="p" data-group-id="4634373912-31">)</span><span class="p">,</span><span class="w"> </span><span class="nc">:queue</span><span class="o">.</span><span class="n">drop_r</span><span class="p" data-group-id="4634373912-32">(</span><span class="n">queue</span><span class="p" data-group-id="4634373912-32">)</span><span class="p" data-group-id="4634373912-30">}</span><span class="w">
+  </span><span class="k" data-group-id="4634373912-29">end</span><span class="w">
+</span><span class="k" data-group-id="4634373912-1">end</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="8781883635-1">{</span><span class="ss">:module</span><span class="p">,</span><span class="w"> </span><span class="nc">Queue</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8781883635-2">&lt;&lt;</span><span class="mi">70</span><span class="p">,</span><span class="w"> </span><span class="mi">79</span><span class="p">,</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w"> </span><span class="mi">49</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="8781883635-2">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8781883635-3">{</span><span class="ss">:handle_call</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="8781883635-3">}</span><span class="p" data-group-id="8781883635-1">}</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">AnomaTest.LiveBook.Idempotent</span><span class="w"> </span><span class="k" data-group-id="4447156945-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">ExUnit.Case</span><span class="w">
+
+  </span><span class="n">setup_all</span><span class="w"> </span><span class="k" data-group-id="4447156945-2">do</span><span class="w">
+    </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:queue_name</span><span class="w">
+
+    </span><span class="k">unless</span><span class="w"> </span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="4447156945-3">(</span><span class="n">name</span><span class="p" data-group-id="4447156945-3">)</span><span class="w"> </span><span class="k" data-group-id="4447156945-4">do</span><span class="w">
+      </span><span class="nc">Queue</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="4447156945-5">(</span><span class="n">name</span><span class="p" data-group-id="4447156945-5">)</span><span class="w">
+    </span><span class="k" data-group-id="4447156945-4">end</span><span class="w">
+
+    </span><span class="p" data-group-id="4447156945-6">[</span><span class="ss">queue</span><span class="p">:</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="4447156945-6">]</span><span class="w">
+  </span><span class="k" data-group-id="4447156945-2">end</span><span class="w">
+
+  </span><span class="n">test</span><span class="w"> </span><span class="s">&quot;reset&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4447156945-7">%{</span><span class="ss">queue</span><span class="p">:</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="4447156945-7">}</span><span class="w"> </span><span class="k" data-group-id="4447156945-8">do</span><span class="w">
+    </span><span class="c1"># Make sure we get reliable results!</span><span class="w">
+    </span><span class="nc">Queue</span><span class="o">.</span><span class="n">reset</span><span class="p" data-group-id="4447156945-9">(</span><span class="n">name</span><span class="p" data-group-id="4447156945-9">)</span><span class="w">
+    </span><span class="nc">Queue</span><span class="o">.</span><span class="n">enqueue</span><span class="p" data-group-id="4447156945-10">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="4447156945-10">)</span><span class="w">
+    </span><span class="nc">Queue</span><span class="o">.</span><span class="n">enqueue</span><span class="p" data-group-id="4447156945-11">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p" data-group-id="4447156945-11">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nc">Queue</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="4447156945-12">(</span><span class="n">name</span><span class="p" data-group-id="4447156945-12">)</span><span class="w">
+  </span><span class="k" data-group-id="4447156945-8">end</span><span class="w">
+</span><span class="k" data-group-id="4447156945-1">end</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="1926995011-1">{</span><span class="ss">:module</span><span class="p">,</span><span class="w"> </span><span class="nc">AnomaTest.LiveBook.Idempotent</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1926995011-2">&lt;&lt;</span><span class="mi">70</span><span class="p">,</span><span class="w"> </span><span class="mi">79</span><span class="p">,</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w"> </span><span class="mi">49</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="1926995011-2">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1926995011-3">{</span><span class="ss">:&quot;test reset&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="1926995011-3">}</span><span class="p" data-group-id="1926995011-1">}</span></code></pre><p>Here before getting values from the queue, we make sure it's fresh by resetting it.</p><p>In the <code class="inline">Queue</code> case it's contrived, however a lot of genservers in the codebase work like this!</p><p>Something important to note is that <a href="https://hexdocs.pm/mix/Mix.Tasks.Test.html"><code class="inline">mix test</code></a> will not catch this!</p><p>So please try to keep tests isolated from each other.</p><!-- livebook:{"branch_parent_index":1} --><h2 id="try-to-name-values" class="section-heading">
+  <a href="#try-to-name-values" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Try to Name Values</span>
+</h2>
+<p>For debugging purposes, it is best to name values, and so you can rerun values on command, or help the debugging process.</p>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="running-tests.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Running Tests
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="understanding-any-module.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Understanding any code in Anoma
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.22.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.22.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.22.0/show/documentation/contributing/testing/writing-tests.livemd">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>
