@@ -6,7 +6,7 @@ defmodule Anoma.ShieldedResource.ComplianceInput do
   alias __MODULE__
   use TypedStruct
 
-  alias Anoma.ShieldedResource
+  alias Anoma.RM.ShieldedResource
 
   typedstruct enforce: true do
     # Input resource

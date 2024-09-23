@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource do
+defmodule Anoma.RM.ShieldedResource do
   @moduledoc """
   I am a shielded resource.
   """
@@ -114,7 +114,7 @@ defmodule Anoma.ShieldedResource do
     |> :binary.list_to_bin()
   end
 
-  @spec to_bytes(Anoma.ShieldedResource.t()) :: [byte()]
+  @spec to_bytes(ShieldedResource.t()) :: [byte()]
   def to_bytes(resource = %ShieldedResource{}) do
     binaries =
       resource.logic <>
