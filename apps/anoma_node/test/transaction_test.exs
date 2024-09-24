@@ -27,5 +27,6 @@ defmodule TransactionTest do
     ETransaction.inc_counter_submit_with_zero()
     ETransaction.inc_counter_submit_after_zero()
     ETransaction.inc_counter_submit_after_read()
+    ETransaction.bluf_transaction_errors()
   end
 end
