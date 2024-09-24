@@ -10,10 +10,18 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   use TypedStruct
 
+  @type result :: {:ok, any()} | :error | :in_progress
+
+  typedstruct module: Tx do
+    field(:result, Mempool.result(), default: :in_progress)
+    field(:backend, Backends.backend())
+    field(:code, Noun.t())
+  end
+
   typedstruct do
     field(
       :transactions,
-      %{binary() => {Backends.backend(), Noun.t()}},
+      %{binary() => Mempool.Tx.t()},
       default: %{}
     )
 
@@ -61,29 +69,50 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   def handle_call({:execute, id_list}, _from, state) do
+    # we should also check for id uniqueness
     with true <-
            id_list
            |> Enum.all?(fn x -> Map.has_key?(state.transactions, x) end) do
-      task =
-        Task.async(fn ->
-          blocking_complete(id_list, state.transactions)
-        end)
-
-      for id <- id_list do
-        EventBroker.subscribe(task.pid, [
-          worker_module_filter(),
-          Ordering.tx_id_filter(id)
-        ])
-      end
-
       Ordering.order(id_list)
 
-      {writes, rem} = Task.await(task)
+      # check which tasks were already completed and return the uncompleted list
+
+      new_txs =
+        for id <- id_list,
+            reduce: state.transactions do
+          map ->
+            unless Map.get(map, id).result == :in_progress do
+              map
+            else
+              receive do
+                %EventBroker.Event{
+                  body: %Anoma.Node.Transaction.Backends.CompleteEvent{
+                    tx_id: id,
+                    result: res
+                  }
+                } ->
+                  EventBroker.unsubscribe_me([
+                    worker_module_filter(),
+                    Ordering.tx_id_filter(id)
+                  ])
+
+                  Map.update!(map, id, fn tx ->
+                    Map.put(tx, :result, res)
+                  end)
+              end
+            end
+        end
+
+      writes = Map.take(new_txs, id_list) |> Map.values()
 
       Storage.commit(state.round, writes)
 
       {:reply, :ok,
-       %__MODULE__{state | transactions: rem, round: state.round + 1}}
+       %__MODULE__{
+         state
+         | transactions: Map.drop(new_txs, id_list),
+           round: state.round + 1
+       }}
     else
       false -> {:reply, :error, state}
     end
@@ -94,14 +123,20 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   # the pid for ro backend now needs to be specified inside the backend
-  def handle_cast({:tx, tx_code_w_backend, tx_id}, state) do
+  def handle_cast({:tx, {backend, code} = tx, tx_id}, state) do
+    EventBroker.subscribe_me([
+      worker_module_filter(),
+      Ordering.tx_id_filter(tx_id)
+    ])
+
     Task.start(fn ->
-      Backends.execute(tx_code_w_backend, tx_id)
+      Backends.execute(tx, tx_id)
     end)
 
     nstate = %Mempool{
       state
-      | transactions: Map.put(state.transactions, tx_id, tx_code_w_backend)
+      | transactions:
+          Map.put(state.transactions, tx_id, %Tx{backend: backend, code: code})
     }
 
     {:noreply, nstate}
@@ -111,42 +146,31 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:noreply, state}
   end
 
-  def handle_info(_, state) do
-    {:noreply, state}
+  # I handle messages of worker which are done before I execute
+  # if I handle info about an already cleared tx I do nothing
+  def handle_info(
+        %EventBroker.Event{
+          body: %Anoma.Node.Transaction.Backends.CompleteEvent{
+            tx_id: id,
+            result: res
+          }
+        },
+        state
+      ) do
+    EventBroker.unsubscribe_me([
+      worker_module_filter(),
+      Ordering.tx_id_filter(id)
+    ])
+
+    new_map =
+      state.transactions
+      |> Map.update!(id, fn tx -> Map.put(tx, :result, res) end)
+
+    {:noreply, %__MODULE__{state | transactions: new_map}}
   end
 
-  def blocking_complete(ids, map) do
-    for _id <- ids,
-        reduce: {[], map} do
-      {list, rem} ->
-        receive do
-          %EventBroker.Event{
-            body: %Anoma.Node.Transaction.Backends.CompleteEvent{
-              tx_id: id,
-              result: {:ok, res}
-            }
-          } ->
-            EventBroker.unsubscribe_me([
-              worker_module_filter(),
-              Ordering.tx_id_filter(id)
-            ])
-
-            {[{{:ok, res}, Map.get(rem, id)} | list], Map.delete(rem, id)}
-
-          %EventBroker.Event{
-            body: %Anoma.Node.Transaction.Backends.CompleteEvent{
-              tx_id: id,
-              result: :error
-            }
-          } ->
-            EventBroker.unsubscribe_me([
-              worker_module_filter(),
-              Ordering.tx_id_filter(id)
-            ])
-
-            {[{:error, Map.get(rem, id)} | list], Map.delete(rem, id)}
-        end
-    end
+  def handle_info(_, state) do
+    {:noreply, state}
   end
 
   def worker_module_filter() do
