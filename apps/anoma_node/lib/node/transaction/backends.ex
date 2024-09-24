@@ -28,7 +28,8 @@ defmodule Anoma.Node.Transaction.Backends do
         execute({backend, tx}, id)
 
       :error ->
-        :error
+        worker_event(id, :error)
+        Ordering.write({id, [{nil, nil}]})
     end
   end
 
@@ -59,30 +60,19 @@ defmodule Anoma.Node.Transaction.Backends do
     with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
          {:ok, result} <- gate_call(stage_2_tx, env, id),
          :ok <- process.(id, result, reply_to) do
-      ok_event =
-        EventBroker.Event.new_with_body(%__MODULE__.CompleteEvent{
-          tx_id: id,
-          result: {:ok, result}
-        })
-
-      EventBroker.event(ok_event)
+      worker_event(id, {:ok, result})
     else
       _e ->
-        error_event =
-          EventBroker.Event.new_with_body(%__MODULE__.CompleteEvent{
-            tx_id: id,
-            result: :error
-          })
-
-        EventBroker.event(error_event)
+        worker_event(id, :error)
+        Ordering.write({id, [{nil, nil}]})
     end
   end
 
   defp send_value(id, result, reply_to) do
     # send the value to reply-to address and the topic
     reply_msg = {:read_value, result}
-    Ordering.write({id, [{nil, nil}]})
     send(reply_to, reply_msg)
+    Ordering.write({id, [{nil, nil}]})
   end
 
   def blob_store(id, result, _reply_to) do
@@ -103,5 +93,15 @@ defmodule Anoma.Node.Transaction.Backends do
     else
       _ -> :error
     end
+  end
+
+  defp worker_event(id, result) do
+    event =
+      EventBroker.Event.new_with_body(%__MODULE__.CompleteEvent{
+        tx_id: id,
+        result: result
+      })
+
+    EventBroker.event(event)
   end
 end
