@@ -33,9 +33,19 @@ defmodule Anoma.Node.Transaction.Storage do
   end
 
   def init(_) do
-    :mnesia.create_table(__MODULE__.Values, attributes: [:key, :value])
-    :mnesia.create_table(__MODULE__.Updates, attributes: [:key, :value])
-    :mnesia.create_table(__MODULE__.Blocks, attributes: [:round, :block])
+    :mnesia.delete_table(__MODULE__.Values)
+    :mnesia.delete_table(__MODULE__.Updates)
+    :mnesia.delete_table(__MODULE__.Blocks)
+
+    {:atomic, :ok} =
+      :mnesia.create_table(__MODULE__.Values, attributes: [:key, :value])
+
+    {:atomic, :ok} =
+      :mnesia.create_table(__MODULE__.Updates, attributes: [:key, :value])
+
+    {:atomic, :ok} =
+      :mnesia.create_table(__MODULE__.Blocks, attributes: [:round, :block])
+
     {:ok, %Storage{}}
   end
 
