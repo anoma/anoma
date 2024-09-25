@@ -29,7 +29,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
       :error ->
         worker_event(id, :error)
-        Ordering.write({id, [{nil, nil}]})
+        Ordering.write({id, []})
     end
   end
 
@@ -64,7 +64,7 @@ defmodule Anoma.Node.Transaction.Backends do
     else
       _e ->
         worker_event(id, :error)
-        Ordering.write({id, [{nil, nil}]})
+        Ordering.write({id, []})
     end
   end
 
@@ -72,7 +72,7 @@ defmodule Anoma.Node.Transaction.Backends do
     # send the value to reply-to address and the topic
     reply_msg = {:read_value, result}
     send(reply_to, reply_msg)
-    Ordering.write({id, [{nil, nil}]})
+    Ordering.write({id, []})
   end
 
   def blob_store(id, result, _reply_to) do
