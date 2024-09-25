@@ -305,4 +305,20 @@ defmodule Anoma.Node.Examples.ETransaction do
        ]}
     ] = :mnesia.dirty_read({Storage.Blocks, 0})
   end
+
+  def read_txs_write_nothing(key \\ "key") do
+    restart_tx_module()
+    Mempool.tx({{:debug_read_term, self()}, zero(key)}, "id 1")
+    :ok = ["id 1"] |> Mempool.execute()
+
+    [] = :mnesia.dirty_all_keys(Storage.Values)
+    [] = :mnesia.dirty_all_keys(Storage.Updates)
+  end
+
+  def bluff_txs_write_nothing() do
+    bluf_transaction_errors()
+
+    [] = :mnesia.dirty_all_keys(Storage.Values)
+    [] = :mnesia.dirty_all_keys(Storage.Updates)
+  end
 end
