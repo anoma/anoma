@@ -11,9 +11,9 @@
     quantity=@
     value=@
     eph=?
-    nonce=@
-    npk=@
-    rseed=@
+    nonce=[@u @]
+    npk=[@u @]
+    rseed=[@u @]
   ==
 ::  a transparent resource commitment is the resource.
 +$  commitment  @
