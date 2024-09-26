@@ -258,7 +258,7 @@
   (~(met block 0) a)
 --
 ::  layer 5: under construction (axes may change)
-~%  %four  +  ~
+~%  %five  +  ~
 |%
 ::  bitwise xor
 ++  mix                                                 ::  binary xor
