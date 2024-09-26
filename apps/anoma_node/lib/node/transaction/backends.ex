@@ -5,6 +5,7 @@ defmodule Anoma.Node.Transaction.Backends do
   """
 
   alias Anoma.Node.Transaction.Ordering
+  alias Anoma.TransparentResource
 
   import Nock
   require Noun
@@ -33,19 +34,20 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   def execute({{:debug_read_term, pid}, tx}, id) do
-    execute_kv_ro(tx, id, pid, &send_value/3)
+    execute_candidate(tx, id, fn x, y -> send_value(x, y, pid) end)
   end
 
   def execute({:debug_term_storage, tx}, id) do
-    execute_kv_ro(tx, id, nil, &store_value/3)
+    execute_candidate(tx, id, &store_value/2)
   end
 
   def execute({:debug_bloblike, tx}, id) do
-    execute_kv_ro(tx, id, nil, &blob_store/3)
+    execute_candidate(tx, id, &blob_store/2)
   end
 
   defp gate_call(tx_code, env, id) do
-    with {:ok, ordered_tx} <- nock(tx_code, [10, [6, 1 | id], 0 | 1], env),
+    with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
+         {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
          {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
       {:ok, result}
     else
@@ -53,12 +55,11 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
-  defp execute_kv_ro(tx_code, id, reply_to, process) do
+  defp execute_candidate(tx_code, id, process) do
     env = %Nock{}
 
-    with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
-         {:ok, result} <- gate_call(stage_2_tx, env, id),
-         :ok <- process.(id, result, reply_to) do
+    with {:ok, result} <- gate_call(tx_code, env, id),
+         :ok <- process.(id, result) do
       ok_event =
         EventBroker.Event.new_with_body(%__MODULE__.CompleteEvent{
           tx_id: id,
@@ -78,6 +79,19 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
+  defp resource_tx(id, result) do
+    with {:ok, tx} <- TransparentResource.Resource.from_noun(result),
+         true <- TransparentResource.verify(tx) do
+      for action <- tx.actions do
+        cms = action.commitments
+        nlfs = action.nullifiers
+        Ordering.append({id, [{:nullifiers, nlfs}, {:commitments, cms}]})
+      end
+    else
+      _e -> :error
+    end
+  end
+
   defp send_value(id, result, reply_to) do
     # send the value to reply-to address and the topic
     reply_msg = {:read_value, result}
@@ -85,12 +99,12 @@ defmodule Anoma.Node.Transaction.Backends do
     send(reply_to, reply_msg)
   end
 
-  def blob_store(id, result, _reply_to) do
+  def blob_store(id, result) do
     key = :crypto.hash(:sha256, :erlang.term_to_binary(result))
     Ordering.write({id, [{key, result}]})
   end
 
-  def store_value(id, result, _reply_to) do
+  def store_value(id, result) do
     with {:ok, list} <- result |> Noun.list_nock_to_erlang_safe(),
          true <-
            Enum.all?(list, fn
