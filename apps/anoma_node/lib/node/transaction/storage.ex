@@ -73,52 +73,7 @@ defmodule Anoma.Node.Transaction.Storage do
     if height <= state.uncommitted_height do
       # relies on this being a reverse-ordered list
       result =
-        case Map.get(state.uncommitted_updates, key) do
-          nil ->
-            tx1 = fn -> :mnesia.read(__MODULE__.Updates, key) end
-
-            {:atomic, tx1_result} =
-              :mnesia.transaction(tx1)
-
-            case tx1_result do
-              [{__MODULE__.Updates, _key, height_upds}] ->
-                height = height_upds |> Enum.find(fn a -> a <= height end)
-
-                case height do
-                  nil ->
-                    :absent
-
-                  _ ->
-                    tx2 = fn ->
-                      :mnesia.read(__MODULE__.Values, {height, key})
-                    end
-
-                    {:atomic,
-                     [{__MODULE__.Values, {_height, _key}, tx2_result}]} =
-                      :mnesia.transaction(tx2)
-
-                    {:ok, tx2_result}
-                end
-
-              [] ->
-                :absent
-
-              _ ->
-                :error
-            end
-
-          heights ->
-            update_height = heights |> Enum.find(fn a -> a <= height end)
-
-            case update_height do
-              nil ->
-                :absent
-
-              _ ->
-                {:ok,
-                 Map.get(state.uncommitted, {update_height, key}, :error)}
-            end
-        end
+        read_in_past(height, key, state)
 
       {:reply, result, state}
     else
@@ -127,7 +82,8 @@ defmodule Anoma.Node.Transaction.Storage do
     end
   end
 
-  def handle_call({:write, {height, kvlist}}, from, state) do
+  def handle_call({write_or_append, {height, kvlist}}, from, state)
+      when write_or_append in [:write, :append] do
     unless height == state.uncommitted_height + 1 do
       block_spawn(height - 1, fn ->
         blocking_write(height, kvlist, from)
@@ -135,21 +91,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
       {:noreply, state}
     else
-      new_state = abwrite(:write, {height, kvlist}, state)
-
-      {:reply, :ok, new_state}
-    end
-  end
-
-  def handle_call({:append, {height, kvlist}}, from, state) do
-    unless height == state.uncommitted_height + 1 do
-      block_spawn(height - 1, fn ->
-        blocking_write(height, kvlist, from)
-      end)
-
-      {:noreply, state}
-    else
-      new_state = abwrite(:append, {height, kvlist}, state)
+      new_state = abwrite(write_or_append, {height, kvlist}, state)
 
       {:reply, :ok, new_state}
     end
@@ -183,6 +125,10 @@ defmodule Anoma.Node.Transaction.Storage do
 
   def write({height, kvlist}) do
     GenServer.call(__MODULE__, {:write, {height, kvlist}}, :infinity)
+  end
+
+  def append({height, kvlist}) do
+    GenServer.call(__MODULE__, {:append, {height, kvlist}}, :infinity)
   end
 
   def commit(block_round, writes) do
@@ -223,7 +169,17 @@ defmodule Anoma.Node.Transaction.Storage do
           reduce: {state, kvlist} do
         {state_acc, list} ->
           key_old_updates = Map.get(state_acc.uncommitted_updates, key, [])
-          key_new_updates = [height | key_old_updates]
+
+          key_new_updates =
+            with [latest_height | _] <- key_old_updates do
+              if height == latest_height do
+                key_old_updates
+              else
+                [height | key_old_updates]
+              end
+            else
+              _ -> [height]
+            end
 
           new_updates =
             Map.put(state_acc.uncommitted_updates, key, key_new_updates)
@@ -232,12 +188,21 @@ defmodule Anoma.Node.Transaction.Storage do
             case flag do
               :append ->
                 old_set_value =
-                  Map.get(state_acc.uncommitted_updates, key, MapSet.new())
+                  case Map.get(state_acc.uncommitted, {height, key}) do
+                    nil ->
+                      case read_in_past(height, key, state) do
+                        :absent -> MapSet.new()
+                        {:ok, res} -> res
+                      end
+
+                    res ->
+                      res
+                  end
 
                 new_set_value = MapSet.put(old_set_value, value)
 
                 new_kv =
-                  Map.put_new(
+                  Map.put(
                     state_acc.uncommitted,
                     {height, key},
                     new_set_value
@@ -269,6 +234,53 @@ defmodule Anoma.Node.Transaction.Storage do
     EventBroker.event(write_event)
 
     new_state
+  end
+
+  def read_in_past(height, key, state) do
+    case Map.get(state.uncommitted_updates, key) do
+      nil ->
+        tx1 = fn -> :mnesia.read(__MODULE__.Updates, key) end
+
+        {:atomic, tx1_result} =
+          :mnesia.transaction(tx1)
+
+        case tx1_result do
+          [{__MODULE__.Updates, _key, height_upds}] ->
+            height = height_upds |> Enum.find(fn a -> a <= height end)
+
+            case height do
+              nil ->
+                :absent
+
+              _ ->
+                tx2 = fn ->
+                  :mnesia.read(__MODULE__.Values, {height, key})
+                end
+
+                {:atomic, [{__MODULE__.Values, {_height, _key}, tx2_result}]} =
+                  :mnesia.transaction(tx2)
+
+                {:ok, tx2_result}
+            end
+
+          [] ->
+            :absent
+
+          _ ->
+            :error
+        end
+
+      heights ->
+        update_height = heights |> Enum.find(fn a -> a <= height end)
+
+        case update_height do
+          nil ->
+            :absent
+
+          _ ->
+            {:ok, Map.get(state.uncommitted, {update_height, key}, :error)}
+        end
+    end
   end
 
   def blocking_write(height, kvlist, from) do
