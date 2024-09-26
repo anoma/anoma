@@ -12,7 +12,9 @@ defmodule Anoma.Node.Examples.ELogging do
       GenServer.stop(Logging)
     end
 
-    Logging.start_link(nil)
+    :mnesia.clear_table(Anoma.Node.Logging.Events)
+
+    Logging.start_link()
   end
 
   def check_tx_event() do
