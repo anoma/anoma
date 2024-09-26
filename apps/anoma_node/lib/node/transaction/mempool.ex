@@ -45,13 +45,34 @@ defmodule Anoma.Node.Transaction.Mempool do
     field(:round, non_neg_integer(), default: 0)
   end
 
-  def start_link(default) do
-    GenServer.start_link(__MODULE__, default, name: Mempool)
+  def start_link(args \\ []) do
+    GenServer.start_link(__MODULE__, args, name: Mempool)
   end
 
   @spec init(any()) :: {:ok, Mempool.t()}
-  def init(_arg) do
-    {:ok, %__MODULE__{}}
+  def init(args) do
+    {:ok, keylist} =
+      args |> Keyword.validate(txs: [], consensus: nil, round: nil)
+
+    for {id, tx_w_backend} <- keylist[:txs] do
+      tx(tx_w_backend, id)
+    end
+
+    consensus = keylist[:consensus]
+    round = keylist[:round]
+
+    if consensus do
+      Task.async(fn -> execute(consensus) end)
+    end
+
+    struct =
+      if round do
+        %__MODULE__{round: round}
+      else
+        %__MODULE__{}
+      end
+
+    {:ok, struct}
   end
 
   ############################################################

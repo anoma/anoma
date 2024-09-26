@@ -28,25 +28,25 @@ defmodule Anoma.Node.Transaction.Storage do
     field(:writes, list({Anoma.Node.Transaction.Storage.bare_key(), term()}))
   end
 
-  def start_link(args) do
+  def start_link(args \\ []) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
-  def init(_) do
-    :mnesia.delete_table(__MODULE__.Values)
-    :mnesia.delete_table(__MODULE__.Updates)
-    :mnesia.delete_table(__MODULE__.Blocks)
+  def init(args) do
+    {:ok, keylist} =
+      args
+      |> Keyword.validate(
+        uncommitted_height: 0,
+        values_table: __MODULE__.Values,
+        updates_table: __MODULE__.Updates,
+        blocks_table: __MODULE__.Blocks
+      )
 
-    {:atomic, :ok} =
-      :mnesia.create_table(__MODULE__.Values, attributes: [:key, :value])
+    :mnesia.create_table(keylist[:values_table], attributes: [:key, :value])
+    :mnesia.create_table(keylist[:updates_table], attributes: [:key, :value])
+    :mnesia.create_table(keylist[:blocks_table], attributes: [:round, :block])
 
-    {:atomic, :ok} =
-      :mnesia.create_table(__MODULE__.Updates, attributes: [:key, :value])
-
-    {:atomic, :ok} =
-      :mnesia.create_table(__MODULE__.Blocks, attributes: [:round, :block])
-
-    {:ok, %Storage{}}
+    {:ok, %Storage{uncommitted_height: keylist[:uncommitted_height]}}
   end
 
   def handle_call({:commit, round, writes}, _from, state) do
