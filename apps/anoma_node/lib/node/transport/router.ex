@@ -1,6 +1,6 @@
 defmodule Anoma.Node.Transport.Router do
   @moduledoc """
-  I am the router module. I route messages to local and remote engines.
+  I am the router module. I route messages and start connections to other nodes.
 
   ### Public API
 
@@ -17,20 +17,27 @@ defmodule Anoma.Node.Transport.Router do
   alias __MODULE__
   alias Anoma.Crypto.Id
   alias Anoma.Node.Transport.EngineProxy
-  alias Anoma.Node.Transport.TCPClient
-  alias Anoma.Node.Transport.TCPServer
-  alias Anoma.Node.Transport.TCPSupervisor
+  alias Anoma.Node.Transport.Registry
+  alias Anoma.Node.Transport.TCP
 
-  import Anoma.Node.Transport.Addressing
+  @typedoc """
+  Shorthand type for socket.
+  """
+  @type hostname :: :inet.socket_address() | :inet.hostname()
 
-  ############################################################
-  #                    State                                 #
-  ############################################################
+  @typedoc """
+  Shorthand type for port number.
+  """
+  @type port_number :: :inet.port_number()
 
   @typedoc """
   I am the type of the configuration to start a router process.
   """
   @type router_config :: map()
+
+  ############################################################
+  #                    State                                 #
+  ############################################################
 
   typedstruct do
     @typedoc """
@@ -39,17 +46,169 @@ defmodule Anoma.Node.Transport.Router do
     My fields contain information to communicate with other engines.
 
     ### Fields
-     - `:config` - The configuration parameters of the node.
+    - `:node_id` - The id of the node to which this router belongs.
+    - `:port`    - The port on which this router listens for incoming connections.
     """
-    field(:config, router_config())
+    field(:node_id, Id.t())
+    field(:port, port_number())
   end
 
   ############################################################
   #                    Genserver Helpers                     #
   ############################################################
 
-  def start_link([config]) do
-    GenServer.start_link(__MODULE__, config, name: __MODULE__)
+  def start_link(args) do
+    args = Keyword.validate!(args, [:node_id])
+
+    # register as a router for the local node, at the local registry.
+    node_id = args[:node_id]
+    name = Registry.key(node_id, node_id, __MODULE__)
+
+    GenServer.start_link(__MODULE__, args, name: name)
+  end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+
+  @doc """
+  I initialize a new router with the given configuration.
+
+  ### Options
+
+  - `:node_id` - The key of the local node.
+  """
+  @impl true
+  @spec init(Keyword.t()) :: {:ok, Router.t()}
+  def init(args) do
+    Logger.debug("starting router with #{inspect(args)}")
+
+    args = Keyword.validate!(args, [:node_id])
+
+    state = struct(__MODULE__, Enum.into(args, %{}))
+
+    {:ok, state}
+  end
+
+  # ----------------------------------------------------------------------------
+  # Calls
+
+  @impl true
+  # @doc """
+  # I handle the call to start a new TCP server.
+  # """
+  def handle_call({:start_tcp_server, host, port}, _from, state) do
+    Logger.debug("starting tcp server")
+    {:ok, _pid, port} = handle_start_tcp_server(host, port, state.node_id)
+    {:reply, {:ok, port}, %{state | port: port}}
+  end
+
+  # @doc """
+  # I handle the call to start a new TCP client.
+  # """
+  def handle_call({:start_tcp_client, host, port}, _from, state) do
+    Logger.debug("starting tcp client")
+    {:ok, _pid} = handle_start_tcp_client(host, port, state.node_id)
+    {:reply, :ok, state}
+  end
+
+  # @doc """
+  # I handle the call to start a new proxy engine.
+  # """
+  def handle_call({:start_proxy, remote_node_id, type}, _, state) do
+    Logger.debug("starting proxy engine")
+
+    {:ok, _pid} =
+      handle_start_proxy_engine(remote_node_id, type, state.node_id)
+
+    {:reply, :ok, state}
+  end
+
+  # @doc """
+  # I handle the call handling a synchronous message addressed to me.
+  # """
+  def handle_call({:synchronous_message, message, _timeout}, _from, state) do
+    label = :erlang.phash2(state.node_id)
+    message = inspect(message)
+    Logger.debug("router received sync message: #{label} #{message}")
+
+    {:reply, :ok, state}
+  end
+
+  # ----------------------------------------------------------------------------
+  # Casts
+
+  @impl true
+  # @doc """
+  # I handle the call handling an asynchronous message addressed to me.
+  # """
+  def handle_cast({:asynchronous_message, message}, state) do
+    label = :erlang.phash2(state.node_id)
+    message = inspect(message)
+    IO.puts("router received async message: #{label} #{message}")
+
+    {:noreply, state}
+  end
+
+  ############################################################
+  #               Static Public RPC API                      #
+  ############################################################
+
+  @doc """
+  I ask the local router to send an asynchronous message to another router.
+  The local router will lookup the proxy for the router and send the message.
+
+  ### Options
+
+    - `:node_id` - The id of the local node.
+  """
+  @spec send_async(Id.t(), atom(), any(), Keyword.t()) :: :ok
+  def send_async(remote_node_id, type, message, opts \\ []) do
+    opts = Keyword.validate!(opts, [:node_id])
+    node_id = Keyword.get(opts, :node_id, nil)
+
+    # I should either find the local router, or a proxy engine for the remote router
+    case Registry.lookup(node_id, remote_node_id, type) do
+      [{_node_id, ^type, _labels, pid, _}] ->
+        GenServer.cast(pid, {:asynchronous_message, message})
+
+      [] ->
+        :ok
+    end
+  end
+
+  @doc """
+  I ask the local router to send an asynchronous message to another router.
+  The local router will lookup the proxy for the router and send the message.
+
+  If the recipient is unknown to me, I raise an error.
+
+  ### Options
+
+    - `:node_id` - The id of the local node.
+    - `:timeout` - The time to wait for a response.
+
+  """
+  @spec send_sync(Id.t(), atom(), any(), Keyword.t()) :: term()
+  def send_sync(remote_node_id, type, message, opts \\ [timeout: 5000]) do
+    opts = Keyword.validate!(opts, [:node_id, :timeout])
+    node_id = Keyword.get(opts, :node_id, nil)
+    timeout = Keyword.get(opts, :timeout, 5000)
+
+    # I should either find the local router, or a proxy engine for the remote router
+    case Registry.lookup(node_id, remote_node_id, type) do
+      [{_node_id, ^type, _labels, pid, _}] ->
+        expiration = System.monotonic_time(:millisecond) + timeout
+
+        GenServer.call(
+          pid,
+          {:synchronous_message, message, expiration},
+          timeout
+        )
+
+      [] ->
+        raise "no process associated with #{inspect(remote_node_id)} and name #{inspect(type)}"
+    end
   end
 
   ############################################################
@@ -58,116 +217,53 @@ defmodule Anoma.Node.Transport.Router do
 
   @doc """
   I start a new TCP server process.
-  """
-  @spec start_tcp_server() :: :ok
-  def start_tcp_server() do
-    GenServer.call(__MODULE__, {:start_tcp_server})
-  end
 
-  @spec start_proxy_engine(any()) :: :ok
-  @doc """
-  I start a new TCP client to connect to a remote node at the given host and port.
+  ### Options
+
+    - `:node_id` - The id of the local node.
   """
-  @spec start_tcp_client(
-          :inet.socket_address() | :inet.hostname(),
-          :inet.port_number()
-        ) :: :ok
-  def start_tcp_client(host, port) do
-    GenServer.call(__MODULE__, {:start_tcp_client, host, port})
+  @spec start_tcp_server(hostname, port_number, Keyword.t()) ::
+          {:ok, port_number()}
+  def start_tcp_server(host, port, opts \\ []) do
+    opts = Keyword.validate!(opts, [:node_id])
+    node_id = Keyword.get(opts, :node_id, nil)
+    router = Registry.key(node_id, node_id, __MODULE__)
+
+    GenServer.call(router, {:start_tcp_server, host, port})
   end
 
   @doc """
-  Given the id of an engine, I start a proxy engine for this id.
-  This proxy can be used to route messages to a remote node.
+  I start a new TCP client process.
+
+  ### Options
+
+    - `:node_id` - The id of the local node.
   """
-  @spec start_proxy_engine(Id.t()) :: :ok
-  def start_proxy_engine(engine_id) do
-    GenServer.cast(__MODULE__, {:start_proxy_engine, engine_id})
+  @spec start_tcp_client(hostname, port_number, Keyword.t()) :: :ok
+  def start_tcp_client(host, port, opts \\ []) do
+    opts = Keyword.validate!(opts, [:node_id])
+    node_id = Keyword.get(opts, :node_id, nil)
+    router = Registry.key(node_id, node_id, __MODULE__)
+
+    GenServer.call(router, {:start_tcp_client, host, port})
   end
 
   @doc """
-  Given the id of a node and engine type, I lookup the address of the engine's proxy.
+  I start a new proxy engine for a remote node.
+
+  ### Options
+
+    - `:node_id` - The id of the local node.
+    - `:type`    - The type of the engine to start.
   """
-  def lookup_engine(engine_id, engine_type) do
-    GenServer.call(__MODULE__, {:lookup_engine, engine_id, engine_type})
-  end
+  @spec start_proxy_engine(Id.t(), Keyword.t()) :: :ok
+  def start_proxy_engine(remote_node_id, opts \\ []) do
+    opts = Keyword.validate!(opts, [:node_id, :type])
+    node_id = Keyword.get(opts, :node_id, nil)
+    type = Keyword.get(opts, :type, nil)
+    router = Registry.key(node_id, node_id, __MODULE__)
 
-  @doc """
-  I send an async message to an engine by sending it to its proxy.
-  The proxy will then forward it to via a connection (e.g., TCP).
-  """
-  @spec async_send(Id.t(), atom(), any()) :: :ok
-  def async_send(engine_id, engine_type, message) do
-    GenServer.cast(
-      get_address_for(engine_id, engine_type),
-      {:send_async, message}
-    )
-  end
-
-  # @doc """
-  # I send a synchronous message to an engine by sending it to its proxy
-  # and waiting for a reply.
-  # **NOTE**: this function just sends an async now.
-  # """
-  @spec sync_send(Id.t(), atom(), any()) :: term()
-  def sync_send(engine_id, engine_type, message, timeout \\ 0) do
-    GenServer.call(
-      get_address_for(engine_id, engine_type),
-      {:send_sync, message, timeout},
-      timeout
-    )
-  end
-
-  ############################################################
-  #                    Genserver Behavior                    #
-  ############################################################
-
-  # @doc """
-  # I initialize a new router with the given configuration.
-  # """
-  @impl true
-  @spec init(router_config()) :: {:ok, Router.t()}
-  def init(config) do
-    state = %__MODULE__{config: config}
-    {:ok, state}
-  end
-
-  @impl true
-
-  # @doc """
-  # I start a new proxy engine.
-  # """
-  def handle_cast({:start_proxy_engine, remote_router_id}, state) do
-    {:ok, state} = handle_start_proxy_engine(remote_router_id, state)
-    {:noreply, state}
-  end
-
-  @impl true
-  # @doc """
-  # I start a new TCP server.
-  # """
-  def handle_call({:start_tcp_server}, _from, state) do
-    case handle_start_tcp_server(state) do
-      {:ok, state} ->
-        {:reply, :ok, state}
-
-      {:error, reason, state} ->
-        {:reply, {:error, reason}, state}
-    end
-  end
-
-  # @doc """
-  # I start a new TCP client.
-  # """
-  def handle_call({:start_tcp_client, host, port}, _from, state) do
-    {:reply, handle_start_tcp_client(host, port, state), state}
-  end
-
-  # @doc """
-  # I lookup the pid of a proxy engine for a given id and type.
-  # """
-  def handle_call({:lookup_engine, id, type}, _from, state) do
-    {:reply, handle_lookup_engine(id, type), state}
+    GenServer.call(router, {:start_proxy, remote_node_id, type})
   end
 
   ############################################################
@@ -175,129 +271,92 @@ defmodule Anoma.Node.Transport.Router do
   ############################################################
 
   @doc """
-  I start a new TCP server process.
-
-  I use the configuration of the router to start the server on the proper port and host.
+  I start a new TCP listener under the supervisor for my tcp connections.
   """
-  @spec handle_start_tcp_server(t()) ::
-          {:ok, t()} | {:error, :failed_to_start_tcp_server, t()}
-  def handle_start_tcp_server(state) do
-    %{config: %{network: network, router_key: router_key}} = state
+  @spec handle_start_tcp_server(any(), any(), any()) ::
+          {:error, :failed_to_start_tcp_server}
+          | {:ok, pid(), char()}
+  def handle_start_tcp_server(host, port, local_node_id) do
+    # arg list for the tcp listener process
+    args = [host: host, port: port, node_id: local_node_id]
 
-    args = [
-      host: network.host,
-      port: network.tcp_port,
-      router_key: router_key
-    ]
+    # name of the supervisor under which the listener will be started
+    supervisor = Registry.key(local_node_id, local_node_id, :tcp_supervisor)
 
-    case DynamicSupervisor.start_child(TCPSupervisor, {TCPServer, args}) do
-      {:ok, _} ->
-        {:ok, state}
+    case DynamicSupervisor.start_child(supervisor, {TCP.Listener, args}) do
+      {:ok, pid} ->
+        port = TCP.Listener.port(pid)
+        {:ok, pid, port}
 
-      {:ok, _, _} ->
-        {:ok, state}
+      {:ok, pid, _} ->
+        port = TCP.Listener.port(pid)
+        {:ok, pid, port}
 
       err ->
         IO.puts("an error occurred starting the tcp server: #{inspect(err)}")
-        {:error, :failed_to_start_tcp_server, state}
+        {:error, :failed_to_start_tcp_server}
     end
   end
 
   @doc """
   I start a new TCP client process that will connect to a remote TCP server.
   """
-  @spec handle_start_tcp_client(
-          :inet.socket_address() | :inet.hostname(),
-          :inet.port_number(),
-          t()
-        ) :: {:ok, t()}
-  def handle_start_tcp_client(host, port, state) do
-    config = state.config
+  @spec handle_start_tcp_client(hostname, port_number, Id.t()) ::
+          {:error, :failed_to_start_tcp_client}
+          | {:ok, pid()}
+  def handle_start_tcp_client(host, port, local_node_id) do
+    args = [host: host, port: port, node_id: local_node_id]
 
-    args = [
-      host: host,
-      port: port,
-      router_key: config.router_key
-    ]
+    # name of the supervisor under which the client will be started
+    supervisor = Registry.key(local_node_id, local_node_id, :tcp_supervisor)
 
-    case DynamicSupervisor.start_child(TCPSupervisor, {TCPClient, args}) do
-      {:ok, _} ->
-        {:ok, state}
+    case DynamicSupervisor.start_child(supervisor, {TCP.Client, args}) do
+      {:ok, pid} ->
+        {:ok, pid}
 
-      {:ok, _, _} ->
-        {:ok, state}
+      {:ok, pid, _} ->
+        {:ok, pid}
 
       err ->
-        IO.puts("an error occurred starting the tcp server: #{inspect(err)}")
-        {:error, :failed_to_start_tcp_client, state}
+        IO.puts("an error occurred starting the tcp client: #{inspect(err)}")
+        {:error, :failed_to_start_tcp_client}
     end
   end
 
   @doc """
-  I start a new proxy engine for a given router id.
+  I start a new TCP client process that will connect to a remote TCP server.
+  When the remote node already has an engine proxy, I return that pid.
   """
-  @spec handle_start_proxy_engine(Id.t(), t()) :: {:ok, t()}
-  def handle_start_proxy_engine(id, state) do
-    res =
-      DynamicSupervisor.start_child(
-        TCPSupervisor,
-        {EngineProxy, [id]}
-      )
+  @spec handle_start_tcp_client(Id.t(), atom(), Id.t()) ::
+          {:error, :failed_to_start_engine_proxy}
+          | {:ok, pid()}
+  def handle_start_proxy_engine(remote_node_id, type, local_node_id) do
+    args = [
+      node_id: local_node_id,
+      remote_node_id: remote_node_id,
+      type: type
+    ]
 
-    case res do
-      {:ok, _} ->
-        {:ok, state}
+    # name of the supervisor under which the client will be started
+    supervisor =
+      Registry.key(local_node_id, local_node_id, :proxy_engine_supervisor)
 
-      {:ok, _, _} ->
-        {:ok, state}
+    case DynamicSupervisor.start_child(supervisor, {EngineProxy, args}) do
+      {:ok, pid} ->
+        {:ok, pid}
+
+      {:ok, pid, _} ->
+        {:ok, pid}
+
+      {:error, {:already_started, pid}} ->
+        {:ok, pid}
 
       err ->
         IO.puts(
-          "an error occurred starting the proxy engine: #{inspect(err)}"
+          "an error occurred starting the engine proxy: #{inspect(err)}"
         )
 
-        {:ok, state}
+        {:error, :failed_to_start_engine_proxy}
     end
-  end
-
-  @doc """
-  I lookup the pid of a proxy engine for a given id and type.
-
-  ## Examples
-
-    iex> Router.lookup_engine(some_id, :router)
-    {:ok, pid}
-
-    iex> Router.lookup_engine(some_id, :router)
-    {:error, :not_found}
-  """
-  @spec handle_lookup_engine(Id.t(), atom()) ::
-          {:error, :not_found} | {:ok, pid()}
-  def handle_lookup_engine(id, engine_type) do
-    case Registry.lookup(ProxyRegister, %{
-           remote_id: id,
-           type: engine_type
-         }) do
-      [{pid, _meta}] ->
-        {:ok, pid}
-
-      [] ->
-        {:error, :not_found}
-    end
-  end
-
-  ############################################################
-  #                           Helpers                        #
-  ############################################################
-
-  @doc """
-  I am a helper function to dump the entire register.
-  I am used for debugging purposes.
-  """
-  def dump_register() do
-    Registry.select(ProxyRegister, [
-      {{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2", :"$3"}}]}
-    ])
-    |> Enum.sort()
   end
 end

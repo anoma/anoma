@@ -1,50 +1,23 @@
 defmodule Anoma.Node.Transport.EngineProxy do
   @moduledoc """
   I am an engine proxy and I serve as the single point of contact to a remote node.
+
+  I handle the outgoing messages for the node I proxy.
+  For any given message I receive, I look for a connection to the remote node to send the message.
+  These connections can be TCP connection, websockets, or any other connection type.
+
+  The incoming messages are sent to the right engine directly by the connection.
   """
   use GenServer
   use TypedStruct
 
-  alias __MODULE__
+  require Logger
+
   alias Anoma.Crypto.Id
-  alias Anoma.Node.Transport.EngineProxy.AsyncMessage
-  alias Anoma.Node.Transport.EngineProxy.SyncMessage
-
-  ############################################################
-  #                    Messages                              #
-  ############################################################
-
-  typedstruct module: SyncMessage do
-    @typedoc """
-    I contain all data for a synchronous message send.
-
-    My fields contain information to keep track of the message and to send it to the remote.
-
-    ### Fields
-    - `:from`          - The process id of the sender.
-    - `:message`       - The message to send.
-    - `:timeout`       - The timeout of the message.
-    - `:ref`           - The unique reference of the message.
-    - `:timestamp`     - The timestamp of the message.
-    """
-    field(:from, term())
-    field(:message, map())
-    field(:timeout, integer())
-    field(:ref, reference())
-    field(:timestamp, integer())
-  end
-
-  typedstruct module: AsyncMessage do
-    @typedoc """
-    I contain all data for an asynchronous message send.
-
-    My fields contain information to keep track of the message and to send it to the remote.
-
-    ### Fields
-    - `:message`       - The message to send.
-    """
-    field(:message, map())
-  end
+  alias Anoma.Node.Transport.Messages.Handler
+  alias Anoma.Node.Transport.Registry
+  alias EventBroker.Event
+  alias EventBroker.Filters
 
   ############################################################
   #                    State                                 #
@@ -58,12 +31,14 @@ defmodule Anoma.Node.Transport.EngineProxy do
 
     ### Fields
      - `:remote_id`      - the id of the remote engine.
-      - `:type`          - the type of the connection (e.g., :router, :mempool, ..)
-      - `:message_queue` - A queue of messages for the remote engine.
+     - `:type`           - the type of the connection (e.g., :router, :mempool, ..)
+     - `:message_queue`  - A queue of messages for the remote engine.
     """
-    field(:remote_id, Id.t())
+    field(:node_id, Id.t())
+    field(:remote_node_id, Id.t())
     field(:type, atom())
-    field(:message_queue, [SyncMessage.t() | AsyncMessage.t()], default: [])
+    field(:async_queue, [term()], default: [])
+    field(:sync_queue, [term()], default: [])
   end
 
   ############################################################
@@ -71,7 +46,18 @@ defmodule Anoma.Node.Transport.EngineProxy do
   ############################################################
 
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args)
+    args = Keyword.validate!(args, [:node_id, :remote_node_id, :type])
+
+    # register as a type of proxy engine for a remote node, at the local registry.
+    # e.g., {TCP.Server, remote_node_id}
+    name =
+      Registry.key(
+        args[:node_id],
+        args[:remote_node_id],
+        args[:type]
+      )
+
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   ############################################################
@@ -87,62 +73,114 @@ defmodule Anoma.Node.Transport.EngineProxy do
   I register this process as a proxy engine in the registry for the given remote node id.
   """
   @impl true
-  def init([remote_id]) do
-    state = %EngineProxy{remote_id: remote_id}
-    {:ok, _} = register_proxy(state)
+  def init(args) do
+    Logger.debug("starting engine proxy with #{inspect(args)}")
+
+    # trap exits to shut down cleanly.
+    Process.flag(:trap_exit, true)
+
+    args = Keyword.validate!(args, [:node_id, :remote_node_id, :type])
+    state = struct(__MODULE__, Enum.into(args, %{}))
+
+    # subscribe to discovery events
+    EventBroker.subscribe_me([%Filters.SourceModule{module: Handler}])
 
     {:ok, state}
   end
 
-  # @doc """
-  # I send an asynchronous message to the remote engine via
-  # an available connection.
-  # """
+  # ----------------------------------------------------------------------------
+  # Casts
+
   @impl true
-  def handle_cast({:send_async, message}, state) do
-    message = %AsyncMessage{message: message}
-    {:ok, _, new_state} = handle_async_send(message, state)
-    {:noreply, new_state}
+  # @doc """
+  # I receive this message to forward it to the remote node via an available connection.
+  # """
+  def handle_cast({:asynchronous_message, message}, state) do
+    Logger.debug("forwarding async message: #{inspect(message)}")
+
+    node_id = state.node_id
+    remote_node_id = state.remote_node_id
+    type = state.type
+
+    case handle_async_message(message, node_id, remote_node_id, type) do
+      # message sent
+      {:ok, :sent} ->
+        {:noreply, state}
+
+      # queue the message
+      {:error, :no_connection} ->
+        new_state =
+          Map.update(state, :async_queue, [message], &[message | &1])
+
+        {:noreply, new_state}
+    end
   end
 
-  # @doc """
-  # I am a message signaling that a new network connection is available
-  # to my node.
-  # If I have messages queued, I will flush them.
-  # """
+  # ----------------------------------------------------------------------------
+  # Calls
+
   @impl true
-  def handle_cast({:new_connection, pid}, state) do
-    state = handle_new_connection(state, pid)
+  # @doc """
+  # I receive this message to forward it to the remote node via an available connection.
+  # """
+  def handle_call({:synchronous_message, message, expiration}, from, state) do
+    Logger.debug("forwarding sync message: #{inspect(message)}")
+
+    node_id = state.node_id
+    remote_node_id = state.remote_node_id
+    type = state.type
+
+    case handle_sync_message(message, node_id, remote_node_id, type) do
+      # message sent
+      {:ok, :sent} ->
+        {:reply, :ok, state}
+
+      # no connection available, queue the message
+      {:error, :no_connection} ->
+        message_ref = make_ref()
+        to_queue = {message, expiration, from, message_ref}
+
+        new_state =
+          Map.update(state, :sync_queue, [to_queue], &[to_queue | &1])
+
+        # remove message after expiration
+        timeout = max(0, expiration - System.monotonic_time(:millisecond))
+        Process.send_after(self(), {:check_timeout, message_ref}, timeout)
+
+        {:noreply, new_state}
+    end
+  end
+
+  # ----------------------------------------------------------------------------
+  # Infos
+
+  @impl true
+  # @doc """
+  # I receive this message when I have to remove a message from the queue
+  # because it expired. The message could have been sent in the mean while.
+  # """
+  def handle_info({:check_timeout, message_ref}, state) do
+    state =
+      Map.update(state, :sync_queue, [], fn queue ->
+        Enum.reject(queue, fn
+          {_, _, _, ref} -> ref == message_ref
+        end)
+      end)
+
     {:noreply, state}
   end
 
   # @doc """
-  # I send a synchronous message to the remote engine via
-  # an available connection.
+  # I receive this event when a new node has been discovered.
   # """
-  @impl true
-  def handle_call({:send_sync, message, timeout}, from, state) do
-    message = %SyncMessage{
-      message: message,
-      from: from,
-      timeout: timeout,
-      timestamp: System.monotonic_time(:millisecond),
-      ref: make_ref()
-    }
+  def handle_info(%Event{body: :new_node_discovered}, state) do
+    new_state = handle_new_proxy(state)
 
-    {:ok, _, new_state} = handle_sync_send(message, state)
     {:noreply, new_state}
   end
 
-  # @doc """
-  # I check if there is a message in my queue with the given inbox.
-  # I do not reply to the original sender, because the timeout had to be specified in the
-  # GenServer.call/2 call too, and that will expire on its own.
-  # """
-  @impl true
-  def handle_info({:check_timeout, message_ref}, state) do
-    new_state = handle_check_timeout(message_ref, state)
-    {:noreply, new_state}
+  def handle_info(%Event{}, state) do
+    {:noreply, state}
   end
 
   ############################################################
@@ -150,84 +188,65 @@ defmodule Anoma.Node.Transport.EngineProxy do
   ############################################################
 
   # @doc """
-  # I send an async message to the given remote id.
-  # I lookup the available connection types and send the message
-  # to the first available connection.
+  # I handle the event of a new proxy engine starting up.
+  # This event means I can potentially flush some messages out of my queue.
   # """
-  @spec handle_async_send(AsyncMessage.t(), t()) ::
-          {:ok, :queued | :sent, t()}
-  defp handle_async_send(message, state) do
-    case lookup_connection(state, [:tcp]) do
-      # no connection available, queue the message
-      [] ->
-        {:ok, state} = queue_message(message, state)
-        {:ok, :queued, state}
+  @spec handle_new_proxy(t()) :: t()
+  defp handle_new_proxy(state) do
+    node_id = state.node_id
+    remote_node_id = state.remote_node_id
+    type = state.type
 
-      # a connection is found, send the message
-      [{_type, _id, pid} | _] ->
-        # note: we could just send the message to {:via..} here, but there will be different
-        #       types of connections, so a lookup is waranted here.
+    # flush out the async queue
+    async_queue =
+      flush_async_queue(state.async_queue, node_id, remote_node_id, type)
+
+    sync_queue =
+      flush_sync_queue(state.sync_queue, node_id, remote_node_id, type)
+
+    %{state | async_queue: async_queue, sync_queue: sync_queue}
+  end
+
+  # @doc """
+  # I handle an incoming asynchronous message.
+  # I try to send the message if there is an active connection.
+  # """
+  @spec handle_async_message(term(), Id.t(), Id.t(), atom()) ::
+          {:ok, :sent} | {:error, :no_connection}
+  defp handle_async_message(message, local_node_id, remote_node_id, type) do
+    # lookup the connection for the remote node (e.g., tcp)
+    case Registry.lookup_by_label(local_node_id, remote_node_id, :transport) do
+      [{_, _, :transport, pid, _}] ->
+        message = %{to: type, message: message, type: :async}
+
         GenServer.cast(pid, {:send, message})
-        {:ok, :sent, state}
+
+        {:ok, :sent}
+
+      [] ->
+        {:error, :no_connection}
     end
   end
 
   # @doc """
-  # I send a sync message to the given remote id.
-  # I lookup the available connection types and send the message
-  # to the first available connection.
-  # If I cannot send the message, I queue it.
+  # I try to send a synchronous message to a remote node over an available connection.
+  # If there is no connection I return an error.
   # """
-  @spec handle_sync_send(SyncMessage.t(), t()) :: {:ok, :sent | :queued, t()}
-  defp handle_sync_send(message, state) do
-    case lookup_connection(state, [:tcp]) do
-      [] ->
-        {:ok, state} = queue_message(message, state)
+  @spec handle_sync_message(term(), Id.t(), Id.t(), atom()) ::
+          {:ok, :sent} | {:error, :no_connection}
+  defp handle_sync_message(message, local_node_id, remote_node_id, type) do
+    # lookup the connection for the remote node (e.g., tcp)
+    case Registry.lookup_by_label(local_node_id, remote_node_id, :transport) do
+      [{_, _, :transport, pid, _}] ->
+        message = %{to: type, message: message, type: :sync}
 
-        Process.send_after(
-          self(),
-          {:check_timeout, message.ref},
-          message.timeout
-        )
-
-        {:ok, :queued, state}
-
-      [{_type, _id, pid} | _] ->
-        # note: we could just send the message to {:via..} here, but there will be different
-        #       types of connections, so a lookup is waranted here.
         GenServer.cast(pid, {:send, message})
 
-        # reply to the original sender to ack the sending
-        GenServer.reply(message.from, {:ok, :sent})
-        {:ok, :sent, state}
+        {:ok, :sent}
+
+      [] ->
+        {:error, :no_connection}
     end
-  end
-
-  # @doc """
-  # I flush the queue whenever a new connection appears.
-  # If the messages fail, theyre put back in the queue.
-  # """
-  @spec handle_new_connection(t(), pid()) :: t()
-  defp handle_new_connection(state, _pid) do
-    flush_queue(state)
-  end
-
-  # @doc """
-  # I check the queue for the given message and remove it.
-  # If the message has been sent it's not in there.
-  # If the message expired, it must be removed from the queue.
-  # """
-  @spec handle_check_timeout(reference(), t()) :: t()
-  defp handle_check_timeout(message_ref, state) do
-    # fetch the message with the given reference.
-    queue =
-      state.message_queue
-      |> Enum.reject(fn
-        %SyncMessage{ref: ^message_ref} -> true
-        _ -> false
-      end)
-
-    %{state | message_queue: queue}
   end
 
   ############################################################
@@ -235,78 +254,37 @@ defmodule Anoma.Node.Transport.EngineProxy do
   ############################################################
 
   # @doc """
-  # I register the current process as the proxy engine for the given remote node id.
-  # Currently the type is always :router.
+  # I flush the async queue by trying to send all the messages in there.
+  # I return the new queue.
   # """
-  @spec register_proxy(t()) :: {:ok, :registered} | {:ok, :already_registered}
-  defp register_proxy(state) do
-    engine_key = %{remote_id: state.remote_id, type: :router}
-    # what could be we store as a value? its optional
-    # but I imagine something like connection type or something
-    # these values can help in lookups
-    engine_value = %{}
+  @spec flush_async_queue([term()], Id.t(), Id.t(), atom()) :: [term()]
+  defp flush_async_queue(queue, node_id, remote_node_id, type) do
+    Enum.reject(queue, fn message ->
+      case handle_async_message(message, node_id, remote_node_id, type) do
+        {:ok, :sent} ->
+          true
 
-    case Registry.register(ProxyRegister, engine_key, engine_value) do
-      {:ok, _} -> {:ok, :registered}
-      {:error, {:already_registered, _}} -> {:ok, :already_registered}
-    end
-  end
-
-  # @doc """
-  # I flush the queue of messages to the remote engine.
-  # """
-  @spec flush_queue(t()) :: t()
-  defp flush_queue(state) do
-    new_state = Map.put(state, :message_queue, [])
-
-    state.message_queue
-    |> Enum.reduce(new_state, fn
-      %AsyncMessage{} = m, state ->
-        {:ok, _, state} = handle_async_send(m, state)
-        state
-
-      %SyncMessage{} = m, state ->
-        # recompute the timeout
-        new_timeout =
-          m.timestamp + m.timeout - System.monotonic_time(:millisecond)
-
-        m = %{m | timeout: new_timeout}
-
-        {:ok, _, state} = handle_sync_send(m, state)
-        state
+        {:error, :no_connection} ->
+          false
+      end
     end)
   end
 
   # @doc """
-  # I queue a message to be sent to the remote engine.
-  # If the engine is not present right now, the queue builds up.
+  # I flush the sync queue by trying to send all the messages in there.
+  # I return the new queue.
   # """
-  @spec queue_message(term(), t()) :: {:ok, t()}
-  defp queue_message(message, state) do
-    {:ok, Map.update(state, :message_queue, [message], &[message | &1])}
-  end
+  @spec flush_sync_queue([term()], Id.t(), Id.t(), atom()) :: [term()]
+  defp flush_sync_queue(queue, node_id, remote_node_id, type) do
+    Enum.reject(queue, fn {message, _expiration, from, _message_ref} ->
+      case handle_sync_message(message, node_id, remote_node_id, type) do
+        {:ok, :sent} ->
+          GenServer.reply(from, :ok)
+          true
 
-  # @doc """
-  # I lookup any possible connections that can be used to transmit data to a remote node.
-  # I lookup all connections for a given id of type :tcp or :tor.
-  # """
-  @spec lookup_connection(t(), [atom()]) :: [{:tcp | :tor, Id.t(), pid()}]
-  defp lookup_connection(state, types) do
-    # match pattern: this pattern should match the values in the registry
-    # at least {:"$1", :"$2", :"$3"} ({key, pid, value})
-    pattern = {%{type: :"$1", remote_id: :"$2"}, :"$3", :"$4"}
-
-    # guards: filters applied on the results
-    # the below line filters out specific ids and types
-    type_guard =
-      Enum.reduce(types, [], fn type, acc ->
-        [{:orelse, {:"=:=", :"$1", type}, acc}]
-      end)
-
-    guards = [{:==, :"$2", state.remote_id} | type_guard]
-
-    # shape: the shape of the results the registry should return
-    shape = [{{:"$1", :"$2", :"$3"}}]
-    Registry.select(ProxyRegister, [{pattern, guards, shape}])
+        {:error, :no_connection} ->
+          false
+      end
+    end)
   end
 end

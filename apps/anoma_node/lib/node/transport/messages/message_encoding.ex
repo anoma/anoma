@@ -1,6 +1,13 @@
 defmodule Anoma.Node.Transport.MessageEncoding do
   @moduledoc """
   I contain logic to encode and decode the bytes coming in over a network connection.
+
+  ### Public API
+
+  I provide the following public functionality:
+
+  - `decode_bytes/1`
+  - `encode_message/1`
   """
 
   @doc """
@@ -16,7 +23,7 @@ defmodule Anoma.Node.Transport.MessageEncoding do
   end
 
   @doc """
-  I encode any term into a binary message for the socket.
+  I encode any term into a binary.
   """
   @spec encode_message(term()) :: binary()
   def encode_message(term) do

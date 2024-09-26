@@ -2,27 +2,36 @@ defmodule Anoma.Node.Transport.Discovery do
   @moduledoc """
   I contain logic to handle the discovery of new nodes on the network.
 
-  I am used to register remote nodes locally, and to setup the necessary connections to them.
-  I also register proxies locally, and create the necessary inform
+  When a new node connects via TCP or other network connections, I ensure that the proper messages
+  are sent to that node.
+
+  When a new node is discovered, I also create an engine proxy for that node.
+
+  ### Public API
+
+  I provide the following public functionality:
+
+  - `announce_self/2`
+  - `create_node_proxy/2`
   """
   alias Anoma.Crypto.Id
   alias Anoma.Node.Transport.Router
 
-  @doc """
-  I inform a remote node about my existence.
+  require Logger
 
-  Given a process id of a network connection I send a message that contains
-  my type, a message, and my router id.
+  @doc """
+  I send a remote node a message with our node meta data over the connection process given to me.
   """
-  @spec inform_node(pid(), Id.t()) :: :ok
-  def inform_node(pid, router_id) do
+  @spec announce_self(GenServer.server(), Id.t()) :: :ok
+  def announce_self(connection_pid, local_node_id) do
     discovery_message = %{
       type: :inform,
-      message: "HOIHOI",
-      router_id: router_id
+      node_id: local_node_id
     }
 
-    send(pid, {:send, discovery_message})
+    # todo: this should maybe go via the router, rather than directly to the tcp connection?
+    GenServer.cast(connection_pid, {:send, discovery_message})
+
     :ok
   end
 
@@ -36,33 +45,13 @@ defmodule Anoma.Node.Transport.Discovery do
         If the connection is down, the registry will not have this process anymore, and the proxy
         will not be able to send messages to the remote router.
   """
-  def remember_node(router_id) do
-    # start a proxy engine for this node
-    Router.start_proxy_engine(router_id)
+  @spec create_node_proxy(Id.t(), Id.t()) :: :ok
+  def create_node_proxy(remote_node_id, local_node_id) do
+    Logger.debug("creating proxy for remote node #{inspect(remote_node_id)}")
 
-    # announce
-  end
-
-  @doc """
-  I register the current process as the tcp connection for a given remote router id.
-  If there is already a tcp registered for this remote router id I return that process.
-  """
-  @spec register_as_tcp_for_node(Id.t()) ::
-          {:ok, pid()} | {:error, {:already_registered, pid()}}
-  def register_as_tcp_for_node(remote_id) do
-    # register this process as the tcp connection for the given remote_id
-    key = %{remote_id: remote_id, type: :tcp}
-    value = %{}
-    res = Registry.register(ProxyRegister, key, value)
-    IO.inspect(res)
-
-    # announce connection to proxy engines
-    GenServer.cast(
-      {:via, Registry,
-       {ProxyRegister, %{remote_id: remote_id, type: :router}}},
-      {:new_connection, self()}
+    Router.start_proxy_engine(remote_node_id,
+      node_id: local_node_id,
+      type: Router
     )
-
-    res
   end
 end

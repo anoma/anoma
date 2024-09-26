@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transport.TCPClient do
+defmodule Anoma.Node.Transport.TCP.Client do
   @moduledoc """
   I am a TCP client. I connect to a remote TCP server and send messages to it.
 
@@ -9,13 +9,21 @@ defmodule Anoma.Node.Transport.TCPClient do
 
   require Logger
 
-  alias __MODULE__
   alias Anoma.Crypto.Id
-  alias Anoma.Node.Transport.Discovery
 
-  import Anoma.Node.Transport.MessageEncoding
+  import Anoma.Node.Transport.TCP.Shared
 
   @num_connect_retries 8
+
+  @typedoc """
+  Shorthand type for socket.
+  """
+  @type hostname :: :inet.socket_address() | :inet.hostname()
+
+  @typedoc """
+  Shorthand type for port number.
+  """
+  @type port_number :: :inet.port_number()
 
   ############################################################
   #                    State                                 #
@@ -28,16 +36,16 @@ defmodule Anoma.Node.Transport.TCPClient do
     My fields contain information to facilitate the TCP connection with a remote node.
 
     ### Fields
-    - `:host`       - The host address of the remote tcp server.
-    - `:port`       - The port of the remote tcp server.
-    - `:socket`     - The socket of the connection.
-    - `:router_key` - The key of this router. This value is used to announce myself to other
-                      nodes.
+    - `:host`           - The host address of the remote tcp server.
+    - `:port`           - The port of the remote tcp server.
+    - `:socket`         - The socket of the connection.
+    - `:node_id`        - The key of this router. This value is used to announce myself to other
+                          nodes.
     """
-    field(:host, :inet.socket_address() | :inet.hostname())
-    field(:port, :inet.port_number())
+    field(:host, hostname())
+    field(:port, port_number())
     field(:socket, port())
-    field(:router_key, Id.t())
+    field(:node_id, Id.t())
   end
 
   ############################################################
@@ -58,6 +66,8 @@ defmodule Anoma.Node.Transport.TCPClient do
   end
 
   def start_link(args) do
+    args = Keyword.validate!(args, [:node_id, :host, :port])
+
     GenServer.start_link(__MODULE__, args)
   end
 
@@ -69,15 +79,24 @@ defmodule Anoma.Node.Transport.TCPClient do
   I am the init function for a TCP client connection.
 
   I expect a host, port, and local router key to initialize the connection.
+
+  ### Options
+
+    - `:host`    - The host to whom I will connect.
+    - `:port`    - The port on which I will connect.
+    - `:node_id` - The key of the local node.
   """
   @impl true
-  @spec init(
-          host: :inet.socket_address() | :inet.hostname(),
-          port: :inet.port_number(),
-          router_key: Id.t()
-        ) :: {:ok, t(), {:continue, :connect}}
-  def init(host: host, port: port, router_key: router_key) do
-    state = %TCPClient{host: host, port: port, router_key: router_key}
+  def init(args) do
+    Logger.debug("starting tcp client with #{inspect(args)}")
+
+    # trap exits to shut down cleanly.
+    Process.flag(:trap_exit, true)
+
+    # validate the arguments given to me and use them to create my initial state.
+    args = Keyword.validate!(args, [:host, :port, :node_id])
+    state = struct(__MODULE__, Enum.into(args, %{}))
+
     {:ok, state, {:continue, :connect}}
   end
 
@@ -90,11 +109,42 @@ defmodule Anoma.Node.Transport.TCPClient do
     {:noreply, state}
   end
 
+  @impl true
+  # @doc """
+  # I am called when the genserver terminates.
+  # """
+  def terminate(reason, _state) do
+    Logger.warning("tcp client terminated #{inspect(reason)}")
+    :ok
+  end
+
+  # ----------------------------------------------------------------------------
+  # Casts
+
+  # @doc """
+  # I send a message to the remote node.
+  # I'm usually called from the proxy engine.
+  # """
+  @impl true
+  def handle_cast({:send, message}, state) do
+    case handle_send(message, state.socket) do
+      {:ok, :sent} ->
+        {:noreply, state}
+
+      {:error, :failed_to_send} ->
+        state = handle_fatal_error(:failed_to_send_message, state)
+        {:stop, :normal, state}
+    end
+  end
+
+  # ----------------------------------------------------------------------------
+  # Infos
+
+  @impl true
   # @doc """
   # I get called when there have been `@num_connect_retries` attempts to connect.
   # At this point the connection will not be retried and the client stops.
   # """
-  @impl true
   def handle_info({:try_connect, 0}, state) do
     state = handle_fatal_error(:attempts_failed, state)
     {:stop, :normal, state}
@@ -111,64 +161,44 @@ defmodule Anoma.Node.Transport.TCPClient do
     case try_connect(state.host, state.port) do
       # connection successful
       {:ok, socket} ->
-        handle_connection_established(state)
+        handle_connection_established(self(), state.node_id)
         {:noreply, %{state | socket: socket}}
 
       # failed to connect
-      {:error, :timeout} ->
+      {:error, _} ->
         Logger.debug("failed connection attempt, retrying")
+
         message = {:try_connect, attempts - 1}
         timeout = backoff_interval(attempts)
         Process.send_after(self(), message, timeout)
 
         {:noreply, state}
-
-      # other errors are fatal
-      {:error, reason} ->
-        state = handle_fatal_error(reason, state)
-        {:stop, :normal, state}
     end
   end
-
-  # ----------------------------------------------------------
-  # tcp messages
 
   # @doc """
   # I handle an incoming TCP message from the socket.
   # """
   def handle_info({:tcp, _, bytes}, state) do
-    Logger.debug(">> #{inspect(self())} :: #{inspect(bytes)}")
-    {:ok, state} = handle_bytes(bytes, state)
+    handle_received_bytes(bytes, state.node_id, connection_type: __MODULE__)
     {:noreply, state}
   end
 
   # @doc """
-  # I handle an outgoing TCP message.
-  # Before sending the message I encode it.
-  # If the message fails to send, I terminate the connection normally.
+  # I handle a closed socket.
+  # When the socket is closed I start the reconnect process.
   # """
-  def handle_info({:send, message}, state) do
-    Logger.debug("<< #{inspect(self())} :: #{inspect(message)}")
-
-    case :gen_tcp.send(state.socket, encode_message(message)) do
-      :ok ->
-        {:noreply, state}
-
-      {:error, err} ->
-        Logger.debug("failed to send bytes to socket, terminating")
-        state = handle_fatal_error(err, state)
-        {:stop, :normal, state}
-    end
+  def handle_info({:tcp_closed, _}, state) do
+    Logger.debug("tcp client socket closed")
+    send(self(), {:try_connect, @num_connect_retries})
+    {:noreply, state}
   end
 
   # @doc """
-  # I handle a closed socket.
-  # When the socket is closed I stop the connection normally.
+  # Catch all for unknown messages
   # """
-  def handle_info({:tcp_closed, _}, state) do
-    Logger.debug("#{inspect(self())} :: socket closed")
-    state = handle_fatal_error(:socket_closed, state)
-    {:stop, :normal, state}
+  def handle_info(_, state) do
+    {:noreply, state}
   end
 
   ############################################################
@@ -176,54 +206,18 @@ defmodule Anoma.Node.Transport.TCPClient do
   ############################################################
 
   # @doc """
-  # I process an incoming message from the socket.
-  # I decode it and then handle the decoded message.
-  # If the message cannot be decoded, I just ignore it.
+  # I handle a fatal error in the TCP connection.
+  # A fatal error is an error the tcp connection does not wish to recover from.
   # """
-  @spec handle_bytes(binary, t()) :: {:ok, t()}
-  defp handle_bytes(bytes, state) do
-    case decode_bytes(bytes) do
-      {:ok, message} ->
-        handle_message(message)
-        {:ok, state}
+  @spec handle_fatal_error(any(), t()) :: t()
+  defp handle_fatal_error(reason, state) do
+    Logger.error("fatal error in tcp client (#{inspect(reason)})")
 
-      {:error, :failed_to_decode} ->
-        {:ok, state}
-    end
-  end
-
-  # @doc """
-  # I handle a decoded message.
-  # If the message is an inform message I remember the node.
-  # """
-  @spec handle_message(term()) :: :ok
-  defp handle_message(message) do
-    Logger.debug("decoded message: #{inspect(message)}")
-
-    case message do
-      %{type: :inform} ->
-        Discovery.remember_node(message.router_id)
-        Discovery.register_as_tcp_for_node(message.router_id)
-
-      _ ->
-        :ok
-    end
-
-    :ok
-  end
-
-  # @doc """
-  # I handle a successful connection to the remote node.
-  # I inform the node my of myself.
-  # """
-  @spec handle_connection_established(t()) :: :ok
-  defp handle_connection_established(state) do
-    Discovery.inform_node(self(), state.router_key)
-    :ok
+    state
   end
 
   ############################################################
-  #                           Connecting                     #
+  #                           Helpers                        #
   ############################################################
 
   # @doc """
@@ -240,10 +234,7 @@ defmodule Anoma.Node.Transport.TCPClient do
   # I try and connect over TCP to the given host and port.
   # If the connection succeeds I return the socket, otherwise I return an error.
   # """
-  @spec try_connect(
-          :inet.socket_address() | :inet.hostname(),
-          :inet.port_number()
-        ) ::
+  @spec try_connect(hostname(), port_number()) ::
           {:ok, port()} | {:error, :timeout} | {:error, any()}
   defp try_connect(host, port) do
     case :gen_tcp.connect(host, port, mode: :binary) do
@@ -251,24 +242,8 @@ defmodule Anoma.Node.Transport.TCPClient do
         :inet.setopts(socket, [{:active, true}])
         {:ok, socket}
 
-      {:error, :timeout} ->
-        {:error, :timeout}
-
-      {:error, reason} ->
-        {:error, reason}
+      {:error, e} ->
+        {:error, e}
     end
-  end
-
-  # @doc """
-  # I handle a fatal error in the TCP connection.
-  # A fatal error is an error the tcp connection does not wish to recover from.
-  # """
-  @spec handle_fatal_error(any(), t()) :: t()
-  defp handle_fatal_error(reason, state) do
-    Logger.debug(
-      "failed connection to #{inspect(state.host)}:#{state.port} (#{inspect(reason)})"
-    )
-
-    state
   end
 end
