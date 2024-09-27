@@ -743,6 +743,37 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  I represent the sum gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lsum =>  logics  |=   [a=@s b=@s]  (sum [a b])
+
+  and computing
+
+  .*  lsum  [0 2]
+  """
+  @spec sum_arm() :: Noun.t()
+  def sum_arm() do
+    "[8 [9 4 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def sum() do
+    arm = sum_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # -11 + --2 == -9
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 4]], 0 | 1]) == {:ok, 17}
+
+    # --2 % --2 == --4
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 4]], 0 | 1]) == {:ok, 8}
+
+    core
+  end
+
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
     "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
