@@ -4,7 +4,6 @@
   {:cairo,
    git: "https://github.com/anoma/aarm-cairo",
    rev: "dd2ed877e8d7c326a4a88dcf86ae32cd0183f3ae"},
-  {:enacl, git: "https://github.com/anoma/enacl/"},
   {:kino, git: "https://github.com/livebook-dev/kino", override: true},
   # until the next Kino release
   {:kino_kroki, "~> 0.1.0"},

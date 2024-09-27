@@ -27,7 +27,6 @@ defmodule AnomaNode.MixProject do
       extra_applications: [
         :crypto,
         :debugger,
-        :enacl,
         :logger,
         :mnesia,
         :observer,
