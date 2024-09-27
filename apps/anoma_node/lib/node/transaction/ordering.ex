@@ -44,10 +44,17 @@ defmodule Anoma.Node.Transaction.Ordering do
     end
   end
 
-  def handle_call({:write, {tx_id, kvlist}}, from, state) do
+  def handle_call({write_or_append, {tx_id, kvlist}}, from, state)
+      when write_or_append in [:write, :append] do
+    call =
+      case write_or_append do
+        :write -> &Storage.write/1
+        :append -> &Storage.append/1
+      end
+
     with {:ok, height} <- Map.fetch(state.tx_id_to_height, tx_id) do
       Task.start(fn ->
-        GenServer.reply(from, Storage.write({height, kvlist}))
+        GenServer.reply(from, call.({height, kvlist}))
       end)
 
       {:noreply, state}
@@ -106,6 +113,11 @@ defmodule Anoma.Node.Transaction.Ordering do
   @spec write({binary(), list({any(), any()})}) :: :ok
   def write({id, kvlist}) do
     GenServer.call(__MODULE__, {:write, {id, kvlist}}, :infinity)
+  end
+
+  @spec write({binary(), list({any(), any()})}) :: :ok
+  def append({id, kvlist}) do
+    GenServer.call(__MODULE__, {:append, {id, kvlist}}, :infinity)
   end
 
   def order(txs) do

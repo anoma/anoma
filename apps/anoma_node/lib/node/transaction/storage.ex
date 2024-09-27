@@ -93,7 +93,8 @@ defmodule Anoma.Node.Transaction.Storage do
     end
   end
 
-  def handle_call({:write, {height, kvlist}}, from, state) do
+  def handle_call({write_or_append, {height, kvlist}}, from, state)
+      when write_or_append in [:write, :append] do
     unless height == state.uncommitted_height + 1 do
       block_spawn(height - 1, fn ->
         blocking_write(height, kvlist, from)
@@ -101,21 +102,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
       {:noreply, state}
     else
-      new_state = abwrite(:write, {height, kvlist}, state)
-
-      {:reply, :ok, new_state}
-    end
-  end
-
-  def handle_call({:append, {height, kvlist}}, from, state) do
-    unless height == state.uncommitted_height + 1 do
-      block_spawn(height - 1, fn ->
-        blocking_write(height, kvlist, from)
-      end)
-
-      {:noreply, state}
-    else
-      new_state = abwrite(:append, {height, kvlist}, state)
+      new_state = abwrite(write_or_append, {height, kvlist}, state)
 
       {:reply, :ok, new_state}
     end
@@ -149,6 +136,10 @@ defmodule Anoma.Node.Transaction.Storage do
 
   def write({height, kvlist}) do
     GenServer.call(__MODULE__, {:write, {height, kvlist}}, :infinity)
+  end
+
+  def append({height, kvlist}) do
+    GenServer.call(__MODULE__, {:append, {height, kvlist}}, :infinity)
   end
 
   def commit(block_round, writes) do
