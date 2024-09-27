@@ -542,6 +542,41 @@ defmodule Examples.ENock do
   end
 
   @doc """
+  I represent the dul gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =ldul =>  logics  |=   [a=@s b=@]  (dul [a b])
+
+  and computing
+
+  .*  ldul  [0 2]
+  """
+  @spec dul_arm() :: Noun.t()
+  def dul_arm() do
+    "[8 [9 22 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def dul() do
+    arm = dul_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # dul(-1, --5) == 9
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 10]], 0 | 1]) == {:ok, 9}
+
+    # dul(-11, -61) == 110
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 121]], 0 | 1]) ==
+             {:ok, 110}
+
+    # dul(--5, 3) == 2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [10 | 3]], 0 | 1]) == {:ok, 2}
+
+    core
+  end
+
+  @doc """
   I represent the fra gate call as a 2-argument gate.
 
   Can be obtained by defining
