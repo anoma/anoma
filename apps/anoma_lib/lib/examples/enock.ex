@@ -510,6 +510,37 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  I represent the dif gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =ldif =>  logics  |=   [a=@ b=@]  (dif [a b])
+
+  and computing
+
+  .*  ldif  [0 2]
+  """
+  @spec dif_arm() :: Noun.t()
+  def dif_arm() do
+    "[8 [9 759 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def dif() do
+    arm = dif_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # --3 - -2 == --5
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [6 | 3]], 0 | 1]) == {:ok, 10}
+
+    # -3 - --2 == -5
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 4]], 0 | 1]) == {:ok, 9}
+
+    core
+  end
+
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
     "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
