@@ -706,6 +706,43 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  I represent the rem gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lrem =>  logics  |=   [a=@s b=@s]  (rem [a b])
+
+  and computing
+
+  .*  lrem  [0 2]
+  """
+  @spec rem_arm() :: Noun.t()
+  def rem_arm() do
+    "[8 [9 6.058 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def rem() do
+    arm = rem_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # -17 % -3 == -2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [33 | 5]], 0 | 1]) == {:ok, 3}
+
+    # --17 % -3 == --2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [34 | 5]], 0 | 1]) == {:ok, 4}
+
+    # -17 % --3 == -2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [33 | 6]], 0 | 1]) == {:ok, 3}
+
+    # --17 % --3 == --2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [34 | 6]], 0 | 1]) == {:ok, 4}
+
+    core
+  end
+
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
     "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
