@@ -774,6 +774,22 @@ defmodule Examples.ENock do
     core
   end
 
+  @spec sun_arm() :: Noun.t()
+  def sun_arm() do
+    "[8 [9 10 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+  end
+
+  def sun() do
+    arm = sun_arm()
+    sample = 888
+    core = [arm, sample | Nock.logics_core()]
+
+    # sun(90) == 180
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 90], 0 | 1]) == {:ok, 180}
+
+    core
+  end
+
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
     "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
