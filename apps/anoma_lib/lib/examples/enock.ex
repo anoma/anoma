@@ -675,6 +675,37 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  I represent the pro gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lpro =>  logics  |=   [a=@s b=@s]  (pro [a b])
+
+  and computing
+
+  .*  lpro  [0 2]
+  """
+  @spec pro_arm() :: Noun.t()
+  def pro_arm() do
+    "[8 [9 46 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def pro() do
+    arm = pro_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # -3 * --3 == -9
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 6]], 0 | 1]) == {:ok, 17}
+
+    # -3 * -3 == --9
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 5]], 0 | 1]) == {:ok, 18}
+
+    core
+  end
+
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
     "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
