@@ -613,6 +613,37 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  I represent the new gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lnew =>  logics  |=   [a=? b=@]  (new [a b])
+
+  and computing
+
+  .*  lnew  [0 2]
+  """
+  @spec new_arm() :: Noun.t()
+  def new_arm() do
+    "[8 [9 758 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def new() do
+    arm = new_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # new(%.n, 2) == -2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 2]], 0 | 1]) == {:ok, 3}
+
+    # new(%.y, 2) == --2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [0 | 2]], 0 | 1]) == {:ok, 4}
+
+    core
+  end
+
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
     "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
