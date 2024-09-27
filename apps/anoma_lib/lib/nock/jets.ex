@@ -297,6 +297,7 @@ defmodule Nock.Jets do
           end
         rescue
           _ in ArgumentError -> {:ok, 1}
+          _ in ErlangError -> {:ok, 1}
         end
 
       _ ->
@@ -355,6 +356,7 @@ defmodule Nock.Jets do
            )}
         rescue
           _ in ArgumentError -> :error
+          _ in ErlangError -> :error
         end
 
       _ ->

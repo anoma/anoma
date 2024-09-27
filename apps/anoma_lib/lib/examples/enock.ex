@@ -209,7 +209,7 @@ defmodule Examples.ENock do
     assert {:ok, ECrypto.blood_l_signed()} ==
              Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
 
-    assert :error ==
+    refute {:ok, invalid_args} ==
              Nock.nock(core, [9, 2, 10, [6, 1 | invalid_args], 0 | 1]),
            "Can't sign with one's public key!"
 

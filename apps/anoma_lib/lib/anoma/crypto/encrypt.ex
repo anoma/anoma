@@ -2,12 +2,13 @@ defmodule Anoma.Crypto.Encrypt do
   @type public() :: box_public()
   @type secret() :: box_secret()
 
-  @type box_public() :: <<_::256>>
-  @type box_secret() :: <<_::256>>
+  @type box_public() :: iolist()
+  @type box_secret() :: iolist()
 
   @spec new_keypair() :: %{public: box_public(), secret: box_secret()}
   def new_keypair() do
-    :enacl.box_keypair()
+    {pub, priv} = :crypto.generate_key(:rsa, {2048, 65537})
+    %{public: pub, secret: priv}
   end
 
   @doc """
@@ -18,16 +19,14 @@ defmodule Anoma.Crypto.Encrypt do
   """
   @spec seal(any(), box_public()) :: binary()
   def seal(message, pub) do
-    :enacl.box_seal(:erlang.term_to_binary(message), pub)
+    :crypto.public_encrypt(:rsa, :erlang.term_to_binary(message), pub, [])
   end
 
   @spec unseal(binary(), box_public(), box_secret()) ::
           {:ok, any()} | {:error, :failed_verification}
-  def unseal(cipher, pub, sec) do
+  def unseal(cipher, _pub, sec) do
     try do
-      with {:ok, encrypt} <- :enacl.box_seal_open(cipher, pub, sec) do
-        {:ok, :erlang.binary_to_term(encrypt)}
-      end
+      :erlang.binary_to_term(:crypto.private_decrypt(:rsa, cipher, sec, []))
     rescue
       _e in ArgumentError -> {:error, :failed_verification}
     end

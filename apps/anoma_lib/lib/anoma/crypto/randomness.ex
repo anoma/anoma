@@ -8,6 +8,6 @@ defmodule Anoma.Crypto.Randomness do
   """
   @spec get_random(non_neg_integer()) :: binary()
   def get_random(size) do
-    :enacl.randombytes(size)
+    :crypto.strong_rand_bytes(size)
   end
 end

@@ -106,8 +106,11 @@ defmodule Anoma.Crypto.Id do
     extern
   end
 
-  def truncated_key_string(key) do
+  def truncated_key_string(key) when is_binary(key) do
     key |> Base.encode16(case: :lower) |> String.slice(0..5)
+  end
+  def truncated_key_string(key) when is_list(key) do
+    key |> List.last() |> truncated_key_string()
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do

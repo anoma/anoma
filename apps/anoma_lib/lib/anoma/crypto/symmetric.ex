@@ -5,24 +5,30 @@ defmodule Anoma.Crypto.Symmetric do
 
   alias Anoma.Crypto.Randomness
 
-  @type t() :: xchacha()
+  @type t() :: chacha()
 
   # should we include AD data? For our purposes I think not?
   @type xchacha() :: {:xchacha, xchacha_key(), xchacha_nonce()}
   @type xchacha_nonce() :: <<_::192>>
   @type xchacha_key() :: <<_::256>>
 
-  @spec random_xchacha_nonce() :: xchacha_nonce()
-  def random_xchacha_nonce() do
-    Randomness.get_random(:enacl.aead_xchacha20poly1305_ietf_NPUBBYTES())
+  @type chacha() :: {:chacha, xchacha_key(), xchacha_nonce()}
+  @type chacha_nonce() :: <<_::96>>
+  @type chacha_key() :: <<_::256>>
+
+  @tag_size 16
+
+  @spec random_chacha_nonce() :: chacha_nonce()
+  def random_chacha_nonce() do
+    Randomness.get_random(12)
   end
 
-  @spec random_xchacha_key() :: xchacha_key()
-  def random_xchacha_key(), do: :enacl.secretstream_xchacha20poly1305_keygen()
+  @spec random_chacha_key() :: chacha_key()
+  def random_chacha_key(), do: Randomness.get_random(32)
 
-  @spec random_xchacha() :: xchacha()
-  def random_xchacha() do
-    {:xchacha, random_xchacha_key(), random_xchacha_nonce()}
+  @spec random_chacha() :: chacha()
+  def random_chacha() do
+    {:chacha, random_chacha_key(), random_chacha_nonce()}
   end
 
   @doc """
@@ -54,12 +60,13 @@ defmodule Anoma.Crypto.Symmetric do
 
   """
   @spec encrypt_raw(binary(), t()) :: binary()
-  def encrypt_raw(binary, {:xchacha, key, nonce}) do
-    :enacl.aead_xchacha20poly1305_ietf_encrypt(binary, <<>>, nonce, key)
+  def encrypt_raw(binary, {:chacha, key, nonce}) do
+    {cipher, tag} = :crypto.crypto_one_time_aead(:chacha20_poly1305, key, nonce, binary, <<>>, true)
+    tag <> cipher
   end
 
   @spec decrypt_raw(binary(), t()) :: binary() | {:error, any()}
-  def decrypt_raw(binary, {:xchacha, key, nonce}) do
-    :enacl.aead_xchacha20poly1305_ietf_decrypt(binary, <<>>, nonce, key)
+  def decrypt_raw(<<tag::binary-size(16), message::binary>>, {:chacha, key, nonce}) do
+    :crypto.crypto_one_time_aead(:chacha20_poly1305, key, nonce, message, <<>>, tag, false)
   end
 end
