@@ -84,52 +84,7 @@ defmodule Anoma.Node.Transaction.Storage do
     if height <= state.uncommitted_height do
       # relies on this being a reverse-ordered list
       result =
-        case Map.get(state.uncommitted_updates, key) do
-          nil ->
-            tx1 = fn -> :mnesia.read(__MODULE__.Updates, key) end
-
-            {:atomic, tx1_result} =
-              :mnesia.transaction(tx1)
-
-            case tx1_result do
-              [{__MODULE__.Updates, _key, height_upds}] ->
-                height = height_upds |> Enum.find(fn a -> a <= height end)
-
-                case height do
-                  nil ->
-                    :absent
-
-                  _ ->
-                    tx2 = fn ->
-                      :mnesia.read(__MODULE__.Values, {height, key})
-                    end
-
-                    {:atomic,
-                     [{__MODULE__.Values, {_height, _key}, tx2_result}]} =
-                      :mnesia.transaction(tx2)
-
-                    {:ok, tx2_result}
-                end
-
-              [] ->
-                :absent
-
-              _ ->
-                :error
-            end
-
-          heights ->
-            update_height = heights |> Enum.find(fn a -> a <= height end)
-
-            case update_height do
-              nil ->
-                :absent
-
-              _ ->
-                {:ok,
-                 Map.get(state.uncommitted, {update_height, key}, :error)}
-            end
-        end
+        read_in_past(height, key, state)
 
       {:reply, result, state}
     else
@@ -279,6 +234,53 @@ defmodule Anoma.Node.Transaction.Storage do
     EventBroker.event(write_event)
 
     new_state
+  end
+
+  def read_in_past(height, key, state) do
+    case Map.get(state.uncommitted_updates, key) do
+      nil ->
+        tx1 = fn -> :mnesia.read(__MODULE__.Updates, key) end
+
+        {:atomic, tx1_result} =
+          :mnesia.transaction(tx1)
+
+        case tx1_result do
+          [{__MODULE__.Updates, _key, height_upds}] ->
+            height = height_upds |> Enum.find(fn a -> a <= height end)
+
+            case height do
+              nil ->
+                :absent
+
+              _ ->
+                tx2 = fn ->
+                  :mnesia.read(__MODULE__.Values, {height, key})
+                end
+
+                {:atomic, [{__MODULE__.Values, {_height, _key}, tx2_result}]} =
+                  :mnesia.transaction(tx2)
+
+                {:ok, tx2_result}
+            end
+
+          [] ->
+            :absent
+
+          _ ->
+            :error
+        end
+
+      heights ->
+        update_height = heights |> Enum.find(fn a -> a <= height end)
+
+        case update_height do
+          nil ->
+            :absent
+
+          _ ->
+            {:ok, Map.get(state.uncommitted, {update_height, key}, :error)}
+        end
+    end
   end
 
   def blocking_write(height, kvlist, from) do
