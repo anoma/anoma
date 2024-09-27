@@ -644,6 +644,37 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  I represent the old gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lold =>  logics  |=   [a=@s]  (old a)
+
+  and computing
+
+  .*  lold  [0 2]
+  """
+  @spec old_arm() :: Noun.t()
+  def old_arm() do
+    "[8 [9 756 0 31] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def old() do
+    arm = old_arm()
+    sample = 888
+    core = [arm, sample | Nock.logics_core()]
+
+    # old(-2) == [%.n, 2]
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1]) == {:ok, [1 | 2]}
+
+    # old(--2) == [%.y, 2]
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1]) == {:ok, [0 | 2]}
+
+    core
+  end
+
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
     "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
