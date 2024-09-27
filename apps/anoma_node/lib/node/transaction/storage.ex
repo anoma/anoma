@@ -67,8 +67,9 @@ defmodule Anoma.Node.Transaction.Storage do
           end
 
         :mnesia.write({__MODULE__.Updates, key, new_updates})
-        :mnesia.write({__MODULE__.Blocks, round, writes})
       end
+
+      :mnesia.write({__MODULE__.Blocks, round, writes})
     end
 
     :mnesia.transaction(mnesia_tx)
@@ -230,7 +231,7 @@ defmodule Anoma.Node.Transaction.Storage do
   def abwrite(flag, {height, kvlist}, state) do
     {new_state, event_writes} =
       for {key, value} <- kvlist,
-          reduce: {state, kvlist} do
+          reduce: {%__MODULE__{state | uncommitted_height: height}, kvlist} do
         {state_acc, list} ->
           key_old_updates = Map.get(state_acc.uncommitted_updates, key, [])
           key_new_updates = [height | key_old_updates]
@@ -263,9 +264,8 @@ defmodule Anoma.Node.Transaction.Storage do
             end
 
           {%__MODULE__{
-             state
+             state_acc
              | uncommitted: new_kv,
-               uncommitted_height: height,
                uncommitted_updates: new_updates
            }, event_writes_local}
       end
