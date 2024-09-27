@@ -541,6 +541,43 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  I represent the fra gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lfra =>  logics  |=   [a=@s b=@s]  (fra [a b])
+
+  and computing
+
+  .*  lfra  [0 2]
+  """
+  @spec fra_arm() :: Noun.t()
+  def fra_arm() do
+    "[8 [9 190 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def fra() do
+    arm = fra_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # -1 / -1 == --1
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 1]], 0 | 1]) == {:ok, 2}
+
+    # -11 / --2 == -5
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 4]], 0 | 1]) == {:ok, 9}
+
+    # --0 / --1 == --0
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [0 | 1]], 0 | 1]) == {:ok, 0}
+
+    # --5 / -2 == -2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [10 | 3]], 0 | 1]) == {:ok, 3}
+
+    core
+  end
+
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
     "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
