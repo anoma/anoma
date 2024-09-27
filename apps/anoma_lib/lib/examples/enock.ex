@@ -812,6 +812,43 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  I represent the sum gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lcmp =>  logics  |=   [a=@s b=@s]  (cmp [a b])
+
+  and computing
+
+  .*  lcmp  [0 2]
+  """
+  @spec cmp_arm() :: Noun.t()
+  def cmp_arm() do
+    "[8 [9 191 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def cmp() do
+    arm = cmp_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # cmp(-2, --1) == -1
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [3 | 2]], 0 | 1]) == {:ok, 1}
+
+    # cmp(--2, --1) == --1
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 2]], 0 | 1]) == {:ok, 2}
+
+    # cmp(--2, --2) == --0
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 4]], 0 | 1]) == {:ok, 0}
+
+    # cmp(--2, --5) == -1
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 10]], 0 | 1]) == {:ok, 1}
+
+    core
+  end
+
   ############################################################
   ##                      Block Cores                       ##
   ############################################################
