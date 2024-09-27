@@ -485,6 +485,32 @@ defmodule Examples.ENock do
   end
 
   ############################################################
+  ##                  Signed arithmetic                     ##
+  ############################################################
+
+  @spec syn_arm() :: Noun.t()
+  def syn_arm() do
+    "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+  end
+
+  def syn() do
+    arm = syn_arm()
+    sample = 888
+    core = [arm, sample | Nock.logics_core()]
+
+    # syn(--0) == %.y
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1]) == {:ok, 0}
+
+    # syn(-2) == %.n
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1]) == {:ok, 1}
+
+    # syn(--2) == %.y
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1]) == {:ok, 0}
+
+    core
+  end
+
+  ############################################################
   ##                      Block Cores                       ##
   ############################################################
 
