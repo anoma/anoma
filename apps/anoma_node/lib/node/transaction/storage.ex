@@ -189,7 +189,14 @@ defmodule Anoma.Node.Transaction.Storage do
           reduce: {%__MODULE__{state | uncommitted_height: height}, kvlist} do
         {state_acc, list} ->
           key_old_updates = Map.get(state_acc.uncommitted_updates, key, [])
-          key_new_updates = [height | key_old_updates]
+
+          key_new_updates =
+            with [latest_height | _] <- key_old_updates,
+                 true <- height == latest_height do
+              key_old_updates
+            else
+              _e -> [height | key_old_updates]
+            end
 
           new_updates =
             Map.put(state_acc.uncommitted_updates, key, key_new_updates)
@@ -198,12 +205,21 @@ defmodule Anoma.Node.Transaction.Storage do
             case flag do
               :append ->
                 old_set_value =
-                  Map.get(state_acc.uncommitted_updates, key, MapSet.new())
+                  case Map.get(state_acc.uncommitted, {height, key}) do
+                    nil ->
+                      case read_in_past(height, key, state) do
+                        :absent -> MapSet.new()
+                        {:ok, res} -> res
+                      end
+
+                    res ->
+                      res
+                  end
 
                 new_set_value = MapSet.put(old_set_value, value)
 
                 new_kv =
-                  Map.put_new(
+                  Map.put(
                     state_acc.uncommitted,
                     {height, key},
                     new_set_value
