@@ -118,7 +118,7 @@ defmodule Examples.ENock do
   """
   @spec dec_arm() :: Noun.t()
   def dec_arm() do
-    "[8 [9 342 0 2.047] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 342 0 4.095] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec dec() :: Noun.t()
@@ -148,7 +148,7 @@ defmodule Examples.ENock do
 
   @spec cue_arm() :: Noun.t()
   def cue_arm() do
-    "[8 [9 94 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 94 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec cue() :: Noun.t()
@@ -171,7 +171,7 @@ defmodule Examples.ENock do
 
   @spec jam_arm() :: Noun.t()
   def jam_arm() do
-    "[8 [9 22 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 22 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec jam() :: Noun.t()
@@ -194,7 +194,7 @@ defmodule Examples.ENock do
 
   @spec sign_arm() :: Noun.t()
   def sign_arm() do
-    "[8 [9 10 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 10 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -228,7 +228,7 @@ defmodule Examples.ENock do
 
   @spec verify_arm() :: Noun.t()
   def verify_arm() do
-    "[8 [9 4 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 4 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -262,7 +262,7 @@ defmodule Examples.ENock do
 
   @spec sign_detatched_arm() :: Noun.t()
   def sign_detatched_arm() do
-    "[8 [9 23 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 23 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -294,7 +294,7 @@ defmodule Examples.ENock do
 
   @spec verify_detatched_arm() :: Noun.t()
   def verify_detatched_arm() do
-    "[8 [9 22 0 63] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+    "[8 [9 22 0 127] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -345,7 +345,7 @@ defmodule Examples.ENock do
 
   @spec bex_arm() :: Noun.t()
   def bex_arm() do
-    "[8 [9 4 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 4 0 511] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec bex() :: Noun.t()
@@ -374,7 +374,7 @@ defmodule Examples.ENock do
 
   @spec mix_arm() :: Noun.t()
   def mix_arm() do
-    "[8 [9 4 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 4 0 255] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -401,7 +401,7 @@ defmodule Examples.ENock do
 
   @spec mat_arm() :: Noun.t()
   def mat_arm() do
-    "[8 [9 43 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 43 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   # Please make some assertions ☹
@@ -425,7 +425,7 @@ defmodule Examples.ENock do
 
   @spec shax_arm() :: Noun.t()
   def shax_arm() do
-    "[8 [9 22 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 22 0 63] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   def shax() do
@@ -458,7 +458,7 @@ defmodule Examples.ENock do
   @spec raw_arm() :: Noun.t()
   def raw_arm() do
     arm =
-      "[8 [8 [9 47 0 31] 9 2 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 47 0 63] 9 2 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
@@ -717,9 +717,9 @@ defmodule Examples.ENock do
         9
         2
         10
-        [30 8 [9 342 0 8.191] 9 2 10 [6 0 62] 0 2]
+        [30 8 [9 342 0 16.383] 9 2 10 [6 0 62] 0 2]
         10
-        [6 [8 [9 20 0 8.191] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+        [6 [8 [9 20 0 16.383] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
         0
         1
       ]
@@ -760,7 +760,7 @@ defmodule Examples.ENock do
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 255] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
+        "[8 [8 [9 10 0 511] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
       )
 
     sample = [999 | 888]
@@ -782,7 +782,7 @@ defmodule Examples.ENock do
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 255] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
+        "[8 [8 [9 10 0 511] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
       )
 
     sample = 999
