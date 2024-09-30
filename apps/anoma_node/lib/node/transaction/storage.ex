@@ -33,9 +33,9 @@ defmodule Anoma.Node.Transaction.Storage do
   end
 
   def init(args) do
-    {:ok, keylist} =
+    keylist =
       args
-      |> Keyword.validate(
+      |> Keyword.validate!(
         uncommitted_height: 0,
         values_table: __MODULE__.Values,
         updates_table: __MODULE__.Updates,

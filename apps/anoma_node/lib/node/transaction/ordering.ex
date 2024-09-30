@@ -27,7 +27,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   end
 
   def init(args) do
-    {:ok, keylist} = args |> Keyword.validate(next_height: 1)
+    keylist = args |> Keyword.validate!(next_height: 1)
     {:ok, %Ordering{next_height: keylist[:next_height]}}
   end
 

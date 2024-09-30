@@ -51,8 +51,8 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @spec init(any()) :: {:ok, Mempool.t()}
   def init(args) do
-    {:ok, keylist} =
-      args |> Keyword.validate(txs: [], consensus: nil, round: nil)
+    keylist =
+      args |> Keyword.validate!(txs: [], consensus: nil, round: nil)
 
     for {id, tx_w_backend} <- keylist[:txs] do
       tx(tx_w_backend, id)

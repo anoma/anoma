@@ -27,7 +27,7 @@ defmodule Anoma.Node.Logging do
 
   @spec init(any()) :: {:ok, Logging.t()}
   def init(arg) do
-    {:ok, keylist} = Keyword.validate(arg, table: __MODULE__.Events)
+    keylist = Keyword.validate!(arg, table: __MODULE__.Events)
     table = keylist[:table]
 
     :mnesia.create_table(table, attributes: [:type, :body])
