@@ -27,7 +27,6 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   typedstruct module: ConsensusEvent do
     field(:order, list(binary()))
-    field(:round, non_neg_integer())
   end
 
   typedstruct module: BlockEvent do
@@ -109,7 +108,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   def handle_cast({:execute, id_list}, state) do
-    consensus_event(id_list, state.round)
+    consensus_event(id_list)
     Executor.execute(id_list)
 
     {:noreply, state}
@@ -178,11 +177,10 @@ defmodule Anoma.Node.Transaction.Mempool do
     EventBroker.event(tx_event)
   end
 
-  def consensus_event(id_list, round) do
+  def consensus_event(id_list) do
     consensus_event =
       EventBroker.Event.new_with_body(%__MODULE__.ConsensusEvent{
-        order: id_list,
-        round: round
+        order: id_list
       })
 
     EventBroker.event(consensus_event)
