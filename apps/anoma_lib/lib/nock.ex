@@ -2,6 +2,7 @@ defmodule Nock do
   @moduledoc """
   Nock, a universal function on nouns.
   """
+  alias Anoma.Crypto.Id
 
   require Noun
   require Logger
@@ -18,6 +19,7 @@ defmodule Nock do
 
   """
   typedstruct do
+    field(:node_id, Id.t())
     field(:meter_pid, pid() | nil, default: nil)
   end
 
@@ -105,7 +107,7 @@ defmodule Nock do
   # top-level nock 4k interpreter.
 
   # direct calls should be jetted
-  @spec nock(Noun.t(), Noun.t()) :: {:ok, Noun.t()} | :error
+  @spec nock(Noun.t(), Noun.t(), Id.t()) :: {:ok, Noun.t()} | :error
   def nock(subject, formula) do
     nock(subject, formula, %Nock{})
   end
@@ -232,10 +234,11 @@ defmodule Nock do
   end
 
   @spec read_with_id(Noun.t(), t()) :: {:ok, Noun.t()} | :error
-  def read_with_id(id_key_list, _env) do
+  def read_with_id(id_key_list, env) do
     if id_key_list do
       with [id, key] <- id_key_list |> Noun.list_nock_to_erlang(),
-           {:ok, value} <- Anoma.Node.Transaction.Ordering.read({id, key}) do
+           {:ok, value} <-
+             Anoma.Node.Transaction.Ordering.read(env.node_id, {id, key}) do
         {:ok, value}
       else
         _ -> :error

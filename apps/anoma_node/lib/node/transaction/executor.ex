@@ -1,49 +1,60 @@
 defmodule Anoma.Node.Transaction.Executor do
-  alias Anoma.Node.Transaction.{Backends, Mempool, Ordering}
   alias __MODULE__
+  alias Anoma.Crypto.Id
+  alias Anoma.Node.Transaction.{Backends, Mempool, Ordering}
+  alias Anoma.Node.Registry
 
   use TypedStruct
+
+  use GenServer
+
   require EventBroker.Event
 
   typedstruct do
+    field(:node_id, Id.t())
   end
 
   typedstruct enforce: true, module: ExecutionEvent do
     field(:result, list({:ok | :error, binary()}))
   end
 
-  def start_link(default) do
-    GenServer.start_link(__MODULE__, default, name: Executor)
+  def start_link(args) do
+    args = Keyword.validate!(args, [:node_id])
+    name = Registry.name(args[:node_id], __MODULE__)
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   @spec init(any()) :: {:ok, Executor.t()}
-  def init(_arg) do
+  def init(args) do
     EventBroker.subscribe_me([
       Mempool.worker_module_filter(),
       complete_filter()
     ])
 
-    {:ok, %__MODULE__{}}
+    state = struct(__MODULE__, Enum.into(args, %{}))
+    {:ok, state}
   end
 
-  def launch(tw_w_backend, id) do
-    GenServer.cast(__MODULE__, {:launch, tw_w_backend, id})
+  def launch(node_id, tw_w_backend, id) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.cast(pid, {:launch, tw_w_backend, id})
   end
 
-  def execute(consensus) do
-    GenServer.cast(__MODULE__, {:execute, consensus})
+  def execute(node_id, consensus) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.cast(pid, {:execute, consensus})
   end
 
   def handle_cast({:launch, tw_w_backend, id}, state) do
     Task.start(fn ->
-      Backends.execute(tw_w_backend, id)
+      Backends.execute(state.node_id, tw_w_backend, id)
     end)
 
     {:noreply, state}
   end
 
   def handle_cast({:execute, consensus}, state) do
-    Ordering.order(consensus)
+    Ordering.order(state.node_id, consensus)
 
     res_list =
       for id <- consensus, reduce: [] do
