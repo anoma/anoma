@@ -8,10 +8,12 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   alias __MODULE__
   alias Anoma.Node.Transaction.Storage
+  alias Anoma.Node.Registry
 
   require EventBroker.Event
 
   typedstruct enforce: true do
+    field(:node_id, String.t())
     field(:next_height, integer(), default: 1)
     # maps tx ids to their height for writing.
     # the previous height is used for reading.
@@ -23,24 +25,29 @@ defmodule Anoma.Node.Transaction.Ordering do
   end
 
   def start_link(args \\ []) do
-    GenServer.start_link(__MODULE__, args, name: __MODULE__)
+    name = Registry.name(args[:node_id], __MODULE__)
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   def init(args) do
-    keylist = args |> Keyword.validate!(next_height: 1)
-    {:ok, %Ordering{next_height: keylist[:next_height]}}
+    args = Keyword.validate!(args, [:node_id, next_height: 1])
+    state = struct(Ordering, Enum.into(args, %{}))
+    {:ok, state}
   end
 
   def handle_call({:read, {tx_id, key}}, from, state) do
     with {:ok, height} <- Map.fetch(state.tx_id_to_height, tx_id) do
       Task.start(fn ->
-        GenServer.reply(from, Storage.read({height - 1, key}))
+        GenServer.reply(from, Storage.read(state.node_id, {height - 1, key}))
       end)
 
       {:noreply, state}
     else
       _ ->
-        block_spawn(tx_id, fn -> blocking_read({tx_id, key}, from) end)
+        block_spawn(tx_id, fn ->
+          blocking_read(state.node_id, {tx_id, key}, from)
+        end)
+
         {:noreply, state}
     end
   end
@@ -49,8 +56,8 @@ defmodule Anoma.Node.Transaction.Ordering do
       when write_or_append in [:write, :append] do
     call =
       case write_or_append do
-        :write -> &Storage.write/1
-        :append -> &Storage.append/1
+        :write -> &Storage.write(state.node_id, &1)
+        :append -> &Storage.append(state.node_id, &1)
       end
 
     with {:ok, height} <- Map.fetch(state.tx_id_to_height, tx_id) do
@@ -61,7 +68,9 @@ defmodule Anoma.Node.Transaction.Ordering do
       {:noreply, state}
     else
       _ ->
-        block_spawn(tx_id, fn -> blocking_write({tx_id, kvlist}, from) end)
+        block_spawn(tx_id, fn ->
+          blocking_write(state.node_id, {tx_id, kvlist}, from)
+        end)
 
         {:noreply, state}
     end
@@ -107,31 +116,36 @@ defmodule Anoma.Node.Transaction.Ordering do
     ])
   end
 
-  def read({id, key}) do
-    GenServer.call(__MODULE__, {:read, {id, key}}, :infinity)
+  @spec read(String.t(), {binary(), [binary()]}) :: any()
+  def read(node_id, {id, key}) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.call(pid, {:read, {id, key}}, :infinity)
   end
 
-  @spec write({binary(), list({any(), any()})}) :: :ok
-  def write({id, kvlist}) do
-    GenServer.call(__MODULE__, {:write, {id, kvlist}}, :infinity)
+  @spec write(String.t(), {binary(), list({any(), any()})}) :: :ok
+  def write(node_id, {id, kvlist}) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.call(pid, {:write, {id, kvlist}}, :infinity)
   end
 
-  @spec write({binary(), list({any(), any()})}) :: :ok
-  def append({id, kvlist}) do
-    GenServer.call(__MODULE__, {:append, {id, kvlist}}, :infinity)
+  @spec append(String.t(), {binary(), list({any(), any()})}) :: :ok
+  def append(node_id, {id, kvlist}) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.call(pid, {:append, {id, kvlist}}, :infinity)
   end
 
-  def order(txs) do
-    GenServer.cast(__MODULE__, {:order, txs})
+  def order(node_id, txs) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.cast(pid, {:order, txs})
   end
 
-  def blocking_read({id, key}, from) do
-    block(from, id, fn -> read({id, key}) end)
+  def blocking_read(node_id, {id, key}, from) do
+    block(from, id, fn -> read(node_id, {id, key}) end)
   end
 
-  def blocking_write({id, kvlist}, from) do
+  def blocking_write(node_id, {id, kvlist}, from) do
     block(from, id, fn ->
-      write({id, kvlist})
+      write(node_id, {id, kvlist})
     end)
   end
 

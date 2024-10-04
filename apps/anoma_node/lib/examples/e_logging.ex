@@ -1,6 +1,7 @@
 defmodule Anoma.Node.Examples.ELogging do
   alias Anoma.Node.Logging
   alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Examples.ENode
 
   require EventBroker.Event
 
@@ -8,213 +9,232 @@ defmodule Anoma.Node.Examples.ELogging do
   import ExUnit.Assertions
 
   def restart_logging do
-    if GenServer.whereis(Logging) do
-      GenServer.stop(Logging)
-    end
+    # if GenServer.whereis(Logging) do
+    #   GenServer.stop(Logging)
+    # end
 
-    :mnesia.clear_table(Anoma.Node.Logging.Events)
+    # :mnesia.clear_table(Anoma.Node.Logging.Events)
 
-    Logging.start_link()
+    # Logging.start_link(node_id: "londo_mollari")
   end
 
-  def check_tx_event() do
-    restart_logging()
+  def check_tx_event(
+        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        |> Base.url_encode64()
+      ) do
+    ENode.start_node(node_id)
+    table_name = Logging.table_name(node_id)
 
-    :mnesia.subscribe({:table, Logging.Events, :simple})
+    :mnesia.subscribe({:table, table_name, :simple})
 
     tx_event("id 1", "back 1", "code 1")
 
     assert_receive(
-      {:mnesia_table_event,
-       {:write, {Anoma.Node.Logging.Events, "id 1", {"back 1", "code 1"}}, _}},
+      {:mnesia_table_event, {:write, {_, "id 1", {"back 1", "code 1"}}, _}},
       5000
     )
 
-    assert {:atomic,
-            [{Anoma.Node.Logging.Events, "id 1", {"back 1", "code 1"}}]} =
+    assert {:atomic, [{^table_name, "id 1", {"back 1", "code 1"}}]} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, "id 1")
+               :mnesia.read(table_name, "id 1")
              end)
 
-    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+    :mnesia.unsubscribe({:table, table_name, :simple})
   end
 
-  def check_multiple_tx_events() do
-    restart_logging()
+  def check_multiple_tx_events(
+        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        |> Base.url_encode64()
+      ) do
+    ENode.start_node(node_id)
 
-    :mnesia.subscribe({:table, Logging.Events, :simple})
+    table_name = Logging.table_name(node_id)
+
+    :mnesia.subscribe({:table, table_name, :simple})
 
     tx_event("id 1", "back 1", "code 1")
     tx_event("id 2", "back 2", "code 2")
 
     assert_receive(
       {:mnesia_table_event,
-       {:write, {Anoma.Node.Logging.Events, "id 1", {"back 1", "code 1"}}, _}},
+       {:write, {^table_name, "id 1", {"back 1", "code 1"}}, _}},
       5000
     )
 
     assert_receive(
       {:mnesia_table_event,
-       {:write, {Anoma.Node.Logging.Events, "id 2", {"back 2", "code 2"}}, _}},
+       {:write, {^table_name, "id 2", {"back 2", "code 2"}}, _}},
       5000
     )
 
-    assert {:atomic,
-            [{Anoma.Node.Logging.Events, "id 1", {"back 1", "code 1"}}]} =
+    assert {:atomic, [{^table_name, "id 1", {"back 1", "code 1"}}]} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, "id 1")
+               :mnesia.read(table_name, "id 1")
              end)
 
-    assert {:atomic,
-            [{Anoma.Node.Logging.Events, "id 2", {"back 2", "code 2"}}]} =
+    assert {:atomic, [{^table_name, "id 2", {"back 2", "code 2"}}]} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, "id 2")
+               :mnesia.read(table_name, "id 2")
              end)
 
-    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+    :mnesia.unsubscribe({:table, table_name, :simple})
   end
 
-  def check_consensus_event() do
-    check_tx_event()
+  def check_consensus_event(
+        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        |> Base.url_encode64()
+      ) do
+    check_tx_event(node_id)
+    table_name = Logging.table_name(node_id)
 
-    :mnesia.subscribe({:table, Logging.Events, :simple})
+    :mnesia.subscribe({:table, table_name, :simple})
 
     consensus_event(["id 1"])
 
     assert_receive(
       {:mnesia_table_event,
-       {:write, {Anoma.Node.Logging.Events, :consensus, [["id 1"]]}, _}},
+       {:write, {^table_name, :consensus, [["id 1"]]}, _}},
       5000
     )
 
-    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+    :mnesia.unsubscribe({:table, table_name, :simple})
 
-    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, [["id 1"]]}]} =
+    assert {:atomic, [{^table_name, :consensus, [["id 1"]]}]} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, :consensus)
+               :mnesia.read(table_name, :consensus)
              end)
   end
 
-  def check_consensus_event_multiple() do
-    check_multiple_tx_events()
+  def check_consensus_event_multiple(
+        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        |> Base.url_encode64()
+      ) do
+    check_multiple_tx_events(node_id)
+    table_name = Logging.table_name(node_id)
 
-    :mnesia.subscribe({:table, Logging.Events, :simple})
+    :mnesia.subscribe({:table, table_name, :simple})
 
     consensus_event(["id 1"])
     consensus_event(["id 2"])
 
     assert_receive(
       {:mnesia_table_event,
-       {:write, {Anoma.Node.Logging.Events, :consensus, [["id 1"], ["id 2"]]},
-        _}},
+       {:write, {^table_name, :consensus, [["id 1"], ["id 2"]]}, _}},
       5000
     )
 
-    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+    :mnesia.unsubscribe({:table, table_name, :simple})
 
-    assert {:atomic,
-            [{Anoma.Node.Logging.Events, :consensus, [["id 1"], ["id 2"]]}]} =
+    assert {:atomic, [{^table_name, :consensus, [["id 1"], ["id 2"]]}]} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, :consensus)
+               :mnesia.read(table_name, :consensus)
              end)
   end
 
-  def check_block_event() do
-    check_consensus_event()
+  def check_block_event(
+        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        |> Base.url_encode64()
+      ) do
+    check_consensus_event(node_id)
+    table_name = Logging.table_name(node_id)
 
-    :mnesia.subscribe({:table, Logging.Events, :simple})
+    :mnesia.subscribe({:table, table_name, :simple})
+
     block_event(["id 1"], 0)
 
     assert_receive(
-      {:mnesia_table_event,
-       {:delete, {Anoma.Node.Logging.Events, "id 1"}, _}},
+      {:mnesia_table_event, {:delete, {^table_name, "id 1"}, _}},
       5000
     )
 
-    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+    :mnesia.unsubscribe({:table, table_name, :simple})
 
-    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, []}]} =
+    assert {:atomic, [{^table_name, :consensus, []}]} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, :consensus)
+               :mnesia.read(table_name, :consensus)
              end)
 
     assert {:atomic, []} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, "id 1")
+               :mnesia.read(table_name, "id 1")
              end)
   end
 
-  def check_block_event_multiple() do
-    check_consensus_event_multiple()
+  def check_block_event_multiple(
+        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        |> Base.url_encode64()
+      ) do
+    check_consensus_event_multiple(node_id)
+    table_name = Logging.table_name(node_id)
 
-    :mnesia.subscribe({:table, Logging.Events, :simple})
+    :mnesia.subscribe({:table, table_name, :simple})
     block_event(["id 1"], 0)
 
     assert_receive(
-      {:mnesia_table_event,
-       {:delete, {Anoma.Node.Logging.Events, "id 1"}, _}},
+      {:mnesia_table_event, {:delete, {^table_name, "id 1"}, _}},
       5000
     )
 
-    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, [["id 2"]]}]} =
+    assert {:atomic, [{^table_name, :consensus, [["id 2"]]}]} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, :consensus)
+               :mnesia.read(table_name, :consensus)
              end)
 
     assert {:atomic, []} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, "id 1")
+               :mnesia.read(table_name, "id 1")
              end)
 
     block_event(["id 2"], 0)
 
     assert_receive(
-      {:mnesia_table_event,
-       {:delete, {Anoma.Node.Logging.Events, "id 2"}, _}},
+      {:mnesia_table_event, {:delete, {^table_name, "id 2"}, _}},
       5000
     )
 
-    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+    :mnesia.unsubscribe({:table, table_name, :simple})
 
-    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, []}]} =
+    assert {:atomic, [{^table_name, :consensus, []}]} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, :consensus)
+               :mnesia.read(table_name, :consensus)
              end)
 
     assert {:atomic, []} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, "id 2")
+               :mnesia.read(table_name, "id 2")
              end)
   end
 
-  def check_block_event_leave_one_out() do
-    check_consensus_event_multiple()
+  def check_block_event_leave_one_out(
+        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        |> Base.url_encode64()
+      ) do
+    check_consensus_event_multiple(node_id)
+    table_name = Logging.table_name(node_id)
 
-    :mnesia.subscribe({:table, Logging.Events, :simple})
+    :mnesia.subscribe({:table, table_name, :simple})
     block_event(["id 1"], 0)
 
     assert_receive(
-      {:mnesia_table_event,
-       {:delete, {Anoma.Node.Logging.Events, "id 1"}, _}},
+      {:mnesia_table_event, {:delete, {^table_name, "id 1"}, _}},
       5000
     )
 
-    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+    :mnesia.unsubscribe({:table, table_name, :simple})
 
-    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, [["id 2"]]}]} =
+    assert {:atomic, [{^table_name, :consensus, [["id 2"]]}]} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, :consensus)
+               :mnesia.read(table_name, :consensus)
              end)
 
     assert {:atomic, []} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, "id 1")
+               :mnesia.read(table_name, "id 1")
              end)
 
-    assert {:atomic,
-            [{Anoma.Node.Logging.Events, "id 2", {"back 2", "code 2"}}]} =
+    assert {:atomic, [{^table_name, "id 2", {"back 2", "code 2"}}]} =
              :mnesia.transaction(fn ->
-               :mnesia.read(Logging.Events, "id 2")
+               :mnesia.read(table_name, "id 2")
              end)
   end
 
