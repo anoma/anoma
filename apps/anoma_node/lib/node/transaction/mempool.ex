@@ -7,8 +7,11 @@ defmodule Anoma.Node.Transaction.Mempool do
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Storage
+  alias Anoma.Node.Registry
 
   use TypedStruct
+
+  use GenServer
 
   typedstruct do
     field(
@@ -20,8 +23,17 @@ defmodule Anoma.Node.Transaction.Mempool do
     field(:round, non_neg_integer(), default: 0)
   end
 
-  def start_link(default) do
-    GenServer.start_link(__MODULE__, default, name: Mempool)
+  def start_link(nil) do
+    GenServer.start_link(__MODULE__, nil, name: Mempool)
+  end
+
+  def start_link(args) do
+    args = Keyword.validate!(args, [:node_id])
+    # register as a router for the local node, at the local registry.
+    node_id = args[:node_id]
+    name = Registry.name(node_id, __MODULE__)
+
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   @spec init(any()) :: {:ok, Mempool.t()}
@@ -32,6 +44,11 @@ defmodule Anoma.Node.Transaction.Mempool do
   ############################################################
   #                      Public RPC API                      #
   ############################################################
+
+  def tx_dump(node_id) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.call(pid, :dump)
+  end
 
   def tx_dump() do
     GenServer.call(__MODULE__, :dump)
