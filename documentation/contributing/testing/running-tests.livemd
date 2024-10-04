@@ -198,131 +198,17 @@ Finished in 0.3 seconds (0.3s async, 0.00s sync)
 
 ## Running individual tests
 
-In the Writing tests document we layout a guideline that shows how to write tests that can easily be ran in the repl over and over.
+Since most (if not all!) tests are composed from examples. One can simply run the examples directly!
 
-Thanks to this design, running individual tests is quite simple!
-
-All one has to do is follow these simple instructions:
-
-1. copy the Imports from the test file one sees
-2. copy all code within the `setup_all`
-3. (optional) import `ExUnit.Assertions`
-4. run the tets by hand.
-
-```elixir
-defmodule AnomaTest.LiveBook.Example do
-  use ExUnit.Case, async: true
-
-  import TestHelper.Nock
-
-  setup_all do
-    name = :hi
-
-    [name: name]
-  end
-
-  test "first", %{} do
-    assert 2 == 2
-  end
-
-  test "logic", %{name: name} do
-    fi = :erlang.atom_to_binary(name)
-    assert fi == fi
-  end
-
-  describe "group" do
-    test "second", %{name: name} do
-      assert name == name
-    end
-  end
-end
-```
-
-<!-- livebook:{"output":true} -->
-
-```
-warning: unused import TestHelper.Nock
-  documentation/contributing/testing/running-tests.livemd#cell:nzkdwbfnnuijteho:4
-
-```
-
-<!-- livebook:{"output":true} -->
-
-```
-{:module, AnomaTest.LiveBook.Example, <<70, 79, 82, 49, 0, 0, 16, ...>>, {:"test group second", 1}}
-```
+<!-- livebook:{"break_markdown":true} -->
 
 If we take `AnomaTest.LiveBook.Example` as our exmaple, then we can run the individual tests like the following.
 
-```elixir
-# Copy the imports
-import TestHelper.Nock
-
-# Copy the setup_all
-
-name = :hi
-
-[name: name]
-
-# Now run the test
-
-AnomaTest.LiveBook.Example."test first"(%{name: name})
-```
-
-<!-- livebook:{"output":true} -->
-
-```
-:ok
-```
+<!-- livebook:{"break_markdown":true} -->
 
 Test names are odd in that they are not simple atoms, they are typically the word `test` then the string name given to the test. Hence `test "first"` became `AnomaTest.LiveBook.Example."test first"/1`.
 
 To run the group, we need to prepend the group name as well.
-
-```elixir
-AnomaTest.LiveBook.Example."test group second"(%{name: name})
-```
-
-<!-- livebook:{"output":true} -->
-
-```
-:ok
-```
-
-What is very nice about this setup is that we can run the tests piecewise by copy and pasting the logic to the point that we care about. For example let us run the `AnomaTest.LiveBook.Example."test logic"/1` test by hand.
-
-```elixir
-fi = :erlang.atom_to_binary(name)
-
-assert fi == fi
-```
-
-<!-- livebook:{"output":true} -->
-
-```
-error: undefined function assert/1 (there is no such import)
-  documentation/contributing/testing/running-tests.livemd#cell:6wdtc4fkrz3iatat:3
-
-```
-
-The assert code fails as we forgot to import `ExUnit.Assertions`. If we import this file then the entire copy and paste will run!
-
-```elixir
-import ExUnit.Assertions
-fi = :erlang.atom_to_binary(name)
-
-assert fi == fi
-```
-
-<!-- livebook:{"output":true} -->
-
-```
-true
-```
-
-This is very useful in debugging, as we may have a test that is composed of `n` steps, and we may wish to run it partially up until some known state, then modify the code live.
-
-This means that instead of having to rerun tests from scractch over and over again like in Rust or CPP, you can effectively have all the state of the test live in your repl, and change specific code you wish to test, and simply run the command that fails and see how your code changes affect any particular given state.
 
 ## Conclusion
 
