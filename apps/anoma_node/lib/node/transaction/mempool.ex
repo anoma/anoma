@@ -5,6 +5,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   alias __MODULE__
   alias Anoma.Node.Transaction.{Storage, Executor, Backends}
+  alias Anoma.Node.Registry
 
   require EventBroker.Event
 
@@ -46,7 +47,8 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   def start_link(args \\ []) do
-    GenServer.start_link(__MODULE__, args, name: Mempool)
+    name = Registry.name(args[:node_id], __MODULE__)
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   @spec init(any()) :: {:ok, Mempool.t()}
@@ -75,6 +77,11 @@ defmodule Anoma.Node.Transaction.Mempool do
   ############################################################
   #                      Public RPC API                      #
   ############################################################
+
+  def tx_dump(node_id) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.call(pid, :dump)
+  end
 
   def tx_dump() do
     GenServer.call(__MODULE__, :dump)
