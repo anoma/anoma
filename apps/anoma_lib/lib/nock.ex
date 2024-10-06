@@ -416,15 +416,17 @@ defmodule Nock do
 
         # 11: hint (spec macro)
         # *[a 11 [b c] d]     *[[*[a c] *[a d]] 0 3]
-        [eleven, [_hint_noun | hint_formula] | sub_formula]
+        [eleven, [hint_noun | hint_formula] | sub_formula]
         when eleven in [11, <<11>>] ->
           # must be computed, but is discarded
           {:ok, hint_result} = nock(subject, hint_formula, environment)
+          process_hint(hint_noun, hint_result)
           {:ok, real_result} = nock(subject, sub_formula, environment)
           nock([hint_result | real_result], [0 | 3], environment)
 
         # *[a 11 b c]         *[a c]
-        [eleven, _hint_noun | sub_formula] when eleven in [11, <<11>>] ->
+        [eleven, hint_noun | sub_formula] when eleven in [11, <<11>>] ->
+          process_hint(hint_noun)
           nock(subject, sub_formula, environment)
 
         # else, error
@@ -434,6 +436,21 @@ defmodule Nock do
     rescue
       _ in MatchError -> :error
     end
+  end
+
+  # process_hint helper: noncontextual, but enough for %puts
+  def process_hint(_) do
+  end
+
+  # %puts hint: print an atom during evaluation
+  def process_hint(puts, hint_result)
+      when Noun.is_noun_atom(hint_result) and
+             puts in [0x73747570, "puts"] do
+    string_to_print = Noun.normalize_noun(hint_result)
+    IO.puts(string_to_print)
+  end
+
+  def process_hint(_, _) do
   end
 
   def cons(a, b) do
