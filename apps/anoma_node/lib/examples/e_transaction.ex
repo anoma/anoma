@@ -15,7 +15,7 @@ defmodule Anoma.Node.Examples.ETransaction do
     :mnesia.clear_table(Anoma.Node.Transaction.Storage.Updates)
     :mnesia.clear_table(Anoma.Node.Transaction.Storage.Blocks)
 
-    Anoma.Node.Transaction.Storage.start_link()
+    Anoma.Node.Transaction.Storage.start_link(nil)
   end
 
   def write_then_read do
@@ -167,7 +167,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       GenServer.stop(Anoma.Node.Transaction.Ordering)
     end
 
-    Anoma.Node.Transaction.Ordering.start_link()
+    Anoma.Node.Transaction.Ordering.start_link(nil)
   end
 
   def ord_write_then_read do
@@ -213,7 +213,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       GenServer.stop(Anoma.Node.Transaction.Mempool)
     end
 
-    Anoma.Node.Transaction.Mempool.start_link()
+    Anoma.Node.Transaction.Mempool.start_link(nil)
   end
 
   def restart_executor do
@@ -229,46 +229,6 @@ defmodule Anoma.Node.Examples.ETransaction do
     restart_storage()
     restart_executor()
     restart_mempool()
-  end
-
-  def mempool_startup_txs do
-    restart_storage()
-    restart_ordering()
-
-    if GenServer.whereis(Anoma.Node.Transaction.Mempool) do
-      GenServer.stop(Anoma.Node.Transaction.Mempool)
-    end
-
-    Mempool.start_link(txs: [{"id 1", {:debug_term_storage, "code"}}])
-    ["id 1"] = Mempool.tx_dump()
-  end
-
-  def mempool_startup_consensus(round \\ 0) do
-    restart_storage()
-    restart_ordering()
-
-    if GenServer.whereis(Anoma.Node.Transaction.Mempool) do
-      GenServer.stop(Anoma.Node.Transaction.Mempool)
-    end
-
-    Mempool.start_link(
-      txs: [{"id 1", {:debug_term_storage, "code"}}],
-      consensus: ["id 1"],
-      round: round
-    )
-
-    [] = Mempool.tx_dump()
-
-    [
-      {Storage.Blocks, ^round,
-       [
-         %Mempool.Tx{
-           code: "code",
-           backend: :debug_term_storage,
-           vm_result: :error
-         }
-       ]}
-    ] = :mnesia.dirty_read({Storage.Blocks, round})
   end
 
   # to be moved to nock
