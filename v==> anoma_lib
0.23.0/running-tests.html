@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.23.0">
+
+
+    <title>Running Tests — Anoma v0.23.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.23.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>Running Tests</span>
+  </h1>
+
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="user.html">User</a><ol><li><a href="data.html">Data</a></li></ol></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a><ol><li><a href="fema-analysis-pinger.html">Fema Analysis Pinger</a></li></ol></li><li><a href="logging.html">Logging</a></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="intent" class="section-heading">
+  <a href="#intent" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Intent</span>
+</h2>
+<p>This document is aimed at allowing any developer to run tests in a more ergonomic way than simply running:</p><pre><code class="makeup shell" translate="no"><span class="">% mix test
+</span></code></pre><p>Namely, this document covers running tests inside <code class="inline">IEX</code> and being able to do so on demand.</p><h2 id="setting-up-iex" class="section-heading">
+  <a href="#setting-up-iex" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Setting up IEX</span>
+</h2>
+<p>To Run tests within IEx. One simply calls <code class="inline">Mix.Tasks.Test.run/1</code> within their IEX session.</p><p>However attempting to do this by default will result in the following error:</p><pre><code class="makeup shell" translate="no"><span class=""> iex --sname mariari --cookie mariari -S mix
+</span></code></pre><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="nc">Mix.Tasks.Test</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="5314232618-1">(</span><span class="p" data-group-id="5314232618-2">[</span><span class="p" data-group-id="5314232618-2">]</span><span class="p" data-group-id="5314232618-1">)</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="gt">** (Mix.Error) &quot;mix test&quot; is running in the &quot;dev&quot; environment. If you are running tests from within another command, you can either:</span><span class="w">
+
+  </span><span class="mi">1</span><span class="o">.</span><span class="w"> </span><span class="n">set</span><span class="w"> </span><span class="nc">MIX_ENV</span><span class="w"> </span><span class="ss">explicitly</span><span class="p">:</span><span class="w">
+
+      </span><span class="nc">MIX_ENV</span><span class="o">=</span><span class="n">test</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="n">test</span><span class="o">.</span><span class="n">another</span><span class="w">
+
+  </span><span class="mi">2</span><span class="o">.</span><span class="w"> </span><span class="n">set</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="ss">:preferred_envs</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="s">&quot;def cli&quot;</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">your</span><span class="w"> </span><span class="n">mix</span><span class="o">.</span><span class="ss">exs</span><span class="p">:</span><span class="w">
+
+      </span><span class="kd">def</span><span class="w"> </span><span class="nf">cli</span><span class="w"> </span><span class="k" data-group-id="5886307806-1">do</span><span class="w">
+        </span><span class="p" data-group-id="5886307806-2">[</span><span class="ss">preferred_envs</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5886307806-3">[</span><span class="ss">&quot;test.another&quot;</span><span class="p">:</span><span class="w"> </span><span class="ss">:test</span><span class="p" data-group-id="5886307806-3">]</span><span class="p" data-group-id="5886307806-2">]</span><span class="w">
+      </span><span class="k" data-group-id="5886307806-1">end</span><span class="w">
+
+    </span><span class="p" data-group-id="5886307806-4">(</span><span class="n">mix</span><span class="w"> </span><span class="mf">1.15</span><span class="o">.</span><span class="mi">5</span><span class="p" data-group-id="5886307806-4">)</span><span class="w"> </span><span class="n">lib</span><span class="o">/</span><span class="n">mix</span><span class="o">.</span><span class="n">ex</span><span class="p">:</span><span class="mi">577</span><span class="p">:</span><span class="w"> </span><span class="nc">Mix</span><span class="o">.</span><span class="k">raise</span><span class="o">/</span><span class="mi">2</span><span class="w">
+    </span><span class="p" data-group-id="5886307806-5">(</span><span class="n">mix</span><span class="w"> </span><span class="mf">1.15</span><span class="o">.</span><span class="mi">5</span><span class="p" data-group-id="5886307806-5">)</span><span class="w"> </span><span class="n">lib</span><span class="o">/</span><span class="n">mix</span><span class="o">/</span><span class="n">tasks</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">ex</span><span class="p">:</span><span class="mi">486</span><span class="p">:</span><span class="w"> </span><span class="nc">Mix.Tasks.Test</span><span class="o">.</span><span class="n">do_run</span><span class="o">/</span><span class="mi">3</span><span class="w">
+    </span><span class="c1">#cell:nsl6gqly4w45ei6b:1: (file)</span><span class="w">
+    </span><span class="err">`</span><span class="err">`</span><span class="err">`</span></code></pre><!-- livebook:{"break_markdown":true} --><p>The error text hints at a suggestion on how to solve the problem.</p><pre><code class="makeup shell" translate="no"><span class="">MIX_ENV=iex iex --sname mariari --cookie mariari -S mix
+</span></code></pre><p>I recommend using the <code class="inline">iex</code> environment over the <code class="inline">test</code> environment that is shwon in the error, as in the <code class="inline">Anoma</code> project, we set the <code class="inline">test</code> environment to have <a href="https://hexdocs.pm/elixir/Config.html#config/2"><code class="inline">Config.config/2</code></a> to have the following settings:</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:logger</span><span class="p">,</span><span class="w">
+  </span><span class="ss">level</span><span class="p">:</span><span class="w"> </span><span class="ss">:error</span></code></pre><p>Which means that some logging details you may care about may not be reported to you by default.</p><p>Now that we have the environment setup if we try running this again we get:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Mix.Tasks.Test</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="1916925097-1">(</span><span class="p" data-group-id="1916925097-2">[</span><span class="p" data-group-id="1916925097-2">]</span><span class="p" data-group-id="1916925097-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="w">
+</span><span class="nc">Finished</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">0.00</span><span class="w"> </span><span class="n">seconds</span><span class="w"> </span><span class="p" data-group-id="0980708740-1">(</span><span class="mf">0.00</span><span class="n">s</span><span class="w"> </span><span class="n">async</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="n">s</span><span class="w"> </span><span class="n">sync</span><span class="p" data-group-id="0980708740-1">)</span><span class="w">
+</span><span class="mi">0</span><span class="w"> </span><span class="n">failures</span><span class="w">
+
+</span><span class="nc">Randomized</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="mi">670138</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre><p>Running the command has a few effects:</p><ol><li>It behaves the same as <a href="https://hexdocs.pm/mix/Mix.Tasks.Test.html"><code class="inline">mix test</code></a> running every single test in the project.</li><li>It loads in the test modules, meaning we now have access to all modules in <code class="inline">AnomaTest</code>.</li><li><a href="https://hexdocs.pm/ex_unit/ExUnit.html"><code class="inline">ExUnit</code></a> is now started up, meaning we can run tests with <a href="https://hexdocs.pm/ex_unit/ExUnit.html#run/0"><code class="inline">ExUnit.run/0</code></a> now.</li></ol><p>For larger projects <code class="inline">1.</code> may be prohibitive as tests may take quite a while to run!</p><h2 id="running-individual-modules-for-the-first-time" class="section-heading">
+  <a href="#running-individual-modules-for-the-first-time" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Running Individual Modules For the First Time</span>
+</h2>
+<p>To run an individual module, one simply needs to invoke the <a href="https://hexdocs.pm/ex_unit/ExUnit.html"><code class="inline">ExUnit</code></a> framework themselves.</p><p>A good example of this at play is the following example:</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="n">iex</span><span class="p" data-group-id="0829454731-1">(</span><span class="n">mariari</span><span class="err">@</span><span class="nc">YU</span><span class="o">-</span><span class="nc">NO</span><span class="p" data-group-id="0829454731-1">)</span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">ExUnit</span><span class="o">.</span><span class="n">start</span><span class="w">
+</span><span class="ss">:ok</span><span class="w">
+</span><span class="n">iex</span><span class="p" data-group-id="0829454731-2">(</span><span class="n">mariari</span><span class="err">@</span><span class="nc">YU</span><span class="o">-</span><span class="nc">NO</span><span class="p" data-group-id="0829454731-2">)</span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="s">&quot;test/node/mempool_test.exs&quot;</span><span class="w">
+</span><span class="p" data-group-id="0829454731-3">[</span><span class="nc">AnomaTest.Node.Mempool</span><span class="p" data-group-id="0829454731-3">]</span><span class="w">
+</span><span class="n">iex</span><span class="p" data-group-id="0829454731-4">(</span><span class="n">mariari</span><span class="err">@</span><span class="nc">YU</span><span class="o">-</span><span class="nc">NO</span><span class="p" data-group-id="0829454731-4">)</span><span class="mi">3</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">ExUnit</span><span class="o">.</span><span class="n">run</span><span class="w">
+
+</span><span class="mi">14</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">45.846</span><span class="w"> </span><span class="p" data-group-id="0829454731-5">[</span><span class="n">error</span><span class="p" data-group-id="0829454731-5">]</span><span class="w"> </span><span class="nc">Worker</span><span class="w"> </span><span class="n">failed!</span><span class="w"> </span><span class="ss">:error</span><span class="w">
+
+</span><span class="mi">14</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">45.849</span><span class="w"> </span><span class="p" data-group-id="0829454731-6">[</span><span class="n">error</span><span class="p" data-group-id="0829454731-6">]</span><span class="w"> </span><span class="nc">Worker</span><span class="w"> </span><span class="n">failed!</span><span class="w"> </span><span class="ss">:error</span><span class="w">
+</span><span class="n">...</span><span class="o">..</span><span class="w">
+</span><span class="nc">Finished</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="n">seconds</span><span class="w"> </span><span class="p" data-group-id="0829454731-7">(</span><span class="mf">0.3</span><span class="n">s</span><span class="w"> </span><span class="n">async</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="n">s</span><span class="w"> </span><span class="n">sync</span><span class="p" data-group-id="0829454731-7">)</span><span class="w">
+</span><span class="mi">5</span><span class="w"> </span><span class="n">tests</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="n">failures</span><span class="w">
+
+</span><span class="nc">Randomized</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="mi">670138</span><span class="w">
+</span><span class="p" data-group-id="0829454731-8">%{</span><span class="ss">total</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="ss">failures</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">excluded</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">skipped</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="0829454731-8">}</span></code></pre><p>We can see here that I've started up ExUnit with <a href="https://hexdocs.pm/ex_unit/ExUnit.html#start/0"><code class="inline">ExUnit.start/0</code></a>, then I've manually compiled the module I wanted to run <code class="inline">c ...</code> and then I ran <a href="https://hexdocs.pm/ex_unit/ExUnit.html#run/0"><code class="inline">ExUnit.run/0</code></a>.</p><p>The side effect of running tests this way is that only <code class="inline">AnomaTest.Node.Mempool</code> is in scope. The other tests are not.</p><!-- livebook:{"break_markdown":true} --><p>The behavior of <a href="https://hexdocs.pm/ex_unit/ExUnit.html#run/0"><code class="inline">ExUnit.run/0</code></a> is quite configurable, see <a href="https://hexdocs.pm/ex_unit/ExUnit.html#configure/1"><code class="inline">ExUnit.configure/1</code></a> for a lot of options on filtering what tests are run.</p><h2 id="rerunning-tests" class="section-heading">
+  <a href="#rerunning-tests" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">ReRunning Tests</span>
+</h2>
+<p>One may be surprised at the first time they try to rerun tests, as they will run into the following anomaly:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Mix.Tasks.Test</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="1271336139-1">(</span><span class="p" data-group-id="1271336139-2">[</span><span class="p" data-group-id="1271336139-2">]</span><span class="p" data-group-id="1271336139-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="w">
+</span><span class="nc">Finished</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">0.00</span><span class="w"> </span><span class="n">seconds</span><span class="w"> </span><span class="p" data-group-id="8820180558-1">(</span><span class="mf">0.00</span><span class="n">s</span><span class="w"> </span><span class="n">async</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="n">s</span><span class="w"> </span><span class="n">sync</span><span class="p" data-group-id="8820180558-1">)</span><span class="w">
+</span><span class="mi">0</span><span class="w"> </span><span class="n">failures</span><span class="w">
+
+</span><span class="nc">Randomized</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="mi">670138</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre><p>No tests were run again! This can be rather annoying as we often make changes to code and wish to see if they break certain tests!</p><p>A way around this is by recompiling the given module then running again</p><pre><code class="makeup iex" translate="no"><span class="n">iex</span><span class="w"> </span><span class="mi">7</span><span class="o">&gt;</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="nc">AnomaTest.Node.Mempool</span><span class="w">
+</span><span class="ss">warning</span><span class="p">:</span><span class="w"> </span><span class="n">redefining</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="nc">AnomaTest.Node.Mempool</span><span class="w"> </span><span class="p" data-group-id="9554161623-1">(</span><span class="n">current</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="n">defined</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">memory</span><span class="p" data-group-id="9554161623-1">)</span><span class="w">
+  </span><span class="n">test</span><span class="o">/</span><span class="n">node</span><span class="o">/</span><span class="n">mempool_test</span><span class="o">.</span><span class="n">exs</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="w"> </span><span class="nc">AnomaTest.Node.Mempool</span><span class="w"> </span><span class="p" data-group-id="9554161623-2">(</span><span class="n">module</span><span class="p" data-group-id="9554161623-2">)</span><span class="w">
+
+</span><span class="p" data-group-id="9554161623-3">{</span><span class="ss">:reloaded</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9554161623-4">[</span><span class="nc">AnomaTest.Node.Mempool</span><span class="p" data-group-id="9554161623-4">]</span><span class="p" data-group-id="9554161623-3">}</span><span class="w">
+</span><span class="n">iex</span><span class="p" data-group-id="9554161623-5">(</span><span class="n">mariari</span><span class="err">@</span><span class="nc">YU</span><span class="o">-</span><span class="nc">NO</span><span class="p" data-group-id="9554161623-5">)</span><span class="mi">8</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">Mix.Tasks.Test</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="9554161623-6">(</span><span class="p" data-group-id="9554161623-7">[</span><span class="p" data-group-id="9554161623-7">]</span><span class="p" data-group-id="9554161623-6">)</span><span class="w">
+
+</span><span class="mi">14</span><span class="p">:</span><span class="mi">58</span><span class="p">:</span><span class="mf">09.255</span><span class="w"> </span><span class="p" data-group-id="9554161623-8">[</span><span class="n">error</span><span class="p" data-group-id="9554161623-8">]</span><span class="w"> </span><span class="nc">Worker</span><span class="w"> </span><span class="n">failed!</span><span class="w"> </span><span class="ss">:error</span><span class="w">
+
+</span><span class="mi">14</span><span class="p">:</span><span class="mi">58</span><span class="p">:</span><span class="mf">09.256</span><span class="w"> </span><span class="p" data-group-id="9554161623-9">[</span><span class="n">error</span><span class="p" data-group-id="9554161623-9">]</span><span class="w"> </span><span class="nc">Worker</span><span class="w"> </span><span class="n">failed!</span><span class="w"> </span><span class="ss">:error</span><span class="w">
+</span><span class="n">...</span><span class="o">..</span><span class="w">
+</span><span class="nc">Finished</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="n">seconds</span><span class="w"> </span><span class="p" data-group-id="9554161623-10">(</span><span class="mf">0.3</span><span class="n">s</span><span class="w"> </span><span class="n">async</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="n">s</span><span class="w"> </span><span class="n">sync</span><span class="p" data-group-id="9554161623-10">)</span><span class="w">
+</span><span class="mi">5</span><span class="w"> </span><span class="n">tests</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="n">failures</span></code></pre><h2 id="running-individual-tests" class="section-heading">
+  <a href="#running-individual-tests" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Running individual tests</span>
+</h2>
+<p>In the Writing tests document we layout a guideline that shows how to write tests that can easily be ran in the repl over and over.</p><p>Thanks to this design, running individual tests is quite simple!</p><p>All one has to do is follow these simple instructions:</p><ol><li>copy the Imports from the test file one sees</li><li>copy all code within the <code class="inline">setup_all</code></li><li>(optional) import <a href="https://hexdocs.pm/ex_unit/ExUnit.Assertions.html"><code class="inline">ExUnit.Assertions</code></a></li><li>run the tets by hand.</li></ol><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">AnomaTest.LiveBook.Example</span><span class="w"> </span><span class="k" data-group-id="5542486675-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">ExUnit.Case</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="w">
+
+  </span><span class="kn">import</span><span class="w"> </span><span class="nc">TestHelper.Nock</span><span class="w">
+
+  </span><span class="n">setup_all</span><span class="w"> </span><span class="k" data-group-id="5542486675-2">do</span><span class="w">
+    </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:hi</span><span class="w">
+
+    </span><span class="p" data-group-id="5542486675-3">[</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="5542486675-3">]</span><span class="w">
+  </span><span class="k" data-group-id="5542486675-2">end</span><span class="w">
+
+  </span><span class="n">test</span><span class="w"> </span><span class="s">&quot;first&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5542486675-4">%{</span><span class="p" data-group-id="5542486675-4">}</span><span class="w"> </span><span class="k" data-group-id="5542486675-5">do</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="w">
+  </span><span class="k" data-group-id="5542486675-5">end</span><span class="w">
+
+  </span><span class="n">test</span><span class="w"> </span><span class="s">&quot;logic&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5542486675-6">%{</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="5542486675-6">}</span><span class="w"> </span><span class="k" data-group-id="5542486675-7">do</span><span class="w">
+    </span><span class="n">fi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">:erlang</span><span class="o">.</span><span class="n">atom_to_binary</span><span class="p" data-group-id="5542486675-8">(</span><span class="n">name</span><span class="p" data-group-id="5542486675-8">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">fi</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">fi</span><span class="w">
+  </span><span class="k" data-group-id="5542486675-7">end</span><span class="w">
+
+  </span><span class="n">describe</span><span class="w"> </span><span class="s">&quot;group&quot;</span><span class="w"> </span><span class="k" data-group-id="5542486675-9">do</span><span class="w">
+    </span><span class="n">test</span><span class="w"> </span><span class="s">&quot;second&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5542486675-10">%{</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="5542486675-10">}</span><span class="w"> </span><span class="k" data-group-id="5542486675-11">do</span><span class="w">
+      </span><span class="n">assert</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">name</span><span class="w">
+    </span><span class="k" data-group-id="5542486675-11">end</span><span class="w">
+  </span><span class="k" data-group-id="5542486675-9">end</span><span class="w">
+</span><span class="k" data-group-id="5542486675-1">end</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">warning</span><span class="p">:</span><span class="w"> </span><span class="n">unused</span><span class="w"> </span><span class="kn">import</span><span class="w"> </span><span class="nc">TestHelper.Nock</span><span class="w">
+  </span><span class="n">documentation</span><span class="o">/</span><span class="n">contributing</span><span class="o">/</span><span class="n">testing</span><span class="o">/</span><span class="n">running</span><span class="o">-</span><span class="n">tests</span><span class="o">.</span><span class="n">livemd</span><span class="c1">#cell:nzkdwbfnnuijteho:4</span><span class="w">
+</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="6178260655-1">{</span><span class="ss">:module</span><span class="p">,</span><span class="w"> </span><span class="nc">AnomaTest.LiveBook.Example</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6178260655-2">&lt;&lt;</span><span class="mi">70</span><span class="p">,</span><span class="w"> </span><span class="mi">79</span><span class="p">,</span><span class="w"> </span><span class="mi">82</span><span class="p">,</span><span class="w"> </span><span class="mi">49</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="6178260655-2">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6178260655-3">{</span><span class="ss">:&quot;test group second&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="6178260655-3">}</span><span class="p" data-group-id="6178260655-1">}</span></code></pre><p>If we take <code class="inline">AnomaTest.LiveBook.Example</code> as our exmaple, then we can run the individual tests like the following.</p><pre><code class="makeup elixir" translate="no"><span class="c1"># Copy the imports</span><span class="w">
+</span><span class="kn">import</span><span class="w"> </span><span class="nc">TestHelper.Nock</span><span class="w">
+
+</span><span class="c1"># Copy the setup_all</span><span class="w">
+
+</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:hi</span><span class="w">
+
+</span><span class="p" data-group-id="7947784765-1">[</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="7947784765-1">]</span><span class="w">
+
+</span><span class="c1"># Now run the test</span><span class="w">
+
+</span><span class="nc">AnomaTest.LiveBook.Example</span><span class="o">.</span><span class="s">&quot;test first&quot;</span><span class="p" data-group-id="7947784765-2">(</span><span class="p" data-group-id="7947784765-3">%{</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="7947784765-3">}</span><span class="p" data-group-id="7947784765-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre><p>Test names are odd in that they are not simple atoms, they are typically the word <code class="inline">test</code> then the string name given to the test. Hence <code class="inline">test &quot;first&quot;</code> became <code class="inline">AnomaTest.LiveBook.Example.&quot;test first&quot;/1</code>.</p><p>To run the group, we need to prepend the group name as well.</p><pre><code class="makeup elixir" translate="no"><span class="nc">AnomaTest.LiveBook.Example</span><span class="o">.</span><span class="s">&quot;test group second&quot;</span><span class="p" data-group-id="4634960518-1">(</span><span class="p" data-group-id="4634960518-2">%{</span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="n">name</span><span class="p" data-group-id="4634960518-2">}</span><span class="p" data-group-id="4634960518-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre><p>What is very nice about this setup is that we can run the tests piecewise by copy and pasting the logic to the point that we care about. For example let us run the <code class="inline">AnomaTest.LiveBook.Example.&quot;test logic&quot;/1</code> test by hand.</p><pre><code class="makeup elixir" translate="no"><span class="n">fi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">:erlang</span><span class="o">.</span><span class="n">atom_to_binary</span><span class="p" data-group-id="4334561878-1">(</span><span class="n">name</span><span class="p" data-group-id="4334561878-1">)</span><span class="w">
+
+</span><span class="n">assert</span><span class="w"> </span><span class="n">fi</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">fi</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">error</span><span class="p">:</span><span class="w"> </span><span class="n">undefined</span><span class="w"> </span><span class="n">function</span><span class="w"> </span><span class="n">assert</span><span class="o">/</span><span class="mi">1</span><span class="w"> </span><span class="p" data-group-id="6370417516-1">(</span><span class="n">there</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">no</span><span class="w"> </span><span class="n">such</span><span class="w"> </span><span class="kn">import</span><span class="p" data-group-id="6370417516-1">)</span><span class="w">
+  </span><span class="n">documentation</span><span class="o">/</span><span class="n">contributing</span><span class="o">/</span><span class="n">testing</span><span class="o">/</span><span class="n">running</span><span class="o">-</span><span class="n">tests</span><span class="o">.</span><span class="n">livemd</span><span class="c1">#cell:6wdtc4fkrz3iatat:3</span><span class="w">
+</span></code></pre><p>The assert code fails as we forgot to import <a href="https://hexdocs.pm/ex_unit/ExUnit.Assertions.html"><code class="inline">ExUnit.Assertions</code></a>. If we import this file then the entire copy and paste will run!</p><pre><code class="makeup elixir" translate="no"><span class="kn">import</span><span class="w"> </span><span class="nc">ExUnit.Assertions</span><span class="w">
+</span><span class="n">fi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">:erlang</span><span class="o">.</span><span class="n">atom_to_binary</span><span class="p" data-group-id="2339648483-1">(</span><span class="n">name</span><span class="p" data-group-id="2339648483-1">)</span><span class="w">
+
+</span><span class="n">assert</span><span class="w"> </span><span class="n">fi</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">fi</span></code></pre><pre><code class="makeup output" translate="no"><span class="no">true</span></code></pre><p>This is very useful in debugging, as we may have a test that is composed of <code class="inline">n</code> steps, and we may wish to run it partially up until some known state, then modify the code live.</p><p>This means that instead of having to rerun tests from scractch over and over again like in Rust or CPP, you can effectively have all the state of the test live in your repl, and change specific code you wish to test, and simply run the command that fails and see how your code changes affect any particular given state.</p><h2 id="conclusion" class="section-heading">
+  <a href="#conclusion" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Conclusion</span>
+</h2>
+<p>Running tests in Elixir is nice and somewhat simple!</p><p>We have covered how to:</p><ol><li>Run tests within <code class="inline">IEX</code></li><li>re-running tests in <code class="inline">IEX</code></li><li>running individual tests fully</li><li>Running individual tests partially</li></ol>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="testing.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Testing
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="writing-tests.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Writing Tests
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.23.0/show/documentation/contributing/testing/running-tests.livemd">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

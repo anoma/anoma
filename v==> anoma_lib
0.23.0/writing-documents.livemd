@@ -1,0 +1,135 @@
+<!-- livebook:{"file_entries":[{"name":"writing-docs-configure-system.png","type":"attachment"},{"name":"writing-docs-kroki.png","type":"attachment"},{"name":"writing-docs-smart-box.png","type":"attachment"}],"persist_outputs":true} -->
+
+# Writing Documents
+
+## Index
+1. [Toc](./../toc.livemd)
+2. [User](./../user.livemd)
+   1. [Data](./../user/data.livemd)
+3. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Style Guide](./../contributing/style-guide.livemd)
+   3. [Writing Documents](./../contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./../contributing/examples-over-testing.livemd)
+   5. [Git](./../contributing/git.livemd)
+   6. [Hoon](./../contributing/hoon.livemd)
+   7. [Iex](./../contributing/iex.livemd)
+   8. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   9. [Observer](./../contributing/observer.livemd)
+   10. [Testing](./../contributing/testing.livemd)
+       1. [Running Tests](./../contributing/testing/running-tests.livemd)
+       2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+4. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+5. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+6. [Analysis](./../analysis.livemd)
+   1. [Fema Analysis Pinger](./../analysis/fema-analysis-pinger.livemd)
+7. [Logging](./../logging.livemd)
+8. [Vm_interface](./../vm_interface.livemd)
+
+## The writing from within Anoma
+
+One of the more important parts of the Anoma project is understanding how the codebase works, and how it evolves.
+
+A good way to start on this process is by reading and writing documentation and making visual tools to better solidify knowledge for oneself and others.
+
+To better do this, the codebase as a few levels of documentations:
+
+1. The specs (link TBA)
+2. These livebook documents
+3. Module level documentation
+
+`1.` is what specifies what `Anoma` is abstractly.
+
+`2.` serves the purpose of general knowledge transfer. Some documents serve to provide newcomers with information about various parts of Anoma's development process, others provide visual presentations to various parts of the codebase, while even others provide indepth analys of the codebase.
+
+`3.` is documents regarding module and function specifics. This is often augmented by `2.` for better context and examples.
+
+## Making a new document
+
+To create a new document, it is simple as creating a new `.livemd` file in the folder location you wish it to be organized under.
+
+Thus a file at `documentation/contributing/testing/foo.livemd` would be organized under the section `contribution/testing/`.
+
+The file can either be made in livebook itself, or via the host operating system.
+
+## Connect to Anoma
+
+One should connect the document to a locally running IEX instance of Anoma.
+
+This let's you take advantage of the pre-installed `kino` tools, and lets you generate documentation/diagrams over real Anoma Code.
+
+This can be achieved by click on runtime settings:
+
+<div>
+<img src="./files/writing-docs-configure-system.png" width="300" >
+</div>
+
+From here, click on configure and connect it to your running Anoma instance.
+
+## Making diagrams
+
+Diagrams are an import piece of documentation.
+
+All the standard livebook tools can be used, but Anoma has some extra dependencies that can help creating documentation.
+
+Namely under, the `+Smart` section, we can generate out various kinds of documents:
+
+![](files/writing-docs-smart-box.png)
+
+The diagram will give you [Kroki diagrams](https://kroki.io/), and the UI will look something like this:
+
+![](files/writing-docs-kroki.png)
+
+However currently, due to a bug, writing text in the `Diagram source` will not change the generated diagram.
+
+It is important to click the pencil icon, and edit it by hand.
+
+## Generating the index
+
+To have an Index for a document, one must have a section named `Index`.
+
+Once one has the `Index`, one can generate it by running `mix toc` or `make docs`.
+
+Because livebook does not pull the files for changes, you may have to close the book and open it back up to have the relevant sections be up to date.
+
+<!-- livebook:{"branch_parent_index":5} -->
+
+## Controlling the index sections
+
+To control the order of the index, the project has a file that controls the ordering.
+
+```elixir
+"doc_order.exs" |> File.read!() |> IO.puts()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  {"documentation",
+   [
+     {"toc", []},
+     {"contributing",
+      [
+        {"understanding-any-module", []},
+        {"writing-documents", []}
+      ]},
+     {"visualization", []},
+     {"hoon", []}
+   ]}
+]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+This is a priority list of documents, so the higher up a document is, the higher it will be presented in the `index`.
+
+Running `mix toc` takes this into account. Note that to make sure your changes are reflected, run **mix clean** to make sure the wanted order is generated.
