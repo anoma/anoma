@@ -4,8 +4,10 @@ defmodule Anoma.Node.Logging do
   """
 
   alias __MODULE__
+  alias Anoma.Node.Registry
   alias Anoma.Node.Transaction
   alias Transaction.{Mempool, Ordering, Storage}
+  alias Anoma.Crypto.Id
 
   use GenServer
   use TypedStruct
@@ -20,17 +22,22 @@ defmodule Anoma.Node.Logging do
   end
 
   typedstruct do
+    field(:node_id, Id.t())
     field(:table, atom(), default: __MODULE__.Events)
   end
 
-  def start_link(arg \\ []) do
-    GenServer.start_link(__MODULE__, arg, name: Logging)
+  def start_link(args) do
+    args = Keyword.validate!(args, [:node_id, :table])
+    name = Registry.name(args[:node_id], __MODULE__)
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   @spec init(any()) :: {:ok, Logging.t()}
-  def init(arg) do
-    keylist = Keyword.validate!(arg, table: __MODULE__.Events)
-    table = keylist[:table]
+  def init(args) do
+    args = Keyword.validate!(args, [:node_id, table: __MODULE__.Events])
+
+    table =
+      String.to_atom("#{args[:table]}_#{:erlang.phash2(args[:node_id])}")
 
     with {:atomic, :ok} <-
            :mnesia.create_table(table, attributes: [:type, :body]) do
@@ -40,7 +47,7 @@ defmodule Anoma.Node.Logging do
     end
 
     EventBroker.subscribe_me([logging_filter()])
-    {:ok, %__MODULE__{}}
+    {:ok, %__MODULE__{node_id: args[:node_id], table: table}}
   end
 
   def handle_info(
@@ -211,5 +218,9 @@ defmodule Anoma.Node.Logging do
 
         [{id, tx_w_backend} | lst]
     end
+  end
+
+  def table_name(node_id) do
+    String.to_atom("#{Logging.Events}_#{:erlang.phash2(node_id)}")
   end
 end
