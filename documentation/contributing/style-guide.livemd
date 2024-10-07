@@ -82,6 +82,10 @@ success or failure of the operation.
 
 #### Rule 1.7
 
+Calling a callback function from another callback functions is _not_ allowed.
+
+#### Rule 1.8
+
 Every actor module should have mandatory `Public RPC API`, `GenServer Behavior`, and `GenServer Implementation` sections with following formatting:
 
 <!-- livebook:{"force_markdown":true} -->
@@ -96,7 +100,7 @@ Every actor module should have mandatory `Public RPC API`, `GenServer Behavior`,
 
 ```elixir
   ############################################################
-  #                    Genserver Behavior                    #
+  #                    GenServer Behavior                    #
   ############################################################
 ```
 
@@ -104,17 +108,29 @@ Every actor module should have mandatory `Public RPC API`, `GenServer Behavior`,
 
 ```elixir
   ############################################################
-  #                  Genserver Implementation                #
+  #                  GenServer Implementation                #
   ############################################################
 ```
 
 where
 
 * `Public RPC API` contains public functions using `call` or `cast` functionality
-* `GenServer Behavior` contains all `handle_call` and `handle_cast` functions
+* `GenServer Behavior` contains all callback functions `handle_call`, `handle_cast`, `handle_info`, and `handle_continue`
 * `GenServer Implementation` contains all functions explicitly used in the `GenServer Behavior` sections.
 
 Extra functions can be contained in the latter section or can further be separated into `Helper` functions.
+
+#### Rule 1.9
+
+Actor module may have an optional `Logging Info` section with following formatting:
+
+```
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+```
+
+that contains functions related to logging.
 
 ## Module Documentation
 
