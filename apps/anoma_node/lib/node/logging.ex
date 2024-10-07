@@ -66,17 +66,17 @@ defmodule Anoma.Node.Logging do
   def handle_info(
         %EventBroker.Event{
           body: %Mempool.ConsensusEvent{
-            order: list,
-            round: round
+            order: list
           }
         },
         state
       ) do
     :mnesia.transaction(fn ->
-      :mnesia.write({state.table, :consensus, {round, list}})
+      pending = match_consensus(state.table)
+      :mnesia.write({state.table, :consensus, pending ++ [list]})
     end)
 
-    log_fun({:info, "Consensus provided order. Round: #{inspect(round)}"})
+    log_fun({:info, "Consensus provided order. List: #{inspect(list)}"})
     {:noreply, state}
   end
 
@@ -93,15 +93,16 @@ defmodule Anoma.Node.Logging do
       for id <- id_list do
         :mnesia.delete({state.table, id})
       end
+
+      current_pending = match_consensus(state.table)
+      :mnesia.write({state.table, :consensus, tl(current_pending)})
+      :mnesia.write({state.table, :round, round})
     end)
 
     log_fun({:info, "Block succesfully committed. Round: #{inspect(round)}"})
     {:noreply, state}
   end
 
-  # the type index is either an id or a :consensus atom
-  # the first one has body the tuple {backend, code}
-  # the second one will have {round, map} with a list of txs
   def init_table(table) do
     :mnesia.delete_table(table)
     {:atomic, :ok} = :mnesia.create_table(table, attributes: [:type, :body])
@@ -115,5 +116,12 @@ defmodule Anoma.Node.Logging do
 
   def logging_filter() do
     %__MODULE__.LoggingFilter{}
+  end
+
+  defp match_consensus(table) do
+    case :mnesia.read({table, :consensus}) do
+      [] -> []
+      [{_, :consensus, current_pending}] -> current_pending
+    end
   end
 end

@@ -16,9 +16,14 @@ defmodule Anoma.Node.Transaction.Backends do
 
   @type transaction() :: {backend(), Noun.t() | binary()}
 
+  typedstruct enforce: true, module: ResultEvent do
+    field(:tx_id, integer())
+    field(:vm_result, {:ok, Noun.t()} | :error)
+  end
+
   typedstruct enforce: true, module: CompleteEvent do
     field(:tx_id, integer())
-    field(:result, :ok | :error)
+    field(:tx_result, {:ok, any()} | :error)
   end
 
   def execute({backend, tx}, id)
@@ -28,8 +33,7 @@ defmodule Anoma.Node.Transaction.Backends do
         execute({backend, tx}, id)
 
       :error ->
-        worker_event(id, :error)
-        Ordering.write({id, []})
+        error_handle(id)
     end
   end
 
@@ -49,9 +53,11 @@ defmodule Anoma.Node.Transaction.Backends do
     with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
          {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
          {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
-      {:ok, result}
+      res = {:ok, result}
+      result_event(id, res)
+      res
     else
-      e -> e
+      _e -> :vm_error
     end
   end
 
@@ -60,11 +66,14 @@ defmodule Anoma.Node.Transaction.Backends do
 
     with {:ok, result} <- gate_call(tx_code, env, id),
          :ok <- process.(id, result) do
-      worker_event(id, {:ok, result})
+      :ok
     else
+      :vm_error ->
+        error_handle(id)
+
       _e ->
-        worker_event(id, :error)
         Ordering.write({id, []})
+        complete_event(id, :error)
     end
   end
 
@@ -73,11 +82,13 @@ defmodule Anoma.Node.Transaction.Backends do
     reply_msg = {:read_value, result}
     send(reply_to, reply_msg)
     Ordering.write({id, []})
+    complete_event(id, {:ok, reply_msg})
   end
 
   def blob_store(id, result) do
     key = :crypto.hash(:sha256, :erlang.term_to_binary(result))
     Ordering.write({id, [{key, result}]})
+    complete_event(id, {:ok, key})
   end
 
   def store_value(id, result) do
@@ -89,17 +100,33 @@ defmodule Anoma.Node.Transaction.Backends do
            end) do
       Ordering.write({id, list |> Enum.map(fn [k | v] -> {k, v} end)})
 
-      :ok
+      complete_event(id, {:ok, list})
     else
       _ -> :error
     end
   end
 
-  defp worker_event(id, result) do
+  defp error_handle(id) do
+    result_event(id, :error)
+    Ordering.write({id, []})
+    complete_event(id, :error)
+  end
+
+  defp complete_event(id, result) do
     event =
       EventBroker.Event.new_with_body(%__MODULE__.CompleteEvent{
         tx_id: id,
-        result: result
+        tx_result: result
+      })
+
+    EventBroker.event(event)
+  end
+
+  defp result_event(id, result) do
+    event =
+      EventBroker.Event.new_with_body(%__MODULE__.ResultEvent{
+        tx_id: id,
+        vm_result: result
       })
 
     EventBroker.event(event)

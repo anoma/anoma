@@ -77,20 +77,44 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :mnesia.subscribe({:table, Logging.Events, :simple})
 
-    consensus_event(["id 1"], 0)
+    consensus_event(["id 1"])
 
     assert_receive(
       {:mnesia_table_event,
-       {:write, {Anoma.Node.Logging.Events, :consensus, {0, ["id 1"]}}, _}},
+       {:write, {Anoma.Node.Logging.Events, :consensus, [["id 1"]]}, _}},
       5000
     )
 
-    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, {0, ["id 1"]}}]} =
+    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+
+    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, [["id 1"]]}]} =
              :mnesia.transaction(fn ->
                :mnesia.read(Logging.Events, :consensus)
              end)
+  end
+
+  def check_consensus_event_multiple() do
+    check_multiple_tx_events()
+
+    :mnesia.subscribe({:table, Logging.Events, :simple})
+
+    consensus_event(["id 1"])
+    consensus_event(["id 2"])
+
+    assert_receive(
+      {:mnesia_table_event,
+       {:write, {Anoma.Node.Logging.Events, :consensus, [["id 1"], ["id 2"]]},
+        _}},
+      5000
+    )
 
     :mnesia.unsubscribe({:table, Logging.Events, :simple})
+
+    assert {:atomic,
+            [{Anoma.Node.Logging.Events, :consensus, [["id 1"], ["id 2"]]}]} =
+             :mnesia.transaction(fn ->
+               :mnesia.read(Logging.Events, :consensus)
+             end)
   end
 
   def check_block_event() do
@@ -105,7 +129,9 @@ defmodule Anoma.Node.Examples.ELogging do
       5000
     )
 
-    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, {0, ["id 1"]}}]} =
+    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+
+    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, []}]} =
              :mnesia.transaction(fn ->
                :mnesia.read(Logging.Events, :consensus)
              end)
@@ -116,12 +142,10 @@ defmodule Anoma.Node.Examples.ELogging do
              end)
   end
 
-  def check_block_event_leave_one_out() do
-    check_multiple_tx_events()
+  def check_block_event_multiple() do
+    check_consensus_event_multiple()
 
     :mnesia.subscribe({:table, Logging.Events, :simple})
-
-    consensus_event(["id 1"], 0)
     block_event(["id 1"], 0)
 
     assert_receive(
@@ -130,7 +154,52 @@ defmodule Anoma.Node.Examples.ELogging do
       5000
     )
 
-    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, {0, ["id 1"]}}]} =
+    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, [["id 2"]]}]} =
+             :mnesia.transaction(fn ->
+               :mnesia.read(Logging.Events, :consensus)
+             end)
+
+    assert {:atomic, []} =
+             :mnesia.transaction(fn ->
+               :mnesia.read(Logging.Events, "id 1")
+             end)
+
+    block_event(["id 2"], 0)
+
+    assert_receive(
+      {:mnesia_table_event,
+       {:delete, {Anoma.Node.Logging.Events, "id 2"}, _}},
+      5000
+    )
+
+    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+
+    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, []}]} =
+             :mnesia.transaction(fn ->
+               :mnesia.read(Logging.Events, :consensus)
+             end)
+
+    assert {:atomic, []} =
+             :mnesia.transaction(fn ->
+               :mnesia.read(Logging.Events, "id 2")
+             end)
+  end
+
+  def check_block_event_leave_one_out() do
+    check_consensus_event_multiple()
+
+    :mnesia.subscribe({:table, Logging.Events, :simple})
+    block_event(["id 1"], 0)
+
+    assert_receive(
+      {:mnesia_table_event,
+       {:delete, {Anoma.Node.Logging.Events, "id 1"}, _}},
+      5000
+    )
+
+    :mnesia.unsubscribe({:table, Logging.Events, :simple})
+
+    assert {:atomic, [{Anoma.Node.Logging.Events, :consensus, [["id 2"]]}]} =
              :mnesia.transaction(fn ->
                :mnesia.read(Logging.Events, :consensus)
              end)
@@ -157,11 +226,10 @@ defmodule Anoma.Node.Examples.ELogging do
     EventBroker.event(event)
   end
 
-  def consensus_event(order, round) do
+  def consensus_event(order) do
     event =
       EventBroker.Event.new_with_body(%Mempool.ConsensusEvent{
-        order: order,
-        round: round
+        order: order
       })
 
     EventBroker.event(event)

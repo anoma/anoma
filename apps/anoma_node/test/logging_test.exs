@@ -10,10 +10,12 @@ defmodule LoggingTest do
 
   test "consensus event examples" do
     ELogging.check_consensus_event()
+    ELogging.check_consensus_event_multiple()
   end
 
   test "block event examples" do
     ELogging.check_block_event()
+    ELogging.check_block_event_multiple()
     ELogging.check_block_event_leave_one_out()
   end
 end

@@ -4,18 +4,18 @@ defmodule Anoma.Node.Transaction.Mempool do
   """
 
   alias __MODULE__
-  alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Ordering
-  alias Anoma.Node.Transaction.Storage
+  alias Anoma.Node.Transaction.{Storage, Executor, Backends}
 
   require EventBroker.Event
 
   use TypedStruct
 
-  @type result :: {:ok, any()} | :error | :in_progress
+  @type vm_result :: {:ok, Noun.t()} | :error | :in_progress
+  @type tx_result :: {:ok, any()} | :error | :in_progress
 
   typedstruct module: Tx do
-    field(:result, Mempool.result(), default: :in_progress)
+    field(:tx_result, Mempool.tx_result(), default: :in_progress)
+    field(:vm_result, Mempool.vm_result(), default: :in_progress)
     field(:backend, Backends.backend())
     field(:code, Noun.t())
   end
@@ -27,7 +27,6 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   typedstruct module: ConsensusEvent do
     field(:order, list(binary()))
-    field(:round, non_neg_integer())
   end
 
   typedstruct module: BlockEvent do
@@ -51,6 +50,10 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @spec init(any()) :: {:ok, Mempool.t()}
   def init(_arg) do
+    EventBroker.subscribe_me([
+      filter_for_mempool()
+    ])
+
     {:ok, %__MODULE__{}}
   end
 
@@ -74,7 +77,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   # list of ids seen as ordered transactions
   @spec execute(list(binary())) :: :ok
   def execute(ordered_list_of_txs) do
-    GenServer.call(__MODULE__, {:execute, ordered_list_of_txs})
+    GenServer.cast(__MODULE__, {:execute, ordered_list_of_txs})
   end
 
   ############################################################
@@ -85,99 +88,16 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:reply, state.transactions |> Map.keys(), state}
   end
 
-  def handle_call({:execute, id_list}, _from, state) do
-    round = state.round
-    tx_map = state.transactions
-
-    consensus_event =
-      EventBroker.Event.new_with_body(%__MODULE__.ConsensusEvent{
-        order: id_list,
-        round: round
-      })
-
-    EventBroker.event(consensus_event)
-
-    # we should also check for id uniqueness
-    with true <-
-           id_list
-           |> Enum.all?(fn x -> Map.has_key?(tx_map, x) end) do
-      Ordering.order(id_list)
-
-      # check which tasks were already completed and return the uncompleted list
-
-      new_txs =
-        for id <- id_list,
-            reduce: tx_map do
-          map ->
-            unless Map.get(map, id).result == :in_progress do
-              map
-            else
-              receive do
-                %EventBroker.Event{
-                  body: %Anoma.Node.Transaction.Backends.CompleteEvent{
-                    tx_id: id,
-                    result: res
-                  }
-                } ->
-                  EventBroker.unsubscribe_me([
-                    worker_module_filter(),
-                    Ordering.tx_id_filter(id)
-                  ])
-
-                  Map.update!(map, id, fn tx ->
-                    Map.put(tx, :result, res)
-                  end)
-              end
-            end
-        end
-
-      writes = Map.take(new_txs, id_list) |> Map.values()
-
-      Storage.commit(round, writes)
-
-      block_event =
-        EventBroker.Event.new_with_body(%__MODULE__.BlockEvent{
-          order: id_list,
-          round: round
-        })
-
-      EventBroker.event(block_event)
-
-      {:reply, :ok,
-       %__MODULE__{
-         state
-         | transactions: Map.drop(new_txs, id_list),
-           round: state.round + 1
-       }}
-    else
-      false -> {:reply, :error, state}
-    end
-  end
-
   def handle_call(_, _, state) do
     {:reply, :ok, state}
   end
 
-  # the pid for ro backend now needs to be specified inside the backend
   def handle_cast({:tx, {backend, code} = tx, tx_id}, state) do
     value = %Tx{backend: backend, code: code}
 
-    tx_event =
-      EventBroker.Event.new_with_body(%__MODULE__.TxEvent{
-        id: tx_id,
-        tx: value
-      })
+    tx_event(tx_id, value)
 
-    EventBroker.event(tx_event)
-
-    EventBroker.subscribe_me([
-      worker_module_filter(),
-      Ordering.tx_id_filter(tx_id)
-    ])
-
-    Task.start(fn ->
-      Backends.execute(tx, tx_id)
-    end)
+    Executor.launch(tx, tx_id)
 
     nstate = %Mempool{
       state
@@ -187,38 +107,100 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:noreply, nstate}
   end
 
+  def handle_cast({:execute, id_list}, state) do
+    consensus_event(id_list)
+    Executor.execute(id_list)
+
+    {:noreply, state}
+  end
+
   def handle_cast(_, state) do
     {:noreply, state}
   end
 
-  # I handle messages of worker which are done before I execute
-  # if I handle info about an already cleared tx I do nothing
   def handle_info(
         %EventBroker.Event{
-          body: %Anoma.Node.Transaction.Backends.CompleteEvent{
+          body: %Backends.ResultEvent{
             tx_id: id,
-            result: res
+            vm_result: res
           }
         },
         state
       ) do
-    EventBroker.unsubscribe_me([
-      worker_module_filter(),
-      Ordering.tx_id_filter(id)
-    ])
-
     new_map =
       state.transactions
-      |> Map.update!(id, fn tx -> Map.put(tx, :result, res) end)
+      |> Map.update!(id, fn tx -> Map.put(tx, :vm_result, res) end)
 
     {:noreply, %__MODULE__{state | transactions: new_map}}
+  end
+
+  def handle_info(
+        %EventBroker.Event{
+          body: %Executor.ExecutionEvent{
+            result: execution_list
+          }
+        },
+        state
+      ) do
+    round = state.round
+
+    {writes, map} = process_execution(state, execution_list)
+
+    Storage.commit(round, writes)
+
+    block_event(Enum.map(execution_list, &elem(&1, 1)), round)
+
+    {:noreply, %__MODULE__{state | transactions: map, round: round + 1}}
   end
 
   def handle_info(_, state) do
     {:noreply, state}
   end
 
+  def block_event(id_list, round) do
+    block_event =
+      EventBroker.Event.new_with_body(%__MODULE__.BlockEvent{
+        order: id_list,
+        round: round
+      })
+
+    EventBroker.event(block_event)
+  end
+
+  def tx_event(tx_id, value) do
+    tx_event =
+      EventBroker.Event.new_with_body(%__MODULE__.TxEvent{
+        id: tx_id,
+        tx: value
+      })
+
+    EventBroker.event(tx_event)
+  end
+
+  def consensus_event(id_list) do
+    consensus_event =
+      EventBroker.Event.new_with_body(%__MODULE__.ConsensusEvent{
+        order: id_list
+      })
+
+    EventBroker.event(consensus_event)
+  end
+
   def worker_module_filter() do
     %EventBroker.Filters.SourceModule{module: Anoma.Node.Transaction.Backends}
+  end
+
+  def filter_for_mempool() do
+    %Backends.ForMempoolFilter{}
+  end
+
+  defp process_execution(state, execution_list) do
+    for {tx_res, id} <- execution_list, reduce: {[], state.transactions} do
+      {lst, ex_state} ->
+        {tx_struct, map} =
+          Map.get_and_update!(ex_state, id, fn _ -> :pop end)
+
+        {[Map.put(tx_struct, :tx_result, tx_res) | lst], map}
+    end
   end
 end
