@@ -12,6 +12,11 @@ defmodule TransactionTest do
     ETransaction.write_future_then_write_present()
     ETransaction.write_multiple_then_read()
     ETransaction.write_future_multiple_then_write_present()
+    ETransaction.append_then_read()
+    ETransaction.append_then_read_same()
+    ETransaction.append_then_read_several()
+    ETransaction.append_twice_then_read()
+    ETransaction.append_twice_then_read_with_commit()
     ETransaction.complicated_storage()
     ETransaction.complicated_storage_with_commit()
   end

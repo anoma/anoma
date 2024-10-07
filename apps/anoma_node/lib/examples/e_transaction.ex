@@ -71,6 +71,50 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, 231} = Task.await(task2)
   end
 
+  def append_then_read do
+    restart_storage()
+    Storage.append({1, [{:set, "value"}]})
+    new_set = MapSet.new(["value"])
+    {:ok, ^new_set} = Storage.read({1, :set})
+  end
+
+  def append_then_read_same do
+    restart_storage()
+    Storage.append({1, [{:set, "value"}, {:set, "value"}]})
+    new_set = MapSet.new(["value"])
+    {:ok, ^new_set} = Storage.read({1, :set})
+  end
+
+  def append_then_read_several do
+    restart_storage()
+    Storage.append({1, [{:set, "value1"}, {:set, "value2"}]})
+    new_set = MapSet.new(["value1", "value2"])
+    {:ok, ^new_set} = Storage.read({1, :set})
+  end
+
+  def append_twice_then_read do
+    restart_storage()
+    Storage.append({1, [{:set, "value1"}]})
+    new_set = MapSet.new(["value1"])
+    {:ok, ^new_set} = Storage.read({1, :set})
+    Storage.append({2, [{:set, "value2"}]})
+    appended_set = MapSet.new(["value1", "value2"])
+    {:ok, ^appended_set} = Storage.read({2, :set})
+  end
+
+  def append_twice_then_read_with_commit do
+    restart_storage()
+    Storage.append({1, [{:set, "value1"}]})
+    new_set = MapSet.new(["value1"])
+    {:ok, ^new_set} = Storage.read({1, :set})
+
+    Storage.commit(1, nil)
+
+    Storage.append({2, [{:set, "value2"}]})
+    appended_set = MapSet.new(["value1", "value2"])
+    {:ok, ^appended_set} = Storage.read({2, :set})
+  end
+
   def complicated_storage do
     restart_storage()
     task1 = Task.async(fn -> Storage.read({3, ["abc"]}) end)
