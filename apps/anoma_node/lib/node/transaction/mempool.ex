@@ -8,6 +8,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   require EventBroker.Event
 
+  use GenServer
   use TypedStruct
 
   @type vm_result :: {:ok, Noun.t()} | :error | :in_progress
@@ -44,17 +45,31 @@ defmodule Anoma.Node.Transaction.Mempool do
     field(:round, non_neg_integer(), default: 0)
   end
 
-  def start_link(default) do
-    GenServer.start_link(__MODULE__, default, name: Mempool)
+  def start_link(args \\ []) do
+    GenServer.start_link(__MODULE__, args, name: Mempool)
   end
 
   @spec init(any()) :: {:ok, Mempool.t()}
-  def init(_arg) do
+  def init(args) do
+    keylist =
+      args |> Keyword.validate!(transactions: [], consensus: [], round: 0)
+
     EventBroker.subscribe_me([
       filter_for_mempool()
     ])
 
-    {:ok, %__MODULE__{}}
+    for {id, tx_w_backend} <- keylist[:transactions] do
+      tx(tx_w_backend, id)
+    end
+
+    consensus = keylist[:consensus]
+    round = keylist[:round]
+
+    for list <- consensus do
+      execute(list)
+    end
+
+    {:ok, %__MODULE__{round: round}}
   end
 
   ############################################################

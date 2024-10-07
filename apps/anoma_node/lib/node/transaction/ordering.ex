@@ -22,12 +22,13 @@ defmodule Anoma.Node.Transaction.Ordering do
     field(:tx_id, binary())
   end
 
-  def start_link(args) do
+  def start_link(args \\ []) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
-  def init(_opts) do
-    {:ok, %Ordering{}}
+  def init(args) do
+    keylist = args |> Keyword.validate!(next_height: 1)
+    {:ok, %Ordering{next_height: keylist[:next_height]}}
   end
 
   def handle_call({:read, {tx_id, key}}, from, state) do
