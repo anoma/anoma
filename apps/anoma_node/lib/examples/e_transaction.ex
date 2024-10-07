@@ -190,35 +190,119 @@ defmodule Anoma.Node.Examples.ETransaction do
     # Place the result in a list
     arm = [10, [2 | increment_value_arm], 1, 0 | 0]
     sample = 0
-    inc = [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.logics_core()]
+    inc = [[8, [1 | sample], [1 | arm], 0 | 1] | 999]
 
     {:debug_term_storage, inc}
   end
 
-  def zero_counter_submit(key \\ ["key"]) do
+  def zero_counter_submit(key \\ "key") do
     restart_tx_module()
-    Mempool.tx(zero(key), "id 1")
+    {back, zero} = zero(key)
+
+    Mempool.tx({back, zero}, "id 1")
     :ok = Mempool.tx_dump() |> Mempool.execute()
+
+    [
+      {Storage.Blocks, 0,
+       [
+         %Mempool.Tx{
+           code: ^zero,
+           backend: ^back,
+           result: {:ok, [[^key | 0] | 0]}
+         }
+       ]}
+    ] = :mnesia.dirty_read({Storage.Blocks, 0})
   end
 
-  def inc_counter_submit_with_zero(key \\ ["key"]) do
+  def inc_counter_submit_with_zero(key \\ "key") do
     restart_tx_module()
-    Mempool.tx(zero(key), "id 1")
-    Mempool.tx(inc(key), "id 2")
+    {back1, zero} = zero(key)
+    {back2, inc} = inc(key)
+
+    Mempool.tx({back1, zero}, "id 1")
+    Mempool.tx({back2, inc}, "id 2")
     :ok = Mempool.tx_dump() |> Mempool.execute()
+
+    [
+      {Storage.Blocks, 0,
+       [
+         %Mempool.Tx{
+           code: ^zero,
+           backend: ^back1,
+           result: {:ok, [[^key | 0] | 0]}
+         },
+         %Mempool.Tx{
+           code: ^inc,
+           backend: ^back2,
+           result: {:ok, [[^key | 1] | 0]}
+         }
+       ]}
+    ] = :mnesia.dirty_read({Storage.Blocks, 0})
   end
 
-  def inc_counter_submit_after_zero(key \\ ["key"]) do
+  def inc_counter_submit_after_zero(key \\ "key") do
     zero_counter_submit(key)
-    Mempool.tx(inc(key), "id 2")
+    {back, inc} = inc(key)
+    Mempool.tx({back, inc}, "id 2")
     :ok = ["id 2"] |> Mempool.execute()
+
+    [
+      {Storage.Blocks, 1,
+       [
+         %Mempool.Tx{
+           code: ^inc,
+           backend: ^back,
+           result: {:ok, [[^key | 1] | 0]}
+         }
+       ]}
+    ] = :mnesia.dirty_read({Storage.Blocks, 1})
   end
 
-  def inc_counter_submit_after_read(key \\ ["key"]) do
+  def inc_counter_submit_after_read(key \\ "key") do
     zero_counter_submit(key)
-    {:debug_term_storage, zero} = zero()
+    {:debug_term_storage, zero} = zero(key)
+    {back, inc} = inc(key)
     Mempool.tx({{:debug_read_term, self()}, zero}, "id 2")
     Mempool.tx(inc(key), "id 3")
-    :ok = ["id 3", "id 2"] |> Mempool.execute()
+    :ok = ["id 2", "id 3"] |> Mempool.execute()
+
+    [
+      {Storage.Blocks, 1,
+       [
+         %Mempool.Tx{
+           code: ^zero,
+           backend: {:debug_read_term, _},
+           result: {:ok, [[^key | 0] | 0]}
+         },
+         %Mempool.Tx{
+           code: ^inc,
+           backend: ^back,
+           result: {:ok, [[^key | 1] | 0]}
+         }
+       ]}
+    ] = :mnesia.dirty_read({Storage.Blocks, 1})
+  end
+
+  def bluf() do
+    [0 | 0]
+  end
+
+  def bluf_transaction_errors do
+    restart_tx_module()
+    # todo: ideally we wait for the event broker message
+    # before execution
+    Mempool.tx({:debug_term_storage, bluf()}, "id 1")
+    :ok = ["id 1"] |> Mempool.execute()
+
+    [
+      {Storage.Blocks, 0,
+       [
+         %Mempool.Tx{
+           code: [0 | 0],
+           backend: :debug_term_storage,
+           result: :error
+         }
+       ]}
+    ] = :mnesia.dirty_read({Storage.Blocks, 0})
   end
 end
