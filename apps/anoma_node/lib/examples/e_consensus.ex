@@ -1,6 +1,6 @@
 defmodule Anoma.Node.Examples.EConsensus do
   alias Anoma.Crypto.Id
-  alias Anoma.Node.Examples.{ETransaction, ELogging}
+  alias Anoma.Node.Examples.{ETransaction}
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Mempool
@@ -33,7 +33,6 @@ defmodule Anoma.Node.Examples.EConsensus do
 
   def restart_consensus_env(node_id \\ Examples.ECrypto.londo()) do
     ETransaction.restart_tx_module(node_id)
-    ELogging.restart_logging()
     restart_consensus(node_id)
   end
 

@@ -9,16 +9,6 @@ defmodule Anoma.Node.Examples.ELogging do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  def restart_logging do
-    # if GenServer.whereis(Logging) do
-    #   GenServer.stop(Logging)
-    # end
-
-    # :mnesia.clear_table(Anoma.Node.Logging.Events)
-
-    # Logging.start_link(node_id: Examples.ECrypto.londo())
-  end
-
   def check_tx_event(node_id \\ Id.new_keypair()) do
     ENode.start_node(node_id)
     table_name = Logging.table_name(node_id)
