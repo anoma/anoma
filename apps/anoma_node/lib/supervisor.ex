@@ -25,12 +25,18 @@ defmodule Anoma.Supervisor do
   end
 
   @doc """
-  I start a new node with the given `node_id`.
+  I start a new node with the given `node_id` and transaction initialization arguments.
   """
-  def start_node(node_id: node_id) do
+  def start_node(args) do
+    [tx_args: tx_args, node_id: node_id] =
+      Keyword.validate!(args, [
+        :node_id,
+        tx_args: [mempool: [], ordering: [], storage: []]
+      ])
+
     DynamicSupervisor.start_child(
       Anoma.Node.NodeSupervisor,
-      {Anoma.Node.Supervisor, [node_id: node_id]}
+      {Anoma.Node.Supervisor, [node_id: node_id, tx_args: tx_args]}
     )
   end
 end

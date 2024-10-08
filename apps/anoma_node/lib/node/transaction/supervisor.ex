@@ -6,16 +6,21 @@ defmodule Anoma.Node.Transaction.Supervisor do
   use Supervisor
 
   def start_link(args) do
-    args = Keyword.validate!(args, [:node_id])
+    args = Keyword.validate!(args, [:node_id, :tx_args])
     Supervisor.start_link(__MODULE__, args)
   end
 
   def init(args) do
+    tx_args = args[:tx_args]
+
     children = [
-      {Anoma.Node.Transaction.Mempool, [node_id: args[:node_id]]},
+      {Anoma.Node.Transaction.Mempool,
+       [node_id: args[:node_id]] ++ tx_args[:mempool]},
       {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]},
-      {Anoma.Node.Transaction.Ordering, [node_id: args[:node_id]]},
-      {Anoma.Node.Transaction.Storage, [node_id: args[:node_id]]}
+      {Anoma.Node.Transaction.Ordering,
+       [node_id: args[:node_id]] ++ tx_args[:ordering]},
+      {Anoma.Node.Transaction.Storage,
+       [node_id: args[:node_id]] ++ tx_args[:storage]}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)
