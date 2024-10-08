@@ -14,13 +14,13 @@ defmodule Anoma.Node.Transaction.Supervisor do
     tx_args = args[:tx_args]
 
     children = [
-      {Anoma.Node.Transaction.Mempool,
-       [node_id: args[:node_id]] ++ tx_args[:mempool]},
       {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]},
       {Anoma.Node.Transaction.Ordering,
        [node_id: args[:node_id]] ++ tx_args[:ordering]},
       {Anoma.Node.Transaction.Storage,
-       [node_id: args[:node_id]] ++ tx_args[:storage]}
+       [node_id: args[:node_id]] ++ tx_args[:storage]},
+      {Anoma.Node.Transaction.Mempool,
+       [node_id: args[:node_id]] ++ tx_args[:mempool]}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)
