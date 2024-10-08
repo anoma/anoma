@@ -74,7 +74,7 @@ defmodule Anoma.Node.Transaction.Mempool do
     ])
 
     for {id, tx_w_backend} <- keylist[:transactions] do
-      tx(tx_w_backend, id)
+      tx(args[:node_id], tx_w_backend, id)
     end
 
     consensus = keylist[:consensus]
