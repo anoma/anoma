@@ -2,9 +2,11 @@
 [
   {:burrito, "~> 1.1.0"},
   {:cairo,
-   git: "https://github.com/anoma/aarm-cairo",
-   rev: "dd2ed877e8d7c326a4a88dcf86ae32cd0183f3ae"},
-  {:enacl, git: "https://github.com/anoma/enacl/"},
+  git: "https://github.com/anoma/aarm-cairo",
+  rev: "dd2ed877e8d7c326a4a88dcf86ae32cd0183f3ae"},
+  {:enacl,
+   git: "https://github.com/m1dnight/enacl",
+   rev: "b5f561d706c6902434af4d3cb2e83e56be764355"},
   {:kino, git: "https://github.com/livebook-dev/kino", override: true},
   # until the next Kino release
   {:kino_kroki, "~> 0.1.0"},
