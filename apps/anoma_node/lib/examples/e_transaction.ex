@@ -67,9 +67,7 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, 231} = Storage.read(node_id, {1, ["bcd"]})
   end
 
-  def write_future_multiple_then_write_present(
-        node_id \\ "londo_mollari"
-      ) do
+  def write_future_multiple_then_write_present(node_id \\ "londo_mollari") do
     restart_storage(node_id)
 
     _task1 =

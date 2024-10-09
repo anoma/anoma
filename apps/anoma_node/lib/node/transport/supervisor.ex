@@ -24,6 +24,7 @@ defmodule Anoma.Node.Transport.Supervisor do
   """
   def init(args) do
     Logger.debug("starting transport supervisor #{inspect(args)}")
+    Process.set_label(__MODULE__)
 
     # validate args and set defaults
     args = Keyword.validate!(args, [:node_id, ports: []])

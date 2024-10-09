@@ -58,7 +58,10 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   @spec init(any()) :: {:ok, Mempool.t()}
+
   def init(args) do
+    Process.set_label(__MODULE__)
+
     keylist =
       args
       |> Keyword.validate!(

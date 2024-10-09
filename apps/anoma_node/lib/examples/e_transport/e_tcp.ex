@@ -3,9 +3,9 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
   use TypedStruct
 
   import ExUnit.Assertions
-  import Examples.ECrypto, only: [alice: 0, bertha: 0]
 
   alias Anoma.Node.Registry
+  alias Anoma.Node.Examples.ERegistry
   alias Anoma.Protobuf.NodeInfo
   alias EventBroker.Filters
 
@@ -67,13 +67,13 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
     # --------------------------------------------------------
     # Assert the processes are all created
 
-    registered_processes =
+    _registered_processes =
       Registry.dump_register()
       |> Enum.map(fn {address, _pid, _} -> address end)
 
-    assert Registry.address(node_id, :tcp_supervisor) in registered_processes
+    assert ERegistry.process_registered?(node_id, :tcp_supervisor)
 
-    assert Registry.address(node_id, :proxy_supervisor) in registered_processes
+    assert ERegistry.process_registered?(node_id, :proxy_supervisor)
 
     # --------------------------------------------------------
     # return the context
@@ -121,8 +121,8 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
   @spec create_context() :: contexts
   def create_context() do
     %{}
-    |> create_node(:alice, alice())
-    |> create_node(:bertha, bertha())
+    |> create_node(:alice, "alice")
+    |> create_node(:bertha, "bertha")
   end
 
   # @doc """
@@ -230,8 +230,8 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
   @spec create_nodes_and_cleanup_nodes() :: contexts
   def create_nodes_and_cleanup_nodes() do
     %{}
-    |> create_node(:alice, alice())
-    |> create_node(:bertha, bertha())
+    |> create_node(:alice, "alice")
+    |> create_node(:bertha, "bertha")
     |> remove_node(:alice)
     |> remove_node(:bertha)
   end
@@ -249,23 +249,21 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
     # create the nodes and connect them to each other.
     contexts =
       %{}
-      |> create_node(:alice, alice())
-      |> create_node(:bertha, bertha())
+      |> create_node(:alice, "alice")
+      |> create_node(:bertha, "bertha")
       |> create_tcp_listener(for: :alice)
       |> create_tcp_client(for: :bertha, to: :alice)
 
     # the node info we expect to discover
     alice_node_info = %NodeInfo{
-      sign: alice().external.sign,
-      encrypt: alice().external.encrypt
+      node_id: "alice"
     }
 
     assert_receive %{body: {:new_node_discovered, ^alice_node_info}}
 
     # the node info we expect to discover
     bertha_node_info = %NodeInfo{
-      sign: bertha().external.sign,
-      encrypt: bertha().external.encrypt
+      node_id: "bertha"
     }
 
     assert_receive %{body: {:new_node_discovered, ^bertha_node_info}}
