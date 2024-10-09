@@ -69,6 +69,8 @@ defmodule Anoma.Node.Transport.TCP.Connection do
   # I don't do anything useful.
   # """
   def init(args) do
+    Process.set_label(__MODULE__)
+
     Logger.debug("#{inspect(self())} starting tcp connection")
     args = Keyword.validate!(args, [:node_id, :socket])
     state = struct(__MODULE__, Enum.into(args, %{}))

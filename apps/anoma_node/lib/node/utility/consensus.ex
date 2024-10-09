@@ -23,6 +23,7 @@ defmodule Anoma.Node.Utility.Consensus do
 
   @spec init(any()) :: {:ok, Consensus.t()}
   def init(args) do
+    Process.set_label(__MODULE__)
     args = Keyword.validate!(args, [:interval, :node_id])
 
     EventBroker.subscribe_me([

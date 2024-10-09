@@ -16,6 +16,7 @@ defmodule Anoma.Supervisor do
   end
 
   def init(_args) do
+    Process.set_label(__MODULE__)
     children = [
       {Elixir.Registry, keys: :unique, name: Anoma.Node.Registry},
       {DynamicSupervisor, name: Anoma.Node.NodeSupervisor}

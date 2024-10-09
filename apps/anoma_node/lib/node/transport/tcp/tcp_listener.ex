@@ -101,6 +101,8 @@ defmodule Anoma.Node.Transport.TCP.Listener do
   """
   @impl true
   def init(args) do
+    Process.set_label(__MODULE__)
+
     Logger.debug("starting tcp listener with #{inspect(args)}")
 
     # trap exits to shut down cleanly.

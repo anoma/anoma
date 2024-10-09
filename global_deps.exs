@@ -5,6 +5,7 @@
    git: "https://github.com/anoma/aarm-cairo",
    rev: "dd2ed877e8d7c326a4a88dcf86ae32cd0183f3ae"},
   {:enacl, git: "https://github.com/anoma/enacl/"},
+  {:grpc, "~> 0.9"},
   {:kino, git: "https://github.com/livebook-dev/kino", override: true},
   # until the next Kino release
   {:kino_kroki, "~> 0.1.0"},
@@ -14,7 +15,8 @@
   {:murmur, "~> 2.0"},
   {:optimus, "~> 0.2"},
   {:plug_crypto, "~> 2.0"},
-  {:protobuf, "~> 0.10.0"},
+  {:protobuf, "~> 0.11.0"},
+  {:protobuf_generate, "~> 0.1.0"},
   {:qex, ">= 0.5.1"},
   {:recon, "~> 2.5.4"},
   {:rexbug, ">= 2.0.0-rc1"},
