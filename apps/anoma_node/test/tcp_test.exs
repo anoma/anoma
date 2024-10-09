@@ -4,8 +4,7 @@ defmodule Examples.TcpTest do
 
   alias Anoma.Node.Examples.ETransport.ETcp
 
-  test "sha256 examples" do
-    ETcp.create_nodes_and_cleanup_nodes()
+  test "tcp client and server examples" do
     ETcp.connect_nodes()
   end
 end
