@@ -40,7 +40,7 @@ defmodule Anoma.Node.Examples.ERegistry do
   @doc """
   I create an address for a given node id, module, and label.
   """
-  @spec create_address_with_label() :: Registry.Address.t()
+  @spec create_address_with_label() :: Address.t()
   def create_address_with_label() do
     node_id = Id.new_keypair()
     address = Registry.address(node_id, :module, :label)

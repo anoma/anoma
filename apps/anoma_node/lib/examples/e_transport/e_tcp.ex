@@ -9,6 +9,7 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
   alias Anoma.Node.Registry
   alias Protobufs.NodeInfo
   alias EventBroker.Filters
+  alias Anoma.Node.Examples.ENode
 
   require ExUnit.Assertions
   require Logger
@@ -43,27 +44,12 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
   ############################################################
 
   # @doc """
-  # I start a new node with the given node id.
-  # If the node is already started, I return the pid.
-  # """
-  @spec start_node(Id.t()) :: pid()
-  defp start_node(node_id) do
-    case Anoma.Supervisor.start_node(node_id: node_id) do
-      {:ok, pid} ->
-        pid
-
-      {:error, {:already_started, pid}} ->
-        pid
-    end
-  end
-
-  # @doc """
   # I create a new node and add it to the context.
   # """
   @spec create_node(contexts, atom(), Id.t()) :: contexts
   defp create_node(contexts, node_name, node_id) do
     # start  a node for alice
-    node_pid = start_node(node_id)
+    node_pid = ENode.start_node(node_id)
 
     # --------------------------------------------------------
     # Assert the processes are all created
@@ -124,6 +110,36 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
     %{}
     |> create_node(:alice, alice())
     |> create_node(:bertha, bertha())
+  end
+
+  # @doc """
+  # I create a tcp server for the given node.
+  # """
+  @spec create_tcp_listener(ENode.t()) :: ENode.t()
+  def create_tcp_listener(node) do
+    node_id = node.node_id
+
+    # count the number of listeners in use before creating a new one
+    count_before =
+      DynamicSupervisor.count_children(
+        Registry.whereis(node_id, :tcp_supervisor)
+      )
+
+    # start a tcp server on a random port
+    {:ok, _pid, port} = Anoma.Node.Transport.start_tcp_server(node_id)
+
+    count_after =
+      DynamicSupervisor.count_children(
+        Registry.whereis(node_id, :tcp_supervisor)
+      )
+
+    # assert that one extra listener is created
+    assert count_before.active + 1 == count_after.active
+    assert count_before.workers + 1 == count_after.workers
+    assert count_before.specs + 1 == count_after.specs
+
+    # store the port in the context
+    Map.update(node, :ports, [port], &(&1 ++ [port]))
   end
 
   # @doc """
