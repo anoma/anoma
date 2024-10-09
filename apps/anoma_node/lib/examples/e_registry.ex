@@ -1,18 +1,55 @@
 defmodule Anoma.Node.Examples.ERegistry do
   import ExUnit.Assertions
 
+  alias __MODULE__
+  alias Anoma.Crypto.Id
   alias Anoma.Node.Registry
   alias Anoma.Node.Registry.Address
-  alias Anoma.Crypto.Id
+
+  use TypedStruct
+
+  ############################################################
+  #                    Context                               #
+  ############################################################
+
+  typedstruct do
+    @typedoc """
+    I am the state of a registry created in the examples.
+
+    ### Fields
+    - `:pid`      - the pid of the supervision tree.
+    """
+    field(:pid, pid())
+  end
+
+  @doc """
+  Given a node id and an engine, I check if this process is registered and alive.
+  """
+  @spec process_registered?(Id.t(), atom()) :: boolean()
+  def process_registered?(node_id, engine) do
+    case Registry.whereis(node_id, engine) do
+      nil ->
+        false
+
+      pid ->
+        Process.alive?(pid)
+    end
+  end
 
   @doc """
   I start a new registry, or return the address of the one that is already running.
   """
-  @spec start_registry() :: {:ok, pid()}
+  @spec start_registry() :: ERegistry.t() | :error
   def start_registry() do
-    case Elixir.Registry.start_link(keys: :unique, name: Anoma.Node.Registry) do
-      {:error, {:already_started, pid}} -> {:ok, pid}
-      {:ok, pid} -> {:ok, pid}
+    case Elixir.Registry.start_link(keys: :unique, name: Registry) do
+      {:error, {:already_started, pid}} ->
+        %ERegistry{pid: pid}
+
+      {:ok, pid} ->
+        %ERegistry{pid: pid}
+
+      _ ->
+        :error
     end
   end
 
@@ -21,15 +58,14 @@ defmodule Anoma.Node.Examples.ERegistry do
 
   I assert that the address is created correctly.
   """
-  @spec create_address() :: Registry.Address.t()
-  def create_address() do
-    node_id = Id.new_keypair()
+  @spec create_address(Id.t()) :: Address.t()
+  def create_address(node_id \\ Id.new_keypair()) do
     address = Registry.address(node_id, :module)
 
-    expected_address = %Anoma.Node.Registry.Address{
+    expected_address = %Address{
       label: nil,
       engine: :module,
-      node_id: node_id
+      node_id: node_id.external
     }
 
     assert expected_address == address
@@ -40,15 +76,14 @@ defmodule Anoma.Node.Examples.ERegistry do
   @doc """
   I create an address for a given node id, module, and label.
   """
-  @spec create_address_with_label() :: Registry.Address.t()
-  def create_address_with_label() do
-    node_id = Id.new_keypair()
+  @spec create_address_with_label(Id.t()) :: Address.t()
+  def create_address_with_label(node_id \\ Id.new_keypair()) do
     address = Registry.address(node_id, :module, :label)
 
-    expected_address = %Anoma.Node.Registry.Address{
+    expected_address = %Address{
       label: :label,
       engine: :module,
-      node_id: node_id
+      node_id: node_id.external
     }
 
     assert expected_address == address
@@ -59,13 +94,13 @@ defmodule Anoma.Node.Examples.ERegistry do
   @doc """
   Given a node id and an engine, I generate a name that can be used to register processes.
   """
-  def generate_name() do
-    node_id = Id.new_keypair()
+  @spec generate_name(Id.t()) :: {:via, atom(), {atom(), Address.t()}}
+  def generate_name(node_id \\ Id.new_keypair()) do
     name = Registry.name(node_id, :module)
 
     expected_name =
       {:via, Elixir.Registry,
-       {Registry, %Address{node_id: node_id, engine: :module}}}
+       {Registry, %Address{node_id: node_id.external, engine: :module}}}
 
     assert name == expected_name
 
@@ -75,15 +110,14 @@ defmodule Anoma.Node.Examples.ERegistry do
   @doc """
   I generate a name from a module, node id and label.
   """
-  @spec generate_name_with_label() ::
-          {:via, atom(), {atom(), Address.t()}}
-  def generate_name_with_label() do
-    node_id = Id.new_keypair()
+  @spec generate_name_with_label() :: {:via, atom(), {atom(), Address.t()}}
+  def generate_name_with_label(node_id \\ Id.new_keypair()) do
     name = Registry.name(node_id, :module, :label)
 
     expected_name =
       {:via, Elixir.Registry,
-       {Registry, %Address{node_id: node_id, engine: :module, label: :label}}}
+       {Registry,
+        %Address{node_id: node_id.external, engine: :module, label: :label}}}
 
     assert name == expected_name
 
@@ -93,9 +127,9 @@ defmodule Anoma.Node.Examples.ERegistry do
   @doc """
   I register a process in the registry and then lookup its pid.
   """
-  def find_pid_of_process() do
+  @spec find_pid_of_process(Id.t()) :: :ok
+  def find_pid_of_process(node_id \\ Id.new_keypair()) do
     start_registry()
-    node_id = Id.new_keypair()
 
     # create a process that registers itself and then waits to be shut down.
     this = self()
@@ -123,11 +157,9 @@ defmodule Anoma.Node.Examples.ERegistry do
   @doc """
   I register a few engines for a specific node, and then ask the registry for the list.
   """
-  def list_engines_for_node() do
+  @spec list_engines_for_node(Id.t()) :: :ok
+  def list_engines_for_node(node_id \\ Id.new_keypair()) do
     start_registry()
-
-    # start a process, and register some dummy engines.
-    node_id = Id.new_keypair()
 
     # let the engine processes send a message to the current process.
     this = self()
@@ -160,10 +192,12 @@ defmodule Anoma.Node.Examples.ERegistry do
       end
 
     # the registry can induce a short delay before the process is registered.
-    assert Enum.sort(Registry.engines_for(node_id)) == engines
+    assert Enum.sort(Registry.engines_for(node_id.external)) == engines
 
     for engine_pid <- engine_pids do
       send(engine_pid, :stop)
     end
+
+    :ok
   end
 end

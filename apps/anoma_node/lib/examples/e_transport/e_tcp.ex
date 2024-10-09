@@ -7,6 +7,7 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
 
   alias Anoma.Crypto.Id
   alias Anoma.Node.Registry
+  alias Anoma.Node.Examples.ERegistry
   alias Protobufs.NodeInfo
   alias EventBroker.Filters
 
@@ -72,9 +73,9 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
       Registry.dump_register()
       |> Enum.map(fn {address, _pid, _} -> address end)
 
-    assert Registry.address(node_id, :tcp_supervisor) in registered_processes
+    assert ERegistry.process_registered?(node_id, :tcp_supervisor)
 
-    assert Registry.address(node_id, :proxy_supervisor) in registered_processes
+    assert ERegistry.process_registered?(node_id, :proxy_supervisor)
 
     # --------------------------------------------------------
     # return the context

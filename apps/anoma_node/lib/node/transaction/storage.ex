@@ -37,6 +37,8 @@ defmodule Anoma.Node.Transaction.Storage do
   end
 
   def init(args) do
+    Process.set_label(__MODULE__)
+
     keylist =
       args
       |> Keyword.validate!([

@@ -12,6 +12,8 @@ defmodule Anoma.Node.Utility.Supervisor do
   end
 
   def init(_args) do
+    Process.set_label(__MODULE__)
+
     children = []
     Supervisor.init(children, strategy: :one_for_all)
   end
