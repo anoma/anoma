@@ -43,3 +43,4 @@ Mnesia*/
 
 # Certificate files
 *.pem
+apps/anoma_lib/lib/protobufs/protobufs/
