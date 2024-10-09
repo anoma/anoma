@@ -592,4 +592,78 @@
     [[256 d] $(c d, b (sub b 256))]
   --
 --
+::  layer 8: signed arithmetic
+::  uses `end` and `rsh` from layer 7 shim
+~%  %eight  +  ~
+|%
+++  abs  ::  Absolute value
+  ~/  %abs
+  =,  shim
+  |=(a=@s (add (end 0 a) (rsh 0 a)))
+++  dif  ::  Subtraction
+  ~/  %dif
+  |=  [a=@s b=@s]
+  (sum a (new !(syn b) (abs b)))
+++  dul  ::  Modulus
+  ~/  %dul
+  |=  [a=@s b=@]
+  =+(c=(old a) ?:(-.c (mod +.c b) (sub b +.c)))
+++  fra  ::  Divide
+  ~/  %fra
+  |=  [a=@s b=@s]
+  (new =(0 (mix (syn a) (syn b))) (div (abs a) (abs b)))
+++  new  ::  Atom to @s
+  ~/  %new
+  |=  [a=? b=@]
+  `@s`?:(a (mul 2 b) ?:(=(0 b) 0 +((mul 2 (dec b)))))
+++  old  ::  Sign and absolute value
+  ~/  %old
+  |=(a=@s [(syn a) (abs a)])
+++  pro  ::  Multiplication
+  ~/  %pro
+  |=  [a=@s b=@s]
+  (new =(0 (mix (syn a) (syn b))) (mul (abs a) (abs b)))
+++  rem  ::  Remainder
+  ~/  %rem
+  |=([a=@s b=@s] (dif a (pro b (fra a b))))
+++  sum  ::  Addition
+  ~/  %sum
+  |=  [a=@s b=@s]
+  =+  [c=(old a) d=(old b)]
+  ?:  -.c
+    ?:  -.d
+      (new & (add +.c +.d))
+    ?:  (gte +.c +.d)
+      (new & (sub +.c +.d))
+    (new | (sub +.d +.c))
+  ?:  -.d
+    ?:  (gte +.c +.d)
+      (new | (sub +.c +.d))
+    (new & (sub +.d +.c))
+  (new | (add +.c +.d))
+++  sun  ::  @u to @s
+  ~/  %sun
+  |=(a=@u (mul 2 a))
+++  syn  ::  Sign test
+  ~/  %syn
+  =,  shim
+  |=(a=@s =(0 (end 0 a)))
+++  cmp  ::  Compare
+  ~/  %cmp
+  |=  [a=@s b=@s]
+  ^-  @s
+  ?:  =(a b)
+    --0
+  ?:  (syn a)
+    ?:  (syn b)
+      ?:  (gth a b)
+        --1
+      -1
+    --1
+  ?:  (syn b)
+    -1
+  ?:  (gth a b)
+    -1
+  --1
+--
 ==

@@ -118,7 +118,7 @@ defmodule Examples.ENock do
   """
   @spec dec_arm() :: Noun.t()
   def dec_arm() do
-    "[8 [9 342 0 2.047] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 342 0 4.095] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec dec() :: Noun.t()
@@ -148,7 +148,7 @@ defmodule Examples.ENock do
 
   @spec cue_arm() :: Noun.t()
   def cue_arm() do
-    "[8 [9 94 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 94 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec cue() :: Noun.t()
@@ -171,7 +171,7 @@ defmodule Examples.ENock do
 
   @spec jam_arm() :: Noun.t()
   def jam_arm() do
-    "[8 [9 22 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 22 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec jam() :: Noun.t()
@@ -194,7 +194,7 @@ defmodule Examples.ENock do
 
   @spec sign_arm() :: Noun.t()
   def sign_arm() do
-    "[8 [9 10 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 10 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -228,7 +228,7 @@ defmodule Examples.ENock do
 
   @spec verify_arm() :: Noun.t()
   def verify_arm() do
-    "[8 [9 4 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 4 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -262,7 +262,7 @@ defmodule Examples.ENock do
 
   @spec sign_detatched_arm() :: Noun.t()
   def sign_detatched_arm() do
-    "[8 [9 23 0 63] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 23 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -294,7 +294,7 @@ defmodule Examples.ENock do
 
   @spec verify_detatched_arm() :: Noun.t()
   def verify_detatched_arm() do
-    "[8 [9 22 0 63] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+    "[8 [9 22 0 127] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -345,7 +345,7 @@ defmodule Examples.ENock do
 
   @spec bex_arm() :: Noun.t()
   def bex_arm() do
-    "[8 [9 4 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 4 0 511] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   @spec bex() :: Noun.t()
@@ -374,7 +374,7 @@ defmodule Examples.ENock do
 
   @spec mix_arm() :: Noun.t()
   def mix_arm() do
-    "[8 [9 4 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 4 0 255] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -401,7 +401,7 @@ defmodule Examples.ENock do
 
   @spec mat_arm() :: Noun.t()
   def mat_arm() do
-    "[8 [9 43 0 127] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 43 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   # Please make some assertions ☹
@@ -425,7 +425,7 @@ defmodule Examples.ENock do
 
   @spec shax_arm() :: Noun.t()
   def shax_arm() do
-    "[8 [9 22 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    "[8 [9 22 0 63] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
   def shax() do
@@ -458,7 +458,7 @@ defmodule Examples.ENock do
   @spec raw_arm() :: Noun.t()
   def raw_arm() do
     arm =
-      "[8 [8 [9 47 0 31] 9 2 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 47 0 63] 9 2 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
@@ -482,6 +482,371 @@ defmodule Examples.ENock do
     {:ok, 9} = call
 
     call
+  end
+
+  ############################################################
+  ##                  Signed arithmetic                     ##
+  ############################################################
+
+  @spec abs_arm() :: Noun.t()
+  def abs_arm() do
+    "[8 [9 1.515 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+  end
+
+  def abs() do
+    arm = abs_arm()
+    sample = 888
+    core = [arm, sample | Nock.logics_core()]
+
+    # abs(--0) == 0
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1]) == {:ok, 0}
+
+    # abs(-2) == 2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1]) == {:ok, 2}
+
+    # abs(--2) == 2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1]) == {:ok, 2}
+
+    core
+  end
+
+  @doc """
+  I represent the dif gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =ldif =>  logics  |=   [a=@ b=@]  (dif [a b])
+
+  and computing
+
+  .*  ldif  [0 2]
+  """
+  @spec dif_arm() :: Noun.t()
+  def dif_arm() do
+    "[8 [9 759 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def dif() do
+    arm = dif_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # --3 - -2 == --5
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [6 | 3]], 0 | 1]) == {:ok, 10}
+
+    # -3 - --2 == -5
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 4]], 0 | 1]) == {:ok, 9}
+
+    core
+  end
+
+  @doc """
+  I represent the dul gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =ldul =>  logics  |=   [a=@s b=@]  (dul [a b])
+
+  and computing
+
+  .*  ldul  [0 2]
+  """
+  @spec dul_arm() :: Noun.t()
+  def dul_arm() do
+    "[8 [9 22 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def dul() do
+    arm = dul_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # dul(-1, --5) == 9
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 10]], 0 | 1]) == {:ok, 9}
+
+    # dul(-11, -61) == 110
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 121]], 0 | 1]) ==
+             {:ok, 110}
+
+    # dul(--5, 3) == 2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [10 | 3]], 0 | 1]) == {:ok, 2}
+
+    core
+  end
+
+  @doc """
+  I represent the fra gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lfra =>  logics  |=   [a=@s b=@s]  (fra [a b])
+
+  and computing
+
+  .*  lfra  [0 2]
+  """
+  @spec fra_arm() :: Noun.t()
+  def fra_arm() do
+    "[8 [9 190 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def fra() do
+    arm = fra_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # -1 / -1 == --1
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 1]], 0 | 1]) == {:ok, 2}
+
+    # -11 / --2 == -5
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 4]], 0 | 1]) == {:ok, 9}
+
+    # --0 / --1 == --0
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [0 | 1]], 0 | 1]) == {:ok, 0}
+
+    # --5 / -2 == -2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [10 | 3]], 0 | 1]) == {:ok, 3}
+
+    core
+  end
+
+  @doc """
+  I represent the new gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lnew =>  logics  |=   [a=? b=@]  (new [a b])
+
+  and computing
+
+  .*  lnew  [0 2]
+  """
+  @spec new_arm() :: Noun.t()
+  def new_arm() do
+    "[8 [9 758 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def new() do
+    arm = new_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # new(%.n, 2) == -2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 2]], 0 | 1]) == {:ok, 3}
+
+    # new(%.y, 2) == --2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [0 | 2]], 0 | 1]) == {:ok, 4}
+
+    core
+  end
+
+  @doc """
+  I represent the old gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lold =>  logics  |=   [a=@s]  (old a)
+
+  and computing
+
+  .*  lold  [0 2]
+  """
+  @spec old_arm() :: Noun.t()
+  def old_arm() do
+    "[8 [9 756 0 31] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def old() do
+    arm = old_arm()
+    sample = 888
+    core = [arm, sample | Nock.logics_core()]
+
+    # old(-2) == [%.n, 2]
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1]) == {:ok, [1 | 2]}
+
+    # old(--2) == [%.y, 2]
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1]) == {:ok, [0 | 2]}
+
+    core
+  end
+
+  @doc """
+  I represent the pro gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lpro =>  logics  |=   [a=@s b=@s]  (pro [a b])
+
+  and computing
+
+  .*  lpro  [0 2]
+  """
+  @spec pro_arm() :: Noun.t()
+  def pro_arm() do
+    "[8 [9 46 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def pro() do
+    arm = pro_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # -3 * --3 == -9
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 6]], 0 | 1]) == {:ok, 17}
+
+    # -3 * -3 == --9
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 5]], 0 | 1]) == {:ok, 18}
+
+    core
+  end
+
+  @doc """
+  I represent the rem gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lrem =>  logics  |=   [a=@s b=@s]  (rem [a b])
+
+  and computing
+
+  .*  lrem  [0 2]
+  """
+  @spec rem_arm() :: Noun.t()
+  def rem_arm() do
+    "[8 [9 6.058 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def rem() do
+    arm = rem_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # -17 % -3 == -2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [33 | 5]], 0 | 1]) == {:ok, 3}
+
+    # --17 % -3 == --2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [34 | 5]], 0 | 1]) == {:ok, 4}
+
+    # -17 % --3 == -2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [33 | 6]], 0 | 1]) == {:ok, 3}
+
+    # --17 % --3 == --2
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [34 | 6]], 0 | 1]) == {:ok, 4}
+
+    core
+  end
+
+  @doc """
+  I represent the sum gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lsum =>  logics  |=   [a=@s b=@s]  (sum [a b])
+
+  and computing
+
+  .*  lsum  [0 2]
+  """
+  @spec sum_arm() :: Noun.t()
+  def sum_arm() do
+    "[8 [9 4 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def sum() do
+    arm = sum_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # -11 + --2 == -9
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 4]], 0 | 1]) == {:ok, 17}
+
+    # --2 % --2 == --4
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 4]], 0 | 1]) == {:ok, 8}
+
+    core
+  end
+
+  @spec sun_arm() :: Noun.t()
+  def sun_arm() do
+    "[8 [9 10 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+  end
+
+  def sun() do
+    arm = sun_arm()
+    sample = 888
+    core = [arm, sample | Nock.logics_core()]
+
+    # sun(90) == 180
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 90], 0 | 1]) == {:ok, 180}
+
+    core
+  end
+
+  @spec syn_arm() :: Noun.t()
+  def syn_arm() do
+    "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+  end
+
+  def syn() do
+    arm = syn_arm()
+    sample = 888
+    core = [arm, sample | Nock.logics_core()]
+
+    # syn(--0) == %.y
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1]) == {:ok, 0}
+
+    # syn(-2) == %.n
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1]) == {:ok, 1}
+
+    # syn(--2) == %.y
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1]) == {:ok, 0}
+
+    core
+  end
+
+  @doc """
+  I represent the sum gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =lcmp =>  logics  |=   [a=@s b=@s]  (cmp [a b])
+
+  and computing
+
+  .*  lcmp  [0 2]
+  """
+  @spec cmp_arm() :: Noun.t()
+  def cmp_arm() do
+    "[8 [9 191 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def cmp() do
+    arm = cmp_arm()
+    sample = [888 | 999]
+    core = [arm, sample | Nock.logics_core()]
+
+    # cmp(-2, --1) == -1
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [3 | 2]], 0 | 1]) == {:ok, 1}
+
+    # cmp(--2, --1) == --1
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 2]], 0 | 1]) == {:ok, 2}
+
+    # cmp(--2, --2) == --0
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 4]], 0 | 1]) == {:ok, 0}
+
+    # cmp(--2, --5) == -1
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 10]], 0 | 1]) == {:ok, 1}
+
+    core
   end
 
   ############################################################
@@ -717,9 +1082,9 @@ defmodule Examples.ENock do
         9
         2
         10
-        [30 8 [9 342 0 8.191] 9 2 10 [6 0 62] 0 2]
+        [30 8 [9 342 0 16.383] 9 2 10 [6 0 62] 0 2]
         10
-        [6 [8 [9 20 0 8.191] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+        [6 [8 [9 20 0 16.383] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
         0
         1
       ]
@@ -760,7 +1125,7 @@ defmodule Examples.ENock do
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 255] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
+        "[8 [8 [9 10 0 511] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
       )
 
     sample = [999 | 888]
@@ -782,7 +1147,7 @@ defmodule Examples.ENock do
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 255] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
+        "[8 [8 [9 10 0 511] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
       )
 
     sample = 999
