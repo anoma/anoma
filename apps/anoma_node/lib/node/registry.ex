@@ -9,7 +9,7 @@ defmodule Anoma.Node.Registry do
   ############################################################
 
   typedstruct enforce: true, module: Address do
-    field(:node_id, binary())
+    field(:node_id, Id.Extern.t())
     field(:engine, atom())
     field(:label, atom(), default: nil)
   end
@@ -48,7 +48,7 @@ defmodule Anoma.Node.Registry do
   def name(node_id, engine, label \\ nil) do
     address = address(node_id, engine, label)
 
-    {:via, Registry, {__MODULE__, address, inspect(address)}}
+    {:via, Registry, {__MODULE__, address}}
   end
 
   @doc """
@@ -70,8 +70,12 @@ defmodule Anoma.Node.Registry do
 
   I filter out all the non-engine names based on an allow list.
   """
-  @spec engines_for(Id.t()) :: [atom()]
-  def engines_for(node_id) do
+  @spec engines_for(Id.t() | Id.Extern.t()) :: [atom()]
+  def engines_for(%Id{} = id) do
+    engines_for(id.external)
+  end
+
+  def engines_for(%Id.Extern{} = node_id) do
     pattern = {%{node_id: :"$1", engine: :"$2"}, :"$3", :"$4"}
 
     # guards: filters applied on the results

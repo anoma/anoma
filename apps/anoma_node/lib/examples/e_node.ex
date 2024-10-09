@@ -1,6 +1,11 @@
 defmodule Anoma.Node.Examples.ENode do
   use TypedStruct
+
+  import ExUnit.Assertions
+
   alias __MODULE__
+  alias Anoma.Node.Examples.ERegistry
+  alias Anoma.Crypto.Id
 
   ############################################################
   #                    Context                               #
@@ -13,13 +18,13 @@ defmodule Anoma.Node.Examples.ENode do
     My fields contain information to listen for TCP connection with a remote node.
 
     ### Fields
-    - `:node_id`  - The key of this router. This value is used to announce myself to other
-    - `:pid`      - the pid of the supervision tree.
-    - `:ports`    - The ports on which the node is listening for connections.
+    - `:node_id`   - The key of this router. This value is used to announce myself to other
+    - `:pid`       - the pid of the supervision tree.
+    - `:tcp_ports` - The ports on which the node is listening for connections.
     """
     field(:node_id, Id.t())
     field(:pid, pid())
-    field(:ports, [integer()], default: [])
+    field(:tcp_ports, [integer()], default: [])
   end
 
   ############################################################
@@ -29,10 +34,10 @@ defmodule Anoma.Node.Examples.ENode do
   @doc """
   I start a new node given a node id and returns its process id.
   """
-  @spec start_node(any()) :: ENode.t()
+  @spec start_node(Id.t()) :: ENode.t()
   def start_node(node_id) do
     pid =
-      case Anoma.Supervisor.start_node(node_id: node_id, grpc_port: 1234) do
+      case Anoma.Supervisor.start_node(node_id: node_id) do
         {:ok, pid} ->
           pid
 
@@ -40,15 +45,23 @@ defmodule Anoma.Node.Examples.ENode do
           pid
       end
 
-    %ENode{node_id: node_id, pid: pid, ports: []}
+    # make some assertions about the running processes for this node
+    assert ERegistry.process_registered?(node_id, :tcp_supervisor)
+    assert ERegistry.process_registered?(node_id, :proxy_supervisor)
+
+    %ENode{node_id: node_id, pid: pid, tcp_ports: []}
   end
 
   @doc """
-  I start a new node given a node id and returns its process id.
+  I stop a node and assert that's is gone.
   """
   @spec stop_node(ENode.t()) :: :ok
   def stop_node(node) do
     Supervisor.stop(node.pid)
+
+    assert ERegistry.process_registered?(node.node_id, :tcp_supervisor)
+    assert ERegistry.process_registered?(node.node_id, :proxy_supervisor)
+    :ok
   end
 
   @doc """

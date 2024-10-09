@@ -26,10 +26,10 @@ defmodule Anoma.Node.Supervisor do
     Process.set_label(__MODULE__)
 
     args = Keyword.validate!(args, [:node_id])
-    node_id = args[:node_id]
 
     children = [
       {Anoma.Node.Transaction.Supervisor, node_id: args[:node_id]},
+      {Anoma.Node.Transport.Supervisor, node_id: args[:node_id]},
       {Anoma.Node.Utility.Supervisor, node_id: args[:node_id]},
       {Anoma.Node.Logging, node_id: args[:node_id]}
     ]
