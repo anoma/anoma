@@ -35,8 +35,8 @@ Development can be followed in multiple ways:
 To have a working Anoma Node the following dependencies are required:
 
 1. `cmake`
-2. `Erlang`
-3. `Elixir`
+2. `Erlang` version OTP 27 or higher
+3. `Elixir` version 1.17.0 or higher
 4. `zig`
 5. `rust` version of 1.76.0 or newer
   - rustup is an easy way to satisfy this.
