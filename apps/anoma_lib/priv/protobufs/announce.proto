@@ -25,34 +25,24 @@ message NodeInfo {
 // ----------------- Prove -----------------------
 
 message Prove {
-  message Request {
-    NodeInfo sender_info = 1;
-    string intent = 2;
-  }
+  message Request { string intent = 1; }
 
-  message Response {
-    string result = 1;
-  }
+  message Response { string result = 1; }
 }
 // ----------------- Intent Pool -----------------
 
-message Intent {
-  int32 value = 1;
-}
+message Intent { int32 value = 1; }
 /*
 Intent pool requests
 */
 message IntentPool {
   message AddIntent {
-    message Request {
-      NodeInfo sender_info = 1;
-      Intent intent = 2;
-    }
+    message Request { Intent intent = 1; }
     message Response { string result = 1; }
   }
 
   message ListIntents {
-    message Request { NodeInfo sender_info = 1; }
+    message Request {}
 
     message Response {
       repeated string intents = 1; // a list of intents.
@@ -63,7 +53,7 @@ message IntentPool {
 // ----------------- Indexer -----------------
 message Indexer {
   message Nullifiers {
-    message Request { NodeInfo sender_info = 1; }
+    message Request {}
 
     message Response {
       repeated string nullifiers = 1; // a list of intents.
@@ -71,7 +61,7 @@ message Indexer {
   }
 
   message UnrevealedCommits {
-    message Request { NodeInfo sender_info = 1; }
+    message Request {}
 
     message Response {
       repeated string commits = 1; // a list of intents.
@@ -79,7 +69,7 @@ message Indexer {
   }
 
   message UnspentResources {
-    message Request { NodeInfo sender_info = 1; }
+    message Request {}
 
     message Response {
       repeated string unspent_resources = 1; // a list of intents.
@@ -94,7 +84,7 @@ Intent pool requests
 */
 message MemPool {
   message Dump {
-    message Request { NodeInfo sender_info = 1; }
+    message Request {}
 
     message Response {
       repeated string dumps = 1; // a list of intents.
