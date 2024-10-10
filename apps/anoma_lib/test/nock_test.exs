@@ -16,6 +16,7 @@ defmodule AnomaTest.Nock do
     ENock.verify()
     ENock.bex()
     ENock.mix()
+    ENock.shax()
     ENock.met0()
     ENock.met1()
     ENock.met2()
@@ -27,6 +28,7 @@ defmodule AnomaTest.Nock do
     ENock.rsh2()
     ENock.uend0()
     ENock.uend1()
+    ENock.raw_27_4()
     # Next one calls this... so uneeded but who cares
     ENock.jamming_and_cueing()
     ENock.one_two()

@@ -268,4 +268,19 @@ defmodule Noun do
       true -> "[" <> condensed_print(h) <> " " <> condensed_print(t) <> "]"
     end
   end
+
+  @doc """
+  I try to turn an Elixir term to a proper list.
+  If the term is a nock list, return {:ok, result}
+  Otheriwse :error
+  """
+
+  @spec list_nock_to_erlang_safe(any()) :: {:ok, Noun.t()} | :error
+  def list_nock_to_erlang_safe(x) do
+    try do
+      {:ok, list_nock_to_erlang(x)}
+    rescue
+      _e -> :error
+    end
+  end
 end

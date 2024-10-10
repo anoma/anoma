@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package Protobufs;
+
+// ----------------- Announcement  ---------------------
+
+// The request message containing the user's name.
+message Announcement {
+  NodeInfo node_info = 1;
+  repeated string engines = 2;
+}
+
+// ----------------- Node information -----------------
+
+/*
+This message contains all necessary information about a node
+that sends a request.
+*/
+
+message NodeInfo {
+  bytes sign = 1;
+  bytes encrypt = 2;
+}
+
+// ----------------- Prove -----------------------
+
+message Prove {
+  message Request {
+    NodeInfo sender_info = 1;
+    string intent = 2;
+  }
+
+  message Response {
+    string result = 1;
+  }
+}
+// ----------------- Intent Pool -----------------
+
+message Intent {
+  int32 value = 1;
+}
+/*
+Intent pool requests
+*/
+message IntentPool {
+  message AddIntent {
+    message Request {
+      NodeInfo sender_info = 1;
+      Intent intent = 2;
+    }
+    message Response { string result = 1; }
+  }
+
+  message ListIntents {
+    message Request { NodeInfo sender_info = 1; }
+
+    message Response {
+      repeated string intents = 1; // a list of intents.
+    }
+  }
+}
+
+// ----------------- Indexer -----------------
+message Indexer {
+  message Nullifiers {
+    message Request { NodeInfo sender_info = 1; }
+
+    message Response {
+      repeated string nullifiers = 1; // a list of intents.
+    }
+  }
+
+  message UnrevealedCommits {
+    message Request { NodeInfo sender_info = 1; }
+
+    message Response {
+      repeated string commits = 1; // a list of intents.
+    }
+  }
+
+  message UnspentResources {
+    message Request { NodeInfo sender_info = 1; }
+
+    message Response {
+      repeated string unspent_resources = 1; // a list of intents.
+    }
+  }
+}
+
+// ----------------- Mempool -----------------
+
+/*
+Intent pool requests
+*/
+message MemPool {
+  message Dump {
+    message Request { NodeInfo sender_info = 1; }
+
+    message Response {
+      repeated string dumps = 1; // a list of intents.
+    }
+  }
+}
+
+// ----------------- Intent Pool -----------------
+
+/*
+The enveloppe holds any message that can be sent or received by nodes.
+
+The enveloppe is required because the encoder can only encode 1 type of message.
+*/
+message Enveloppe {
+  NodeInfo sender_info = 1; // node information of the sender.
+  bytes message_id = 2;     // the message id.
+
+  oneof inner_message {
+    // announcement
+    Announcement announcement = 3;
+    // list intents
+    IntentPool.ListIntents.Request list_intents_request = 4;
+    IntentPool.ListIntents.Response list_intents_response = 5;
+
+    IntentPool.AddIntent.Request add_intent_request = 6;
+    IntentPool.AddIntent.Response add_intent_response = 7;
+
+    Indexer.Nullifiers.Request nullifiers_request = 8;
+    Indexer.Nullifiers.Response nullifiers_response = 9;
+
+    Indexer.UnrevealedCommits.Request unrevealed_commits_request = 10;
+    Indexer.UnrevealedCommits.Response unrevealed_commits_response = 11;
+
+    Indexer.UnspentResources.Request unspent_resources_request = 12;
+    Indexer.UnspentResources.Response unspent_resources_response = 13;
+
+    // mempool dump
+    MemPool.Dump.Request mempool_dump_request = 14;
+    MemPool.Dump.Response mempool_dump_response = 15;
+  }
+}
+
+// ----------------- Services -----------------
+service Intents {
+  rpc ListIntents(IntentPool.ListIntents.Request)
+      returns (IntentPool.ListIntents.Response) {}
+
+  rpc AddIntent(IntentPool.AddIntent.Request)
+      returns (IntentPool.AddIntent.Response) {}
+
+  rpc ListNullifiers(Indexer.Nullifiers.Request)
+      returns (Indexer.Nullifiers.Response) {}
+
+  rpc ListUnrevealedCommits(Indexer.UnrevealedCommits.Request)
+      returns (Indexer.UnrevealedCommits.Response) {}
+
+  rpc ListUnspentResources(Indexer.UnspentResources.Request)
+      returns (Indexer.UnspentResources.Response) {}
+
+  rpc Prove(Prove.Request) returns (Prove.Response) {}
+}

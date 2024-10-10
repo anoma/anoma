@@ -1,7 +1,7 @@
-defmodule Examples.EventBroker do
+defmodule Examples.EEventBroker do
   @moduledoc false
 
-  use TestHelper.TestMacro
+  use ExUnit.Case
   alias EventBroker.{Supervisor, Registry, Filters, Event}
 
   @doc """
@@ -91,17 +91,14 @@ defmodule Examples.EventBroker do
 
   @spec subscribe_and_check() :: {:received, Event.t()}
   def subscribe_and_check do
-    EventBroker.subscribe_me(
-      EventBroker.Registry,
-      [
-        trivial_filter_spec(),
-        this_module_filter_spec(),
-        trivial_filter_spec()
-      ]
-    )
+    EventBroker.subscribe_me([
+      trivial_filter_spec(),
+      this_module_filter_spec(),
+      trivial_filter_spec()
+    ])
 
-    EventBroker.event(EventBroker.Broker, example_message_a())
-    EventBroker.event(EventBroker.Broker, example_message_b())
+    EventBroker.event(example_message_a())
+    EventBroker.event(example_message_b())
 
     {:ok, event} =
       receive do
@@ -112,7 +109,7 @@ defmodule Examples.EventBroker do
           :error
       end
 
-    EventBroker.unsubscribe_me(EventBroker.Registry, [
+    EventBroker.unsubscribe_me([
       trivial_filter_spec(),
       this_module_filter_spec(),
       trivial_filter_spec()
@@ -139,11 +136,11 @@ defmodule Examples.EventBroker do
         this_module_filter_spec()
       end
 
-    EventBroker.subscribe_me(EventBroker.Registry, filter_spec_list)
+    EventBroker.subscribe_me(filter_spec_list)
 
     f = fn ->
       for _ <- 1..1_000_000 do
-        EventBroker.event(EventBroker.Broker, example_message_a())
+        EventBroker.event(example_message_a())
 
         {:ok, _} =
           receive do
@@ -160,7 +157,7 @@ defmodule Examples.EventBroker do
 
     result = :timer.tc(f)
 
-    EventBroker.unsubscribe_me(EventBroker.Registry, filter_spec_list)
+    EventBroker.unsubscribe_me(filter_spec_list)
 
     result
   end
@@ -190,7 +187,7 @@ defmodule Examples.EventBroker do
           acc
         end
     end
-    |> Enum.map(&EventBroker.unsubscribe_me(EventBroker.Registry, &1))
+    |> Enum.map(&EventBroker.unsubscribe_me(&1))
 
     assert [[]] ==
              :sys.get_state(Registry).registered_filters
@@ -215,7 +212,7 @@ defmodule Examples.EventBroker do
   @spec check_self_sub() :: {Registry.t(), pid()}
   def check_self_sub(list \\ []) do
     unsub_all()
-    assert :ok = EventBroker.subscribe_me(EventBroker.Registry, list)
+    assert :ok = EventBroker.subscribe_me(list)
 
     agent =
       :sys.get_state(Registry).registered_filters |> Map.get(list)
@@ -241,7 +238,7 @@ defmodule Examples.EventBroker do
   @spec check_sub_no_unsub() :: {Registry.t(), pid()}
   def check_sub_no_unsub(list \\ []) do
     start_broker()
-    EventBroker.subscribe_me(EventBroker.Registry, list)
+    EventBroker.subscribe_me(list)
 
     agent =
       :sys.get_state(Registry).registered_filters |> Map.get(list)
@@ -272,7 +269,7 @@ defmodule Examples.EventBroker do
 
     message = string |> example_message_a()
 
-    EventBroker.event(EventBroker.Broker, message)
+    EventBroker.event(message)
 
     assert_receive ^message
 
@@ -295,7 +292,7 @@ defmodule Examples.EventBroker do
   def un_subscribing_works_atomic(list \\ [trivial_filter_spec()]) do
     {state, pid} = check_self_sub(list)
 
-    EventBroker.unsubscribe_me(EventBroker.Registry, list)
+    EventBroker.unsubscribe_me(list)
 
     refute Process.alive?(pid)
     refute Map.get(state, list)
@@ -325,7 +322,7 @@ defmodule Examples.EventBroker do
 
     message = string |> example_message_b()
 
-    EventBroker.event(EventBroker.Broker, message)
+    EventBroker.event(message)
 
     refute_receive ^message
 
@@ -398,10 +395,10 @@ defmodule Examples.EventBroker do
     good_msg = (string <> " good") |> example_message_a()
     bad_msg = (string <> " bad") |> example_message_b()
 
-    EventBroker.unsubscribe_me(EventBroker.Registry, trivial)
+    EventBroker.unsubscribe_me(trivial)
 
-    EventBroker.event(EventBroker.Broker, good_msg)
-    EventBroker.event(EventBroker.Broker, bad_msg)
+    EventBroker.event(good_msg)
+    EventBroker.event(bad_msg)
 
     assert_receive ^good_msg
     refute_receive ^bad_msg
@@ -423,6 +420,6 @@ defmodule Examples.EventBroker do
     unsub_all()
 
     assert "[Nock] do not export filtering functions" ==
-             EventBroker.subscribe_me(EventBroker.Registry, [%Nock{}])
+             EventBroker.subscribe_me([%{__struct__: Nock}])
   end
 end
