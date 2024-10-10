@@ -20,7 +20,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   def check_tx_event(node_id \\ Id.new_keypair()) do
-    ENode.start_node(node_id)
+    ENode.start_node(node_id: node_id)
     table_name = Logging.table_name(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
@@ -41,7 +41,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   def check_multiple_tx_events(node_id \\ Id.new_keypair()) do
-    ENode.start_node(node_id)
+    ENode.start_node(node_id: node_id)
 
     table_name = Logging.table_name(node_id)
 

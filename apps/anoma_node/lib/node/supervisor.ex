@@ -17,7 +17,6 @@ defmodule Anoma.Node.Supervisor do
 
   def start_link(args) do
     name = Anoma.Node.Registry.name(args[:node_id], __MODULE__)
-
     Supervisor.start_link(__MODULE__, args, name: name)
   end
 
@@ -34,6 +33,8 @@ defmodule Anoma.Node.Supervisor do
       {Anoma.Node.Logging, node_id: args[:node_id]}
     ]
 
-    Supervisor.init(children, strategy: :one_for_all)
+    result = Supervisor.init(children, strategy: :one_for_all)
+
+    result
   end
 end
