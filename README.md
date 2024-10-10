@@ -1,7 +1,14 @@
 # Anoma
 
 This is an implementation of the Anoma protocol, whose specs can be
-found [here](https://specs.anoma.net/alpha).
+found [here](https://specs.anoma.net/latest).
+
+## Docs
+
+- [Contributors documentation](https://anoma.github.io/anoma/readme.html)
+- [Specification](https://specs.anoma.net/latest/)
+- Developer Docs (Coming Soon™)
+- User Docs (Coming Soon™)
 
 ## Following Development
 
@@ -13,10 +20,12 @@ Development can be followed in multiple ways:
 1. [Issues are put into the project overview](https://github.com/orgs/anoma/projects/19)
    - This is a good way to see what work is assigned and the various
      views into how goals are being met
-2. [Promise Graph from the project overview](https://specs.anoma.net/projects/anoma-19.html)
-   - This is the same information as `1.` but using our own promise
-     graph tooling. This is kept up to date hourly.
-3. [What's Cooking on Anoma](https://github.com/orgs/anoma/projects/20 "A good view on how topics are progressing throughout a cycle")
+2. [What's Cooking on Anoma](https://github.com/orgs/anoma/projects/20 "A good view on how topics are progressing throughout a cycle")
+3. [Research Forums](https://research.anoma.net/)
+   - This is good for seeing discussions on the direction of Anoma
+   - [The architecture posts](https://research.anoma.net/tags/c/protocol-design/25/architecture)
+     in particular are a practical vision for how the codebase's
+     architecture will evolve. Around two of these get posted per week
 4. [Issues](https://github.com/anoma/anoma/issues) and [pull requests](https://github.com/anoma/anoma/pulls)
    - This is good for viewing new issues and work coming in, but the
      other views are typically a better way to view this
@@ -26,14 +35,16 @@ Development can be followed in multiple ways:
 To have a working Anoma Node the following dependencies are required:
 
 1. `cmake`
-2. `Erlang`
-3. `Elixir`
+2. `Erlang` version OTP 27 or higher
+3. `Elixir` version 1.17.0 or higher
 4. `zig`
-5. `rust`
+5. `rust` version of 1.76.0 or newer
+  - rustup is an easy way to satisfy this.
 
 ### OSX
 
 ```sh
+brew install cmake
 brew install elixir
 brew install zig
 ```
@@ -61,10 +72,43 @@ mix run --no-halt # starts a non-interactive shell
 See the Contributing section for how to get the best use of the
 interactive shell.
 
+Further see the Known issues section if you encounter an issue.
+
 ## Contributing
 
 Please read the [contributor's guide](./documentation/contributing.livemd) for in
 depth details about the codebase.
+
+## Known Issues
+
+### (Mix) Could not compile dependency :enacl
+
+For some versions of OSX (and Linux), our
+[enacl](https://github.com/jlouis/enacl) package may have compilation issues.
+
+To get around it please run
+
+```sh
+git checkout mariari/no-libsodium
+mix clean
+mix deps.get
+mix compile
+```
+
+### could not compile dependency :cairo, "mix compile"
+
+The rust compiler can be quite picky about our
+[cairo](https://github.com/anoma/aarm-cairo) dependencies. This is
+likely caused by an incompatible rust-toolchain.
+
+To get around it you may have to run a command like:
+
+```sh
+rustup toolchain add 1.76.0
+# for OSX you may try 1.76.0-aarch64-apple-darwin
+```
+
+Once this is had, the Cairo issues should go away.
 
 ### Git
 
