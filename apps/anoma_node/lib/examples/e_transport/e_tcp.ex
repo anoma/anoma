@@ -136,9 +136,9 @@ defmodule Anoma.Node.Examples.ETransport.ETcp do
   """
   @spec connect_nodes() :: {ENode.t(), ENode.t()}
   def connect_nodes() do
-    server = ENode.start_node(Examples.ECrypto.alice())
+    server = ENode.start_node(node_id: Examples.ECrypto.alice())
 
-    client = ENode.start_node(Examples.ECrypto.londo())
+    client = ENode.start_node(node_id: Examples.ECrypto.londo())
 
     connect_nodes({client, server})
   end

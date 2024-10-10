@@ -7,6 +7,8 @@ defmodule Anoma.Node.Examples.ENode do
   alias Anoma.Node.Examples.ERegistry
   alias Anoma.Crypto.Id
 
+  require Logger
+
   ############################################################
   #                    Context                               #
   ############################################################
@@ -18,9 +20,9 @@ defmodule Anoma.Node.Examples.ENode do
     My fields contain information to listen for TCP connection with a remote node.
 
     ### Fields
-    - `:node_id`   - The key of this router. This value is used to announce myself to other
-    - `:pid`       - the pid of the supervision tree.
-    - `:tcp_ports` - The ports on which the node is listening for connections.
+    - `:node_id`    - The key of this router. This value is used to announce myself to other
+    - `:pid`        - the pid of the supervision tree.
+    - `:tcp_ports`  - The ports on which the node is listening for connections.
     """
     field(:node_id, Id.t())
     field(:pid, pid())
@@ -31,25 +33,75 @@ defmodule Anoma.Node.Examples.ENode do
   #                  Public API                              #
   ############################################################
 
+  @table_name :enode_table
+
+  @doc """
+  I initialize the ETS table to keep track of creates nodes.
+
+  My only reason for existence is to keep track of the nodes that are created in the system and their
+  GRPC ports.
+  """
+  def initialize_ets() do
+    unless @table_name in :ets.all() do
+      :ok
+      :ets.new(@table_name, [:set, :protected, :named_table])
+    end
+
+    @table_name
+  end
+
   @doc """
   I start a new node given a node id and returns its process id.
+
+  When a node is started, I put its ENode struct in an ETS table for later retrieval.
+
+  When a node is already spawned, I lookup the ENode struct in the ETS table.
+  Some meta data (in particular, the GRPC port) is only available when the node is started
+  so I fetch that data from the ETS table.
   """
-  @spec start_node(Id.t()) :: ENode.t()
-  def start_node(node_id) do
-    pid =
-      case Anoma.Supervisor.start_node(node_id: node_id) do
+  @spec start_node(Id.t()) :: ENode.t() | {:error, :failed_to_start_node}
+  def start_node(opts \\ []) do
+    initialize_ets()
+
+    opts =
+      Keyword.validate!(opts, node_id: Examples.ECrypto.londo())
+
+    enode =
+      case Anoma.Supervisor.start_node(opts) do
         {:ok, pid} ->
-          pid
+          enode = %ENode{
+            node_id: opts[:node_id],
+            pid: pid,
+            tcp_ports: []
+          }
+
+          :ets.insert(@table_name, {pid, enode})
+          enode
 
         {:error, {:already_started, pid}} ->
-          pid
+
+          case :ets.lookup(@table_name, pid) do
+            [{_, enode}] ->
+              enode
+
+            _ ->
+              {:error, :node_started_but_not_in_cache}
+          end
+
+        {:error, _} ->
+          {:error, :failed_to_start_node}
       end
 
-    # make some assertions about the running processes for this node
-    assert ERegistry.process_registered?(node_id, :tcp_supervisor)
-    assert ERegistry.process_registered?(node_id, :proxy_supervisor)
+    case enode do
+      {:error, _} ->
+        enode
 
-    %ENode{node_id: node_id, pid: pid, tcp_ports: []}
+
+      enode ->
+        assert ERegistry.process_registered?(enode.node_id, :tcp_supervisor)
+        assert ERegistry.process_registered?(enode.node_id, :proxy_supervisor)
+        enode
+    end
   end
 
   @doc """
@@ -59,8 +111,8 @@ defmodule Anoma.Node.Examples.ENode do
   def stop_node(node) do
     Supervisor.stop(node.pid)
 
-    assert ERegistry.process_registered?(node.node_id, :tcp_supervisor)
-    assert ERegistry.process_registered?(node.node_id, :proxy_supervisor)
+    refute ERegistry.process_registered?(node.node_id, :tcp_supervisor)
+    refute ERegistry.process_registered?(node.node_id, :proxy_supervisor)
     :ok
   end
 

@@ -41,7 +41,7 @@ defmodule Anoma.Node.Examples.EConsensus do
     node_id = Id.new_keypair()
 
     # start up a new node
-    node_pid = ENode.start_node(node_id)
+    node_pid = ENode.start_node(node_id: node_id)
 
     {:ok, consensus_pid} =
       Consensus.start_link(node_id: node_id, interval: 1000)
@@ -79,7 +79,7 @@ defmodule Anoma.Node.Examples.EConsensus do
     EventBroker.subscribe_me([])
 
     # start up a new node
-    ENode.start_node(node_id)
+    ENode.start_node(node_id: node_id)
 
     {:ok, _} = Consensus.start_link(node_id: node_id, interval: 1000)
 
