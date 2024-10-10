@@ -68,13 +68,9 @@ defmodule Anoma.Node.Examples.ENode do
     enode =
       case Anoma.Supervisor.start_node(opts) do
         {:ok, pid} ->
-          enode = %ENode{
-            node_id: opts[:node_id],
-            pid: pid,
-            tcp_ports: []
-          }
-
+          enode = %ENode{node_id: opts[:node_id], pid: pid, tcp_ports: []}
           :ets.insert(@table_name, {pid, enode})
+
           enode
 
         {:error, {:already_started, pid}} ->
