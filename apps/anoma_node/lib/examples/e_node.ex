@@ -69,23 +69,20 @@ defmodule Anoma.Node.Examples.ENode do
     enode =
       case Anoma.Supervisor.start_node(opts) do
         {:ok, pid} ->
-          enode = %ENode{
-            node_id: opts[:node_id],
-            pid: pid,
-            tcp_ports: []
-          }
-
+          enode = %ENode{node_id: opts[:node_id], pid: pid, tcp_ports: []}
           :ets.insert(@table_name, {pid, enode})
+
           enode
 
         {:error, {:already_started, pid}} ->
-
           case :ets.lookup(@table_name, pid) do
             [{_, enode}] ->
               enode
 
             _ ->
-              {:error, :node_started_but_not_in_cache}
+              enode = %ENode{node_id: opts[:node_id], pid: pid, tcp_ports: []}
+              :ets.insert(@table_name, {pid, enode})
+              enode
           end
 
         {:error, _} ->
@@ -95,7 +92,6 @@ defmodule Anoma.Node.Examples.ENode do
     case enode do
       {:error, _} ->
         enode
-
 
       enode ->
         assert ERegistry.process_registered?(enode.node_id, :tcp_supervisor)
