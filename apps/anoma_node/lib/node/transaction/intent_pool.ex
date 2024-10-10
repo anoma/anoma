@@ -1,19 +1,21 @@
-defmodule Anoma.Node.IntentPool do
+defmodule Anoma.Node.Transaction.IntentPool do
   @moduledoc """
   I am the intent pool for the Anoma node.
   m1dnight still has to write these docs.
   """
 
   require EventBroker.Event
+  require Logger
+
   alias __MODULE__
+  alias Anoma.Crypto.Id
+  alias Anoma.Node.Registry
+  alias Anoma.RM.Intent
   alias EventBroker.Broker
   alias EventBroker.Event
-  alias Anoma.RM.Intent
 
   use TypedStruct
   use GenServer
-
-  require Logger
 
   ############################################################
   #                      State                               #
@@ -35,7 +37,8 @@ defmodule Anoma.Node.IntentPool do
 
   @spec start_link(any()) :: :ignore | {:error, any()} | {:ok, pid()}
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: __MODULE__)
+    name = Registry.name(args[:node_id], __MODULE__)
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   @impl true
@@ -51,18 +54,18 @@ defmodule Anoma.Node.IntentPool do
   @doc """
   I return the list of current intents.
   """
-  @spec intents() :: MapSet.t()
-  @spec intents(GenServer.server()) :: MapSet.t()
-  def intents(name \\ __MODULE__) do
+  @spec intents(Id.t()) :: MapSet.t()
+  def intents(node_id) do
+    name = Registry.name(node_id, __MODULE__)
     Elixir.GenServer.call(name, :all_intents)
   end
 
   @doc """
   I add a new intent to the intent pool.
   """
-  @spec new_intent(any()) :: :ok
-  @spec new_intent(GenServer.server(), any()) :: :ok
-  def new_intent(name \\ __MODULE__, intent) do
+  @spec new_intent(Id.t(), any()) :: :ok
+  def new_intent(node_id, intent) do
+    name = Registry.name(node_id, __MODULE__)
     GenServer.cast(name, {:new_intent, intent})
   end
 
@@ -70,9 +73,9 @@ defmodule Anoma.Node.IntentPool do
   I remove an intent from the intent pool.
   If the intent does not exist nothing happens.
   """
-  @spec remove_intent(any()) :: :ok
-  @spec remove_intent(GenServer.server(), any()) :: :ok
-  def remove_intent(name \\ __MODULE__, intent) do
+  @spec remove_intent(Id.t(), any()) :: :ok
+  def remove_intent(node_id, intent) do
+    name = Registry.name(node_id, __MODULE__)
     GenServer.cast(name, {:remove_intent, intent})
   end
 
@@ -114,7 +117,7 @@ defmodule Anoma.Node.IntentPool do
       {:ok, :already_present, state}
     else
       Logger.debug("new intent added #{inspect(intent)}")
-      EventBroker.event(Broker, Event.new_with_body({:intent_added, intent}))
+      EventBroker.event(Event.new_with_body({:intent_added, intent}), Broker)
 
       state = Map.update!(state, :intents, &MapSet.put(&1, intent))
       {:ok, :inserted, state}
@@ -141,8 +144,8 @@ defmodule Anoma.Node.IntentPool do
       Logger.debug("intent removed #{inspect(intent)}")
 
       EventBroker.event(
-        Broker,
-        Event.new_with_body({:intent_removed, intent})
+        Event.new_with_body({:intent_removed, intent}),
+        Broker
       )
 
       state = Map.update!(state, :intents, &MapSet.delete(&1, intent))
