@@ -64,7 +64,7 @@ defmodule Anoma.Node.Examples.ENode do
     initialize_ets()
 
     opts =
-      Keyword.validate!(opts, node_id: Examples.ECrypto.londo())
+      Keyword.validate!(opts, node_id: Id.new_keypair())
 
     enode =
       case Anoma.Supervisor.start_node(opts) do
