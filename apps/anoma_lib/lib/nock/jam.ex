@@ -17,6 +17,7 @@ defmodule Nock.Jam do
     |> then(fn %__MODULE__{buffer: buf} -> buf end)
     |> Enum.reverse()
     |> Nock.Bits.bit_list_to_integer()
+    |> Noun.atom_integer_to_binary()
   end
 
   @spec encode(t(), Noun.t()) :: t()
