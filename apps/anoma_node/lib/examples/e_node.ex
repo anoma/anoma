@@ -76,7 +76,9 @@ defmodule Anoma.Node.Examples.ENode do
           enode = %ENode{
             node_id: opts[:node_id],
             pid: pid,
-            tcp_ports: []
+            tcp_ports: [],
+            grpc_port:
+              :ranch.get_port(<<"Anoma.Node.Transport.GRPC.Endpoint">>)
           }
 
           :ets.insert(@table_name, {pid, enode})
