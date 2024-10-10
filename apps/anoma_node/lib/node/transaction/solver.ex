@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Solver do
+defmodule Anoma.Node.Transaction.Solver do
   @moduledoc """
   I am a strawman intent solver for testing purposes.
 
@@ -14,7 +14,9 @@ defmodule Anoma.Node.Solver do
   use GenServer
 
   alias __MODULE__
-  alias Anoma.Node.IntentPool
+  alias Anoma.Crypto.Id
+  alias Anoma.Node.Transaction.IntentPool
+  alias Anoma.Node.Registry
   alias Anoma.RM.Intent
   alias EventBroker.Event
   alias EventBroker.Filters
@@ -32,11 +34,10 @@ defmodule Anoma.Node.Solver do
     ### Fields
     - `:unsolved`        - The set of unsolved intents.
     - `:solved`          - The set of solved intents.
-    - `:intent_pool`     - The intent pool process name.
     """
     field(:unsolved, MapSet.t(Intent.t()), default: MapSet.new())
     field(:solved, MapSet.t(Intent.t()), default: MapSet.new())
-    field(:intent_pool, GenServer.server())
+    field(:node_id, Id.t())
   end
 
   ############################################################
@@ -47,7 +48,8 @@ defmodule Anoma.Node.Solver do
   I create a new solver process .
   """
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args)
+    name = Registry.name(args[:node_id], __MODULE__)
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   ############################################################
@@ -57,19 +59,19 @@ defmodule Anoma.Node.Solver do
   @doc """
   I return all the solved intents.
   """
-  @spec get_solved :: [Intent.t()]
-  @spec get_solved(GenServer.server()) :: [Intent.t()]
-  def get_solved(solver \\ __MODULE__) do
-    GenServer.call(solver, :get_solved)
+  @spec get_solved(Id.t()) :: [Intent.t()]
+  def get_solved(node_id) do
+    name = Registry.name(node_id, __MODULE__)
+    GenServer.call(name, :get_solved)
   end
 
   @doc """
   I return all the unsolved intents.
   """
-  @spec get_unsolved :: [Intent.t()]
-  @spec get_unsolved(GenServer.server()) :: [Intent.t()]
-  def get_unsolved(solver \\ __MODULE__) do
-    GenServer.call(solver, :get_unsolved)
+  @spec get_unsolved(Id.t()) :: [Intent.t()]
+  def get_unsolved(node_id) do
+    name = Registry.name(node_id, __MODULE__)
+    GenServer.call(name, :get_unsolved)
   end
 
   ############################################################
@@ -79,18 +81,19 @@ defmodule Anoma.Node.Solver do
   @impl true
   def init(args) do
     # set default values for the arguments
-    args = Keyword.validate!(args, intent_pool: __MODULE__)
+    args = Keyword.validate!(args, [:node_id])
 
     # subscribe to all new intent pool messages
     subscribe_to_new_intents()
 
     # fetch the unsolved intents from the intent pool
-    unsolved_intents = Enum.to_list(IntentPool.intents(args[:intent_pool]))
+    unsolved_intents =
+      Enum.to_list(IntentPool.intents(args[:node_id]))
 
     state =
       %Solver{
         unsolved: MapSet.new(unsolved_intents),
-        intent_pool: args[:intent_pool]
+        node_id: args[:node_id]
       }
 
     {:ok, state}
@@ -236,7 +239,7 @@ defmodule Anoma.Node.Solver do
   @spec subscribe_to_new_intents() :: :ok | String.t()
   defp subscribe_to_new_intents() do
     filter = %Filters.SourceModule{module: IntentPool}
-    EventBroker.subscribe_me(EventBroker.Registry, [filter])
+    EventBroker.subscribe_me([filter])
   end
 
   @doc """

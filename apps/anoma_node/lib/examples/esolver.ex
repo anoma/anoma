@@ -1,4 +1,4 @@
-defmodule Examples.Solver do
+defmodule Anoma.Node.Examples.ESolver do
   @moduledoc """
   I contain several examples on how to use the solver.
   """
@@ -6,54 +6,10 @@ defmodule Examples.Solver do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Anoma.Node.IntentPool
-  alias Anoma.Node.Solver
+  alias Anoma.Node.Transaction.IntentPool
+  alias Anoma.Node.Transaction.Solver
   alias Anoma.RM.DumbIntent
-
-  ############################################################
-  #                  Initialization                          #
-  ############################################################
-
-  @doc """
-  I start a new intent pool and solver, and return their process id.
-  """
-  def initialization() do
-    # start the event broker application.
-    Application.ensure_all_started(:event_broker)
-
-    # start an intent pool
-    intent_pool_name =
-      Enum.shuffle(?a..?z)
-      |> Enum.take(20)
-      |> to_string
-      |> String.to_atom()
-
-    {:ok, intent_pool_pid} =
-      GenServer.start_link(IntentPool, [], name: intent_pool_name)
-
-    # start a solver
-    solver_name =
-      Enum.shuffle(?a..?z)
-      |> Enum.take(20)
-      |> to_string
-      |> String.to_atom()
-
-    intent_pool_args = [intent_pool: intent_pool_pid]
-
-    {:ok, solver_pid} =
-      GenServer.start_link(Solver, intent_pool_args, name: solver_name)
-
-    %{
-      solver: %{name: solver_name, pid: solver_pid},
-      intent_pool: %{name: intent_pool_name, pid: intent_pool_pid}
-    }
-  end
-
-  def cleanup(context) do
-    Process.sleep(1000)
-    GenServer.stop(context.solver.pid, :normal)
-    GenServer.stop(context.intent_pool.pid, :normal)
-  end
+  alias Anoma.Node.Examples.ENode
 
   ############################################################
   #                           Scenarios                      #
@@ -70,7 +26,7 @@ defmodule Examples.Solver do
     intent = %DumbIntent{}
 
     # solve the transaction
-    assert Solver.solve([intent]) == [intent]
+    assert Solver.solve([intent]) == MapSet.new([intent])
   end
 
   @doc """
@@ -108,49 +64,42 @@ defmodule Examples.Solver do
   I verify that the transaction is then in the unsolved list.
   """
   @spec solvable_transaction_via_intent_pool() :: :ok
-  def solvable_transaction_via_intent_pool() do
+  def solvable_transaction_via_intent_pool(enode \\ ENode.start_node()) do
     # startup
-    context = initialization()
-    solver = context.solver.pid
-    intent_pool = context.intent_pool.pid
-
     # the solver does not have solved transactions.
-    assert [] == Solver.get_solved(solver)
-    assert [] == Solver.get_unsolved(solver)
+    assert [] == Solver.get_solved(enode.node_id)
+    assert [] == Solver.get_unsolved(enode.node_id)
 
     # add an intent to the pool
     # note: this is asynchronous, so block this process for a bit
     intent_1 = %DumbIntent{value: -1}
-    IntentPool.new_intent(intent_pool, intent_1)
+    IntentPool.new_intent(enode.node_id, intent_1)
     Process.sleep(100)
 
     # the solver does not have solved transactions.
-    assert Solver.get_solved(solver) == []
-    assert Solver.get_unsolved(solver) == [intent_1]
+    assert Solver.get_solved(enode.node_id) == []
+    assert Solver.get_unsolved(enode.node_id) == [intent_1]
 
     # --------------------------------------------------------------------------
     # add a second intent to make it solvable
 
     intent_2 = %DumbIntent{value: 1}
-    IntentPool.new_intent(intent_pool, intent_2)
+    IntentPool.new_intent(enode.node_id, intent_2)
     Process.sleep(100)
 
     # the solver does not have solved transactions.
-    assert Solver.get_solved(solver) == [intent_1, intent_2]
-    assert Solver.get_unsolved(solver) == []
+    assert Solver.get_solved(enode.node_id) == [intent_1, intent_2]
+    assert Solver.get_unsolved(enode.node_id) == []
 
     # --------------------------------------------------------------------------
     # add a third intent to make it unsolvable
 
     intent_3 = %DumbIntent{value: 1000}
-    IntentPool.new_intent(intent_pool, intent_3)
+    IntentPool.new_intent(enode.node_id, intent_3)
     Process.sleep(100)
 
     # the solver does not have solved transactions.
-    assert Solver.get_solved(solver) == [intent_1, intent_2]
-    assert Solver.get_unsolved(solver) == [intent_3]
-
-    # cleanup
-    cleanup(context)
+    assert Solver.get_solved(enode.node_id) == [intent_1, intent_2]
+    assert Solver.get_unsolved(enode.node_id) == [intent_3]
   end
 end

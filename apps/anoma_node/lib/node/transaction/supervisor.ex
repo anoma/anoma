@@ -19,6 +19,7 @@ defmodule Anoma.Node.Transaction.Supervisor do
       {Anoma.Node.Transaction.Ordering, [node_id: args[:node_id]]},
       {Anoma.Node.Transaction.Storage, [node_id: args[:node_id]]},
       {Anoma.Node.Transaction.IntentPool, [node_id: args[:node_id]]},
+      {Anoma.Node.Transaction.Solver, [node_id: args[:node_id]]}
 
     ]
 
