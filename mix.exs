@@ -26,7 +26,14 @@ defmodule Anoma.MixProject do
       escript: escript(),
       # Burrito release
       releases: releases(),
-      package: package()
+      package: package(),
+      compilers: [:compile_protoc | Mix.compilers()],
+      protoc_options: [
+        elixir_out: "apps/anoma_lib/lib/",
+        proto_files: ["apps/anoma_lib/priv/protobufs/announce.proto"],
+        extra_opts:
+          "one_file_per_module=true,gen_descriptors=true,plugins=grpc"
+      ]
     ]
   end
 
