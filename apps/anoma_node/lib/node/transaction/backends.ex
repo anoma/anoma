@@ -5,6 +5,7 @@ defmodule Anoma.Node.Transaction.Backends do
   """
 
   alias Anoma.Node.Transaction.Ordering
+  alias Anoma.TransparentResource
 
   import Nock
   require Noun
@@ -12,7 +13,10 @@ defmodule Anoma.Node.Transaction.Backends do
   use TypedStruct
 
   @type backend() ::
-          :debug_term_storage | {:debug_read_term, pid} | :debug_bloblike
+          :debug_term_storage
+          | {:debug_read_term, pid}
+          | :debug_bloblike
+          | :transparent_resource
 
   @type transaction() :: {backend(), Noun.t() | binary()}
 
@@ -49,6 +53,10 @@ defmodule Anoma.Node.Transaction.Backends do
     execute_candidate(tx, id, &blob_store/2)
   end
 
+  def execute({:transparent_resource, tx}, id) do
+    execute_candidate(tx, id, &transparent_resource_tx/2)
+  end
+
   defp gate_call(tx_code, env, id) do
     with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
          {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
@@ -74,6 +82,19 @@ defmodule Anoma.Node.Transaction.Backends do
       _e ->
         Ordering.write({id, []})
         complete_event(id, :error)
+    end
+  end
+
+  defp transparent_resource_tx(id, result) do
+    with {:ok, tx} <- TransparentResource.Resource.from_noun(result),
+         true <- TransparentResource.Transaction.verify(tx) do
+      for action <- tx.actions do
+        cms = action.commitments
+        nfs = action.nullifiers
+        Ordering.append({id, [{:nullifiers, nfs}, {:commitments, cms}]})
+      end
+    else
+      _e -> :error
     end
   end
 
