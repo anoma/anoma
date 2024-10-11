@@ -8,17 +8,21 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: erlef/setup-beam@v1.16.0
+    - uses: erlef/setup-beam@v1.18.2
       with:
         otp-version: ${{ inputs.otp_version }}
-        elixir-version: "1.16.0"
+        elixir-version: "1.17.3"
     - name: Install system dependencies
       shell: bash
       run: sudo apt-get install -y libsodium-dev
+    - name: Install Protobuf dependencies
+      shell: bash
+      run: sudo apt install -y protobuf-compiler
     - name: Build ex_doc
       shell: bash
       run: |
         mix deps.get
+        mix escript.install hex protobuf
         mix escript.build
         mv anoma anoma_otp_${{ inputs.otp }}
         shasum -a 1 anoma_otp_${{ inputs.otp }} > anoma-otp-${{ inputs.otp }}.sha1sum
