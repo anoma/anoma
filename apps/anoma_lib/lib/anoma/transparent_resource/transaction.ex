@@ -51,8 +51,9 @@ defmodule Anoma.TransparentResource.Transaction do
   end
 
   # actions must be compliant, i.e., contain a proof for each resource
-  def verify_tx_action_compliance(_) do
-    true
+  @spec verify_tx_action_compliance(t()) :: boolean()
+  def verify_tx_action_compliance(%Transaction{actions: actions}) do
+    Enum.all?(actions, &Action.verify_correspondence/1)
   end
 
   # the sum of all action deltas we compute here must equal

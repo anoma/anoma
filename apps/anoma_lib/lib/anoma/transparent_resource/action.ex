@@ -44,4 +44,27 @@ defmodule Anoma.TransparentResource.Action do
 
     Delta.sub(committed_delta, nullified_delta)
   end
+
+  @spec verify_correspondence(t()) :: boolean()
+  def verify_correspondence(action = %Action{}) do
+    # Bail out early, if there are more committed and nullified
+    # resources than there are actual resource proofs
+    if MapSet.size(action.proofs) <
+         MapSet.size(action.commitments) + MapSet.size(action.nullifiers) do
+      false
+    else
+      # TODO Should I check that LogicProof.commitments =
+      # Action.commitments, as well as the nullifiers? Or can I assume
+      # that they are the same context. I could technically make it
+      # lie if I constructed it to lie, no?
+      action.proofs
+      |> Enum.all?(fn %LogicProof{resource: resource} ->
+        commitment = resource |> Resource.commitment()
+        nullifier = resource |> Resource.nullifier()
+
+        MapSet.member?(action.commitments, commitment) ||
+          MapSet.member?(action.nullifiers, nullifier)
+      end)
+    end
+  end
 end
