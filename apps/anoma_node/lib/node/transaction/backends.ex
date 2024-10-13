@@ -86,7 +86,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   defp transparent_resource_tx(id, result) do
-    with {:ok, tx} <- TransparentResource.Resource.from_noun(result),
+    with {:ok, tx} <- TransparentResource.Transaction.from_noun(result),
          true <- TransparentResource.Transaction.verify(tx) do
       for action <- tx.actions do
         cms = action.commitments
