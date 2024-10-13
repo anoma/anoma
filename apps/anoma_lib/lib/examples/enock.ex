@@ -5,6 +5,7 @@ defmodule Examples.ENock do
   import ExUnit.Assertions
 
   alias Examples.ECrypto
+  import Noun
 
   ####################################################################
   ##                        Resource Logics                         ##
@@ -1176,38 +1177,55 @@ defmodule Examples.ENock do
   # I want the results to be useful here... sadly they are not ☹
   # Maybe move the tests to the core itself... idk
 
+  # todo: BAD. fix the disaster left by integer jam
   def jamming_and_cueing() do
-    jam_and_cue(0, 2)
-    jam_and_cue(1, 12)
-    jam_and_cue(2, 72)
-    jam_and_cue(19, 2480)
-    jam_and_cue(581_949_002, 1_191_831_557_952)
-    jam_and_cue([0 | 19], 39689)
-    jam_and_cue([1 | 1], 817)
-    jam_and_cue([10_000 | 10_000], 4_952_983_169)
-    jam_and_cue([65536 | <<0, 0, 1>>], 158_376_919_809)
-    jam_and_cue([999_999_999 | 999_999_999], 1_301_217_674_263_809)
-    jam_and_cue([222, 444 | 888], 250_038_217_192_960_129)
-    jam_and_cue([[107 | 110] | [107 | 110]], 635_080_761_093)
+    jam_and_cue(0, atom_integer_to_binary(2))
+    jam_and_cue(1, atom_integer_to_binary(12))
+    jam_and_cue(2, atom_integer_to_binary(72))
+    jam_and_cue(19, atom_integer_to_binary(2480))
+    jam_and_cue(581_949_002, atom_integer_to_binary(1_191_831_557_952))
+    jam_and_cue([0 | 19], atom_integer_to_binary(39689))
+    jam_and_cue([1 | 1], atom_integer_to_binary(817))
+    jam_and_cue([10_000 | 10_000], atom_integer_to_binary(4_952_983_169))
+
+    jam_and_cue(
+      [65536 | <<0, 0, 1>>],
+      atom_integer_to_binary(158_376_919_809)
+    )
+
+    jam_and_cue(
+      [999_999_999 | 999_999_999],
+      atom_integer_to_binary(1_301_217_674_263_809)
+    )
+
+    jam_and_cue(
+      [222, 444 | 888],
+      atom_integer_to_binary(250_038_217_192_960_129)
+    )
+
+    jam_and_cue(
+      [[107 | 110] | [107 | 110]],
+      atom_integer_to_binary(635_080_761_093)
+    )
 
     jam_and_cue(
       [0, 1, 2, 3, 4, 5, 6, 7, 8, 9 | 10],
-      25_681_224_503_728_653_597_984_370_231_065
+      atom_integer_to_binary(25_681_224_503_728_653_597_984_370_231_065)
     )
 
     jam_and_cue(
       [99, 100, 101, 102, 103, 104 | 0],
-      223_372_995_869_285_333_705_242_560_449
+      atom_integer_to_binary(223_372_995_869_285_333_705_242_560_449)
     )
 
     jam_and_cue(
       [[222, 444 | 888] | [222, 444 | 888]],
-      170_479_614_045_978_345_989
+      atom_integer_to_binary(170_479_614_045_978_345_989)
     )
 
     jam_and_cue(
       [[0 | 1], [1 | 2], [2 | 3], [3 | 4] | 0],
-      11_976_248_475_217_237_797
+      atom_integer_to_binary(11_976_248_475_217_237_797)
     )
 
     jam_and_cue(
@@ -1222,7 +1240,9 @@ defmodule Examples.ENock do
         [7 | 8],
         [8 | 9] | 0
       ],
-      7_694_087_033_387_855_647_747_387_855_514_468_399_947_749_137_782_565
+      atom_integer_to_binary(
+        7_694_087_033_387_855_647_747_387_855_514_468_399_947_749_137_782_565
+      )
     )
 
     jam_and_cue(
@@ -1239,7 +1259,9 @@ defmodule Examples.ENock do
         [18 | 19],
         [20 | 21] | 0
       ],
-      308_947_677_754_874_070_959_300_747_182_056_036_528_545_493_781_368_831_595_479_491_505_523_344_414_501
+      atom_integer_to_binary(
+        308_947_677_754_874_070_959_300_747_182_056_036_528_545_493_781_368_831_595_479_491_505_523_344_414_501
+      )
     )
 
     assert dec() ==
