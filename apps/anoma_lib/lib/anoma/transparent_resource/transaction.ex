@@ -1,6 +1,8 @@
 defmodule Anoma.TransparentResource.Transaction do
   use TypedStruct
 
+  @behaviour Noun.Nounable.Kind
+
   alias Anoma.TransparentResource.Action
   alias Anoma.TransparentResource.Delta
   alias __MODULE__
@@ -63,5 +65,37 @@ defmodule Anoma.TransparentResource.Transaction do
   # all transaction logic proofs must pass
   def verify_tx_action_logics(_) do
     true
+  end
+
+  # We any here, as it's giving a weird error
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error | any()
+  def from_noun([roots, actions, delta, delta_proof | terminator])
+      when terminator in [0, <<>>, <<0>>, []] do
+    with {:ok, actions} <- Action.from_noun(actions),
+         {:ok, delta} <- Delta.from_noun(delta) do
+      {:ok,
+       %Transaction{
+         roots: MapSet.new(Noun.list_nock_to_erlang(roots)),
+         actions: actions,
+         delta: delta,
+         delta_proof: delta_proof
+       }}
+    end
+  end
+
+  def from_noun(_) do
+    :error
+  end
+
+  defimpl Noun.Nounable, for: Transaction do
+    def to_noun(trans = %Transaction{}) do
+      [
+        MapSet.to_list(trans.roots),
+        Enum.map(trans.actions, &Noun.Nounable.to_noun/1),
+        Map.to_list(trans.delta) |> Enum.map(fn {x, y} -> [x, y] end),
+        # Consider better provinance value
+        trans.delta_proof
+      ]
+    end
   end
 end
