@@ -75,7 +75,10 @@ defmodule Anoma.TransparentResource.Transaction do
   end
 
   # all transaction logic proofs must pass
-  def verify_tx_action_logics(_) do
-    true
+  @spec verify_tx_action_logics(t()) :: boolean()
+  def verify_tx_action_logics(tx = %Transaction{}) do
+    tx.actions
+    |> Stream.flat_map(& &1.proofs)
+    |> Enum.all?(&Anoma.TransparentResource.LogicProof.verify/1)
   end
 end
