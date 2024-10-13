@@ -6,8 +6,8 @@ defmodule Anoma.TransparentResource.Transaction do
   alias __MODULE__
 
   typedstruct enforce: true do
-    field(:roots, MapSet.t(binary()), default: [])
-    field(:actions, MapSet.t(Action.t()), default: [])
+    field(:roots, MapSet.t(binary()), default: MapSet.new())
+    field(:actions, MapSet.t(Action.t()), default: MapSet.new())
     field(:delta, Delta.t(), default: %{})
     # useless field for shielded only.
     field(:delta_proof, <<>>, default: <<>>)
