@@ -7,9 +7,9 @@ defmodule Anoma.TransparentResource.Action do
   alias __MODULE__
 
   typedstruct enforce: true do
-    field(:commitments, MapSet.t(binary()), default: [])
-    field(:nullifiers, MapSet.t(binary()), default: [])
-    field(:proofs, MapSet.t(LogicProof.t()), default: [])
+    field(:commitments, MapSet.t(binary()), default: MapSet.new())
+    field(:nullifiers, MapSet.t(binary()), default: MapSet.new())
+    field(:proofs, MapSet.t(LogicProof.t()), default: MapSet.new())
     field(:app_data, binary(), default: <<>>)
   end
 
