@@ -3,7 +3,7 @@
   {:burrito, "~> 1.1.0"},
   {:cairo,
    git: "https://github.com/anoma/aarm-cairo",
-   rev: "dd2ed877e8d7c326a4a88dcf86ae32cd0183f3ae"},
+   ref: "dd2ed877e8d7c326a4a88dcf86ae32cd0183f3ae"},
   {:enacl,
    git: "https://github.com/anoma/enacl/",
    ref: "23173637c495b85d56f205e4721cfe5afdef92e9"},
