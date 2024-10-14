@@ -4,8 +4,11 @@ defmodule Anoma.Node.Logging do
   """
 
   alias __MODULE__
-  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction
+  alias Transaction.{Mempool, Ordering, Storage}
 
+  use GenServer
   use TypedStruct
 
   require Logger
@@ -18,18 +21,27 @@ defmodule Anoma.Node.Logging do
   end
 
   typedstruct do
+    field(:node_id, String.t())
     field(:table, atom(), default: __MODULE__.Events)
   end
 
-  def start_link(default) do
-    GenServer.start_link(__MODULE__, default, name: Logging)
+  def start_link(args) do
+    args = Keyword.validate!(args, [:node_id, :table])
+    name = Registry.name(args[:node_id], __MODULE__)
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   @spec init(any()) :: {:ok, Logging.t()}
-  def init(_arg) do
-    init_table(__MODULE__.Events)
+  def init(args) do
+    args = Keyword.validate!(args, [:node_id, table: __MODULE__.Events])
+
+    table =
+      String.to_atom("#{args[:table]}_#{:erlang.phash2(args[:node_id])}")
+
+    init_table(table)
+
     EventBroker.subscribe_me([logging_filter()])
-    {:ok, %__MODULE__{}}
+    {:ok, %__MODULE__{node_id: args[:node_id], table: table}}
   end
 
   def handle_info(
@@ -123,5 +135,9 @@ defmodule Anoma.Node.Logging do
       [] -> []
       [{_, :consensus, current_pending}] -> current_pending
     end
+  end
+
+  def table_name(node_id) do
+    String.to_atom("#{Logging.Events}_#{:erlang.phash2(node_id)}")
   end
 end

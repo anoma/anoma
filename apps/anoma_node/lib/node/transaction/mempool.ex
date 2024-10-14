@@ -4,10 +4,16 @@ defmodule Anoma.Node.Transaction.Mempool do
   """
 
   alias __MODULE__
+  alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.{Storage, Executor, Backends}
+  alias Backends.ResultEvent
+  alias EventBroker.Event
+  alias Executor.ExecutionEvent
 
   require EventBroker.Event
+  require Logger
 
+  use GenServer
   use TypedStruct
 
   @type vm_result :: {:ok, Noun.t()} | :error | :in_progress
@@ -35,6 +41,8 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   typedstruct do
+    field(:node_id, String.t())
+
     field(
       :transactions,
       %{binary() => Mempool.Tx.t()},
@@ -44,40 +52,48 @@ defmodule Anoma.Node.Transaction.Mempool do
     field(:round, non_neg_integer(), default: 0)
   end
 
-  def start_link(default) do
-    GenServer.start_link(__MODULE__, default, name: Mempool)
+  def start_link(args \\ []) do
+    name = Registry.name(args[:node_id], __MODULE__)
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   @spec init(any()) :: {:ok, Mempool.t()}
-  def init(_arg) do
+  def init(args) do
+    keylist =
+      args
+      |> Keyword.validate!(node_id: "this is not a node id")
+
     EventBroker.subscribe_me([
       filter_for_mempool()
     ])
 
-    {:ok, %__MODULE__{}}
+    {:ok, %__MODULE__{node_id: args[:node_id]}}
   end
 
   ############################################################
   #                      Public RPC API                      #
   ############################################################
 
-  def tx_dump() do
-    GenServer.call(__MODULE__, :dump)
+  def tx_dump(node_id) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.call(pid, :dump)
   end
 
-  def tx(tx_w_backend) do
-    tx(tx_w_backend, :crypto.strong_rand_bytes(16))
+  def tx(node_id, tx_w_backend) do
+    tx(node_id, tx_w_backend, :crypto.strong_rand_bytes(16))
   end
 
   # only to be called by Logging replays directly
-  def tx(tx_w_backend, id) do
-    GenServer.cast(__MODULE__, {:tx, tx_w_backend, id})
+  def tx(node_id, tx_w_backend, id) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.cast(pid, {:tx, tx_w_backend, id})
   end
 
   # list of ids seen as ordered transactions
-  @spec execute(list(binary())) :: :ok
-  def execute(ordered_list_of_txs) do
-    GenServer.cast(__MODULE__, {:execute, ordered_list_of_txs})
+  @spec execute(String.t(), list(binary())) :: :ok
+  def execute(node_id, ordered_list_of_txs) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.cast(pid, {:execute, ordered_list_of_txs})
   end
 
   ############################################################
@@ -97,7 +113,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
     tx_event(tx_id, value)
 
-    Executor.launch(tx, tx_id)
+    Executor.launch(state.node_id, tx, tx_id)
 
     nstate = %Mempool{
       state
@@ -109,7 +125,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   def handle_cast({:execute, id_list}, state) do
     consensus_event(id_list)
-    Executor.execute(id_list)
+    Executor.execute(state.node_id, id_list)
 
     {:noreply, state}
   end
@@ -118,35 +134,27 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:noreply, state}
   end
 
-  def handle_info(
-        %EventBroker.Event{
-          body: %Backends.ResultEvent{
-            tx_id: id,
-            vm_result: res
-          }
-        },
-        state
-      ) do
+  def handle_info(%Event{body: %ResultEvent{}} = e, state) do
+    id = e.body.tx_id
+    res = e.body.vm_result
+
     new_map =
       state.transactions
-      |> Map.update!(id, fn tx -> Map.put(tx, :vm_result, res) end)
+      |> Map.update!(id, fn tx ->
+        Map.put(tx, :vm_result, res)
+      end)
 
-    {:noreply, %__MODULE__{state | transactions: new_map}}
+    new_state = %__MODULE__{state | transactions: new_map}
+    {:noreply, new_state}
   end
 
-  def handle_info(
-        %EventBroker.Event{
-          body: %Executor.ExecutionEvent{
-            result: execution_list
-          }
-        },
-        state
-      ) do
+  def handle_info(%Event{body: %ExecutionEvent{result: _}} = e, state) do
+    execution_list = e.body.result
     round = state.round
 
     {writes, map} = process_execution(state, execution_list)
 
-    Storage.commit(round, writes)
+    Storage.commit(state.node_id, round, writes)
 
     block_event(Enum.map(execution_list, &elem(&1, 1)), round)
 
@@ -156,6 +164,10 @@ defmodule Anoma.Node.Transaction.Mempool do
   def handle_info(_, state) do
     {:noreply, state}
   end
+
+  ############################################################
+  #                           Helpers                        #
+  ############################################################
 
   def block_event(id_list, round) do
     block_event =

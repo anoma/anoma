@@ -18,6 +18,7 @@ defmodule Nock do
 
   """
   typedstruct do
+    field(:node_id, String.t(), default: "")
     field(:meter_pid, pid() | nil, default: nil)
   end
 
@@ -232,10 +233,11 @@ defmodule Nock do
   end
 
   @spec read_with_id(Noun.t(), t()) :: {:ok, Noun.t()} | :error
-  def read_with_id(id_key_list, _env) do
+  def read_with_id(id_key_list, env) do
     if id_key_list do
       with [id, key] <- id_key_list |> Noun.list_nock_to_erlang(),
-           {:ok, value} <- Anoma.Node.Transaction.Ordering.read({id, key}) do
+           {:ok, value} <-
+             Anoma.Node.Transaction.Ordering.read(env.node_id, {id, key}) do
         {:ok, value}
       else
         _ -> :error
