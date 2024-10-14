@@ -227,8 +227,8 @@ defmodule Anoma.Client.Connection.TCP do
     Logger.debug("received message for node :: #{inspect(message)}")
 
     case Messages.proto_to_call(message, ref, local_node_id) do
-      {:reply, Envelope} ->
-        GenServer.cast(self(), {:tcp_out, Envelope})
+      {:reply, %Envelope{}} ->
+        GenServer.cast(self(), {:tcp_out, %Envelope{}})
         :ok
 
       {:is_reply, reply, message_id} ->
