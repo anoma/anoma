@@ -70,7 +70,7 @@ defmodule Anoma.Node.Transaction.Mempool do
       filter_for_mempool()
     ])
 
-    {:ok, %__MODULE__{node_id: args[:node_id]}}
+    {:ok, %__MODULE__{node_id: keylist[:node_id]}}
   end
 
   ############################################################

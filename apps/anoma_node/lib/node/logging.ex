@@ -6,7 +6,7 @@ defmodule Anoma.Node.Logging do
   alias __MODULE__
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction
-  alias Transaction.{Mempool, Ordering, Storage}
+  alias Transaction.Mempool
 
   use GenServer
   use TypedStruct

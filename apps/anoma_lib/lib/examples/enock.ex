@@ -272,7 +272,7 @@ defmodule Examples.ENock do
     sample = [999 | 888]
     core = [sign_detatched_arm(), sample | Nock.logics_core()]
 
-    valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign()]
+    valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
 
     assert {:ok, ECrypto.blood_l_signed_detached()} ==
              Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
