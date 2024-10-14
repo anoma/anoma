@@ -34,13 +34,28 @@ defmodule Anoma.TransparentResource.Transaction do
   end
 
   # actions must contain disjoint sets of commitments and nullifiers
-  def verify_tx_action_distinctness(_) do
-    true
+  @spec verify_tx_action_distinctness(t()) :: boolean()
+  def verify_tx_action_distinctness(tx = %Transaction{}) do
+    comms = tx.actions |> Enum.map(& &1.commitments)
+    nulls = tx.actions |> Enum.map(& &1.nullifiers)
+
+    number_of = fn x -> x |> Stream.map(&MapSet.size/1) |> Enum.sum() end
+
+    uniq_number_of = fn x ->
+      x |> Enum.reduce(&MapSet.union/2) |> MapSet.size()
+    end
+
+    {comm_size, uniq_comm_size} = {number_of.(comms), uniq_number_of.(comms)}
+    {null_size, uniq_null_size} = {number_of.(nulls), uniq_number_of.(nulls)}
+
+    # TODO Add failure logging
+    comm_size == uniq_comm_size && null_size == uniq_null_size
   end
 
   # actions must be compliant, i.e., contain a proof for each resource
-  def verify_tx_action_compliance(_) do
-    true
+  @spec verify_tx_action_compliance(t()) :: boolean()
+  def verify_tx_action_compliance(%Transaction{actions: actions}) do
+    Enum.all?(actions, &Action.verify_correspondence/1)
   end
 
   # the sum of all action deltas we compute here must equal
@@ -63,8 +78,11 @@ defmodule Anoma.TransparentResource.Transaction do
   end
 
   # all transaction logic proofs must pass
-  def verify_tx_action_logics(_) do
-    true
+  @spec verify_tx_action_logics(t()) :: boolean()
+  def verify_tx_action_logics(tx = %Transaction{}) do
+    tx.actions
+    |> Stream.flat_map(& &1.proofs)
+    |> Enum.all?(&Anoma.TransparentResource.LogicProof.verify/1)
   end
 
   # We any here, as it's giving a weird error
