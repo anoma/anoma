@@ -7,5 +7,6 @@ config :logger,
 
 config :anoma_lib, []
 config :anoma_node, []
+config :anoma_protobuf, []
 config :compile_protoc, []
 config :event_broker, []
