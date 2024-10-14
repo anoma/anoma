@@ -213,8 +213,7 @@ defmodule Anoma.Node.Transport.Messages do
   # """
   defp node_info(node_id) do
     %NodeInfo{
-      sign: node_id.external.sign,
-      encrypt: node_id.external.encrypt
+      node_id: node_id
     }
   end
 

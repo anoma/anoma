@@ -68,6 +68,8 @@ defmodule Anoma.Node.Transport.TCP.Connection do
   # I don't do anything useful.
   # """
   def init(args) do
+    Process.set_label(__MODULE__)
+
     Logger.debug("#{inspect(self())} starting tcp connection")
     args = Keyword.validate!(args, [:node_id, :socket])
     state = struct(__MODULE__, Enum.into(args, %{}))
@@ -233,8 +235,8 @@ defmodule Anoma.Node.Transport.TCP.Connection do
     Logger.debug("received message for node :: #{inspect(message)}")
 
     case Messages.proto_to_call(message, ref, local_node_id) do
-      {:reply, Envelope} ->
-        GenServer.cast(self(), {:tcp_out, Envelope})
+      {:reply, env = %Envelope{}} ->
+        GenServer.cast(self(), {:tcp_out, env})
         :ok
 
       {:is_reply, reply, message_id} ->

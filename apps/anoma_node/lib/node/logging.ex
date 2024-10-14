@@ -33,6 +33,8 @@ defmodule Anoma.Node.Logging do
 
   @spec init(any()) :: {:ok, Logging.t()}
   def init(args) do
+    Process.set_label(__MODULE__)
+
     args = Keyword.validate!(args, [:node_id, table: __MODULE__.Events])
 
     table =

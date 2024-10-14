@@ -16,26 +16,25 @@ defmodule Anoma.Node.Supervisor do
   end
 
   def start_link(args) do
-    args = Keyword.validate!(args, [:node_id])
-    node_id = args[:node_id]
-    name = Anoma.Node.Registry.name(node_id, __MODULE__)
-
+    name = Anoma.Node.Registry.name(args[:node_id], __MODULE__)
     Supervisor.start_link(__MODULE__, args, name: name)
   end
 
   def init(args) do
     Logger.debug("starting node with #{inspect(args)}")
+    Process.set_label(__MODULE__)
 
     args = Keyword.validate!(args, [:node_id])
-    node_id = args[:node_id]
 
     children = [
-      {Anoma.Node.Transport.Supervisor, node_id: node_id},
-      {Anoma.Node.Transaction.Supervisor, node_id: node_id},
-      {Anoma.Node.Utility.Supervisor, node_id: node_id},
-      {Anoma.Node.Logging, node_id: node_id}
+      {Anoma.Node.Transaction.Supervisor, node_id: args[:node_id]},
+      {Anoma.Node.Transport.Supervisor, node_id: args[:node_id]},
+      {Anoma.Node.Utility.Supervisor, node_id: args[:node_id]},
+      {Anoma.Node.Logging, node_id: args[:node_id]}
     ]
 
-    Supervisor.init(children, strategy: :one_for_all)
+    result = Supervisor.init(children, strategy: :one_for_all)
+
+    result
   end
 end

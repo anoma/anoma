@@ -65,6 +65,8 @@ defmodule Anoma.Node.Transport.EngineProxy do
   """
   @impl true
   def init(args) do
+    Process.set_label(__MODULE__)
+
     Logger.debug("starting engine proxy with #{inspect(args)}")
 
     # trap exits to shut down cleanly.

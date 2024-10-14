@@ -25,6 +25,8 @@ defmodule Anoma.Node.Transaction.Executor do
 
   @spec init(any()) :: {:ok, Executor.t()}
   def init(args) do
+    Process.set_label(__MODULE__)
+
     EventBroker.subscribe_me([
       Mempool.worker_module_filter(),
       complete_filter()
