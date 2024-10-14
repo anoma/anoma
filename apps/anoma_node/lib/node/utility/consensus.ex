@@ -36,7 +36,6 @@ defmodule Anoma.Node.Utility.Consensus do
 
     :mnesia.transaction(fn ->
       for cons <- :mnesia.read(table, :consensus) do
-        IO.puts("wait for block")
         wait_for_block(cons)
       end
     end)
