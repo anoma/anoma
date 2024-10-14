@@ -97,6 +97,32 @@ defmodule Anoma.Node.Registry do
   end
 
   @doc """
+  Given an engine type, I return the name of the local engine of that type.
+
+  If there are multiple engines of that type present, I raise an error.
+  """
+  @spec local_node_id() :: {:ok, any()} | {:error, term()}
+  def local_node_id() do
+    pattern = {%{node_id: :"$1"}, :"$2", :"$3"}
+
+    # shape: the shape of the results the registry should return
+    shape = [:"$1"]
+
+    Registry.select(__MODULE__, [{pattern, [], shape}])
+    |> Enum.uniq()
+    |> case do
+      [] ->
+        {:error, :no_node_running}
+
+      [node_id] ->
+        {:ok, node_id}
+
+      [_, _ | _] ->
+        {:error, :multiple_nodes}
+    end
+  end
+
+  @doc """
   I return the contents of the registry.
   """
   @spec dump_register() :: [{Address.t(), pid(), any()}]
