@@ -10,6 +10,7 @@ defmodule Anoma.RM.Shielded.PartialTransaction do
   alias __MODULE__
   use TypedStruct
   alias Anoma.RM.Shielded.ProofRecord
+  alias Anoma.Constants
 
   typedstruct enforce: true do
     field(:logic_proofs, list(ProofRecord.t()), default: [])
@@ -71,8 +72,12 @@ defmodule Anoma.RM.Shielded.PartialTransaction do
               |> :binary.bin_to_list()
             )
 
+          compliance_hash_valid =
+            ProofRecord.get_cairo_program_hash(proof_record) ==
+              Constants.cairo_compliance_program_hash()
+
           Logger.debug("compliance result: #{inspect(result)}")
-          acc && result
+          acc && result && compliance_hash_valid
       end
 
     all_logic_proofs_valid && all_compliance_proofs_valid
