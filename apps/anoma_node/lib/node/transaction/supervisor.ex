@@ -11,6 +11,8 @@ defmodule Anoma.Node.Transaction.Supervisor do
   end
 
   def init(args) do
+    Process.set_label(__MODULE__)
+
     children = [
       {Anoma.Node.Transaction.Mempool, [node_id: args[:node_id]]},
       {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]},

@@ -22,7 +22,7 @@ defmodule Anoma.Node.Examples.ELogging do
         node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
         |> Base.url_encode64()
       ) do
-    ENode.start_node(node_id)
+    ENode.start_node(node_id: node_id)
     table_name = Logging.table_name(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
@@ -46,7 +46,7 @@ defmodule Anoma.Node.Examples.ELogging do
         node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
         |> Base.url_encode64()
       ) do
-    ENode.start_node(node_id)
+    ENode.start_node(node_id: node_id)
 
     table_name = Logging.table_name(node_id)
 

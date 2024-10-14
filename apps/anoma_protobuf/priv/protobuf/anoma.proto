@@ -18,25 +18,40 @@ that sends a request.
 */
 
 message NodeInfo {
-  bytes sign = 1;
-  bytes encrypt = 2;
+  bytes node_id = 1;
 }
 
+// ----------------- Prove -----------------------
+
+message Prove {
+  message Request {
+    NodeInfo sender_info = 1;
+    string intent = 2;
+  }
+
+  message Response {
+    string result = 1;
+  }
+}
 // ----------------- Intent Pool -----------------
 
+message Intent {
+  int32 value = 1;
+}
 /*
 Intent pool requests
 */
 message IntentPool {
   message AddIntent {
-    message Request {}
-    message Response {
-      string result = 1;
+    message Request {
+      NodeInfo sender_info = 1;
+      Intent intent = 2;
     }
+    message Response { string result = 1; }
   }
 
   message ListIntents {
-    message Request {}
+    message Request { NodeInfo sender_info = 1; }
 
     message Response {
       repeated string intents = 1; // a list of intents.
@@ -47,7 +62,7 @@ message IntentPool {
 // ----------------- Indexer -----------------
 message Indexer {
   message Nullifiers {
-    message Request {}
+    message Request { NodeInfo sender_info = 1; }
 
     message Response {
       repeated string nullifiers = 1; // a list of intents.
@@ -55,7 +70,7 @@ message Indexer {
   }
 
   message UnrevealedCommits {
-    message Request {}
+    message Request { NodeInfo sender_info = 1; }
 
     message Response {
       repeated string commits = 1; // a list of intents.
@@ -63,7 +78,7 @@ message Indexer {
   }
 
   message UnspentResources {
-    message Request {}
+    message Request { NodeInfo sender_info = 1; }
 
     message Response {
       repeated string unspent_resources = 1; // a list of intents.
@@ -78,7 +93,7 @@ Intent pool requests
 */
 message MemPool {
   message Dump {
-    message Request {}
+    message Request { NodeInfo sender_info = 1; }
 
     message Response {
       repeated string dumps = 1; // a list of intents.
@@ -122,8 +137,22 @@ message Envelope {
   }
 }
 
-
 // ----------------- Services -----------------
 service Intents {
-  rpc ListIntents(IntentPool.ListIntents.Request) returns (IntentPool.ListIntents.Response) {}
+  rpc ListIntents(IntentPool.ListIntents.Request)
+      returns (IntentPool.ListIntents.Response) {}
+
+  rpc AddIntent(IntentPool.AddIntent.Request)
+      returns (IntentPool.AddIntent.Response) {}
+
+  rpc ListNullifiers(Indexer.Nullifiers.Request)
+      returns (Indexer.Nullifiers.Response) {}
+
+  rpc ListUnrevealedCommits(Indexer.UnrevealedCommits.Request)
+      returns (Indexer.UnrevealedCommits.Response) {}
+
+  rpc ListUnspentResources(Indexer.UnspentResources.Request)
+      returns (Indexer.UnspentResources.Response) {}
+
+  rpc Prove(Prove.Request) returns (Prove.Response) {}
 }
