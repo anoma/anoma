@@ -30,12 +30,14 @@ To have a working Anoma Node the following dependencies are required:
 3. `Elixir`
 4. `zig`
 5. `rust`
+6. `protoc`
 
 ### OSX
 
 ```sh
 brew install elixir
 brew install zig
+brew install protobuf
 ```
 
 ### Linux
