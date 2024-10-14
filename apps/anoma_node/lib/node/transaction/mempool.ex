@@ -59,25 +59,25 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @spec init(any()) :: {:ok, Mempool.t()}
   def init(args) do
-    keylist =
+    args =
       args
-      |> Keyword.validate!(
-        node_id: "this is not a node id",
+      |> Keyword.validate!([
+        :node_id,
         transactions: [],
         consensus: [],
         round: 0
-      )
+      ])
 
     EventBroker.subscribe_me([
       filter_for_mempool()
     ])
 
-    for {id, tx_w_backend} <- keylist[:transactions] do
+    for {id, tx_w_backend} <- args[:transactions] do
       tx(tx_w_backend, id)
     end
 
-    consensus = keylist[:consensus]
-    round = keylist[:round]
+    consensus = args[:consensus]
+    round = args[:round]
 
     for list <- consensus do
       execute(args[:node_id], list)
