@@ -7,12 +7,13 @@ defmodule Anoma.Node.Transaction.Storage do
   use TypedStruct
   require EventBroker.Event
 
-  alias __MODULE__
+  alias Anoma.Node.Registry
 
   @type bare_key() :: list(String.t())
   @type qualified_key() :: {integer(), bare_key()}
 
   typedstruct enforce: true do
+    field(:node_id, String.t())
     field(:uncommitted, %{qualified_key() => term()}, default: %{})
     # the most recent height written.
     # starts at 0 because nothing has been written.
@@ -28,52 +29,82 @@ defmodule Anoma.Node.Transaction.Storage do
     field(:writes, list({Anoma.Node.Transaction.Storage.bare_key(), term()}))
   end
 
-  def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: __MODULE__)
+  def start_link(args \\ []) do
+    args = Keyword.validate!(args, [:node_id])
+    name = Registry.name(args[:node_id], __MODULE__)
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
-  def init(_) do
-    :mnesia.delete_table(__MODULE__.Values)
-    :mnesia.delete_table(__MODULE__.Updates)
-    :mnesia.delete_table(__MODULE__.Blocks)
+  def init(args) do
+    keylist =
+      args
+      |> Keyword.validate!([
+        :node_id
+      ])
 
-    {:atomic, :ok} =
-      :mnesia.create_table(__MODULE__.Values, attributes: [:key, :value])
+    node_id = keylist[:node_id]
 
-    {:atomic, :ok} =
-      :mnesia.create_table(__MODULE__.Updates, attributes: [:key, :value])
+    values_table =
+      String.to_atom("#{__MODULE__.Values}_#{:erlang.phash2(node_id)}")
 
-    {:atomic, :ok} =
-      :mnesia.create_table(__MODULE__.Blocks, attributes: [:round, :block])
+    updates_table =
+      String.to_atom("#{__MODULE__.Updates}_#{:erlang.phash2(node_id)}")
 
-    {:ok, %Storage{}}
+    blocks_table =
+      String.to_atom("#{__MODULE__.Blocks}_#{:erlang.phash2(node_id)}")
+
+    :mnesia.create_table(values_table, attributes: [:key, :value])
+    :mnesia.create_table(updates_table, attributes: [:key, :value])
+    :mnesia.create_table(blocks_table, attributes: [:round, :block])
+
+    state =
+      struct(__MODULE__, Enum.into(args, %{}))
+      |> Map.put(:values_table, values_table)
+      |> Map.put(:updates_table, updates_table)
+      |> Map.put(:blocks_table, blocks_table)
+
+    {:ok, state}
   end
 
-  def handle_call({:commit, round, writes}, _from, state) do
+  def terminate(_reason, state) do
+    {:ok, state}
+  end
+
+  def handle_call({:commit, round, writes, _}, _from, state) do
     mnesia_tx = fn ->
       for {key, value} <- state.uncommitted do
-        :mnesia.write({__MODULE__.Values, key, value})
+        :mnesia.write({state.values_table, key, value})
       end
 
       for {key, value} <- state.uncommitted_updates do
         {:atomic, res} =
-          fn -> :mnesia.read(__MODULE__.Updates, key) end
+          fn -> :mnesia.read(state.updates_table, key) end
           |> :mnesia.transaction()
+
+        updates_table = state.updates_table
 
         new_updates =
           case res do
             [] -> value
-            [{__MODULE__.Updates, _key, list}] -> value ++ list
+            [{^updates_table, _key, list}] -> value ++ list
           end
 
-        :mnesia.write({__MODULE__.Updates, key, new_updates})
+        :mnesia.write({state.updates_table, key, new_updates})
       end
 
-      :mnesia.write({__MODULE__.Blocks, round, writes})
+      :mnesia.write({state.blocks_table, round, writes})
     end
 
     :mnesia.transaction(mnesia_tx)
-    {:reply, :ok, %__MODULE__{uncommitted_height: state.uncommitted_height}}
+
+    state = %{
+      state
+      | uncommitted: %{},
+        uncommitted_updates: %{},
+        uncommitted_height: state.uncommitted_height
+    }
+
+    {:reply, :ok, state}
   end
 
   def handle_call({:read, {0, _key}}, _from, state) do
@@ -88,7 +119,10 @@ defmodule Anoma.Node.Transaction.Storage do
 
       {:reply, result, state}
     else
-      block_spawn(height, fn -> blocking_read(height, key, from) end)
+      block_spawn(height, fn ->
+        blocking_read(state.node_id, height, key, from)
+      end)
+
       {:noreply, state}
     end
   end
@@ -97,7 +131,7 @@ defmodule Anoma.Node.Transaction.Storage do
       when write_or_append in [:write, :append] do
     unless height == state.uncommitted_height + 1 do
       block_spawn(height - 1, fn ->
-        blocking_write(height, kvlist, from)
+        blocking_write(state.node_id, height, kvlist, from)
       end)
 
       {:noreply, state}
@@ -130,23 +164,27 @@ defmodule Anoma.Node.Transaction.Storage do
     {:noreply, state}
   end
 
-  def read({height, key}) do
-    GenServer.call(__MODULE__, {:read, {height, key}}, :infinity)
+  def read(node_id, {height, key}) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.call(pid, {:read, {height, key}}, :infinity)
   end
 
-  def write({height, kvlist}) do
-    GenServer.call(__MODULE__, {:write, {height, kvlist}}, :infinity)
+  def write(node_id, {height, kvlist}) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.call(pid, {:write, {height, kvlist}}, :infinity)
   end
 
-  def append({height, kvlist}) do
-    GenServer.call(__MODULE__, {:append, {height, kvlist}}, :infinity)
+  def append(node_id, {height, kvlist}) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.call(pid, {:append, {height, kvlist}}, :infinity)
   end
 
-  def commit(block_round, writes) do
-    GenServer.call(__MODULE__, {:commit, block_round, writes})
+  def commit(node_id, block_round, writes) do
+    pid = Registry.whereis(node_id, __MODULE__)
+    GenServer.call(pid, {:commit, block_round, writes, self()})
   end
 
-  defp blocking_read(height, key, from) do
+  defp blocking_read(node_id, height, key, from) do
     receive do
       # if the key we care about was written at exactly the height we
       # care about, then we already have the value for free
@@ -156,7 +194,7 @@ defmodule Anoma.Node.Transaction.Storage do
         case Enum.find(writes, fn {keywrite, _value} -> key == keywrite end) do
           # try reading in history instead
           nil ->
-            GenServer.reply(from, read({height, key}))
+            GenServer.reply(from, read(node_id, {height, key}))
 
           # return value
           {_key, value} ->
@@ -246,14 +284,16 @@ defmodule Anoma.Node.Transaction.Storage do
   def read_in_past(height, key, state) do
     case Map.get(state.uncommitted_updates, key) do
       nil ->
-        tx1 = fn -> :mnesia.read(__MODULE__.Updates, key) end
+        tx1 = fn -> :mnesia.read(state.updates_table, key) end
 
-        {:atomic, tx1_result} =
-          :mnesia.transaction(tx1)
+        {:atomic, tx1_result} = :mnesia.transaction(tx1)
+
+        updates_table = state.updates_table
 
         case tx1_result do
-          [{__MODULE__.Updates, _key, height_upds}] ->
+          [{^updates_table, _key, height_upds}] ->
             height = height_upds |> Enum.find(fn a -> a <= height end)
+            values_table = state.values_table
 
             case height do
               nil ->
@@ -261,10 +301,10 @@ defmodule Anoma.Node.Transaction.Storage do
 
               _ ->
                 tx2 = fn ->
-                  :mnesia.read(__MODULE__.Values, {height, key})
+                  :mnesia.read(values_table, {height, key})
                 end
 
-                {:atomic, [{__MODULE__.Values, {_height, _key}, tx2_result}]} =
+                {:atomic, [{^values_table, {_height, _key}, tx2_result}]} =
                   :mnesia.transaction(tx2)
 
                 {:ok, tx2_result}
@@ -290,14 +330,14 @@ defmodule Anoma.Node.Transaction.Storage do
     end
   end
 
-  def blocking_write(height, kvlist, from) do
+  def blocking_write(node_id, height, kvlist, from) do
     awaited_height = height - 1
 
     receive do
       %EventBroker.Event{
         body: %__MODULE__.WriteEvent{height: ^awaited_height}
       } ->
-        GenServer.reply(from, write({height, kvlist}))
+        GenServer.reply(from, write(node_id, {height, kvlist}))
     end
 
     EventBroker.unsubscribe_me([
@@ -312,5 +352,17 @@ defmodule Anoma.Node.Transaction.Storage do
 
   defp height_filter(height) do
     %__MODULE__.HeightFilter{height: height}
+  end
+
+  def blocks_table(node_id) do
+    String.to_atom("#{__MODULE__.Blocks}_#{:erlang.phash2(node_id)}")
+  end
+
+  def values_table(node_id) do
+    String.to_atom("#{__MODULE__.Values}_#{:erlang.phash2(node_id)}")
+  end
+
+  def updates_table(node_id) do
+    String.to_atom("#{__MODULE__.Updates}_#{:erlang.phash2(node_id)}")
   end
 end
