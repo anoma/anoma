@@ -57,4 +57,12 @@ defmodule Anoma.CairoResource.ProofRecord do
       _ -> :error
     end
   end
+
+  @spec get_cairo_program_hash(ProofRecord.t()) :: binary()
+  def get_cairo_program_hash(proof_record) do
+    proof_record.public_inputs
+    |> :binary.bin_to_list()
+    |> Cairo.get_program_hash()
+    |> :binary.list_to_bin()
+  end
 end
