@@ -22,10 +22,12 @@ defmodule Anoma.Node.Examples.ENode do
     - `:node_id`    - The key of this router. This value is used to announce myself to other
     - `:pid`        - the pid of the supervision tree.
     - `:tcp_ports`  - The ports on which the node is listening for connections.
+    - `:grpc_ports` - The ports on which the node is listening for grpc connections.
     """
     field(:node_id, String.t())
     field(:pid, pid())
     field(:tcp_ports, [integer()], default: [])
+    field(:grpc_port, integer(), default: 0)
   end
 
   ############################################################
@@ -63,12 +65,22 @@ defmodule Anoma.Node.Examples.ENode do
     initialize_ets()
 
     opts =
-      Keyword.validate!(opts, node_id: "londo")
+      Keyword.validate!(opts,
+        node_id: "londo",
+        grpc_port: 0
+      )
 
     enode =
       case Anoma.Supervisor.start_node(opts) do
         {:ok, pid} ->
-          enode = %ENode{node_id: opts[:node_id], pid: pid, tcp_ports: []}
+          enode = %ENode{
+            node_id: opts[:node_id],
+            pid: pid,
+            tcp_ports: [],
+            grpc_port:
+              :ranch.get_port(<<"Anoma.Node.Transport.GRPC.Endpoint">>)
+          }
+
           :ets.insert(@table_name, {pid, enode})
 
           enode
