@@ -6,7 +6,7 @@ defmodule Anoma.TransparentResource.Resource do
   use TypedStruct
   alias __MODULE__
 
-  @type committment() :: binary()
+  @type commitment() :: binary()
   @type nullifier() :: binary()
 
   typedstruct enforce: true do
