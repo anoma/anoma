@@ -10,5 +10,6 @@ defmodule Examples.RegistryTest do
     ERegistry.generate_name_with_label()
     ERegistry.find_pid_of_process()
     ERegistry.list_engines_for_node()
+    ERegistry.single_node_running()
   end
 end
