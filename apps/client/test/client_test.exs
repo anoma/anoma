@@ -7,7 +7,7 @@ defmodule ClientTest do
     excluded = []
 
     EClient.__info__(:functions)
-    |> Enum.filter(&(&1 in excluded))
+    |> Enum.filter(&(&1 not in excluded))
     |> Enum.each(fn {func, _arity} ->
       apply(EClient, func, [])
     end)
