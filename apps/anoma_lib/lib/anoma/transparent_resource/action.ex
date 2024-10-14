@@ -44,4 +44,45 @@ defmodule Anoma.TransparentResource.Action do
 
     Delta.sub(committed_delta, nullified_delta)
   end
+
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
+  def from_noun([commits, nulls, proofs, app_data | terminator])
+      when terminator in [0, <<>>, <<0>>, []] do
+    with {:ok, proofs} <- from_noun_proofs(proofs) do
+      {:ok,
+       %Action{
+         commitments: MapSet.new(Noun.list_nock_to_erlang(commits)),
+         nullifiers: MapSet.new(Noun.list_nock_to_erlang(nulls)),
+         proofs: proofs,
+         app_data: app_data
+       }}
+    end
+  end
+
+  def from_noun(_) do
+    :error
+  end
+
+  defimpl Noun.Nounable, for: Action do
+    def to_noun(trans = %Action{}) do
+      [
+        MapSet.to_list(trans.commitments),
+        MapSet.to_list(trans.nullifiers),
+        Enum.map(trans.proofs, &Noun.Nounable.to_noun/1),
+        trans.app_data
+      ]
+    end
+  end
+
+  @spec from_noun_proofs(Noun.t()) :: {:ok, MapSet.t(LogicProof.t())}
+  defp from_noun_proofs(noun) when is_list(noun) do
+    maybe_proofs =
+      Enum.map(Noun.list_nock_to_erlang(noun), &LogicProof.from_noun/1)
+
+    if Enum.any?(maybe_proofs, &(:error == &1)) do
+      :error
+    else
+      {:ok, MapSet.new(Enum.map(maybe_proofs, fn {:ok, x} -> x end))}
+    end
+  end
 end
