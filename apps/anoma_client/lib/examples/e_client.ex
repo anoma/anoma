@@ -41,8 +41,18 @@ defmodule Anoma.Client.Examples.EClient do
   @doc """
   Given an enode, I connect to its GRPC endpoint.
   """
-  @spec connect_to_node(ENode.t()) :: %EClient{}
-  def connect_to_node(enode \\ ENode.start_node(grpc_port: 0)) do
+  @spec connect_to_node(ENode.t() | nil) :: %EClient{}
+  def connect_to_node(enode \\ nil) do
+    # if no node was given, this ran in a unit test.
+    # we kill all nodes since we can only have a local node for this test.
+    enode =
+      if enode == nil do
+        ENode.kill_all_nodes()
+        ENode.start_node(grpc_port: 0)
+      else
+        enode
+      end
+
     result =
       case GRPC.Stub.connect("localhost:#{enode.grpc_port}") do
         {:ok, channel} ->
@@ -74,6 +84,13 @@ defmodule Anoma.Client.Examples.EClient do
     }
 
     {:ok, _reply} = Intents.Stub.add_intent(client.channel, request)
+
+    # fetch the intents to ensure it was added
+    request = %ListIntents.Request{}
+
+    {:ok, reply} = Intents.Stub.list_intents(client.channel, request)
+
+    assert reply.intents == ["1"]
   end
 
   @doc """
