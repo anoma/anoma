@@ -30,12 +30,14 @@ To have a working Anoma Node the following dependencies are required:
 3. `Elixir`
 4. `zig`
 5. `rust`
+6. `protoc`
 
 ### OSX
 
 ```sh
 brew install elixir
 brew install zig
+brew install protobuf
 ```
 
 ### Linux
@@ -43,6 +45,14 @@ brew install zig
 All the dependencies can be grabbed from your distro's package manager.
 
 ## Installation
+
+Generate the protobuf definitions before compiling Anoma:
+
+```bash
+cd apps/anoma_lib/priv/protobufs
+protoc --elixir_out=one_file_per_module=true,gen_descriptors=true,plugins=grpc:../../lib *.proto
+cd -
+```
 
 To install the dependencies as well as Anoma run:
 
