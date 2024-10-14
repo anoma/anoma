@@ -36,7 +36,9 @@ defmodule Anoma.TransparentResource.LogicProof do
   end
 
   def verify(proof = %LogicProof{}) do
-    args = []
+    {public_inputs, private_inputs} = internal_logic_inputs(proof)
+
+    args = [public_inputs | private_inputs]
 
     result = Nock.nock(proof.resource.logic, [9, 2, 10, [6 | args], 0 | 1])
 
