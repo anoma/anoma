@@ -68,10 +68,10 @@ defmodule Anoma.TransparentResource.Transaction do
   end
 
   # We any here, as it's giving a weird error
-  @spec from_noun(Noun.t()) :: {:ok, t()} | :error | any()
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([roots, actions, delta, delta_proof | terminator])
       when terminator in [0, <<>>, <<0>>, []] do
-    with {:ok, actions} <- Action.from_noun(actions),
+    with {:ok, actions} <- from_noun_actions(actions),
          {:ok, delta} <- Delta.from_noun(delta) do
       {:ok,
        %Transaction{
@@ -96,6 +96,18 @@ defmodule Anoma.TransparentResource.Transaction do
         # Consider better provinance value
         trans.delta_proof
       ]
+    end
+  end
+
+  @spec from_noun_actions(Noun.t()) :: {:ok, MapSet.t(Action.t())}
+  defp from_noun_actions(noun) when is_list(noun) do
+    maybe_actions =
+      Enum.map(Noun.list_nock_to_erlang(noun), &Action.from_noun/1)
+
+    if Enum.any?(maybe_actions, &(:error == &1)) do
+      :error
+    else
+      {:ok, MapSet.new(Enum.map(maybe_actions, fn {:ok, x} -> x end))}
     end
   end
 end
