@@ -29,10 +29,12 @@ defmodule Anoma.Supervisor do
   @doc """
   I start a new node with the given `node_id`.
   """
-  def start_node(node_id: node_id) do
+  def start_node(args) do
+    args = Keyword.validate!(args, [:node_id, :grpc_port])
+
     DynamicSupervisor.start_child(
       Anoma.Node.NodeSupervisor,
-      {Anoma.Node.Supervisor, [node_id: node_id]}
+      {Anoma.Node.Supervisor, args}
     )
   end
 end
