@@ -54,17 +54,18 @@ To compile a working Anoma Node the following dependencies are required:
 2. Windows Development Environment:
     * Install [Build Tools for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Workload: Visual C++ build tools)
     * Install [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
-3. Install CMake:
+3. Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (Windows and Linux only)
+4. Install CMake:
     * Linux and Mac OS X: use package manager
     * Windows: not required
-4. Install [Sodium](https://doc.libsodium.org/installation#pre-built-libraries) (Windows only)
+5. Install [Sodium](https://doc.libsodium.org/installation#pre-built-libraries) (Windows only)
     * Ensure that the `LIB` and `INCLUDE` environment variables point to this installation
-5. Install [Protocol Buffers](https://grpc.io/docs/protoc-installation/)
-6. Install [Elixir](https://elixir-lang.org/install.html) (version 1.17.0 or higher) and with it:
+6. Install [Protocol Buffers](https://grpc.io/docs/protoc-installation/)
+7. Install [Elixir](https://elixir-lang.org/install.html) (version 1.17.0 or higher) and with it:
      * Install [Hex package manager](https://hexdocs.pm/mix/1.13/Mix.Tasks.Local.Hex.html)
      * Install [Rebar3](https://hexdocs.pm/mix/1.14/Mix.Tasks.Local.Rebar.html)
      * Install protobuf-elixir: `mix escript.install hex protobuf`
-7. Install [Rust](https://www.rust-lang.org/tools/install) (version 1.76.0 or newer)
+8. Install [Rust](https://www.rust-lang.org/tools/install) (version 1.76.0 or newer)
 
 ### Compiling and Running
 
@@ -93,7 +94,7 @@ Further see the Known issues section if you encounter an issue.
 To work with Docker images, do the following:
 1. Install [Docker](https://docs.docker.com/engine/install/), this is necessary for both building and running Docker images
 2. Build the Anoma image from the repository root: `docker build -t <IMAGE> .`
-    * `<IMAGE>` is your chosen image name 
+    * `<IMAGE>` is your chosen image name
 4. Run the Anoma image: `docker run -it --network host <IMAGE> <SUBCOMMAND>`
     * `<IMAGE>` is the name of Anoma Docker image to be run
     * `<SUBCOMMAND>`is interpreted by the Anoma binary
