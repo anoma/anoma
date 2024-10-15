@@ -18,6 +18,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @type vm_result :: {:ok, Noun.t()} | :error | :in_progress
   @type tx_result :: {:ok, any()} | :error | :in_progress
+  @typep startup_options() :: {:node_id, String.t()}
 
   typedstruct module: Tx do
     field(:tx_result, Mempool.tx_result(), default: :in_progress)
@@ -52,13 +53,13 @@ defmodule Anoma.Node.Transaction.Mempool do
     field(:round, non_neg_integer(), default: 0)
   end
 
+  @spec start_link([startup_options()]) :: GenServer.on_start()
   def start_link(args \\ []) do
     name = Registry.name(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
-  @spec init(any()) :: {:ok, Mempool.t()}
-
+  @spec init([startup_options()]) :: {:ok, Mempool.t()}
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -77,16 +78,19 @@ defmodule Anoma.Node.Transaction.Mempool do
   #                      Public RPC API                      #
   ############################################################
 
+  @spec tx_dump(String.t()) :: [Mempool.Tx.t()]
   def tx_dump(node_id) do
     pid = Registry.whereis(node_id, __MODULE__)
     GenServer.call(pid, :dump)
   end
 
+  @spec tx(String.t(), {Backends.backend(), Noun.t()}) :: :ok
   def tx(node_id, tx_w_backend) do
     tx(node_id, tx_w_backend, :crypto.strong_rand_bytes(16))
   end
 
   # only to be called by Logging replays directly
+  @spec tx(String.t(), {Backends.backend(), Noun.t()}, binary()) :: :ok
   def tx(node_id, tx_w_backend, id) do
     pid = Registry.whereis(node_id, __MODULE__)
     GenServer.cast(pid, {:tx, tx_w_backend, id})
@@ -209,6 +213,8 @@ defmodule Anoma.Node.Transaction.Mempool do
     %Backends.ForMempoolFilter{}
   end
 
+  @spec process_execution(t(), [{:ok | :error, binary()}]) ::
+          {[Mempool.Tx.t()], %{binary() => Mempool.Tx.t()}}
   defp process_execution(state, execution_list) do
     for {tx_res, id} <- execution_list, reduce: {[], state.transactions} do
       {lst, ex_state} ->
