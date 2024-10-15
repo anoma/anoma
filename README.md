@@ -85,6 +85,17 @@ interactive shell.
 
 Further see the Known issues section if you encounter an issue.
 
+
+## Docker images
+To work with Docker images, do the following:
+1. Install [Docker](https://docs.docker.com/engine/install/), this is necessary for both building and running Docker images
+2. Build the Anoma image from the repository root: `docker build -t <IMAGE> .`
+    * `<IMAGE>` is your chosen image name 
+4. Run the Anoma image: `docker run -it --network host <IMAGE> <SUBCOMMAND>`
+    * `<IMAGE>` is the name of Anoma Docker image to be run
+    * `<SUBCOMMAND>`is interpreted by the Anoma binary
+    * `--network host` will enable connections from the host
+
 ## Contributing
 
 Please read the [contributor's guide](./documentation/contributing.livemd) for in
