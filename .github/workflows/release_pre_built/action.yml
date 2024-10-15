@@ -8,10 +8,10 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: erlef/setup-beam@v1.16.0
+    - uses: erlef/setup-beam@v1.18.2
       with:
         otp-version: ${{ inputs.otp_version }}
-        elixir-version: "1.16.0"
+        elixir-version: "1.17.3"
     - name: Install system dependencies
       shell: bash
       run: sudo apt-get install -y libsodium-dev

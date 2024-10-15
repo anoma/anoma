@@ -16,10 +16,10 @@ runs:
 
       - name: Set up Elixir
         id: beam
-        uses: erlef/setup-beam@v1.16.0
+        uses: erlef/setup-beam@v1.18.2
         with:
-          elixir-version: '1.15.6'
-          otp-version: '26.1.2'
+          elixir-version: '1.17.3'
+          otp-version: '27.1'
 
       - name: Restore dependencies cache
         id: deps-cache
