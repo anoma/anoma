@@ -56,7 +56,8 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   #                      Public RPC API                      #
   ############################################################
 
-  @spec list_intents() :: {:ok, Anoma.Protobuf.IntentPool.ListIntents.Response.t()}
+  @spec list_intents() ::
+          {:ok, Anoma.Protobuf.IntentPool.ListIntents.Response.t()}
   def list_intents() do
     GenServer.call(__MODULE__, {:list_intents})
   end
@@ -67,7 +68,8 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, {:add_intent, intent})
   end
 
-  @spec list_nullifiers() :: {:ok, Anoma.Protobuf.Indexer.Nullifiers.Response.t()}
+  @spec list_nullifiers() ::
+          {:ok, Anoma.Protobuf.Indexer.Nullifiers.Response.t()}
   def list_nullifiers() do
     GenServer.call(__MODULE__, {:list_nullifiers})
   end
