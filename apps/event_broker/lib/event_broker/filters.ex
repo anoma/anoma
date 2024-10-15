@@ -6,38 +6,28 @@ defmodule EventBroker.Filters do
   use EventBroker.DefFilter
 
   deffilter Trivial do
-    true
+    _ -> true
   end
 
-  deffilter LessTrivial,
-    params: %LessTrivial{value: value},
-    fields: [field(:value, bool())] do
-    value
+  deffilter LessTrivial, value: bool() do
+    _ -> value
   end
 
+  # complicated macro usage example
   deffilter ManyFields,
-    event: %EventBroker.Event{
+    params_module: module(),
+    params_foo: term(),
+    params_bar: term() do
+    %EventBroker.Event{
       source_module: event_module,
       body: {event_foo, event_bar}
-    },
-    params: %ManyFields{
-      module: params_module,
-      foo: params_foo,
-      bar: params_bar
-    },
-    fields: [
-      field(:module, module()),
-      field(:foo, term()),
-      field(:bar, term())
-    ] do
-    event_module == params_module && event_foo == params_foo &&
-      event_bar == params_bar
+    } ->
+      params_module == event_module && params_foo == event_foo &&
+        params_bar == event_bar
   end
 
-  deffilter SourceModule,
-    event: %EventBroker.Event{source_module: event_module},
-    params: %SourceModule{module: params_module},
-    fields: [field(:module, module())] do
-    event_module == params_module
+  deffilter SourceModule, module: module() do
+    %EventBroker.Event{source_module: ^module} -> true
+    _ -> false
   end
 end
