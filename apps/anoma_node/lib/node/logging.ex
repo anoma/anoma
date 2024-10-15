@@ -8,6 +8,7 @@ defmodule Anoma.Node.Logging do
   alias Anoma.Node.Transaction
   alias Transaction.Mempool
 
+  use EventBroker.DefFilter
   use GenServer
   use TypedStruct
 
@@ -23,6 +24,23 @@ defmodule Anoma.Node.Logging do
   typedstruct do
     field(:node_id, String.t())
     field(:table, atom(), default: __MODULE__.Events)
+  end
+
+  deffilter LoggingFilter do
+    %EventBroker.Event{body: %Anoma.Node.Logging.LoggingEvent{}} ->
+      true
+
+    %EventBroker.Event{body: %Mempool.TxEvent{}} ->
+      true
+
+    %EventBroker.Event{body: %Mempool.ConsensusEvent{}} ->
+      true
+
+    %EventBroker.Event{body: %Mempool.BlockEvent{}} ->
+      true
+
+    _ ->
+      false
   end
 
   def start_link(args) do

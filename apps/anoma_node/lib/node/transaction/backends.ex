@@ -4,12 +4,14 @@ defmodule Anoma.Node.Transaction.Backends do
   Support :kv, :ro, :rm, :cairo execution.
   """
 
+  alias Anoma.Node.Transaction.Executor
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.TransparentResource
 
   import Nock
   require Noun
   require EventBroker.Event
+  use EventBroker.DefFilter
   use TypedStruct
 
   @type backend() ::
@@ -28,6 +30,25 @@ defmodule Anoma.Node.Transaction.Backends do
   typedstruct enforce: true, module: CompleteEvent do
     field(:tx_id, integer())
     field(:tx_result, {:ok, any()} | :error)
+  end
+
+  deffilter CompleteFilter do
+    %EventBroker.Event{body: %CompleteEvent{}} ->
+      true
+
+    _ ->
+      false
+  end
+
+  deffilter ForMempoolFilter do
+    %EventBroker.Event{body: %ResultEvent{}} ->
+      true
+
+    %EventBroker.Event{body: %Executor.ExecutionEvent{}} ->
+      true
+
+    _ ->
+      false
   end
 
   def execute(node_id, {backend, tx}, id)

@@ -3,6 +3,7 @@ defmodule Anoma.Node.Transaction.Storage do
   abstorage genserver
   """
 
+  use EventBroker.DefFilter
   use GenServer
   use TypedStruct
   require EventBroker.Event
@@ -27,6 +28,11 @@ defmodule Anoma.Node.Transaction.Storage do
   typedstruct enforce: true, module: WriteEvent do
     field(:height, integer())
     field(:writes, list({Anoma.Node.Transaction.Storage.bare_key(), term()}))
+  end
+
+  deffilter HeightFilter, height: non_neg_integer() do
+    %EventBroker.Event{body: %{height: ^height}} -> true
+    _ -> false
   end
 
   def start_link(args \\ []) do
