@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>API Reference — Anoma v0.23.0</title>
+    <title>API Reference — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
 
-    <span>API Reference <small class="app-vsn">Anoma v0.23.0</small></span>
+    <span>API Reference <small class="app-vsn">Anoma v0.24.1</small></span>
   </h1>
 
 
@@ -136,6 +136,81 @@ GUIDES
 </h2>
 
     <div class="summary">
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.html" translate="no">Anoma.Client</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Documentation for <code class="inline">Client</code>.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Api.Endpoint.html" translate="no">Anoma.Client.Api.Endpoint</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Api.Server.html" translate="no">Anoma.Client.Api.Server</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Application.html" translate="no">Anoma.Client.Application</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The Anoma client application acts as a proxy between a third-party client and an Anoma node.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Connection.GRPCProxy.html" translate="no">Anoma.Client.Connection.GRPCProxy</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Connection.Supervisor.html" translate="no">Anoma.Client.Connection.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the client supervisor. I monitor all the processed regarding a connection to a single remote node.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Connection.TCP.html" translate="no">Anoma.Client.Connection.TCP</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the TCP connection process. I manage a tcp connection with a remote node.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Examples.EClient.html" translate="no">Anoma.Client.Examples.EClient</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain functions to test the public interface of the client.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Examples.EProxy.html" translate="no">Anoma.Client.Examples.EProxy</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain examples for the GRPC proxy.</p></div>
+
+</div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Anoma.Constants.html" translate="no">Anoma.Constants</a>
@@ -221,9 +296,41 @@ GUIDES
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Anoma.Node.Examples.EIntentPool.html" translate="no">Anoma.Node.Examples.EIntentPool</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain several examples on how to run the intent pool.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Anoma.Node.Examples.ELogging.html" translate="no">Anoma.Node.Examples.ELogging</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ENode.html" translate="no">Anoma.Node.Examples.ENode</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ERegistry.html" translate="no">Anoma.Node.Examples.ERegistry</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ESolver.html" translate="no">Anoma.Node.Examples.ESolver</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain several examples on how to use the solver.</p></div>
 
 </div>
 <div class="summary-row">
@@ -243,6 +350,13 @@ GUIDES
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Anoma.Node.Examples.ETransport.ETcp.html" translate="no">Anoma.Node.Examples.ETransport.ETcp</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ETransport.ETcp.Context.html" translate="no">Anoma.Node.Examples.ETransport.ETcp.Context</a>
 
   </div>
 
@@ -269,7 +383,21 @@ GUIDES
 
   </div>
 
-    <div class="summary-synopsis"><p>I am a filter for the logging engine.</p></div>
+    <div class="summary-synopsis"><p>I am the Anoma.Node.Logging.LoggingFilter filter generated by deffilter in Anoma.Node.Logging.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Registry.html" translate="no">Anoma.Node.Registry</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Registry.Address.html" translate="no">Anoma.Node.Registry.Address</a>
+
+  </div>
 
 </div>
 <div class="summary-row">
@@ -304,7 +432,7 @@ Support :kv, :ro, :rm, :cairo execution.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I am a filter for backend result messages.</p></div>
+    <div class="summary-synopsis"><p>I am the Anoma.Node.Transaction.Backends.CompleteFilter filter generated by deffilter in Anoma.Node.Transaction.Backends.</p></div>
 
 </div>
 <div class="summary-row">
@@ -313,7 +441,7 @@ Support :kv, :ro, :rm, :cairo execution.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>Important messages for mempool.</p></div>
+    <div class="summary-synopsis"><p>I am the Anoma.Node.Transaction.Backends.ForMempoolFilter filter generated by deffilter in Anoma.Node.Transaction.Backends.</p></div>
 
 </div>
 <div class="summary-row">
@@ -335,6 +463,16 @@ Support :kv, :ro, :rm, :cairo execution.</p></div>
     <a href="Anoma.Node.Transaction.Executor.ExecutionEvent.html" translate="no">Anoma.Node.Transaction.Executor.ExecutionEvent</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.IntentPool.html" translate="no">Anoma.Node.Transaction.IntentPool</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the intent pool for the Anoma node.
+m1dnight still has to write these docs.</p></div>
 
 </div>
 <div class="summary-row">
@@ -396,7 +534,16 @@ Support :kv, :ro, :rm, :cairo execution.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I am a filter for matching ordered transaction ids.</p></div>
+    <div class="summary-synopsis"><p>I am the Anoma.Node.Transaction.Ordering.TxIdFilter filter generated by deffilter in Anoma.Node.Transaction.Ordering.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Solver.html" translate="no">Anoma.Node.Transaction.Solver</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a strawman intent solver for testing purposes.</p></div>
 
 </div>
 <div class="summary-row">
@@ -414,7 +561,7 @@ Support :kv, :ro, :rm, :cairo execution.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I am a filter which for height-matching.</p></div>
+    <div class="summary-synopsis"><p>I am the Anoma.Node.Transaction.Storage.HeightFilter filter generated by deffilter in Anoma.Node.Transaction.Storage.</p></div>
 
 </div>
 <div class="summary-row">
@@ -439,26 +586,6 @@ Support :kv, :ro, :rm, :cairo execution.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Anoma.Node.Transport.Addressing.html" translate="no">Anoma.Node.Transport.Addressing</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>I contain logic to deal with addresses to local and remote engines.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Anoma.Node.Transport.Discovery.html" translate="no">Anoma.Node.Transport.Discovery</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>I contain logic to handle the discovery of new nodes on the network.</p></div>
-
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -471,34 +598,23 @@ Support :kv, :ro, :rm, :cairo execution.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Anoma.Node.Transport.EngineProxy.AsyncMessage.html" translate="no">Anoma.Node.Transport.EngineProxy.AsyncMessage</a>
+    <a href="Anoma.Node.Transport.GRPC.Endpoint.html" translate="no">Anoma.Node.Transport.GRPC.Endpoint</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Anoma.Node.Transport.EngineProxy.SyncMessage.html" translate="no">Anoma.Node.Transport.EngineProxy.SyncMessage</a>
+    <a href="Anoma.Node.Transport.GRPC.Server.html" translate="no">Anoma.Node.Transport.GRPC.Server</a>
 
   </div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Anoma.Node.Transport.MessageEncoding.html" translate="no">Anoma.Node.Transport.MessageEncoding</a>
+    <a href="Anoma.Node.Transport.Messages.html" translate="no">Anoma.Node.Transport.Messages</a>
 
   </div>
-
-    <div class="summary-synopsis"><p>I contain logic to encode and decode the bytes coming in over a network connection.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Anoma.Node.Transport.Router.html" translate="no">Anoma.Node.Transport.Router</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>I am the router module. I route messages to local and remote engines.</p></div>
 
 </div>
 <div class="summary-row">
@@ -512,20 +628,20 @@ Support :kv, :ro, :rm, :cairo execution.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Anoma.Node.Transport.TCPClient.html" translate="no">Anoma.Node.Transport.TCPClient</a>
+    <a href="Anoma.Node.Transport.TCP.Connection.html" translate="no">Anoma.Node.Transport.TCP.Connection</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>I am a TCP client. I connect to a remote TCP server and send messages to it.</p></div>
+    <div class="summary-synopsis"><p>I am the TCP connection process. I manage a tcp connection with a remote node.</p></div>
 
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Anoma.Node.Transport.TCPServer.html" translate="no">Anoma.Node.Transport.TCPServer</a>
+    <a href="Anoma.Node.Transport.TCP.Listener.html" translate="no">Anoma.Node.Transport.TCP.Listener</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>I am a TCP server. I listen on a given interface and port for incoming connections.</p></div>
+    <div class="summary-synopsis"><p>I am a TCP listener. I listen on a given interface and port for incoming connections.</p></div>
 
 </div>
 <div class="summary-row">
@@ -553,6 +669,22 @@ Support :kv, :ro, :rm, :cairo execution.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>I am the supervisor for the utility subsystem.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.RM.DumbIntent.html" translate="no">Anoma.RM.DumbIntent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.RM.Intent.html" translate="no">Anoma.RM.Intent</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Intent protocol.</p></div>
 
 </div>
 <div class="summary-row">
@@ -627,12 +759,67 @@ Support :kv, :ro, :rm, :cairo execution.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Anoma.Supervisor.html" translate="no">Anoma.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the top level supervisor for the Anoma node application.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Anoma.System.Directories.html" translate="no">Anoma.System.Directories</a>
 
   </div>
 
     <div class="summary-synopsis"><p>I provide out utilities for ensuring user Data, Config,
 etc. directories are properly setup for the host operating system.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.html" translate="no">Anoma.TransparentResource</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.Action.html" translate="no">Anoma.TransparentResource.Action</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.Delta.html" translate="no">Anoma.TransparentResource.Delta</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>delta functions. not a struct don't make it a struct</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.LogicProof.html" translate="no">Anoma.TransparentResource.LogicProof</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.Resource.html" translate="no">Anoma.TransparentResource.Resource</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>resource struct</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.Transaction.html" translate="no">Anoma.TransparentResource.Transaction</a>
+
+  </div>
 
 </div>
 <div class="summary-row">
@@ -699,6 +886,15 @@ commitment tree.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="EventBroker.DefFilter.html" translate="no">EventBroker.DefFilter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain the deffilter macro. Require or use me to use deffilter.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="EventBroker.Event.html" translate="no">EventBroker.Event</a>
 
   </div>
@@ -727,12 +923,29 @@ all the filters used in the PubSub system.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="EventBroker.Filters.html" translate="no">EventBroker.Filters</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain submodules for the default filters supported by the event broker.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="EventBroker.Filters.LessTrivial.html" translate="no">EventBroker.Filters.LessTrivial</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>I represent a filter which filters a message based on the value I store
-in my struct.</p></div>
+    <div class="summary-synopsis"><p>I am the EventBroker.Filters.LessTrivial filter generated by deffilter in EventBroker.Filters.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filters.ManyFields.html" translate="no">EventBroker.Filters.ManyFields</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the EventBroker.Filters.ManyFields filter generated by deffilter in EventBroker.Filters.</p></div>
 
 </div>
 <div class="summary-row">
@@ -741,7 +954,7 @@ in my struct.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I filter an event based on its source module.</p></div>
+    <div class="summary-synopsis"><p>I am the EventBroker.Filters.SourceModule filter generated by deffilter in EventBroker.Filters.</p></div>
 
 </div>
 <div class="summary-row">
@@ -750,7 +963,7 @@ in my struct.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I am the trivial filter. I always return true.</p></div>
+    <div class="summary-synopsis"><p>I am the EventBroker.Filters.Trivial filter generated by deffilter in EventBroker.Filters.</p></div>
 
 </div>
 <div class="summary-row">
@@ -940,6 +1153,15 @@ functions.</p></div>
     <div class="summary">
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Mix.Tasks.Compile.Protoc.html" translate="no">mix compile.protoc</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I compile the protobuf files before compiling the project.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Mix.Tasks.Toc.html" translate="no">mix toc</a>
 
   </div>
@@ -974,9 +1196,9 @@ Anoma
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
           </span>
 

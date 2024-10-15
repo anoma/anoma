@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>Anoma.Node.Examples.ELogging — Anoma v0.23.0</title>
+    <title>Anoma.Node.Examples.ELogging — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Examples.ELogging</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.23.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
 
   </h1>
 
@@ -152,7 +152,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_block_event/0" data-no-tooltip translate="no">check_block_event()</a>
+        <a href="#check_block_event/1" data-no-tooltip translate="no">check_block_event(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</a>
 
       </div>
 
@@ -160,7 +160,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_block_event_leave_one_out/0" data-no-tooltip translate="no">check_block_event_leave_one_out()</a>
+        <a href="#check_block_event_leave_one_out/1" data-no-tooltip translate="no">check_block_event_leave_one_out(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</a>
 
       </div>
 
@@ -168,7 +168,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_block_event_multiple/0" data-no-tooltip translate="no">check_block_event_multiple()</a>
+        <a href="#check_block_event_multiple/1" data-no-tooltip translate="no">check_block_event_multiple(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</a>
 
       </div>
 
@@ -176,7 +176,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_consensus_event/0" data-no-tooltip translate="no">check_consensus_event()</a>
+        <a href="#check_consensus_event/1" data-no-tooltip translate="no">check_consensus_event(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</a>
 
       </div>
 
@@ -184,7 +184,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_consensus_event_multiple/0" data-no-tooltip translate="no">check_consensus_event_multiple()</a>
+        <a href="#check_consensus_event_multiple/1" data-no-tooltip translate="no">check_consensus_event_multiple(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</a>
 
       </div>
 
@@ -192,7 +192,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_multiple_tx_events/0" data-no-tooltip translate="no">check_multiple_tx_events()</a>
+        <a href="#check_multiple_tx_events/1" data-no-tooltip translate="no">check_multiple_tx_events(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</a>
 
       </div>
 
@@ -200,7 +200,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_tx_event/0" data-no-tooltip translate="no">check_tx_event()</a>
+        <a href="#check_tx_event/1" data-no-tooltip translate="no">check_tx_event(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</a>
 
       </div>
 
@@ -260,14 +260,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="check_block_event/0">
+<section class="detail" id="check_block_event/1">
+
+    <span id="check_block_event/0"></span>
 
   <div class="detail-header">
-    <a href="#check_block_event/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#check_block_event/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">check_block_event()</h1>
+    <h1 class="signature" translate="no">check_block_event(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</h1>
 
 
   </div>
@@ -277,14 +279,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="check_block_event_leave_one_out/0">
+<section class="detail" id="check_block_event_leave_one_out/1">
+
+    <span id="check_block_event_leave_one_out/0"></span>
 
   <div class="detail-header">
-    <a href="#check_block_event_leave_one_out/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#check_block_event_leave_one_out/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">check_block_event_leave_one_out()</h1>
+    <h1 class="signature" translate="no">check_block_event_leave_one_out(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</h1>
 
 
   </div>
@@ -294,14 +298,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="check_block_event_multiple/0">
+<section class="detail" id="check_block_event_multiple/1">
+
+    <span id="check_block_event_multiple/0"></span>
 
   <div class="detail-header">
-    <a href="#check_block_event_multiple/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#check_block_event_multiple/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">check_block_event_multiple()</h1>
+    <h1 class="signature" translate="no">check_block_event_multiple(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</h1>
 
 
   </div>
@@ -311,14 +317,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="check_consensus_event/0">
+<section class="detail" id="check_consensus_event/1">
+
+    <span id="check_consensus_event/0"></span>
 
   <div class="detail-header">
-    <a href="#check_consensus_event/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#check_consensus_event/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">check_consensus_event()</h1>
+    <h1 class="signature" translate="no">check_consensus_event(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</h1>
 
 
   </div>
@@ -328,14 +336,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="check_consensus_event_multiple/0">
+<section class="detail" id="check_consensus_event_multiple/1">
+
+    <span id="check_consensus_event_multiple/0"></span>
 
   <div class="detail-header">
-    <a href="#check_consensus_event_multiple/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#check_consensus_event_multiple/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">check_consensus_event_multiple()</h1>
+    <h1 class="signature" translate="no">check_consensus_event_multiple(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</h1>
 
 
   </div>
@@ -345,14 +355,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="check_multiple_tx_events/0">
+<section class="detail" id="check_multiple_tx_events/1">
+
+    <span id="check_multiple_tx_events/0"></span>
 
   <div class="detail-header">
-    <a href="#check_multiple_tx_events/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#check_multiple_tx_events/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">check_multiple_tx_events()</h1>
+    <h1 class="signature" translate="no">check_multiple_tx_events(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</h1>
 
 
   </div>
@@ -362,14 +374,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="check_tx_event/0">
+<section class="detail" id="check_tx_event/1">
+
+    <span id="check_tx_event/0"></span>
 
   <div class="detail-header">
-    <a href="#check_tx_event/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#check_tx_event/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">check_tx_event()</h1>
+    <h1 class="signature" translate="no">check_tx_event(node_id \\ (&quot;londo_mollari&quot; &lt;&gt; :crypto.strong_rand_bytes(16)) |&gt; Base.url_encode64())</h1>
 
 
   </div>
@@ -438,9 +452,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
           </span>
 

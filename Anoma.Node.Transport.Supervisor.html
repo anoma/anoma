@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>Anoma.Node.Transport.Supervisor — Anoma v0.23.0</title>
+    <title>Anoma.Node.Transport.Supervisor — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -123,39 +123,14 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transport.Supervisor</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.23.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
 
   </h1>
 
 
     <section id="moduledoc">
 <p>I am the transport supervisor.</p><p>My main functionality is to supervise the physical transport connections
-in this node (e.g., TCP connections).</p><h2 id="module-registry" class="section-heading">
-  <a href="#module-registry" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Registry</span>
-</h2>
-<p>The registry maps process ids to names. For each external node connection
-a value is put into the register where the key is the remote key and the
-type of connection. For example, a TCP connection would be stored as
-<code class="inline">%{remote_id: remote_id, type: :tcp}</code> and a remote engine proxy is
-stored as <code class="inline">%{remote_id: remote_id, type: :router}</code>.</p><h2 id="module-tcp-supervisor" class="section-heading">
-  <a href="#module-tcp-supervisor" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">TCP Supervisor</span>
-</h2>
-<p>The TCP supervisor is a dynamic supervisor that supervises TCP connections.</p><h2 id="module-proxy-supervisor" class="section-heading">
-  <a href="#module-proxy-supervisor" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Proxy Supervisor</span>
-</h2>
-<p>The proxy supervisor is a dynamic supervisor that supervises proxy engine
-processes. A proxy engine is a process that acts as a message relay for a
-remote engine.</p><p>The proxy engine can receive messages and knows which physical connection
-should be used to relay the message to the remote engine.</p>
+in this node (e.g., TCP connections).</p>
     </section>
 
 </div>
@@ -184,7 +159,17 @@ should be used to relay the message to the remote engine.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_link/1" data-no-tooltip translate="no">start_link(init_arg)</a>
+        <a href="#init/1" data-no-tooltip translate="no">init(args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I initialize a new transport supervision tree.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_link/1" data-no-tooltip translate="no">start_link(args)</a>
 
       </div>
 
@@ -220,6 +205,29 @@ should be used to relay the message to the remote engine.</p>
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
+<section class="detail" id="init/1">
+
+  <div class="detail-header">
+    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">init(args)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I initialize a new transport supervision tree.</p><h3 id="init/1-options" class="section-heading">
+  <a href="#init/1-options" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Options</span>
+</h3>
+<ul><li><code class="inline">:node_id</code> - The key of the local node.</li></ul>
+  </section>
+</section>
 <section class="detail" id="start_link/1">
 
   <div class="detail-header">
@@ -227,7 +235,7 @@ should be used to relay the message to the remote engine.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_link(init_arg)</h1>
+    <h1 class="signature" translate="no">start_link(args)</h1>
 
 
   </div>
@@ -245,9 +253,9 @@ should be used to relay the message to the remote engine.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
           </span>
 

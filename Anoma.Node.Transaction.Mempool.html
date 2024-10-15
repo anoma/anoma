@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>Anoma.Node.Transaction.Mempool — Anoma v0.23.0</title>
+    <title>Anoma.Node.Transaction.Mempool — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Mempool</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.23.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
 
   </h1>
 
@@ -204,7 +204,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#execute/1" data-no-tooltip translate="no">execute(ordered_list_of_txs)</a>
+        <a href="#execute/2" data-no-tooltip translate="no">execute(node_id, ordered_list_of_txs)</a>
 
       </div>
 
@@ -238,7 +238,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#tx/1" data-no-tooltip translate="no">tx(tx_w_backend)</a>
+        <a href="#tx/2" data-no-tooltip translate="no">tx(node_id, tx_w_backend)</a>
 
       </div>
 
@@ -246,7 +246,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#tx/2" data-no-tooltip translate="no">tx(tx_w_backend, id)</a>
+        <a href="#tx/3" data-no-tooltip translate="no">tx(node_id, tx_w_backend, id)</a>
 
       </div>
 
@@ -254,7 +254,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#tx_dump/0" data-no-tooltip translate="no">tx_dump()</a>
+        <a href="#tx_dump/1" data-no-tooltip translate="no">tx_dump(node_id)</a>
 
       </div>
 
@@ -306,6 +306,7 @@ GUIDES
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Transaction.Mempool{
+  node_id: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil,
   round: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
   transactions: %{required(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) =&gt; <a href="Anoma.Node.Transaction.Mempool.Tx.html#t:t/0">Anoma.Node.Transaction.Mempool.Tx.t</a>()}
 }</pre>
@@ -424,14 +425,14 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="execute/1">
+<section class="detail" id="execute/2">
 
   <div class="detail-header">
-    <a href="#execute/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#execute/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">execute(ordered_list_of_txs)</h1>
+    <h1 class="signature" translate="no">execute(node_id, ordered_list_of_txs)</h1>
 
 
   </div>
@@ -440,7 +441,7 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> execute([<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()]) :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> execute(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()]) :: :ok</pre>
 
       </div>
 
@@ -480,7 +481,7 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> init(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> init([startup_options()]) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
 
       </div>
 
@@ -503,22 +504,11 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
-  </section>
-</section>
-<section class="detail" id="tx/1">
+          <pre translate="no"><span class="attribute">@spec</span> start_link([startup_options()]) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
 
-  <div class="detail-header">
-    <a href="#tx/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">tx(tx_w_backend)</h1>
-
-
-  </div>
-
-  <section class="docstring">
+      </div>
 
 
   </section>
@@ -530,29 +520,68 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">tx(tx_w_backend, id)</h1>
+    <h1 class="signature" translate="no">tx(node_id, tx_w_backend)</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> tx(
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  {<a href="Anoma.Node.Transaction.Backends.html#t:backend/0">Anoma.Node.Transaction.Backends.backend</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()}
+) :: :ok</pre>
+
+      </div>
 
 
   </section>
 </section>
-<section class="detail" id="tx_dump/0">
+<section class="detail" id="tx/3">
 
   <div class="detail-header">
-    <a href="#tx_dump/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#tx/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">tx_dump()</h1>
+    <h1 class="signature" translate="no">tx(node_id, tx_w_backend, id)</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> tx(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), {<a href="Anoma.Node.Transaction.Backends.html#t:backend/0">Anoma.Node.Transaction.Backends.backend</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()}, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) ::
+  :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="tx_dump/1">
+
+  <div class="detail-header">
+    <a href="#tx_dump/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">tx_dump(node_id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> tx_dump(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: [<a href="Anoma.Node.Transaction.Mempool.Tx.html#t:t/0">Anoma.Node.Transaction.Mempool.Tx.t</a>()]</pre>
+
+      </div>
 
 
   </section>
@@ -599,9 +628,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
           </span>
 

@@ -3,12 +3,26 @@
 # Hoon
 
 ## Index
-
-* [Index](./index_docs.livemd)
-  * [Hoon](./hoon.livemd)
-    1. [Setting up](./hoon/setting-up.livemd)
-    2. [Dumping](./hoon/dumping.livemd)
-    3. [Calling Conventions](./hoon/calling.livemd)
+1. [Toc](./toc.livemd)
+2. [Contributing](./contributing.livemd)
+   1. [Understanding Any Module](./contributing/understanding-any-module.livemd)
+   2. [Style Guide](./contributing/style-guide.livemd)
+   3. [Writing Documents](./contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./contributing/examples-over-testing.livemd)
+   5. [Git](./contributing/git.livemd)
+   6. [Iex](./contributing/iex.livemd)
+   7. [Mnesia Vs Actor State](./contributing/mnesia-vs-actor-state.livemd)
+   8. [Observer](./contributing/observer.livemd)
+   9. [Testing](./contributing/testing.livemd)
+      1. [Running Tests](./contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./contributing/testing/writing-tests.livemd)
+3. [Visualization](./visualization.livemd)
+   1. [Actors](./visualization/actors.livemd)
+4. [Hoon](./hoon.livemd)
+   1. [Calling](./hoon/calling.livemd)
+   2. [Dumping](./hoon/dumping.livemd)
+   3. [Setting Up](./hoon/setting-up.livemd)
+5. [Analysis](./analysis.livemd)
 
 ## About This Guide
 

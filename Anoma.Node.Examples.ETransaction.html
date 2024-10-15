@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>Anoma.Node.Examples.ETransaction — Anoma v0.23.0</title>
+    <title>Anoma.Node.Examples.ETransaction — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Examples.ETransaction</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.23.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
 
   </h1>
 
@@ -144,7 +144,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#append_then_read/0" data-no-tooltip translate="no">append_then_read()</a>
+        <a href="#append_then_read/1" data-no-tooltip translate="no">append_then_read(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -152,7 +152,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#append_then_read_same/0" data-no-tooltip translate="no">append_then_read_same()</a>
+        <a href="#append_then_read_same/1" data-no-tooltip translate="no">append_then_read_same(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -160,7 +160,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#append_then_read_several/0" data-no-tooltip translate="no">append_then_read_several()</a>
+        <a href="#append_then_read_several/1" data-no-tooltip translate="no">append_then_read_several(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -168,7 +168,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#append_twice_then_read/0" data-no-tooltip translate="no">append_twice_then_read()</a>
+        <a href="#append_twice_then_read/1" data-no-tooltip translate="no">append_twice_then_read(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -176,7 +176,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#append_twice_then_read_with_commit/0" data-no-tooltip translate="no">append_twice_then_read_with_commit()</a>
+        <a href="#append_twice_then_read_with_commit/1" data-no-tooltip translate="no">append_twice_then_read_with_commit(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -192,7 +192,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bluf_transaction_errors/0" data-no-tooltip translate="no">bluf_transaction_errors()</a>
+        <a href="#bluf_transaction_errors/1" data-no-tooltip translate="no">bluf_transaction_errors(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -200,7 +200,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bluff_txs_write_nothing/0" data-no-tooltip translate="no">bluff_txs_write_nothing()</a>
+        <a href="#bluff_txs_write_nothing/1" data-no-tooltip translate="no">bluff_txs_write_nothing(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -208,7 +208,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#complicated_storage/0" data-no-tooltip translate="no">complicated_storage()</a>
+        <a href="#complicated_storage/1" data-no-tooltip translate="no">complicated_storage(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -216,7 +216,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#complicated_storage_with_commit/0" data-no-tooltip translate="no">complicated_storage_with_commit()</a>
+        <a href="#complicated_storage_with_commit/1" data-no-tooltip translate="no">complicated_storage_with_commit(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -232,7 +232,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#inc_counter_submit_after_read/1" data-no-tooltip translate="no">inc_counter_submit_after_read(key \\ &quot;key&quot;)</a>
+        <a href="#inc_counter_submit_after_read/1" data-no-tooltip translate="no">inc_counter_submit_after_read(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -240,7 +240,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#inc_counter_submit_after_zero/1" data-no-tooltip translate="no">inc_counter_submit_after_zero(key \\ &quot;key&quot;)</a>
+        <a href="#inc_counter_submit_after_zero/1" data-no-tooltip translate="no">inc_counter_submit_after_zero(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -248,7 +248,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#inc_counter_submit_with_zero/1" data-no-tooltip translate="no">inc_counter_submit_with_zero(key \\ &quot;key&quot;)</a>
+        <a href="#inc_counter_submit_with_zero/1" data-no-tooltip translate="no">inc_counter_submit_with_zero(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -256,7 +256,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mempool_startup_consensus/1" data-no-tooltip translate="no">mempool_startup_consensus(round \\ 0)</a>
+        <a href="#ord_order_first/1" data-no-tooltip translate="no">ord_order_first(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -264,7 +264,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mempool_startup_txs/0" data-no-tooltip translate="no">mempool_startup_txs()</a>
+        <a href="#ord_read_future_then_write/1" data-no-tooltip translate="no">ord_read_future_then_write(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -272,7 +272,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#ord_order_first/0" data-no-tooltip translate="no">ord_order_first()</a>
+        <a href="#ord_write_then_read/1" data-no-tooltip translate="no">ord_write_then_read(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -280,7 +280,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#ord_read_future_then_write/0" data-no-tooltip translate="no">ord_read_future_then_write()</a>
+        <a href="#read_future_then_write/1" data-no-tooltip translate="no">read_future_then_write(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -288,7 +288,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#ord_write_then_read/0" data-no-tooltip translate="no">ord_write_then_read()</a>
+        <a href="#read_other_future_then_write/1" data-no-tooltip translate="no">read_other_future_then_write(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -296,7 +296,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read_future_then_write/0" data-no-tooltip translate="no">read_future_then_write()</a>
+        <a href="#read_txs_write_nothing/1" data-no-tooltip translate="no">read_txs_write_nothing(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -304,7 +304,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read_other_future_then_write/0" data-no-tooltip translate="no">read_other_future_then_write()</a>
+        <a href="#restart_executor/1" data-no-tooltip translate="no">restart_executor(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -312,7 +312,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read_txs_write_nothing/1" data-no-tooltip translate="no">read_txs_write_nothing(key \\ &quot;key&quot;)</a>
+        <a href="#restart_mempool/1" data-no-tooltip translate="no">restart_mempool(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -320,7 +320,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#restart_executor/0" data-no-tooltip translate="no">restart_executor()</a>
+        <a href="#restart_ordering/1" data-no-tooltip translate="no">restart_ordering(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -328,7 +328,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#restart_mempool/0" data-no-tooltip translate="no">restart_mempool()</a>
+        <a href="#restart_storage/1" data-no-tooltip translate="no">restart_storage(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -336,7 +336,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#restart_ordering/0" data-no-tooltip translate="no">restart_ordering()</a>
+        <a href="#restart_tx_module/1" data-no-tooltip translate="no">restart_tx_module(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -344,7 +344,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#restart_storage/0" data-no-tooltip translate="no">restart_storage()</a>
+        <a href="#write_future_multiple_then_write_present/1" data-no-tooltip translate="no">write_future_multiple_then_write_present(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -352,7 +352,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#restart_tx_module/0" data-no-tooltip translate="no">restart_tx_module()</a>
+        <a href="#write_future_then_write_present/1" data-no-tooltip translate="no">write_future_then_write_present(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -360,7 +360,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#write_future_multiple_then_write_present/0" data-no-tooltip translate="no">write_future_multiple_then_write_present()</a>
+        <a href="#write_multiple_then_read/1" data-no-tooltip translate="no">write_multiple_then_read(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -368,7 +368,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#write_future_then_write_present/0" data-no-tooltip translate="no">write_future_then_write_present()</a>
+        <a href="#write_then_read/1" data-no-tooltip translate="no">write_then_read(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -376,23 +376,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#write_multiple_then_read/0" data-no-tooltip translate="no">write_multiple_then_read()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#write_then_read/0" data-no-tooltip translate="no">write_then_read()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#write_then_read_other/0" data-no-tooltip translate="no">write_then_read_other()</a>
+        <a href="#write_then_read_other/1" data-no-tooltip translate="no">write_then_read_other(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -408,7 +392,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#zero_counter_submit/1" data-no-tooltip translate="no">zero_counter_submit(key \\ &quot;key&quot;)</a>
+        <a href="#zero_counter_submit/1" data-no-tooltip translate="no">zero_counter_submit(node_id \\ &quot;londo_mollari&quot;)</a>
 
       </div>
 
@@ -427,14 +411,16 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="append_then_read/0">
+<section class="detail" id="append_then_read/1">
+
+    <span id="append_then_read/0"></span>
 
   <div class="detail-header">
-    <a href="#append_then_read/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#append_then_read/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">append_then_read()</h1>
+    <h1 class="signature" translate="no">append_then_read(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -444,14 +430,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="append_then_read_same/0">
+<section class="detail" id="append_then_read_same/1">
+
+    <span id="append_then_read_same/0"></span>
 
   <div class="detail-header">
-    <a href="#append_then_read_same/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#append_then_read_same/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">append_then_read_same()</h1>
+    <h1 class="signature" translate="no">append_then_read_same(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -461,14 +449,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="append_then_read_several/0">
+<section class="detail" id="append_then_read_several/1">
+
+    <span id="append_then_read_several/0"></span>
 
   <div class="detail-header">
-    <a href="#append_then_read_several/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#append_then_read_several/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">append_then_read_several()</h1>
+    <h1 class="signature" translate="no">append_then_read_several(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -478,14 +468,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="append_twice_then_read/0">
+<section class="detail" id="append_twice_then_read/1">
+
+    <span id="append_twice_then_read/0"></span>
 
   <div class="detail-header">
-    <a href="#append_twice_then_read/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#append_twice_then_read/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">append_twice_then_read()</h1>
+    <h1 class="signature" translate="no">append_twice_then_read(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -495,14 +487,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="append_twice_then_read_with_commit/0">
+<section class="detail" id="append_twice_then_read_with_commit/1">
+
+    <span id="append_twice_then_read_with_commit/0"></span>
 
   <div class="detail-header">
-    <a href="#append_twice_then_read_with_commit/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#append_twice_then_read_with_commit/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">append_twice_then_read_with_commit()</h1>
+    <h1 class="signature" translate="no">append_twice_then_read_with_commit(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -529,14 +523,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="bluf_transaction_errors/0">
+<section class="detail" id="bluf_transaction_errors/1">
+
+    <span id="bluf_transaction_errors/0"></span>
 
   <div class="detail-header">
-    <a href="#bluf_transaction_errors/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#bluf_transaction_errors/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">bluf_transaction_errors()</h1>
+    <h1 class="signature" translate="no">bluf_transaction_errors(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -546,14 +542,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="bluff_txs_write_nothing/0">
+<section class="detail" id="bluff_txs_write_nothing/1">
+
+    <span id="bluff_txs_write_nothing/0"></span>
 
   <div class="detail-header">
-    <a href="#bluff_txs_write_nothing/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#bluff_txs_write_nothing/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">bluff_txs_write_nothing()</h1>
+    <h1 class="signature" translate="no">bluff_txs_write_nothing(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -563,14 +561,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="complicated_storage/0">
+<section class="detail" id="complicated_storage/1">
+
+    <span id="complicated_storage/0"></span>
 
   <div class="detail-header">
-    <a href="#complicated_storage/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#complicated_storage/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">complicated_storage()</h1>
+    <h1 class="signature" translate="no">complicated_storage(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -580,14 +580,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="complicated_storage_with_commit/0">
+<section class="detail" id="complicated_storage_with_commit/1">
+
+    <span id="complicated_storage_with_commit/0"></span>
 
   <div class="detail-header">
-    <a href="#complicated_storage_with_commit/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#complicated_storage_with_commit/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">complicated_storage_with_commit()</h1>
+    <h1 class="signature" translate="no">complicated_storage_with_commit(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -625,7 +627,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">inc_counter_submit_after_read(key \\ &quot;key&quot;)</h1>
+    <h1 class="signature" translate="no">inc_counter_submit_after_read(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -644,7 +646,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">inc_counter_submit_after_zero(key \\ &quot;key&quot;)</h1>
+    <h1 class="signature" translate="no">inc_counter_submit_after_zero(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -663,7 +665,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">inc_counter_submit_with_zero(key \\ &quot;key&quot;)</h1>
+    <h1 class="signature" translate="no">inc_counter_submit_with_zero(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -673,16 +675,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="mempool_startup_consensus/1">
+<section class="detail" id="ord_order_first/1">
 
-    <span id="mempool_startup_consensus/0"></span>
+    <span id="ord_order_first/0"></span>
 
   <div class="detail-header">
-    <a href="#mempool_startup_consensus/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#ord_order_first/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">mempool_startup_consensus(round \\ 0)</h1>
+    <h1 class="signature" translate="no">ord_order_first(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -692,14 +694,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="mempool_startup_txs/0">
+<section class="detail" id="ord_read_future_then_write/1">
+
+    <span id="ord_read_future_then_write/0"></span>
 
   <div class="detail-header">
-    <a href="#mempool_startup_txs/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#ord_read_future_then_write/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">mempool_startup_txs()</h1>
+    <h1 class="signature" translate="no">ord_read_future_then_write(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -709,14 +713,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="ord_order_first/0">
+<section class="detail" id="ord_write_then_read/1">
+
+    <span id="ord_write_then_read/0"></span>
 
   <div class="detail-header">
-    <a href="#ord_order_first/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#ord_write_then_read/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">ord_order_first()</h1>
+    <h1 class="signature" translate="no">ord_write_then_read(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -726,14 +732,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="ord_read_future_then_write/0">
+<section class="detail" id="read_future_then_write/1">
+
+    <span id="read_future_then_write/0"></span>
 
   <div class="detail-header">
-    <a href="#ord_read_future_then_write/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#read_future_then_write/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">ord_read_future_then_write()</h1>
+    <h1 class="signature" translate="no">read_future_then_write(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -743,48 +751,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="ord_write_then_read/0">
+<section class="detail" id="read_other_future_then_write/1">
+
+    <span id="read_other_future_then_write/0"></span>
 
   <div class="detail-header">
-    <a href="#ord_write_then_read/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#read_other_future_then_write/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">ord_write_then_read()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="read_future_then_write/0">
-
-  <div class="detail-header">
-    <a href="#read_future_then_write/0" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">read_future_then_write()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="read_other_future_then_write/0">
-
-  <div class="detail-header">
-    <a href="#read_other_future_then_write/0" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">read_other_future_then_write()</h1>
+    <h1 class="signature" translate="no">read_other_future_then_write(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -803,7 +779,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">read_txs_write_nothing(key \\ &quot;key&quot;)</h1>
+    <h1 class="signature" translate="no">read_txs_write_nothing(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -813,14 +789,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="restart_executor/0">
+<section class="detail" id="restart_executor/1">
+
+    <span id="restart_executor/0"></span>
 
   <div class="detail-header">
-    <a href="#restart_executor/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#restart_executor/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">restart_executor()</h1>
+    <h1 class="signature" translate="no">restart_executor(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -830,14 +808,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="restart_mempool/0">
+<section class="detail" id="restart_mempool/1">
+
+    <span id="restart_mempool/0"></span>
 
   <div class="detail-header">
-    <a href="#restart_mempool/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#restart_mempool/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">restart_mempool()</h1>
+    <h1 class="signature" translate="no">restart_mempool(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -847,14 +827,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="restart_ordering/0">
+<section class="detail" id="restart_ordering/1">
+
+    <span id="restart_ordering/0"></span>
 
   <div class="detail-header">
-    <a href="#restart_ordering/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#restart_ordering/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">restart_ordering()</h1>
+    <h1 class="signature" translate="no">restart_ordering(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -864,14 +846,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="restart_storage/0">
+<section class="detail" id="restart_storage/1">
+
+    <span id="restart_storage/0"></span>
 
   <div class="detail-header">
-    <a href="#restart_storage/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#restart_storage/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">restart_storage()</h1>
+    <h1 class="signature" translate="no">restart_storage(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -881,14 +865,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="restart_tx_module/0">
+<section class="detail" id="restart_tx_module/1">
+
+    <span id="restart_tx_module/0"></span>
 
   <div class="detail-header">
-    <a href="#restart_tx_module/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#restart_tx_module/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">restart_tx_module()</h1>
+    <h1 class="signature" translate="no">restart_tx_module(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -898,14 +884,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="write_future_multiple_then_write_present/0">
+<section class="detail" id="write_future_multiple_then_write_present/1">
+
+    <span id="write_future_multiple_then_write_present/0"></span>
 
   <div class="detail-header">
-    <a href="#write_future_multiple_then_write_present/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#write_future_multiple_then_write_present/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">write_future_multiple_then_write_present()</h1>
+    <h1 class="signature" translate="no">write_future_multiple_then_write_present(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -915,14 +903,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="write_future_then_write_present/0">
+<section class="detail" id="write_future_then_write_present/1">
+
+    <span id="write_future_then_write_present/0"></span>
 
   <div class="detail-header">
-    <a href="#write_future_then_write_present/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#write_future_then_write_present/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">write_future_then_write_present()</h1>
+    <h1 class="signature" translate="no">write_future_then_write_present(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -932,14 +922,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="write_multiple_then_read/0">
+<section class="detail" id="write_multiple_then_read/1">
+
+    <span id="write_multiple_then_read/0"></span>
 
   <div class="detail-header">
-    <a href="#write_multiple_then_read/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#write_multiple_then_read/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">write_multiple_then_read()</h1>
+    <h1 class="signature" translate="no">write_multiple_then_read(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -949,14 +941,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="write_then_read/0">
+<section class="detail" id="write_then_read/1">
+
+    <span id="write_then_read/0"></span>
 
   <div class="detail-header">
-    <a href="#write_then_read/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#write_then_read/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">write_then_read()</h1>
+    <h1 class="signature" translate="no">write_then_read(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -966,14 +960,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="write_then_read_other/0">
+<section class="detail" id="write_then_read_other/1">
+
+    <span id="write_then_read_other/0"></span>
 
   <div class="detail-header">
-    <a href="#write_then_read_other/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#write_then_read_other/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">write_then_read_other()</h1>
+    <h1 class="signature" translate="no">write_then_read_other(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -1011,7 +1007,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">zero_counter_submit(key \\ &quot;key&quot;)</h1>
+    <h1 class="signature" translate="no">zero_counter_submit(node_id \\ &quot;londo_mollari&quot;)</h1>
 
 
   </div>
@@ -1029,9 +1025,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
           </span>
 

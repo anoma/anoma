@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>Anoma.Node.Transport — Anoma v0.23.0</title>
+    <title>Anoma.Node.Transport — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -123,14 +123,10 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transport</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.23.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
 
   </h1>
 
-
-    <section id="moduledoc">
-
-    </section>
 
 </div>
 
@@ -141,6 +137,32 @@ GUIDES
       </a>
       <span class="text">Summary</span>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:hostname/0" data-no-tooltip translate="no">hostname()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Shorthand type for socket.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:port_number/0" data-no-tooltip translate="no">port_number()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Shorthand type for port number.</p></div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -148,39 +170,31 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_accepter/2" data-no-tooltip translate="no">create_accepter(listen_socket, id)</a>
+        <a href="#start_engine_proxy/3" data-no-tooltip translate="no">start_engine_proxy(node_id, remote_node_id, type)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Given a remote node id, I start a proxy engine that represents that remote node.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_engine_proxy/1" data-no-tooltip translate="no">create_engine_proxy(remote_id)</a>
+        <a href="#start_tcp_client/2" data-no-tooltip translate="no">start_tcp_client(node_id, arg)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>I create a new proxy engine to talk to remote engines.</p></div>
+        <div class="summary-synopsis"><p>I start a new TCP client connection to a given host and port.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_tcp_client/1" data-no-tooltip translate="no">start_tcp_client(config)</a>
+        <a href="#start_tcp_server/2" data-no-tooltip translate="no">start_tcp_server(node_id, arg \\ {{0, 0, 0, 0}, 0})</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>I create a new TCP client</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#start_tcp_server/1" data-no-tooltip translate="no">start_tcp_server(config)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I create a new TCP listening server under the transport supervisor.</p></div>
+        <div class="summary-synopsis"><p>I start a new TCP server for the given node.</p></div>
 
     </div>
 
@@ -188,6 +202,64 @@ GUIDES
 
   </section>
 
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:hostname/0">
+
+  <div class="detail-header">
+    <a href="#t:hostname/0" class="detail-link" data-no-tooltip title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">hostname()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> hostname() :: <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:socket_address/0">:inet.socket_address</a>() | <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:hostname/0">:inet.hostname</a>()</pre>
+
+      </div>
+
+<p>Shorthand type for socket.</p>
+  </section>
+</section>
+<section class="detail" id="t:port_number/0">
+
+  <div class="detail-header">
+    <a href="#t:port_number/0" class="detail-link" data-no-tooltip title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">port_number()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> port_number() :: <a href="https://www.erlang.org/doc/apps/kernel/inet.html#t:port_number/0">:inet.port_number</a>()</pre>
+
+      </div>
+
+<p>Shorthand type for port number.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -197,72 +269,82 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="create_accepter/2">
+<section class="detail" id="start_engine_proxy/3">
 
   <div class="detail-header">
-    <a href="#create_accepter/2" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#start_engine_proxy/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">create_accepter(listen_socket, id)</h1>
+    <h1 class="signature" translate="no">start_engine_proxy(node_id, remote_node_id, type)</h1>
 
 
   </div>
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> start_engine_proxy(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+<p>Given a remote node id, I start a proxy engine that represents that remote node.</p>
   </section>
 </section>
-<section class="detail" id="create_engine_proxy/1">
+<section class="detail" id="start_tcp_client/2">
 
   <div class="detail-header">
-    <a href="#create_engine_proxy/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#start_tcp_client/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">create_engine_proxy(remote_id)</h1>
+    <h1 class="signature" translate="no">start_tcp_client(node_id, arg)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-<p>I create a new proxy engine to talk to remote engines.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_tcp_client(
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  {<a href="#t:hostname/0">hostname</a>(), <a href="#t:port_number/0">port_number</a>()}
+) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>(), <a href="#t:port_number/0">port_number</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+<p>I start a new TCP client connection to a given host and port.</p>
   </section>
 </section>
-<section class="detail" id="start_tcp_client/1">
+<section class="detail" id="start_tcp_server/2">
+
+    <span id="start_tcp_server/1"></span>
 
   <div class="detail-header">
-    <a href="#start_tcp_client/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#start_tcp_server/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_tcp_client(config)</h1>
+    <h1 class="signature" translate="no">start_tcp_server(node_id, arg \\ {{0, 0, 0, 0}, 0})</h1>
 
 
   </div>
 
   <section class="docstring">
 
-<p>I create a new TCP client</p>
-  </section>
-</section>
-<section class="detail" id="start_tcp_server/1">
+      <div class="specs">
 
-  <div class="detail-header">
-    <a href="#start_tcp_server/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">start_tcp_server(config)</h1>
+          <pre translate="no"><span class="attribute">@spec</span> start_tcp_server(
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  {<a href="#t:hostname/0">hostname</a>(), <a href="#t:port_number/0">port_number</a>()}
+) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>(), <a href="#t:port_number/0">port_number</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
 
+      </div>
 
-  </div>
-
-  <section class="docstring">
-
-<p>I create a new TCP listening server under the transport supervisor.</p>
+<p>I start a new TCP server for the given node.</p>
   </section>
 </section>
 
@@ -273,9 +355,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
           </span>
 

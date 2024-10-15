@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>Anoma.Node.Transaction.Storage — Anoma v0.23.0</title>
+    <title>Anoma.Node.Transaction.Storage — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Storage</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.23.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
 
   </h1>
 
@@ -186,7 +186,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#append/1" data-no-tooltip translate="no">append(arg)</a>
+        <a href="#append/2" data-no-tooltip translate="no">append(node_id, arg)</a>
 
       </div>
 
@@ -202,7 +202,15 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#blocking_write/3" data-no-tooltip translate="no">blocking_write(height, kvlist, from)</a>
+        <a href="#blocking_write/4" data-no-tooltip translate="no">blocking_write(node_id, height, kvlist, from)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#blocks_table/1" data-no-tooltip translate="no">blocks_table(node_id)</a>
 
       </div>
 
@@ -220,7 +228,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#commit/2" data-no-tooltip translate="no">commit(block_round, writes)</a>
+        <a href="#commit/3" data-no-tooltip translate="no">commit(node_id, block_round, writes)</a>
 
       </div>
 
@@ -238,7 +246,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#read/1" data-no-tooltip translate="no">read(arg)</a>
+        <a href="#read/2" data-no-tooltip translate="no">read(node_id, arg)</a>
 
       </div>
 
@@ -262,7 +270,23 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#write/1" data-no-tooltip translate="no">write(arg)</a>
+        <a href="#updates_table/1" data-no-tooltip translate="no">updates_table(node_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#values_table/1" data-no-tooltip translate="no">values_table(node_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#write/2" data-no-tooltip translate="no">write(node_id, arg)</a>
 
       </div>
 
@@ -344,6 +368,7 @@ GUIDES
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Transaction.Storage{
+  node_id: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
   uncommitted: %{required(<a href="#t:qualified_key/0">qualified_key</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()},
   uncommitted_height: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
   uncommitted_updates: %{required(<a href="#t:bare_key/0">bare_key</a>()) =&gt; [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()]}
@@ -380,22 +405,37 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> abwrite(:append | :write, {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]}, <a href="#t:t/0">t</a>()) :: <a href="#t:t/0">t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
-<section class="detail" id="append/1">
+<section class="detail" id="append/2">
 
   <div class="detail-header">
-    <a href="#append/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#append/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">append(arg)</h1>
+    <h1 class="signature" translate="no">append(node_id, arg)</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> append(
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]}
+) :: :ok</pre>
+
+      </div>
 
 
   </section>
@@ -417,14 +457,31 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="blocking_write/3">
+<section class="detail" id="blocking_write/4">
 
   <div class="detail-header">
-    <a href="#blocking_write/3" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#blocking_write/4" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">blocking_write(height, kvlist, from)</h1>
+    <h1 class="signature" translate="no">blocking_write(node_id, height, kvlist, from)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="blocks_table/1">
+
+  <div class="detail-header">
+    <a href="#blocks_table/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">blocks_table(node_id)</h1>
 
 
   </div>
@@ -451,19 +508,29 @@ GUIDES
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="commit/2">
+<section class="detail" id="commit/3">
 
   <div class="detail-header">
-    <a href="#commit/2" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#commit/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">commit(block_round, writes)</h1>
+    <h1 class="signature" translate="no">commit(node_id, block_round, writes)</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> commit(
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  [<a href="Anoma.Node.Transaction.Mempool.Tx.html#t:t/0">Anoma.Node.Transaction.Mempool.Tx.t</a>()] | nil
+) :: :ok</pre>
+
+      </div>
 
 
   </section>
@@ -482,22 +549,37 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init([startup_options()]) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+      </div>
+
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="read/1">
+<section class="detail" id="read/2">
 
   <div class="detail-header">
-    <a href="#read/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#read/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">read(arg)</h1>
+    <h1 class="signature" translate="no">read(node_id, arg)</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> read(
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}
+) :: :absent | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -515,6 +597,12 @@ GUIDES
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> read_in_past(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="#t:t/0">t</a>()) :: :absent | :error | {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
 
 
   </section>
@@ -535,22 +623,71 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_link([startup_options()]) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
-<section class="detail" id="write/1">
+<section class="detail" id="updates_table/1">
 
   <div class="detail-header">
-    <a href="#write/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#updates_table/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">write(arg)</h1>
+    <h1 class="signature" translate="no">updates_table(node_id)</h1>
 
 
   </div>
 
   <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="values_table/1">
+
+  <div class="detail-header">
+    <a href="#values_table/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">values_table(node_id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="write/2">
+
+  <div class="detail-header">
+    <a href="#write/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">write(node_id, arg)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> write(
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]}
+) :: :ok</pre>
+
+      </div>
 
 
   </section>
@@ -563,9 +700,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
           </span>
 

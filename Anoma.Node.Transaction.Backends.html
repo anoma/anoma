@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>Anoma.Node.Transaction.Backends — Anoma v0.23.0</title>
+    <title>Anoma.Node.Transaction.Backends — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Backends</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.23.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
 
   </h1>
 
@@ -171,7 +171,7 @@ Support :kv, :ro, :rm, :cairo execution.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#blob_store/2" data-no-tooltip translate="no">blob_store(id, result)</a>
+        <a href="#blob_store/3" data-no-tooltip translate="no">blob_store(node_id, id, result)</a>
 
       </div>
 
@@ -179,7 +179,7 @@ Support :kv, :ro, :rm, :cairo execution.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#execute/2" data-no-tooltip translate="no">execute(arg, id)</a>
+        <a href="#execute/3" data-no-tooltip translate="no">execute(node_id, arg, id)</a>
 
       </div>
 
@@ -187,7 +187,7 @@ Support :kv, :ro, :rm, :cairo execution.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#store_value/2" data-no-tooltip translate="no">store_value(id, result)</a>
+        <a href="#store_value/3" data-no-tooltip translate="no">store_value(node_id, id, result)</a>
 
       </div>
 
@@ -222,7 +222,11 @@ Support :kv, :ro, :rm, :cairo execution.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> backend() :: :debug_term_storage | {:debug_read_term, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()} | :debug_bloblike</pre>
+          <pre translate="no"><span class="attribute">@type</span> backend() ::
+  :debug_term_storage
+  | {:debug_read_term, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()}
+  | :debug_bloblike
+  | :transparent_resource</pre>
 
       </div>
 
@@ -264,53 +268,71 @@ Support :kv, :ro, :rm, :cairo execution.</p>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="blob_store/2">
+<section class="detail" id="blob_store/3">
 
   <div class="detail-header">
-    <a href="#blob_store/2" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#blob_store/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">blob_store(id, result)</h1>
+    <h1 class="signature" translate="no">blob_store(node_id, id, result)</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> blob_store(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: :ok | :error</pre>
+
+      </div>
 
 
   </section>
 </section>
-<section class="detail" id="execute/2">
+<section class="detail" id="execute/3">
 
   <div class="detail-header">
-    <a href="#execute/2" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#execute/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">execute(arg, id)</h1>
+    <h1 class="signature" translate="no">execute(node_id, arg, id)</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> execute(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), {<a href="#t:backend/0">backend</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()}, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: :ok</pre>
+
+      </div>
 
 
   </section>
 </section>
-<section class="detail" id="store_value/2">
+<section class="detail" id="store_value/3">
 
   <div class="detail-header">
-    <a href="#store_value/2" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#store_value/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">store_value(id, result)</h1>
+    <h1 class="signature" translate="no">store_value(node_id, id, result)</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> store_value(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: :ok | :error</pre>
+
+      </div>
 
 
   </section>
@@ -323,9 +345,9 @@ Support :kv, :ro, :rm, :cairo execution.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
           </span>
 

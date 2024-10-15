@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>Nock — Anoma v0.23.0</title>
+    <title>Nock — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Nock</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.23.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
 
   </h1>
 
@@ -412,6 +412,14 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#scry_forbidden/1" data-no-tooltip translate="no">scry_forbidden(_)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#stdlib_core/0" data-no-tooltip translate="no">stdlib_core()</a>
 
       </div>
@@ -457,7 +465,10 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Nock{meter_pid: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>() | nil}</pre>
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Nock{
+  meter_pid: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>() | nil,
+  scry_function: (<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>() -&gt; {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()} | :error)
+}</pre>
 
       </div>
 
@@ -1072,6 +1083,23 @@ determine if we should be using jets or not</p>
 
   </section>
 </section>
+<section class="detail" id="scry_forbidden/1">
+
+  <div class="detail-header">
+    <a href="#scry_forbidden/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">scry_forbidden(_)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="stdlib_core/0">
 
   <div class="detail-header">
@@ -1120,9 +1148,9 @@ determine if we should be using jets or not</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
           </span>
 

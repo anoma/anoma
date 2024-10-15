@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>Anoma — Anoma v0.23.0</title>
+    <title>Anoma — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -127,7 +127,13 @@ GUIDES
   </h1>
 
 <p>This is an implementation of the Anoma protocol, whose specs can be
-found <a href="https://specs.anoma.net/alpha">here</a>.</p><h2 id="following-development" class="section-heading">
+found <a href="https://specs.anoma.net/latest">here</a>.</p><h2 id="docs" class="section-heading">
+  <a href="#docs" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Docs</span>
+</h2>
+<ul><li><a href="https://anoma.github.io/anoma/readme.html">Contributors documentation</a></li><li><a href="https://specs.anoma.net/latest/">Specification</a></li><li>Developer Docs (Coming Soon™)</li><li>User Docs (Coming Soon™)</li></ul><h2 id="following-development" class="section-heading">
   <a href="#following-development" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -135,22 +141,25 @@ found <a href="https://specs.anoma.net/alpha">here</a>.</p><h2 id="following-dev
 </h2>
 <p>Work is merged into <code class="inline">base</code> on a bi-weekly (once every two weeks)
 schedule.</p><p>Development can be followed in multiple ways:</p><ol><li><a href="https://github.com/orgs/anoma/projects/19">Issues are put into the project overview</a><ul><li>This is a good way to see what work is assigned and the various
-views into how goals are being met</li></ul></li><li><a href="https://specs.anoma.net/projects/anoma-19.html">Promise Graph from the project overview</a><ul><li>This is the same information as <code class="inline">1.</code> but using our own promise
-graph tooling. This is kept up to date hourly.</li></ul></li><li><a href="https://github.com/orgs/anoma/projects/20" title="A good view on how topics are progressing throughout a cycle">What's Cooking on Anoma</a></li><li><a href="https://github.com/anoma/anoma/issues">Issues</a> and <a href="https://github.com/anoma/anoma/pulls">pull requests</a><ul><li>This is good for viewing new issues and work coming in, but the
+views into how goals are being met</li></ul></li><li><a href="https://github.com/orgs/anoma/projects/20" title="A good view on how topics are progressing throughout a cycle">What's Cooking on Anoma</a></li><li><a href="https://research.anoma.net/">Research Forums</a><ul><li>This is good for seeing discussions on the direction of Anoma</li><li><a href="https://research.anoma.net/tags/c/protocol-design/25/architecture">The architecture posts</a>
+in particular are a practical vision for how the codebase's
+architecture will evolve. Around two of these get posted per week</li></ul></li><li><a href="https://github.com/anoma/anoma/issues">Issues</a> and <a href="https://github.com/anoma/anoma/pulls">pull requests</a><ul><li>This is good for viewing new issues and work coming in, but the
 other views are typically a better way to view this</li></ul></li></ol><h2 id="dependencies" class="section-heading">
   <a href="#dependencies" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Dependencies</span>
 </h2>
-<p>To have a working Anoma Node the following dependencies are required:</p><ol><li><code class="inline">cmake</code></li><li><code class="inline">Erlang</code></li><li><code class="inline">Elixir</code></li><li><code class="inline">zig</code></li><li><code class="inline">rust</code></li></ol><h3 id="osx" class="section-heading">
+<p>To have a working Anoma Node the following dependencies are required:</p><ol><li><code class="inline">cmake</code></li><li><code class="inline">Erlang</code> version OTP 27 or higher</li><li><code class="inline">Elixir</code> version 1.17.0 or higher</li><li><code class="inline">zig</code></li><li><code class="inline">rust</code> version of 1.76.0 or newer</li></ol><ul><li>rustup is an easy way to satisfy this.</li></ul><ol start="6"><li><code class="inline">protobuf</code></li></ol><ul><li>Along with <code class="inline">mix escript.install hex protobuf</code></li></ul><h3 id="osx" class="section-heading">
   <a href="#osx" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">OSX</span>
 </h3>
-<pre><code class="makeup sh" translate="no"><span class="">brew install elixir
+<pre><code class="makeup sh" translate="no"><span class="">brew install cmake
+</span><span class="">brew install elixir
 </span><span class="">brew install zig
+</span><span class="">brew install protbuf
 </span></code></pre><h3 id="linux" class="section-heading">
   <a href="#linux" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -164,18 +173,46 @@ other views are typically a better way to view this</li></ul></li></ol><h2 id="d
   <span class="text">Installation</span>
 </h2>
 <p>To install the dependencies as well as Anoma run:</p><pre><code class="makeup bash" translate="no"><span class="">mix deps.get
+</span><span class="">mix escript.install hex protobuf
 </span><span class="">mix compile
 </span></code></pre><p>To start an Anoma instance run one of these:</p><pre><code class="makeup bash" translate="no"><span class="">iex -S mix # starts an interactive shell
 </span><span class="">mix run --no-halt # starts a non-interactive shell
 </span></code></pre><p>See the Contributing section for how to get the best use of the
-interactive shell.</p><h2 id="contributing" class="section-heading">
+interactive shell.</p><p>Further see the Known issues section if you encounter an issue.</p><h2 id="contributing" class="section-heading">
   <a href="#contributing" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Contributing</span>
 </h2>
 <p>Please read the <a href="contributing.html">contributor's guide</a> for in
-depth details about the codebase.</p><h3 id="git" class="section-heading">
+depth details about the codebase.</p><h2 id="known-issues" class="section-heading">
+  <a href="#known-issues" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Known Issues</span>
+</h2>
+<h3 id="mix-could-not-compile-dependency-enacl" class="section-heading">
+  <a href="#mix-could-not-compile-dependency-enacl" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">(Mix) Could not compile dependency :enacl</span>
+</h3>
+<p>For some versions of OSX (and Linux), our
+<a href="https://github.com/jlouis/enacl">enacl</a> package may have compilation issues.</p><p>To get around it please run</p><pre><code class="makeup sh" translate="no"><span class="">git checkout mariari/no-libsodium
+</span><span class="">mix clean
+</span><span class="">mix deps.get
+</span><span class="">mix compile
+</span></code></pre><h3 id="could-not-compile-dependency-cairo-mix-compile" class="section-heading">
+  <a href="#could-not-compile-dependency-cairo-mix-compile" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">could not compile dependency :cairo, &quot;mix compile&quot;</span>
+</h3>
+<p>The rust compiler can be quite picky about our
+<a href="https://github.com/anoma/aarm-cairo">cairo</a> dependencies. This is
+likely caused by an incompatible rust-toolchain.</p><p>To get around it you may have to run a command like:</p><pre><code class="makeup sh" translate="no"><span class="">rustup toolchain add 1.76.0
+</span><span class=""># for OSX you may try 1.76.0-aarch64-apple-darwin
+</span></code></pre><p>Once this is had, the Cairo issues should go away.</p><h3 id="git" class="section-heading">
   <a href="#git" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -222,11 +259,11 @@ Analysis
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
-              (<a href="https://preview.hex.pm/preview/anoma/0.23.0/show/README.md">current file</a>)
+              (<a href="https://preview.hex.pm/preview/anoma/0.24.1/show/README.md">current file</a>)
 
           </span>
 

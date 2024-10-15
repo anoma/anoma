@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.23.0">
+    <meta name="project" content="Anoma v0.24.1">
 
 
-    <title>Anoma.Node.Examples.ETransport.ETcp — Anoma v0.23.0</title>
+    <title>Anoma.Node.Examples.ETransport.ETcp — Anoma v0.24.1</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-88EE5332.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.23.0
+          v0.24.1
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Examples.ETransport.ETcp</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.23.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
 
   </h1>
 
@@ -137,6 +137,22 @@ GUIDES
       </a>
       <span class="text">Summary</span>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:contexts/0" data-no-tooltip translate="no">contexts()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the type of the contexts in this module.</p></div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -144,17 +160,41 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#test_tcp_server_1/0" data-no-tooltip translate="no">test_tcp_server_1()</a>
+        <a href="#connect_nodes/0" data-no-tooltip translate="no">connect_nodes()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I create a new tcp server for the node with the given name.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#test_tcp_server_2/0" data-no-tooltip translate="no">test_tcp_server_2()</a>
+        <a href="#connect_nodes/1" data-no-tooltip translate="no">connect_nodes(arg)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I create a tcp connection between two nodes and assert that they discover eachother.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_tcp_client/1" data-no-tooltip translate="no">create_tcp_client(list)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I create a tcp client for the given node and connect to the server node.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_tcp_listener/1" data-no-tooltip translate="no">create_tcp_listener(node)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I create a tcp server for the given node.</p></div>
 
     </div>
 
@@ -162,6 +202,43 @@ GUIDES
 
   </section>
 
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:contexts/0">
+
+  <div class="detail-header">
+    <a href="#t:contexts/0" class="detail-link" data-no-tooltip title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">contexts()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> contexts() :: %{
+  required(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) =&gt; <a href="Anoma.Node.Examples.ETransport.ETcp.Context.html#t:t/0">Anoma.Node.Examples.ETransport.ETcp.Context.t</a>()
+}</pre>
+
+      </div>
+
+<p>I am the type of the contexts in this module.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -171,38 +248,103 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="test_tcp_server_1/0">
+<section class="detail" id="connect_nodes/0">
 
   <div class="detail-header">
-    <a href="#test_tcp_server_1/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#connect_nodes/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">test_tcp_server_1()</h1>
+    <h1 class="signature" translate="no">connect_nodes()</h1>
 
 
   </div>
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> connect_nodes() ::
+  {<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>(), <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()}</pre>
+
+      </div>
+
+<p>I create a new tcp server for the node with the given name.</p>
   </section>
 </section>
-<section class="detail" id="test_tcp_server_2/0">
+<section class="detail" id="connect_nodes/1">
 
   <div class="detail-header">
-    <a href="#test_tcp_server_2/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#connect_nodes/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">test_tcp_server_2()</h1>
+    <h1 class="signature" translate="no">connect_nodes(arg)</h1>
 
 
   </div>
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> connect_nodes({<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>(), <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()}) ::
+  {<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>(), <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()}</pre>
+
+      </div>
+
+<p>I create a tcp connection between two nodes and assert that they discover eachother.</p>
+  </section>
+</section>
+<section class="detail" id="create_tcp_client/1">
+
+  <div class="detail-header">
+    <a href="#create_tcp_client/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">create_tcp_client(list)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_tcp_client(
+  client: <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>(),
+  server: <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()
+) ::
+  [client: <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>(), server: <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()]</pre>
+
+      </div>
+
+<p>I create a tcp client for the given node and connect to the server node.</p>
+  </section>
+</section>
+<section class="detail" id="create_tcp_listener/1">
+
+  <div class="detail-header">
+    <a href="#create_tcp_listener/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">create_tcp_listener(node)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_tcp_listener(<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()) ::
+  <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()</pre>
+
+      </div>
+
+<p>I create a tcp server for the given node.</p>
   </section>
 </section>
 
@@ -213,9 +355,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.23.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.23.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
 
           </span>
 
