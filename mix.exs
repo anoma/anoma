@@ -39,7 +39,7 @@ defmodule Anoma.MixProject do
   def releases do
     [
       anoma: [
-        include_executables_for: [:unix],
+        include_executables_for: [:unix, :windows],
         applications: [
           anoma_node: :permanent,
           event_broker: :permanent
