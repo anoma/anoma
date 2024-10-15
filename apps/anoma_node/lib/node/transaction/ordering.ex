@@ -3,6 +3,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   abordering genserver
   """
 
+  use EventBroker.DefFilter
   use GenServer
   use TypedStruct
 
@@ -24,6 +25,11 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   typedstruct enforce: true, module: OrderEvent do
     field(:tx_id, binary())
+  end
+
+  deffilter TxIdFilter, tx_id: binary() do
+    %EventBroker.Event{body: %{tx_id: ^tx_id}} -> true
+    _ -> false
   end
 
   @spec start_link([startup_options()]) :: GenServer.on_start()
