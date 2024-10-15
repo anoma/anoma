@@ -40,6 +40,8 @@ To have a working Anoma Node the following dependencies are required:
 4. `zig`
 5. `rust` version of 1.76.0 or newer
   - rustup is an easy way to satisfy this.
+6. `protobuf`
+  - Along with `mix escript.install hex protobuf`
 
 ### OSX
 
@@ -47,6 +49,7 @@ To have a working Anoma Node the following dependencies are required:
 brew install cmake
 brew install elixir
 brew install zig
+brew install protbuf
 ```
 
 ### Linux
@@ -59,6 +62,7 @@ To install the dependencies as well as Anoma run:
 
 ```bash
 mix deps.get
+mix escript.install hex protobuf
 mix compile
 ```
 
