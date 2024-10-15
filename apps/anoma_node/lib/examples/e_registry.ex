@@ -110,7 +110,7 @@ defmodule Anoma.Node.Examples.ERegistry do
         (:crypto.strong_rand_bytes(16)
          |> Base.url_encode64())
 
-    name = Registry.name(node_id, :module)
+    name = Registry.via(node_id, :module)
 
     expected_name =
       {:via, Elixir.Registry,
@@ -132,7 +132,7 @@ defmodule Anoma.Node.Examples.ERegistry do
         (:crypto.strong_rand_bytes(16)
          |> Base.url_encode64())
 
-    name = Registry.name(node_id, :module, :label)
+    name = Registry.via(node_id, :module, :label)
 
     expected_name =
       {:via, Elixir.Registry,

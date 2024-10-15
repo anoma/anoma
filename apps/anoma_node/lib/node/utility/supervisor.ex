@@ -7,7 +7,7 @@ defmodule Anoma.Node.Utility.Supervisor do
   alias Anoma.Node.Registry
 
   def start_link(args) do
-    name = Registry.name(args[:node_id], __MODULE__)
+    name = Registry.via(args[:node_id], __MODULE__)
     Supervisor.start_link(__MODULE__, args, name: name)
   end
 

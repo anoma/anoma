@@ -53,7 +53,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   def start_link(args \\ []) do
-    name = Registry.name(args[:node_id], __MODULE__)
+    name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
@@ -78,8 +78,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   ############################################################
 
   def tx_dump(node_id) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, :dump)
+    GenServer.call(Registry.via(node_id, __MODULE__), :dump)
   end
 
   def tx(node_id, tx_w_backend) do
@@ -88,15 +87,16 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   # only to be called by Logging replays directly
   def tx(node_id, tx_w_backend, id) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.cast(pid, {:tx, tx_w_backend, id})
+    GenServer.cast(Registry.via(node_id, __MODULE__), {:tx, tx_w_backend, id})
   end
 
   # list of ids seen as ordered transactions
   @spec execute(String.t(), list(binary())) :: :ok
   def execute(node_id, ordered_list_of_txs) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.cast(pid, {:execute, ordered_list_of_txs})
+    GenServer.cast(
+      Registry.via(node_id, __MODULE__),
+      {:execute, ordered_list_of_txs}
+    )
   end
 
   ############################################################

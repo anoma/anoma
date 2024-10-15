@@ -46,7 +46,7 @@ defmodule Anoma.Node.Transport.EngineProxy do
 
     # register as a type of proxy engine for a remote node, at the local registry.
     # e.g., {TCP.Server, remote_node_id}
-    name = Registry.name(args[:remote_node_id], args[:type])
+    name = Registry.via(args[:remote_node_id], args[:type])
 
     GenServer.start_link(__MODULE__, args, name: name)
   end

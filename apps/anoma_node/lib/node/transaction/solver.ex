@@ -47,7 +47,7 @@ defmodule Anoma.Node.Transaction.Solver do
   I create a new solver process .
   """
   def start_link(args) do
-    name = Registry.name(args[:node_id], __MODULE__)
+    name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
@@ -60,7 +60,7 @@ defmodule Anoma.Node.Transaction.Solver do
   """
   @spec get_solved(String.t()) :: [Intent.t()]
   def get_solved(node_id) do
-    name = Registry.name(node_id, __MODULE__)
+    name = Registry.via(node_id, __MODULE__)
     GenServer.call(name, :get_solved)
   end
 
@@ -69,7 +69,7 @@ defmodule Anoma.Node.Transaction.Solver do
   """
   @spec get_unsolved(String.t()) :: [Intent.t()]
   def get_unsolved(node_id) do
-    name = Registry.name(node_id, __MODULE__)
+    name = Registry.via(node_id, __MODULE__)
     GenServer.call(name, :get_unsolved)
   end
 

@@ -31,7 +31,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
   def start_link(args \\ []) do
     args = Keyword.validate!(args, [:node_id])
-    name = Registry.name(args[:node_id], __MODULE__)
+    name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
@@ -167,23 +167,34 @@ defmodule Anoma.Node.Transaction.Storage do
   end
 
   def read(node_id, {height, key}) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:read, {height, key}}, :infinity)
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:read, {height, key}},
+      :infinity
+    )
   end
 
   def write(node_id, {height, kvlist}) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:write, {height, kvlist}}, :infinity)
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:write, {height, kvlist}},
+      :infinity
+    )
   end
 
   def append(node_id, {height, kvlist}) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:append, {height, kvlist}}, :infinity)
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:append, {height, kvlist}},
+      :infinity
+    )
   end
 
   def commit(node_id, block_round, writes) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:commit, block_round, writes, self()})
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:commit, block_round, writes, self()}
+    )
   end
 
   defp blocking_read(node_id, height, key, from) do

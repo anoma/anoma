@@ -36,7 +36,7 @@ defmodule Anoma.Node.Transaction.IntentPool do
 
   @spec start_link(any()) :: :ignore | {:error, any()} | {:ok, pid()}
   def start_link(args) do
-    name = Registry.name(args[:node_id], __MODULE__)
+    name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
@@ -55,7 +55,7 @@ defmodule Anoma.Node.Transaction.IntentPool do
   """
   @spec intents(String.t()) :: MapSet.t()
   def intents(node_id) do
-    name = Registry.name(node_id, __MODULE__)
+    name = Registry.via(node_id, __MODULE__)
     Elixir.GenServer.call(name, :all_intents)
   end
 
@@ -64,7 +64,7 @@ defmodule Anoma.Node.Transaction.IntentPool do
   """
   @spec new_intent(String.t(), any()) :: :ok
   def new_intent(node_id, intent) do
-    name = Registry.name(node_id, __MODULE__)
+    name = Registry.via(node_id, __MODULE__)
     GenServer.cast(name, {:new_intent, intent})
   end
 
@@ -74,7 +74,7 @@ defmodule Anoma.Node.Transaction.IntentPool do
   """
   @spec remove_intent(String.t(), any()) :: :ok
   def remove_intent(node_id, intent) do
-    name = Registry.name(node_id, __MODULE__)
+    name = Registry.via(node_id, __MODULE__)
     GenServer.cast(name, {:remove_intent, intent})
   end
 
