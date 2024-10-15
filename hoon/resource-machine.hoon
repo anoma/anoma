@@ -2,45 +2,136 @@
 !.
 =>  anoma
 |%
-::  resource machine data structures
-::  a resource. see resource machine report
+::  type definitions
 +$  resource
-  $:
-    logic=resource-logic
-    label=@t
-    quantity=@
-    data=@
-    eph=?
-    nonce=@
-    npk=@
-    rseed=@
+  $~  :*
+    label=*@t
+    logic=*resource-logic
+    ephemeral=|
+    quantity=`@u`1
+    data=*[@u @]
+    nullifier-key=*@I
+    nonce=*@I
+    rseed=%fake
   ==
-::  a transparent resource commitment is the resource.
+  $:
+    label=@t              ::  the label; some binary, @t for convenience
+    logic=resource-logic  ::  the logic predicate
+    ephemeral=?           ::  the ephemerality flag
+    quantity=@u           ::  quantity; some nonnegative integer
+    data=[len=@u val=@]   ::  arbitrary data; see lengthy comment in
+                          ::  resource.ex. words mean things
+    nullifier-key=@I      ::  npk; 256 bits
+    nonce=@I              ::  nonce for uniqueness; 256 bits
+    rseed=%fake           ::  useless field. meaningless value
+  ==
 +$  commitment  @
-::  a transparent nullifier is the resource, signed by the nullifier key
 +$  nullifier  @
-::  a transparent proof is the resource (just the resource logic, really)
-::  what is a proof? a proof that the resource logic gives true on this tx.
-::  just providing the resource logic is also a proof. the verification
-::  is just executing the logic and comparing its result to true.
-+$  proof  resource
-::  a delta is a signed denominated amount. denom depends on logic and label
-::  true = positive. todo: use map instead (when hashes are in)
-+$  delta  (list [denom=@ sign=? amount=@])
-++  zero-delta  `delta`~
-::  a resource transaction. see the resource machine report
-+$  resource-transaction  ::  todo: sets instead of lists
++$  public-inputs
   $:
-    roots=(list @)
-    commitments=(list commitment)
-    nullifiers=(list nullifier)
-    proofs=(list proof)
-    delta=delta  ::  total tx delta
-    extra=@
-    preference=~ ::  nyi
+    commitments=(list commitment)  ::  commitment set
+    nullifiers=(list nullifier)    ::  nullifier set
+    self-tag=@                     ::  exactly one commitment or nullifier
+    other-public=*                 ::  some other public inputs
   ==
-::  a resource logic is a function from a transaction to boolean
++$  private-inputs
+  $:
+    committed-resources=(list resource)  ::  committed resource set
+    nullified-resources=(list resource)  ::  nullified resource set
+    other-private=*                      ::  some other private inputs
+  ==
 +$  resource-logic
-  $~  =>(~ |=(^ &))
-  $-([self=resource tx=resource-transaction] ?)
+  $~  =>(~ |=(* &))
+  $-([public-inputs private-inputs] ?)
++$  logic-proof
+  [resource=resource inputs=[public-inputs private-inputs]]
++$  compliance-proof  %compliance
++$  proof  ?(compliance-proof logic-proof)
++$  action
+  $~  :*
+    commitments=~
+    nullifiers=~
+    proofs=~
+    app-data=**
+  ==
+  $:
+    commitments=(list commitment)  ::  commitment set
+    nullifiers=(list nullifier)    ::  nullifier set
+    proofs=(list proof)            ::  proof set
+    app-data=*                     ::  arbitrary data
+  ==
++$  cm-root  @                     ::  commitment set root
++$  resource-kind
+  [label=@t logic=resource-logic]
++$  delta-element
+  [k=resource-kind v=@s]
++$  delta  (list delta-element)    ::  delta (opaque)
++$  transaction
+  $~  :*
+    roots=~
+    actions=~
+    delta=*delta
+    delta-proof=%delta
+  ==
+  $:
+    roots=(list cm-root)   ::  root set for spent resources
+    actions=(list action)  ::  action set
+    delta=delta            ::  delta (opaque)
+    delta-proof=%delta     ::  delta proof (trivial)
+  ==
+::  provided functions
+++  private  ::  DO NOT USE!
+  |%
+  ++  uncommit
+    |=  =commitment
+    ;;  resource
+    (cue (~(rsh block 3) 3 commitment))
+  ++  unnullify
+    |=  =nullifier
+    ;;  resource
+    (cue (~(rsh block 3) 3 nullifier))
+  --
+++  commit  ::  commit to a resource
+  |=  =resource
+  ^-  commitment
+  (~(cat block 3) 'CM_' (jam resource))
+++  nullify  ::  nullify a resource
+  |=  =resource
+  ^-  nullifier
+  (~(cat block 3) 'NF_' (jam resource))
+++  kind
+  |=  =resource
+  ^-  resource-kind
+  [label.resource logic.resource]
+++  prove-logic  ::  prove a resource logic given all inputs
+  |=  =logic-proof
+  (jam logic-proof)
+++  prove-action  ::  prove action compliance, trivially
+  |=  *
+  %compliance
+++  delta-add
+  |=  [d1=delta d2=delta]
+  ^-  delta
+  !!
+++  delta-sub
+  |=  [d1=delta d2=delta]
+  ^-  delta
+  !!
+++  resource-delta
+  |=  =resource
+  ^-  delta
+  ~[[(kind resource) (sun quantity.resource)]]
+++  action-delta
+  |=  =action
+  ^-  delta
+  !!
+++  make-delta  ::  make delta from actions (to make a transaction)
+  |=  actions=(list action)
+  ^-  delta
+  !!
+++  prove-delta  ::  prove delta, trivially
+  |=  *
+  %delta
+++  zero-delta  ::  the value of the zero delta, for convenience
+  ~
 --
