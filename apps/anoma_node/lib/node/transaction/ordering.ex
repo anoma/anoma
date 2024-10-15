@@ -12,6 +12,8 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   require EventBroker.Event
 
+  @typep startup_options() :: {:node_id, String.t()}
+
   typedstruct enforce: true do
     field(:node_id, String.t())
     field(:next_height, integer(), default: 1)
@@ -24,11 +26,13 @@ defmodule Anoma.Node.Transaction.Ordering do
     field(:tx_id, binary())
   end
 
+  @spec start_link([startup_options()]) :: GenServer.on_start()
   def start_link(args \\ []) do
     name = Registry.name(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
+  @spec init([startup_options()]) :: {:ok, t()}
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -118,7 +122,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     ])
   end
 
-  @spec read(String.t(), {binary(), [binary()]}) :: any()
+  @spec read(String.t(), {binary(), any()}) :: any()
   def read(node_id, {id, key}) do
     pid = Registry.whereis(node_id, __MODULE__)
     GenServer.call(pid, {:read, {id, key}}, :infinity)
@@ -136,21 +140,26 @@ defmodule Anoma.Node.Transaction.Ordering do
     GenServer.call(pid, {:append, {id, kvlist}}, :infinity)
   end
 
+  @spec order(String.t(), [binary()]) :: :ok
   def order(node_id, txs) do
     pid = Registry.whereis(node_id, __MODULE__)
     GenServer.cast(pid, {:order, txs})
   end
 
+  @spec blocking_read(String.t(), {binary(), any()}, GenServer.from()) :: :ok
   def blocking_read(node_id, {id, key}, from) do
     block(from, id, fn -> read(node_id, {id, key}) end)
   end
 
+  @spec blocking_write(String.t(), {binary(), [any()]}, GenServer.from()) ::
+          :ok
   def blocking_write(node_id, {id, kvlist}, from) do
     block(from, id, fn ->
       write(node_id, {id, kvlist})
     end)
   end
 
+  @spec block(GenServer.from(), binary(), (-> any())) :: :ok
   def block(from, tx_id, call) do
     receive do
       %EventBroker.Event{body: %__MODULE__.OrderEvent{tx_id: ^tx_id}} ->
