@@ -237,9 +237,11 @@ defmodule Anoma.Node.Examples.ERegistry do
     assert Kernel.match?({:error, :no_node_running}, Registry.local_node_id())
 
     # start one node and assert the node is returned
-    node_id = "londo_mollari" <>
-              (:crypto.strong_rand_bytes(16)
-               |> Base.url_encode64())
+    node_id =
+      "londo_mollari" <>
+        (:crypto.strong_rand_bytes(16)
+         |> Base.url_encode64())
+
     %ENode{} = ENode.start_node(node_id: node_id)
 
     assert {:ok, node_id} == Registry.local_node_id()
