@@ -1,7 +1,7 @@
 defmodule ProxyTest do
   use ExUnit.Case
 
-  alias Client.Examples.EProxy
+  alias Anoma.Client.Examples.EProxy
 
   test "proxy tests" do
     excluded = [start_proxy_for: 0, start_proxy_for: 1]

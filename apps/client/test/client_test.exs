@@ -1,7 +1,7 @@
-defmodule ClientTest do
+defmodule Anoma.ClientTest do
   use ExUnit.Case
 
-  alias Client.Examples.EClient
+  alias Anoma.Client.Examples.EClient
 
   test "client tests" do
     excluded = []

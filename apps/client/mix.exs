@@ -1,4 +1,4 @@
-defmodule Client.MixProject do
+defmodule Anoma.Client.MixProject do
   use Mix.Project
 
   def project do
@@ -19,7 +19,7 @@ defmodule Client.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Client.Application, []}
+      mod: {Anoma.Client.Application, []}
     ]
   end
 

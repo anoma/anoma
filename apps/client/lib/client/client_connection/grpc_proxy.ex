@@ -1,4 +1,4 @@
-defmodule Client.Connection.GRPCProxy do
+defmodule Anoma.Client.Connection.GRPCProxy do
   use GenServer
   use TypedStruct
 

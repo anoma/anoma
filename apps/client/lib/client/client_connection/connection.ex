@@ -1,4 +1,4 @@
-defmodule Client.Connection.TCP do
+defmodule Anoma.Client.Connection.TCP do
   @moduledoc """
   I am the TCP connection process. I manage a tcp connection with a remote node.
   """

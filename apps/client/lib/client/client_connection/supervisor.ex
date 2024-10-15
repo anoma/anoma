@@ -1,4 +1,4 @@
-defmodule Client.Connection.Supervisor do
+defmodule Anoma.Client.Connection.Supervisor do
   @moduledoc """
   I am the client supervisor. I monitor all the processed regarding a connection to a single remote node.
   """

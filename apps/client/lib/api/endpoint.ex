@@ -1,5 +1,7 @@
 # Define your endpoint
-defmodule Client.Api.Endpoint do
+defmodule Anoma.Client.Api.Endpoint do
+  alias Anoma.Client
+
   use GRPC.Endpoint
 
   intercept(GRPC.Server.Interceptors.Logger)

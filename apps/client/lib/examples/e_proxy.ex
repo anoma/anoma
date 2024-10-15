@@ -1,4 +1,4 @@
-defmodule Client.Examples.EProxy do
+defmodule Anoma.Client.Examples.EProxy do
   @moduledoc """
   I contain examples for the GRPC proxy.
 
@@ -10,7 +10,7 @@ defmodule Client.Examples.EProxy do
 
   alias __MODULE__
   alias Anoma.Node.Examples.ENode
-  alias Client.Connection.GRPCProxy
+  alias Anoma.Client.Connection.GRPCProxy
   alias Protobufs.Intent
 
   require ExUnit.Assertions

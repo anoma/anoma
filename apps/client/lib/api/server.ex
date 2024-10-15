@@ -1,5 +1,5 @@
-defmodule Client.Api.Server do
-  alias Client.Connection.GRPCProxy
+defmodule Anoma.Client.Api.Server do
+  alias Anoma.Client.Connection.GRPCProxy
   alias GRPC.Server.Stream
   alias Protobufs.Indexer.Nullifiers
   alias Protobufs.Indexer.UnrevealedCommits

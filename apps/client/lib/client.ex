@@ -1,9 +1,10 @@
-defmodule Client do
+defmodule Anoma.Client do
   @moduledoc """
   Documentation for `Client`.
   """
   use TypedStruct
 
+  alias Anoma.Client
   alias Protobufs
 
   typedstruct do

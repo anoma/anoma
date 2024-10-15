@@ -1,4 +1,4 @@
-defmodule Client.Examples.EClient do
+defmodule Anoma.Client.Examples.EClient do
   @moduledoc """
   I contain functions to test the public interface of the client.
 

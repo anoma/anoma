@@ -1,4 +1,4 @@
-defmodule Client.Application do
+defmodule Anoma.Client.Application do
   @moduledoc """
   The Anoma client application acts as a proxy between a third-party client and an Anoma node.
 
@@ -11,6 +11,8 @@ defmodule Client.Application do
   use Application
 
   require Logger
+
+  alias Anoma.Client
 
   @impl true
   def start(_type, _args) do
