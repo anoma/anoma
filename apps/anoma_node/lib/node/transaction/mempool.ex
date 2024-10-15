@@ -63,15 +63,20 @@ defmodule Anoma.Node.Transaction.Mempool do
   def init(args) do
     Process.set_label(__MODULE__)
 
-    keylist =
+    args =
       args
-      |> Keyword.validate!(node_id: "this is not a node id")
+      |> Keyword.validate!([
+        :node_id,
+        transactions: [],
+        consensus: [],
+        round: 0
+      ])
 
     EventBroker.subscribe_me([
       filter_for_mempool()
     ])
 
-    {:ok, %__MODULE__{node_id: keylist[:node_id]}}
+    {:ok, %__MODULE__{node_id: args[:node_id]}}
   end
 
   ############################################################
