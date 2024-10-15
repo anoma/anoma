@@ -446,7 +446,9 @@ defmodule Anoma.Node.Examples.ETransaction do
     blocks_table = Storage.blocks_table(node_id)
     key = "key"
     restart_tx_module(node_id)
-    Mempool.tx(node_id, {{:debug_read_term, self()}, zero(key)}, "id 1")
+    {_backend, code} = zero(key)
+
+    Mempool.tx(node_id, {{:debug_read_term, self()}, code}, "id 1")
     :mnesia.subscribe({:table, blocks_table, :simple})
     Mempool.execute(node_id, ["id 1"])
 

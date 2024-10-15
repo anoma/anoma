@@ -46,24 +46,11 @@ defmodule Anoma.Node.Transaction.Storage do
 
     node_id = keylist[:node_id]
 
-    values_table =
-      String.to_atom("#{__MODULE__.Values}_#{:erlang.phash2(node_id)}")
+    :mnesia.create_table(values_table(node_id), attributes: [:key, :value])
+    :mnesia.create_table(updates_table(node_id), attributes: [:key, :value])
+    :mnesia.create_table(blocks_table(node_id), attributes: [:round, :block])
 
-    updates_table =
-      String.to_atom("#{__MODULE__.Updates}_#{:erlang.phash2(node_id)}")
-
-    blocks_table =
-      String.to_atom("#{__MODULE__.Blocks}_#{:erlang.phash2(node_id)}")
-
-    :mnesia.create_table(values_table, attributes: [:key, :value])
-    :mnesia.create_table(updates_table, attributes: [:key, :value])
-    :mnesia.create_table(blocks_table, attributes: [:round, :block])
-
-    state =
-      struct(__MODULE__, Enum.into(args, %{}))
-      |> Map.put(:values_table, values_table)
-      |> Map.put(:updates_table, updates_table)
-      |> Map.put(:blocks_table, blocks_table)
+    state = struct(__MODULE__, Enum.into(args, %{}))
 
     {:ok, state}
   end
@@ -75,15 +62,15 @@ defmodule Anoma.Node.Transaction.Storage do
   def handle_call({:commit, round, writes, _}, _from, state) do
     mnesia_tx = fn ->
       for {key, value} <- state.uncommitted do
-        :mnesia.write({state.values_table, key, value})
+        :mnesia.write({values_table(state.node_id), key, value})
       end
 
       for {key, value} <- state.uncommitted_updates do
         {:atomic, res} =
-          fn -> :mnesia.read(state.updates_table, key) end
+          fn -> :mnesia.read(updates_table(state.node_id), key) end
           |> :mnesia.transaction()
 
-        updates_table = state.updates_table
+        updates_table = updates_table(state.node_id)
 
         new_updates =
           case res do
@@ -91,10 +78,10 @@ defmodule Anoma.Node.Transaction.Storage do
             [{^updates_table, _key, list}] -> value ++ list
           end
 
-        :mnesia.write({state.updates_table, key, new_updates})
+        :mnesia.write({updates_table(state.node_id), key, new_updates})
       end
 
-      :mnesia.write({state.blocks_table, round, writes})
+      :mnesia.write({blocks_table(state.node_id), round, writes})
     end
 
     :mnesia.transaction(mnesia_tx)
@@ -286,16 +273,16 @@ defmodule Anoma.Node.Transaction.Storage do
   def read_in_past(height, key, state) do
     case Map.get(state.uncommitted_updates, key) do
       nil ->
-        tx1 = fn -> :mnesia.read(state.updates_table, key) end
+        tx1 = fn -> :mnesia.read(updates_table(state.node_id), key) end
 
         {:atomic, tx1_result} = :mnesia.transaction(tx1)
 
-        updates_table = state.updates_table
+        updates_table = updates_table(state.node_id)
 
         case tx1_result do
           [{^updates_table, _key, height_upds}] ->
             height = height_upds |> Enum.find(fn a -> a <= height end)
-            values_table = state.values_table
+            values_table = values_table(state.node_id)
 
             case height do
               nil ->
@@ -327,7 +314,7 @@ defmodule Anoma.Node.Transaction.Storage do
             :absent
 
           _ ->
-            {:ok, Map.get(state.uncommitted, {update_height, key}, :error)}
+            Map.fetch(state.uncommitted, {update_height, key})
         end
     end
   end
