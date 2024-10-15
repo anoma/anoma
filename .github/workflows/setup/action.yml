@@ -14,12 +14,16 @@ runs:
         shell: bash
         run: sudo apt-get install -y libsodium-dev
 
+      - name: Install Protobuf dependencies
+        shell: bash
+        run: sudo apt install -y protobuf-compiler
+
       - name: Set up Elixir
         id: beam
-        uses: erlef/setup-beam@v1.16.0
+        uses: erlef/setup-beam@v1.18.2
         with:
-          elixir-version: '1.15.6'
-          otp-version: '26.1.2'
+          elixir-version: '1.17.3'
+          otp-version: '27.1'
 
       - name: Restore dependencies cache
         id: deps-cache
@@ -40,6 +44,9 @@ runs:
         shell: bash
         run: mix deps.get
 
+      - name: Install Protobuf Elixir dependencies
+        shell: bash
+        run: mix escript.install hex protobuf --force
       - name: Build dependencies
         shell: bash
         run: mix deps.compile
