@@ -35,7 +35,7 @@ defmodule Anoma.Node.Transport.Supervisor do
     tcp_supervisor =
       {
         DynamicSupervisor,
-        name: Anoma.Node.Registry.name(node_id, :tcp_supervisor),
+        name: Anoma.Node.Registry.via(node_id, :tcp_supervisor),
         strategy: :one_for_one,
         max_restarts: 1_000_000,
         max_seconds: 1
@@ -44,7 +44,7 @@ defmodule Anoma.Node.Transport.Supervisor do
     # proxy supervisor
     proxy_supervisor =
       {DynamicSupervisor,
-       name: Anoma.Node.Registry.name(node_id, :proxy_supervisor),
+       name: Anoma.Node.Registry.via(node_id, :proxy_supervisor),
        strategy: :one_for_one,
        max_restarts: 1_000_000,
        max_seconds: 1}

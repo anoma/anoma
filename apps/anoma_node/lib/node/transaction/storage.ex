@@ -40,7 +40,7 @@ defmodule Anoma.Node.Transaction.Storage do
   @spec start_link(list(startup_options())) :: GenServer.on_start()
   def start_link(args \\ []) do
     args = Keyword.validate!(args, [:node_id])
-    name = Registry.name(args[:node_id], __MODULE__)
+    name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
@@ -165,20 +165,29 @@ defmodule Anoma.Node.Transaction.Storage do
 
   @spec read(String.t(), {non_neg_integer(), any()}) :: :absent | any()
   def read(node_id, {height, key}) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:read, {height, key}}, :infinity)
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:read, {height, key}},
+      :infinity
+    )
   end
 
   @spec write(String.t(), {non_neg_integer(), list(any())}) :: :ok
   def write(node_id, {height, kvlist}) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:write, {height, kvlist}}, :infinity)
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:write, {height, kvlist}},
+      :infinity
+    )
   end
 
   @spec append(String.t(), {non_neg_integer(), list(any())}) :: :ok
   def append(node_id, {height, kvlist}) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:append, {height, kvlist}}, :infinity)
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:append, {height, kvlist}},
+      :infinity
+    )
   end
 
   @spec commit(
@@ -187,8 +196,10 @@ defmodule Anoma.Node.Transaction.Storage do
           list(Anoma.Node.Transaction.Mempool.Tx.t()) | nil
         ) :: :ok
   def commit(node_id, block_round, writes) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:commit, block_round, writes, self()})
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:commit, block_round, writes, self()}
+    )
   end
 
   @spec blocking_read(String.t(), non_neg_integer(), any(), GenServer.from()) ::

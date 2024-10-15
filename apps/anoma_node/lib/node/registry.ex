@@ -28,11 +28,11 @@ defmodule Anoma.Node.Registry do
   end
 
   @doc """
-  I generate the name for a process with the given node_id and engine name.
+  I generate the :via stanza for a process with the given node_id and engine name.
   """
-  @spec name(String.t(), atom(), atom()) ::
+  @spec via(String.t(), atom(), atom()) ::
           {:via, Registry, {atom(), Address.t()}}
-  def name(node_id, engine, label \\ nil) do
+  def via(node_id, engine, label \\ nil) do
     address = address(node_id, engine, label)
 
     {:via, Registry, {__MODULE__, address}}

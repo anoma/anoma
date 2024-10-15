@@ -34,7 +34,7 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   @spec start_link([startup_options()]) :: GenServer.on_start()
   def start_link(args \\ []) do
-    name = Registry.name(args[:node_id], __MODULE__)
+    name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
@@ -130,26 +130,34 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   @spec read(String.t(), {binary(), any()}) :: any()
   def read(node_id, {id, key}) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:read, {id, key}}, :infinity)
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:read, {id, key}},
+      :infinity
+    )
   end
 
   @spec write(String.t(), {binary(), list({any(), any()})}) :: :ok
   def write(node_id, {id, kvlist}) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:write, {id, kvlist}}, :infinity)
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:write, {id, kvlist}},
+      :infinity
+    )
   end
 
   @spec append(String.t(), {binary(), list({any(), any()})}) :: :ok
   def append(node_id, {id, kvlist}) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.call(pid, {:append, {id, kvlist}}, :infinity)
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:append, {id, kvlist}},
+      :infinity
+    )
   end
 
   @spec order(String.t(), [binary()]) :: :ok
   def order(node_id, txs) do
-    pid = Registry.whereis(node_id, __MODULE__)
-    GenServer.cast(pid, {:order, txs})
+    GenServer.cast(Registry.via(node_id, __MODULE__), {:order, txs})
   end
 
   @spec blocking_read(String.t(), {binary(), any()}, GenServer.from()) :: :ok

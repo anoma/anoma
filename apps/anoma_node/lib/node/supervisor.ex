@@ -17,7 +17,7 @@ defmodule Anoma.Node.Supervisor do
 
   def start_link(args) do
     args = Keyword.validate!(args, [:node_id, :grpc_port])
-    name = Anoma.Node.Registry.name(args[:node_id], __MODULE__)
+    name = Anoma.Node.Registry.via(args[:node_id], __MODULE__)
     Supervisor.start_link(__MODULE__, args, name: name)
   end
 
