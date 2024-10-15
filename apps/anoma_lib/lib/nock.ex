@@ -18,7 +18,10 @@ defmodule Nock do
 
   """
   typedstruct do
-    field(:node_id, String.t(), default: "")
+    field(:scry_function, (term() -> {:ok, term()} | :error),
+      default: &__MODULE__.scry_forbidden/1
+    )
+
     field(:meter_pid, pid() | nil, default: nil)
   end
 
@@ -237,7 +240,7 @@ defmodule Nock do
     if id_key_list do
       with [id, key] <- id_key_list |> Noun.list_nock_to_erlang(),
            {:ok, value} <-
-             Anoma.Node.Transaction.Ordering.read(env.node_id, {id, key}) do
+             env.scry_function.({id, key}) do
         {:ok, value}
       else
         _ -> :error
@@ -245,6 +248,10 @@ defmodule Nock do
     else
       :error
     end
+  end
+
+  def scry_forbidden(_) do
+    :error
   end
 
   # metered nock: a hack until nock VMs become their own agents.
