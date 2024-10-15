@@ -30,10 +30,23 @@ Development can be followed in multiple ways:
    - This is good for viewing new issues and work coming in, but the
      other views are typically a better way to view this
 
+## Running pre-built binaries
+### Release Dependencies
+To run a working Anoma Node the following dependencies are required:
+
+1. Mac OS X Development Environment:
+    * Install Apple Command Line Developer Tools: `xcode-select --install`
+    * Install [MacPorts](https://www.macports.org/install.php) (or equivalent package manager)
+2. Install [ncurses](https://ports.macports.org/port/ncurses/) (Mac OS X only)
+3. Install OpenSSL:
+    * Mac OS X and Linux: use package manager
+    * Windows: not required
+### Running
+Download the [Anoma release](https://github.com/anoma/anoma/releases) for your platform, extract it, and run `bin/anoma`.
 ## Compilation from sources
 ### Build Dependencies
 
-To have a working Anoma Node the following dependencies are required:
+To compile a working Anoma Node the following dependencies are required:
 
 1. Mac OS X Development Environment:
     * Install Apple Command Line Developer Tools: `xcode-select --install`
@@ -42,8 +55,7 @@ To have a working Anoma Node the following dependencies are required:
     * Install [Build Tools for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Workload: Visual C++ build tools)
     * Install [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
 3. Install CMake:
-    * [Mac OS X](https://ports.macports.org/port/cmake/)
-    * Linux: from package distribution's package manager
+    * Linux and Mac OS X: use package manager
     * Windows: not required
 4. Install [Sodium](https://doc.libsodium.org/installation#pre-built-libraries) (Windows only)
     * Ensure that the `LIB` and `INCLUDE` environment variables point to this installation
