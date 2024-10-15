@@ -33,7 +33,7 @@ defmodule Anoma.Client.Application do
   @spec fetch_args() :: Keyword.t()
   defp fetch_args() do
     listen_port =
-      (System.get_env("LISTEN_PORT") || "50052") |> String.to_integer()
+      (System.get_env("LISTEN_PORT") || "0") |> String.to_integer()
 
     [listen_port: listen_port]
   end

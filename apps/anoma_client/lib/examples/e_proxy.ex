@@ -33,8 +33,18 @@ defmodule Anoma.Client.Examples.EProxy do
   @doc """
   I test the GRPC proxy to proxy requests to an existing Anoma node.
   """
-  @spec start_proxy_for(ENode.t()) :: %EProxy{} | {:error, term()}
-  def start_proxy_for(enode \\ ENode.start_node(grpc_port: 0)) do
+  @spec start_proxy_for(ENode.t() | nil) :: %EProxy{} | {:error, term()}
+  def start_proxy_for(enode \\ nil) do
+    # if no node was given, this ran in a unit test.
+    # we kill all nodes since we can only have a local node for this test.
+    enode =
+      if enode == nil do
+        ENode.kill_all_nodes()
+        ENode.start_node(grpc_port: 0)
+      else
+        enode
+      end
+
     proxy_args = [port: enode.grpc_port, host: "localhost"]
 
     case GRPCProxy.start_link(proxy_args) do
