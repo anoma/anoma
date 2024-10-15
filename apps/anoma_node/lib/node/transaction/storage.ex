@@ -327,7 +327,7 @@ defmodule Anoma.Node.Transaction.Storage do
             :absent
 
           _ ->
-            {:ok, Map.get(state.uncommitted, {update_height, key}, :error)}
+            Map.fetch(state.uncommitted, {update_height, key})
         end
     end
   end
