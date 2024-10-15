@@ -11,6 +11,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
   @type bare_key() :: list(String.t())
   @type qualified_key() :: {integer(), bare_key()}
+  @typep startup_options() :: {:node_id, String.t()}
 
   typedstruct enforce: true do
     field(:node_id, String.t())
@@ -29,12 +30,15 @@ defmodule Anoma.Node.Transaction.Storage do
     field(:writes, list({Anoma.Node.Transaction.Storage.bare_key(), term()}))
   end
 
+  @spec start_link() :: GenServer.on_start()
+  @spec start_link(list(startup_options())) :: GenServer.on_start()
   def start_link(args \\ []) do
     args = Keyword.validate!(args, [:node_id])
     name = Registry.name(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
+  @spec init([startup_options()]) :: {:ok, t()}
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -153,26 +157,36 @@ defmodule Anoma.Node.Transaction.Storage do
     {:noreply, state}
   end
 
+  @spec read(String.t(), {non_neg_integer(), any()}) :: :absent | any()
   def read(node_id, {height, key}) do
     pid = Registry.whereis(node_id, __MODULE__)
     GenServer.call(pid, {:read, {height, key}}, :infinity)
   end
 
+  @spec write(String.t(), {non_neg_integer(), list(any())}) :: :ok
   def write(node_id, {height, kvlist}) do
     pid = Registry.whereis(node_id, __MODULE__)
     GenServer.call(pid, {:write, {height, kvlist}}, :infinity)
   end
 
+  @spec append(String.t(), {non_neg_integer(), list(any())}) :: :ok
   def append(node_id, {height, kvlist}) do
     pid = Registry.whereis(node_id, __MODULE__)
     GenServer.call(pid, {:append, {height, kvlist}}, :infinity)
   end
 
+  @spec commit(
+          String.t(),
+          non_neg_integer(),
+          list(Anoma.Node.Transaction.Mempool.Tx.t()) | nil
+        ) :: :ok
   def commit(node_id, block_round, writes) do
     pid = Registry.whereis(node_id, __MODULE__)
     GenServer.call(pid, {:commit, block_round, writes, self()})
   end
 
+  @spec blocking_read(String.t(), non_neg_integer(), any(), GenServer.from()) ::
+          :ok
   defp blocking_read(node_id, height, key, from) do
     receive do
       # if the key we care about was written at exactly the height we
@@ -201,6 +215,8 @@ defmodule Anoma.Node.Transaction.Storage do
   end
 
   # todo: should exclude same key being overwritten at same height
+  @spec abwrite(:append | :write, {non_neg_integer(), list(any())}, t()) ::
+          t()
   def abwrite(flag, {height, kvlist}, state) do
     {new_state, event_writes} =
       for {key, value} <- kvlist,
@@ -270,6 +286,8 @@ defmodule Anoma.Node.Transaction.Storage do
     new_state
   end
 
+  @spec read_in_past(non_neg_integer(), any(), t()) ::
+          :absent | :error | {:ok, term()}
   def read_in_past(height, key, state) do
     case Map.get(state.uncommitted_updates, key) do
       nil ->
