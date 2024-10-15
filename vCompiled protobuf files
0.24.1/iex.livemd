@@ -1,0 +1,43 @@
+# IEx
+
+## Index
+1. [Toc](./../toc.livemd)
+2. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Style Guide](./../contributing/style-guide.livemd)
+   3. [Writing Documents](./../contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./../contributing/examples-over-testing.livemd)
+   5. [Git](./../contributing/git.livemd)
+   6. [Iex](./../contributing/iex.livemd)
+   7. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   8. [Observer](./../contributing/observer.livemd)
+   9. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+3. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+4. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+5. [Analysis](./../analysis.livemd)
+
+## Running multiple IEX's in the same Image/Environments
+
+It is sometimes useful to have multiple terminals/IEX's in the same
+running system, or perhaps to connect to a running deploy Anoma
+Instance. We can connect to other IEX instances in this way:
+
+<!-- livebook:{"break_markdown":true} -->
+
+```bash
+MIX_ENV=test iex --sname b@localhost --cookie anoma -S mix
+# open a new terminal
+MIX_ENV=test iex --remsh b@localhost --sname c@localhost --cookie anoma -S mix
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+This also allows you to connect from [livebook](https://livebook.dev)
+by using the above cookie `anoma` under the `runtime` config of
+livebook.

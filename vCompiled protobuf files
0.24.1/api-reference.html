@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.24.1">
+
+
+    <title>API Reference — Anoma v0.24.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-37006C57.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-extra">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.24.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>API Reference <small class="app-vsn">Anoma v0.24.1</small></span>
+  </h1>
+
+
+  <section class="details-list">
+    <h2 id="modules" class="section-heading">
+  <a href="#modules" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Modules</span>
+</h2>
+
+    <div class="summary">
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.html" translate="no">Anoma.Client</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Documentation for <code class="inline">Client</code>.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Api.Endpoint.html" translate="no">Anoma.Client.Api.Endpoint</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Api.Server.html" translate="no">Anoma.Client.Api.Server</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Application.html" translate="no">Anoma.Client.Application</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The Anoma client application acts as a proxy between a third-party client and an Anoma node.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Connection.GRPCProxy.html" translate="no">Anoma.Client.Connection.GRPCProxy</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Connection.Supervisor.html" translate="no">Anoma.Client.Connection.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the client supervisor. I monitor all the processed regarding a connection to a single remote node.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Connection.TCP.html" translate="no">Anoma.Client.Connection.TCP</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the TCP connection process. I manage a tcp connection with a remote node.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Examples.EClient.html" translate="no">Anoma.Client.Examples.EClient</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain functions to test the public interface of the client.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Client.Examples.EProxy.html" translate="no">Anoma.Client.Examples.EProxy</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain examples for the GRPC proxy.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Constants.html" translate="no">Anoma.Constants</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Crypto.Encrypt.html" translate="no">Anoma.Crypto.Encrypt</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Crypto.Id.html" translate="no">Anoma.Crypto.Id</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I represent the Identity</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Crypto.Id.Extern.html" translate="no">Anoma.Crypto.Id.Extern</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Crypto.Id.Intern.html" translate="no">Anoma.Crypto.Id.Intern</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Crypto.Randomness.html" translate="no">Anoma.Crypto.Randomness</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am an implementation of the Local Randomness Engine</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Crypto.Sign.html" translate="no">Anoma.Crypto.Sign</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Crypto.Symmetric.html" translate="no">Anoma.Crypto.Symmetric</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.html" translate="no">Anoma.Node</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.DummyStorage.html" translate="no">Anoma.Node.DummyStorage</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am dummy storage during the defactor, to avoid undue stress on shielded rm.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.EConsensus.html" translate="no">Anoma.Node.Examples.EConsensus</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.EIntentPool.html" translate="no">Anoma.Node.Examples.EIntentPool</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain several examples on how to run the intent pool.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ELogging.html" translate="no">Anoma.Node.Examples.ELogging</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ENode.html" translate="no">Anoma.Node.Examples.ENode</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ERegistry.html" translate="no">Anoma.Node.Examples.ERegistry</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ESolver.html" translate="no">Anoma.Node.Examples.ESolver</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain several examples on how to use the solver.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ETransaction.html" translate="no">Anoma.Node.Examples.ETransaction</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ETransport.html" translate="no">Anoma.Node.Examples.ETransport</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ETransport.ETcp.html" translate="no">Anoma.Node.Examples.ETransport.ETcp</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Examples.ETransport.ETcp.Context.html" translate="no">Anoma.Node.Examples.ETransport.ETcp.Context</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Logging.html" translate="no">Anoma.Node.Logging</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Replay manager with logger functionality</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Logging.LoggingEvent.html" translate="no">Anoma.Node.Logging.LoggingEvent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Logging.LoggingFilter.html" translate="no">Anoma.Node.Logging.LoggingFilter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Anoma.Node.Logging.LoggingFilter filter generated by deffilter in Anoma.Node.Logging.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Registry.html" translate="no">Anoma.Node.Registry</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Registry.Address.html" translate="no">Anoma.Node.Registry.Address</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Supervisor.html" translate="no">Anoma.Node.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the top level supervisor for the Anoma node.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Backends.html" translate="no">Anoma.Node.Transaction.Backends</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Backend module.
+Support :kv, :ro, :rm, :cairo execution.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Backends.CompleteEvent.html" translate="no">Anoma.Node.Transaction.Backends.CompleteEvent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Backends.CompleteFilter.html" translate="no">Anoma.Node.Transaction.Backends.CompleteFilter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Anoma.Node.Transaction.Backends.CompleteFilter filter generated by deffilter in Anoma.Node.Transaction.Backends.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Backends.ForMempoolFilter.html" translate="no">Anoma.Node.Transaction.Backends.ForMempoolFilter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Anoma.Node.Transaction.Backends.ForMempoolFilter filter generated by deffilter in Anoma.Node.Transaction.Backends.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Backends.ResultEvent.html" translate="no">Anoma.Node.Transaction.Backends.ResultEvent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Executor.html" translate="no">Anoma.Node.Transaction.Executor</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Executor.ExecutionEvent.html" translate="no">Anoma.Node.Transaction.Executor.ExecutionEvent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.IntentPool.html" translate="no">Anoma.Node.Transaction.IntentPool</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the intent pool for the Anoma node.
+m1dnight still has to write these docs.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Mempool.html" translate="no">Anoma.Node.Transaction.Mempool</a>
+
+  </div>
+
+    <div class="summary-synopsis"></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Mempool.BlockEvent.html" translate="no">Anoma.Node.Transaction.Mempool.BlockEvent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Mempool.ConsensusEvent.html" translate="no">Anoma.Node.Transaction.Mempool.ConsensusEvent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Mempool.Tx.html" translate="no">Anoma.Node.Transaction.Mempool.Tx</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Mempool.TxEvent.html" translate="no">Anoma.Node.Transaction.Mempool.TxEvent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Ordering.html" translate="no">Anoma.Node.Transaction.Ordering</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>abordering genserver</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Ordering.OrderEvent.html" translate="no">Anoma.Node.Transaction.Ordering.OrderEvent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Ordering.TxIdFilter.html" translate="no">Anoma.Node.Transaction.Ordering.TxIdFilter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Anoma.Node.Transaction.Ordering.TxIdFilter filter generated by deffilter in Anoma.Node.Transaction.Ordering.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Solver.html" translate="no">Anoma.Node.Transaction.Solver</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a strawman intent solver for testing purposes.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Storage.html" translate="no">Anoma.Node.Transaction.Storage</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>abstorage genserver</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Storage.HeightFilter.html" translate="no">Anoma.Node.Transaction.Storage.HeightFilter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Anoma.Node.Transaction.Storage.HeightFilter filter generated by deffilter in Anoma.Node.Transaction.Storage.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Storage.WriteEvent.html" translate="no">Anoma.Node.Transaction.Storage.WriteEvent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transaction.Supervisor.html" translate="no">Anoma.Node.Transaction.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the supervisor for the transaction subsystem.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.html" translate="no">Anoma.Node.Transport</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.EngineProxy.html" translate="no">Anoma.Node.Transport.EngineProxy</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am an engine proxy and I serve as the single point of contact to a remote node.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.GRPC.Endpoint.html" translate="no">Anoma.Node.Transport.GRPC.Endpoint</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.GRPC.Server.html" translate="no">Anoma.Node.Transport.GRPC.Server</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.Messages.html" translate="no">Anoma.Node.Transport.Messages</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.Supervisor.html" translate="no">Anoma.Node.Transport.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the transport supervisor.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.TCP.Connection.html" translate="no">Anoma.Node.Transport.TCP.Connection</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the TCP connection process. I manage a tcp connection with a remote node.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.TCP.Listener.html" translate="no">Anoma.Node.Transport.TCP.Listener</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a TCP listener. I listen on a given interface and port for incoming connections.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Utility.Consensus.html" translate="no">Anoma.Node.Utility.Consensus</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A trivial consensus provider for the mempool.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Utility.Consensus.BlockFilter.html" translate="no">Anoma.Node.Utility.Consensus.BlockFilter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a filter for Block events.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Utility.Supervisor.html" translate="no">Anoma.Node.Utility.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the supervisor for the utility subsystem.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.RM.DumbIntent.html" translate="no">Anoma.RM.DumbIntent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.RM.Intent.html" translate="no">Anoma.RM.Intent</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Intent protocol.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.RM.Trans.html" translate="no">Anoma.RM.Trans</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.RM.Transaction.html" translate="no">Anoma.RM.Transaction</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Transaction protocol.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.html" translate="no">Anoma.ShieldedResource</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a shielded resource.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.ComplianceInput.html" translate="no">Anoma.ShieldedResource.ComplianceInput</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I represent a compliance's input.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.ComplianceOutput.html" translate="no">Anoma.ShieldedResource.ComplianceOutput</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I represent a resource's output.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.PartialTransaction.html" translate="no">Anoma.ShieldedResource.PartialTransaction</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a shielded resource machine partial transaction.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.ProofRecord.html" translate="no">Anoma.ShieldedResource.ProofRecord</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a proof record for a shielded resource.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.ShieldedTransaction.html" translate="no">Anoma.ShieldedResource.ShieldedTransaction</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a shielded resource machine transaction.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Supervisor.html" translate="no">Anoma.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the top level supervisor for the Anoma node application.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.System.Directories.html" translate="no">Anoma.System.Directories</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I provide out utilities for ensuring user Data, Config,
+etc. directories are properly setup for the host operating system.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.html" translate="no">Anoma.TransparentResource</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.Action.html" translate="no">Anoma.TransparentResource.Action</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.Delta.html" translate="no">Anoma.TransparentResource.Delta</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>delta functions. not a struct don't make it a struct</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.LogicProof.html" translate="no">Anoma.TransparentResource.LogicProof</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.Resource.html" translate="no">Anoma.TransparentResource.Resource</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>resource struct</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.TransparentResource.Transaction.html" translate="no">Anoma.TransparentResource.Transaction</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Utility.html" translate="no">Anoma.Utility</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I provide utility functions for users.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="CommitmentTree.html" translate="no">CommitmentTree</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A simple commitment tree.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="CommitmentTree.Node.html" translate="no">CommitmentTree.Node</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="CommitmentTree.Proof.html" translate="no">CommitmentTree.Proof</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I represent a compact proof that a particular element is contained within the
+commitment tree.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="CommitmentTree.Spec.html" translate="no">CommitmentTree.Spec</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A specification for a commitment tree.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.html" translate="no">EventBroker</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the EventBroker Application Module.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Broker.html" translate="no">EventBroker.Broker</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a Broker module.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.DefFilter.html" translate="no">EventBroker.DefFilter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain the deffilter macro. Require or use me to use deffilter.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Event.html" translate="no">EventBroker.Event</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am an Event module for the Event Broker.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filter.html" translate="no">EventBroker.Filter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a filter module for the Event Broker. I provide the callbacks for
+all the filters used in the PubSub system.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.FilterAgent.html" translate="no">EventBroker.FilterAgent</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a Filter Agent module.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filters.html" translate="no">EventBroker.Filters</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I contain submodules for the default filters supported by the event broker.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filters.LessTrivial.html" translate="no">EventBroker.Filters.LessTrivial</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the EventBroker.Filters.LessTrivial filter generated by deffilter in EventBroker.Filters.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filters.ManyFields.html" translate="no">EventBroker.Filters.ManyFields</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the EventBroker.Filters.ManyFields filter generated by deffilter in EventBroker.Filters.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filters.SourceModule.html" translate="no">EventBroker.Filters.SourceModule</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the EventBroker.Filters.SourceModule filter generated by deffilter in EventBroker.Filters.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Filters.Trivial.html" translate="no">EventBroker.Filters.Trivial</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the EventBroker.Filters.Trivial filter generated by deffilter in EventBroker.Filters.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Registry.html" translate="no">EventBroker.Registry</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the Registry for the PubSub system.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="EventBroker.Supervisor.html" translate="no">EventBroker.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am the EventBroker Supervisor for PubSub.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.ECommitmentTree.html" translate="no">Examples.ECommitmentTree</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.ECrypto.html" translate="no">Examples.ECrypto</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.ENock.html" translate="no">Examples.ENock</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Glossary.html" translate="no">Glossary</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="IdentityMap.html" translate="no">IdentityMap</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A map with an identity value; all keys not explicitly assigned a value map to
+the identity.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Livebook.html" translate="no">Livebook</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I generate out extra information for Livebook</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="MapSetMap.html" translate="no">MapSetMap</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>An IdentityMap where the values are MapSets, plus some convenient helper functions.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Nock.html" translate="no">Nock</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Nock, a universal function on nouns.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Nock.Bits.html" translate="no">Nock.Bits</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Nock.Cli.html" translate="no">Nock.Cli</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Nock.Cue.html" translate="no">Nock.Cue</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Nock.Jam.html" translate="no">Nock.Jam</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Nock.Jets.html" translate="no">Nock.Jets</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Jets for the Nock interpreter, taking a gate core. Not fully general.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Noun.html" translate="no">Noun</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The noun data structure.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Noun.Format.html" translate="no">Noun.Format</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Parsing and printing of nouns.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Noun.Nounable.html" translate="no">Noun.Nounable</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Noun.Nounable.Kind.html" translate="no">Noun.Nounable.Kind</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="TestHelper.Nock.html" translate="no">TestHelper.Nock</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a testing module that has some common definitions for nock
+functions.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="TestHelper.TestMacro.html" translate="no">TestHelper.TestMacro</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a module populated by macros associated to Anoma Testing.</p></div>
+
+</div>
+
+    </div>
+  </section>
+
+
+  <section class="details-list">
+    <h2 id="mix-tasks" class="section-heading">
+  <a href="#mix-tasks" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Mix Tasks</span>
+</h2>
+
+    <div class="summary">
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Mix.Tasks.Compile.Protoc.html" translate="no">mix compile.protoc</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I compile the protobuf files before compiling the project.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Mix.Tasks.Toc.html" translate="no">mix toc</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I generate out the TOC for each liveview doc</p></div>
+
+</div>
+
+    </div>
+  </section>
+
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="readme.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Anoma
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>
