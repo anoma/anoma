@@ -30,30 +30,29 @@ Development can be followed in multiple ways:
    - This is good for viewing new issues and work coming in, but the
      other views are typically a better way to view this
 
-## Dependencies
+## Compilation from sources
+### Build Dependencies
 
 To have a working Anoma Node the following dependencies are required:
 
-1. `cmake`
-2. `Erlang` version OTP 27 or higher
-3. `Elixir` version 1.17.0 or higher
-4. `zig`
-5. `rust` version of 1.76.0 or newer
-  - rustup is an easy way to satisfy this.
+1. Mac OS X Development Environment:
+    * Install Apple Command Line Developer Tools: `xcode-select --install`
+    * Install [MacPorts](https://www.macports.org/install.php) (or equivalent package manager)
+2. Windows Development Environment:
+    * Install [Build Tools for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Workload: Visual C++ build tools)
+    * Install [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
+4. Install CMake:
+    * [Mac OS X](https://ports.macports.org/port/cmake/)
+    * Linux: from package distribution's package manager
+    * Windows: not required
+5. Install [Sodium](https://doc.libsodium.org/installation#pre-built-libraries) (Windows only)
+    * Ensure that the `LIB` and `INCLUDE` environment variables point to this installation 
+5. Install [Elixir](https://elixir-lang.org/install.html) (version 1.17.0 or higher) and with it:
+     * Install [Hex package manager](https://hexdocs.pm/mix/1.13/Mix.Tasks.Local.Hex.html)
+     * Install [Rebar3](https://hexdocs.pm/mix/1.14/Mix.Tasks.Local.Rebar.html)
+8. Install [Rust](https://www.rust-lang.org/tools/install) (version 1.76.0 or newer)
 
-### OSX
-
-```sh
-brew install cmake
-brew install elixir
-brew install zig
-```
-
-### Linux
-
-All the dependencies can be grabbed from your distro's package manager.
-
-## Installation
+### Compiling and Running
 
 To install the dependencies as well as Anoma run:
 
