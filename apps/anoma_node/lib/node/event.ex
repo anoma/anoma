@@ -5,6 +5,8 @@ defmodule Anoma.Node.Event do
   """
 
   require EventBroker.Event
+
+  use EventBroker.DefFilter
   use TypedStruct
 
   typedstruct enforce: true do
@@ -31,5 +33,13 @@ defmodule Anoma.Node.Event do
         }
       }
     end
+  end
+
+  deffilter NodeFilter, node_id: String.t() do
+    %EventBroker.Event{body: %Anoma.Node.Event{node_id: ^node_id}} ->
+      true
+
+    _ ->
+      false
   end
 end
