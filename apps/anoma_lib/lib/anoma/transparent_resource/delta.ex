@@ -7,14 +7,42 @@ defmodule Anoma.TransparentResource.Delta do
 
   @type t() :: %{binary() => integer()}
 
+  defmodule DeltaError do
+    defexception [:message]
+  end
+
   def add(d1 = %{}, d2 = %{}) do
     Map.merge(d1, d2, fn _k, v1, v2 -> v1 + v2 end)
-    |> Map.reject(fn {_k, v} -> v == 0 end)
+    |> make_sane()
   end
 
   def sub(d1 = %{}, d2 = %{}) do
     Map.merge(d1, d2, fn _k, v1, v2 -> v1 - v2 end)
-    |> Map.reject(fn {_k, v} -> v == 0 end)
+    |> make_sane()
+  end
+
+  def negate(d = %{}) do
+    for {k, v} <- d, into: %{} do
+      {k, -v}
+    end
+  end
+
+  def sane?(d = %{}) do
+    !Enum.any?(d, fn {_, v} -> v == 0 end)
+  end
+
+  def sane!(d = %{}) do
+    for {_, v} <- d do
+      if v == 0 do
+        raise DeltaError, "zero element found in delta"
+      end
+    end
+
+    true
+  end
+
+  def make_sane(d = %{}) do
+    Map.reject(d, fn {_k, v} -> v == 0 end)
   end
 
   # This would be automated by Noun.Nounable.Map.from_noun/1
