@@ -89,7 +89,7 @@ defmodule Anoma.Client.Examples.EProxy do
           {:ok, Anoma.Protobuf.Indexer.Nullifiers.Response.t()}
   def list_nullifiers(%EProxy{} \\ start_proxy_for()) do
     result = GRPCProxy.list_nullifiers()
-    assert Kernel.match?({:ok, %{nullifiers: ["null", "ifier"]}}, result)
+    assert Kernel.match?({:ok, %{nullifiers: []}}, result)
     result
   end
 
@@ -100,7 +100,7 @@ defmodule Anoma.Client.Examples.EProxy do
           {:ok, Anoma.Protobuf.Indexer.UnrevealedCommits.Response.t()}
   def list_unrevealed_commits(%EProxy{} \\ start_proxy_for()) do
     result = GRPCProxy.list_unrevealed_commits()
-    assert Kernel.match?({:ok, %{commits: ["commit1", "commit2"]}}, result)
+    assert Kernel.match?({:ok, %{commits: []}}, result)
     result
   end
 
@@ -115,10 +115,7 @@ defmodule Anoma.Client.Examples.EProxy do
     assert Kernel.match?(
              {:ok,
               %{
-                unspent_resources: [
-                  "unspent resource 1",
-                  "unspent resource 2"
-                ]
+                unspent_resources: []
               }},
              result
            )
