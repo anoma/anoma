@@ -71,10 +71,4 @@ defmodule Anoma.Node.Transport.GRPC.Server do
 
     %UnspentResources.Response{unspent_resources: resources}
   end
-
-  @spec prove(Prove.Request.t(), Stream.t()) ::
-          Prove.Response.t()
-  def prove(request, _stream) do
-    %Prove.Response{result: "here's your proof for #{request.intent}"}
-  end
 end
