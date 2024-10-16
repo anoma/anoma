@@ -7,11 +7,20 @@ defmodule Anoma.Node.Utility.Consensus do
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Registry
 
+  use EventBroker.DefFilter
   use TypedStruct
 
   typedstruct do
     field(:interval, non_neg_integer(), default: 5000)
     field(:node_id, String.t())
+  end
+
+  deffilter BlockFilter do
+    %EventBroker.Event{body: %Mempool.BlockEvent{}} ->
+      true
+
+    _ ->
+      false
   end
 
   def start_link(args) do
@@ -87,6 +96,6 @@ defmodule Anoma.Node.Utility.Consensus do
   end
 
   def block_filter() do
-    %Consensus.BlockFilter{}
+    %__MODULE__.BlockFilter{}
   end
 end
