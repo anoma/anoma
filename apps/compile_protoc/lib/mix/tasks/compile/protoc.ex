@@ -33,7 +33,10 @@ defmodule Mix.Tasks.Compile.Protoc do
         # find the protoc executable
         protoc_bin = protoc_executable()
 
-        # make the output directory
+        unless output_files == [] do
+          Enum.map(output_files, &File.rm!/1)
+        end
+
         File.mkdir_p!(compiler_opts[:elixir_out])
 
         # run the protoc command
