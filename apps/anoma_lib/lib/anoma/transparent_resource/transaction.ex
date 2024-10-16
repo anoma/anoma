@@ -15,6 +15,15 @@ defmodule Anoma.TransparentResource.Transaction do
     field(:delta_proof, <<>>, default: <<>>)
   end
 
+  def compose(tx1 = %Transaction{}, tx2 = %Transaction{}) do
+    %Transaction{
+      roots: MapSet.union(tx1.roots, tx2.roots),
+      actions: MapSet.union(tx1.actions, tx2.actions),
+      delta: Delta.add(tx1.delta, tx2.delta),
+      delta_proof: <<>>
+    }
+  end
+
   def verify(tx = %Transaction{}) do
     with true <- verify_tx_roots(tx),
          true <- verify_tx_action_distinctness(tx),
