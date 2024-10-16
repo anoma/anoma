@@ -42,4 +42,8 @@ defmodule Anoma.Node.Event do
     _ ->
       false
   end
+
+  def node_filter(node_id) do
+    %__MODULE__.NodeFilter{node_id: node_id}
+  end
 end
