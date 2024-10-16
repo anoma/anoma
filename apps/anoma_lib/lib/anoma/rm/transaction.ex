@@ -48,3 +48,51 @@ defmodule Anoma.RM.Trans do
            Enum.any?(nf1, fn x -> x in nf2 end))
   end
 end
+
+# ----------------------------------------------------------------------------
+# Implementation for Anoma.TransparentResource.Transaction
+
+defimpl Anoma.RM.Transaction, for: Anoma.TransparentResource.Transaction do
+  alias Anoma.TransparentResource.Transaction
+
+  # https://specs.anoma.net/latest/system_architecture/state/resource_machine/transaction.html
+  @impl true
+  def compose(%Transaction{} = tx_1, %Transaction{} = tx_2) do
+    Transaction.compose(tx_1, tx_2)
+  end
+
+  @impl true
+  def verify(%Transaction{} = tx) do
+    Transaction.verify(tx)
+  end
+
+  @impl true
+  def storage_commitments(%Transaction{} = _tx) do
+    raise "Not implemented"
+  end
+
+  @impl true
+  def storage_nullifiers(%Transaction{} = _tx) do
+    raise "Not implemented"
+  end
+
+  @impl true
+  def commitments(%Transaction{} = _tx) do
+    raise "Not implemented"
+  end
+
+  @impl true
+  def nullifiers(%Transaction{} = _tx) do
+    raise "Not implemented"
+  end
+
+  @impl true
+  def cm_tree(%Transaction{} = _tx, _storage) do
+    raise "Not implemented"
+  end
+
+  @impl true
+  def resource_existence_check(%Transaction{} = _tx, _storage) do
+    raise "Not implemented"
+  end
+end
