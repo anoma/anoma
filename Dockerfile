@@ -2,7 +2,7 @@
 FROM elixir:1.17 AS builder
 # Get cmake in order to compile RocksDB
 RUN apt-get update
-RUN apt-get install -y cmake
+RUN apt-get install -y cmake protobuf-compiler
 # Install Rust in order to compile Cairo
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 # Add cargo to the path for future commands
@@ -20,11 +20,15 @@ COPY params params
 RUN mix local.hex --force
 # rebar3 is required to compile Anoma dependencies
 RUN mix local.rebar --force
+# Protocol Buffers compiler is also required
+RUN mix escript.install hex protobuf --force
+# Add the Protocol Buffers compiler to the path
+ENV PATH="/root/.mix/escripts:${PATH}"
 RUN mix clean --deps
 # Get all the dependencies required to build Anoma
 RUN mix deps.get
 # Finally, build an Anoma release
-RUN mix release --force
+RUN mix release
 # Create a minimal environment for running Elixir
 FROM debian:bookworm-slim AS app
 # OpenSSL is required for libcrypto
