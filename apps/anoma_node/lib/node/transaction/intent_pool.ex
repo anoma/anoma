@@ -26,8 +26,10 @@ defmodule Anoma.Node.Transaction.IntentPool do
 
     ### Fields
     - `:intents` - The intents in the pool.
+    - `:node_id` - The ID of the Node.
     """
     field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
+    field(:node_id, String.t())
   end
 
   ############################################################
@@ -43,7 +45,7 @@ defmodule Anoma.Node.Transaction.IntentPool do
   @impl true
   def init(args) do
     Logger.debug("starting intent pool with #{inspect(args)}")
-    {:ok, %IntentPool{}}
+    {:ok, %IntentPool{node_id: args[:node_id]}}
   end
 
   ############################################################
