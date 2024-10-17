@@ -9,20 +9,7 @@ defmodule Anoma.Node.Examples.ELogging do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  def restart_logging do
-    # if GenServer.whereis(Logging) do
-    #   GenServer.stop(Logging)
-    # end
-
-    # :mnesia.clear_table(Anoma.Node.Logging.Events)
-
-    # Logging.start_link(node_id: "londo_mollari")
-  end
-
-  def check_tx_event(
-        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
-        |> Base.url_encode64()
-      ) do
+  def check_tx_event(node_id \\ Node.example_random_id()) do
     ENode.start_node(node_id: node_id)
     table_name = Logging.table_name(node_id)
 
@@ -43,10 +30,7 @@ defmodule Anoma.Node.Examples.ELogging do
     :mnesia.unsubscribe({:table, table_name, :simple})
   end
 
-  def check_multiple_tx_events(
-        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
-        |> Base.url_encode64()
-      ) do
+  def check_multiple_tx_events(node_id \\ Node.example_random_id()) do
     ENode.start_node(node_id: node_id)
 
     table_name = Logging.table_name(node_id)
@@ -82,7 +66,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   def check_consensus_event(
-        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        node_id \\ Node.example_random_id()
         |> Base.url_encode64()
       ) do
     check_tx_event(node_id)
@@ -107,7 +91,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   def check_consensus_event_multiple(
-        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        node_id \\ Node.example_random_id()
         |> Base.url_encode64()
       ) do
     check_multiple_tx_events(node_id)
@@ -133,7 +117,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   def check_block_event(
-        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        node_id \\ Node.example_random_id()
         |> Base.url_encode64()
       ) do
     check_consensus_event(node_id)
@@ -162,7 +146,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   def check_block_event_multiple(
-        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        node_id \\ Node.example_random_id()
         |> Base.url_encode64()
       ) do
     check_consensus_event_multiple(node_id)
@@ -207,7 +191,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   def check_block_event_leave_one_out(
-        node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
+        node_id \\ Node.example_random_id()
         |> Base.url_encode64()
       ) do
     check_consensus_event_multiple(node_id)
