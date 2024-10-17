@@ -17,12 +17,12 @@ defmodule Anoma.TransparentResource.Action do
     for proof <- proofs,
         reduce: %{commited: MapSet.new(), nullified: MapSet.new()} do
       %{committed: committed, nullified: nullified} ->
-        case proof.polarity do
-          :committed ->
+        case proof.self_tag do
+          {:committed, _} ->
             new_committed = MapSet.put(committed, proof.resource)
             %{committed: new_committed, nullified: nullified}
 
-          :nullified ->
+          {:nullified, _} ->
             new_nullified = MapSet.put(nullified, proof.resource)
             %{committed: committed, nullified: new_nullified}
         end
