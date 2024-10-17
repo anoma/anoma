@@ -58,12 +58,14 @@ defmodule Anoma.TransparentResource.Action do
       # that they are the same context. I could technically make it
       # lie if I constructed it to lie, no?
       action.proofs
-      |> Enum.all?(fn %LogicProof{resource: resource} ->
-        commitment = resource |> Resource.commitment()
-        nullifier = resource |> Resource.nullifier()
+      |> Enum.all?(fn
+        %LogicProof{resource: resource, self_tag: {:committed, commitment}} ->
+          Resource.commitment(resource) == commitment &&
+            MapSet.member?(action.commitments, commitment)
 
-        MapSet.member?(action.commitments, commitment) ||
-          MapSet.member?(action.nullifiers, nullifier)
+        %LogicProof{resource: resource, self_tag: {:nullified, nullifier}} ->
+          Resource.nullifier(resource) == nullifier &&
+            MapSet.member?(action.nullifiers, nullifier)
       end)
     end
   end
