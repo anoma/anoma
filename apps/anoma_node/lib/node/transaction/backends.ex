@@ -149,7 +149,8 @@ defmodule Anoma.Node.Transaction.Backends do
     stored_nullifiers = Ordering.read(node_id, {id, :nullifiers})
 
     not any_nullifiers_already_exist?(stored_nullifiers, trans) &&
-      not any_commitments_already_exist?(stored_commitments, trans)
+      not any_commitments_already_exist?(stored_commitments, trans) &&
+      commitments_exist_before_nullifier_submission(stored_commitments, trans)
   end
 
   @spec any_nullifiers_already_exist?(
@@ -168,6 +169,21 @@ defmodule Anoma.Node.Transaction.Backends do
   defp any_commitments_already_exist?(stored_comms, trans = %TTransaction{}) do
     commitments = TTransaction.commitments(trans)
     Enum.any?(commitments, &MapSet.member?(stored_comms, &1))
+  end
+
+  @spec commitments_exist_before_nullifier_submission(
+          MapSet.t(TResource.commitment()),
+          TTransaction.t()
+        ) :: boolean()
+  def commitments_exist_before_nullifier_submission(
+        stored_comms,
+        trans = %TTransaction{}
+      ) do
+    TTransaction.nullified_resources(trans)
+    |> Stream.reject(fn resource = %TResource{} -> resource.ephemeral end)
+    |> Stream.map(&TResource.commitment/1)
+    # Now let us check these commitments belong in the set
+    |> Enum.all?(fn commitment -> MapSet.member?(stored_comms, commitment) end)
   end
 
   @spec send_value(String.t(), binary(), Noun.t(), pid()) :: :ok | :error
