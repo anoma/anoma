@@ -51,14 +51,13 @@ defmodule Anoma.Node.Transaction.Storage do
     keylist =
       args
       |> Keyword.validate!([
-        :node_id
+        :node_id,
+        rocks: false
       ])
 
     node_id = keylist[:node_id]
 
-    :mnesia.create_table(values_table(node_id), attributes: [:key, :value])
-    :mnesia.create_table(updates_table(node_id), attributes: [:key, :value])
-    :mnesia.create_table(blocks_table(node_id), attributes: [:round, :block])
+    init_tables(node_id, args[:rocks])
 
     state = struct(__MODULE__, Enum.into(args, %{}))
 
@@ -376,6 +375,26 @@ defmodule Anoma.Node.Transaction.Storage do
 
   defp height_filter(height) do
     %__MODULE__.HeightFilter{height: height}
+  end
+
+  @spec init_tables(atom(), bool()) :: any()
+  def init_tables(node_id, rocks) do
+    rocks_opt = Anoma.Utility.rock_opts(rocks)
+
+    :mnesia.create_table(
+      values_table(node_id),
+      rocks_opt ++ [attributes: [:key, :value]]
+    )
+
+    :mnesia.create_table(
+      updates_table(node_id),
+      rocks_opt ++ [attributes: [:key, :value]]
+    )
+
+    :mnesia.create_table(
+      blocks_table(node_id),
+      rocks_opt ++ [attributes: [:round, :block]]
+    )
   end
 
   def blocks_table(node_id) do
