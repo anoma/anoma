@@ -5,6 +5,7 @@ defmodule Anoma.Node.Transaction.Backends do
   """
 
   alias Anoma.Node
+  alias Node.Logging
   alias Node.Transaction.{Executor, Ordering}
   alias Anoma.TransparentResource
 
@@ -135,7 +136,16 @@ defmodule Anoma.Node.Transaction.Backends do
         )
       end
     else
-      _e -> :error
+      e ->
+        unless e == :error do
+          Logging.log_event(
+            node_id,
+            :debug,
+            "Transaction verification failed. Reason: #{inspect(e)}"
+          )
+        end
+
+        :error
     end
   end
 
