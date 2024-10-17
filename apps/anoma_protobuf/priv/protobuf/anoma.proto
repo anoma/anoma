@@ -23,10 +23,50 @@ message NodeInfo {
 
 // ----------------- Prove -----------------------
 
-message Prove {
-  message Request { string intent = 1; }
+message Input {
+  oneof input {
+    bytes jammed = 1;
+    string text = 2;
+  }
+}
 
-  message Response { string result = 1; }
+message Prove {
+  message Request {
+    oneof program {
+      bytes jammed_program = 1;
+      string text_program = 2;
+    }
+
+    repeated Input public_inputs = 3;
+    repeated Input private_inputs = 4;
+  }
+
+  message Response {
+    oneof result {
+      bytes proof = 1;
+      string error = 2;
+    }
+  }
+}
+
+// ----------------- RunNock -----------------------
+
+message RunNock {
+  message Request {
+    oneof program {
+      bytes jammed_program = 1;
+      string text_program = 2;
+    }
+
+    repeated Input inputs = 3;
+  }
+
+  message Response {
+    oneof result {
+      bytes output = 1;
+      string error = 2;
+    }
+  }
 }
 // ----------------- Intent Pool -----------------
 
@@ -145,4 +185,5 @@ service Intents {
       returns (Indexer.UnspentResources.Response) {}
 
   rpc Prove(Prove.Request) returns (Prove.Response) {}
+  rpc RunNock(RunNock.Request) returns (RunNock.Response) {}
 }

@@ -8,7 +8,6 @@ defmodule Anoma.Node.Transport.GRPC.Server do
   alias Anoma.Protobuf.IntentPool.AddIntent
   alias Anoma.Protobuf.IntentPool.ListIntents
   alias Anoma.Protobuf.Intents
-  alias Anoma.Protobuf.Prove
 
   use GRPC.Server, service: Intents.Service
 
@@ -64,11 +63,5 @@ defmodule Anoma.Node.Transport.GRPC.Server do
     %UnspentResources.Response{
       unspent_resources: ["unspent resource 1", "unspent resource 2"]
     }
-  end
-
-  @spec prove(Prove.Request.t(), Stream.t()) ::
-          Prove.Response.t()
-  def prove(request, _stream) do
-    %Prove.Response{result: "here's your proof for #{request.intent}"}
   end
 end
