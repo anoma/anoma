@@ -40,7 +40,7 @@ defmodule Anoma.TransparentResource.Transaction do
     number_of = fn x -> x |> Stream.map(&MapSet.size/1) |> Enum.sum() end
 
     uniq_number_of = fn x ->
-      x |> Enum.reduce(&MapSet.union/2) |> MapSet.size()
+      x |> Enum.reduce(MapSet.new(), &MapSet.union/2) |> MapSet.size()
     end
 
     {comm_size, uniq_comm_size} = {number_of.(comms), uniq_number_of.(comms)}
