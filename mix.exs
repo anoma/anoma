@@ -39,6 +39,12 @@ defmodule Anoma.MixProject do
 
   def releases do
     [
+      anoma_client: [
+        include_executables_for: [:unix],
+        applications: [
+          {:anoma_client, :permanent}
+        ]
+      ],
       anoma: [
         steps: [:assemble, &Burrito.wrap/1],
         burrito: [
