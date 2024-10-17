@@ -30,7 +30,12 @@ defmodule Anoma.Supervisor do
   I start a new node with the given `node_id`.
   """
   def start_node(args) do
-    args = Keyword.validate!(args, [:node_id, :grpc_port])
+    args =
+      Keyword.validate!(args, [
+        :node_id,
+        :grpc_port,
+        tx_args: [mempool: [], ordering: [], storage: []]
+      ])
 
     DynamicSupervisor.start_child(
       Anoma.Node.NodeSupervisor,
