@@ -1,7 +1,7 @@
 defmodule Anoma.Node.Examples.EConsensus do
   alias Anoma.Node
   alias Node.{Examples, Registry}
-  alias Examples.{ETransaction, ELogging, ENode}
+  alias Examples.{ETransaction, ENode}
   alias Node.Transaction.Mempool
   alias Node.Utility.Consensus
 
@@ -32,7 +32,6 @@ defmodule Anoma.Node.Examples.EConsensus do
 
   def restart_consensus_env(node_id \\ "londo_mollari") do
     ETransaction.restart_tx_module(node_id)
-    ELogging.restart_logging()
     restart_consensus(node_id)
   end
 
