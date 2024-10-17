@@ -4,13 +4,13 @@ defmodule Anoma.Node.Transaction.Mempool do
   """
 
   alias __MODULE__
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.{Storage, Executor, Backends}
+  alias Anoma.Node
+  alias Node.Registry
+  alias Node.Transaction.{Storage, Executor, Backends}
   alias Backends.ResultEvent
-  alias EventBroker.Event
   alias Executor.ExecutionEvent
 
-  require EventBroker.Event
+  require Node.Event
   require Logger
 
   use GenServer
@@ -72,11 +72,14 @@ defmodule Anoma.Node.Transaction.Mempool do
         round: 0
       ])
 
+    node_id = args[:node_id]
+
     EventBroker.subscribe_me([
+      Node.Event.node_filter(node_id),
       filter_for_mempool()
     ])
 
-    {:ok, %__MODULE__{node_id: args[:node_id]}}
+    {:ok, %__MODULE__{node_id: node_id}}
   end
 
   ############################################################
@@ -122,10 +125,11 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   def handle_cast({:tx, {backend, code} = tx, tx_id}, state) do
     value = %Tx{backend: backend, code: code}
+    node_id = state.node_id
 
-    tx_event(tx_id, value)
+    tx_event(tx_id, value, node_id)
 
-    Executor.launch(state.node_id, tx, tx_id)
+    Executor.launch(node_id, tx, tx_id)
 
     nstate = %Mempool{
       state
@@ -136,8 +140,10 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   def handle_cast({:execute, id_list}, state) do
-    consensus_event(id_list)
-    Executor.execute(state.node_id, id_list)
+    node_id = state.node_id
+
+    consensus_event(id_list, node_id)
+    Executor.execute(node_id, id_list)
 
     {:noreply, state}
   end
@@ -146,9 +152,12 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:noreply, state}
   end
 
-  def handle_info(%Event{body: %ResultEvent{}} = e, state) do
-    id = e.body.tx_id
-    res = e.body.vm_result
+  def handle_info(
+        %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}} = e,
+        state
+      ) do
+    id = e.body.body.tx_id
+    res = e.body.body.vm_result
 
     new_map =
       state.transactions
@@ -160,15 +169,21 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:noreply, new_state}
   end
 
-  def handle_info(%Event{body: %ExecutionEvent{result: _}} = e, state) do
-    execution_list = e.body.result
+  def handle_info(
+        %EventBroker.Event{
+          body: %Node.Event{body: %ExecutionEvent{result: _}}
+        } = e,
+        state
+      ) do
+    execution_list = e.body.body.result
     round = state.round
+    node_id = state.node_id
 
     {writes, map} = process_execution(state, execution_list)
 
-    Storage.commit(state.node_id, round, writes)
+    Storage.commit(node_id, round, writes)
 
-    block_event(Enum.map(execution_list, &elem(&1, 1)), round)
+    block_event(Enum.map(execution_list, &elem(&1, 1)), round, node_id)
 
     {:noreply, %__MODULE__{state | transactions: map, round: round + 1}}
   end
@@ -181,9 +196,9 @@ defmodule Anoma.Node.Transaction.Mempool do
   #                           Helpers                        #
   ############################################################
 
-  def block_event(id_list, round) do
+  def block_event(id_list, round, node_id) do
     block_event =
-      EventBroker.Event.new_with_body(%__MODULE__.BlockEvent{
+      Node.Event.new_with_body(node_id, %__MODULE__.BlockEvent{
         order: id_list,
         round: round
       })
@@ -191,9 +206,9 @@ defmodule Anoma.Node.Transaction.Mempool do
     EventBroker.event(block_event)
   end
 
-  def tx_event(tx_id, value) do
+  def tx_event(tx_id, value, node_id) do
     tx_event =
-      EventBroker.Event.new_with_body(%__MODULE__.TxEvent{
+      Node.Event.new_with_body(node_id, %__MODULE__.TxEvent{
         id: tx_id,
         tx: value
       })
@@ -201,9 +216,9 @@ defmodule Anoma.Node.Transaction.Mempool do
     EventBroker.event(tx_event)
   end
 
-  def consensus_event(id_list) do
+  def consensus_event(id_list, node_id) do
     consensus_event =
-      EventBroker.Event.new_with_body(%__MODULE__.ConsensusEvent{
+      Node.Event.new_with_body(node_id, %__MODULE__.ConsensusEvent{
         order: id_list
       })
 

@@ -3,12 +3,13 @@ defmodule Anoma.Node.Transaction.Storage do
   abstorage genserver
   """
 
+  alias Anoma.Node
+  alias Node.Registry
+
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
-  require EventBroker.Event
-
-  alias Anoma.Node.Registry
+  require Node.Event
 
   @type bare_key() :: list(String.t())
   @type qualified_key() :: {integer(), bare_key()}
@@ -32,7 +33,7 @@ defmodule Anoma.Node.Transaction.Storage do
   end
 
   deffilter HeightFilter, height: non_neg_integer() do
-    %EventBroker.Event{body: %{height: ^height}} -> true
+    %EventBroker.Event{body: %Node.Event{body: %{height: ^height}}} -> true
     _ -> false
   end
 
@@ -118,9 +119,15 @@ defmodule Anoma.Node.Transaction.Storage do
 
       {:reply, result, state}
     else
-      block_spawn(height, fn ->
-        blocking_read(state.node_id, height, key, from)
-      end)
+      node_id = state.node_id
+
+      block_spawn(
+        height,
+        fn ->
+          blocking_read(node_id, height, key, from)
+        end,
+        node_id
+      )
 
       {:noreply, state}
     end
@@ -129,9 +136,15 @@ defmodule Anoma.Node.Transaction.Storage do
   def handle_call({write_or_append, {height, kvlist}}, from, state)
       when write_or_append in [:write, :append] do
     unless height == state.uncommitted_height + 1 do
-      block_spawn(height - 1, fn ->
-        blocking_write(state.node_id, height, kvlist, from)
-      end)
+      node_id = state.node_id
+
+      block_spawn(
+        height - 1,
+        fn ->
+          blocking_write(node_id, height, kvlist, from)
+        end,
+        node_id
+      )
 
       {:noreply, state}
     else
@@ -145,11 +158,12 @@ defmodule Anoma.Node.Transaction.Storage do
     {:reply, :ok, state}
   end
 
-  def block_spawn(height, call) do
+  def block_spawn(height, call, node_id) do
     {:ok, pid} =
       Task.start(call)
 
     EventBroker.subscribe(pid, [
+      Node.Event.node_filter(node_id),
       this_module_filter(),
       height_filter(height)
     ])
@@ -209,7 +223,9 @@ defmodule Anoma.Node.Transaction.Storage do
       # if the key we care about was written at exactly the height we
       # care about, then we already have the value for free
       %EventBroker.Event{
-        body: %__MODULE__.WriteEvent{height: ^height, writes: writes}
+        body: %Node.Event{
+          body: %__MODULE__.WriteEvent{height: ^height, writes: writes}
+        }
       } ->
         case Enum.find(writes, fn {keywrite, _value} -> key == keywrite end) do
           # try reading in history instead
@@ -226,6 +242,7 @@ defmodule Anoma.Node.Transaction.Storage do
     end
 
     EventBroker.unsubscribe_me([
+      Node.Event.node_filter(node_id),
       this_module_filter(),
       height_filter(height)
     ])
@@ -293,7 +310,7 @@ defmodule Anoma.Node.Transaction.Storage do
       end
 
     write_event =
-      EventBroker.Event.new_with_body(%__MODULE__.WriteEvent{
+      Node.Event.new_with_body(state.node_id, %__MODULE__.WriteEvent{
         height: height,
         writes: event_writes
       })
@@ -359,12 +376,15 @@ defmodule Anoma.Node.Transaction.Storage do
 
     receive do
       %EventBroker.Event{
-        body: %__MODULE__.WriteEvent{height: ^awaited_height}
+        body: %Node.Event{
+          body: %__MODULE__.WriteEvent{height: ^awaited_height}
+        }
       } ->
         GenServer.reply(from, write(node_id, {height, kvlist}))
     end
 
     EventBroker.unsubscribe_me([
+      Node.Event.node_filter(node_id),
       this_module_filter(),
       height_filter(awaited_height)
     ])

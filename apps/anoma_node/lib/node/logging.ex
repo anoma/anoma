@@ -4,14 +4,15 @@ defmodule Anoma.Node.Logging do
   """
 
   alias __MODULE__
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction
+  alias Anoma.Node
+  alias Node.{Registry, Transaction}
   alias Transaction.Mempool
 
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
 
+  require Node.Event
   require Logger
 
   @type flag :: :info | :debug | :error
@@ -27,16 +28,18 @@ defmodule Anoma.Node.Logging do
   end
 
   deffilter LoggingFilter do
-    %EventBroker.Event{body: %Anoma.Node.Logging.LoggingEvent{}} ->
+    %EventBroker.Event{
+      body: %Node.Event{body: %Anoma.Node.Logging.LoggingEvent{}}
+    } ->
       true
 
-    %EventBroker.Event{body: %Mempool.TxEvent{}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.TxEvent{}}} ->
       true
 
-    %EventBroker.Event{body: %Mempool.ConsensusEvent{}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.ConsensusEvent{}}} ->
       true
 
-    %EventBroker.Event{body: %Mempool.BlockEvent{}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
       true
 
     _ ->
@@ -60,15 +63,23 @@ defmodule Anoma.Node.Logging do
 
     init_table(table)
 
-    EventBroker.subscribe_me([logging_filter()])
-    {:ok, %__MODULE__{node_id: args[:node_id], table: table}}
+    node_id = args[:node_id]
+
+    EventBroker.subscribe_me([
+      Node.Event.node_filter(node_id),
+      logging_filter()
+    ])
+
+    {:ok, %__MODULE__{node_id: node_id, table: table}}
   end
 
   def handle_info(
         %EventBroker.Event{
-          body: %Logging.LoggingEvent{
-            flag: flag,
-            msg: msg
+          body: %Node.Event{
+            body: %Logging.LoggingEvent{
+              flag: flag,
+              msg: msg
+            }
           }
         },
         state
@@ -79,9 +90,11 @@ defmodule Anoma.Node.Logging do
 
   def handle_info(
         %EventBroker.Event{
-          body: %Mempool.TxEvent{
-            id: id,
-            tx: %Mempool.Tx{backend: backend, code: code}
+          body: %Node.Event{
+            body: %Mempool.TxEvent{
+              id: id,
+              tx: %Mempool.Tx{backend: backend, code: code}
+            }
           }
         },
         state
@@ -97,8 +110,10 @@ defmodule Anoma.Node.Logging do
   # when replaying, we need the round information to check against the comitted blocks
   def handle_info(
         %EventBroker.Event{
-          body: %Mempool.ConsensusEvent{
-            order: list
+          body: %Node.Event{
+            body: %Mempool.ConsensusEvent{
+              order: list
+            }
           }
         },
         state
@@ -114,9 +129,11 @@ defmodule Anoma.Node.Logging do
 
   def handle_info(
         %EventBroker.Event{
-          body: %Mempool.BlockEvent{
-            order: id_list,
-            round: round
+          body: %Node.Event{
+            body: %Mempool.BlockEvent{
+              order: id_list,
+              round: round
+            }
           }
         },
         state
@@ -148,6 +165,14 @@ defmodule Anoma.Node.Logging do
 
   def logging_filter() do
     %__MODULE__.LoggingFilter{}
+  end
+
+  def log_event(node_id, flag, msg) do
+    Node.Event.new_with_body(node_id, %__MODULE__.LoggingEvent{
+      flag: flag,
+      msg: msg
+    })
+    |> EventBroker.event()
   end
 
   defp match_consensus(table) do
