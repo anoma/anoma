@@ -59,12 +59,12 @@ defmodule Anoma.TransparentResource.Action do
       # lie if I constructed it to lie, no?
       action.proofs
       |> Enum.all?(fn
-        %LogicProof{resource: resource, self_tag: {:committed, commitment}} ->
-          Resource.commitment(resource) == commitment &&
+        proof = %LogicProof{self_tag: {:committed, commitment}} ->
+          LogicProof.verify_resource_corresponds_to_tag(proof) &&
             MapSet.member?(action.commitments, commitment)
 
-        %LogicProof{resource: resource, self_tag: {:nullified, nullifier}} ->
-          Resource.nullifier(resource) == nullifier &&
+        proof = %LogicProof{self_tag: {:nullified, nullifier}} ->
+          LogicProof.verify_resource_corresponds_to_tag(proof) &&
             MapSet.member?(action.nullifiers, nullifier)
       end)
     end
