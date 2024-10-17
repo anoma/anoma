@@ -52,7 +52,8 @@ defmodule Anoma.Node.Transaction.Storage do
     keylist =
       args
       |> Keyword.validate!([
-        :node_id
+        :node_id,
+        uncommitted_height: 0
       ])
 
     node_id = keylist[:node_id]

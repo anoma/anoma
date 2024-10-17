@@ -18,4 +18,14 @@ defmodule LoggingTest do
     ELogging.check_block_event_multiple()
     ELogging.check_block_event_leave_one_out()
   end
+
+  test "replay examples" do
+    ELogging.replay_tx()
+    ELogging.replay_several_txs()
+    ELogging.replay_consensus()
+    ELogging.replay_consensus_with_several_txs()
+    ELogging.replay_several_consensus()
+    ELogging.replay_consensus_leave_one_out()
+    ELogging.replay_corrects_result()
+  end
 end
