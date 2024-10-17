@@ -59,13 +59,9 @@ defmodule Anoma.TransparentResource.Action do
       # lie if I constructed it to lie, no?
       action.proofs
       |> Enum.all?(fn
-        proof = %LogicProof{self_tag: {:committed, commitment}} ->
+        proof = %LogicProof{} ->
           LogicProof.verify_resource_corresponds_to_tag(proof) &&
-            MapSet.member?(action.commitments, commitment)
-
-        proof = %LogicProof{self_tag: {:nullified, nullifier}} ->
-          LogicProof.verify_resource_corresponds_to_tag(proof) &&
-            MapSet.member?(action.nullifiers, nullifier)
+            verify_resource_is_accounted_for?(action, proof)
       end)
     end
   end
@@ -109,5 +105,19 @@ defmodule Anoma.TransparentResource.Action do
     else
       {:ok, MapSet.new(Enum.map(maybe_proofs, fn {:ok, x} -> x end))}
     end
+  end
+
+  # Check that the resource is in the set
+  @spec verify_resource_is_accounted_for?(t(), LogicProof.t()) :: boolean()
+  defp verify_resource_is_accounted_for?(self = %Action{}, %LogicProof{
+         self_tag: {:committed, commitment}
+       }) do
+    MapSet.member?(self.commitments, commitment)
+  end
+
+  defp verify_resource_is_accounted_for?(self = %Action{}, %LogicProof{
+         self_tag: {:nullified, nullifier}
+       }) do
+    MapSet.member?(self.nullifiers, nullifier)
   end
 end
