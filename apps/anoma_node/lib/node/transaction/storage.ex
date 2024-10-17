@@ -40,7 +40,7 @@ defmodule Anoma.Node.Transaction.Storage do
   @spec start_link() :: GenServer.on_start()
   @spec start_link(list(startup_options())) :: GenServer.on_start()
   def start_link(args \\ []) do
-    args = Keyword.validate!(args, [:node_id])
+    args = Keyword.validate!(args, [:node_id, :uncommitted_height])
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
