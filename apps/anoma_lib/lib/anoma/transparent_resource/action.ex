@@ -61,7 +61,8 @@ defmodule Anoma.TransparentResource.Action do
       |> Enum.all?(fn
         proof = %LogicProof{} ->
           LogicProof.verify_resource_corresponds_to_tag(proof) &&
-            verify_resource_is_accounted_for?(action, proof)
+            verify_resource_is_accounted_for?(action, proof) and
+            verify_action_resources_correspond_to_proofs?(action, proof)
       end)
     end
   end
@@ -119,5 +120,14 @@ defmodule Anoma.TransparentResource.Action do
          self_tag: {:nullified, nullifier}
        }) do
     MapSet.member?(self.nullifiers, nullifier)
+  end
+
+  @spec verify_action_resources_correspond_to_proofs?(t(), LogicProof.t()) ::
+          boolean()
+  defp verify_action_resources_correspond_to_proofs?(
+         %Action{commitments: action_commits, nullifiers: action_nulls},
+         %LogicProof{commitments: commitments, nullifiers: nullifiers}
+       ) do
+    action_commits == commitments && action_nulls == nullifiers
   end
 end
