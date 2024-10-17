@@ -50,6 +50,21 @@ defmodule Anoma.TransparentResource.LogicProof do
 
   @empty [0, <<>>, <<0>>, []]
 
+  @spec verify_resource_corresponds_to_tag(t()) :: boolean()
+  def verify_resource_corresponds_to_tag(%LogicProof{
+        resource: resource,
+        self_tag: {:committed, commitment}
+      }) do
+    Resource.commitment(resource) == commitment
+  end
+
+  def verify_resource_corresponds_to_tag(%LogicProof{
+        resource: resource,
+        self_tag: {:nullified, nullifier}
+      }) do
+    Resource.nullifier(resource) == nullifier
+  end
+
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
         resource,
