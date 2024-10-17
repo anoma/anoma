@@ -9,7 +9,7 @@ defmodule Anoma.Node.Transaction.IntentPool do
 
   alias __MODULE__
   alias Anoma.Node.Registry
-  alias Anoma.RM.Intent
+  alias Anoma.RM.Transaction
   alias EventBroker.Broker
   alias EventBroker.Event
 
@@ -27,7 +27,7 @@ defmodule Anoma.Node.Transaction.IntentPool do
     ### Fields
     - `:intents` - The intents in the pool.
     """
-    field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
+    field(:intents, MapSet.t(Transaction.t()), default: MapSet.new())
   end
 
   ############################################################

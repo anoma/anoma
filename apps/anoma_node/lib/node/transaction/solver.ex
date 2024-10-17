@@ -16,7 +16,7 @@ defmodule Anoma.Node.Transaction.Solver do
   alias __MODULE__
   alias Anoma.Node.Transaction.IntentPool
   alias Anoma.Node.Registry
-  alias Anoma.RM.Intent
+  alias Anoma.RM.Transaction
   alias EventBroker.Event
   alias EventBroker.Filters
 
@@ -34,8 +34,8 @@ defmodule Anoma.Node.Transaction.Solver do
     - `:unsolved`        - The set of unsolved intents.
     - `:solved`          - The set of solved intents.
     """
-    field(:unsolved, MapSet.t(Intent.t()), default: MapSet.new())
-    field(:solved, MapSet.t(Intent.t()), default: MapSet.new())
+    field(:unsolved, MapSet.t(Transaction.t()), default: MapSet.new())
+    field(:solved, MapSet.t(Transaction.t()), default: MapSet.new())
     field(:node_id, String.t())
   end
 
@@ -58,7 +58,7 @@ defmodule Anoma.Node.Transaction.Solver do
   @doc """
   I return all the solved intents.
   """
-  @spec get_solved(String.t()) :: [Intent.t()]
+  @spec get_solved(String.t()) :: [Transaction.t()]
   def get_solved(node_id) do
     name = Registry.via(node_id, __MODULE__)
     GenServer.call(name, :get_solved)
@@ -67,7 +67,7 @@ defmodule Anoma.Node.Transaction.Solver do
   @doc """
   I return all the unsolved intents.
   """
-  @spec get_unsolved(String.t()) :: [Intent.t()]
+  @spec get_unsolved(String.t()) :: [Transaction.t()]
   def get_unsolved(node_id) do
     name = Registry.via(node_id, __MODULE__)
     GenServer.call(name, :get_unsolved)
@@ -137,7 +137,7 @@ defmodule Anoma.Node.Transaction.Solver do
   # @doc """
   # I return a list of all solved intents.
   # """
-  @spec handle_get_solved(t()) :: [Intent.t()]
+  @spec handle_get_solved(t()) :: [Transaction.t()]
   defp handle_get_solved(state) do
     Enum.to_list(state.solved)
   end
@@ -145,7 +145,7 @@ defmodule Anoma.Node.Transaction.Solver do
   # @doc """
   # I return a list of all unsolved intents.
   # """
-  @spec handle_get_unsolved(t()) :: [Intent.t()]
+  @spec handle_get_unsolved(t()) :: [Transaction.t()]
   defp handle_get_unsolved(state) do
     Enum.to_list(state.unsolved)
   end
@@ -154,7 +154,7 @@ defmodule Anoma.Node.Transaction.Solver do
   # I handle adding a new intent.
   # I add the intent to the list of unsolved intents, and then attempt to solve.
   # """
-  @spec handle_new_intent(Intent.t(), t()) :: t()
+  @spec handle_new_intent(Transaction.t(), t()) :: t()
   defp handle_new_intent(intent, state) do
     Logger.debug("solver received new intent: #{inspect(intent)}")
     unsolved? = intent in state.unsolved
@@ -202,8 +202,8 @@ defmodule Anoma.Node.Transaction.Solver do
   #
   # I assume that the composition of intents is associative and commutative.
   # """
-  @spec solve([Intent.t()] | MapSet.t(Intent.t())) ::
-          MapSet.t(Intent.t()) | nil
+  @spec solve([Transaction.t()] | MapSet.t(Transaction.t())) ::
+          MapSet.t(Transaction.t()) | nil
   def solve(intents) do
     intents
     |> Enum.to_list()
@@ -219,13 +219,13 @@ defmodule Anoma.Node.Transaction.Solver do
   I check if a list of intents is valid by composing them and verifying if they satisfy
   the Intent.valid? predicate.
   """
-  @spec valid?([Intent.t()]) :: boolean()
+  @spec valid?([Transaction.t()]) :: boolean()
   def valid?([]), do: false
 
   def valid?(intents) do
     intents
-    |> Enum.reduce(&Intent.compose/2)
-    |> Intent.verify()
+    |> Enum.reduce(&Transaction.compose/2)
+    |> Transaction.verify()
   end
 
   ############################################################
