@@ -108,4 +108,34 @@ defmodule Anoma.TransparentResource.Action do
       {:ok, MapSet.new(Enum.map(maybe_proofs, fn {:ok, x} -> x end))}
     end
   end
+
+  ##############################################################################
+  #                                Accessing                                   #
+  ##############################################################################
+
+  @spec commitments(t()) :: MapSet.t(Resource.commitment())
+  def commitments(%Action{commitments: commitments}) do
+    commitments
+  end
+
+  @spec nullifiers(t()) :: MapSet.t(Resource.nullifier())
+  def nullifiers(%Action{nullifiers: nullifiers}) do
+    nullifiers
+  end
+
+  @spec resources(t()) :: MapSet.t(Resource.t())
+  def resources(self = %Action{}) do
+    MapSet.new(self.proofs, & &1.resource)
+  end
+
+  @spec nullified_resources(t()) :: MapSet.t(Resource.t())
+  def nullified_resources(self = %Action{}) do
+    self.proofs
+    |> Stream.filter(fn
+      %LogicProof{self_tag: {:nullified, _}} -> true
+      _ -> false
+    end)
+    |> Stream.map(& &1.resource)
+    |> Enum.into(MapSet.new())
+  end
 end
