@@ -15,8 +15,8 @@ defmodule Anoma.TransparentResource.Transaction do
     field(:delta_proof, <<>>, default: <<>>)
   end
 
-  def verify(tx = %Transaction{}) do
-    with true <- verify_tx_roots(tx),
+  def verify(tx = %Transaction{}, root_closure \\ fn _ -> true end) do
+    with true <- verify_tx_roots(tx, root_closure),
          true <- verify_tx_action_distinctness(tx),
          true <- verify_tx_action_compliance(tx),
          true <- verify_tx_action_delta_sum(tx),
@@ -29,8 +29,9 @@ defmodule Anoma.TransparentResource.Transaction do
   end
 
   # every consumed resource referenced must exist in a referenced root
-  def verify_tx_roots(_) do
-    true
+  @spec verify_tx_roots(t(), (t() -> boolean())) :: boolean()
+  def verify_tx_roots(tx, root_closure) do
+    root_closure.(tx)
   end
 
   # actions must contain disjoint sets of commitments and nullifiers
