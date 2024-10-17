@@ -151,9 +151,16 @@ defmodule Anoma.Node.Logging do
     {:noreply, state}
   end
 
+  @spec init_table(atom()) :: {:atomic, :ok}
   def init_table(table) do
     :mnesia.delete_table(table)
-    {:atomic, :ok} = :mnesia.create_table(table, attributes: [:type, :body])
+    :mnesia.create_table(table, attributes: [:type, :body])
+
+    :mnesia.clear_table(table)
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({table, :round, -1})
+    end)
   end
 
   defp log_fun({:debug, msg}), do: Logger.debug(msg)
