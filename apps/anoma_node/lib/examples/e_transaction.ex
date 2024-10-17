@@ -6,7 +6,9 @@ defmodule Anoma.Node.Examples.ETransaction do
 
   alias Anoma.Node.Registry
 
-  ## storage
+  ############################################################
+  #                          Storage                         #
+  ############################################################
 
   def restart_storage(node_id \\ "londo_mollari") do
     pid = Registry.whereis(node_id, Storage)
@@ -168,7 +170,10 @@ defmodule Anoma.Node.Examples.ETransaction do
     }
   end
 
-  ## ordering
+  ############################################################
+  #                         Ordering                         #
+  ############################################################
+
   def restart_ordering(node_id \\ "londo_mollari") do
     pid = Registry.whereis(node_id, Ordering)
 
@@ -270,6 +275,10 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     {:debug_term_storage, inc}
   end
+
+  ############################################################
+  #                        Transactions                      #
+  ############################################################
 
   def zero_counter_submit(node_id \\ "londo_mollari") do
     key = "key"
