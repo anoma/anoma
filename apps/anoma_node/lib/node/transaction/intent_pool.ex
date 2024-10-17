@@ -10,11 +10,13 @@ defmodule Anoma.Node.Transaction.IntentPool do
   alias __MODULE__
   alias Anoma.Node
   alias Node.Registry
+  alias Node.Transaction.Backends
   alias Anoma.RM.Intent
   alias EventBroker.Broker
 
   require Node.Event
 
+  use EventBroker.DefFilter
   use TypedStruct
   use GenServer
 
@@ -47,6 +49,13 @@ defmodule Anoma.Node.Transaction.IntentPool do
   @impl true
   def init(args) do
     Logger.debug("starting intent pool with #{inspect(args)}")
+    node_id = args[:node_id]
+
+    EventBroker.subscribe_me([
+      Node.Event.node_filter(node_id),
+      nullifier_filter()
+    ])
+
     {:ok, %IntentPool{node_id: args[:node_id]}}
   end
 
@@ -102,6 +111,16 @@ defmodule Anoma.Node.Transaction.IntentPool do
   def handle_call(:all_intents, _from, state) do
     {:ok, intents} = handle_all_intents(state)
     {:reply, intents, state}
+  end
+
+  @impl true
+  def handle_info(
+        %EventBroker.Event{
+          body: %Node.Event{body: %Backends.NullifierEvent{nullifiers: set}}
+        },
+        state
+      ) do
+    {:noreply, handle_new_nullifiers(state, set)}
   end
 
   ############################################################
@@ -162,5 +181,40 @@ defmodule Anoma.Node.Transaction.IntentPool do
 
       {:ok, :not_present, state}
     end
+  end
+
+  @spec handle_new_nullifiers(t(), MapSet.t(binary())) :: t()
+  defp handle_new_nullifiers(state, nlfs_set) do
+    set_of_txs = state.intents
+
+    new_intents =
+      Enum.reject(set_of_txs, fn x ->
+        Stream.map(x.actions, fn x -> x.proofs end)
+        |> Stream.map(fn x ->
+          x.resource |> Anoma.TransparentResource.Resource.nullifier()
+        end)
+        |> Enum.any?(&MapSet.member?(nlfs_set, &1))
+      end)
+      |> Enum.into(&MapSet.new/1)
+
+    %__MODULE__{state | intents: new_intents}
+  end
+
+  ############################################################
+  #                         Helpers                          #
+  ############################################################
+
+  deffilter NullifierFilter do
+    %EventBroker.Event{
+      body: %Anoma.Node.Event{body: %Backends.NullifierEvent{}}
+    } ->
+      true
+
+    _ ->
+      false
+  end
+
+  defp nullifier_filter() do
+    %__MODULE__.NullifierFilter{}
   end
 end
