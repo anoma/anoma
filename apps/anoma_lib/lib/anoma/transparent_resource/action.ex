@@ -58,12 +58,11 @@ defmodule Anoma.TransparentResource.Action do
       # that they are the same context. I could technically make it
       # lie if I constructed it to lie, no?
       action.proofs
-      |> Enum.all?(fn %LogicProof{resource: resource} ->
-        commitment = resource |> Resource.commitment()
-        nullifier = resource |> Resource.nullifier()
-
-        MapSet.member?(action.commitments, commitment) ||
-          MapSet.member?(action.nullifiers, nullifier)
+      |> Enum.all?(fn
+        proof = %LogicProof{} ->
+          LogicProof.verify_resource_corresponds_to_tag(proof) &&
+            verify_resource_is_accounted_for?(action, proof) and
+            verify_action_resources_correspond_to_proofs?(action, proof)
       end)
     end
   end
@@ -107,6 +106,29 @@ defmodule Anoma.TransparentResource.Action do
     else
       {:ok, MapSet.new(Enum.map(maybe_proofs, fn {:ok, x} -> x end))}
     end
+  end
+
+  # Check that the resource is in the set
+  @spec verify_resource_is_accounted_for?(t(), LogicProof.t()) :: boolean()
+  defp verify_resource_is_accounted_for?(self = %Action{}, %LogicProof{
+         self_tag: {:committed, commitment}
+       }) do
+    MapSet.member?(self.commitments, commitment)
+  end
+
+  defp verify_resource_is_accounted_for?(self = %Action{}, %LogicProof{
+         self_tag: {:nullified, nullifier}
+       }) do
+    MapSet.member?(self.nullifiers, nullifier)
+  end
+
+  @spec verify_action_resources_correspond_to_proofs?(t(), LogicProof.t()) ::
+          boolean()
+  defp verify_action_resources_correspond_to_proofs?(
+         %Action{commitments: action_commits, nullifiers: action_nulls},
+         %LogicProof{commitments: commitments, nullifiers: nullifiers}
+       ) do
+    action_commits == commitments && action_nulls == nullifiers
   end
 
   ##############################################################################
