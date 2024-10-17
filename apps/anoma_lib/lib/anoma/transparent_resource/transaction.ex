@@ -24,7 +24,7 @@ defmodule Anoma.TransparentResource.Transaction do
          true <- verify_tx_action_logics(tx) do
       true
     else
-      _ -> false
+      reason -> reason
     end
   end
 
