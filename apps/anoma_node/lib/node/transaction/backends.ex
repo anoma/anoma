@@ -32,6 +32,10 @@ defmodule Anoma.Node.Transaction.Backends do
     field(:tx_result, {:ok, any()} | :error)
   end
 
+  typedstruct enforce: true, module: NullifierEvent do
+    field(:nullifiers, MapSet.t(binary()))
+  end
+
   deffilter CompleteFilter do
     %EventBroker.Event{body: %Node.Event{body: %CompleteEvent{}}} ->
       true
@@ -134,6 +138,15 @@ defmodule Anoma.Node.Transaction.Backends do
           {id, [{:nullifiers, nfs}, {:commitments, cms}]}
         )
       end
+
+      nfs_set =
+        for action <- tx.actions, reduce: MapSet.new() do
+          set -> MapSet.union(set, action.nullifiers)
+        end
+
+      nullifier_event(nfs_set, node_id)
+
+      :ok
     else
       _e -> :error
     end
@@ -198,6 +211,16 @@ defmodule Anoma.Node.Transaction.Backends do
       Node.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
         tx_id: id,
         vm_result: result
+      })
+
+    EventBroker.event(event)
+  end
+
+  @spec nullifier_event(MapSet.t(binary()), String.t()) :: :ok
+  defp nullifier_event(set, node_id) do
+    event =
+      Node.Event.new_with_body(node_id, %__MODULE__.NullifierEvent{
+        nullifiers: set
       })
 
     EventBroker.event(event)
