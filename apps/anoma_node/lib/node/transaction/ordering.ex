@@ -8,10 +8,11 @@ defmodule Anoma.Node.Transaction.Ordering do
   use TypedStruct
 
   alias __MODULE__
-  alias Anoma.Node.Transaction.Storage
-  alias Anoma.Node.Registry
+  alias Anoma.Node
+  alias Node.Transaction.Storage
+  alias Node.Registry
 
-  require EventBroker.Event
+  require Node.Event
 
   @typep startup_options() :: {:node_id, String.t()}
 
@@ -28,7 +29,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   end
 
   deffilter TxIdFilter, tx_id: binary() do
-    %EventBroker.Event{body: %{tx_id: ^tx_id}} -> true
+    %EventBroker.Event{body: %Node.Event{body: %{tx_id: ^tx_id}}} -> true
     _ -> false
   end
 
@@ -56,9 +57,15 @@ defmodule Anoma.Node.Transaction.Ordering do
       {:noreply, state}
     else
       _ ->
-        block_spawn(tx_id, fn ->
-          blocking_read(state.node_id, {tx_id, key}, from)
-        end)
+        node_id = state.node_id
+
+        block_spawn(
+          tx_id,
+          fn ->
+            blocking_read(node_id, {tx_id, key}, from)
+          end,
+          node_id
+        )
 
         {:noreply, state}
     end
@@ -80,9 +87,15 @@ defmodule Anoma.Node.Transaction.Ordering do
       {:noreply, state}
     else
       _ ->
-        block_spawn(tx_id, fn ->
-          blocking_write(state.node_id, {tx_id, kvlist}, from)
-        end)
+        node_id = state.node_id
+
+        block_spawn(
+          tx_id,
+          fn ->
+            blocking_write(node_id, {tx_id, kvlist}, from)
+          end,
+          node_id
+        )
 
         {:noreply, state}
     end
@@ -98,7 +111,7 @@ defmodule Anoma.Node.Transaction.Ordering do
           reduce: {state.tx_id_to_height, state.next_height} do
         {map, order} ->
           order_event =
-            EventBroker.Event.new_with_body(%__MODULE__.OrderEvent{
+            Node.Event.new_with_body(state.node_id, %__MODULE__.OrderEvent{
               tx_id: tx_id
             })
 
@@ -118,11 +131,12 @@ defmodule Anoma.Node.Transaction.Ordering do
     {:noreply, state}
   end
 
-  def block_spawn(id, call) do
+  def block_spawn(id, call, node_id) do
     {:ok, pid} =
       Task.start(call)
 
     EventBroker.subscribe(pid, [
+      Node.Event.node_filter(node_id),
       this_module_filter(),
       tx_id_filter(id)
     ])
@@ -162,21 +176,28 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   @spec blocking_read(String.t(), {binary(), any()}, GenServer.from()) :: :ok
   def blocking_read(node_id, {id, key}, from) do
-    block(from, id, fn -> read(node_id, {id, key}) end)
+    block(from, id, fn -> read(node_id, {id, key}) end, node_id)
   end
 
   @spec blocking_write(String.t(), {binary(), [any()]}, GenServer.from()) ::
           :ok
   def blocking_write(node_id, {id, kvlist}, from) do
-    block(from, id, fn ->
-      write(node_id, {id, kvlist})
-    end)
+    block(
+      from,
+      id,
+      fn ->
+        write(node_id, {id, kvlist})
+      end,
+      node_id
+    )
   end
 
-  @spec block(GenServer.from(), binary(), (-> any())) :: :ok
-  def block(from, tx_id, call) do
+  @spec block(GenServer.from(), binary(), (-> any()), String.t()) :: :ok
+  def block(from, tx_id, call, node_id) do
     receive do
-      %EventBroker.Event{body: %__MODULE__.OrderEvent{tx_id: ^tx_id}} ->
+      %EventBroker.Event{
+        body: %Node.Event{body: %__MODULE__.OrderEvent{tx_id: ^tx_id}}
+      } ->
         result = call.()
         GenServer.reply(from, result)
 
@@ -185,6 +206,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     end
 
     EventBroker.unsubscribe_me([
+      Node.Event.node_filter(node_id),
       this_module_filter(),
       tx_id_filter(tx_id)
     ])

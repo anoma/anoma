@@ -8,10 +8,12 @@ defmodule Anoma.Node.Transaction.IntentPool do
   require Logger
 
   alias __MODULE__
-  alias Anoma.Node.Registry
+  alias Anoma.Node
+  alias Node.Registry
   alias Anoma.RM.Intent
   alias EventBroker.Broker
-  alias EventBroker.Event
+
+  require Node.Event
 
   use TypedStruct
   use GenServer
@@ -26,8 +28,10 @@ defmodule Anoma.Node.Transaction.IntentPool do
 
     ### Fields
     - `:intents` - The intents in the pool.
+    - `:node_id` - The ID of the Node.
     """
     field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
+    field(:node_id, String.t())
   end
 
   ############################################################
@@ -43,7 +47,7 @@ defmodule Anoma.Node.Transaction.IntentPool do
   @impl true
   def init(args) do
     Logger.debug("starting intent pool with #{inspect(args)}")
-    {:ok, %IntentPool{}}
+    {:ok, %IntentPool{node_id: args[:node_id]}}
   end
 
   ############################################################
@@ -116,7 +120,11 @@ defmodule Anoma.Node.Transaction.IntentPool do
       {:ok, :already_present, state}
     else
       Logger.debug("new intent added #{inspect(intent)}")
-      EventBroker.event(Event.new_with_body({:intent_added, intent}), Broker)
+
+      EventBroker.event(
+        Node.Event.new_with_body(state.node_id, {:intent_added, intent}),
+        Broker
+      )
 
       state = Map.update!(state, :intents, &MapSet.put(&1, intent))
       {:ok, :inserted, state}
@@ -143,7 +151,7 @@ defmodule Anoma.Node.Transaction.IntentPool do
       Logger.debug("intent removed #{inspect(intent)}")
 
       EventBroker.event(
-        Event.new_with_body({:intent_removed, intent}),
+        Node.Event.new_with_body(state.node_id, {:intent_removed, intent}),
         Broker
       )
 

@@ -1,13 +1,14 @@
 defmodule Anoma.Node.Transaction.Executor do
   alias __MODULE__
-  alias Anoma.Node.Transaction.{Backends, Mempool, Ordering}
-  alias Anoma.Node.Registry
+  alias Anoma.Node
+  alias Node.Transaction.{Backends, Mempool, Ordering}
+  alias Node.Registry
 
   use TypedStruct
 
   use GenServer
 
-  require EventBroker.Event
+  require Node.Event
 
   @typep startup_options() :: {:node_id, String.t()}
 
@@ -31,6 +32,7 @@ defmodule Anoma.Node.Transaction.Executor do
     Process.set_label(__MODULE__)
 
     EventBroker.subscribe_me([
+      Node.Event.node_filter(args[:node_id]),
       Mempool.worker_module_filter(),
       complete_filter()
     ])
@@ -61,16 +63,20 @@ defmodule Anoma.Node.Transaction.Executor do
   end
 
   def handle_cast({:execute, consensus}, state) do
-    Ordering.order(state.node_id, consensus)
+    node_id = state.node_id
+
+    Ordering.order(node_id, consensus)
 
     res_list =
       for id <- consensus, reduce: [] do
         list ->
           receive do
             %EventBroker.Event{
-              body: %Backends.CompleteEvent{
-                tx_id: ^id,
-                tx_result: res
+              body: %Node.Event{
+                body: %Backends.CompleteEvent{
+                  tx_id: ^id,
+                  tx_result: res
+                }
               }
             } ->
               [{res, id} | list]
@@ -79,14 +85,14 @@ defmodule Anoma.Node.Transaction.Executor do
           end
       end
 
-    execution_event(res_list)
+    execution_event(res_list, node_id)
     {:noreply, state}
   end
 
-  @spec execution_event([{any(), binary()}]) :: :ok
-  def execution_event(res_list) do
+  @spec execution_event([{any(), binary()}], String.t()) :: :ok
+  def execution_event(res_list, node_id) do
     event =
-      EventBroker.Event.new_with_body(%__MODULE__.ExecutionEvent{
+      Node.Event.new_with_body(node_id, %__MODULE__.ExecutionEvent{
         result: res_list
       })
 
