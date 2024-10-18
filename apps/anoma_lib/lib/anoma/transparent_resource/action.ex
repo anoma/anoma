@@ -99,13 +99,35 @@ defmodule Anoma.TransparentResource.Action do
   @spec from_noun_proofs(Noun.t()) :: {:ok, MapSet.t(LogicProof.t())}
   defp from_noun_proofs(noun) when is_list(noun) do
     maybe_proofs =
-      Enum.map(Noun.list_nock_to_erlang(noun), &LogicProof.from_noun/1)
+      Enum.map(Noun.list_nock_to_erlang(noun), &proof_from_noun/1)
 
     if Enum.any?(maybe_proofs, &(:error == &1)) do
       :error
     else
-      {:ok, MapSet.new(Enum.map(maybe_proofs, fn {:ok, x} -> x end))}
+      # We handle compliance proofs by simply dropping them
+      return_set =
+        Enum.map(maybe_proofs, fn {:ok, x} -> x end)
+        |> Enum.reject(&is_binary/1)
+
+      {:ok, MapSet.new(return_set)}
     end
+  end
+
+  @spec proof_from_noun(Noun.t()) :: {:ok, LogicProof.t() | binary()} | :error
+  defp proof_from_noun(noun) when is_integer(noun) do
+    proof_from_noun(Noun.atom_integer_to_binary(noun))
+  end
+
+  defp proof_from_noun(noun) when is_binary(noun) do
+    if noun == "compliance" do
+      {:ok, "compliance"}
+    else
+      :error
+    end
+  end
+
+  defp proof_from_noun(noun) do
+    LogicProof.from_noun(noun)
   end
 
   # Check that the resource is in the set
