@@ -58,12 +58,11 @@ defmodule Anoma.TransparentResource.Action do
       # that they are the same context. I could technically make it
       # lie if I constructed it to lie, no?
       action.proofs
-      |> Enum.all?(fn %LogicProof{resource: resource} ->
-        commitment = resource |> Resource.commitment()
-        nullifier = resource |> Resource.nullifier()
-
-        MapSet.member?(action.commitments, commitment) ||
-          MapSet.member?(action.nullifiers, nullifier)
+      |> Enum.all?(fn
+        proof = %LogicProof{} ->
+          LogicProof.verify_resource_corresponds_to_tag(proof) &&
+            verify_resource_is_accounted_for?(action, proof) and
+            verify_action_resources_correspond_to_proofs?(action, proof)
       end)
     end
   end
@@ -100,12 +99,87 @@ defmodule Anoma.TransparentResource.Action do
   @spec from_noun_proofs(Noun.t()) :: {:ok, MapSet.t(LogicProof.t())}
   defp from_noun_proofs(noun) when is_list(noun) do
     maybe_proofs =
-      Enum.map(Noun.list_nock_to_erlang(noun), &LogicProof.from_noun/1)
+      Enum.map(Noun.list_nock_to_erlang(noun), &proof_from_noun/1)
 
     if Enum.any?(maybe_proofs, &(:error == &1)) do
       :error
     else
-      {:ok, MapSet.new(Enum.map(maybe_proofs, fn {:ok, x} -> x end))}
+      # We handle compliance proofs by simply dropping them
+      return_set =
+        Enum.map(maybe_proofs, fn {:ok, x} -> x end)
+        |> Enum.reject(&is_binary/1)
+
+      {:ok, MapSet.new(return_set)}
     end
+  end
+
+  @spec proof_from_noun(Noun.t()) :: {:ok, LogicProof.t() | binary()} | :error
+  defp proof_from_noun(noun) when is_integer(noun) do
+    proof_from_noun(Noun.atom_integer_to_binary(noun))
+  end
+
+  defp proof_from_noun(noun) when is_binary(noun) do
+    if noun == "compliance" do
+      {:ok, "compliance"}
+    else
+      :error
+    end
+  end
+
+  defp proof_from_noun(noun) do
+    LogicProof.from_noun(noun)
+  end
+
+  # Check that the resource is in the set
+  @spec verify_resource_is_accounted_for?(t(), LogicProof.t()) :: boolean()
+  defp verify_resource_is_accounted_for?(self = %Action{}, %LogicProof{
+         self_tag: {:committed, commitment}
+       }) do
+    MapSet.member?(self.commitments, commitment)
+  end
+
+  defp verify_resource_is_accounted_for?(self = %Action{}, %LogicProof{
+         self_tag: {:nullified, nullifier}
+       }) do
+    MapSet.member?(self.nullifiers, nullifier)
+  end
+
+  @spec verify_action_resources_correspond_to_proofs?(t(), LogicProof.t()) ::
+          boolean()
+  defp verify_action_resources_correspond_to_proofs?(
+         %Action{commitments: action_commits, nullifiers: action_nulls},
+         %LogicProof{commitments: commitments, nullifiers: nullifiers}
+       ) do
+    action_commits == commitments && action_nulls == nullifiers
+  end
+
+  ##############################################################################
+  #                                Accessing                                   #
+  ##############################################################################
+
+  @spec commitments(t()) :: MapSet.t(Resource.commitment())
+  def commitments(%Action{commitments: commitments}) do
+    commitments
+  end
+
+  @spec nullifiers(t()) :: MapSet.t(Resource.nullifier())
+  def nullifiers(%Action{nullifiers: nullifiers}) do
+    nullifiers
+  end
+
+  @spec resources(t()) :: MapSet.t(Resource.t())
+  def resources(self = %Action{}) do
+    MapSet.new(self.proofs, & &1.resource)
+  end
+
+  @spec nullified_resources(t()) :: MapSet.t(Resource.t())
+  def nullified_resources(self = %Action{}) do
+    self.proofs
+    |> Stream.filter(fn
+      %LogicProof{self_tag: {:nullified, _}} -> true
+      _ -> false
+    end)
+    |> Stream.map(& &1.resource)
+    |> Enum.into(MapSet.new())
   end
 end
