@@ -45,42 +45,50 @@ defmodule Anoma.RM.Shielded.PartialTransaction do
 
   @spec verify(t()) :: boolean()
   def verify(partial_transaction) do
-    all_logic_proofs_valid =
-      for proof_record <- partial_transaction.logic_proofs,
-          reduce: true do
-        acc ->
-          result =
-            proof_record.proof
-            |> :binary.bin_to_list()
-            |> Cairo.verify(
-              proof_record.public_inputs
-              |> :binary.bin_to_list()
-            )
+    with true <- verify_proofs(partial_transaction.logic_proofs),
+         true <-
+           verify_proofs(
+             partial_transaction.compliance_proofs,
+             "compliance result"
+           ),
+         true <- verify_compliance_hash(partial_transaction.compliance_proofs) do
+      true
+    else
+      _ -> false
+    end
+  end
 
-          acc && result
+  @spec verify_proofs(list(ProofRecord.t()), binary() | nil) :: boolean()
+  defp verify_proofs(proofs, debug_msg \\ nil) do
+    Enum.reduce_while(proofs, true, fn proof_record, _acc ->
+      public_inputs =
+        proof_record.public_inputs
+        |> :binary.bin_to_list()
+
+      res =
+        proof_record.proof
+        |> :binary.bin_to_list()
+        |> Cairo.verify(public_inputs)
+
+      if debug_msg do
+        Logger.debug("#{debug_msg}: #{inspect(res)}")
       end
 
-    all_compliance_proofs_valid =
-      for proof_record <- partial_transaction.compliance_proofs,
-          reduce: true do
-        acc ->
-          result =
-            proof_record.proof
-            |> :binary.bin_to_list()
-            |> Cairo.verify(
-              proof_record.public_inputs
-              |> :binary.bin_to_list()
-            )
-
-          compliance_hash_valid =
-            ProofRecord.get_cairo_program_hash(proof_record) ==
-              Constants.cairo_compliance_program_hash()
-
-          Logger.debug("compliance result: #{inspect(result)}")
-          acc && result && compliance_hash_valid
+      case res do
+        true -> {:cont, true}
+        false -> {:halt, false}
+        {:error, _} -> {:halt, false}
       end
+    end)
+  end
 
-    all_logic_proofs_valid && all_compliance_proofs_valid
+  @spec verify_compliance_hash(list(ProofRecord.t())) :: boolean()
+  def verify_compliance_hash(compliance_proofs) do
+    compliance_proofs
+    |> Enum.all?(
+      &(ProofRecord.get_cairo_program_hash(&1) ==
+          Constants.cairo_compliance_program_hash())
+    )
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
