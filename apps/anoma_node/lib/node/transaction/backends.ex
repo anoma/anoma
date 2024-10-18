@@ -159,19 +159,32 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
-  @spec verify_tx_root(String.t(), binary(), TTransaction.t()) :: boolean()
+  @spec verify_tx_root(String.t(), binary(), TTransaction.t()) ::
+          true | {:error, String.t()}
   defp verify_tx_root(node_id, id, trans = %TTransaction{}) do
     stored_commitments = Ordering.read(node_id, {id, :commitments})
-    commitments_exist_before_nullifier_submission(stored_commitments, trans)
+    # TODO improve the error messages
+    commitments_exist_before_nullifier_submission(stored_commitments, trans) or
+      {:error, "A resource tried to be nullified before it was commited"}
   end
 
-  @spec storage_check?(String.t(), binary(), TTransaction.t()) :: boolean()
+  @spec storage_check?(String.t(), binary(), TTransaction.t()) ::
+          true | {:error, String.t()}
   defp storage_check?(node_id, id, trans) do
     stored_commitments = Ordering.read(node_id, {id, :commitments})
     stored_nullifiers = Ordering.read(node_id, {id, :nullifiers})
 
-    not any_nullifiers_already_exist?(stored_nullifiers, trans) &&
-      not any_commitments_already_exist?(stored_commitments, trans)
+    # TODO improve error messages
+    cond do
+      any_nullifiers_already_exist?(stored_nullifiers, trans) ->
+        {:error, "A submitted nullifier already exists in storage"}
+
+      any_commitments_already_exist?(stored_commitments, trans) ->
+        {:error, "A submitted commitment already exists in storage"}
+
+      true ->
+        true
+    end
   end
 
   @spec any_nullifiers_already_exist?(
