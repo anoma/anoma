@@ -15,8 +15,22 @@ defmodule Anoma.TransparentResource.Transaction do
     field(:delta_proof, <<>>, default: <<>>)
   end
 
-  def verify(tx = %Transaction{}) do
-    with true <- verify_tx_roots(tx),
+  @type verify_opts() ::
+          {:double_insertion_closure, (t() -> boolean())}
+          | {:root_closure, (t() -> boolean())}
+
+  @spec verify(t()) :: boolean()
+  @spec verify(t(), list(verify_opts)) :: boolean()
+  def verify(tx = %Transaction{}, options \\ []) do
+    args =
+      Keyword.validate!(options,
+        double_insertion_closure: fn _ -> true end,
+        root_clsoure: fn _ -> true end
+      )
+
+    with true <- verify_tx_roots(tx, args[:root_closure]),
+         true <-
+           verify_tx_storage_checks(tx, args[:double_insertion_closure]),
          true <- verify_tx_action_distinctness(tx),
          true <- verify_tx_action_compliance(tx),
          true <- verify_tx_action_delta_sum(tx),
@@ -29,8 +43,15 @@ defmodule Anoma.TransparentResource.Transaction do
   end
 
   # every consumed resource referenced must exist in a referenced root
-  def verify_tx_roots(_) do
-    true
+  @spec verify_tx_roots(t(), (t() -> boolean())) :: boolean()
+  def verify_tx_roots(tx, root_closure) do
+    root_closure.(tx)
+  end
+
+  # Every transactions must not have already been seen by storage
+  @spec verify_tx_storage_checks(t(), (t() -> boolean())) :: boolean()
+  def verify_tx_storage_checks(tx, double_insertion_closure) do
+    double_insertion_closure.(tx)
   end
 
   # actions must contain disjoint sets of commitments and nullifiers
@@ -127,5 +148,40 @@ defmodule Anoma.TransparentResource.Transaction do
     else
       {:ok, MapSet.new(Enum.map(maybe_actions, fn {:ok, x} -> x end))}
     end
+  end
+
+  ##############################################################################
+  #                                Accessing                                   #
+  ##############################################################################
+
+  @spec commitments(t()) ::
+          MapSet.t(Anoma.TransparentResource.Resource.commitment())
+  def commitments(self = %Transaction{}) do
+    self.actions
+    |> Stream.map(&Action.commitments/1)
+    |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+  end
+
+  @spec nullifiers(t()) ::
+          MapSet.t(Anoma.TransparentResource.Resource.nullifier())
+  def nullifiers(self = %Transaction{}) do
+    self.actions
+    |> Stream.map(&Action.nullifiers/1)
+    |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+  end
+
+  @spec resources(t()) :: MapSet.t(Anoma.TransparentResource.Resource.t())
+  def resources(self = %Transaction{}) do
+    self.actions
+    |> Stream.map(&Action.resources/1)
+    |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+  end
+
+  @spec nullified_resources(t()) ::
+          MapSet.t(Anoma.TransparentResource.Resource.t())
+  def nullified_resources(self = %Transaction{}) do
+    self.actions
+    |> Stream.map(&Action.nullified_resources/1)
+    |> Enum.reduce(MapSet.new(), &MapSet.union/2)
   end
 end
