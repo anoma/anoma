@@ -4,15 +4,16 @@ defmodule Anoma.Node.Transaction.Backends do
   Support :kv, :ro, :rm, :cairo execution.
   """
 
-  alias Anoma.Node.Transaction.Executor
-  alias Anoma.Node.Transaction.Ordering
+  alias Anoma.Node
+  alias Node.Logging
+  alias Node.Transaction.{Executor, Ordering}
   alias Anoma.TransparentResource
   alias Anoma.TransparentResource.Transaction, as: TTransaction
   alias Anoma.TransparentResource.Resource, as: TResource
 
   import Nock
   require Noun
-  require EventBroker.Event
+  require Node.Event
   use EventBroker.DefFilter
   use TypedStruct
 
@@ -35,7 +36,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   deffilter CompleteFilter do
-    %EventBroker.Event{body: %CompleteEvent{}} ->
+    %EventBroker.Event{body: %Node.Event{body: %CompleteEvent{}}} ->
       true
 
     _ ->
@@ -43,10 +44,10 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   deffilter ForMempoolFilter do
-    %EventBroker.Event{body: %ResultEvent{}} ->
+    %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}} ->
       true
 
-    %EventBroker.Event{body: %Executor.ExecutionEvent{}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Executor.ExecutionEvent{}}} ->
       true
 
     _ ->
@@ -118,7 +119,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
       _e ->
         Ordering.write(node_id, {id, []})
-        complete_event(id, :error)
+        complete_event(id, :error, node_id)
     end
   end
 
@@ -145,23 +146,45 @@ defmodule Anoma.Node.Transaction.Backends do
         )
       end
     else
-      _e -> :error
+      e ->
+        unless e == :error do
+          Logging.log_event(
+            node_id,
+            :error,
+            "Transaction verification failed. Reason: #{inspect(e)}"
+          )
+        end
+
+        :error
     end
   end
 
-  @spec verify_tx_root(String.t(), binary(), TTransaction.t()) :: boolean()
+  @spec verify_tx_root(String.t(), binary(), TTransaction.t()) ::
+          true | {:error, String.t()}
   defp verify_tx_root(node_id, id, trans = %TTransaction{}) do
     stored_commitments = Ordering.read(node_id, {id, :commitments})
-    commitments_exist_before_nullifier_submission(stored_commitments, trans)
+    # TODO improve the error messages
+    commitments_exist_before_nullifier_submission(stored_commitments, trans) or
+      {:error, "A resource tried to be nullified before it was commited"}
   end
 
-  @spec storage_check?(String.t(), binary(), TTransaction.t()) :: boolean()
+  @spec storage_check?(String.t(), binary(), TTransaction.t()) ::
+          true | {:error, String.t()}
   defp storage_check?(node_id, id, trans) do
     stored_commitments = Ordering.read(node_id, {id, :commitments})
     stored_nullifiers = Ordering.read(node_id, {id, :nullifiers})
 
-    not any_nullifiers_already_exist?(stored_nullifiers, trans) &&
-      not any_commitments_already_exist?(stored_commitments, trans)
+    # TODO improve error messages
+    cond do
+      any_nullifiers_already_exist?(stored_nullifiers, trans) ->
+        {:error, "A submitted nullifier already exists in storage"}
+
+      any_commitments_already_exist?(stored_commitments, trans) ->
+        {:error, "A submitted commitment already exists in storage"}
+
+      true ->
+        true
+    end
   end
 
   @spec any_nullifiers_already_exist?(
@@ -203,14 +226,14 @@ defmodule Anoma.Node.Transaction.Backends do
     reply_msg = {:read_value, result}
     send(reply_to, reply_msg)
     Ordering.write(node_id, {id, []})
-    complete_event(id, {:ok, reply_msg})
+    complete_event(id, {:ok, reply_msg}, node_id)
   end
 
   @spec blob_store(String.t(), binary(), Noun.t()) :: :ok | :error
   def blob_store(node_id, id, result) do
     key = :crypto.hash(:sha256, :erlang.term_to_binary(result))
     Ordering.write(node_id, {id, [{key, result}]})
-    complete_event(id, {:ok, key})
+    complete_event(id, {:ok, key}, node_id)
   end
 
   @spec store_value(String.t(), binary(), Noun.t()) :: :ok | :error
@@ -226,7 +249,7 @@ defmodule Anoma.Node.Transaction.Backends do
         {id, list |> Enum.map(fn [k | v] -> {k, v} end)}
       )
 
-      complete_event(id, {:ok, list})
+      complete_event(id, {:ok, list}, node_id)
     else
       _ -> :error
     end
@@ -236,13 +259,13 @@ defmodule Anoma.Node.Transaction.Backends do
   defp error_handle(node_id, id) do
     result_event(id, :error, node_id)
     Ordering.write(node_id, {id, []})
-    complete_event(id, :error)
+    complete_event(id, :error, node_id)
   end
 
-  @spec complete_event(String.t(), :error | {:ok, any()}) :: :ok
-  defp complete_event(id, result) do
+  @spec complete_event(String.t(), :error | {:ok, any()}, String.t()) :: :ok
+  defp complete_event(id, result, node_id) do
     event =
-      EventBroker.Event.new_with_body(%__MODULE__.CompleteEvent{
+      Node.Event.new_with_body(node_id, %__MODULE__.CompleteEvent{
         tx_id: id,
         tx_result: result
       })
@@ -250,10 +273,10 @@ defmodule Anoma.Node.Transaction.Backends do
     EventBroker.event(event)
   end
 
-  @spec result_event(String.t(), any(), binary()) :: :ok
-  defp result_event(id, result, _node_id) do
+  @spec result_event(String.t(), any(), String.t()) :: :ok
+  defp result_event(id, result, node_id) do
     event =
-      EventBroker.Event.new_with_body(%__MODULE__.ResultEvent{
+      Node.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
         tx_id: id,
         vm_result: result
       })

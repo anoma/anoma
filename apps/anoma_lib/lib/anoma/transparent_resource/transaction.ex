@@ -19,8 +19,8 @@ defmodule Anoma.TransparentResource.Transaction do
           {:double_insertion_closure, (t() -> boolean())}
           | {:root_closure, (t() -> boolean())}
 
-  @spec verify(t()) :: boolean()
-  @spec verify(t(), list(verify_opts)) :: boolean()
+  @spec verify(t()) :: true | {:error, String.t()}
+  @spec verify(t(), list(verify_opts)) :: true | {:error, String.t()}
   def verify(tx = %Transaction{}, options \\ []) do
     args =
       Keyword.validate!(options,
@@ -38,24 +38,26 @@ defmodule Anoma.TransparentResource.Transaction do
          true <- verify_tx_action_logics(tx) do
       true
     else
-      _ -> false
+      reason -> reason
     end
   end
 
   # every consumed resource referenced must exist in a referenced root
-  @spec verify_tx_roots(t(), (t() -> boolean())) :: boolean()
+  @spec verify_tx_roots(t(), (t() -> boolean())) ::
+          true | {:error, String.t()}
   def verify_tx_roots(tx, root_closure) do
     root_closure.(tx)
   end
 
   # Every transactions must not have already been seen by storage
-  @spec verify_tx_storage_checks(t(), (t() -> boolean())) :: boolean()
+  @spec verify_tx_storage_checks(t(), (t() -> boolean())) ::
+          true | {:error, String.t()}
   def verify_tx_storage_checks(tx, double_insertion_closure) do
     double_insertion_closure.(tx)
   end
 
   # actions must contain disjoint sets of commitments and nullifiers
-  @spec verify_tx_action_distinctness(t()) :: boolean()
+  @spec verify_tx_action_distinctness(t()) :: true | {:error, String.t()}
   def verify_tx_action_distinctness(tx = %Transaction{}) do
     comms = tx.actions |> Enum.map(& &1.commitments)
     nulls = tx.actions |> Enum.map(& &1.nullifiers)
@@ -69,18 +71,33 @@ defmodule Anoma.TransparentResource.Transaction do
     {comm_size, uniq_comm_size} = {number_of.(comms), uniq_number_of.(comms)}
     {null_size, uniq_null_size} = {number_of.(nulls), uniq_number_of.(nulls)}
 
-    # TODO Add failure logging
-    comm_size == uniq_comm_size && null_size == uniq_null_size
+    cond do
+      not (comm_size == uniq_comm_size) ->
+        {:error, "There is a repeat commitment in the transaction"}
+
+      not (null_size == uniq_null_size) ->
+        {:error, "There is a repeat nullifier in the transaction"}
+
+      true ->
+        true
+    end
   end
 
   # actions must be compliant, i.e., contain a proof for each resource
-  @spec verify_tx_action_compliance(t()) :: boolean()
+  @spec verify_tx_action_compliance(t()) :: true | {:error, String.t()}
   def verify_tx_action_compliance(%Transaction{actions: actions}) do
-    Enum.all?(actions, &Action.verify_correspondence/1)
+    failed =
+      actions
+      |> Enum.map(&Action.verify_correspondence/1)
+      |> Enum.reject(&(&1 == true))
+
+    Enum.empty?(failed) or
+      {:error, Enum.join(Enum.map(failed, &elem(&1, 1)), "\n")}
   end
 
   # the sum of all action deltas we compute here must equal
   # the transaction delta
+  @spec verify_tx_action_delta_sum(t()) :: true | {:error, String.t()}
   def verify_tx_action_delta_sum(%Transaction{
         actions: actions,
         delta: tx_delta
@@ -90,20 +107,31 @@ defmodule Anoma.TransparentResource.Transaction do
         acc -> Delta.add(acc, Action.delta(action))
       end
 
-    action_delta_sum == tx_delta
+    action_delta_sum == tx_delta or
+      {:error,
+       "Transaction delta: #{inspect(tx_delta)}\n" <>
+         "does not match the action deltas #{inspect(action_delta_sum)}"}
   end
 
   # the tx's delta must be zero
+  @spec verify_tx_has_zero_delta(t()) :: true | {:error, String.t()}
   def verify_tx_has_zero_delta(%Transaction{delta: delta}) do
-    delta == %{}
+    delta == %{} or
+      {:error, "The Transaction delta #{inspect(delta)} is not zero"}
   end
 
   # all transaction logic proofs must pass
-  @spec verify_tx_action_logics(t()) :: boolean()
+  @spec verify_tx_action_logics(t()) :: true | {:error, String.t()}
   def verify_tx_action_logics(tx = %Transaction{}) do
-    tx.actions
-    |> Stream.flat_map(& &1.proofs)
-    |> Enum.all?(&Anoma.TransparentResource.LogicProof.verify/1)
+    proofs = tx.actions |> Enum.flat_map(& &1.proofs)
+
+    failed =
+      Enum.reject(proofs, &Anoma.TransparentResource.LogicProof.verify/1)
+
+    Enum.empty?(failed) or
+      {:error,
+       "Logic failure in the following proofs\n" <>
+         "#{inspect(failed, pretty: true)}"}
   end
 
   # We any here, as it's giving a weird error
