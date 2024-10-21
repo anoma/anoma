@@ -4,13 +4,13 @@ defmodule Anoma.Node.Transaction.Backends do
   Support :kv, :ro, :rm, :cairo execution.
   """
 
-  alias Anoma.Node.Transaction.Executor
-  alias Anoma.Node.Transaction.Ordering
+  alias Anoma.Node
+  alias Node.Transaction.{Executor, Ordering}
   alias Anoma.TransparentResource
 
   import Nock
   require Noun
-  require EventBroker.Event
+  require Node.Event
   use EventBroker.DefFilter
   use TypedStruct
 
@@ -32,8 +32,12 @@ defmodule Anoma.Node.Transaction.Backends do
     field(:tx_result, {:ok, any()} | :error)
   end
 
+  typedstruct enforce: true, module: NullifierEvent do
+    field(:nullifiers, MapSet.t(binary()))
+  end
+
   deffilter CompleteFilter do
-    %EventBroker.Event{body: %CompleteEvent{}} ->
+    %EventBroker.Event{body: %Node.Event{body: %CompleteEvent{}}} ->
       true
 
     _ ->
@@ -41,10 +45,10 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   deffilter ForMempoolFilter do
-    %EventBroker.Event{body: %ResultEvent{}} ->
+    %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}} ->
       true
 
-    %EventBroker.Event{body: %Executor.ExecutionEvent{}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Executor.ExecutionEvent{}}} ->
       true
 
     _ ->
@@ -116,7 +120,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
       _e ->
         Ordering.write(node_id, {id, []})
-        complete_event(id, :error)
+        complete_event(id, :error, node_id)
     end
   end
 
@@ -134,6 +138,15 @@ defmodule Anoma.Node.Transaction.Backends do
           {id, [{:nullifiers, nfs}, {:commitments, cms}]}
         )
       end
+
+      nfs_set =
+        for action <- tx.actions, reduce: MapSet.new() do
+          set -> MapSet.union(set, action.nullifiers)
+        end
+
+      nullifier_event(nfs_set, node_id)
+
+      :ok
     else
       _e -> :error
     end
@@ -145,14 +158,14 @@ defmodule Anoma.Node.Transaction.Backends do
     reply_msg = {:read_value, result}
     send(reply_to, reply_msg)
     Ordering.write(node_id, {id, []})
-    complete_event(id, {:ok, reply_msg})
+    complete_event(id, {:ok, reply_msg}, node_id)
   end
 
   @spec blob_store(String.t(), binary(), Noun.t()) :: :ok | :error
   def blob_store(node_id, id, result) do
     key = :crypto.hash(:sha256, :erlang.term_to_binary(result))
     Ordering.write(node_id, {id, [{key, result}]})
-    complete_event(id, {:ok, key})
+    complete_event(id, {:ok, key}, node_id)
   end
 
   @spec store_value(String.t(), binary(), Noun.t()) :: :ok | :error
@@ -168,7 +181,7 @@ defmodule Anoma.Node.Transaction.Backends do
         {id, list |> Enum.map(fn [k | v] -> {k, v} end)}
       )
 
-      complete_event(id, {:ok, list})
+      complete_event(id, {:ok, list}, node_id)
     else
       _ -> :error
     end
@@ -178,13 +191,13 @@ defmodule Anoma.Node.Transaction.Backends do
   defp error_handle(node_id, id) do
     result_event(id, :error, node_id)
     Ordering.write(node_id, {id, []})
-    complete_event(id, :error)
+    complete_event(id, :error, node_id)
   end
 
-  @spec complete_event(String.t(), :error | {:ok, any()}) :: :ok
-  defp complete_event(id, result) do
+  @spec complete_event(String.t(), :error | {:ok, any()}, String.t()) :: :ok
+  defp complete_event(id, result, node_id) do
     event =
-      EventBroker.Event.new_with_body(%__MODULE__.CompleteEvent{
+      Node.Event.new_with_body(node_id, %__MODULE__.CompleteEvent{
         tx_id: id,
         tx_result: result
       })
@@ -192,12 +205,22 @@ defmodule Anoma.Node.Transaction.Backends do
     EventBroker.event(event)
   end
 
-  @spec result_event(String.t(), any(), binary()) :: :ok
-  defp result_event(id, result, _node_id) do
+  @spec result_event(String.t(), any(), String.t()) :: :ok
+  defp result_event(id, result, node_id) do
     event =
-      EventBroker.Event.new_with_body(%__MODULE__.ResultEvent{
+      Node.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
         tx_id: id,
         vm_result: result
+      })
+
+    EventBroker.event(event)
+  end
+
+  @spec nullifier_event(MapSet.t(binary()), String.t()) :: :ok
+  defp nullifier_event(set, node_id) do
+    event =
+      Node.Event.new_with_body(node_id, %__MODULE__.NullifierEvent{
+        nullifiers: set
       })
 
     EventBroker.event(event)

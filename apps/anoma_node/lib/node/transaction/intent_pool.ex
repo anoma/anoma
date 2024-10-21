@@ -8,11 +8,15 @@ defmodule Anoma.Node.Transaction.IntentPool do
   require Logger
 
   alias __MODULE__
-  alias Anoma.Node.Registry
-  alias Anoma.RM.Transaction
+  alias Anoma.Node
+  alias Node.Registry
+  alias Node.Transaction.Backends
+  alias Anoma.RM.Intent
   alias EventBroker.Broker
-  alias EventBroker.Event
 
+  require Node.Event
+
+  use EventBroker.DefFilter
   use TypedStruct
   use GenServer
 
@@ -26,8 +30,10 @@ defmodule Anoma.Node.Transaction.IntentPool do
 
     ### Fields
     - `:intents` - The intents in the pool.
+    - `:node_id` - The ID of the Node.
     """
-    field(:intents, MapSet.t(Transaction.t()), default: MapSet.new())
+    field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
+    field(:node_id, String.t())
   end
 
   ############################################################
@@ -43,7 +49,14 @@ defmodule Anoma.Node.Transaction.IntentPool do
   @impl true
   def init(args) do
     Logger.debug("starting intent pool with #{inspect(args)}")
-    {:ok, %IntentPool{}}
+    node_id = args[:node_id]
+
+    EventBroker.subscribe_me([
+      Node.Event.node_filter(node_id),
+      nullifier_filter()
+    ])
+
+    {:ok, %IntentPool{node_id: args[:node_id]}}
   end
 
   ############################################################
@@ -100,6 +113,16 @@ defmodule Anoma.Node.Transaction.IntentPool do
     {:reply, intents, state}
   end
 
+  @impl true
+  def handle_info(
+        %EventBroker.Event{
+          body: %Node.Event{body: %Backends.NullifierEvent{nullifiers: set}}
+        },
+        state
+      ) do
+    {:noreply, handle_new_nullifiers(state, set)}
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -116,7 +139,11 @@ defmodule Anoma.Node.Transaction.IntentPool do
       {:ok, :already_present, state}
     else
       Logger.debug("new intent added #{inspect(intent)}")
-      EventBroker.event(Event.new_with_body({:intent_added, intent}), Broker)
+
+      EventBroker.event(
+        Node.Event.new_with_body(state.node_id, {:intent_added, intent}),
+        Broker
+      )
 
       state = Map.update!(state, :intents, &MapSet.put(&1, intent))
       {:ok, :inserted, state}
@@ -143,7 +170,7 @@ defmodule Anoma.Node.Transaction.IntentPool do
       Logger.debug("intent removed #{inspect(intent)}")
 
       EventBroker.event(
-        Event.new_with_body({:intent_removed, intent}),
+        Node.Event.new_with_body(state.node_id, {:intent_removed, intent}),
         Broker
       )
 
@@ -154,5 +181,40 @@ defmodule Anoma.Node.Transaction.IntentPool do
 
       {:ok, :not_present, state}
     end
+  end
+
+  @spec handle_new_nullifiers(t(), MapSet.t(binary())) :: t()
+  defp handle_new_nullifiers(state, nlfs_set) do
+    set_of_txs = state.intents
+
+    new_intents =
+      Enum.reject(set_of_txs, fn x ->
+        Stream.map(x.actions, fn x -> x.proofs end)
+        |> Stream.map(fn x ->
+          x.resource |> Anoma.TransparentResource.Resource.nullifier()
+        end)
+        |> Enum.any?(&MapSet.member?(nlfs_set, &1))
+      end)
+      |> Enum.into(&MapSet.new/1)
+
+    %__MODULE__{state | intents: new_intents}
+  end
+
+  ############################################################
+  #                         Helpers                          #
+  ############################################################
+
+  deffilter NullifierFilter do
+    %EventBroker.Event{
+      body: %Anoma.Node.Event{body: %Backends.NullifierEvent{}}
+    } ->
+      true
+
+    _ ->
+      false
+  end
+
+  defp nullifier_filter() do
+    %__MODULE__.NullifierFilter{}
   end
 end
