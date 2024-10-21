@@ -25,7 +25,7 @@ defmodule Anoma.Node.Transport.GRPC.Server do
     {:ok, local_node_id} = Registry.local_node_id()
 
     intents =
-      Anoma.Node.Transaction.IntentPool.intents(local_node_id)
+      Anoma.Node.Intents.IntentPool.intents(local_node_id)
       |> Enum.map(&inspect(&1.value))
 
     %ListIntents.Response{intents: intents}
@@ -40,7 +40,7 @@ defmodule Anoma.Node.Transport.GRPC.Server do
 
     new_intent = %DumbIntent{value: request.intent.value}
     {:ok, local_node_id} = Registry.local_node_id()
-    Anoma.Node.Transaction.IntentPool.new_intent(local_node_id, new_intent)
+    Anoma.Node.Intents.IntentPool.new_intent(local_node_id, new_intent)
 
     %AddIntent.Response{result: "intent added"}
   end

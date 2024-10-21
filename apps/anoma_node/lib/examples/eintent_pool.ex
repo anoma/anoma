@@ -6,7 +6,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Anoma.Node.Transaction.IntentPool
+  alias Anoma.Node.Intents.IntentPool
   alias Anoma.RM.DumbIntent
   alias Anoma.Node.Examples.ENode
 

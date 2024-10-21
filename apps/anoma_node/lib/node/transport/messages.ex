@@ -1,7 +1,6 @@
 defmodule Anoma.Node.Transport.Messages do
   alias Anoma.Node.Indexer
   alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Intentpool
   alias Anoma.Node.Transaction.Mempool
 
   alias Anoma.Protobuf.Announcement
