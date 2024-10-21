@@ -118,7 +118,7 @@ defmodule Anoma.TransparentResource.LogicProof do
     # format in from_noun
     self_tag =
       case proof.self_tag do
-        {:comitted, comm} -> comm
+        {:committed, comm} -> comm
         {:nullified, null} -> null
       end
 
