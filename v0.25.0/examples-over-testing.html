@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.25.0">
+
+
+    <title>Examples over Testing — Anoma v0.25.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.25.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>Examples over Testing</span>
+  </h1>
+
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a></li></ol><h2 id="intro" class="section-heading">
+  <a href="#intro" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Intro</span>
+</h2>
+<p>In complex software projects, there are a variety of automated tools employed to make sure the system works as intended. The two most popular examples are <code class="inline">tests</code> and <code class="inline">type systems</code>. As of the time of this writing, the <code class="inline">Anoma</code> codebase has embraced both of these; having a <code class="inline">73%</code> test coverage and the majority of functions with type signatures!</p><p>This article will focus on the downside of <code class="inline">testing</code> in elixir, and give a compelling argument for <code class="inline">examples</code> over testing!</p><h2 id="what-are-examples" class="section-heading">
+  <a href="#what-are-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">What are Examples</span>
+</h2>
+<p>The word <code class="inline">testing</code> in the context of software development is widely understood, however the term <code class="inline">examples</code> does not have the same level of recognition.</p><p>In order to clarify the meaning within <code class="inline">Anoma</code>, we will take <a href="https://gtoolkit.com/">Glamorous Toolkit</a>'s definition of example, as they have created a well-thought-out system that successfully replaces most <code class="inline">tests</code> with <code class="inline">examples</code></p><!-- livebook:{"break_markdown":true} --><p><a href="https://book.gtoolkit.com/examples-6k9vwuau8psg5ghsgb64zriih">According to Glamorous Toolkit examples are</a>:</p><p>&quot;a way of demonstrating how to use the system and check that it is operating correctly.</p><p>They are similar to SUnit tests in that they make assertions to confirm that the system is operating correctly, but unlike SUnit tests, which typically don't return anything, they answer an object which is useful in its own right.&quot;</p><!-- livebook:{"break_markdown":true} --><p>For the purposes of discussion, we can consider <a href="https://en.wikipedia.org/wiki/SUnit">SUnit</a> and <a href="https://hexdocs.pm/ex_unit/ExUnit.html">ExUnit</a> to be the same. Meaning that there are large overlaps in the practical function between <code class="inline">examples</code> and <code class="inline">tests</code>.</p><h2 id="downsides-of-testing-in-elixir" class="section-heading">
+  <a href="#downsides-of-testing-in-elixir" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Downsides of testing in Elixir</span>
+</h2>
+<p>To get a feeling for what <code class="inline">examples</code> can offer the codebase, we should first discuss the downsides with how <code class="inline">Anoma</code> interacts with tests.</p><ol><li>Tests are not loaded into <a href="https://hexdocs.pm/iex/IEx.html"><code class="inline">IEx</code></a> at startup.</li><li>To run tests by hand, we need to copy paste:<ol><li>Imports.</li><li><code class="inline">setup_all</code> logic.</li><li>the test up until the point we care about.</li></ol></li><li>Tests can't be abstracted in the test module without breaking copy and pasting.</li><li>Tests can't have dialyzer run over them.</li><li><a href="https://hexdocs.pm/iex/IEx.html"><code class="inline">IEx</code></a> does not re-run tests on demand, one has to recompile the test after already running the tests</li><li><a href="https://en.wikipedia.org/wiki/Language_Server_Protocol">LSP</a> seems to not be able to calculate references of values to tests due to them not being compiled.</li></ol><h2 id="how-would-examples-work-in-elixir" class="section-heading">
+  <a href="#how-would-examples-work-in-elixir" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">How would Examples work in Elixir?</span>
+</h2>
+<p>Before we go and talk about addressing the issues with testing, let us first envision how we would go about making examples. Below are rules that we can apply to creating our very first examples.</p><!-- livebook:{"break_markdown":true} --><ol><li>They belong in a module <code class="inline">example/e&lt;module-name&gt;</code>. Where <code class="inline">module-name</code> is the module one is interested in testing.</li><li>Any piece of logic that is relied upon by other parts, is an example.</li><li>If any code spawns actors, they should either register themselves or be memoized.</li><li>We should run asserts on data whenever possible.</li></ol><!-- livebook:{"break_markdown":true} --><p>For demonstration purposes, let us take the most common kinds of tests we have and imagine what they would look like as examples</p><ol><li>The first kind of test is testing non actors.</li><li>The second kind of test is testing stateful actors.</li></ol><p>Tests in the first category tend to care about the form of data and making assertions about said data, while the second category is more about testing the interactions between multiple actors and the final state they produce.</p><p>The translation of tests in classification <code class="inline">2.</code> into examples can be split into two phases:</p><ol><li>The first phase will cover translating the <code class="inline">setup</code> state as global examples. This is not perfect but maintains the same semantics as the test.</li><li>The second phase will make the global setup logic specific per example, making stateful examples return the final network state.</li></ol><!-- livebook:{"branch_parent_index":4} --><h2 id="examplifying-non-actors" class="section-heading">
+  <a href="#examplifying-non-actors" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examplifying non Actors</span>
+</h2>
+<p>A good example we can use, is a test in our <code class="inline">resource</code> test file.</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">AnomaTest.Resource</span><span class="w"> </span><span class="k" data-group-id="6918929382-1">do</span><span class="w">
+  </span><span class="n">test</span><span class="w"> </span><span class="s">&quot;commitments and nullifiers&quot;</span><span class="w"> </span><span class="k" data-group-id="6918929382-2">do</span><span class="w">
+    </span><span class="n">keypair_a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Sign</span><span class="o">.</span><span class="n">new_keypair</span><span class="p" data-group-id="6918929382-3">(</span><span class="p" data-group-id="6918929382-3">)</span><span class="w">
+    </span><span class="n">keypair_b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Sign</span><span class="o">.</span><span class="n">new_keypair</span><span class="p" data-group-id="6918929382-4">(</span><span class="p" data-group-id="6918929382-4">)</span><span class="w">
+
+    </span><span class="n">a_r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_with_npk</span><span class="p" data-group-id="6918929382-5">(</span><span class="n">keypair_a</span><span class="o">.</span><span class="n">public</span><span class="p" data-group-id="6918929382-5">)</span><span class="w">
+    </span><span class="n">a_r2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_with_npk</span><span class="p" data-group-id="6918929382-6">(</span><span class="n">keypair_a</span><span class="o">.</span><span class="n">public</span><span class="p" data-group-id="6918929382-6">)</span><span class="w">
+    </span><span class="n">b_r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_with_npk</span><span class="p" data-group-id="6918929382-7">(</span><span class="n">keypair_b</span><span class="o">.</span><span class="n">public</span><span class="p" data-group-id="6918929382-7">)</span><span class="w">
+
+    </span><span class="c1"># just in case</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">a_r1</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">a_r2</span><span class="w">
+
+    </span><span class="n">c_a_r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">commitment</span><span class="p" data-group-id="6918929382-8">(</span><span class="n">a_r1</span><span class="p" data-group-id="6918929382-8">)</span><span class="w">
+    </span><span class="n">c_a_r2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">commitment</span><span class="p" data-group-id="6918929382-9">(</span><span class="n">a_r2</span><span class="p" data-group-id="6918929382-9">)</span><span class="w">
+    </span><span class="n">c_b_r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">commitment</span><span class="p" data-group-id="6918929382-10">(</span><span class="n">b_r0</span><span class="p" data-group-id="6918929382-10">)</span><span class="w">
+
+    </span><span class="n">n_a_r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullifier</span><span class="p" data-group-id="6918929382-11">(</span><span class="n">a_r1</span><span class="p">,</span><span class="w"> </span><span class="n">keypair_a</span><span class="o">.</span><span class="n">secret</span><span class="p" data-group-id="6918929382-11">)</span><span class="w">
+    </span><span class="n">n_a_r2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullifier</span><span class="p" data-group-id="6918929382-12">(</span><span class="n">a_r2</span><span class="p">,</span><span class="w"> </span><span class="n">keypair_a</span><span class="o">.</span><span class="n">secret</span><span class="p" data-group-id="6918929382-12">)</span><span class="w">
+    </span><span class="n">n_b_r0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullifier</span><span class="p" data-group-id="6918929382-13">(</span><span class="n">b_r0</span><span class="p">,</span><span class="w"> </span><span class="n">keypair_b</span><span class="o">.</span><span class="n">secret</span><span class="p" data-group-id="6918929382-13">)</span><span class="w">
+
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">c_a_r1</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="6918929382-14">(</span><span class="n">a_r1</span><span class="p" data-group-id="6918929382-14">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">c_a_r1</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="6918929382-15">(</span><span class="n">a_r2</span><span class="p" data-group-id="6918929382-15">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">c_a_r1</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="6918929382-16">(</span><span class="n">b_r0</span><span class="p" data-group-id="6918929382-16">)</span><span class="w">
+
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">c_a_r2</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="6918929382-17">(</span><span class="n">a_r1</span><span class="p" data-group-id="6918929382-17">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">c_a_r2</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="6918929382-18">(</span><span class="n">a_r2</span><span class="p" data-group-id="6918929382-18">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">c_a_r2</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="6918929382-19">(</span><span class="n">b_r0</span><span class="p" data-group-id="6918929382-19">)</span><span class="w">
+
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">c_b_r0</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="6918929382-20">(</span><span class="n">a_r1</span><span class="p" data-group-id="6918929382-20">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">c_b_r0</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="6918929382-21">(</span><span class="n">a_r2</span><span class="p" data-group-id="6918929382-21">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">c_b_r0</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="6918929382-22">(</span><span class="n">b_r0</span><span class="p" data-group-id="6918929382-22">)</span><span class="w">
+
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">n_a_r1</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="6918929382-23">(</span><span class="n">a_r1</span><span class="p" data-group-id="6918929382-23">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">n_a_r1</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="6918929382-24">(</span><span class="n">a_r2</span><span class="p" data-group-id="6918929382-24">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">n_a_r1</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="6918929382-25">(</span><span class="n">b_r0</span><span class="p" data-group-id="6918929382-25">)</span><span class="w">
+
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">n_a_r2</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="6918929382-26">(</span><span class="n">a_r1</span><span class="p" data-group-id="6918929382-26">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">n_a_r2</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="6918929382-27">(</span><span class="n">a_r2</span><span class="p" data-group-id="6918929382-27">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">n_a_r2</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="6918929382-28">(</span><span class="n">b_r0</span><span class="p" data-group-id="6918929382-28">)</span><span class="w">
+
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">n_b_r0</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="6918929382-29">(</span><span class="n">a_r1</span><span class="p" data-group-id="6918929382-29">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">n_b_r0</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="6918929382-30">(</span><span class="n">a_r2</span><span class="p" data-group-id="6918929382-30">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">n_b_r0</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="6918929382-31">(</span><span class="n">b_r0</span><span class="p" data-group-id="6918929382-31">)</span><span class="w">
+  </span><span class="k" data-group-id="6918929382-2">end</span><span class="w">
+
+  </span><span class="n">test</span><span class="w"> </span><span class="s">&quot;nullify with wrong key&quot;</span><span class="w"> </span><span class="k" data-group-id="6918929382-32">do</span><span class="w">
+    </span><span class="n">keypair_a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Sign</span><span class="o">.</span><span class="n">new_keypair</span><span class="p" data-group-id="6918929382-33">(</span><span class="p" data-group-id="6918929382-33">)</span><span class="w">
+    </span><span class="n">keypair_b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Sign</span><span class="o">.</span><span class="n">new_keypair</span><span class="p" data-group-id="6918929382-34">(</span><span class="p" data-group-id="6918929382-34">)</span><span class="w">
+
+    </span><span class="n">a_resource</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_with_npk</span><span class="p" data-group-id="6918929382-35">(</span><span class="n">keypair_a</span><span class="o">.</span><span class="n">public</span><span class="p" data-group-id="6918929382-35">)</span><span class="w">
+    </span><span class="n">wrong_nullifier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullifier</span><span class="p" data-group-id="6918929382-36">(</span><span class="n">a_resource</span><span class="p">,</span><span class="w"> </span><span class="n">keypair_b</span><span class="o">.</span><span class="n">secret</span><span class="p" data-group-id="6918929382-36">)</span><span class="w">
+
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">wrong_nullifier</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="6918929382-37">(</span><span class="n">a_resource</span><span class="p" data-group-id="6918929382-37">)</span><span class="w">
+  </span><span class="k" data-group-id="6918929382-32">end</span><span class="w">
+</span><span class="k" data-group-id="6918929382-1">end</span></code></pre><p>The crux of this module is creating some resources, and testing that they behave properly!</p><p>However since tests are not composable, we have to waste time recreating more resources in another test!</p><p>If we were to reimagine this test as an example it would look something like this.</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Example.EResource</span><span class="w"> </span><span class="k" data-group-id="5312667321-1">do</span><span class="w">
+  </span><span class="c1"># Memoize it as we want it to always be the same!</span><span class="w">
+  </span><span class="n">defmemo</span><span class="p" data-group-id="5312667321-2">(</span><span class="n">keypair_a</span><span class="p" data-group-id="5312667321-3">(</span><span class="p" data-group-id="5312667321-3">)</span><span class="p">,</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="nc">Sign</span><span class="o">.</span><span class="n">new_keypair</span><span class="p" data-group-id="5312667321-4">(</span><span class="p" data-group-id="5312667321-4">)</span><span class="p" data-group-id="5312667321-2">)</span><span class="w">
+  </span><span class="n">defmemo</span><span class="p" data-group-id="5312667321-5">(</span><span class="n">keypair_b</span><span class="p" data-group-id="5312667321-6">(</span><span class="p" data-group-id="5312667321-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="nc">Sign</span><span class="o">.</span><span class="n">new_keypair</span><span class="p" data-group-id="5312667321-7">(</span><span class="p" data-group-id="5312667321-7">)</span><span class="p" data-group-id="5312667321-5">)</span><span class="w">
+
+  </span><span class="c1"># new_with_npk gives new resources, so memo again</span><span class="w">
+  </span><span class="n">defmemo</span><span class="p" data-group-id="5312667321-8">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-9">(</span><span class="p" data-group-id="5312667321-9">)</span><span class="p">,</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="n">new_with_npk</span><span class="p" data-group-id="5312667321-10">(</span><span class="n">keypair_a</span><span class="p" data-group-id="5312667321-11">(</span><span class="p" data-group-id="5312667321-11">)</span><span class="o">.</span><span class="n">public</span><span class="p" data-group-id="5312667321-10">)</span><span class="p" data-group-id="5312667321-8">)</span><span class="w">
+  </span><span class="n">defmemo</span><span class="p" data-group-id="5312667321-12">(</span><span class="n">b_resource</span><span class="p" data-group-id="5312667321-13">(</span><span class="p" data-group-id="5312667321-13">)</span><span class="p">,</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="n">new_with_npk</span><span class="p" data-group-id="5312667321-14">(</span><span class="n">keypair_b</span><span class="p" data-group-id="5312667321-15">(</span><span class="p" data-group-id="5312667321-15">)</span><span class="o">.</span><span class="n">public</span><span class="p" data-group-id="5312667321-14">)</span><span class="p" data-group-id="5312667321-12">)</span><span class="w">
+  </span><span class="n">defmemo</span><span class="p" data-group-id="5312667321-16">(</span><span class="n">a2_resource</span><span class="p" data-group-id="5312667321-17">(</span><span class="p" data-group-id="5312667321-17">)</span><span class="p">,</span><span class="w"> </span><span class="ss">do</span><span class="p">:</span><span class="w"> </span><span class="n">new_with_npk</span><span class="p" data-group-id="5312667321-18">(</span><span class="n">keypair_a</span><span class="p" data-group-id="5312667321-19">(</span><span class="p" data-group-id="5312667321-19">)</span><span class="o">.</span><span class="n">public</span><span class="p" data-group-id="5312667321-18">)</span><span class="p" data-group-id="5312667321-16">)</span><span class="w">
+
+  </span><span class="c1"># Now we get interesting</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">commit_a</span><span class="p" data-group-id="5312667321-20">(</span><span class="p" data-group-id="5312667321-20">)</span><span class="w"> </span><span class="k" data-group-id="5312667321-21">do</span><span class="w">
+    </span><span class="n">commitment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">commitment</span><span class="p" data-group-id="5312667321-22">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-23">(</span><span class="p" data-group-id="5312667321-23">)</span><span class="p" data-group-id="5312667321-22">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">commitment</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="5312667321-24">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-25">(</span><span class="p" data-group-id="5312667321-25">)</span><span class="p" data-group-id="5312667321-24">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">commitment</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="5312667321-26">(</span><span class="n">b_resource</span><span class="p" data-group-id="5312667321-27">(</span><span class="p" data-group-id="5312667321-27">)</span><span class="p" data-group-id="5312667321-26">)</span><span class="w">
+    </span><span class="n">commitment</span><span class="w">
+  </span><span class="k" data-group-id="5312667321-21">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">commit_a2</span><span class="p" data-group-id="5312667321-28">(</span><span class="p" data-group-id="5312667321-28">)</span><span class="w"> </span><span class="k" data-group-id="5312667321-29">do</span><span class="w">
+    </span><span class="n">commitment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">commitment</span><span class="p" data-group-id="5312667321-30">(</span><span class="n">a2_resource</span><span class="p" data-group-id="5312667321-31">(</span><span class="p" data-group-id="5312667321-31">)</span><span class="p" data-group-id="5312667321-30">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">commitment</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="5312667321-32">(</span><span class="n">a2_resource</span><span class="p" data-group-id="5312667321-33">(</span><span class="p" data-group-id="5312667321-33">)</span><span class="p" data-group-id="5312667321-32">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">commitment</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="5312667321-34">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-35">(</span><span class="p" data-group-id="5312667321-35">)</span><span class="p" data-group-id="5312667321-34">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">commitment</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">commit_a</span><span class="p" data-group-id="5312667321-36">(</span><span class="p" data-group-id="5312667321-36">)</span><span class="w">
+    </span><span class="n">commitment</span><span class="w">
+  </span><span class="k" data-group-id="5312667321-29">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">commit_b</span><span class="p" data-group-id="5312667321-37">(</span><span class="p" data-group-id="5312667321-37">)</span><span class="w"> </span><span class="k" data-group-id="5312667321-38">do</span><span class="w">
+    </span><span class="n">commitment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">commitment</span><span class="p" data-group-id="5312667321-39">(</span><span class="n">a2_resource</span><span class="p" data-group-id="5312667321-40">(</span><span class="p" data-group-id="5312667321-40">)</span><span class="p" data-group-id="5312667321-39">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">commitment</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="5312667321-41">(</span><span class="n">b_resource</span><span class="p" data-group-id="5312667321-42">(</span><span class="p" data-group-id="5312667321-42">)</span><span class="p" data-group-id="5312667321-41">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">commitment</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">commits_to</span><span class="p" data-group-id="5312667321-43">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-44">(</span><span class="p" data-group-id="5312667321-44">)</span><span class="p" data-group-id="5312667321-43">)</span><span class="w">
+    </span><span class="n">commitment</span><span class="w">
+  </span><span class="k" data-group-id="5312667321-38">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">nullifier_a</span><span class="p" data-group-id="5312667321-45">(</span><span class="p" data-group-id="5312667321-45">)</span><span class="w"> </span><span class="k" data-group-id="5312667321-46">do</span><span class="w">
+    </span><span class="n">nullifier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-47">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-48">(</span><span class="p" data-group-id="5312667321-48">)</span><span class="p">,</span><span class="w"> </span><span class="n">keypair_a</span><span class="p" data-group-id="5312667321-49">(</span><span class="p" data-group-id="5312667321-49">)</span><span class="o">.</span><span class="n">private</span><span class="p" data-group-id="5312667321-47">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">nullifier</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-50">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-51">(</span><span class="p" data-group-id="5312667321-51">)</span><span class="p" data-group-id="5312667321-50">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">nullifier</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-52">(</span><span class="n">b_resource</span><span class="p" data-group-id="5312667321-53">(</span><span class="p" data-group-id="5312667321-53">)</span><span class="p" data-group-id="5312667321-52">)</span><span class="w">
+    </span><span class="n">nullifier</span><span class="w">
+  </span><span class="k" data-group-id="5312667321-46">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">nullifier_a2</span><span class="p" data-group-id="5312667321-54">(</span><span class="p" data-group-id="5312667321-54">)</span><span class="w"> </span><span class="k" data-group-id="5312667321-55">do</span><span class="w">
+    </span><span class="n">nullifier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-56">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-57">(</span><span class="p" data-group-id="5312667321-57">)</span><span class="p">,</span><span class="w"> </span><span class="n">keypair_a2</span><span class="p" data-group-id="5312667321-58">(</span><span class="p" data-group-id="5312667321-58">)</span><span class="o">.</span><span class="n">private</span><span class="p" data-group-id="5312667321-56">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">nullifier</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-59">(</span><span class="n">a2_resource</span><span class="p" data-group-id="5312667321-60">(</span><span class="p" data-group-id="5312667321-60">)</span><span class="p" data-group-id="5312667321-59">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">nullifier</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-61">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-62">(</span><span class="p" data-group-id="5312667321-62">)</span><span class="p" data-group-id="5312667321-61">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">nullifier</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">nullifier_a</span><span class="p" data-group-id="5312667321-63">(</span><span class="p" data-group-id="5312667321-63">)</span><span class="w">
+    </span><span class="n">nullifier</span><span class="w">
+  </span><span class="k" data-group-id="5312667321-55">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">nullifier_b</span><span class="p" data-group-id="5312667321-64">(</span><span class="p" data-group-id="5312667321-64">)</span><span class="w"> </span><span class="k" data-group-id="5312667321-65">do</span><span class="w">
+    </span><span class="n">nullifier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-66">(</span><span class="n">b_resource</span><span class="p" data-group-id="5312667321-67">(</span><span class="p" data-group-id="5312667321-67">)</span><span class="p">,</span><span class="w"> </span><span class="n">keypair_b</span><span class="p" data-group-id="5312667321-68">(</span><span class="p" data-group-id="5312667321-68">)</span><span class="o">.</span><span class="n">private</span><span class="p" data-group-id="5312667321-66">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">nullifier</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-69">(</span><span class="n">b_resource</span><span class="p" data-group-id="5312667321-70">(</span><span class="p" data-group-id="5312667321-70">)</span><span class="p" data-group-id="5312667321-69">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">nullifier</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-71">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-72">(</span><span class="p" data-group-id="5312667321-72">)</span><span class="p" data-group-id="5312667321-71">)</span><span class="w">
+    </span><span class="n">nullifier</span><span class="w">
+  </span><span class="k" data-group-id="5312667321-65">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">invalid_nullifier</span><span class="p" data-group-id="5312667321-73">(</span><span class="p" data-group-id="5312667321-73">)</span><span class="w"> </span><span class="k" data-group-id="5312667321-74">do</span><span class="w">
+    </span><span class="n">nullifier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-75">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-76">(</span><span class="p" data-group-id="5312667321-76">)</span><span class="p">,</span><span class="w"> </span><span class="n">keypair_b</span><span class="p" data-group-id="5312667321-77">(</span><span class="p" data-group-id="5312667321-77">)</span><span class="o">.</span><span class="n">private</span><span class="p" data-group-id="5312667321-75">)</span><span class="w">
+    </span><span class="n">refute</span><span class="w"> </span><span class="n">nullifier</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">nullifies</span><span class="p" data-group-id="5312667321-78">(</span><span class="n">a_resource</span><span class="p" data-group-id="5312667321-79">(</span><span class="p" data-group-id="5312667321-79">)</span><span class="p" data-group-id="5312667321-78">)</span><span class="w">
+    </span><span class="n">nullifier</span><span class="w">
+  </span><span class="k" data-group-id="5312667321-74">end</span><span class="w">
+</span><span class="k" data-group-id="5312667321-1">end</span></code></pre><p>Although this code is <code class="inline">5</code> more lines of code, it has many strong properties:</p><ol><li>Each component is now a top level name. Meaning we can now play with <code class="inline">nullifier_a</code> in <a href="https://hexdocs.pm/iex/IEx.html"><code class="inline">IEx</code></a>. No copy and pasting needed!</li><li>We can add type signatures for each definition, to ensure we have type checking and writing down our own intents!</li><li>We didn't need to unnecessarily generate extra keys, and resources. We can reuse them!</li><li>We are writing properties about the data we wish to have.</li><li>Any other example files can rely on this example file! (hint maybe our next example will use this one)</li></ol><p>Point <code class="inline">4.</code> should be expanded upon. In a test, one is testing many things at once, but what makes examples strong is that we are denoting the dynamic properties we wish data to respect! Because we are doing this on a data basis, it becomes easy to later come back to these and add new facts to the examples.</p><p>Tests discourage this, as they have a singular purpose they exist for, they do not encourage good behavior!</p><p>Further, if we were to not do a 1 to 1 extraction, we could factor some of the data here to <code class="inline">Signature</code> examples as well! We will see how this principle works out in practice in the next section.</p><!-- livebook:{"branch_parent_index":4} --><h2 id="examplifying-stateful-code" class="section-heading">
+  <a href="#examplifying-stateful-code" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examplifying stateful code</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">AnomaTest.Node.Executor.Worker</span><span class="w"> </span><span class="k" data-group-id="3809048790-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">ExUnit.Case</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="w">
+
+  </span><span class="n">setup_all</span><span class="w"> </span><span class="k" data-group-id="3809048790-2">do</span><span class="w">
+    </span><span class="n">storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="3809048790-3">%</span><span class="nc" data-group-id="3809048790-3">Storage</span><span class="p" data-group-id="3809048790-3">{</span><span class="w">
+      </span><span class="ss">qualified</span><span class="p">:</span><span class="w"> </span><span class="nc">AnomaTest.Worker.Qualified</span><span class="p">,</span><span class="w">
+      </span><span class="ss">order</span><span class="p">:</span><span class="w"> </span><span class="nc">AnomaTest.Worker.Order</span><span class="w">
+    </span><span class="p" data-group-id="3809048790-3">}</span><span class="w">
+
+    </span><span class="p" data-group-id="3809048790-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p" data-group-id="3809048790-4">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Anoma.Node.Router</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="3809048790-5">(</span><span class="p" data-group-id="3809048790-5">)</span><span class="w">
+
+    </span><span class="p" data-group-id="3809048790-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="3809048790-6">}</span><span class="w"> </span><span class="o">=</span><span class="w">
+      </span><span class="nc">Anoma.Node.Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="3809048790-7">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Storage</span><span class="p">,</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="3809048790-7">)</span><span class="w">
+
+    </span><span class="p" data-group-id="3809048790-8">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">ordering</span><span class="p" data-group-id="3809048790-8">}</span><span class="w"> </span><span class="o">=</span><span class="w">
+      </span><span class="nc">Anoma.Node.Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="3809048790-9">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Ordering</span><span class="p">,</span><span class="w"> </span><span class="ss">table</span><span class="p">:</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="3809048790-9">)</span><span class="w">
+
+    </span><span class="n">snapshot_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="3809048790-10">[</span><span class="ss">:my_special_nock_snaphsot</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="3809048790-10">]</span><span class="w">
+
+    </span><span class="n">env</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="3809048790-11">%</span><span class="nc" data-group-id="3809048790-11">Nock</span><span class="p" data-group-id="3809048790-11">{</span><span class="ss">snapshot_path</span><span class="p">:</span><span class="w"> </span><span class="n">snapshot_path</span><span class="p">,</span><span class="w"> </span><span class="ss">ordering</span><span class="p">:</span><span class="w"> </span><span class="n">ordering</span><span class="p" data-group-id="3809048790-11">}</span><span class="w">
+
+    </span><span class="p" data-group-id="3809048790-12">[</span><span class="ss">env</span><span class="p">:</span><span class="w"> </span><span class="n">env</span><span class="p" data-group-id="3809048790-12">]</span><span class="w">
+  </span><span class="k" data-group-id="3809048790-2">end</span><span class="w">
+
+  </span><span class="n">test</span><span class="w"> </span><span class="s">&quot;worker evaluates resource transaction&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3809048790-13">%{</span><span class="ss">env</span><span class="p">:</span><span class="w"> </span><span class="n">env</span><span class="p" data-group-id="3809048790-13">}</span><span class="w"> </span><span class="k" data-group-id="3809048790-14">do</span><span class="w">
+    </span><span class="kn">import</span><span class="w"> </span><span class="nc">Anoma.Resource</span><span class="w">
+    </span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Resource.ProofRecord</span><span class="w">
+    </span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Resource.Transaction</span><span class="w">
+
+    </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">unique_integer</span><span class="p" data-group-id="3809048790-15">(</span><span class="p" data-group-id="3809048790-16">[</span><span class="ss">:positive</span><span class="p" data-group-id="3809048790-16">]</span><span class="p" data-group-id="3809048790-15">)</span><span class="w">
+
+    </span><span class="n">storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Ordering</span><span class="o">.</span><span class="n">get_storage</span><span class="p" data-group-id="3809048790-17">(</span><span class="n">env</span><span class="o">.</span><span class="n">ordering</span><span class="p" data-group-id="3809048790-17">)</span><span class="w">
+
+    </span><span class="nc">Storage</span><span class="o">.</span><span class="n">ensure_new</span><span class="p" data-group-id="3809048790-18">(</span><span class="n">storage</span><span class="p" data-group-id="3809048790-18">)</span><span class="w">
+    </span><span class="nc">Ordering</span><span class="o">.</span><span class="n">reset</span><span class="p" data-group-id="3809048790-19">(</span><span class="n">env</span><span class="o">.</span><span class="n">ordering</span><span class="p" data-group-id="3809048790-19">)</span><span class="w">
+
+    </span><span class="n">keypair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Anoma.Crypto.Sign</span><span class="o">.</span><span class="n">new_keypair</span><span class="p" data-group-id="3809048790-20">(</span><span class="p" data-group-id="3809048790-20">)</span><span class="w">
+
+    </span><span class="n">in_resource</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="3809048790-21">%{</span><span class="w">
+      </span><span class="n">new_with_npk</span><span class="p" data-group-id="3809048790-22">(</span><span class="n">keypair</span><span class="o">.</span><span class="n">public</span><span class="p" data-group-id="3809048790-22">)</span><span class="w">
+      </span><span class="o">|</span><span class="w"> </span><span class="ss">label</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;space bucks&quot;</span><span class="p">,</span><span class="w">
+        </span><span class="ss">quantity</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="w">
+    </span><span class="p" data-group-id="3809048790-21">}</span><span class="w">
+
+    </span><span class="n">nf_in</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nullifier</span><span class="p" data-group-id="3809048790-23">(</span><span class="n">in_resource</span><span class="p">,</span><span class="w"> </span><span class="n">keypair</span><span class="o">.</span><span class="n">secret</span><span class="p" data-group-id="3809048790-23">)</span><span class="w">
+    </span><span class="n">pf_in</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ProofRecord</span><span class="o">.</span><span class="n">prove</span><span class="p" data-group-id="3809048790-24">(</span><span class="n">in_resource</span><span class="p" data-group-id="3809048790-24">)</span><span class="w">
+
+    </span><span class="n">out_resource</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="3809048790-25">%{</span><span class="w">
+      </span><span class="n">new_with_npk</span><span class="p" data-group-id="3809048790-26">(</span><span class="n">keypair</span><span class="o">.</span><span class="n">public</span><span class="p" data-group-id="3809048790-26">)</span><span class="w">
+      </span><span class="o">|</span><span class="w"> </span><span class="ss">label</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;space bucks&quot;</span><span class="p">,</span><span class="w">
+        </span><span class="ss">quantity</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="w">
+    </span><span class="p" data-group-id="3809048790-25">}</span><span class="w">
+
+    </span><span class="n">cm_out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">commitment</span><span class="p" data-group-id="3809048790-27">(</span><span class="n">out_resource</span><span class="p" data-group-id="3809048790-27">)</span><span class="w">
+    </span><span class="n">pf_out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ProofRecord</span><span class="o">.</span><span class="n">prove</span><span class="p" data-group-id="3809048790-28">(</span><span class="n">out_resource</span><span class="p" data-group-id="3809048790-28">)</span><span class="w">
+
+    </span><span class="n">rm_tx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="3809048790-29">%</span><span class="nc" data-group-id="3809048790-29">Transaction</span><span class="p" data-group-id="3809048790-29">{</span><span class="w">
+      </span><span class="ss">commitments</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3809048790-30">[</span><span class="n">cm_out</span><span class="p" data-group-id="3809048790-30">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">nullifiers</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3809048790-31">[</span><span class="n">nf_in</span><span class="p" data-group-id="3809048790-31">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">proofs</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3809048790-32">[</span><span class="n">pf_in</span><span class="p">,</span><span class="w"> </span><span class="n">pf_out</span><span class="p" data-group-id="3809048790-32">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">delta</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3809048790-33">%{</span><span class="p" data-group-id="3809048790-33">}</span><span class="w">
+    </span><span class="p" data-group-id="3809048790-29">}</span><span class="w">
+
+    </span><span class="n">rm_tx_noun</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Transaction</span><span class="o">.</span><span class="n">to_noun</span><span class="p" data-group-id="3809048790-34">(</span><span class="n">rm_tx</span><span class="p" data-group-id="3809048790-34">)</span><span class="w">
+    </span><span class="n">rm_executor_tx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="3809048790-35">[</span><span class="p" data-group-id="3809048790-36">[</span><span class="mi">1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">rm_tx_noun</span><span class="p" data-group-id="3809048790-36">]</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="3809048790-35">]</span><span class="w">
+
+    </span><span class="n">spawn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">async</span><span class="p" data-group-id="3809048790-37">(</span><span class="nc">Worker</span><span class="p">,</span><span class="w"> </span><span class="ss">:run</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3809048790-38">[</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3809048790-39">{</span><span class="ss">:rm</span><span class="p">,</span><span class="w"> </span><span class="n">rm_executor_tx</span><span class="p" data-group-id="3809048790-39">}</span><span class="p">,</span><span class="w"> </span><span class="n">env</span><span class="p" data-group-id="3809048790-38">]</span><span class="p" data-group-id="3809048790-37">)</span><span class="w">
+    </span><span class="nc">Ordering</span><span class="o">.</span><span class="n">new_order</span><span class="p" data-group-id="3809048790-40">(</span><span class="n">env</span><span class="o">.</span><span class="n">ordering</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3809048790-41">[</span><span class="nc">Order</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="3809048790-42">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">spawn</span><span class="o">.</span><span class="n">pid</span><span class="p" data-group-id="3809048790-42">)</span><span class="p" data-group-id="3809048790-41">]</span><span class="p" data-group-id="3809048790-40">)</span><span class="w">
+
+    </span><span class="n">send</span><span class="p" data-group-id="3809048790-43">(</span><span class="n">spawn</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3809048790-44">{</span><span class="ss">:write_ready</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="3809048790-44">}</span><span class="p" data-group-id="3809048790-43">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="ss">:ok</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">await</span><span class="p" data-group-id="3809048790-45">(</span><span class="n">spawn</span><span class="p" data-group-id="3809048790-45">)</span><span class="w">
+  </span><span class="k" data-group-id="3809048790-14">end</span><span class="w">
+</span><span class="k" data-group-id="3809048790-1">end</span></code></pre><p>This test has a few parts, one part is a <code class="inline">test_setup</code> and another part is the actual testing code itself.</p><p>I will reimagine this module in two phases. The first respecting the fact that <code class="inline">setup_all</code> is unique and is efficient as it spawns only 1 network for the entire module. The second will instead make the node specific to each example that relies upon it. Returning the network as the interesting object.</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Example.Worker.Phase1</span><span class="w"> </span><span class="k" data-group-id="5531340559-1">do</span><span class="w">
+
+  </span><span class="n">defmemo</span><span class="w"> </span><span class="n">router</span><span class="p" data-group-id="5531340559-2">(</span><span class="p" data-group-id="5531340559-2">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-3">do</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="p" data-group-id="5531340559-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p" data-group-id="5531340559-4">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="5531340559-5">(</span><span class="p" data-group-id="5531340559-5">)</span><span class="w">
+    </span><span class="n">router</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-3">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">raw_storage</span><span class="p" data-group-id="5531340559-6">(</span><span class="p" data-group-id="5531340559-6">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-7">do</span><span class="w">
+    </span><span class="n">storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="5531340559-8">%</span><span class="nc" data-group-id="5531340559-8">Storage</span><span class="p" data-group-id="5531340559-8">{</span><span class="w">
+      </span><span class="ss">qualified</span><span class="p">:</span><span class="w"> </span><span class="nc">AnomaTest.Worker.Qualified</span><span class="p">,</span><span class="w">
+      </span><span class="ss">order</span><span class="p">:</span><span class="w"> </span><span class="nc">AnomaTest.Worker.Order</span><span class="w">
+    </span><span class="p" data-group-id="5531340559-8">}</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-7">end</span><span class="w">
+
+  </span><span class="n">defmemo</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="5531340559-9">(</span><span class="p" data-group-id="5531340559-9">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-10">do</span><span class="w">
+     </span><span class="p" data-group-id="5531340559-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="5531340559-11">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="5531340559-12">(</span><span class="n">router</span><span class="p" data-group-id="5531340559-13">(</span><span class="p" data-group-id="5531340559-13">)</span><span class="p">,</span><span class="w"> </span><span class="nc">Storage</span><span class="p">,</span><span class="w"> </span><span class="n">raw_storage</span><span class="p" data-group-id="5531340559-14">(</span><span class="p" data-group-id="5531340559-14">)</span><span class="p" data-group-id="5531340559-12">)</span><span class="w">
+     </span><span class="n">storage</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-10">end</span><span class="w">
+
+  </span><span class="n">defmemo</span><span class="w"> </span><span class="n">ordering</span><span class="p" data-group-id="5531340559-15">(</span><span class="p" data-group-id="5531340559-15">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-16">do</span><span class="w">
+    </span><span class="p" data-group-id="5531340559-17">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">ordering</span><span class="p" data-group-id="5531340559-17">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="5531340559-18">(</span><span class="n">router</span><span class="p" data-group-id="5531340559-19">(</span><span class="p" data-group-id="5531340559-19">)</span><span class="p">,</span><span class="w"> </span><span class="nc">Ordering</span><span class="p">,</span><span class="w"> </span><span class="ss">table</span><span class="p">:</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="5531340559-20">(</span><span class="p" data-group-id="5531340559-20">)</span><span class="p" data-group-id="5531340559-18">)</span><span class="w">
+     </span><span class="n">ordering</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-16">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">env</span><span class="p" data-group-id="5531340559-21">(</span><span class="p" data-group-id="5531340559-21">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-22">do</span><span class="w">
+   </span><span class="p" data-group-id="5531340559-23">%</span><span class="nc" data-group-id="5531340559-23">Nock</span><span class="p" data-group-id="5531340559-23">{</span><span class="ss">snapshot_path</span><span class="p">:</span><span class="w"> </span><span class="nc">Enock</span><span class="o">.</span><span class="n">snapshot_path</span><span class="p" data-group-id="5531340559-24">(</span><span class="p" data-group-id="5531340559-24">)</span><span class="p">,</span><span class="w"> </span><span class="ss">ordering</span><span class="p">:</span><span class="w"> </span><span class="n">ordering</span><span class="p" data-group-id="5531340559-23">}</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-22">end</span><span class="w">
+
+  </span><span class="c1"># Let&#39;s get an unique number</span><span class="w">
+  </span><span class="n">defmemo</span><span class="w"> </span><span class="n">unique_id</span><span class="p" data-group-id="5531340559-25">(</span><span class="p" data-group-id="5531340559-25">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-26">do</span><span class="w">
+    </span><span class="nc">System</span><span class="o">.</span><span class="n">unique_integer</span><span class="p" data-group-id="5531340559-27">(</span><span class="p" data-group-id="5531340559-28">[</span><span class="ss">:positive</span><span class="p" data-group-id="5531340559-28">]</span><span class="p" data-group-id="5531340559-27">)</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-26">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">successfully_fire_trans</span><span class="p" data-group-id="5531340559-29">(</span><span class="p" data-group-id="5531340559-29">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-30">do</span><span class="w">
+    </span><span class="nc">Storage</span><span class="o">.</span><span class="n">ensure_new</span><span class="p" data-group-id="5531340559-31">(</span><span class="n">storage</span><span class="p" data-group-id="5531340559-32">(</span><span class="p" data-group-id="5531340559-32">)</span><span class="p" data-group-id="5531340559-31">)</span><span class="w">
+    </span><span class="nc">Ordering</span><span class="o">.</span><span class="n">reset</span><span class="p" data-group-id="5531340559-33">(</span><span class="n">ordering</span><span class="p" data-group-id="5531340559-34">(</span><span class="p" data-group-id="5531340559-34">)</span><span class="p" data-group-id="5531340559-33">)</span><span class="w">
+
+    </span><span class="n">spawn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">async</span><span class="p" data-group-id="5531340559-35">(</span><span class="nc">Worker</span><span class="p">,</span><span class="w"> </span><span class="ss">:run</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5531340559-36">[</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5531340559-37">{</span><span class="ss">:rm</span><span class="p">,</span><span class="w"> </span><span class="n">space_trans_candidate</span><span class="p" data-group-id="5531340559-38">(</span><span class="p" data-group-id="5531340559-38">)</span><span class="p" data-group-id="5531340559-37">}</span><span class="p">,</span><span class="w"> </span><span class="n">env</span><span class="p" data-group-id="5531340559-39">(</span><span class="p" data-group-id="5531340559-39">)</span><span class="p" data-group-id="5531340559-36">]</span><span class="p" data-group-id="5531340559-35">)</span><span class="w">
+    </span><span class="nc">Ordering</span><span class="o">.</span><span class="n">new_order</span><span class="p" data-group-id="5531340559-40">(</span><span class="n">ordering</span><span class="p" data-group-id="5531340559-41">(</span><span class="p" data-group-id="5531340559-41">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5531340559-42">[</span><span class="nc">Order</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="5531340559-43">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">spawn</span><span class="o">.</span><span class="n">pid</span><span class="p" data-group-id="5531340559-43">)</span><span class="p" data-group-id="5531340559-42">]</span><span class="p" data-group-id="5531340559-40">)</span><span class="w">
+
+    </span><span class="n">send</span><span class="p" data-group-id="5531340559-44">(</span><span class="n">spawn</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5531340559-45">{</span><span class="ss">:write_ready</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="5531340559-45">}</span><span class="p" data-group-id="5531340559-44">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="ss">:ok</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">await</span><span class="p" data-group-id="5531340559-46">(</span><span class="n">spawn</span><span class="p" data-group-id="5531340559-46">)</span><span class="w">
+    </span><span class="ss">:ok</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-30">end</span><span class="w">
+</span><span class="k" data-group-id="5531340559-1">end</span><span class="w">
+
+</span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Example.ProofRecord</span><span class="w"> </span><span class="k" data-group-id="5531340559-47">do</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">proved_spacebucks_a</span><span class="p" data-group-id="5531340559-48">(</span><span class="p" data-group-id="5531340559-48">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-49">do</span><span class="w">
+    </span><span class="nc">ProofRecord</span><span class="o">.</span><span class="n">prove</span><span class="p" data-group-id="5531340559-50">(</span><span class="nc">Eresource</span><span class="o">.</span><span class="n">space_bucks_10_a</span><span class="p" data-group-id="5531340559-51">(</span><span class="p" data-group-id="5531340559-51">)</span><span class="p" data-group-id="5531340559-50">)</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-49">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">proved_spacebucks_b</span><span class="p" data-group-id="5531340559-52">(</span><span class="p" data-group-id="5531340559-52">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-53">do</span><span class="w">
+    </span><span class="nc">ProofRecord</span><span class="o">.</span><span class="n">prove</span><span class="p" data-group-id="5531340559-54">(</span><span class="nc">Eresource</span><span class="o">.</span><span class="n">space_bucks_10_b</span><span class="p" data-group-id="5531340559-55">(</span><span class="p" data-group-id="5531340559-55">)</span><span class="p" data-group-id="5531340559-54">)</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-53">end</span><span class="w">
+</span><span class="k" data-group-id="5531340559-47">end</span><span class="w">
+
+</span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Example.Transaction</span><span class="w"> </span><span class="k" data-group-id="5531340559-56">do</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">balanced_space_transaction</span><span class="p" data-group-id="5531340559-57">(</span><span class="p" data-group-id="5531340559-57">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-58">do</span><span class="w">
+    </span><span class="n">trans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="5531340559-59">%</span><span class="nc" data-group-id="5531340559-59">Transaction</span><span class="p" data-group-id="5531340559-59">{</span><span class="w">
+      </span><span class="ss">commitments</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5531340559-60">[</span><span class="nc">EResource</span><span class="o">.</span><span class="n">commitment_space_bucks_a</span><span class="p" data-group-id="5531340559-61">(</span><span class="p" data-group-id="5531340559-61">)</span><span class="p" data-group-id="5531340559-60">]</span><span class="w">
+      </span><span class="ss">nullifiers</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5531340559-62">[</span><span class="nc">ERsource</span><span class="o">.</span><span class="n">nullifier_space_bucks_b</span><span class="p" data-group-id="5531340559-63">(</span><span class="p" data-group-id="5531340559-63">)</span><span class="p" data-group-id="5531340559-62">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">proofs</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5531340559-64">[</span><span class="n">proved_spacebucks_a</span><span class="p" data-group-id="5531340559-65">(</span><span class="p" data-group-id="5531340559-65">)</span><span class="p">,</span><span class="w"> </span><span class="n">proved_spacebucks_b</span><span class="p" data-group-id="5531340559-66">(</span><span class="p" data-group-id="5531340559-66">)</span><span class="p" data-group-id="5531340559-64">]</span><span class="w">
+    </span><span class="p" data-group-id="5531340559-59">}</span><span class="w">
+    </span><span class="c1"># This wans&#39;t in the original test!</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">verify</span><span class="p" data-group-id="5531340559-67">(</span><span class="n">trans</span><span class="p" data-group-id="5531340559-67">)</span><span class="w">
+    </span><span class="n">trans</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-58">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">space_trans_candidate</span><span class="p" data-group-id="5531340559-68">(</span><span class="p" data-group-id="5531340559-68">)</span><span class="w"> </span><span class="k" data-group-id="5531340559-69">do</span><span class="w">
+    </span><span class="nc">Transaction</span><span class="o">.</span><span class="n">to_noun</span><span class="p" data-group-id="5531340559-70">(</span><span class="n">balanced_space_transaction</span><span class="p" data-group-id="5531340559-71">(</span><span class="p" data-group-id="5531340559-71">)</span><span class="p" data-group-id="5531340559-70">)</span><span class="w">
+    </span><span class="p" data-group-id="5531340559-72">[</span><span class="p" data-group-id="5531340559-73">[</span><span class="mi">1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">rm_tx_noun</span><span class="p" data-group-id="5531340559-73">]</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="5531340559-72">]</span><span class="w">
+  </span><span class="k" data-group-id="5531340559-69">end</span><span class="w">
+</span><span class="k" data-group-id="5531340559-56">end</span></code></pre><p>Notice we ended up calling a lot of examples from <code class="inline">EResource</code>. Some of the examples already existed even without this test (we really had <code class="inline">spacebucks</code> already in the codebase! Duplicated in the <code class="inline">Worker</code> and in <code class="inline">Resource</code>).</p><p>Further most of the logic that recreates <code class="inline">resources</code> are better placed in the actual <code class="inline">Example.EResource</code> file, as they are relevant examples for someone who is looking for resources. Why would they look at the worker to see examples of the Resources? Likewise, people who are looking at the worker code, would want to look at worker logic, not resource logic!</p><p>We can see the benefits examples offer even stateful tests:</p><ol><li>Most of the boilerplate of creating unrelated types are confined in the proper modules!</li><li>There may be an example off hand which satisfies what we want (we already had spacebucks in <code class="inline">EResource</code>)</li><li>Rephrasing a test as an example doesn't lose any information. the actual example is simply not interesting!</li><li>We can run the stateful tests from IEx and even pry into it without any issues!</li></ol><p>With these benefits of mind let us see if <code class="inline">Phase2</code> can improve point <code class="inline">3.</code> a bit:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Example.Worker.Phase2</span><span class="w"> </span><span class="k" data-group-id="6204148201-1">do</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">router</span><span class="p" data-group-id="6204148201-2">(</span><span class="p" data-group-id="6204148201-2">)</span><span class="w"> </span><span class="k" data-group-id="6204148201-3">do</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="p" data-group-id="6204148201-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="p" data-group-id="6204148201-4">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="6204148201-5">(</span><span class="p" data-group-id="6204148201-5">)</span><span class="w">
+    </span><span class="n">router</span><span class="w">
+  </span><span class="k" data-group-id="6204148201-3">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">raw_storage</span><span class="p" data-group-id="6204148201-6">(</span><span class="p" data-group-id="6204148201-6">)</span><span class="w"> </span><span class="k" data-group-id="6204148201-7">do</span><span class="w">
+    </span><span class="n">storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="6204148201-8">%</span><span class="nc" data-group-id="6204148201-8">Storage</span><span class="p" data-group-id="6204148201-8">{</span><span class="w">
+      </span><span class="ss">qualified</span><span class="p">:</span><span class="w"> </span><span class="nc">AnomaTest.Worker.Qualified</span><span class="p">,</span><span class="w">
+      </span><span class="ss">order</span><span class="p">:</span><span class="w"> </span><span class="nc">AnomaTest.Worker.Order</span><span class="w">
+    </span><span class="p" data-group-id="6204148201-8">}</span><span class="w">
+  </span><span class="k" data-group-id="6204148201-7">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">storage</span><span class="p" data-group-id="6204148201-9">(</span><span class="n">router</span><span class="p" data-group-id="6204148201-9">)</span><span class="w"> </span><span class="k" data-group-id="6204148201-10">do</span><span class="w">
+    </span><span class="p" data-group-id="6204148201-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="6204148201-11">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="6204148201-12">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Storage</span><span class="p">,</span><span class="w"> </span><span class="n">raw_storage</span><span class="p" data-group-id="6204148201-13">(</span><span class="p" data-group-id="6204148201-13">)</span><span class="p" data-group-id="6204148201-12">)</span><span class="w">
+    </span><span class="n">storage</span><span class="w">
+  </span><span class="k" data-group-id="6204148201-10">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">ordering</span><span class="p" data-group-id="6204148201-14">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="6204148201-14">)</span><span class="w"> </span><span class="k" data-group-id="6204148201-15">do</span><span class="w">
+    </span><span class="p" data-group-id="6204148201-16">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">ordering</span><span class="p" data-group-id="6204148201-16">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="6204148201-17">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Ordering</span><span class="p">,</span><span class="w"> </span><span class="ss">table</span><span class="p">:</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="6204148201-17">)</span><span class="w">
+    </span><span class="n">ordering</span><span class="w">
+  </span><span class="k" data-group-id="6204148201-15">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">env</span><span class="p" data-group-id="6204148201-18">(</span><span class="n">ordering</span><span class="p" data-group-id="6204148201-18">)</span><span class="w"> </span><span class="k" data-group-id="6204148201-19">do</span><span class="w">
+    </span><span class="p" data-group-id="6204148201-20">%</span><span class="nc" data-group-id="6204148201-20">Nock</span><span class="p" data-group-id="6204148201-20">{</span><span class="ss">snapshot_path</span><span class="p">:</span><span class="w"> </span><span class="nc">Enock</span><span class="o">.</span><span class="n">snapshot_path</span><span class="p" data-group-id="6204148201-21">(</span><span class="p" data-group-id="6204148201-21">)</span><span class="p">,</span><span class="w"> </span><span class="ss">ordering</span><span class="p">:</span><span class="w"> </span><span class="n">ordering</span><span class="p" data-group-id="6204148201-20">}</span><span class="w">
+  </span><span class="k" data-group-id="6204148201-19">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">network</span><span class="p" data-group-id="6204148201-22">(</span><span class="p" data-group-id="6204148201-22">)</span><span class="w"> </span><span class="k" data-group-id="6204148201-23">do</span><span class="w">
+    </span><span class="n">router</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">router</span><span class="p" data-group-id="6204148201-24">(</span><span class="p" data-group-id="6204148201-24">)</span><span class="w">
+    </span><span class="n">storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="6204148201-25">(</span><span class="n">router</span><span class="p" data-group-id="6204148201-25">)</span><span class="w">
+    </span><span class="p" data-group-id="6204148201-26">%</span><span class="nc" data-group-id="6204148201-26">Node</span><span class="p" data-group-id="6204148201-26">{</span><span class="ss">router</span><span class="p">:</span><span class="w"> </span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="ss">ordering</span><span class="p">:</span><span class="w"> </span><span class="n">ordering</span><span class="p" data-group-id="6204148201-27">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="6204148201-27">)</span><span class="p">,</span><span class="w"> </span><span class="ss">storage</span><span class="p">:</span><span class="w"> </span><span class="n">storage</span><span class="p" data-group-id="6204148201-26">}</span><span class="w">
+  </span><span class="k" data-group-id="6204148201-23">end</span><span class="w">
+
+  </span><span class="c1"># Let&#39;s get an unique number</span><span class="w">
+  </span><span class="n">defmemo</span><span class="w"> </span><span class="n">unique_id</span><span class="p" data-group-id="6204148201-28">(</span><span class="p" data-group-id="6204148201-28">)</span><span class="w"> </span><span class="k" data-group-id="6204148201-29">do</span><span class="w">
+    </span><span class="nc">System</span><span class="o">.</span><span class="n">unique_integer</span><span class="p" data-group-id="6204148201-30">(</span><span class="p" data-group-id="6204148201-31">[</span><span class="ss">:positive</span><span class="p" data-group-id="6204148201-31">]</span><span class="p" data-group-id="6204148201-30">)</span><span class="w">
+  </span><span class="k" data-group-id="6204148201-29">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">successfully_fire_trans</span><span class="p" data-group-id="6204148201-32">(</span><span class="p" data-group-id="6204148201-32">)</span><span class="w"> </span><span class="k" data-group-id="6204148201-33">do</span><span class="w">
+    </span><span class="n">net</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="p" data-group-id="6204148201-34">(</span><span class="p" data-group-id="6204148201-34">)</span><span class="w">
+    </span><span class="n">env</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">env</span><span class="p" data-group-id="6204148201-35">(</span><span class="n">net</span><span class="o">.</span><span class="n">ordering</span><span class="p" data-group-id="6204148201-35">)</span><span class="w">
+    </span><span class="n">spawn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">async</span><span class="p" data-group-id="6204148201-36">(</span><span class="nc">Worker</span><span class="p">,</span><span class="w"> </span><span class="ss">:run</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6204148201-37">[</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6204148201-38">{</span><span class="ss">:rm</span><span class="p">,</span><span class="w"> </span><span class="n">space_trans_candidate</span><span class="p" data-group-id="6204148201-39">(</span><span class="p" data-group-id="6204148201-39">)</span><span class="p" data-group-id="6204148201-38">}</span><span class="p">,</span><span class="w"> </span><span class="n">env</span><span class="p" data-group-id="6204148201-37">]</span><span class="p" data-group-id="6204148201-36">)</span><span class="w">
+    </span><span class="nc">Ordering</span><span class="o">.</span><span class="n">new_order</span><span class="p" data-group-id="6204148201-40">(</span><span class="n">net</span><span class="o">.</span><span class="n">ordering</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6204148201-41">[</span><span class="nc">Order</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="6204148201-42">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">spawn</span><span class="o">.</span><span class="n">pid</span><span class="p" data-group-id="6204148201-42">)</span><span class="p" data-group-id="6204148201-41">]</span><span class="p" data-group-id="6204148201-40">)</span><span class="w">
+
+    </span><span class="n">send</span><span class="p" data-group-id="6204148201-43">(</span><span class="n">spawn</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6204148201-44">{</span><span class="ss">:write_ready</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="6204148201-44">}</span><span class="p" data-group-id="6204148201-43">)</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="ss">:ok</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">await</span><span class="p" data-group-id="6204148201-45">(</span><span class="n">spawn</span><span class="p" data-group-id="6204148201-45">)</span><span class="w">
+    </span><span class="n">net</span><span class="w">
+  </span><span class="k" data-group-id="6204148201-33">end</span><span class="w">
+</span><span class="k" data-group-id="6204148201-1">end</span></code></pre><p>In Phase2 we abstracted out some examples, so that they are no longer standalone examples.</p><p>Sadly <code class="inline">storage</code>, <code class="inline">router</code>, <code class="inline">env</code> and <code class="inline">ordering</code> are no longer examples, but are generator functions for the data we care about. (maybe we can restore this somehow!)</p><p>However, notice that the return of <code class="inline">sucessfully_fire_trans/0</code>, now returns the network!</p><p>This means that if we wanted, we can use this environment for further tests. Such as making sure nullifiers don't insert twice</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="kd">def</span><span class="w"> </span><span class="nf">failed_trans</span><span class="p" data-group-id="2487382080-1">(</span><span class="p" data-group-id="2487382080-1">)</span><span class="w"> </span><span class="k" data-group-id="2487382080-2">do</span><span class="w">
+  </span><span class="n">net</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">succesfully_fire_trans</span><span class="p" data-group-id="2487382080-3">(</span><span class="p" data-group-id="2487382080-3">)</span><span class="w">
+  </span><span class="n">env</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">env</span><span class="p" data-group-id="2487382080-4">(</span><span class="n">net</span><span class="o">.</span><span class="n">ordering</span><span class="p" data-group-id="2487382080-4">)</span><span class="w">
+  </span><span class="n">spawn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">async</span><span class="p" data-group-id="2487382080-5">(</span><span class="nc">Worker</span><span class="p">,</span><span class="w"> </span><span class="ss">:run</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2487382080-6">[</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2487382080-7">{</span><span class="ss">:rm</span><span class="p">,</span><span class="w"> </span><span class="n">space_trans_candidate</span><span class="p" data-group-id="2487382080-8">(</span><span class="p" data-group-id="2487382080-8">)</span><span class="p" data-group-id="2487382080-7">}</span><span class="p">,</span><span class="w"> </span><span class="n">env</span><span class="p" data-group-id="2487382080-6">]</span><span class="p" data-group-id="2487382080-5">)</span><span class="w">
+  </span><span class="nc">Ordering</span><span class="o">.</span><span class="n">new_order</span><span class="p" data-group-id="2487382080-9">(</span><span class="n">net</span><span class="o">.</span><span class="n">ordering</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2487382080-10">[</span><span class="nc">Order</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="2487382080-11">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">spawn</span><span class="o">.</span><span class="n">pid</span><span class="p" data-group-id="2487382080-11">)</span><span class="p" data-group-id="2487382080-10">]</span><span class="p" data-group-id="2487382080-9">)</span><span class="w">
+  </span><span class="n">assert</span><span class="w"> </span><span class="ss">:error</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">await</span><span class="p" data-group-id="2487382080-12">(</span><span class="n">spawn</span><span class="p" data-group-id="2487382080-12">)</span><span class="w">
+  </span><span class="k">for</span><span class="w"> </span><span class="n">nullifier</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">space_trans_candidate</span><span class="p" data-group-id="2487382080-13">(</span><span class="p" data-group-id="2487382080-13">)</span><span class="o">.</span><span class="n">nullifiers</span><span class="w"> </span><span class="k" data-group-id="2487382080-14">do</span><span class="w">
+    </span><span class="n">assert</span><span class="w"> </span><span class="n">in_nullifer_set</span><span class="p" data-group-id="2487382080-15">(</span><span class="n">env</span><span class="p">,</span><span class="w"> </span><span class="n">nullifier</span><span class="p" data-group-id="2487382080-15">)</span><span class="w">
+  </span><span class="k" data-group-id="2487382080-14">end</span><span class="w">
+  </span><span class="n">net</span><span class="w">
+</span><span class="k" data-group-id="2487382080-2">end</span></code></pre><p>Besides reuse we get the following advantages in <code class="inline">Phase2</code>:</p><ol><li>If we had visualization tooling, we can take the result of <code class="inline">successfully_fire_trans/0</code> and view all the views of the data. Meaning that if we made tooling that charts simulated latency, connected node graphs, successful and failed transactions, we would be able to chart them all and visually see the difference between this one and <code class="inline">failed_trans/0</code>.</li><li>We can inspect the state of the network querying for new facts we did not know about before. And consider if any facts are interesting enough to assert that the property holds in the particular example.</li></ol><!-- livebook:{"branch_parent_index":4} --><h2 id="temporary-setbacks" class="section-heading">
+  <a href="#temporary-setbacks" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Temporary Setbacks</span>
+</h2>
+<p>One small annoyance, is that in order to run the tests, we have to currently by hand put the examples in a test file to make sure they are ran.</p><p>This can be offset by a macro that scrapes the examples modules and automatically registers the tests. So this is not a hard issue for the <code class="inline">example</code> style.</p><h2 id="addressing-testing-issues" class="section-heading">
+  <a href="#addressing-testing-issues" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Addressing testing issues</span>
+</h2>
+<p>Now that we have a concrete idea of what <code class="inline">examples</code> look like, let us see how they fix our problems with tests:</p><ol><li>Tests are not loaded into <a href="https://hexdocs.pm/iex/IEx.html"><code class="inline">IEx</code></a> at startup.<ul><li>They are in the lib folder, they are loaded!</li></ul></li><li>To run tests by hand, we need to copy paste:<ul><li>No copy and pasting required, we can pry and avoid copy and paste!</li></ul></li><li>Tests can't be abstracted in the test module without breaking copy and pasting.<ul><li>We can abstract as much as we want</li></ul></li><li>Tests can't have dialyzer run over them.<ul><li>We can run dialyzer and even type our examples!</li></ul></li><li><a href="https://hexdocs.pm/iex/IEx.html"><code class="inline">IEx</code></a> does not re-run tests on demand, one has to recompile the test after already running the tests<ul><li>We can re-run the example whenever we want</li></ul></li><li><a href="https://en.wikipedia.org/wiki/Language_Server_Protocol">LSP</a> seems to not be able to calculate references of values to tests due to them not being compiled.<ul><li>LSP should work as it's compiled like everything else.</li></ul></li></ol><h2 id="outstanding-questions" class="section-heading">
+  <a href="#outstanding-questions" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Outstanding questions</span>
+</h2>
+<p>The most straight forward strategy would be:</p><ol><li>Take each test module and convert it to tests.</li><li>Once most of the modules are done, convert all stateful tests into <code class="inline">phase2</code>.</li></ol><p>However there are open questions:</p><ol><li>How slow is node setup? Will <code class="inline">phase2</code> make tests run longer than 2 seconds (unacceptable)?</li><li>How long until we have a macro that auto registers the examples so they can be ran with <a href="https://hexdocs.pm/mix/Mix.Tasks.Test.html"><code class="inline">mix test</code></a>?</li><li>How will our usage of <code class="inline">examples</code> evolve over time?</li><li>How to deal with tests that make socket files then deletes them after all is done? Will Phase2 make this question obsolete?</li><li>Can the process be improved? <a href="https://scg.unibe.ch/archive/masters/Haen09a.pdf">One of the Authors of GT has a paper about converting <code class="inline">JUnit</code> to <code class="inline">JExample</code>. This can probably inform our own transition and ideas on creating examples</a></li></ol>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="toc.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+TOC
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="git.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Git
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.25.0/show/documentation/contributing/examples-over-testing.livemd">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

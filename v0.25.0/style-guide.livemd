@@ -1,0 +1,334 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Style Guide
+
+## Index
+1. [Toc](./../toc.livemd)
+2. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Style Guide](./../contributing/style-guide.livemd)
+   3. [Writing Documents](./../contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./../contributing/examples-over-testing.livemd)
+   5. [Git](./../contributing/git.livemd)
+   6. [Iex](./../contributing/iex.livemd)
+   7. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   8. [Observer](./../contributing/observer.livemd)
+   9. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+3. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+4. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+5. [Analysis](./../analysis.livemd)
+
+## Structural Rules
+
+A module is **documented** if
+
+* It has nonempty module documentation.
+* All of its public functions capable of having documentation have nonempty documentation.
+* All of its public functions capable of having types assigned have assigned types.
+* All types have type documentation.
+
+#### Rule 1.1
+
+Any module which is specified under the Node directory ought to be **documented**.
+
+#### Rule 1.2
+
+Any public function which is used in a public function by a module specified under the Node directory ought to have nonempty documentation.
+
+#### Rule 1.3
+
+Documentation should be given in first person.
+
+#### Rule 1.4
+
+If `foo` uses `bar` in the same module in the Node dir then `foo` is placed higher than `bar` in the module.
+
+Exceptions might exist but should be noted explicitly in PR and commit messages.
+
+#### Rule 1.5 (CQRS)
+
+If `foo` uses Router or GenServer functionality, it should be a `call` if and only if either
+
+1. The underlying state is unchanged by calling `foo`
+2. There are synchronizaton requirements that `foo` has to fullfill.
+
+#### Rule 1.6
+
+If `foo` uses `call` functionality then the corresponding `handle_call` shall have body
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+{:reply, do_foo(...), state}
+```
+
+with `do_foo` implementing core logic.
+
+If `foo` has synchronization requirements, the return of `do_foo` should only contain information regarding the
+success or failure of the operation.
+
+#### Rule 1.7
+
+Calling a callback function from another callback functions is _not_ allowed.
+
+#### Rule 1.8
+
+Every actor module should have mandatory `Public RPC API`, `GenServer Behavior`, and `GenServer Implementation` sections with following formatting:
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+```
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  ############################################################
+  #                    GenServer Behavior                    #
+  ############################################################
+```
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  ############################################################
+  #                  GenServer Implementation                #
+  ############################################################
+```
+
+where
+
+* `Public RPC API` contains public functions using `call` or `cast` functionality
+* `GenServer Behavior` contains all callback functions `handle_call`, `handle_cast`, `handle_info`, and `handle_continue`
+* `GenServer Implementation` contains all functions explicitly used in the `GenServer Behavior` sections.
+
+Extra functions can be contained in the latter section or can further be separated into `Helper` functions.
+
+#### Rule 1.9
+
+Actor module may have an optional `Logging Info` section with following formatting:
+
+```
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+```
+
+that contains functions related to logging.
+
+## Module Documentation
+
+#### Rule 2.1
+
+Module documentation starts with stating its core purpose in one sentence followed by a new line. If it is related to an Engine X mentioned in the specs, specify that it is an implementation.
+
+* `I am the Storage Engine implementing the Local Key Value Storage Engine.`
+* `I am the Dumper Engine.` (in case the names match)
+* `I am the Blah module which implements foo functionality.`
+
+#### Rule 2.2
+
+Module documentation ought to have an API section separated by a `### Public API` line followed by a line: `I have the following public functionality:` followed by a list of functions or subsections of lists of functions. All public module functions should appear in this section.
+
+A subsection named `Section Name` should be formatted as `#### Section Name` followed by a short description of the section and a list of functions.
+
+The format for the list is: if a module has public function `foo` of `n` entries we list it as ``` - `foo/n` ```.  Every line - except those in the function list - should be separated by a newline. Functions should be grouped by argument number with fewer argument numbers on top.
+
+If subsections were used yet not all functions feature in their lists, the rest of the functions should appear in the `#### Other` subsection placed at the end.
+
+* ```
+  ### Public API
+  I have the following public functionality:
+
+  #### Transaction Functions
+
+  - `new_transaction/3`
+  - `fire_new_transaction/3`
+  - `new_transaction/4`
+  - `fire_new_transaction/4`
+
+  #### Other
+
+  - `snapshot/1`
+  - `subscribe/2`
+  ```
+
+### Example
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  defmodule Anoma.Node.Clock do
+    @moduledoc """
+    I am the Clock module implementing the Local Wall Clock Engine.
+
+    I provide info on the time elapsed in milliseconds after the node launched
+    and the epoch from which it has been calculated using monotonic time.
+
+    The current implementation launches the epoch by asking for the system
+    monotonic time at the point of an Anoma node launch. This is recommended
+    as all my public API uses system monotonic time to give measurements.
+
+    ### Public API
+
+    I have the following public functionality:
+
+    - `get_time/1`
+    - `get_epoch/1`
+    """
+```
+
+## Type Documentation
+
+#### Rule 3.1
+
+The type documentation should start with stating the purpose of the type in one sentence.
+
+* ``` I control options for `launch_min/2` ```
+* `I am the type of the Executor Engine`
+
+#### Rule 3.2
+
+Every product type documentation should have a `### Fields` section followed by a list of field atoms with their descriptions.
+
+The list should be formatted as follows:
+
+Given a field `:field` we list it as ``` - `:field` - ``` followed by a short description. This is followed by a sentence `Enforced: bool` where `bool` is either `true` or `false`. If it has a default value, should be also followed by `Default: value`.
+
+* ```
+  ### Fields
+
+  - `:intents_topic` - The address of the intents topic to which the engine broadcasts.
+  - `:intents` - The set of intents to be solved. Default: `MapSet.new/0`
+  - `:logger` - The address of the Logger Engine used for logging. Enforced: false.
+  ```
+
+#### Rule 3.3
+
+Every sum type documentation should have an `### Options` section followed by a list of field atoms with their descriptions.
+
+The list should be formatted as follows:
+
+Given an option `:option` we list it as ``` - `:option` - ``` followed by a short description.
+
+* ```
+  ### Options
+
+  - `:use_rocksdb` - See `t:Anoma.Node.configuration/0` for more
+  information.
+  - `:supervisor` - This flag determine if we use a supervisor and if
+  so what options. See `t:Supervisor.option/0 ` for supervisor options.
+  - `:testing` - This flag notes if we are testing the node. This gets
+    fed directly into the type `t:Anoma.Node.configuration/0` for
+    `Anoma.Node.start_link/1`. Please consult the
+    `t:Anoma.Node.configuration/0` documentation for the full effect
+    this has on the node.
+  ```
+
+### Example
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  typedstruct do
+    @typedoc """
+    I am the type of the Pinger Engine.
+
+    I store minimal info required to ask the mempool to execute, namely the
+    mempool address and the time specified by the user.
+
+    - `:mempool` - The Mempool Engine address which is called to execute.
+    - `:time` - The time that should be elapsed between the calls to
+                execute or an atom saying that no timer should be set.
+                Default: `:no_timer`
+    """
+
+    field(:mempool, Router.Addr.t())
+    field(:time, non_neg_integer() | atom(), default: :no_timer)
+  end
+
+  @typedoc """
+  I control options for `launch_min/2`.
+
+  ### Options
+
+  - `:use_rocksdb` - See `t:Anoma.Node.configuration/0` for more
+  information.
+  - `:supervisor` - This flag determine if we use a supervisor and if
+  so what options. See `t:Supervisor.option/0 ` for supervisor options.
+  - `:testing` - This flag notes if we are testing the node. This gets
+    fed directly into the type `t:Anoma.Node.configuration/0` for
+    `Anoma.Node.start_link/1`. Please consult the
+    `t:Anoma.Node.configuration/0` documentation for the full effect
+    this has on the node.
+  """
+  @type launch_option ::
+          {:use_rocksdb, boolean()}
+          | {:supervisor, [Supervisor.option()]}
+          | {:testing, boolean()}
+```
+
+## Function Documentation
+
+#### Rule 4.1
+
+The function documentation should begin with stating its purpose in one sentence. If the function is an implementation of a specs-related function, it should mention this by name.
+
+* `I am delete_key function, implementing DeleteValueKVStorage functionality.`
+* `Given a server S and time T, I change the timer set for the struct
+  connected to S setting it to T.`
+
+#### Rule 4.2
+
+If a documented function has functions of same arity in the same module which pattern match arguments differently, they should be listed in a `### Pattern-Match Variations` section in the following format:
+
+If function `foo` has a variation `foo(x1, ... , xn)` where `x1,...,xn` are some Elixir object capable of being pattern-matched to, we present it in a list as `- foo(x1, ... ,xn) -` followed by a short description.
+
+If the arguments are not pattern-matched, provide the variable names as in the definition.
+
+* ```
+  ### Pattern-Matching Variations
+
+  - `init(%Clock{})` - I initialize the Engine with the given state.
+
+  - `init(args)` - I expect a keylist and check for the :start key then
+                   launch the Clock with said setting.
+  ```
+
+#### Rule 4.3
+
+Any function application which a non-constant output and an appropriate EModule example, it should have a reference to the appropriate example function in the codebase.
+
+### Example
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  @doc """
+  I am the initialization function of the Clock Engine.
+
+  ### Pattern-Matching Variations
+
+  - `init(%Clock{})` - I initialize the Engine with the given state.
+
+  - `init(args)` - I expect a keylist and check for the :start key then
+                   launch the Clock with said setting.
+  """
+  def init(%Clock{} = state) do
+    {:ok, state}
+  end
+
+  @spec init(list({:start, integer()})) :: {:ok, Clock.t()}
+  def init(args) do
+    {:ok, %Clock{start: args[:start]}}
+  end
+```

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.25.0">
+
+
+    <title>The Actors — Anoma v0.25.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.25.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>The Actors</span>
+  </h1>
+
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a></li></ol><h2 id="an-overview-of-anoma" class="section-heading">
+  <a href="#an-overview-of-anoma" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">An overview of Anoma</span>
+</h2>
+<p>A good overview of Actors can be seen by looking at the supervision tree of Anoma itself.</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_app_tree</span><span class="p" data-group-id="2668996642-1">(</span><span class="ss">:anoma_node</span><span class="p">,</span><span class="w"> </span><span class="ss">direction</span><span class="p">:</span><span class="w"> </span><span class="ss">:left_right</span><span class="p" data-group-id="2668996642-1">)</span></code></pre><pre><code class="mermaid output">graph LR;
+application_master(#PID&lt;0.875.0&gt;):::supervisor ---&gt; supervisor_ancestor;
+supervisor_ancestor(#PID&lt;0.876.0&gt;):::supervisor ---&gt; 0;
+0(Anoma.Node.Supervisor):::root ---&gt; 1(Anoma.Node.Transport.Supervisor):::supervisor
+0(Anoma.Node.Supervisor):::root ---&gt; 6(Anoma.Node.Transaction.Supervisor):::supervisor
+1(Anoma.Node.Transport.Supervisor):::supervisor ---&gt; 2(ProxySupervisor):::supervisor
+1(Anoma.Node.Transport.Supervisor):::supervisor ---&gt; 3(Anoma.Node.Transport.TCPSupervisor):::supervisor
+1(Anoma.Node.Transport.Supervisor):::supervisor ---&gt; 4(ProxyRegister):::supervisor
+4(ProxyRegister):::supervisor ---&gt; 5(ProxyRegister.PIDPartition0):::worker
+classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
+classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
+classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
+
+</code></pre><h2 id="mempool" class="section-heading">
+  <a href="#mempool" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Mempool</span>
+</h2>
+<p>A good view of visualizing Anoma can be seen through running the
+mempool, as it orchastrates the other actors in Anoma to act</p><!-- livebook:{"break_markdown":true} --><p>First we will create a transaction and see how that changes the base supervision tree before executing</p><pre><code class="makeup elixir" translate="no"><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Ordering</span><span class="w">
+</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Mempool</span><span class="w">
+</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Router</span><span class="w">
+</span><span class="kn">import</span><span class="w"> </span><span class="nc">TestHelper.Nock</span><span class="w">
+
+</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:anoma</span><span class="w">
+</span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="n">state</span><span class="p" data-group-id="8030126295-1">(</span><span class="n">name</span><span class="p" data-group-id="8030126295-1">)</span><span class="w">
+</span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">555</span><span class="w">
+</span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zero_counter</span><span class="p" data-group-id="8030126295-2">(</span><span class="n">key</span><span class="p" data-group-id="8030126295-2">)</span><span class="w">
+</span><span class="n">pid_zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mempool</span><span class="o">.</span><span class="n">tx</span><span class="p" data-group-id="8030126295-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8030126295-4">{</span><span class="ss">:kv</span><span class="p">,</span><span class="w"> </span><span class="n">zero</span><span class="p" data-group-id="8030126295-4">}</span><span class="p" data-group-id="8030126295-3">)</span><span class="o">.</span><span class="n">pid</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="5871186422-1">#</span><span class="nc" data-group-id="5871186422-1">PID</span><span class="p" data-group-id="5871186422-1">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">438</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="5871186422-1">&gt;</span></code></pre><p>The previous evaluations PID can be seen in the diagram below!</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2823113766-1">{</span><span class="bp">_</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2823113766-2">[</span><span class="n">pid1</span><span class="p">,</span><span class="w"> </span><span class="n">pid2</span><span class="p" data-group-id="2823113766-2">]</span><span class="p" data-group-id="2823113766-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Process</span><span class="o">.</span><span class="n">info</span><span class="p" data-group-id="2823113766-3">(</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="2823113766-4">(</span><span class="ss">:anoma</span><span class="p" data-group-id="2823113766-4">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:links</span><span class="p" data-group-id="2823113766-3">)</span><span class="w">
+</span><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_sup_tree</span><span class="p" data-group-id="2823113766-5">(</span><span class="n">pid2</span><span class="p">,</span><span class="w"> </span><span class="ss">direction</span><span class="p">:</span><span class="w"> </span><span class="ss">:left_right</span><span class="p" data-group-id="2823113766-5">)</span></code></pre><pre><code class="mermaid output">graph LR;
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 1(Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 2(Anoma.Node.Clock plaqCqOIQ4LLCT9MAmEMV+qkqZq4+qZV2KSpqSxRZu0=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 3(Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 4(Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 5(Anoma.Node.Executor po4ivXyVtjQ9jvTtra0D2DbKIpM8YOClCmfk8JLp31k=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 6(Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 7(Anoma.Node.Pinger Oc96nqV6/0FFT/JULG5Ep+Z1c62/8f1Bi0gY9CVmJhs=):::worker
+classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
+classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
+classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
+
+</code></pre><p>Now let us see what happens between the actors when we run the mempool</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="9321755234-1">(</span><span class="w">
+  </span><span class="p" data-group-id="9321755234-2">[</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="9321755234-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="9321755234-3">)</span><span class="p" data-group-id="9321755234-2">]</span><span class="p">,</span><span class="w">
+  </span><span class="k" data-group-id="9321755234-4">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nc">Mempool</span><span class="o">.</span><span class="n">execute</span><span class="p" data-group-id="9321755234-5">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p" data-group-id="9321755234-5">)</span><span class="w">
+  </span><span class="k" data-group-id="9321755234-4">end</span><span class="p">,</span><span class="w">
+  </span><span class="ss">message_label</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nc">Anoma.Utility</span><span class="o">.</span><span class="n">message_label</span><span class="o">/</span><span class="mi">1</span><span class="w">
+</span><span class="p" data-group-id="9321755234-1">)</span></code></pre><pre><code class="mermaid output">sequenceDiagram
+participant 3 AS code_server;
+participant 7 AS mnesia_locker;
+participant 6 AS mnesia_tm;
+participant 8 AS Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=;
+participant 2 AS Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=;
+participant 4 AS Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=;
+participant 1 AS Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=;
+participant 0 AS self();
+participant 5 AS #35;PID&lt;0.438.0&gt;;
+0-&gt;&gt;1: CALL: execute
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;4: CALL: next_order
+4-&gt;&gt;1: INFO: tuple
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;4: CALL: new_order
+4-&gt;&gt;1: INFO: tuple
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;5: INFO: write_ready
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;6: INFO: tuple
+6-&gt;&gt;1: INFO: mnesia_tm
+1-&gt;&gt;7: INFO: tuple
+7-&gt;&gt;1: INFO: mnesia_locker
+1-&gt;&gt;7: INFO: release_tid
+1-&gt;&gt;6: INFO: delete_transaction
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;8: CAST: cast
+1-&gt;&gt;0: INFO: tuple
+</code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="9987638439-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="9987638439-1">}</span></code></pre><p>As we can see, we get a fairly solid overview of what actors sent what messages</p><!-- livebook:{"break_markdown":true} --><p>We can also see what processes startup when we start an execution</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="4091773396-1">(</span><span class="w">
+  </span><span class="p" data-group-id="4091773396-2">[</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="4091773396-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="4091773396-3">)</span><span class="p" data-group-id="4091773396-2">]</span><span class="p">,</span><span class="w">
+  </span><span class="k" data-group-id="4091773396-4">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Mempool</span><span class="o">.</span><span class="n">tx</span><span class="p" data-group-id="4091773396-5">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4091773396-6">{</span><span class="ss">:kv</span><span class="p">,</span><span class="w"> </span><span class="n">increment_counter_val</span><span class="p" data-group-id="4091773396-7">(</span><span class="mi">555</span><span class="p" data-group-id="4091773396-7">)</span><span class="p" data-group-id="4091773396-6">}</span><span class="p" data-group-id="4091773396-5">)</span><span class="o">.</span><span class="n">pid</span><span class="p" data-group-id="4091773396-8">(</span><span class="p" data-group-id="4091773396-8">)</span><span class="w"> </span><span class="k" data-group-id="4091773396-4">end</span><span class="p">,</span><span class="w">
+  </span><span class="ss">message_label</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nc">Anoma.Utility</span><span class="o">.</span><span class="n">message_label</span><span class="o">/</span><span class="mi">1</span><span class="w">
+</span><span class="p" data-group-id="4091773396-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="1327974388-1">#</span><span class="nc" data-group-id="1327974388-1">PID</span><span class="p" data-group-id="1327974388-1">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">1147</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="1327974388-1">&gt;</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="8256337522-1">(</span><span class="w">
+  </span><span class="ss">:all</span><span class="p">,</span><span class="w">
+  </span><span class="k" data-group-id="8256337522-2">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Anoma.Node.Logger</span><span class="o">.</span><span class="n">add</span><span class="p" data-group-id="8256337522-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">logger</span><span class="p">,</span><span class="w"> </span><span class="ss">:info</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;help&quot;</span><span class="p" data-group-id="8256337522-3">)</span><span class="w"> </span><span class="k" data-group-id="8256337522-2">end</span><span class="p">,</span><span class="w">
+  </span><span class="ss">message_label</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nc">Anoma.Utility</span><span class="o">.</span><span class="n">message_label</span><span class="o">/</span><span class="mi">1</span><span class="w">
+</span><span class="p" data-group-id="8256337522-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="visualization.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Visualizing Anoma
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="hoon.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Hoon
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.25.0/show/documentation/visualization/actors.livemd">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>
