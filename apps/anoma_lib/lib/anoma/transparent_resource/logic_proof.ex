@@ -36,7 +36,7 @@ defmodule Anoma.TransparentResource.LogicProof do
   def verify(proof = %LogicProof{}) do
     args = []
 
-    result = Nock.nock(proof.resource.logic, [9, 2, 10, [6 | args], 0 | 1])
+    result = Nock.nock(proof.resource.logic, [9, 2, 10, [6, 1 | args], 0 | 1])
 
     case result do
       {:ok, zero} when zero in [0, <<>>, <<0>>, []] -> true
