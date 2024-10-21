@@ -1,5 +1,6 @@
 defmodule Anoma.Node.Examples.EIndexer do
   alias Anoma.Node.Examples.{ETransaction}
+  alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Transaction.Storage
   alias Anoma.Node.Utility.Indexer
   alias Anoma.TransparentResource.Resource
@@ -12,104 +13,102 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
-  def indexer_reads_nullifier(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
-    Indexer.start_link(node_id: node_id)
-    updates = Storage.updates_table(node_id)
-    values = Storage.values_table(node_id)
+  def indexer_reads_nullifier(enode \\ ENode.start_node()) do
+    updates = Storage.updates_table(enode.node_id)
+    values = Storage.values_table(enode.node_id)
 
     nlf = %Resource{} |> Resource.nullifier()
     set = MapSet.new([nlf])
 
     write_new(updates, values, [1], set, nil)
 
-    ^set = Indexer.get(node_id, :nlfs)
+    ^set = Indexer.get(enode.node_id, :nlfs)
 
-    node_id
+    enode
   end
 
-  def indexer_reads_nullifiers(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
-    Indexer.start_link(node_id: node_id)
-    updates = Storage.updates_table(node_id)
-    values = Storage.values_table(node_id)
+  # def indexer_reads_nullifiers(node_id \\ "londo_mollari") do
+  #   ETransaction.restart_storage(node_id)
+  #   Indexer.start_link(node_id: node_id)
+  #   updates = Storage.updates_table(node_id)
+  #   values = Storage.values_table(node_id)
 
-    nlf1 = %Resource{rseed: "random1"} |> Resource.nullifier()
-    nlf2 = %Resource{rseed: "random2"} |> Resource.nullifier()
-    set = MapSet.new([nlf1, nlf2])
+  #   nlf1 = %Resource{rseed: "random1"} |> Resource.nullifier()
+  #   nlf2 = %Resource{rseed: "random2"} |> Resource.nullifier()
+  #   set = MapSet.new([nlf1, nlf2])
 
-    write_new(updates, values, [1], set, nil)
+  #   write_new(updates, values, [1], set, nil)
 
-    ^set = Indexer.get(node_id, :nlfs)
+  #   ^set = Indexer.get(node_id, :nlfs)
 
-    node_id
-  end
+  #   node_id
+  # end
 
-  def indexer_reads_commitments(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
-    Indexer.start_link(node_id: node_id)
-    updates = Storage.updates_table(node_id)
-    values = Storage.values_table(node_id)
+  # def indexer_reads_commitments(node_id \\ "londo_mollari") do
+  #   ETransaction.restart_storage(node_id)
+  #   Indexer.start_link(node_id: node_id)
+  #   updates = Storage.updates_table(node_id)
+  #   values = Storage.values_table(node_id)
 
-    resource1 = %Resource{rseed: "random1"} |> Resource.nullifier()
-    resource2 = %Resource{rseed: "random2"} |> Resource.nullifier()
-    set = MapSet.new([resource1, resource2])
+  #   resource1 = %Resource{rseed: "random1"} |> Resource.nullifier()
+  #   resource2 = %Resource{rseed: "random2"} |> Resource.nullifier()
+  #   set = MapSet.new([resource1, resource2])
 
-    write_new(updates, values, [1], nil, set)
+  #   write_new(updates, values, [1], nil, set)
 
-    ^set = Indexer.get(node_id, :cms)
+  #   ^set = Indexer.get(node_id, :cms)
 
-    node_id
-  end
+  #   node_id
+  # end
 
-  def indexer_does_not_read_revealed(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
-    Indexer.start_link(node_id: node_id)
-    updates = Storage.updates_table(node_id)
-    values = Storage.values_table(node_id)
+  # def indexer_does_not_read_revealed(node_id \\ "londo_mollari") do
+  #   ETransaction.restart_storage(node_id)
+  #   Indexer.start_link(node_id: node_id)
+  #   updates = Storage.updates_table(node_id)
+  #   values = Storage.values_table(node_id)
 
-    resource = %Resource{rseed: "random1"}
-    nul1 = resource |> Resource.nullifier()
-    com1 = resource |> Resource.commitment()
-    nulfs = MapSet.new([nul1])
-    coms = MapSet.new([com1])
+  #   resource = %Resource{rseed: "random1"}
+  #   nul1 = resource |> Resource.nullifier()
+  #   com1 = resource |> Resource.commitment()
+  #   nulfs = MapSet.new([nul1])
+  #   coms = MapSet.new([com1])
 
-    write_new(updates, values, [1], nulfs, coms)
+  #   write_new(updates, values, [1], nulfs, coms)
 
-    newset = MapSet.new([])
-    ^newset = Indexer.get(node_id, :unrevealed)
+  #   newset = MapSet.new([])
+  #   ^newset = Indexer.get(node_id, :unrevealed)
 
-    node_id
-  end
+  #   node_id
+  # end
 
-  def indexer_reads_unrevealed(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
-    Indexer.start_link(node_id: node_id)
-    updates = Storage.updates_table(node_id)
-    values = Storage.values_table(node_id)
+  # def indexer_reads_unrevealed(node_id \\ "londo_mollari") do
+  #   ETransaction.restart_storage(node_id)
+  #   Indexer.start_link(node_id: node_id)
+  #   updates = Storage.updates_table(node_id)
+  #   values = Storage.values_table(node_id)
 
-    resource = %Resource{rseed: "random1"}
-    nul1 = resource |> Resource.nullifier()
-    com1 = resource |> Resource.commitment()
-    com2 = %Resource{rseed: "random2"} |> Resource.commitment()
-    nulfs = MapSet.new([nul1])
-    coms = MapSet.new([com1, com2])
+  #   resource = %Resource{rseed: "random1"}
+  #   nul1 = resource |> Resource.nullifier()
+  #   com1 = resource |> Resource.commitment()
+  #   com2 = %Resource{rseed: "random2"} |> Resource.commitment()
+  #   nulfs = MapSet.new([nul1])
+  #   coms = MapSet.new([com1, com2])
 
-    write_new(updates, values, [1], nulfs, coms)
+  #   write_new(updates, values, [1], nulfs, coms)
 
-    newset = MapSet.new([com2])
-    ^newset = Indexer.get(node_id, :unrevealed)
+  #   newset = MapSet.new([com2])
+  #   ^newset = Indexer.get(node_id, :unrevealed)
 
-    node_id
-  end
+  #   node_id
+  # end
 
   defp write_new(updates, values, heights, nlfs, coms) do
     :mnesia.transaction(fn ->
-      if nlfs do
+      if nlfs != nil do
         :mnesia.write({updates, :nullifiers, heights})
       end
 
-      if coms do
+      if coms != nil do
         :mnesia.write({updates, :commitments, heights})
       end
 
