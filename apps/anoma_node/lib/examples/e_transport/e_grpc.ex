@@ -99,7 +99,8 @@ defmodule Anoma.Node.Examples.EGRPC do
   """
   def list_nullifiers(%EGRPC{} = client \\ connect_to_node()) do
     request = %Nullifiers.Request{}
-    {:ok, _reply} = Intents.Stub.list_nullifiers(client.channel, request)
+    {:ok, reply} = Intents.Stub.list_nullifiers(client.channel, request)
+    assert reply.nullifiers == []
   end
 
   @doc """
@@ -108,8 +109,10 @@ defmodule Anoma.Node.Examples.EGRPC do
   def list_unrevealed_commits(%EGRPC{} = client \\ connect_to_node()) do
     request = %UnrevealedCommits.Request{}
 
-    {:ok, _reply} =
+    {:ok, reply} =
       Intents.Stub.list_unrevealed_commits(client.channel, request)
+
+    assert reply.commits == []
   end
 
   @doc """
@@ -118,7 +121,9 @@ defmodule Anoma.Node.Examples.EGRPC do
   def list_unspent_resources(%EGRPC{} = client \\ connect_to_node()) do
     request = %UnspentResources.Request{}
 
-    {:ok, _reply} =
+    {:ok, reply} =
       Intents.Stub.list_unspent_resources(client.channel, request)
+
+    assert reply.unspent_resources == []
   end
 end
