@@ -534,7 +534,7 @@ defmodule Examples.ENock do
   @spec rad_arm() :: Noun.t()
   def rad_arm() do
     arm =
-      "[8 [8 [9 47 0 63] 9 10 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 47 0 63] 9 20 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]

@@ -575,7 +575,10 @@
   (shax (mix sal (shax ruz)))
 ++  og
   ~/  %og
-  |_  a=@
+  ^|  |_  a=@
+  ++  split
+    ^-  [_og _og]
+    [.(a (shas %split-l a)) .(a (shas %split-r a))]
   ++  raw  :: Random bit generation
     ~/  %raw
     |=  b=@  ^-  @
