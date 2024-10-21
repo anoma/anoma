@@ -113,4 +113,22 @@ defmodule Anoma.TransparentResource.Resource do
     binary_resource = resource |> to_noun() |> Nock.Jam.jam()
     "NF_" <> binary_resource
   end
+
+  @spec commits?(t(), Noun.noun_atom()) :: boolean()
+  def commits?(self = %Resource{}, commitment) when is_binary(commitment) do
+    commitment(self) == commitment
+  end
+
+  def commits?(self = %Resource{}, commitment) when is_integer(commitment) do
+    commits?(self, Noun.atom_integer_to_binary(commitment))
+  end
+
+  @spec nullifies?(t(), Noun.noun_atom()) :: boolean()
+  def nullifies?(self = %Resource{}, nullifier) when is_binary(nullifier) do
+    nullifier(self) == nullifier
+  end
+
+  def nullifies?(self = %Resource{}, nullifier) when is_integer(nullifier) do
+    nullifies?(self, Noun.atom_integer_to_binary(nullifier))
+  end
 end

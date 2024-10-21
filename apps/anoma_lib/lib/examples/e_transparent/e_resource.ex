@@ -6,6 +6,14 @@ defmodule Examples.ETransparent.EResource do
 
   use TestHelper.TestMacro
 
+  @spec trivial_true_resource() :: Resource.t()
+  defmemo trivial_true_resource() do
+    res = %Resource{nonce: Randomness.get_random(32)}
+
+    {:ok, 0} = Nock.nock(res.logic, [9, 2, 0 | 1])
+    res
+  end
+
   @doc """
   I generate out unique trivial true resources.
 
@@ -83,5 +91,13 @@ defmodule Examples.ETransparent.EResource do
     refute Resource.commits?(trivial_true_resource(), res)
 
     res
+  end
+
+  def trivial_true_nullifier_2() do
+    Resource.nullifier(trivial_true_resource_2())
+  end
+
+  def trivial_false_commitment() do
+    Resource.commitment(trivial_false_resource())
   end
 end
