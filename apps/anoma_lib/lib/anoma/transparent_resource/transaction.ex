@@ -137,4 +137,39 @@ defmodule Anoma.TransparentResource.Transaction do
       {:ok, MapSet.new(Enum.map(maybe_actions, fn {:ok, x} -> x end))}
     end
   end
+
+  ##############################################################################
+  #                                Accessing                                   #
+  ##############################################################################
+
+  @spec commitments(t()) ::
+          MapSet.t(Anoma.TransparentResource.Resource.commitment())
+  def commitments(self = %Transaction{}) do
+    self.actions
+    |> Stream.map(&Action.commitments/1)
+    |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+  end
+
+  @spec nullifiers(t()) ::
+          MapSet.t(Anoma.TransparentResource.Resource.nullifier())
+  def nullifiers(self = %Transaction{}) do
+    self.actions
+    |> Stream.map(&Action.nullifiers/1)
+    |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+  end
+
+  @spec resources(t()) :: MapSet.t(Anoma.TransparentResource.Resource.t())
+  def resources(self = %Transaction{}) do
+    self.actions
+    |> Stream.map(&Action.resources/1)
+    |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+  end
+
+  @spec nullified_resources(t()) ::
+          MapSet.t(Anoma.TransparentResource.Resource.t())
+  def nullified_resources(self = %Transaction{}) do
+    self.actions
+    |> Stream.map(&Action.nullified_resources/1)
+    |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+  end
 end
