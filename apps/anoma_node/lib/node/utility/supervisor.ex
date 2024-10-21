@@ -4,17 +4,25 @@ defmodule Anoma.Node.Utility.Supervisor do
   """
 
   use Supervisor
-  alias Anoma.Node.Registry
+
+  require Logger
+
+  require Logger
 
   def start_link(args) do
-    name = Registry.via(args[:node_id], __MODULE__)
-    Supervisor.start_link(__MODULE__, args, name: name)
+    args = Keyword.validate!(args, [:node_id])
+    Supervisor.start_link(__MODULE__, args)
   end
 
-  def init(_args) do
+  def init(args) do
     Process.set_label(__MODULE__)
 
-    children = []
+    args = Keyword.validate!(args, [:node_id])
+
+    children = [
+      {Anoma.Node.Utility.Indexer, Keyword.take(args, [:node_id])}
+    ]
+
     Supervisor.init(children, strategy: :one_for_all)
   end
 end
