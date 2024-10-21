@@ -4,41 +4,49 @@ defmodule Anoma.Client do
   """
   use TypedStruct
 
+  alias Anoma.Client
+  alias Anoma.Client.Connection
+  alias Anoma.Client.ConnectionSupervisor
+
   typedstruct do
     field(:type, :grpc | :tcp)
     field(:supervisor, pid())
+    field(:grpc_port, integer())
   end
 
   @doc """
   I connect to a remote node over GRPC.
   """
-  @spec connect(String.t(), integer()) ::
-          {:ok, Anoma.Client.t()} | {:error, term()}
-  def connect(host, port) do
+  @spec connect(String.t(), integer(), integer()) ::
+          {:ok, Client.t()} | {:error, term()} | {:error, term(), term()}
+  def connect(host, port, listen_port) do
     spec =
-      {Anoma.Client.Connection.Supervisor,
-       [host: host, port: port, type: :grpc]}
+      {Connection.Supervisor,
+       [host: host, port: port, type: :grpc, listen_port: listen_port]}
 
-    case DynamicSupervisor.start_child(
-           Anoma.Client.ConnectionSupervisor,
-           spec
-         ) do
+    case DynamicSupervisor.start_child(ConnectionSupervisor, spec) do
       {:ok, pid} ->
-        {:ok, %__MODULE__{type: :grpc, supervisor: pid}}
+        client_grpc_port = :ranch.get_port(<<"Anoma.Client.Api.Endpoint">>)
+
+        {:ok,
+         %__MODULE__{
+           type: :grpc,
+           supervisor: pid,
+           grpc_port: client_grpc_port
+         }}
 
       {:error, {_, {_, _, :node_unreachable}}} ->
         {:error, :node_unreachable}
 
       err ->
-        IO.inspect(err)
-        {:error, :unknown}
+        {:error, :unknown_error, err}
     end
   end
 
   @doc """
   Given a Client, I disconnect it and cleanup.
   """
-  @spec disconnect(Anoma.Client.t()) :: :ok
+  @spec disconnect(Client.t()) :: :ok
   def disconnect(client) do
     Supervisor.stop(client.supervisor)
   end

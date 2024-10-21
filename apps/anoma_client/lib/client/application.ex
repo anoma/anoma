@@ -14,27 +14,13 @@ defmodule Anoma.Client.Application do
 
   @impl true
   def start(_type, _args) do
-    args = fetch_args()
-
-    Logger.debug("starting client with args: #{inspect(args)}")
+    Logger.debug("starting client")
 
     children = [
-      {DynamicSupervisor, name: Anoma.Client.ConnectionSupervisor},
-      {GRPC.Server.Supervisor,
-       endpoint: Anoma.Client.Api.Endpoint,
-       port: args[:listen_port],
-       start_server: true}
+      {DynamicSupervisor, name: Anoma.Client.ConnectionSupervisor}
     ]
 
     opts = [strategy: :one_for_one, name: Anoma.Client.Supervisor]
     Supervisor.start_link(children, opts)
-  end
-
-  @spec fetch_args() :: Keyword.t()
-  defp fetch_args() do
-    listen_port =
-      (System.get_env("LISTEN_PORT") || "0") |> String.to_integer()
-
-    [listen_port: listen_port]
   end
 end
