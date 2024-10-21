@@ -31,7 +31,6 @@ defmodule Anoma.Node.Supervisor do
       {Anoma.Node.Transport.Supervisor,
        node_id: args[:node_id], grpc_port: args[:grpc_port]},
       {Anoma.Node.Transaction.Supervisor, node_id: args[:node_id]},
-      {Anoma.Node.Utility.Supervisor, node_id: args[:node_id]},
       {Anoma.Node.Logging, node_id: args[:node_id]}
     ]
 
