@@ -79,7 +79,18 @@ defmodule Anoma.Node.Transaction.Mempool do
       filter_for_mempool()
     ])
 
-    {:ok, %__MODULE__{node_id: node_id}}
+    for {id, tx_w_backend} <- args[:transactions] do
+      tx(args[:node_id], tx_w_backend, id)
+    end
+
+    consensus = args[:consensus]
+    round = args[:round]
+
+    for list <- consensus do
+      execute(node_id, list)
+    end
+
+    {:ok, %__MODULE__{round: round, node_id: node_id}}
   end
 
   ############################################################
