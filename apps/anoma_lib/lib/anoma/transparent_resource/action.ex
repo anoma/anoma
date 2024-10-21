@@ -45,25 +45,54 @@ defmodule Anoma.TransparentResource.Action do
     Delta.sub(committed_delta, nullified_delta)
   end
 
-  @spec verify_correspondence(t()) :: boolean()
+  @spec verify_correspondence(t()) :: true | {:error, String.t()}
   def verify_correspondence(action = %Action{}) do
     # Bail out early, if there are more committed and nullified
     # resources than there are actual resource proofs
     if MapSet.size(action.proofs) <
          MapSet.size(action.commitments) + MapSet.size(action.nullifiers) do
-      false
+      {:error,
+       "there are more commitments and nullifiers than actual logic proofs\n" <>
+         "#{inspect(action, pretty: true)}"}
     else
       # TODO Should I check that LogicProof.commitments =
       # Action.commitments, as well as the nullifiers? Or can I assume
       # that they are the same context. I could technically make it
       # lie if I constructed it to lie, no?
-      action.proofs
-      |> Enum.all?(fn
-        proof = %LogicProof{} ->
-          LogicProof.verify_resource_corresponds_to_tag(proof) &&
-            verify_resource_is_accounted_for?(action, proof) and
-            verify_action_resources_correspond_to_proofs?(action, proof)
-      end)
+      failed_proofs =
+        action.proofs
+        |> Enum.map(fn proof = %LogicProof{} ->
+          cond do
+            not LogicProof.verify_resource_corresponds_to_tag(proof) ->
+              "Logic Proof failed, the resource's commitment\nullifier:\n" <>
+                "#{inspect(proof.resource, pretty: true)}\n" <>
+                "does not match the commitment/nullifier: #{inspect(proof.self_tag)}"
+
+            not verify_resource_is_accounted_for?(action, proof) ->
+              "The resource:\n" <>
+                "#{inspect(proof.resource, pretty: true)}\n" <>
+                "Is not found in the Action's commitment/nullifier set"
+
+            not verify_action_resources_correspond_to_proofs?(action, proof) ->
+              "Either the action's commitments:\n" <>
+                "#{inspect(action.commitments, pretty: true)}" <>
+                "does not match the proof's commitments:" <>
+                "#{inspect(proof.commitments, pretty: true)}" <>
+                "or the action's nullifiers:" <>
+                "#{inspect(action.nullifiers, pretty: true)}" <>
+                "does not match the proof's nullifiers:" <>
+                "#{inspect(proof.nullifiers, pretty: true)}"
+
+            true ->
+              true
+          end
+        end)
+        |> Enum.reject(&(&1 == true))
+
+      Enum.empty?(failed_proofs) ||
+        {:error,
+         "The following correspondence proofs failed:\n" <>
+           Enum.join(failed_proofs, "\n")}
     end
   end
 
