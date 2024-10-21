@@ -40,7 +40,7 @@ defmodule Anoma.TransparentResource.LogicProof do
 
     args = [public_inputs | private_inputs]
 
-    result = Nock.nock(proof.resource.logic, [9, 2, 10, [6 | args], 0 | 1])
+    result = Nock.nock(proof.resource.logic, [9, 2, 10, [6, 1 | args], 0 | 1])
 
     case result do
       {:ok, zero} when zero in [0, <<>>, <<0>>, []] -> true
@@ -118,7 +118,7 @@ defmodule Anoma.TransparentResource.LogicProof do
     # format in from_noun
     self_tag =
       case proof.self_tag do
-        {:comitted, comm} -> comm
+        {:committed, comm} -> comm
         {:nullified, null} -> null
       end
 
