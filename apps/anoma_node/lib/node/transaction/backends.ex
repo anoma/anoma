@@ -130,8 +130,12 @@ defmodule Anoma.Node.Transaction.Backends do
           :ok | :error
   defp transparent_resource_tx(node_id, id, result) do
     storage_checks = fn tx -> storage_check?(node_id, id, tx) end
+    verify_tx_root = fn tx -> verify_tx_root(node_id, id, tx) end
 
-    verify_options = [double_insertion_closure: storage_checks]
+    verify_options = [
+      double_insertion_closure: storage_checks,
+      root_closure: verify_tx_root
+    ]
 
     with {:ok, tx} <- TransparentResource.Transaction.from_noun(result),
          true <- TransparentResource.Transaction.verify(tx, verify_options) do
@@ -156,6 +160,12 @@ defmodule Anoma.Node.Transaction.Backends do
     else
       _e -> :error
     end
+  end
+
+  @spec verify_tx_root(String.t(), binary(), TTransaction.t()) :: boolean()
+  defp verify_tx_root(node_id, id, trans = %TTransaction{}) do
+    stored_commitments = Ordering.read(node_id, {id, :commitments})
+    commitments_exist_before_nullifier_submission(stored_commitments, trans)
   end
 
   @spec storage_check?(String.t(), binary(), TTransaction.t()) :: boolean()
@@ -183,6 +193,21 @@ defmodule Anoma.Node.Transaction.Backends do
   defp any_commitments_already_exist?(stored_comms, trans = %TTransaction{}) do
     commitments = TTransaction.commitments(trans)
     Enum.any?(commitments, &MapSet.member?(stored_comms, &1))
+  end
+
+  @spec commitments_exist_before_nullifier_submission(
+          MapSet.t(TResource.commitment()),
+          TTransaction.t()
+        ) :: boolean()
+  def commitments_exist_before_nullifier_submission(
+        stored_comms,
+        trans = %TTransaction{}
+      ) do
+    TTransaction.nullified_resources(trans)
+    |> Stream.reject(fn resource = %TResource{} -> resource.ephemeral end)
+    |> Stream.map(&TResource.commitment/1)
+    # Now let us check these commitments belong in the set
+    |> Enum.all?(fn commitment -> MapSet.member?(stored_comms, commitment) end)
   end
 
   @spec send_value(String.t(), binary(), Noun.t(), pid()) :: :ok | :error
