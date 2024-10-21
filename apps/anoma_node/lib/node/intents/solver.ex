@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transaction.Solver do
+defmodule Anoma.Node.Intents.Solver do
   @moduledoc """
   I am a strawman intent solver for testing purposes.
 
@@ -14,7 +14,7 @@ defmodule Anoma.Node.Transaction.Solver do
   use GenServer
 
   alias __MODULE__
-  alias Anoma.Node.Transaction.IntentPool
+  alias Anoma.Node.Intents.IntentPool
   alias Anoma.Node.Registry
   alias Anoma.RM.Intent
   alias EventBroker.Event

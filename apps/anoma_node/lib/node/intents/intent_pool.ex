@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transaction.IntentPool do
+defmodule Anoma.Node.Intents.IntentPool do
   @moduledoc """
   I am the intent pool for the Anoma node.
   m1dnight still has to write these docs.
