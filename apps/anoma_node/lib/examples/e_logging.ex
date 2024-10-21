@@ -1,7 +1,7 @@
 defmodule Anoma.Node.Examples.ELogging do
   alias Anoma.Node
   alias Node.Logging
-  alias Node.Transaction.Mempool
+  alias Node.Transaction.{Mempool, Storage}
   alias Node.Examples.ENode
 
   require Node.Event
@@ -229,6 +229,260 @@ defmodule Anoma.Node.Examples.ELogging do
              :mnesia.transaction(fn ->
                :mnesia.read(table_name, "id 2")
              end)
+  end
+
+  def replay_corrects_result(node_id \\ Node.example_random_id()) do
+    replay_ensure_created_tables(node_id)
+    table = Storage.blocks_table(node_id)
+
+    :mnesia.transaction(fn ->
+      :mnesia.write(
+        {table, 0, [%Mempool.Tx{backend: :debug_bloblike, code: "code 1"}]}
+      )
+    end)
+
+    write_consensus_leave_one_out(node_id)
+
+    EventBroker.subscribe_me([])
+
+    Logging.restart_with_replay(node_id)
+
+    :ok =
+      wait_for_tx(node_id, "id 2", "code 2")
+
+    :error_tx =
+      wait_for_tx(node_id, "id 1", "code 1")
+
+    state = Anoma.Node.Registry.whereis(node_id, Mempool) |> :sys.get_state()
+    nil = Map.get(state.transactions, "id 1")
+    1 = state.round
+
+    state
+  end
+
+  def replay_consensus_leave_one_out(node_id \\ Node.example_random_id()) do
+    write_consensus_leave_one_out(node_id)
+    replay_ensure_created_tables(node_id)
+
+    EventBroker.subscribe_me([])
+
+    Logging.restart_with_replay(node_id)
+
+    :ok =
+      wait_for_tx(node_id, "id 1", "code 1")
+
+    :ok =
+      wait_for_tx(node_id, "id 2", "code 2")
+
+    :ok =
+      wait_for_consensus(node_id, ["id 1"])
+
+    Mempool.execute(node_id, ["id 2"])
+
+    :ok =
+      wait_for_consensus(node_id, ["id 2"])
+  end
+
+  def replay_several_consensus(node_id \\ Node.example_random_id()) do
+    write_several_consensus(node_id)
+    replay_ensure_created_tables(node_id)
+
+    EventBroker.subscribe_me([])
+
+    Logging.restart_with_replay(node_id)
+
+    :ok =
+      wait_for_tx(node_id, "id 1", "code 1")
+
+    :ok =
+      wait_for_tx(node_id, "id 2", "code 2")
+
+    :ok =
+      wait_for_consensus(node_id, ["id 1"])
+
+    :ok =
+      wait_for_consensus(node_id, ["id 2"])
+  end
+
+  def replay_consensus_with_several_txs(node_id \\ Node.example_random_id()) do
+    write_consensus_with_several_tx(node_id)
+    replay_ensure_created_tables(node_id)
+
+    EventBroker.subscribe_me([])
+
+    Logging.restart_with_replay(node_id)
+
+    :ok =
+      wait_for_tx(node_id, "id 1", "code 1")
+
+    :ok =
+      wait_for_tx(node_id, "id 2", "code 2")
+
+    :ok =
+      wait_for_consensus(node_id, ["id 1", "id 2"])
+  end
+
+  def replay_consensus(node_id \\ Node.example_random_id()) do
+    write_consensus(node_id)
+    replay_ensure_created_tables(node_id)
+
+    EventBroker.subscribe_me([])
+
+    Logging.restart_with_replay(node_id)
+
+    :ok =
+      wait_for_tx(node_id, "id 1", "code 1")
+
+    :ok =
+      wait_for_consensus(node_id, ["id 1"])
+  end
+
+  def replay_several_txs(node_id \\ Node.example_random_id()) do
+    write_several_tx(node_id)
+    replay_ensure_created_tables(node_id)
+
+    EventBroker.subscribe_me([])
+
+    Logging.restart_with_replay(node_id)
+
+    :ok =
+      wait_for_tx(node_id, "id 1", "code 1")
+
+    :ok =
+      wait_for_tx(node_id, "id 2", "code 2")
+  end
+
+  def replay_tx(node_id \\ Node.example_random_id()) do
+    write_tx(node_id)
+    replay_ensure_created_tables(node_id)
+
+    EventBroker.subscribe_me([])
+
+    {:ok, _pid} = Logging.restart_with_replay(node_id)
+
+    :ok =
+      wait_for_tx(node_id, "id 1", "code 1")
+  end
+
+  defp write_consensus_leave_one_out(node_id) do
+    table = write_several_tx(node_id)
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({table, :consensus, [["id 1"]]})
+    end)
+
+    table
+  end
+
+  defp write_several_consensus(node_id) do
+    table = write_several_tx(node_id)
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({table, :consensus, [["id 1"], ["id 2"]]})
+    end)
+
+    table
+  end
+
+  defp write_consensus_with_several_tx(node_id) do
+    table = write_several_tx(node_id)
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({table, :consensus, [["id 1", "id 2"]]})
+    end)
+
+    table
+  end
+
+  def write_consensus(node_id) do
+    table = write_tx(node_id)
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({table, :consensus, [["id 1"]]})
+    end)
+
+    table
+  end
+
+  defp write_several_tx(node_id) do
+    table = create_event_table(node_id)
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({table, "id 1", {:debug_bloblike, "code 1"}})
+      :mnesia.write({table, "id 2", {:debug_bloblike, "code 2"}})
+    end)
+
+    table
+  end
+
+  defp write_tx(node_id) do
+    table = create_event_table(node_id)
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({table, "id 1", {:debug_bloblike, "code 1"}})
+    end)
+
+    table
+  end
+
+  defp wait_for_consensus(node_id, consensus) do
+    receive do
+      %EventBroker.Event{
+        body: %Node.Event{
+          node_id: ^node_id,
+          body: %Mempool.ConsensusEvent{
+            order: ^consensus
+          }
+        }
+      } ->
+        :ok
+    after
+      1000 -> :error_consensus
+    end
+  end
+
+  defp wait_for_tx(node_id, id, code) do
+    receive do
+      %EventBroker.Event{
+        body: %Node.Event{
+          node_id: ^node_id,
+          body: %Mempool.TxEvent{
+            id: ^id,
+            tx: %Mempool.Tx{backend: _, code: ^code}
+          }
+        }
+      } ->
+        :ok
+    after
+      1000 -> :error_tx
+    end
+  end
+
+  defp create_event_table(node_id) do
+    table = Logging.table_name(node_id)
+    :mnesia.create_table(table, attributes: [:type, :body])
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({table, :round, -1})
+    end)
+
+    table
+  end
+
+  defp replay_ensure_created_tables(node_id) do
+    block_table = Storage.blocks_table(node_id)
+    values_table = Storage.values_table(node_id)
+    updates_table = Storage.updates_table(node_id)
+
+    :mnesia.create_table(values_table, attributes: [:key, :value])
+    :mnesia.create_table(updates_table, attributes: [:key, :value])
+    :mnesia.create_table(block_table, attributes: [:round, :block])
+
+    [
+      block_table: block_table,
+      values_table: values_table,
+      updates_table: updates_table
+    ]
   end
 
   def tx_event(id, backend, code, node_id) do

@@ -16,7 +16,7 @@ defmodule Anoma.Node.Supervisor do
   end
 
   def start_link(args) do
-    args = Keyword.validate!(args, [:node_id, :grpc_port])
+    args = Keyword.validate!(args, [:node_id, :grpc_port, :tx_args])
     name = Anoma.Node.Registry.via(args[:node_id], __MODULE__)
     Supervisor.start_link(__MODULE__, args, name: name)
   end
@@ -25,12 +25,13 @@ defmodule Anoma.Node.Supervisor do
     Logger.debug("starting node with #{inspect(args)}")
     Process.set_label(__MODULE__)
 
-    args = Keyword.validate!(args, [:node_id, :grpc_port])
+    args = Keyword.validate!(args, [:node_id, :grpc_port, :tx_args])
 
     children = [
       {Anoma.Node.Transport.Supervisor,
        node_id: args[:node_id], grpc_port: args[:grpc_port]},
-      {Anoma.Node.Transaction.Supervisor, node_id: args[:node_id]},
+      {Anoma.Node.Transaction.Supervisor,
+       [node_id: args[:node_id], tx_args: args[:tx_args]]},
       {Anoma.Node.Intents.Supervisor, node_id: args[:node_id]},
       {Anoma.Node.Logging, node_id: args[:node_id]}
     ]
