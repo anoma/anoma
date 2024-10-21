@@ -74,8 +74,6 @@ defmodule Anoma.Node.Examples.EConsensus do
       end
     end)
 
-    Process.sleep(5000)
-
     node_id =
       ("londo_mollari" <> :crypto.strong_rand_bytes(16))
       |> Base.url_encode64()
