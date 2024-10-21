@@ -6,7 +6,6 @@ defmodule Anoma.Node.Examples.EGRPC do
 
   alias __MODULE__
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Client.Examples.EProxy
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
