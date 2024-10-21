@@ -1,57 +1,46 @@
 defmodule Anoma.Node.Examples.ETransaction do
-  alias Anoma.Node.Transaction.{Storage, Ordering, Mempool}
+  alias Anoma.Node
+  alias Node.Transaction.{Storage, Ordering, Mempool}
 
   require ExUnit.Assertions
   import ExUnit.Assertions
-
-  alias Anoma.Node.Registry
 
   ############################################################
   #                          Storage                         #
   ############################################################
 
-  def restart_storage(node_id \\ "londo_mollari") do
-    pid = Registry.whereis(node_id, Storage)
-
-    if pid && Process.alive?(pid) do
-      GenServer.stop(pid)
-    end
-
-    :mnesia.clear_table(Storage.values_table(node_id))
-    :mnesia.clear_table(Storage.updates_table(node_id))
-    :mnesia.clear_table(Storage.blocks_table(node_id))
-
+  def start_storage(node_id \\ Node.example_random_id()) do
     Anoma.Node.Transaction.Storage.start_link(node_id: node_id)
   end
 
-  def write_then_read(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def write_then_read(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     Storage.write(node_id, {1, [{["abc"], 123}]})
     {:ok, 123} = Storage.read(node_id, {1, ["abc"]})
   end
 
-  def write_then_read_other(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def write_then_read_other(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     Storage.write(node_id, {1, [{["abc"], 123}]})
     :absent = Storage.read(node_id, {1, ["def"]})
   end
 
-  def read_future_then_write(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def read_future_then_write(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     task = Task.async(fn -> Storage.read(node_id, {1, ["abc"]}) end)
     Storage.write(node_id, {1, [{["abc"], 123}]})
     {:ok, 123} = Task.await(task)
   end
 
-  def read_other_future_then_write(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def read_other_future_then_write(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     task = Task.async(fn -> Storage.read(node_id, {1, ["def"]}) end)
     Storage.write(node_id, {1, [{["abc"], 123}]})
     :absent = Task.await(task)
   end
 
-  def write_future_then_write_present(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def write_future_then_write_present(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
 
     _task1 =
       Task.async(fn -> Storage.write(node_id, {2, [{["abc"], 123}]}) end)
@@ -62,15 +51,17 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, 123} = Task.await(task2)
   end
 
-  def write_multiple_then_read(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def write_multiple_then_read(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     Storage.write(node_id, {1, [{["abc"], 123}, {["bcd"], 231}]})
     {:ok, 123} = Storage.read(node_id, {1, ["abc"]})
     {:ok, 231} = Storage.read(node_id, {1, ["bcd"]})
   end
 
-  def write_future_multiple_then_write_present(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def write_future_multiple_then_write_present(
+        node_id \\ Node.example_random_id()
+      ) do
+    start_storage(node_id)
 
     _task1 =
       Task.async(fn ->
@@ -83,29 +74,29 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, 231} = Task.await(task2)
   end
 
-  def append_then_read(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def append_then_read(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     Storage.append(node_id, {1, [{:set, "value"}]})
     new_set = MapSet.new(["value"])
     {:ok, ^new_set} = Storage.read(node_id, {1, :set})
   end
 
-  def append_then_read_same(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def append_then_read_same(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     Storage.append(node_id, {1, [{:set, "value"}, {:set, "value"}]})
     new_set = MapSet.new(["value"])
     {:ok, ^new_set} = Storage.read(node_id, {1, :set})
   end
 
-  def append_then_read_several(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def append_then_read_several(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     Storage.append(node_id, {1, [{:set, "value1"}, {:set, "value2"}]})
     new_set = MapSet.new(["value1", "value2"])
     {:ok, ^new_set} = Storage.read(node_id, {1, :set})
   end
 
-  def append_twice_then_read(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def append_twice_then_read(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     Storage.append(node_id, {1, [{:set, "value1"}]})
     new_set = MapSet.new(["value1"])
     {:ok, ^new_set} = Storage.read(node_id, {1, :set})
@@ -114,8 +105,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, ^appended_set} = Storage.read(node_id, {2, :set})
   end
 
-  def append_twice_then_read_with_commit(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def append_twice_then_read_with_commit(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     Storage.append(node_id, {1, [{:set, "value1"}]})
     new_set = MapSet.new(["value1"])
     {:ok, ^new_set} = Storage.read(node_id, {1, :set})
@@ -127,8 +118,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, ^appended_set} = Storage.read(node_id, {2, :set})
   end
 
-  def complicated_storage(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def complicated_storage(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     task1 = Task.async(fn -> Storage.read(node_id, {3, ["abc"]}) end)
     task2 = Task.async(fn -> Storage.read(node_id, {2, ["abc"]}) end)
     task3 = Task.async(fn -> Storage.read(node_id, {1, ["abc"]}) end)
@@ -148,8 +139,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     }
   end
 
-  def complicated_storage_with_commit(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
+  def complicated_storage_with_commit(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
     task1 = Task.async(fn -> Storage.read(node_id, {3, ["abc"]}) end)
     task2 = Task.async(fn -> Storage.read(node_id, {2, ["abc"]}) end)
     task3 = Task.async(fn -> Storage.read(node_id, {1, ["abc"]}) end)
@@ -174,19 +165,13 @@ defmodule Anoma.Node.Examples.ETransaction do
   #                         Ordering                         #
   ############################################################
 
-  def restart_ordering(node_id \\ "londo_mollari") do
-    pid = Registry.whereis(node_id, Ordering)
-
-    if pid && Process.alive?(pid) do
-      GenServer.stop(pid)
-    end
-
+  def start_ordering(node_id \\ Node.example_random_id()) do
     Anoma.Node.Transaction.Ordering.start_link(node_id: node_id)
   end
 
-  def ord_write_then_read(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
-    restart_ordering(node_id)
+  def ord_write_then_read(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
+    start_ordering(node_id)
 
     _write_task =
       Task.async(fn ->
@@ -202,9 +187,9 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, 123} = Task.await(read_task)
   end
 
-  def ord_read_future_then_write(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
-    restart_ordering(node_id)
+  def ord_read_future_then_write(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
+    start_ordering(node_id)
 
     read_task =
       Task.async(fn -> Ordering.read(node_id, {"tx id 2", ["abc"]}) end)
@@ -219,9 +204,9 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, 123} = Task.await(read_task)
   end
 
-  def ord_order_first(node_id \\ "londo_mollari") do
-    restart_storage(node_id)
-    restart_ordering(node_id)
+  def ord_order_first(node_id \\ Node.example_random_id()) do
+    start_storage(node_id)
+    start_ordering(node_id)
 
     Ordering.order(node_id, ["tx id 1", "tx id 2"])
 
@@ -229,31 +214,19 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, 123} = Ordering.read(node_id, {"tx id 2", ["abc"]})
   end
 
-  def restart_mempool(node_id \\ "londo_mollari") do
-    pid = Registry.whereis(node_id, Mempool)
-
-    if pid && Process.alive?(pid) do
-      GenServer.stop(pid)
-    end
-
+  def start_mempool(node_id \\ Node.example_random_id()) do
     Anoma.Node.Transaction.Mempool.start_link(node_id: node_id)
   end
 
-  def restart_executor(node_id \\ "londo_mollari") do
-    pid = Registry.whereis(node_id, Executor)
-
-    if pid && Process.alive?(pid) do
-      GenServer.stop(pid)
-    end
-
+  def start_executor(node_id \\ Node.example_random_id()) do
     Anoma.Node.Transaction.Executor.start_link(node_id: node_id)
   end
 
-  def restart_tx_module(node_id \\ "londo_mollari") do
-    restart_ordering(node_id)
-    restart_storage(node_id)
-    restart_executor(node_id)
-    restart_mempool(node_id)
+  def start_tx_module(node_id \\ Node.example_random_id()) do
+    start_ordering(node_id)
+    start_storage(node_id)
+    start_executor(node_id)
+    start_mempool(node_id)
   end
 
   # to be moved to nock
@@ -280,9 +253,9 @@ defmodule Anoma.Node.Examples.ETransaction do
   #                        Transactions                      #
   ############################################################
 
-  def zero_counter_submit(node_id \\ "londo_mollari") do
+  def zero_counter_submit(node_id \\ Node.example_random_id()) do
     key = "key"
-    restart_tx_module(node_id)
+    start_tx_module(node_id)
     {back, zero} = zero(key)
 
     Mempool.tx(node_id, {back, zero}, "id 1")
@@ -312,10 +285,10 @@ defmodule Anoma.Node.Examples.ETransaction do
     ] = :mnesia.dirty_read({Storage.blocks_table(node_id), 0})
   end
 
-  def inc_counter_submit_with_zero(node_id \\ "londo_mollari") do
+  def inc_counter_submit_with_zero(node_id \\ Node.example_random_id()) do
     blocks_table = Storage.blocks_table(node_id)
     key = "key"
-    restart_tx_module(node_id)
+    start_tx_module(node_id)
     {back1, zero} = zero(key)
     {back2, inc} = inc(key)
 
@@ -351,7 +324,7 @@ defmodule Anoma.Node.Examples.ETransaction do
     ] = :mnesia.dirty_read({blocks_table, 0})
   end
 
-  def inc_counter_submit_after_zero(node_id \\ "londo_mollari") do
+  def inc_counter_submit_after_zero(node_id \\ Node.example_random_id()) do
     blocks_table = Storage.blocks_table(node_id)
     key = "key"
     zero_counter_submit(node_id)
@@ -380,7 +353,7 @@ defmodule Anoma.Node.Examples.ETransaction do
     ] = :mnesia.dirty_read({blocks_table, 1})
   end
 
-  def inc_counter_submit_after_read(node_id \\ "londo_mollari") do
+  def inc_counter_submit_after_read(node_id \\ Node.example_random_id()) do
     blocks_table = Storage.blocks_table(node_id)
 
     key = "key"
@@ -422,9 +395,9 @@ defmodule Anoma.Node.Examples.ETransaction do
     [0 | 0]
   end
 
-  def bluf_transaction_errors(node_id \\ "londo_mollari") do
+  def bluf_transaction_errors(node_id \\ Node.example_random_id()) do
     blocks_table = Storage.blocks_table(node_id)
-    restart_tx_module(node_id)
+    start_tx_module(node_id)
     # todo: ideally we wait for the event broker message
     # before execution
     Mempool.tx(node_id, {:debug_term_storage, bluf()}, "id 1")
@@ -451,10 +424,10 @@ defmodule Anoma.Node.Examples.ETransaction do
     ] = :mnesia.dirty_read({blocks_table, 0})
   end
 
-  def read_txs_write_nothing(node_id \\ "londo_mollari") do
+  def read_txs_write_nothing(node_id \\ Node.example_random_id()) do
     blocks_table = Storage.blocks_table(node_id)
     key = "key"
-    restart_tx_module(node_id)
+    start_tx_module(node_id)
     {_backend, code} = zero(key)
 
     Mempool.tx(node_id, {{:debug_read_term, self()}, code}, "id 1")
@@ -472,8 +445,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
   end
 
-  def bluff_txs_write_nothing(node_id \\ "londo_mollari") do
-    bluf_transaction_errors()
+  def bluff_txs_write_nothing(node_id \\ Node.example_random_id()) do
+    bluf_transaction_errors(node_id)
 
     [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
     [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
