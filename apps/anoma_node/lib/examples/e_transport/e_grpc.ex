@@ -5,6 +5,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   use TypedStruct
 
   alias __MODULE__
+  alias Anoma.Node.Examples.EIndexer
   alias Anoma.Node.Examples.ENode
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
@@ -30,6 +31,7 @@ defmodule Anoma.Node.Examples.EGRPC do
     - `:channel` - The channel for making grpc requests.
     """
     field(:channel, any())
+    field(:node, ENode.t())
   end
 
   @doc """
@@ -54,7 +56,7 @@ defmodule Anoma.Node.Examples.EGRPC do
     result =
       case GRPC.Stub.connect("localhost:#{enode.grpc_port}") do
         {:ok, channel} ->
-          %EGRPC{channel: channel}
+          %EGRPC{channel: channel, node: enode}
 
         {:error, reason} ->
           Logger.error("GRPC connection failed: #{inspect(reason)}")
@@ -101,6 +103,22 @@ defmodule Anoma.Node.Examples.EGRPC do
     request = %Nullifiers.Request{}
     {:ok, reply} = Intents.Stub.list_nullifiers(client.channel, request)
     assert reply.nullifiers == []
+  end
+
+  @doc """
+  I list all nullifiers, but work with a non-empty set.
+  """
+  def list_nullifiers_non_empty(%EGRPC{} = client \\ connect_to_node()) do
+    # run the example to create a new nullifier in the indexer
+    EIndexer.indexer_reads_nullifier(client.node)
+
+    # the indexer will return a nullifier now
+    request = %Nullifiers.Request{}
+    {:ok, reply} = Intents.Stub.list_nullifiers(client.channel, request)
+
+    assert reply.nullifiers == [
+             <<78, 70, 95, 89, 177, 105, 28, 103, 230, 24, 4>>
+           ]
   end
 
   @doc """
