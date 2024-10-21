@@ -11,7 +11,6 @@ defmodule Anoma.Client.Examples.EClient do
   alias __MODULE__
   alias Anoma.Client
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Node.Examples.ENode
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
@@ -20,6 +19,8 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.IntentPool.ListIntents
   alias Anoma.Protobuf.Intents
   alias Anoma.Protobuf.Prove
+  alias Anoma.Protobuf.RunNock
+  alias Anoma.Protobuf.Input
 
   import ExUnit.Assertions
 
@@ -100,7 +101,7 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec create_example_connection() :: EConnection.t()
   def create_example_connection(eclient \\ create_example_client()) do
-    case GRPC.Stub.connect("localhost:#{eclient.node.grpc_port}") do
+    case GRPC.Stub.connect("localhost:#{eclient.client.grpc_port}") do
       {:ok, channel} ->
         %EConnection{channel: channel}
 
@@ -189,10 +190,92 @@ defmodule Anoma.Client.Examples.EClient do
   @doc """
   I prove something using the client.
   """
-  @spec prove_something(EConnection.t()) :: EConnection.t()
-  def prove_something(conn \\ setup()) do
-    request = %Prove.Request{intent: "prove this, please"}
+  def prove_something_jammed(conn \\ setup()) do
+    nock_str = "[[1 123] 0 0]"
+    pub_inputs = [<<>>, <<>>, <<>>]
+    priv_inputs = [<<>>, <<>>, <<>>]
+
+    # the client sends a knock program that is jammed.
+    nock_program = nock_str |> Noun.Format.parse_always() |> Nock.Jam.jam()
+
+    # each input is jammed individually
+    inputs_pub =
+      Enum.map(pub_inputs, &%Input{input: {:jammed, Nock.Jam.jam(&1)}})
+
+    inputs_priv =
+      Enum.map(priv_inputs, &%Input{input: {:jammed, Nock.Jam.jam(&1)}})
+
+    request = %Prove.Request{
+      program: {:jammed_program, nock_program},
+      public_inputs: inputs_pub,
+      private_inputs: inputs_priv
+    }
+
     {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
-    conn
+  end
+
+  @doc """
+  I prove something using the client.
+  """
+  def prove_something_plain_text(conn \\ setup()) do
+    nock_str = "[[1 123] 0 0]"
+    pub_inputs = ["1", "2", "3"]
+    priv_inputs = ["4", "5", "6"]
+
+    # build input structs
+    pub_inputs = Enum.map(pub_inputs, &%Input{input: {:text, "#{&1}"}})
+    priv_inputs = Enum.map(priv_inputs, &%Input{input: {:text, "#{&1}"}})
+
+    request = %Prove.Request{
+      program: {:text_program, nock_str},
+      public_inputs: pub_inputs,
+      private_inputs: priv_inputs
+    }
+
+    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+  end
+
+  @doc """
+  I run a plaintext nock program using the client.
+  """
+  def run_something_plain_text(conn \\ setup()) do
+    nock_str = "[[1 123] 0 0]"
+    inputs = ["1", "2", "3"]
+
+    # build input structs
+    inputs = Enum.map(inputs, &%Input{input: {:text, "#{&1}"}})
+
+    request = %RunNock.Request{
+      program: {:text_program, nock_str},
+      inputs: inputs
+    }
+
+    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+  end
+
+  @doc """
+  I run a jammed nock program using the client.
+  """
+  def run_something_jammed(conn \\ setup()) do
+    nock_str = "[[1 123] 0 0]"
+    inputs = ["1", "2", "3"]
+
+    nock_program = nock_str |> Noun.Format.parse_always() |> Nock.Jam.jam()
+
+    # build input structs
+    inputs =
+      Enum.map(
+        inputs,
+        &%Input{
+          input: {:jammed, &1 |> Noun.Format.parse_always() |> Nock.Jam.jam()}
+        }
+      )
+
+    request = %RunNock.Request{
+      program: {:jammed_program, nock_program},
+      inputs: inputs
+    }
+
+    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
   end
 end
