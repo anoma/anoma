@@ -19,6 +19,10 @@ defmodule Anoma.Node.Examples.ELogging do
     # Logging.start_link(node_id: "londo_mollari")
   end
 
+  ############################################################
+  #                     Transaction event                    #
+  ############################################################
+
   def check_tx_event(
         node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
         |> Base.url_encode64()
@@ -81,6 +85,10 @@ defmodule Anoma.Node.Examples.ELogging do
     :mnesia.unsubscribe({:table, table_name, :simple})
   end
 
+  ############################################################
+  #                      Consensus event                     #
+  ############################################################
+
   def check_consensus_event(
         node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
         |> Base.url_encode64()
@@ -131,6 +139,10 @@ defmodule Anoma.Node.Examples.ELogging do
                :mnesia.read(table_name, :consensus)
              end)
   end
+
+  ############################################################
+  #                         Block event                      #
+  ############################################################
 
   def check_block_event(
         node_id \\ ("londo_mollari" <> :crypto.strong_rand_bytes(16))
