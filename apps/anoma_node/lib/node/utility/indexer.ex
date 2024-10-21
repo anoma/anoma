@@ -3,16 +3,14 @@ defmodule Anoma.Node.Utility.Indexer do
   A trivial indexer querying the node tables.
   """
 
-  alias __MODULE__
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Storage
-  alias Anoma.Crypto.Id
 
   use GenServer
   use TypedStruct
 
   typedstruct do
-    field(:node_id, Id.t())
+    field(:node_id, String.t())
   end
 
   def start_link(args) do
@@ -28,7 +26,8 @@ defmodule Anoma.Node.Utility.Indexer do
     {:ok, state}
   end
 
-  @spec get(String.t(), :nlfs | :cms | :resources | :blocks) :: any()
+  @spec get(String.t(), :nlfs | :cms | :unrevealed | :resources | :blocks) ::
+          any()
   def get(node_id, flag) do
     name = Registry.via(node_id, __MODULE__)
     GenServer.call(name, flag)
@@ -41,7 +40,7 @@ defmodule Anoma.Node.Utility.Indexer do
       :mnesia.transaction(fn ->
         case :mnesia.all_keys(table) |> Enum.sort(:desc) do
           [] -> :absent
-          [hd | tl] -> hd
+          [hd | _tl] -> hd
         end
       end)
 
@@ -53,21 +52,51 @@ defmodule Anoma.Node.Utility.Indexer do
   end
 
   def handle_call(:cms, _from, state) do
+    {:reply, read_set(:commitments, state.node_id), state}
+  end
+
+  def handle_call(:unrevealed, _from, state) do
     {:reply, unnulified_coms(state.node_id), state}
   end
 
   def handle_call(:resources, _from, state) do
-    res = unnulified_coms(state.node_id) |> Enum.map(&Nock.Cue.cue!/1)
+    res =
+      unnulified_coms(state.node_id)
+      |> get_jam_info(:commitments)
+      |> Stream.map(fn x ->
+        {:ok, res} = Nock.Cue.cue(x)
+        res
+      end)
+      |> MapSet.new()
+
     {:reply, res, state}
   end
 
+  @spec unnulified_coms(String.t()) :: MapSet.t(binary())
   defp unnulified_coms(id) do
-    nullifiers = read_set(:nullifiers, id)
-    commitments = read_set(:commitments, id)
+    nullifiers = read_set(:nullifiers, id) |> get_jam_info(:nullifiers)
+    commitments = read_set(:commitments, id) |> get_jam_info(:commitments)
 
-    MapSet.difference(nullifiers, commitments)
+    Stream.reject(commitments, &Enum.member?(nullifiers, &1))
+    |> Stream.map(fn x -> "CM_" <> x end)
+    |> MapSet.new()
   end
 
+  @spec get_jam_info(MapSet.t(binary()), :commitments | :nullifiers) ::
+          Enumerable.t()
+  defp get_jam_info(set, :commitments) do
+    Stream.map(set, fn <<"CM_", rest::binary>> ->
+      rest
+    end)
+  end
+
+  defp get_jam_info(set, :nullifiers) do
+    Stream.map(set, fn <<"NF_", rest::binary>> ->
+      rest
+    end)
+  end
+
+  @spec read_set(:commitments | :nullifiers, String.t()) :: MapSet.t(binary())
   defp read_set(key, id) do
     values = Storage.values_table(id)
     updates = Storage.updates_table(id)

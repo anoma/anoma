@@ -4,7 +4,8 @@ defmodule Anoma.Node.Utility.Supervisor do
   """
 
   use Supervisor
-  alias Anoma.Node.Registry
+
+  require Logger
 
   require Logger
 
