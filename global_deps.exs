@@ -1,6 +1,5 @@
 # keep me alphabetized; non-runtime dependencies at the bottom.
 [
-  {:burrito, "~> 1.1.0"},
   {:cairo,
    git: "https://github.com/anoma/aarm-cairo",
    ref: "dd2ed877e8d7c326a4a88dcf86ae32cd0183f3ae"},

@@ -24,7 +24,6 @@ defmodule Anoma.MixProject do
       docs: docs(),
       # Nockma eval
       escript: escript(),
-      # Burrito release
       releases: releases(),
       package: package(),
       # as a hack, these are copied to the top level mix.exs
@@ -40,14 +39,10 @@ defmodule Anoma.MixProject do
   def releases do
     [
       anoma: [
-        steps: [:assemble, &Burrito.wrap/1],
-        burrito: [
-          targets: [
-            linux: [os: :linux, cpu: :x86_64]
-            # macos: [os: :darwin, cpu: :x86_64],
-            # macos_m1: [os: :darwin, cpu: :aarch64],
-            # windows: [os: :windows, cpu: :x86_64]
-          ]
+        include_executables_for: [:unix, :windows],
+        applications: [
+          anoma_node: :permanent,
+          event_broker: :permanent
         ]
       ]
     ]

@@ -30,10 +30,8 @@ defmodule AnomaNode.MixProject do
         :enacl,
         :logger,
         :mnesia,
-        :observer,
         :runtime_tools,
-        :tools,
-        :wx
+        :tools
       ]
     ]
   end
