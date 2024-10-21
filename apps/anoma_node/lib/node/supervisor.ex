@@ -25,7 +25,7 @@ defmodule Anoma.Node.Supervisor do
     Logger.debug("starting node with #{inspect(args)}")
     Process.set_label(__MODULE__)
 
-    args = Keyword.validate!(args, [:node_id, :grpc_port, :tx_args])
+    args = Keyword.validate!(args, [:node_id, :tx_args, grpc_port: 0])
 
     children = [
       {Anoma.Node.Transport.Supervisor,
