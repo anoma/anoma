@@ -13,24 +13,46 @@ defmodule Mix.Tasks.Compile.Protoc do
         :extra_opts
       ])
 
-    # find the protoc executable
-    protoc_bin = protoc_executable()
-
-    # make the output directory
-    File.mkdir_p!(compiler_opts[:elixir_out])
-
-    # run the protoc command
-    {_, return_code} =
-      System.cmd(protoc_bin, build_arguments(compiler_opts),
-        into: IO.stream(:stdio, :line),
-        stderr_to_stdout: true
-      )
-
-    if return_code == 0 do
-      Mix.shell().info("Compiled protobuf files")
+    if compiler_opts[:proto_files] == [] do
+      # no files to compile
       :ok
     else
-      {:error, return_code}
+      output_files =
+        Path.wildcard(compiler_opts[:elixir_out] <> "/**/*.pb.ex")
+
+      oldest_output_time =
+        if output_files == [] do
+          nil
+        else
+          oldest_mtime(output_files)
+        end
+
+      newest_input_time = newest_mtime(compiler_opts[:proto_files])
+
+      if oldest_output_time == nil || newest_input_time > oldest_output_time do
+        # find the protoc executable
+        protoc_bin = protoc_executable()
+
+        # make the output directory
+        File.mkdir_p!(compiler_opts[:elixir_out])
+
+        # run the protoc command
+        {_, return_code} =
+          System.cmd(protoc_bin, build_arguments(compiler_opts),
+            into: IO.stream(:stdio, :line),
+            stderr_to_stdout: true
+          )
+
+        if return_code == 0 do
+          Mix.shell().info("Compiled protobuf files")
+          :ok
+        else
+          {:error, return_code}
+        end
+      else
+        # nothing to update
+        :ok
+      end
     end
   end
 
@@ -57,5 +79,19 @@ defmodule Mix.Tasks.Compile.Protoc do
     elixir_out = "--elixir_out=#{extra_opts}:#{elixir_out}"
 
     [elixir_out | proto_files]
+  end
+
+  defp oldest_mtime(file_list) do
+    Enum.min(mtimes(file_list))
+  end
+
+  defp newest_mtime(file_list) do
+    Enum.max(mtimes(file_list))
+  end
+
+  defp mtimes(file_list) do
+    for file <- file_list do
+      File.stat!(file, time: :posix).mtime
+    end
   end
 end
