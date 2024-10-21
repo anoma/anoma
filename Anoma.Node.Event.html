@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.21.0">
+    <meta name="project" content="Anoma v0.25.0">
 
 
-    <title>Anoma.Node.Event — Anoma v0.21.0</title>
+    <title>Anoma.Node.Event — Anoma v0.25.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-0BF4767F.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.21.0
+          v0.25.0
         </div>
       </div>
     </div>
@@ -123,13 +123,14 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Event</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.21.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.25.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>I am an Anoma node specific event. I go inside the body field of an EventBroker.Event.</p>
+<p>I am an Node Event module for Anoma Node.
+I provide a wrapper around all Anoma Events.</p>
     </section>
 
 </div>
@@ -149,6 +150,31 @@ GUIDES
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the Event type for the Node events.
+My fields determine the overall structure of the Node messages.</p></div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new_with_body/2" data-no-tooltip translate="no">new_with_body(node_id, body)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#node_filter/1" data-no-tooltip translate="no">node_filter(node_id)</a>
 
       </div>
 
@@ -183,12 +209,64 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Event{
-  body: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  source_engine: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()
-}</pre>
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Event{body: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(), node_id: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
+
+<p>I am the Event type for the Node events.
+My fields determine the overall structure of the Node messages.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:node_id</code> - The ID of the Anoma Node sending an event. Nil in case<pre><code class="makeup elixir" translate="no"><span class="w">         </span><span class="n">of</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">non</span><span class="o">-</span><span class="nc">Anoma</span><span class="w"> </span><span class="n">event</span><span class="o">.</span></code></pre></li><li><code class="inline">:body</code> - A body of the event.</li></ul>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="new_with_body/2">
+
+  <div class="detail-header">
+    <a href="#new_with_body/2" class="detail-link" data-no-tooltip title="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this macro</span>
+    </a>
+    <h1 class="signature" translate="no">new_with_body(node_id, body)</h1>
+
+
+      <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="node_filter/1">
+
+  <div class="detail-header">
+    <a href="#node_filter/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">node_filter(node_id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
 
 
   </section>
@@ -201,9 +279,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.21.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.21.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
 
           </span>
 

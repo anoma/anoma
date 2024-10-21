@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.24.1">
+    <meta name="project" content="Anoma v0.25.0">
 
 
-    <title>Anoma.Node.Transaction.Storage — Anoma v0.24.1</title>
+    <title>Anoma.Node.Transaction.Storage — Anoma v0.25.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-37006C57.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.24.1
+          v0.25.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Storage</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.25.0)</small>
 
   </h1>
 
@@ -194,7 +194,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#block_spawn/2" data-no-tooltip translate="no">block_spawn(height, call)</a>
+        <a href="#block_spawn/3" data-no-tooltip translate="no">block_spawn(height, call, node_id)</a>
 
       </div>
 
@@ -241,6 +241,14 @@ GUIDES
       </div>
 
         <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#init_tables/2" data-no-tooltip translate="no">init_tables(node_id, rocks)</a>
+
+      </div>
 
     </div>
 
@@ -440,14 +448,14 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="block_spawn/2">
+<section class="detail" id="block_spawn/3">
 
   <div class="detail-header">
-    <a href="#block_spawn/2" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#block_spawn/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">block_spawn(height, call)</h1>
+    <h1 class="signature" translate="no">block_spawn(height, call, node_id)</h1>
 
 
   </div>
@@ -556,6 +564,29 @@ GUIDES
       </div>
 
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="init_tables/2">
+
+  <div class="detail-header">
+    <a href="#init_tables/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">init_tables(node_id, rocks)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init_tables(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), bool()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
 <section class="detail" id="read/2">
@@ -700,9 +731,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
 
           </span>
 

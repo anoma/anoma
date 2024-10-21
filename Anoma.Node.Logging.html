@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.24.1">
+    <meta name="project" content="Anoma v0.25.0">
 
 
-    <title>Anoma.Node.Logging — Anoma v0.24.1</title>
+    <title>Anoma.Node.Logging — Anoma v0.25.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-37006C57.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.24.1
+          v0.25.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Logging</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.25.0)</small>
 
   </h1>
 
@@ -190,7 +190,15 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init_table/1" data-no-tooltip translate="no">init_table(table)</a>
+        <a href="#init_table/2" data-no-tooltip translate="no">init_table(table, rocks)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#log_event/3" data-no-tooltip translate="no">log_event(node_id, flag, msg)</a>
 
       </div>
 
@@ -206,6 +214,44 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#replay_args/1" data-no-tooltip translate="no">replay_args(list)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#replay_setup/2" data-no-tooltip translate="no">replay_setup(event_table, block_table)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The first step in the replay process.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#replay_table_clone/3" data-no-tooltip translate="no">replay_table_clone(values_table, updates_table, node_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Copies the contents of the storage tables into mock Replay tables</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#restart_with_replay/1" data-no-tooltip translate="no">restart_with_replay(node_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the function to be played on restarts of the Anoma node with known ID.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#start_link/1" data-no-tooltip translate="no">start_link(args)</a>
 
       </div>
@@ -215,6 +261,14 @@ GUIDES
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#table_name/1" data-no-tooltip translate="no">table_name(node_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#try_launch/2" data-no-tooltip translate="no">try_launch(mock_id, replay_args)</a>
 
       </div>
 
@@ -331,14 +385,37 @@ GUIDES
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="init_table/1">
+<section class="detail" id="init_table/2">
 
   <div class="detail-header">
-    <a href="#init_table/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#init_table/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">init_table(table)</h1>
+    <h1 class="signature" translate="no">init_table(table, rocks)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init_table(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), bool()) :: {:atomic, :ok}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="log_event/3">
+
+  <div class="detail-header">
+    <a href="#log_event/3" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">log_event(node_id, flag, msg)</h1>
 
 
   </div>
@@ -363,6 +440,99 @@ GUIDES
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="replay_args/1">
+
+  <div class="detail-header">
+    <a href="#replay_args/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">replay_args(list)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> replay_args(height: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), mempool: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()) :: [
+  mempool: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  ordering: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()
+]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="replay_setup/2">
+
+  <div class="detail-header">
+    <a href="#replay_setup/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">replay_setup(event_table, block_table)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> replay_setup(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: [height: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), mempool: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()]</pre>
+
+      </div>
+
+<p>The first step in the replay process.</p><p>All tables here are the original ones from which we get info.</p><p>This gives us the height, the round, as well as the replay Mempool struct</p>
+  </section>
+</section>
+<section class="detail" id="replay_table_clone/3">
+
+  <div class="detail-header">
+    <a href="#replay_table_clone/3" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">replay_table_clone(values_table, updates_table, node_id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Copies the contents of the storage tables into mock Replay tables</p>
+  </section>
+</section>
+<section class="detail" id="restart_with_replay/1">
+
+  <div class="detail-header">
+    <a href="#restart_with_replay/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">restart_with_replay(node_id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> restart_with_replay(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/DynamicSupervisor.html#t:on_start_child/0">DynamicSupervisor.on_start_child</a>()</pre>
+
+      </div>
+
+<p>I am the function to be played on restarts of the Anoma node with known ID.</p><p>I sync the event table with the blocks submitted and then launch a mock
+node with a new ID with replay arguments.</p><p>If the replay succeeds, I reproduce it on the node with the ID provided.
+Otherwise, the only initialization information I reproduce are heights
+and rounds for the Transaction subsystem.</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -399,6 +569,29 @@ GUIDES
 
   </section>
 </section>
+<section class="detail" id="try_launch/2">
+
+  <div class="detail-header">
+    <a href="#try_launch/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">try_launch(mock_id, replay_args)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> try_launch(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: :ok | :error</pre>
+
+      </div>
+
+
+  </section>
+</section>
 
     </div>
   </section>
@@ -407,9 +600,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
 
           </span>
 

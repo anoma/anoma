@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.24.1">
+    <meta name="project" content="Anoma v0.25.0">
 
 
-    <title>Anoma.Node.Transaction.Backends — Anoma v0.24.1</title>
+    <title>Anoma.Node.Transaction.Backends — Anoma v0.25.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-37006C57.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.24.1
+          v0.25.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Backends</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.25.0)</small>
 
   </h1>
 
@@ -172,6 +172,14 @@ Support :kv, :ro, :rm, :cairo execution.</p>
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#blob_store/3" data-no-tooltip translate="no">blob_store(node_id, id, result)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#commitments_exist_before_nullifier_submission/2" data-no-tooltip translate="no">commitments_exist_before_nullifier_submission(stored_comms, trans)</a>
 
       </div>
 
@@ -291,6 +299,32 @@ Support :kv, :ro, :rm, :cairo execution.</p>
 
   </section>
 </section>
+<section class="detail" id="commitments_exist_before_nullifier_submission/2">
+
+  <div class="detail-header">
+    <a href="#commitments_exist_before_nullifier_submission/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">commitments_exist_before_nullifier_submission(stored_comms, trans)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> commitments_exist_before_nullifier_submission(
+  <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.TransparentResource.Resource.html#t:commitment/0">Anoma.TransparentResource.Resource.commitment</a>()),
+  <a href="Anoma.TransparentResource.Transaction.html#t:t/0">Anoma.TransparentResource.Transaction.t</a>()
+) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="execute/3">
 
   <div class="detail-header">
@@ -345,9 +379,9 @@ Support :kv, :ro, :rm, :cairo execution.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
 
           </span>
 

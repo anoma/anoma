@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.24.1">
+    <meta name="project" content="Anoma v0.25.0">
 
 
-    <title>Anoma.TransparentResource.Action — Anoma v0.24.1</title>
+    <title>Anoma.TransparentResource.Action — Anoma v0.25.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-37006C57.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.24.1
+          v0.25.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.TransparentResource.Action</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.25.0)</small>
 
   </h1>
 
@@ -158,6 +158,14 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#commitments/1" data-no-tooltip translate="no">commitments(action)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#delta/1" data-no-tooltip translate="no">delta(action)</a>
 
       </div>
@@ -174,7 +182,31 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#nullified_resources/1" data-no-tooltip translate="no">nullified_resources(self)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#nullifiers/1" data-no-tooltip translate="no">nullifiers(action)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#precis/1" data-no-tooltip translate="no">precis(action)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#resources/1" data-no-tooltip translate="no">resources(self)</a>
 
       </div>
 
@@ -241,6 +273,29 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="commitments/1">
+
+  <div class="detail-header">
+    <a href="#commitments/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">commitments(action)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> commitments(<a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.TransparentResource.Resource.html#t:commitment/0">Anoma.TransparentResource.Resource.commitment</a>())</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="delta/1">
 
   <div class="detail-header">
@@ -281,6 +336,52 @@ GUIDES
 
   </section>
 </section>
+<section class="detail" id="nullified_resources/1">
+
+  <div class="detail-header">
+    <a href="#nullified_resources/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">nullified_resources(self)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nullified_resources(<a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.TransparentResource.Resource.html#t:t/0">Anoma.TransparentResource.Resource.t</a>())</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="nullifiers/1">
+
+  <div class="detail-header">
+    <a href="#nullifiers/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">nullifiers(action)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nullifiers(<a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.TransparentResource.Resource.html#t:nullifier/0">Anoma.TransparentResource.Resource.nullifier</a>())</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="precis/1">
 
   <div class="detail-header">
@@ -294,6 +395,29 @@ GUIDES
   </div>
 
   <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="resources/1">
+
+  <div class="detail-header">
+    <a href="#resources/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">resources(self)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> resources(<a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.TransparentResource.Resource.html#t:t/0">Anoma.TransparentResource.Resource.t</a>())</pre>
+
+      </div>
 
 
   </section>
@@ -314,7 +438,7 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> verify_correspondence(<a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> verify_correspondence(<a href="#t:t/0">t</a>()) :: true | {:error, <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}</pre>
 
       </div>
 
@@ -329,9 +453,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
 
           </span>
 

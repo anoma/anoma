@@ -22,9 +22,11 @@
 Anoma.Client.Api.Endpoint.html
 Anoma.Client.Api.Server.html
 Anoma.Client.Application.html
+Anoma.Client.CLI.html
 Anoma.Client.Connection.GRPCProxy.html
 Anoma.Client.Connection.Supervisor.html
 Anoma.Client.Connection.TCP.html
+Anoma.Client.Examples.EClient.EConnection.html
 Anoma.Client.Examples.EClient.html
 Anoma.Client.Examples.EProxy.html
 Anoma.Client.html
@@ -37,7 +39,8 @@ Anoma.Crypto.Randomness.html
 Anoma.Crypto.Sign.html
 Anoma.Crypto.Symmetric.html
 Anoma.Node.DummyStorage.html
-Anoma.Node.Examples.EConsensus.html
+Anoma.Node.Event.NodeFilter.html
+Anoma.Node.Event.html
 Anoma.Node.Examples.EIntentPool.html
 Anoma.Node.Examples.ELogging.html
 Anoma.Node.Examples.ENode.html
@@ -47,6 +50,10 @@ Anoma.Node.Examples.ETransaction.html
 Anoma.Node.Examples.ETransport.ETcp.Context.html
 Anoma.Node.Examples.ETransport.ETcp.html
 Anoma.Node.Examples.ETransport.html
+Anoma.Node.Intents.IntentPool.NullifierFilter.html
+Anoma.Node.Intents.IntentPool.html
+Anoma.Node.Intents.Solver.html
+Anoma.Node.Intents.Supervisor.html
 Anoma.Node.Logging.LoggingEvent.html
 Anoma.Node.Logging.LoggingFilter.html
 Anoma.Node.Logging.html
@@ -56,11 +63,11 @@ Anoma.Node.Supervisor.html
 Anoma.Node.Transaction.Backends.CompleteEvent.html
 Anoma.Node.Transaction.Backends.CompleteFilter.html
 Anoma.Node.Transaction.Backends.ForMempoolFilter.html
+Anoma.Node.Transaction.Backends.NullifierEvent.html
 Anoma.Node.Transaction.Backends.ResultEvent.html
 Anoma.Node.Transaction.Backends.html
 Anoma.Node.Transaction.Executor.ExecutionEvent.html
 Anoma.Node.Transaction.Executor.html
-Anoma.Node.Transaction.IntentPool.html
 Anoma.Node.Transaction.Mempool.BlockEvent.html
 Anoma.Node.Transaction.Mempool.ConsensusEvent.html
 Anoma.Node.Transaction.Mempool.Tx.html
@@ -69,7 +76,6 @@ Anoma.Node.Transaction.Mempool.html
 Anoma.Node.Transaction.Ordering.OrderEvent.html
 Anoma.Node.Transaction.Ordering.TxIdFilter.html
 Anoma.Node.Transaction.Ordering.html
-Anoma.Node.Transaction.Solver.html
 Anoma.Node.Transaction.Storage.HeightFilter.html
 Anoma.Node.Transaction.Storage.WriteEvent.html
 Anoma.Node.Transaction.Storage.html
@@ -82,9 +88,6 @@ Anoma.Node.Transport.Supervisor.html
 Anoma.Node.Transport.TCP.Connection.html
 Anoma.Node.Transport.TCP.Listener.html
 Anoma.Node.Transport.html
-Anoma.Node.Utility.Consensus.BlockFilter.html
-Anoma.Node.Utility.Consensus.html
-Anoma.Node.Utility.Supervisor.html
 Anoma.Node.html
 Anoma.RM.DumbIntent.html
 Anoma.RM.Intent.html
@@ -99,6 +102,7 @@ Anoma.ShieldedResource.html
 Anoma.Supervisor.html
 Anoma.System.Directories.html
 Anoma.TransparentResource.Action.html
+Anoma.TransparentResource.Delta.DeltaError.html
 Anoma.TransparentResource.Delta.html
 Anoma.TransparentResource.LogicProof.html
 Anoma.TransparentResource.Resource.html
@@ -125,6 +129,9 @@ EventBroker.html
 Examples.ECommitmentTree.html
 Examples.ECrypto.html
 Examples.ENock.html
+Examples.ETransparent.EAction.html
+Examples.ETransparent.ELogicProof.html
+Examples.ETransparent.EResource.html
 Glossary.html
 IdentityMap.html
 Livebook.html
@@ -141,6 +148,7 @@ Noun.Format.html
 Noun.Nounable.Kind.html
 Noun.Nounable.html
 Noun.html
+TestHelper.GenerateExampleTests.html
 TestHelper.Nock.html
 TestHelper.TestMacro.html
 actors.html
@@ -165,8 +173,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-8B655F6B.js
-dist/sidebar_items-37006C57.js
+dist/search_data-491EDB08.js
+dist/sidebar_items-9E851CD4.js
 dumping.html
 examples-over-testing.html
 git.html

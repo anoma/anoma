@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.24.1">
+    <meta name="project" content="Anoma v0.25.0">
 
 
-    <title>Examples.ENock — Anoma v0.24.1</title>
+    <title>Examples.ENock — Anoma v0.25.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-37006C57.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.24.1
+          v0.25.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Examples.ENock</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.25.0)</small>
 
   </h1>
 
@@ -582,6 +582,64 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#rad_arm/0" data-no-tooltip translate="no">rad_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the rad gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rad_call/2" data-no-tooltip translate="no">rad_call(seed, range)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am function calling the rad gate of the og door with specified
+seed and range</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rad_tests/0" data-no-tooltip translate="no">rad_tests()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rads_arm/0" data-no-tooltip translate="no">rads_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the rads gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rads_call/2" data-no-tooltip translate="no">rads_call(seed, range)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am function calling the rads gate of the og door with specified
+seed and range</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rads_tests/0" data-no-tooltip translate="no">rads_tests()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#raw_27_4/0" data-no-tooltip translate="no">raw_27_4()</a>
 
       </div>
@@ -606,6 +664,35 @@ GUIDES
 
         <div class="summary-synopsis"><p>I am function calling the raw gate of the og door with specified
 seed and bitwidth.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raws_arm/0" data-no-tooltip translate="no">raws_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the raws gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raws_call/2" data-no-tooltip translate="no">raws_call(seed, width)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am function calling the raws gate of the og door with specified
+seed and bitwidth.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raws_test/0" data-no-tooltip translate="no">raws_test()</a>
+
+      </div>
 
     </div>
 
@@ -1943,6 +2030,140 @@ seed and bitwidth.</p></div>
 <p>I represent the pro gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=lpro =&gt;  logics  |=   [a=@s b=@s]  (pro [a b])</p><p>and computing</p><p>.*  lpro  [0 2]</p>
   </section>
 </section>
+<section class="detail" id="rad_arm/0">
+
+  <div class="detail-header">
+    <a href="#rad_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rad_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rad_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the rad gate call as a 2-argument gate.</p><p>Can be gotten by defining</p><p>=lrad   =&gt;  logics  |=   [a=@ b=@]  (~(rad og a) b)</p>
+  </section>
+</section>
+<section class="detail" id="rad_call/2">
+
+  <div class="detail-header">
+    <a href="#rad_call/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rad_call(seed, range)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rad_call(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+<p>I am function calling the rad gate of the og door with specified
+seed and range</p>
+  </section>
+</section>
+<section class="detail" id="rad_tests/0">
+
+  <div class="detail-header">
+    <a href="#rad_tests/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rad_tests()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rad_tests() :: {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="rads_arm/0">
+
+  <div class="detail-header">
+    <a href="#rads_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rads_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rads_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the rads gate call as a 2-argument gate.</p><p>Can be gotten by defining</p><p>=lrad   =&gt;  logics  |=   [a=@ b=@]  (~(rads og a) b)</p>
+  </section>
+</section>
+<section class="detail" id="rads_call/2">
+
+  <div class="detail-header">
+    <a href="#rads_call/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rads_call(seed, range)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I am function calling the rads gate of the og door with specified
+seed and range</p>
+  </section>
+</section>
+<section class="detail" id="rads_tests/0">
+
+  <div class="detail-header">
+    <a href="#rads_tests/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rads_tests()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rads_tests() :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="raw_27_4/0">
 
   <div class="detail-header">
@@ -2011,6 +2232,76 @@ seed and bitwidth.</p></div>
 
 <p>I am function calling the raw gate of the og door with specified
 seed and bitwidth.</p>
+  </section>
+</section>
+<section class="detail" id="raws_arm/0">
+
+  <div class="detail-header">
+    <a href="#raws_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raws_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the raws gate call as a 2-argument gate.</p><p>Can be gotten by defining</p><p>=lraw   =&gt;  logics  |=   [a=@ b=@]  (~(raws og a) b)</p>
+  </section>
+</section>
+<section class="detail" id="raws_call/2">
+
+  <div class="detail-header">
+    <a href="#raws_call/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raws_call(seed, width)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_call(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+<p>I am function calling the raws gate of the og door with specified
+seed and bitwidth.</p>
+  </section>
+</section>
+<section class="detail" id="raws_test/0">
+
+  <div class="detail-header">
+    <a href="#raws_test/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raws_test()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_test() :: :ok</pre>
+
+      </div>
+
+
   </section>
 </section>
 <section class="detail" id="rem/0">
@@ -2643,9 +2934,9 @@ seed and bitwidth.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
 
           </span>
 

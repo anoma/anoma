@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.24.1">
+    <meta name="project" content="Anoma v0.25.0">
 
 
-    <title>Anoma — Anoma v0.24.1</title>
+    <title>Anoma — Anoma v0.25.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-37006C57.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.24.1
+          v0.25.0
         </div>
       </div>
     </div>
@@ -144,41 +144,55 @@ schedule.</p><p>Development can be followed in multiple ways:</p><ol><li><a href
 views into how goals are being met</li></ul></li><li><a href="https://github.com/orgs/anoma/projects/20" title="A good view on how topics are progressing throughout a cycle">What's Cooking on Anoma</a></li><li><a href="https://research.anoma.net/">Research Forums</a><ul><li>This is good for seeing discussions on the direction of Anoma</li><li><a href="https://research.anoma.net/tags/c/protocol-design/25/architecture">The architecture posts</a>
 in particular are a practical vision for how the codebase's
 architecture will evolve. Around two of these get posted per week</li></ul></li><li><a href="https://github.com/anoma/anoma/issues">Issues</a> and <a href="https://github.com/anoma/anoma/pulls">pull requests</a><ul><li>This is good for viewing new issues and work coming in, but the
-other views are typically a better way to view this</li></ul></li></ol><h2 id="dependencies" class="section-heading">
-  <a href="#dependencies" class="hover-link">
+other views are typically a better way to view this</li></ul></li></ol><h2 id="running-pre-built-binaries" class="section-heading">
+  <a href="#running-pre-built-binaries" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">Dependencies</span>
+  <span class="text">Running pre-built binaries</span>
 </h2>
-<p>To have a working Anoma Node the following dependencies are required:</p><ol><li><code class="inline">cmake</code></li><li><code class="inline">Erlang</code> version OTP 27 or higher</li><li><code class="inline">Elixir</code> version 1.17.0 or higher</li><li><code class="inline">zig</code></li><li><code class="inline">rust</code> version of 1.76.0 or newer</li></ol><ul><li>rustup is an easy way to satisfy this.</li></ul><ol start="6"><li><code class="inline">protobuf</code></li></ol><ul><li>Along with <code class="inline">mix escript.install hex protobuf</code></li></ul><h3 id="osx" class="section-heading">
-  <a href="#osx" class="hover-link">
+<h3 id="release-dependencies" class="section-heading">
+  <a href="#release-dependencies" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">OSX</span>
+  <span class="text">Release Dependencies</span>
 </h3>
-<pre><code class="makeup sh" translate="no"><span class="">brew install cmake
-</span><span class="">brew install elixir
-</span><span class="">brew install zig
-</span><span class="">brew install protbuf
-</span></code></pre><h3 id="linux" class="section-heading">
-  <a href="#linux" class="hover-link">
+<p>To run a working Anoma Node the following dependencies are required:</p><ol><li>Mac OS X Development Environment:<ul><li>Install Apple Command Line Developer Tools: <code class="inline">xcode-select --install</code></li><li>Install <a href="https://www.macports.org/install.php">MacPorts</a> (or equivalent package manager)</li></ul></li><li>Install <a href="https://ports.macports.org/port/ncurses/">ncurses</a> (Mac OS X only)</li><li>Install OpenSSL:<ul><li>Mac OS X and Linux: use package manager</li><li>Windows: not required</li></ul></li></ol><h3 id="running" class="section-heading">
+  <a href="#running" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">Linux</span>
+  <span class="text">Running</span>
 </h3>
-<p>All the dependencies can be grabbed from your distro's package manager.</p><h2 id="installation" class="section-heading">
-  <a href="#installation" class="hover-link">
+<p>Download the <a href="https://github.com/anoma/anoma/releases">Anoma release</a> for your platform, extract it, and run <code class="inline">bin/anoma</code>.</p><h2 id="compilation-from-sources" class="section-heading">
+  <a href="#compilation-from-sources" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">Installation</span>
+  <span class="text">Compilation from sources</span>
 </h2>
+<h3 id="build-dependencies" class="section-heading">
+  <a href="#build-dependencies" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Build Dependencies</span>
+</h3>
+<p>To compile a working Anoma Node the following dependencies are required:</p><ol><li>Mac OS X Development Environment:<ul><li>Install Apple Command Line Developer Tools: <code class="inline">xcode-select --install</code></li><li>Install <a href="https://www.macports.org/install.php">MacPorts</a> (or equivalent package manager)</li></ul></li><li>Windows Development Environment:<ul><li>Install <a href="https://visualstudio.microsoft.com/downloads/">Build Tools for Visual Studio 2022</a> (Workload: Visual C++ build tools)</li><li>Install <a href="https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4">PowerShell</a></li></ul></li><li>Install <a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git</a> (Windows and Linux only)</li><li>Install CMake:<ul><li>Linux and Mac OS X: use package manager</li><li>Windows: not required</li></ul></li><li>Install <a href="https://doc.libsodium.org/installation#pre-built-libraries">Sodium</a> (Windows only)<ul><li>Ensure that the <code class="inline">LIB</code> and <code class="inline">INCLUDE</code> environment variables point to this installation</li></ul></li><li>Install <a href="https://grpc.io/docs/protoc-installation/">Protocol Buffers</a></li><li>Install <a href="https://elixir-lang.org/install.html">Elixir</a> (version 1.17.0 or higher) and with it:<ul><li>Install <a href="https://hexdocs.pm/mix/1.13/Mix.Tasks.Local.Hex.html">Hex package manager</a></li><li>Install <a href="https://hexdocs.pm/mix/1.14/Mix.Tasks.Local.Rebar.html">Rebar3</a></li><li>Install protobuf-elixir: <code class="inline">mix escript.install hex protobuf</code></li></ul></li><li>Install <a href="https://www.rust-lang.org/tools/install">Rust</a> (version 1.76.0 or newer)</li></ol><h3 id="compiling-and-running" class="section-heading">
+  <a href="#compiling-and-running" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Compiling and Running</span>
+</h3>
 <p>To install the dependencies as well as Anoma run:</p><pre><code class="makeup bash" translate="no"><span class="">mix deps.get
 </span><span class="">mix escript.install hex protobuf
 </span><span class="">mix compile
 </span></code></pre><p>To start an Anoma instance run one of these:</p><pre><code class="makeup bash" translate="no"><span class="">iex -S mix # starts an interactive shell
 </span><span class="">mix run --no-halt # starts a non-interactive shell
 </span></code></pre><p>See the Contributing section for how to get the best use of the
-interactive shell.</p><p>Further see the Known issues section if you encounter an issue.</p><h2 id="contributing" class="section-heading">
+interactive shell.</p><p>Further see the Known issues section if you encounter an issue.</p><h2 id="docker-images" class="section-heading">
+  <a href="#docker-images" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Docker images</span>
+</h2>
+<p>To work with Docker images, do the following:</p><ol><li>Install <a href="https://docs.docker.com/engine/install/">Docker</a>, this is necessary for both building and running Docker images</li><li>Build the Anoma image from the repository root: <code class="inline">docker build -t &lt;IMAGE&gt; .</code><ul><li><code class="inline">&lt;IMAGE&gt;</code> is your chosen image name</li></ul></li><li>Run the Anoma image: <code class="inline">docker run -it --network host &lt;IMAGE&gt; &lt;SUBCOMMAND&gt;</code><ul><li><code class="inline">&lt;IMAGE&gt;</code> is the name of Anoma Docker image to be run</li><li><code class="inline">&lt;SUBCOMMAND&gt;</code>is interpreted by the Anoma binary</li><li><code class="inline">--network host</code> will enable connections from the host</li></ul></li></ol><h2 id="contributing" class="section-heading">
   <a href="#contributing" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -259,11 +273,11 @@ Analysis
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
 
-              (<a href="https://preview.hex.pm/preview/anoma/0.24.1/show/README.md">current file</a>)
+              (<a href="https://preview.hex.pm/preview/anoma/0.25.0/show/README.md">current file</a>)
 
           </span>
 

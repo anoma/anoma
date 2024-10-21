@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.24.1">
+    <meta name="project" content="Anoma v0.25.0">
 
 
-    <title>Anoma.Client.Examples.EProxy — Anoma v0.24.1</title>
+    <title>Anoma.Client.Examples.EProxy — Anoma v0.25.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-37006C57.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.24.1
+          v0.25.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Client.Examples.EProxy</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.25.0)</small>
 
   </h1>
 
@@ -141,22 +141,6 @@ GUIDES
       </a>
       <span class="text">Summary</span>
     </h1>
-<div class="summary-types summary">
-  <h2>
-    <a href="#types">Types</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
-
-      </div>
-
-        <div class="summary-synopsis"><h3>Fields</h3><ul><li><code class="inline">:pid</code>     - The process id of the GRPC proxy.</li></ul></div>
-
-    </div>
-
-</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -164,7 +148,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_intent/1" data-no-tooltip translate="no">add_intent(e_proxy \\ start_proxy_for())</a>
+        <a href="#add_intent/1" data-no-tooltip translate="no">add_intent(client \\ setup())</a>
 
       </div>
 
@@ -174,7 +158,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_intents/1" data-no-tooltip translate="no">list_intents(e_proxy \\ start_proxy_for())</a>
+        <a href="#list_intents/1" data-no-tooltip translate="no">list_intents(client \\ setup())</a>
 
       </div>
 
@@ -184,7 +168,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_nullifiers/1" data-no-tooltip translate="no">list_nullifiers(e_proxy \\ start_proxy_for())</a>
+        <a href="#list_nullifiers/1" data-no-tooltip translate="no">list_nullifiers(client \\ setup())</a>
 
       </div>
 
@@ -194,7 +178,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_unrevealed_commits/1" data-no-tooltip translate="no">list_unrevealed_commits(e_proxy \\ start_proxy_for())</a>
+        <a href="#list_unrevealed_commits/1" data-no-tooltip translate="no">list_unrevealed_commits(client \\ setup())</a>
 
       </div>
 
@@ -204,7 +188,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_unspent_resources/1" data-no-tooltip translate="no">list_unspent_resources(e_proxy \\ start_proxy_for())</a>
+        <a href="#list_unspent_resources/1" data-no-tooltip translate="no">list_unspent_resources(client \\ setup())</a>
 
       </div>
 
@@ -214,11 +198,9 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_proxy_for/1" data-no-tooltip translate="no">start_proxy_for(enode \\ nil)</a>
+        <a href="#setup/0" data-no-tooltip translate="no">setup()</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>I test the GRPC proxy to proxy requests to an existing Anoma node.</p></div>
 
     </div>
 
@@ -226,47 +208,6 @@ GUIDES
 
   </section>
 
-
-  <section id="types" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#types">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Types</span>
-    </h1>
-    <div class="types-list">
-<section class="detail" id="t:t/0">
-
-  <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">t()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Client.Examples.EProxy{pid: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>() | nil}</pre>
-
-      </div>
-
-<h3 id="t:t/0-fields" class="section-heading">
-  <a href="#t:t/0-fields" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Fields</span>
-</h3>
-<ul><li><code class="inline">:pid</code>     - The process id of the GRPC proxy.</li></ul>
-  </section>
-</section>
-
-    </div>
-  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -285,7 +226,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">add_intent(e_proxy \\ start_proxy_for())</h1>
+    <h1 class="signature" translate="no">add_intent(client \\ setup())</h1>
 
 
   </div>
@@ -294,7 +235,8 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> add_intent(<a href="#t:t/0">t</a>()) :: {:ok, Anoma.Protobuf.IntentPool.AddIntent.Response.t()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> add_intent(<a href="Anoma.Client.Examples.EClient.html#t:t/0">Anoma.Client.Examples.EClient.t</a>()) ::
+  <a href="Anoma.Client.Examples.EClient.html#t:t/0">Anoma.Client.Examples.EClient.t</a>()</pre>
 
       </div>
 
@@ -310,7 +252,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">list_intents(e_proxy \\ start_proxy_for())</h1>
+    <h1 class="signature" translate="no">list_intents(client \\ setup())</h1>
 
 
   </div>
@@ -319,7 +261,8 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> list_intents(<a href="#t:t/0">t</a>()) :: {:ok, Anoma.Protobuf.IntentPool.ListIntents.Response.t()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> list_intents(<a href="Anoma.Client.Examples.EClient.html#t:t/0">Anoma.Client.Examples.EClient.t</a>()) ::
+  {<a href="Anoma.Client.Examples.EClient.html#t:t/0">Anoma.Client.Examples.EClient.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -335,7 +278,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">list_nullifiers(e_proxy \\ start_proxy_for())</h1>
+    <h1 class="signature" translate="no">list_nullifiers(client \\ setup())</h1>
 
 
   </div>
@@ -344,7 +287,8 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> list_nullifiers(<a href="#t:t/0">t</a>()) :: {:ok, Anoma.Protobuf.Indexer.Nullifiers.Response.t()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> list_nullifiers(<a href="Anoma.Client.Examples.EClient.html#t:t/0">Anoma.Client.Examples.EClient.t</a>()) ::
+  {<a href="Anoma.Client.Examples.EClient.html#t:t/0">Anoma.Client.Examples.EClient.t</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]}</pre>
 
       </div>
 
@@ -360,7 +304,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">list_unrevealed_commits(e_proxy \\ start_proxy_for())</h1>
+    <h1 class="signature" translate="no">list_unrevealed_commits(client \\ setup())</h1>
 
 
   </div>
@@ -369,8 +313,8 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> list_unrevealed_commits(<a href="#t:t/0">t</a>()) ::
-  {:ok, Anoma.Protobuf.Indexer.UnrevealedCommits.Response.t()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> list_unrevealed_commits(<a href="Anoma.Client.Examples.EClient.html#t:t/0">Anoma.Client.Examples.EClient.t</a>()) ::
+  {<a href="Anoma.Client.Examples.EClient.html#t:t/0">Anoma.Client.Examples.EClient.t</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]}</pre>
 
       </div>
 
@@ -386,7 +330,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">list_unspent_resources(e_proxy \\ start_proxy_for())</h1>
+    <h1 class="signature" translate="no">list_unspent_resources(client \\ setup())</h1>
 
 
   </div>
@@ -395,38 +339,29 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> list_unspent_resources(<a href="#t:t/0">t</a>()) ::
-  {:ok, Anoma.Protobuf.Indexer.UnspentResources.Response.t()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> list_unspent_resources(<a href="Anoma.Client.Examples.EClient.html#t:t/0">Anoma.Client.Examples.EClient.t</a>()) ::
+  {<a href="Anoma.Client.Examples.EClient.html#t:t/0">Anoma.Client.Examples.EClient.t</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]}</pre>
 
       </div>
 
 <p>I ask the node to return its list of intents via the proxy.</p>
   </section>
 </section>
-<section class="detail" id="start_proxy_for/1">
-
-    <span id="start_proxy_for/0"></span>
+<section class="detail" id="setup/0">
 
   <div class="detail-header">
-    <a href="#start_proxy_for/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#setup/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_proxy_for(enode \\ nil)</h1>
+    <h1 class="signature" translate="no">setup()</h1>
 
 
   </div>
 
   <section class="docstring">
 
-      <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start_proxy_for(<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>() | nil) ::
-  %Anoma.Client.Examples.EProxy{pid: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
-
-      </div>
-
-<p>I test the GRPC proxy to proxy requests to an existing Anoma node.</p>
   </section>
 </section>
 
@@ -437,9 +372,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
 
           </span>
 

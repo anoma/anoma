@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.24.1">
+    <meta name="project" content="Anoma v0.25.0">
 
 
-    <title>Anoma.Client.Examples.EClient — Anoma v0.24.1</title>
+    <title>Anoma.Client.Examples.EClient — Anoma v0.25.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-37006C57.js"></script>
+    <script src="dist/sidebar_items-9E851CD4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.24.1
+          v0.25.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Client.Examples.EClient</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.24.1)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.25.0)</small>
 
   </h1>
 
@@ -164,7 +164,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_intent/1" data-no-tooltip translate="no">add_intent(client \\ connect_to_node())</a>
+        <a href="#add_intent/1" data-no-tooltip translate="no">add_intent(conn \\ setup())</a>
 
       </div>
 
@@ -174,17 +174,48 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#connect_to_node/1" data-no-tooltip translate="no">connect_to_node(enode \\ nil)</a>
+        <a href="#create_example_client/1" data-no-tooltip translate="no">create_example_client(enode \\ create_single_example_node())</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Given an enode, I connect to its GRPC endpoint.</p></div>
+        <div class="summary-synopsis"><p>I create an instance of the client and connect it to the given node.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_intents/1" data-no-tooltip translate="no">list_intents(client \\ connect_to_node())</a>
+        <a href="#create_example_connection/1" data-no-tooltip translate="no">create_example_connection(eclient \\ create_example_client())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I create an example stub to a given clients GRPC endpoint.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_single_example_node/0" data-no-tooltip translate="no">create_single_example_node()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I create a new node in the system, and ensure that that is the only node that is running
+by killing all other nodes.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#kill_existing_client/0" data-no-tooltip translate="no">kill_existing_client()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I kill the existing client.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_intents/1" data-no-tooltip translate="no">list_intents(conn \\ setup())</a>
 
       </div>
 
@@ -194,7 +225,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_nullifiers/1" data-no-tooltip translate="no">list_nullifiers(client \\ connect_to_node())</a>
+        <a href="#list_nullifiers/1" data-no-tooltip translate="no">list_nullifiers(conn \\ setup())</a>
 
       </div>
 
@@ -204,7 +235,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_unrevealed_commits/1" data-no-tooltip translate="no">list_unrevealed_commits(client \\ connect_to_node())</a>
+        <a href="#list_unrevealed_commits/1" data-no-tooltip translate="no">list_unrevealed_commits(conn \\ setup())</a>
 
       </div>
 
@@ -214,7 +245,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_unspent_resources/1" data-no-tooltip translate="no">list_unspent_resources(client \\ connect_to_node())</a>
+        <a href="#list_unspent_resources/1" data-no-tooltip translate="no">list_unspent_resources(conn \\ setup())</a>
 
       </div>
 
@@ -224,11 +255,51 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#prove_something/1" data-no-tooltip translate="no">prove_something(client \\ connect_to_node())</a>
+        <a href="#prove_something_jammed/1" data-no-tooltip translate="no">prove_something_jammed(conn \\ setup())</a>
 
       </div>
 
         <div class="summary-synopsis"><p>I prove something using the client.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#prove_something_plain_text/1" data-no-tooltip translate="no">prove_something_plain_text(conn \\ setup())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I prove something using the client.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run_something_jammed/1" data-no-tooltip translate="no">run_something_jammed(conn \\ setup())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I run a jammed nock program using the client.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run_something_plain_text/1" data-no-tooltip translate="no">run_something_plain_text(conn \\ setup())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I run a plaintext nock program using the client.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#setup/0" data-no-tooltip translate="no">setup()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I create the setup necessary to run each example below without arguments.</p></div>
 
     </div>
 
@@ -261,7 +332,12 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Client.Examples.EClient{channel: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>() | nil}</pre>
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Client.Examples.EClient{
+  channel: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>() | nil,
+  client: <a href="Anoma.Client.html#t:t/0">Anoma.Client.t</a>() | nil,
+  node: <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>() | nil,
+  supervisor: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>() | nil
+}</pre>
 
       </div>
 
@@ -271,7 +347,7 @@ GUIDES
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:channel</code> - The channel for making grpc requests.</li></ul>
+<ul><li><code class="inline">:channel</code>    - The channel for making grpc requests.</li><li><code class="inline">:supervisor</code> - the pid of the supervision tree.</li><li><code class="inline">:node</code>       - The node to which the client is connected.</li><li><code class="inline">:client</code>     - The client that is connected to the node.</li><li><code class="inline">:channel</code>    - The channel for making grpc requests.</li></ul>
   </section>
 </section>
 
@@ -295,26 +371,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">add_intent(client \\ connect_to_node())</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>I add an intent to the client.</p>
-  </section>
-</section>
-<section class="detail" id="connect_to_node/1">
-
-    <span id="connect_to_node/0"></span>
-
-  <div class="detail-header">
-    <a href="#connect_to_node/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">connect_to_node(enode \\ nil)</h1>
+    <h1 class="signature" translate="no">add_intent(conn \\ setup())</h1>
 
 
   </div>
@@ -323,14 +380,103 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> connect_to_node(<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>() | nil) ::
-  %Anoma.Client.Examples.EClient{
-    channel: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
-  }</pre>
+          <pre translate="no"><span class="attribute">@spec</span> add_intent(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
+  <a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()</pre>
 
       </div>
 
-<p>Given an enode, I connect to its GRPC endpoint.</p>
+<p>I add an intent to the client.</p>
+  </section>
+</section>
+<section class="detail" id="create_example_client/1">
+
+    <span id="create_example_client/0"></span>
+
+  <div class="detail-header">
+    <a href="#create_example_client/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">create_example_client(enode \\ create_single_example_node())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_example_client(<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>() | nil) :: <a href="#t:t/0">t</a>()</pre>
+
+      </div>
+
+<p>I create an instance of the client and connect it to the given node.</p><p>If there is already a client started, I kill it and start a new one.</p>
+  </section>
+</section>
+<section class="detail" id="create_example_connection/1">
+
+    <span id="create_example_connection/0"></span>
+
+  <div class="detail-header">
+    <a href="#create_example_connection/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">create_example_connection(eclient \\ create_example_client())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I create an example stub to a given clients GRPC endpoint.</p>
+  </section>
+</section>
+<section class="detail" id="create_single_example_node/0">
+
+  <div class="detail-header">
+    <a href="#create_single_example_node/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">create_single_example_node()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_single_example_node() :: <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()</pre>
+
+      </div>
+
+<p>I create a new node in the system, and ensure that that is the only node that is running
+by killing all other nodes.</p>
+  </section>
+</section>
+<section class="detail" id="kill_existing_client/0">
+
+  <div class="detail-header">
+    <a href="#kill_existing_client/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kill_existing_client()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> kill_existing_client() :: :ok</pre>
+
+      </div>
+
+<p>I kill the existing client.</p>
   </section>
 </section>
 <section class="detail" id="list_intents/1">
@@ -342,12 +488,19 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">list_intents(client \\ connect_to_node())</h1>
+    <h1 class="signature" translate="no">list_intents(conn \\ setup())</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_intents(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
+  <a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()</pre>
+
+      </div>
 
 <p>I list the intents over grpc on the client.</p>
   </section>
@@ -361,12 +514,19 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">list_nullifiers(client \\ connect_to_node())</h1>
+    <h1 class="signature" translate="no">list_nullifiers(conn \\ setup())</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_nullifiers(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
+  <a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()</pre>
+
+      </div>
 
 <p>I list all nullifiers.</p>
   </section>
@@ -380,12 +540,19 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">list_unrevealed_commits(client \\ connect_to_node())</h1>
+    <h1 class="signature" translate="no">list_unrevealed_commits(conn \\ setup())</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_unrevealed_commits(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
+  <a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()</pre>
+
+      </div>
 
 <p>I list all unrevealed commits.</p>
   </section>
@@ -399,26 +566,33 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">list_unspent_resources(client \\ connect_to_node())</h1>
+    <h1 class="signature" translate="no">list_unspent_resources(conn \\ setup())</h1>
 
 
   </div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_unspent_resources(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
+  <a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()</pre>
+
+      </div>
+
 <p>I list all unspent resources.</p>
   </section>
 </section>
-<section class="detail" id="prove_something/1">
+<section class="detail" id="prove_something_jammed/1">
 
-    <span id="prove_something/0"></span>
+    <span id="prove_something_jammed/0"></span>
 
   <div class="detail-header">
-    <a href="#prove_something/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#prove_something_jammed/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">prove_something(client \\ connect_to_node())</h1>
+    <h1 class="signature" translate="no">prove_something_jammed(conn \\ setup())</h1>
 
 
   </div>
@@ -426,6 +600,80 @@ GUIDES
   <section class="docstring">
 
 <p>I prove something using the client.</p>
+  </section>
+</section>
+<section class="detail" id="prove_something_plain_text/1">
+
+    <span id="prove_something_plain_text/0"></span>
+
+  <div class="detail-header">
+    <a href="#prove_something_plain_text/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">prove_something_plain_text(conn \\ setup())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I prove something using the client.</p>
+  </section>
+</section>
+<section class="detail" id="run_something_jammed/1">
+
+    <span id="run_something_jammed/0"></span>
+
+  <div class="detail-header">
+    <a href="#run_something_jammed/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">run_something_jammed(conn \\ setup())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I run a jammed nock program using the client.</p>
+  </section>
+</section>
+<section class="detail" id="run_something_plain_text/1">
+
+    <span id="run_something_plain_text/0"></span>
+
+  <div class="detail-header">
+    <a href="#run_something_plain_text/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">run_something_plain_text(conn \\ setup())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I run a plaintext nock program using the client.</p>
+  </section>
+</section>
+<section class="detail" id="setup/0">
+
+  <div class="detail-header">
+    <a href="#setup/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">setup()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I create the setup necessary to run each example below without arguments.</p>
   </section>
 </section>
 
@@ -436,9 +684,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.24.1" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.25.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.24.1">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.25.0">Hex Preview</a>
 
           </span>
 
