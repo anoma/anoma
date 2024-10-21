@@ -12,6 +12,7 @@ defmodule Anoma.Node.Logging do
   use GenServer
   use TypedStruct
 
+  require Node.Event
   require Logger
 
   @type flag :: :info | :debug | :error
@@ -164,6 +165,14 @@ defmodule Anoma.Node.Logging do
 
   def logging_filter() do
     %__MODULE__.LoggingFilter{}
+  end
+
+  def log_event(node_id, flag, msg) do
+    Node.Event.new_with_body(node_id, %__MODULE__.LoggingEvent{
+      flag: flag,
+      msg: msg
+    })
+    |> EventBroker.event()
   end
 
   defp match_consensus(table) do
