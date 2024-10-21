@@ -6,10 +6,11 @@ defmodule Anoma.Node.Transaction.Backends do
 
   alias Anoma.Node
   alias Node.Logging
-  alias Node.Transaction.{Executor, Ordering}
+  alias Node.Transaction.{Executor, Ordering, Storage}
   alias Anoma.TransparentResource
   alias Anoma.TransparentResource.Transaction, as: TTransaction
   alias Anoma.TransparentResource.Resource, as: TResource
+  alias CommitmentTree.Spec
 
   import Nock
   require Noun
@@ -131,7 +132,7 @@ defmodule Anoma.Node.Transaction.Backends do
           :ok | :error
   defp transparent_resource_tx(node_id, id, result) do
     storage_checks = fn tx -> storage_check?(node_id, id, tx) end
-    verify_tx_root = fn tx -> verify_tx_root(node_id, id, tx) end
+    verify_tx_root = fn tx -> verify_tx_root(node_id, tx) end
 
     verify_options = [
       double_insertion_closure: storage_checks,
@@ -150,9 +151,25 @@ defmodule Anoma.Node.Transaction.Backends do
             }
         end
 
-      Ordering.append(
+      ct =
+        case Ordering.read(node_id, {id, :ct}) do
+          :absent -> CommitmentTree.new(Spec.cm_tree_spec(), nil)
+          val -> val
+        end
+
+      {ct_new, anchor} =
+        CommitmentTree.add(ct, map.commitments |> MapSet.to_list())
+
+      Ordering.add(
         node_id,
-        {id, [{:nullifiers, map.nullifiers}, {:commitments, map.commitments}]}
+        {id,
+         %{
+           append: [
+             {:nullifiers, map.nullifiers},
+             {:commitments, map.commitments}
+           ],
+           write: [{:anchor, anchor}, {:ct, ct_new}]
+         }}
       )
 
       nullifier_event(map.nullifiers, node_id)
@@ -172,13 +189,12 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
-  @spec verify_tx_root(String.t(), binary(), TTransaction.t()) ::
+  @spec verify_tx_root(String.t(), TTransaction.t()) ::
           true | {:error, String.t()}
-  defp verify_tx_root(node_id, id, trans = %TTransaction{}) do
-    stored_commitments = Ordering.read(node_id, {id, :commitments})
+  defp verify_tx_root(node_id, trans = %TTransaction{}) do
     # TODO improve the error messages
-    commitments_exist_before_nullifier_submission(stored_commitments, trans) or
-      {:error, "A resource tried to be nullified before it was commited"}
+    commitments_exist_in_roots(node_id, trans) or
+      {:error, "Nullified resources are not committed at latest root"}
   end
 
   @spec storage_check?(String.t(), binary(), TTransaction.t()) ::
@@ -218,19 +234,45 @@ defmodule Anoma.Node.Transaction.Backends do
     Enum.any?(commitments, &MapSet.member?(stored_comms, &1))
   end
 
-  @spec commitments_exist_before_nullifier_submission(
-          MapSet.t(TResource.commitment()),
-          TTransaction.t()
-        ) :: boolean()
-  def commitments_exist_before_nullifier_submission(
-        stored_comms,
-        trans = %TTransaction{}
-      ) do
-    TTransaction.nullified_resources(trans)
-    |> Stream.reject(fn resource = %TResource{} -> resource.ephemeral end)
-    |> Stream.map(&TResource.commitment/1)
-    # Now let us check these commitments belong in the set
-    |> Enum.all?(fn commitment -> MapSet.member?(stored_comms, commitment) end)
+  @spec commitments_exist_in_roots(String.t(), TTransaction.t()) :: bool()
+  defp commitments_exist_in_roots(
+         node_id,
+         trans = %TTransaction{}
+       ) do
+    latest_root_time =
+      for root <- trans.roots, reduce: 0 do
+        time ->
+          with {:atomic, [{_, height_list, ^root}]} <-
+                 :mnesia.transaction(fn ->
+                   :mnesia.match_object(
+                     {Storage.updates_table(node_id), root, :_}
+                   )
+                 end) do
+            height = hd(height_list)
+
+            if height > time do
+              height
+            else
+              time
+            end
+          else
+            {:atomic, []} -> time
+          end
+      end
+
+    action_nullifiers = TTransaction.nullifiers(trans)
+
+    if latest_root_time > 0 do
+      root_coms = Storage.read(node_id, {latest_root_time, :commitments})
+
+      for <<"NF_", rest::binary>> <- action_nullifiers,
+          reduce: MapSet.new([]) do
+        cm_set -> MapSet.put(cm_set, "CM_" <> rest)
+      end
+      |> MapSet.subset?(root_coms)
+    else
+      false
+    end
   end
 
   @spec send_value(String.t(), binary(), Noun.t(), pid()) :: :ok | :error
