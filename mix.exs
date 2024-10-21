@@ -38,6 +38,12 @@ defmodule Anoma.MixProject do
 
   def releases do
     [
+      anoma_client: [
+        include_executables_for: [:unix],
+        applications: [
+          {:anoma_client, :permanent}
+        ]
+      ],
       anoma: [
         include_executables_for: [:unix, :windows],
         applications: [
