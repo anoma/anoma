@@ -96,39 +96,54 @@ defmodule Anoma.CairoResource.Transaction do
     # boolean value so that we can get rid of them in the Transaction struct. We
     # can apply the same improvement to the transparent Transaction.
     def verify(transaction = %Transaction{}) do
-      # check proofs
-      all_proofs_valid =
-        for ptx <- transaction.partial_transactions,
-            reduce: true do
-          acc ->
-            result = PartialTransaction.verify(ptx)
-            Logger.debug("partial_transactions result: #{inspect(result)}")
-            acc && result
-        end
+      with true <- verify_proofs(transaction),
+           compliance_outputs = decode_compliance_outputs(transaction),
+           true <- verify_delta(transaction, compliance_outputs),
+           true <- verify_resource_logic(transaction, compliance_outputs) do
+        true
+      else
+        _ -> false
+      end
+    end
 
-      # Decode the compliance_output
-      compliance_outputs =
-        transaction.partial_transactions
-        |> Enum.flat_map(fn ptx ->
-          ptx.compliance_proofs
-          |> Enum.map(fn proof_record ->
-            ComplianceOutput.from_public_input(proof_record.public_inputs)
-          end)
+    defp verify_proofs(tx) do
+      tx.partial_transactions
+      |> Enum.all?(fn ptx ->
+        res = PartialTransaction.verify(ptx)
+        Logger.debug("partial_transaction result: #{inspect(res)}")
+        res
+      end)
+    end
+
+    defp decode_compliance_outputs(tx) do
+      tx.partial_transactions
+      |> Enum.flat_map(fn ptx ->
+        ptx.compliance_proofs
+        |> Enum.map(fn proof_record ->
+          ComplianceOutput.from_public_input(proof_record.public_inputs)
         end)
+      end)
+    end
 
+    defp verify_delta(tx, compliance_outputs) do
       # Collect binding public keys
       binding_pub_keys = get_binding_pub_keys(compliance_outputs)
 
       # Collect binding signature msgs
-      binding_messages = Transaction.get_binding_messages(transaction)
+      binding_messages = Transaction.get_binding_messages(tx)
 
-      delta_valid =
-        Cairo.sig_verify(
-          binding_pub_keys,
-          binding_messages,
-          transaction.delta |> :binary.bin_to_list()
-        )
+      case Cairo.sig_verify(
+             binding_pub_keys,
+             binding_messages,
+             tx.delta |> :binary.bin_to_list()
+           ) do
+        true -> true
+        false -> false
+        {:error, _} -> false
+      end
+    end
 
+    defp verify_resource_logic(tx, compliance_outputs) do
       # Collect resource logics from compliance proofs
       resource_logics_from_compliance =
         compliance_outputs
@@ -137,21 +152,13 @@ defmodule Anoma.CairoResource.Transaction do
 
       # Compute the program hash of resource logic proofs
       resource_logic_from_program =
-        transaction.partial_transactions
+        tx.partial_transactions
         |> Enum.flat_map(fn ptx ->
           ptx.logic_proofs
           |> Enum.map(&ProofRecord.get_cairo_program_hash/1)
         end)
 
-      resource_logic_valid =
-        resource_logics_from_compliance == resource_logic_from_program
-
-      # check duplicate nfs
-      has_duplicate_nfs =
-        Enum.uniq(transaction.nullifiers) == transaction.nullifiers
-
-      all_proofs_valid && delta_valid && resource_logic_valid &&
-        has_duplicate_nfs
+      resource_logics_from_compliance == resource_logic_from_program
     end
 
     def cm_tree(_tx, _storage) do
