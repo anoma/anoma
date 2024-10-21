@@ -13,7 +13,6 @@ defmodule Anoma.Node.Examples.EGRPC do
   alias Anoma.Protobuf.IntentPool.AddIntent
   alias Anoma.Protobuf.IntentPool.ListIntents
   alias Anoma.Protobuf.Intents
-  alias Anoma.Protobuf.Prove
 
   import ExUnit.Assertions
 
