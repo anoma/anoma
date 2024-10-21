@@ -15,7 +15,7 @@ defmodule Anoma.TransparentResource.Action do
 
   def precis(%Action{proofs: proofs}) do
     for proof <- proofs,
-        reduce: %{commited: MapSet.new(), nullified: MapSet.new()} do
+        reduce: %{committed: MapSet.new(), nullified: MapSet.new()} do
       %{committed: committed, nullified: nullified} ->
         case proof.polarity do
           :committed ->
