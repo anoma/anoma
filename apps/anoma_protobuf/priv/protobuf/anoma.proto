@@ -84,7 +84,7 @@ message IntentPool {
     message Request {}
 
     message Response {
-      repeated string intents = 1; // a list of intents.
+      repeated bytes intents = 1; // a list of intents.
     }
   }
 }
@@ -95,7 +95,7 @@ message Indexer {
     message Request {}
 
     message Response {
-      repeated string nullifiers = 1; // a list of intents.
+      repeated bytes nullifiers = 1; // a list of intents.
     }
   }
 
@@ -103,7 +103,7 @@ message Indexer {
     message Request {}
 
     message Response {
-      repeated string commits = 1; // a list of intents.
+      repeated bytes commits = 1; // a list of intents.
     }
   }
 
@@ -111,7 +111,7 @@ message Indexer {
     message Request {}
 
     message Response {
-      repeated string unspent_resources = 1; // a list of intents.
+      repeated bytes unspent_resources = 1; // a list of intents.
     }
   }
 }

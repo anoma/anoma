@@ -51,7 +51,7 @@ defmodule Anoma.Node.Transport.GRPC.Server do
   def list_nullifiers(_request, _stream) do
     {:ok, local_node_id} = Registry.local_node_id()
     nullifiers = Indexer.get(local_node_id, :nlfs)
-    %Nullifiers.Response{nullifiers: nullifiers}
+    %Nullifiers.Response{nullifiers: Enum.into(nullifiers, [])}
   end
 
   @spec list_unrevealed_commits(UnrevealedCommits.Request.t(), Stream.t()) ::
@@ -59,7 +59,7 @@ defmodule Anoma.Node.Transport.GRPC.Server do
   def list_unrevealed_commits(_request, _stream) do
     {:ok, local_node_id} = Registry.local_node_id()
     commits = Indexer.get(local_node_id, :cms)
-    %UnrevealedCommits.Response{commits: commits}
+    %UnrevealedCommits.Response{commits: Enum.into(commits, [])}
   end
 
   @spec list_unspent_resources(UnspentResources.Request.t(), Stream.t()) ::
@@ -68,6 +68,6 @@ defmodule Anoma.Node.Transport.GRPC.Server do
     {:ok, local_node_id} = Registry.local_node_id()
     resources = Indexer.get(local_node_id, :resources)
 
-    %UnspentResources.Response{unspent_resources: resources}
+    %UnspentResources.Response{unspent_resources: Enum.into(resources, [])}
   end
 end
