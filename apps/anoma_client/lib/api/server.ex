@@ -61,7 +61,7 @@ defmodule Anoma.Client.Api.Server do
     priv_inputs = parse_inputs(request.private_inputs)
 
     result =
-      case run_nock_program(program, pub_inputs, priv_inputs) do
+      case run_nock_program(program, [pub_inputs | priv_inputs]) do
         {:ok, result} ->
           {:proof, Nock.Jam.jam(result)}
 
@@ -134,12 +134,14 @@ defmodule Anoma.Client.Api.Server do
   # I run a nock program with public and private inputs.
   # If no private inputs are given, they are replaced with an empty list.
   # """
-  @spec run_nock_program(Noun.t(), [Noun.t()], [Noun.t()]) ::
+  @spec run_nock_program(Noun.t(), Noun.t()) ::
           {:ok, Noun.t()} | :error
-  defp run_nock_program(program, public_inputs, private_inputs \\ []) do
-    core = [program, <<>> | Nock.rm_core()]
-    inputs = [public_inputs | private_inputs]
-    Nock.nock(core, [9, 2, 10, [6, 1 | inputs], 0 | 1])
+  defp run_nock_program(program, arguments) do
+    core =
+      ((program |> Noun.list_nock_to_erlang()) ++ [Nock.rm_core()])
+      |> to_improper_list()
+
+    Nock.nock(core, [9, 2, 10, [6, 1 | arguments], 0 | 1])
   end
 
   # @doc """

@@ -191,7 +191,7 @@ defmodule Anoma.Client.Examples.EClient do
   I prove something using the client.
   """
   def prove_something_jammed(conn \\ setup()) do
-    nock_str = "[1 123]"
+    nock_str = "[[1 123] 0 0]"
     pub_inputs = [<<>>, <<>>, <<>>]
     priv_inputs = [<<>>, <<>>, <<>>]
 
@@ -218,7 +218,7 @@ defmodule Anoma.Client.Examples.EClient do
   I prove something using the client.
   """
   def prove_something_plain_text(conn \\ setup()) do
-    nock_str = "[1 123]"
+    nock_str = "[[1 123] 0 0]"
     pub_inputs = ["1", "2", "3"]
     priv_inputs = ["4", "5", "6"]
 
@@ -239,7 +239,7 @@ defmodule Anoma.Client.Examples.EClient do
   I run a plaintext nock program using the client.
   """
   def run_something_plain_text(conn \\ setup()) do
-    nock_str = "[1 123]"
+    nock_str = "[[1 123] 0 0]"
     inputs = ["1", "2", "3"]
 
     # build input structs
@@ -257,7 +257,7 @@ defmodule Anoma.Client.Examples.EClient do
   I run a jammed nock program using the client.
   """
   def run_something_jammed(conn \\ setup()) do
-    nock_str = "[1 123]"
+    nock_str = "[[1 123] 0 0]"
     inputs = ["1", "2", "3"]
 
     nock_program = nock_str |> Noun.Format.parse_always() |> Nock.Jam.jam()
