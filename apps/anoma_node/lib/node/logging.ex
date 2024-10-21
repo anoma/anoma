@@ -56,12 +56,17 @@ defmodule Anoma.Node.Logging do
   def init(args) do
     Process.set_label(__MODULE__)
 
-    args = Keyword.validate!(args, [:node_id, table: __MODULE__.Events])
+    args =
+      Keyword.validate!(args, [
+        :node_id,
+        rocks: false,
+        table: __MODULE__.Events
+      ])
 
     table =
       String.to_atom("#{args[:table]}_#{:erlang.phash2(args[:node_id])}")
 
-    init_table(table)
+    init_table(table, args[:rocks])
 
     node_id = args[:node_id]
 
@@ -152,9 +157,13 @@ defmodule Anoma.Node.Logging do
     {:noreply, state}
   end
 
-  def init_table(table) do
+  @spec init_table(atom(), bool()) :: {:atomic, :ok}
+  def init_table(table, rocks) do
     :mnesia.delete_table(table)
-    {:atomic, :ok} = :mnesia.create_table(table, attributes: [:type, :body])
+    rocks_opt = Anoma.Utility.rock_opts(rocks)
+
+    {:atomic, :ok} =
+      :mnesia.create_table(table, rocks_opt ++ [attributes: [:type, :body]])
   end
 
   defp log_fun({:debug, msg}), do: Logger.debug(msg)
