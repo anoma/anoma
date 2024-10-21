@@ -53,8 +53,10 @@ defmodule Anoma.Client.Examples.EClient do
         enode
       end
 
+    _eproxy = Anoma.Client.Examples.EProxy.start_proxy_for(enode)
+
     result =
-      case GRPC.Stub.connect("localhost:#{enode.grpc_port}") do
+      case GRPC.Stub.connect("localhost:50052") do
         {:ok, channel} ->
           %EClient{channel: channel}
 
