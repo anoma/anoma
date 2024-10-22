@@ -36,6 +36,7 @@ defmodule TestHelper.GenerateExampleTests do
         test_name = "example #{inspect(module)}.#{func}/0"
 
         quote do
+          @tag unquote(func)
           test unquote(test_name) do
             unquote(module).unquote(func)()
           end
