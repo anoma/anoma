@@ -102,10 +102,18 @@ defmodule Anoma.TransparentResource.Action do
     with {:ok, proofs} <- from_noun_proofs(proofs) do
       {:ok,
        %Action{
-         commitments: MapSet.new(Noun.list_nock_to_erlang(commits)),
-         nullifiers: MapSet.new(Noun.list_nock_to_erlang(nulls)),
+         commitments:
+           MapSet.new(
+             Noun.list_nock_to_erlang(commits),
+             &Noun.atom_integer_to_binary/1
+           ),
+         nullifiers:
+           MapSet.new(
+             Noun.list_nock_to_erlang(nulls),
+             &Noun.atom_integer_to_binary/1
+           ),
          proofs: proofs,
-         app_data: app_data
+         app_data: Noun.atom_integer_to_binary(app_data)
        }}
     end
   end
