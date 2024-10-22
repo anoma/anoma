@@ -143,6 +143,10 @@ defmodule Anoma.TransparentResource.LogicProof do
   end
 
   @spec from_noun_plaintext(Noun.t()) :: {:ok, MapSet.t(Resource.t())}
+  defp from_noun_plaintext(noun) when noun in @empty do
+    {:ok, MapSet.new([])}
+  end
+
   defp from_noun_plaintext(noun) when is_list(noun) do
     maybe_resources =
       Enum.map(Noun.list_nock_to_erlang(noun), &Resource.from_noun/1)
