@@ -35,4 +35,35 @@ defmodule Examples.ETransparent.EAction do
 
     res
   end
+
+  def trivial_action_proofs_missing_nullifier_proof() do
+    nullifiers = ELogicProof.trivial_true_swap_proof_commitment().nullifiers
+
+    res = %Action{
+      trivial_action_proofs_proof_and_commitments()
+      | nullifiers: nullifiers
+    }
+
+    assert {:error, _} = Action.verify_correspondence(res)
+
+    res
+  end
+
+  def trivial_swap_action() do
+    action = trivial_action_proofs_missing_nullifier_proof()
+
+    res = %Action{
+      trivial_action_proofs_missing_nullifier_proof()
+      | proofs:
+          MapSet.put(
+            action.proofs,
+            ELogicProof.trivial_true_swap_proof_nullifier()
+          )
+    }
+
+    assert Action.verify_correspondence(res)
+    assert %{} = Action.delta(res)
+
+    res
+  end
 end
