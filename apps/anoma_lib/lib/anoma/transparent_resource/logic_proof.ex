@@ -150,7 +150,7 @@ defmodule Anoma.TransparentResource.LogicProof do
     if Enum.any?(maybe_resources, &(:error == &1)) do
       :error
     else
-      {:ok, Map.new(Enum.map(maybe_resources, fn {:ok, x} -> x end))}
+      {:ok, MapSet.new(Enum.map(maybe_resources, fn {:ok, x} -> x end))}
     end
   end
 
