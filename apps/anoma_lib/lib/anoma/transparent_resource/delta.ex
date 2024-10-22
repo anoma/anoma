@@ -22,8 +22,14 @@ defmodule Anoma.TransparentResource.Delta do
   def from_noun(noun) do
     maybe_record =
       Enum.map(Noun.list_nock_to_erlang(noun), fn
-        [x, y | terminator] when terminator in [0, <<>>, <<0>>, []] ->
-          {x, y}
+        [x, [v_sign | v_value] | terminator]
+        when terminator in [0, <<>>, <<0>>, []] ->
+          {x,
+           if Noun.is_zero(v_sign) do
+             v_value
+           else
+             -v_value
+           end}
 
         _ ->
           :error

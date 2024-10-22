@@ -92,7 +92,10 @@ defmodule Anoma.TransparentResource.Transaction do
       [
         MapSet.to_list(trans.roots),
         Enum.map(trans.actions, &Noun.Nounable.to_noun/1),
-        Map.to_list(trans.delta) |> Enum.map(fn {x, y} -> [x, y] end),
+        Map.to_list(trans.delta)
+        |> Enum.map(fn {x, y} ->
+          [x, [if(y >= 0, do: 0, else: 1) | abs(y)]]
+        end),
         # Consider better provinance value
         trans.delta_proof
       ]
