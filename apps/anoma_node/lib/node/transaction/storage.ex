@@ -133,22 +133,30 @@ defmodule Anoma.Node.Transaction.Storage do
     end
   end
 
-  def handle_call({write_or_append, {height, kvlist}}, from, state)
-      when write_or_append in [:write, :append] do
+  def handle_call({write_opt, {height, args}}, from, state)
+      when write_opt in [:write, :append, :add] do
     unless height == state.uncommitted_height + 1 do
       node_id = state.node_id
 
       block_spawn(
         height - 1,
         fn ->
-          blocking_write(node_id, height, kvlist, from)
+          blocking_write(node_id, height, args, from)
         end,
         node_id
       )
 
       {:noreply, state}
     else
-      new_state = abwrite(write_or_append, {height, kvlist}, state)
+      {new_state, event_writes} = abwrite(write_opt, {height, args}, state)
+
+      write_event =
+        Node.Event.new_with_body(state.node_id, %__MODULE__.WriteEvent{
+          height: height,
+          writes: event_writes
+        })
+
+      EventBroker.event(write_event)
 
       {:reply, :ok, new_state}
     end
@@ -182,6 +190,14 @@ defmodule Anoma.Node.Transaction.Storage do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
       {:read, {height, key}},
+      :infinity
+    )
+  end
+
+  def add(node_id, args = {_height, %{write: _writes, append: _appends}}) do
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:add, args},
       :infinity
     )
   end
@@ -249,75 +265,87 @@ defmodule Anoma.Node.Transaction.Storage do
   end
 
   # todo: should exclude same key being overwritten at same height
-  @spec abwrite(:append | :write, {non_neg_integer(), list(any())}, t()) ::
+  @spec abwrite(
+          :append | :write | :add,
+          {non_neg_integer(), list(any()) | %{write: list(), append: list()}},
           t()
+        ) ::
+          {t(), list()}
+  def abwrite(:add, {height, %{write: writes, append: appends}}, state) do
+    {new_state, updates1} = abwrite(:write, {height, writes}, state)
+    {final_state, updates2} = abwrite(:append, {height, appends}, new_state)
+
+    {final_state, updates1 ++ updates2}
+  end
+
   def abwrite(flag, {height, kvlist}, state) do
-    {new_state, event_writes} =
-      for {key, value} <- kvlist,
-          reduce: {%__MODULE__{state | uncommitted_height: height}, kvlist} do
-        {state_acc, list} ->
-          key_old_updates = Map.get(state_acc.uncommitted_updates, key, [])
+    for {key, value} <- kvlist,
+        reduce: {%__MODULE__{state | uncommitted_height: height}, kvlist} do
+      {state_acc, list} ->
+        key_old_updates = Map.get(state_acc.uncommitted_updates, key, [])
 
-          key_new_updates =
-            with [latest_height | _] <- key_old_updates,
-                 true <- height == latest_height do
-              key_old_updates
-            else
-              _e -> [height | key_old_updates]
-            end
+        key_new_updates =
+          with [latest_height | _] <- key_old_updates,
+               true <- height == latest_height do
+            key_old_updates
+          else
+            _e -> [height | key_old_updates]
+          end
 
-          new_updates =
-            Map.put(state_acc.uncommitted_updates, key, key_new_updates)
+        new_updates =
+          Map.put(state_acc.uncommitted_updates, key, key_new_updates)
 
-          {new_kv, event_writes_local} =
-            case flag do
-              :append ->
-                old_set_value =
-                  case Map.get(state_acc.uncommitted, {height, key}) do
-                    nil ->
-                      case read_in_past(height, key, state) do
-                        :absent -> MapSet.new()
-                        {:ok, res} -> res
-                      end
+        {new_kv, event_writes_local} =
+          case flag do
+            :append ->
+              do_append(state_acc, state, height, key, value, list)
 
-                    res ->
-                      res
-                  end
+            :write ->
+              do_write(state_acc, height, key, value, kvlist)
+          end
 
-                new_set_value = MapSet.put(old_set_value, value)
+        {%__MODULE__{
+           state_acc
+           | uncommitted: new_kv,
+             uncommitted_updates: new_updates
+         }, event_writes_local}
+    end
+  end
 
-                new_kv =
-                  Map.put(
-                    state_acc.uncommitted,
-                    {height, key},
-                    new_set_value
-                  )
+  @spec do_append(t(), t(), non_neg_integer(), any(), any(), list()) ::
+          {any(), list()}
+  defp do_append(state_acc, state, height, key, value, list) do
+    old_set_value =
+      case Map.get(state_acc.uncommitted, {height, key}) do
+        nil ->
+          case read_in_past(height, key, state) do
+            :absent -> MapSet.new()
+            {:ok, res} -> res
+          end
 
-                {new_kv, [{key, new_set_value} | list]}
-
-              :write ->
-                new_kv =
-                  Map.put_new(state_acc.uncommitted, {height, key}, value)
-
-                {new_kv, kvlist}
-            end
-
-          {%__MODULE__{
-             state_acc
-             | uncommitted: new_kv,
-               uncommitted_updates: new_updates
-           }, event_writes_local}
+        res ->
+          res
       end
 
-    write_event =
-      Node.Event.new_with_body(state.node_id, %__MODULE__.WriteEvent{
-        height: height,
-        writes: event_writes
-      })
+    new_set_value = MapSet.put(old_set_value, value)
 
-    EventBroker.event(write_event)
+    new_kv =
+      Map.put(
+        state_acc.uncommitted,
+        {height, key},
+        new_set_value
+      )
 
-    new_state
+    {new_kv, [{key, new_set_value} | list]}
+  end
+
+  @spec do_write(t(), non_neg_integer(), any(), any(), list()) ::
+          {any(), list()}
+  defp do_write(state_acc, height, key, value, kvlist) do
+    new_kv =
+      Map.put_new(state_acc.uncommitted, {height, key}, value)
+
+    {new_kv, kvlist}
   end
 
   @spec read_in_past(non_neg_integer(), any(), t()) ::
