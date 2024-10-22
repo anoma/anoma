@@ -34,7 +34,7 @@ defmodule Anoma.TransparentResource.Transaction do
     args =
       Keyword.validate!(options,
         double_insertion_closure: fn _ -> true end,
-        root_clsoure: fn _ -> true end
+        root_closure: fn _ -> true end
       )
 
     with true <- verify_tx_roots(tx, args[:root_closure]),
