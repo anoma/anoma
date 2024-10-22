@@ -86,8 +86,17 @@ defmodule Anoma.TransparentResource.LogicProof do
       {:ok,
        %LogicProof{
          resource: self_resource,
-         commitments: MapSet.new(Noun.list_nock_to_erlang(commits)),
-         nullifiers: MapSet.new(Noun.list_nock_to_erlang(nulls)),
+         # THEY MUST BE BINARY
+         commitments:
+           MapSet.new(
+             Noun.list_nock_to_erlang(commits),
+             &Noun.atom_integer_to_binary/1
+           ),
+         nullifiers:
+           MapSet.new(
+             Noun.list_nock_to_erlang(nulls),
+             &Noun.atom_integer_to_binary/1
+           ),
          self_tag: tag,
          other_public: other_public,
          committed_plaintexts: committed_plaintexts,
