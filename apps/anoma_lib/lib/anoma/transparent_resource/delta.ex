@@ -17,8 +17,7 @@ defmodule Anoma.TransparentResource.Delta do
   end
 
   def sub(d1 = %{}, d2 = %{}) do
-    Map.merge(d1, d2, fn _k, v1, v2 -> v1 - v2 end)
-    |> make_sane()
+    add(d1, negate(d2))
   end
 
   def negate(d = %{}) do
