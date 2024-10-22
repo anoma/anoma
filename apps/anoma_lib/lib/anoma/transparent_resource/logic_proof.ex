@@ -86,8 +86,17 @@ defmodule Anoma.TransparentResource.LogicProof do
       {:ok,
        %LogicProof{
          resource: self_resource,
-         commitments: MapSet.new(Noun.list_nock_to_erlang(commits)),
-         nullifiers: MapSet.new(Noun.list_nock_to_erlang(nulls)),
+         # THEY MUST BE BINARY
+         commitments:
+           MapSet.new(
+             Noun.list_nock_to_erlang(commits),
+             &Noun.atom_integer_to_binary/1
+           ),
+         nullifiers:
+           MapSet.new(
+             Noun.list_nock_to_erlang(nulls),
+             &Noun.atom_integer_to_binary/1
+           ),
          self_tag: tag,
          other_public: other_public,
          committed_plaintexts: committed_plaintexts,
@@ -160,6 +169,10 @@ defmodule Anoma.TransparentResource.LogicProof do
   end
 
   @spec from_noun_plaintext(Noun.t()) :: {:ok, MapSet.t(Resource.t())}
+  defp from_noun_plaintext(noun) when noun in @empty do
+    {:ok, MapSet.new([])}
+  end
+
   defp from_noun_plaintext(noun) when is_list(noun) do
     maybe_resources =
       Enum.map(Noun.list_nock_to_erlang(noun), &Resource.from_noun/1)
@@ -167,7 +180,7 @@ defmodule Anoma.TransparentResource.LogicProof do
     if Enum.any?(maybe_resources, &(:error == &1)) do
       :error
     else
-      {:ok, Map.new(Enum.map(maybe_resources, fn {:ok, x} -> x end))}
+      {:ok, MapSet.new(Enum.map(maybe_resources, fn {:ok, x} -> x end))}
     end
   end
 

@@ -62,16 +62,17 @@ defmodule Anoma.TransparentResource.Resource do
         rseed | terminator
       ])
       when terminator in [0, <<>>, <<0>>, []] do
+    # we make sure the types are respected
     {:ok,
      %Resource{
-       label: label,
+       label: Noun.atom_integer_to_binary(label),
        logic: logic,
        ephemeral: noun_to_bool(ephemeral),
-       quantity: quantity,
-       data: data,
-       nullifier_key: nullifier_key,
-       nonce: nonce,
-       rseed: rseed
+       quantity: Noun.atom_binary_to_integer(quantity),
+       data: Noun.atom_integer_to_binary(data),
+       nullifier_key: Noun.atom_integer_to_binary(nullifier_key, 32),
+       nonce: Noun.atom_integer_to_binary(nonce, 32),
+       rseed: Noun.atom_integer_to_binary(rseed)
      }}
   end
 

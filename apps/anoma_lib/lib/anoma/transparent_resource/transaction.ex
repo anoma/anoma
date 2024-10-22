@@ -34,7 +34,7 @@ defmodule Anoma.TransparentResource.Transaction do
     args =
       Keyword.validate!(options,
         double_insertion_closure: fn _ -> true end,
-        root_clsoure: fn _ -> true end
+        root_closure: fn _ -> true end
       )
 
     with true <- verify_tx_roots(tx, args[:root_closure]),
@@ -168,7 +168,10 @@ defmodule Anoma.TransparentResource.Transaction do
       [
         MapSet.to_list(trans.roots),
         Enum.map(trans.actions, &Noun.Nounable.to_noun/1),
-        Map.to_list(trans.delta) |> Enum.map(fn {x, y} -> [x, y] end),
+        Map.to_list(trans.delta)
+        |> Enum.map(fn {x, y} ->
+          [x, [if(y >= 0, do: 0, else: 1) | abs(y)]]
+        end),
         # Consider better provinance value
         trans.delta_proof
       ]
