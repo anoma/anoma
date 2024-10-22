@@ -254,7 +254,7 @@ defmodule Anoma.Node.Transaction.Storage do
   def abwrite(flag, {height, kvlist}, state) do
     {new_state, event_writes} =
       for {key, value} <- kvlist,
-          reduce: {%__MODULE__{state | uncommitted_height: height}, kvlist} do
+          reduce: {%__MODULE__{state | uncommitted_height: height}, []} do
         {state_acc, list} ->
           key_old_updates = Map.get(state_acc.uncommitted_updates, key, [])
 
