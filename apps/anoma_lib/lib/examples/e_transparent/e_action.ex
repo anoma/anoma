@@ -66,4 +66,32 @@ defmodule Examples.ETransparent.EAction do
 
     res
   end
+
+  def trivial_true_commit_action() do
+    logic_proof = ELogicProof.trivial_true_commitment()
+
+    res = %Action{
+      empty()
+      | proofs: MapSet.new([logic_proof]),
+        commitments: logic_proof.commitments
+    }
+
+    assert Action.verify_correspondence(res)
+
+    res
+  end
+
+  def trivial_true_2_nullifier_action() do
+    logic_proof = ELogicProof.trivial_true_2_nullifier()
+
+    res = %Action{
+      empty()
+      | proofs: MapSet.new([logic_proof]),
+        nullifiers: logic_proof.nullifiers
+    }
+
+    assert Action.verify_correspondence(res)
+
+    res
+  end
 end
