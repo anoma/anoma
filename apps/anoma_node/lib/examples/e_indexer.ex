@@ -1,10 +1,11 @@
 defmodule Anoma.Node.Examples.EIndexer do
-  alias Anoma.Node.Examples.{ETransaction}
-  alias Anoma.Node.Transaction.Storage
-  alias Anoma.Node.Utility.Indexer
+  alias Anoma.Node
+  alias Node.Examples.{ETransaction, ENode}
+  alias Node.Transaction.Storage
+  alias Node.Utility.Indexer
   alias Anoma.TransparentResource.Resource
 
-  def indexer_reads_height(node_id \\ "londo_mollari") do
+  def indexer_reads_height(node_id \\ Node.example_random_id()) do
     ETransaction.inc_counter_submit_after_read(node_id)
     Indexer.start_link(node_id: node_id)
     1 = Indexer.get(node_id, :blocks)
@@ -12,8 +13,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
-  def indexer_reads_nullifier(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
+  def indexer_reads_nullifier(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
@@ -28,8 +29,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
-  def indexer_reads_nullifiers(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
+  def indexer_reads_nullifiers(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
@@ -45,8 +46,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
-  def indexer_reads_commitments(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
+  def indexer_reads_commitments(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
@@ -62,8 +63,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
-  def indexer_does_not_read_revealed(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
+  def indexer_does_not_read_revealed(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
@@ -82,8 +83,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
-  def indexer_reads_unrevealed(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
+  def indexer_reads_unrevealed(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
