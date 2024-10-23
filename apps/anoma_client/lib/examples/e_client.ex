@@ -19,7 +19,6 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.IntentPool.ListIntents
   alias Anoma.Protobuf.Intents
   alias Anoma.Protobuf.Prove
-  alias Anoma.Protobuf.RunNock
   alias Anoma.Protobuf.Input
 
   import ExUnit.Assertions
@@ -187,144 +186,128 @@ defmodule Anoma.Client.Examples.EClient do
     conn
   end
 
-  @doc """
-  I prove something using the client.
-  """
-  def prove_something_jammed(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    pub_inputs = [<<>>, <<>>, <<>>]
-    priv_inputs = [<<>>, <<>>, <<>>]
+  # @doc """
+  # I prove something using the client.
+  # """
+  # def prove_something_jammed(conn \\ setup()) do
+  #   nock_str = "[[1 123] 0 0]"
+  #   pub_inputs = [<<>>, <<>>, <<>>]
+  #   priv_inputs = [<<>>, <<>>, <<>>]
 
-    # the client sends a knock program that is jammed.
-    nock_program = nock_str |> Noun.Format.parse_always() |> Nock.Jam.jam()
+  #   # the client sends a knock program that is jammed.
+  #   nock_program = nock_str |> Noun.Format.parse_always() |> Nock.Jam.jam()
 
-    # each input is jammed individually
-    inputs_pub =
-      Enum.map(pub_inputs, &%Input{input: {:jammed, Nock.Jam.jam(&1)}})
+  #   # each input is jammed individually
+  #   inputs_pub =
+  #     Enum.map(pub_inputs, &%Input{input: {:jammed, Nock.Jam.jam(&1)}})
 
-    inputs_priv =
-      Enum.map(priv_inputs, &%Input{input: {:jammed, Nock.Jam.jam(&1)}})
+  #   inputs_priv =
+  #     Enum.map(priv_inputs, &%Input{input: {:jammed, Nock.Jam.jam(&1)}})
 
-    request = %Prove.Request{
-      program: {:jammed_program, nock_program},
-      public_inputs: inputs_pub,
-      private_inputs: inputs_priv
-    }
+  #   request = %Prove.Request{
+  #     program: {:jammed_program, nock_program},
+  #     public_inputs: inputs_pub,
+  #     private_inputs: inputs_priv
+  #   }
 
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
-  end
+  #   {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+  # end
 
-  @doc """
-  I prove something using the client.
-  """
-  def prove_something_plain_text(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    pub_inputs = ["1", "2", "3"]
-    priv_inputs = ["4", "5", "6"]
+  # @doc """
+  # I prove something using the client.
+  # """
+  # def prove_something_plain_text(conn \\ setup()) do
+  #   nock_str = "[[1 123] 0 0]"
+  #   pub_inputs = ["1", "2", "3"]
+  #   priv_inputs = ["4", "5", "6"]
 
-    # build input structs
-    pub_inputs = Enum.map(pub_inputs, &%Input{input: {:text, "#{&1}"}})
-    priv_inputs = Enum.map(priv_inputs, &%Input{input: {:text, "#{&1}"}})
+  #   # build input structs
+  #   pub_inputs = Enum.map(pub_inputs, &%Input{input: {:text, "#{&1}"}})
+  #   priv_inputs = Enum.map(priv_inputs, &%Input{input: {:text, "#{&1}"}})
 
-    request = %Prove.Request{
-      program: {:text_program, nock_str},
-      public_inputs: pub_inputs,
-      private_inputs: priv_inputs
-    }
+  #   request = %Prove.Request{
+  #     program: {:text_program, nock_str},
+  #     public_inputs: pub_inputs,
+  #     private_inputs: priv_inputs
+  #   }
 
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
-  end
+  #   {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+  # end
 
-  @doc """
-  I run a plaintext nock program using the client.
-  """
-  def run_something_plain_text(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    inputs = ["1", "2", "3"]
+  # @doc """
+  # I run a plaintext nock program using the client.
+  # """
+  # def run_something_plain_text(conn \\ setup()) do
+  #   nock_str = "[[1 123] 0 0]"
+  #   inputs = ["1", "2", "3"]
 
-    # build input structs
-    inputs = Enum.map(inputs, &%Input{input: {:text, "#{&1}"}})
+  #   # build input structs
+  #   inputs = Enum.map(inputs, &%Input{input: {:text, "#{&1}"}})
 
-    request = %RunNock.Request{
-      program: {:text_program, nock_str},
-      inputs: inputs
-    }
+  #   request = %RunNock.Request{
+  #     program: {:text_program, nock_str},
+  #     inputs: inputs
+  #   }
 
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
-  end
+  #   {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+  # end
 
   @doc """
   I run a jammed nock program using the client.
   """
-  def run_something_jammed(conn \\ setup()) do
+  def prove_something_jammed(conn \\ setup()) do
+    # string program and inputs
     nock_str = "[[1 123] 0 0]"
-    inputs = ["1", "2", "3"]
+    inputs = ["3"]
 
-    nock_program = nock_str |> Noun.Format.parse_always() |> Nock.Jam.jam()
+    # assume the program and inputs are jammed
+    program_jammed =
+      Noun.Format.parse_always(nock_str)
+      |> Nock.Jam.jam()
 
-    # build input structs
-    inputs =
-      Enum.map(
-        inputs,
-        &%Input{
-          input: {:jammed, &1 |> Noun.Format.parse_always() |> Nock.Jam.jam()}
-        }
-      )
+    inputs_jammed =
+      inputs
+      |> Enum.map(&Noun.Format.parse_always/1)
+      |> Enum.map(&Nock.Jam.jam/1)
 
-    request = %RunNock.Request{
-      program: {:jammed_program, nock_program},
-      inputs: inputs
+    # create the protobuf request
+    inputs = Enum.map(inputs_jammed, &%Input{input: {:jammed, &1}})
+
+    request = %Prove.Request{
+      program: {:jammed_program, program_jammed},
+      public_inputs: inputs
     }
 
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+    {:ok, %{result: {:proof, result}}} =
+      Intents.Stub.prove(conn.channel, request)
+
+    assert {:ok, 123} == Nock.Cue.cue(result)
   end
 
+  @doc """
+  I run a Juvix program that squares its inputs.
+  """
   def run_juvix_factorial(conn \\ setup()) do
     # assume the program and inputs are jammed
     program_jammed =
-      File.read!("apps/anoma_client/priv/test_juvix/Squared.nockma")
+      File.read!("priv/test_juvix/Squared.nockma")
 
     inputs_jammed =
       ["3"]
       |> Enum.map(&Noun.Format.parse_always/1)
       |> Enum.map(&Nock.Jam.jam/1)
 
-    # cue the program and inputs into nouns
-    {:ok, program_noun} = Nock.Cue.cue(program_jammed)
+    # create the protobuf request
+    inputs = Enum.map(inputs_jammed, &%Input{input: {:jammed, &1}})
 
-    input_nouns =
-      inputs_jammed
-      |> Enum.map(fn i ->
-        {:ok, input} = Nock.Cue.cue(i)
-        input
-      end)
+    request = %Prove.Request{
+      program: {:jammed_program, program_jammed},
+      public_inputs: inputs
+    }
 
-    # eval with nouns
-    nock =
-      (Noun.list_nock_to_erlang(program_noun) ++ [Nock.rm_core()])
-      |> Anoma.Client.Api.Server.to_improper_list()
+    {:ok, %{result: {:proof, result}}} =
+      Intents.Stub.prove(conn.channel, request)
 
-    stuff = Anoma.Client.Api.Server.to_improper_list([6, 1] ++ input_nouns)
-
-    Nock.nock(nock, [9, 2, 10, stuff, 0 | 1])
-    # # read in the juvix binary program and encode it
-    # {:ok, squared} =
-    #   File.read!("apps/anoma_client/priv/test_juvix/Squared.nockma")
-    #   |> Nock.Cue.cue()
-
-    # inputs = "3" |> Noun.Format.parse_always()
-    # the list of inputs (in this case, just the three)
-    # inputs =
-    #   ["3"]
-    #   |> Enum.map(
-    #     &%Input{
-    #       input: {:jammed, &1 |> Noun.Format.parse_always() |> Nock.Jam.jam() |> Base.encode64()}
-    #     }
-    #   )
-
-    #   nock =
-    #     ((squared |> Noun.list_nock_to_erlang()) ++ [Nock.rm_core()])
-    #     |> Anoma.Client.Api.Server.to_improper_list()
-    #     |> tap(fn x -> IO.inspect(x) end)
+    assert {:ok, 9} == Nock.Cue.cue(result)
   end
 end

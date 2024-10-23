@@ -55,21 +55,31 @@ defmodule Anoma.Client.Api.Server do
   @spec prove(Prove.Request.t(), Stream.t()) ::
           Prove.Response.t()
   def prove(request, _stream) do
-    # depending if the program is plain text or jammed, unpack it.
-    program = parse_program(request.program)
-    pub_inputs = parse_inputs(request.public_inputs)
-    priv_inputs = parse_inputs(request.private_inputs)
+    try do
+      # depending if the program is plain text or jammed, unpack it.
+      program_noun = parse_program(request.program)
 
-    result =
-      case run_nock_program(program, [pub_inputs | priv_inputs]) do
-        {:ok, result} ->
-          {:proof, Nock.Jam.jam(result)}
+      input_nouns =
+        parse_inputs(request.private_inputs) ++
+          parse_inputs(request.public_inputs)
 
-        :error ->
-          {:error, "failed to prove the nock program"}
-      end
+      result =
+        case run_nock_program(program_noun, input_nouns) do
+          {:ok, result} ->
+            {:proof, Nock.Jam.jam(result)}
 
-    %Prove.Response{result: result}
+          :error ->
+            {:error, "failed to prove the nock program"}
+        end
+
+      %Prove.Response{result: result}
+    rescue
+      _ ->
+        %Prove.Response{result: {:error, "failed to evaluate"}}
+    catch
+      _ ->
+        %Prove.Response{result: {:error, "failed to evaluate"}}
+    end
   end
 
   @spec run_nock(RunNock.Request.t(), Stream.t()) ::
@@ -122,7 +132,8 @@ defmodule Anoma.Client.Api.Server do
     inputs
     |> Enum.map(fn
       %{input: {:jammed, input}} ->
-        Nock.Cue.cue(input)
+        {:ok, noun} = Nock.Cue.cue(input)
+        noun
 
       %{input: {:text, input}} ->
         Noun.Format.parse_always(input)
@@ -138,10 +149,12 @@ defmodule Anoma.Client.Api.Server do
           {:ok, Noun.t()} | :error
   defp run_nock_program(program, arguments) do
     core =
-      ((program |> Noun.list_nock_to_erlang()) ++ [Nock.rm_core()])
+      (Noun.list_nock_to_erlang(program) ++ [Nock.rm_core()])
       |> to_improper_list()
 
-    Nock.nock(core, [9, 2, 10, [6, 1 | arguments], 0 | 1])
+    stuff = to_improper_list([6, 1] ++ arguments)
+
+    Nock.nock(core, [9, 2, 10, stuff, 0 | 1])
   end
 
   # @doc """
@@ -149,8 +162,8 @@ defmodule Anoma.Client.Api.Server do
   # E.g., [1,2,3] -> [1,2|3]
   # """
   @spec to_improper_list([any()]) :: maybe_improper_list(any(), any())
-  def to_improper_list([]), do: []
-  def to_improper_list([x]), do: [x]
-  def to_improper_list([x, y]), do: [x | y]
-  def to_improper_list([h | t]), do: [h | to_improper_list(t)]
+  defp to_improper_list([]), do: []
+  defp to_improper_list([x]), do: [x]
+  defp to_improper_list([x, y]), do: [x | y]
+  defp to_improper_list([h | t]), do: [h | to_improper_list(t)]
 end
