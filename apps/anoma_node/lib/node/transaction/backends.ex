@@ -267,12 +267,29 @@ defmodule Anoma.Node.Transaction.Backends do
 
       for <<"NF_", rest::binary>> <- action_nullifiers,
           reduce: MapSet.new([]) do
-        cm_set -> MapSet.put(cm_set, "CM_" <> rest)
+        cm_set ->
+          if is_ephemeral?(rest) do
+            cm_set
+          else
+            MapSet.put(cm_set, "CM_" <> rest)
+          end
       end
       |> MapSet.subset?(root_coms)
     else
-      false
+      Enum.all?(action_nullifiers, fn <<"NF_", rest::binary>> ->
+        is_ephemeral?(rest)
+      end)
     end
+  end
+
+  defp is_ephemeral?(jammed_transaction) do
+    nock_boolean =
+      Nock.Cue.cue(jammed_transaction)
+      |> elem(1)
+      |> List.pop_at(2)
+      |> elem(0)
+
+    nock_boolean in [0, <<>>, <<0>>, []]
   end
 
   @spec send_value(String.t(), binary(), Noun.t(), pid()) :: :ok | :error
