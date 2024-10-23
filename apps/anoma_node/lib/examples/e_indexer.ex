@@ -104,6 +104,41 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
+  def indexer_reads_anchor(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
+    Indexer.start_link(node_id: node_id)
+    updates = Storage.updates_table(node_id)
+    values = Storage.values_table(node_id)
+
+    hash = "I am a root at height 1"
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({updates, :anchor, [1]})
+      :mnesia.write({values, {1, :anchor}, hash})
+    end)
+
+    ^hash = Indexer.get(node_id, :root)
+
+    node_id
+  end
+
+  def indexer_reads_recent_anchor(node_id \\ Node.example_random_id()) do
+    indexer_reads_anchor(node_id)
+    updates = Storage.updates_table(node_id)
+    values = Storage.values_table(node_id)
+
+    hash = "I am a root at height 2"
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({updates, :anchor, [2, 1]})
+      :mnesia.write({values, {2, :anchor}, hash})
+    end)
+
+    ^hash = Indexer.get(node_id, :root)
+
+    node_id
+  end
+
   defp write_new(updates, values, heights, nlfs, coms) do
     :mnesia.transaction(fn ->
       if nlfs do
