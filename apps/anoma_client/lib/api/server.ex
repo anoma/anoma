@@ -149,8 +149,8 @@ defmodule Anoma.Client.Api.Server do
   # E.g., [1,2,3] -> [1,2|3]
   # """
   @spec to_improper_list([any()]) :: maybe_improper_list(any(), any())
-  defp to_improper_list([]), do: []
-  defp to_improper_list([x]), do: [x]
-  defp to_improper_list([x, y]), do: [x | y]
-  defp to_improper_list([h | t]), do: [h | to_improper_list(t)]
+  def to_improper_list([]), do: []
+  def to_improper_list([x]), do: [x]
+  def to_improper_list([x, y]), do: [x | y]
+  def to_improper_list([h | t]), do: [h | to_improper_list(t)]
 end

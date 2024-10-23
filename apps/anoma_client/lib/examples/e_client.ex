@@ -278,4 +278,53 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
   end
+
+  def run_juvix_factorial(conn \\ setup()) do
+    # assume the program and inputs are jammed
+    program_jammed =
+      File.read!("apps/anoma_client/priv/test_juvix/Squared.nockma")
+
+    inputs_jammed =
+      ["3"]
+      |> Enum.map(&Noun.Format.parse_always/1)
+      |> Enum.map(&Nock.Jam.jam/1)
+
+    # cue the program and inputs into nouns
+    {:ok, program_noun} = Nock.Cue.cue(program_jammed)
+
+    input_nouns =
+      inputs_jammed
+      |> Enum.map(fn i ->
+        {:ok, input} = Nock.Cue.cue(i)
+        input
+      end)
+
+    # eval with nouns
+    nock =
+      (Noun.list_nock_to_erlang(program_noun) ++ [Nock.rm_core()])
+      |> Anoma.Client.Api.Server.to_improper_list()
+
+    stuff = Anoma.Client.Api.Server.to_improper_list([6, 1] ++ input_nouns)
+
+    Nock.nock(nock, [9, 2, 10, stuff, 0 | 1])
+    # # read in the juvix binary program and encode it
+    # {:ok, squared} =
+    #   File.read!("apps/anoma_client/priv/test_juvix/Squared.nockma")
+    #   |> Nock.Cue.cue()
+
+    # inputs = "3" |> Noun.Format.parse_always()
+    # the list of inputs (in this case, just the three)
+    # inputs =
+    #   ["3"]
+    #   |> Enum.map(
+    #     &%Input{
+    #       input: {:jammed, &1 |> Noun.Format.parse_always() |> Nock.Jam.jam() |> Base.encode64()}
+    #     }
+    #   )
+
+    #   nock =
+    #     ((squared |> Noun.list_nock_to_erlang()) ++ [Nock.rm_core()])
+    #     |> Anoma.Client.Api.Server.to_improper_list()
+    #     |> tap(fn x -> IO.inspect(x) end)
+  end
 end
