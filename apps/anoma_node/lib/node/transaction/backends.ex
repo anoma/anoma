@@ -271,7 +271,18 @@ defmodule Anoma.Node.Transaction.Backends do
 
       for <<"NF_", rest::binary>> <- action_nullifiers,
           reduce: MapSet.new([]) do
-        cm_set -> MapSet.put(cm_set, "CM_" <> rest)
+        cm_set ->
+          nock_boolean =
+            Nock.Cue.cue(rest)
+            |> elem(1)
+            |> List.pop_at(2)
+            |> elem(0)
+
+          if nock_boolean in [0, <<>>, <<0>>, []] do
+            cm_set
+          else
+            MapSet.put(cm_set, "CM_" <> rest)
+          end
       end
       |> MapSet.subset?(root_coms)
     else
