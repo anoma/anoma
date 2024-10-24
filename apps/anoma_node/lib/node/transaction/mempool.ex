@@ -164,7 +164,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   def handle_info(
-        %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}} = e,
+        e = %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}},
         state
       ) do
     id = e.body.body.tx_id
@@ -181,9 +181,9 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   def handle_info(
-        %EventBroker.Event{
+        e = %EventBroker.Event{
           body: %Node.Event{body: %ExecutionEvent{result: _}}
-        } = e,
+        },
         state
       ) do
     execution_list = e.body.body.result
