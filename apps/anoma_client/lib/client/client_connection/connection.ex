@@ -191,7 +191,7 @@ defmodule Anoma.Client.Connection.TCP do
   # I encode a protobuf Envelope into bytes.
   # """
   @spec encode(Envelope.t()) :: binary()
-  defp encode(%Envelope{} = message) do
+  defp encode(message = %Envelope{}) do
     Protobuf.encode(message)
   end
 
@@ -206,12 +206,12 @@ defmodule Anoma.Client.Connection.TCP do
   #
   # Every other message is forwarded to the engine proxy.
   # """
-  defp handle_message_in(%Envelope{} = message, local_node_id) do
+  defp handle_message_in(message = %Envelope{}, local_node_id) do
     {_, inner_message} = message.inner_message
     handle_message_in(inner_message, message.message_id, local_node_id)
   end
 
-  defp handle_message_in(%Announcement{} = announcement, _ref, _local_node_id) do
+  defp handle_message_in(announcement = %Announcement{}, _ref, _local_node_id) do
     Logger.debug("received announcement :: #{inspect(announcement)}")
     remote_node_id = announcement.node_info
 

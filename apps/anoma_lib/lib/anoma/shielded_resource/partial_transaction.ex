@@ -31,14 +31,14 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
     compilance = to_noun_list.(compliance_proofs)
     checked = Enum.all?(logic ++ compilance, &(elem(&1, 0) == :ok))
 
-    with true <- checked do
+    if checked do
       {:ok,
        %PartialTransaction{
          logic_proofs: Enum.map(logic, &elem(&1, 1)),
          compliance_proofs: Enum.map(compilance, &elem(&1, 1))
        }}
     else
-      false -> :error
+      :error
     end
   end
 

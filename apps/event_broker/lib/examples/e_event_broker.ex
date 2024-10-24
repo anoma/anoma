@@ -18,11 +18,15 @@ defmodule Examples.EEventBroker do
           :already_started | :error | {:ok, %{broker: pid(), registry: pid()}}
   def start_broker do
     on_start =
-      with {:ok, sup_pid} <- Supervisor.start_link() do
-        {:ok, sup_pid}
-      else
-        {:error, {:already_started, _pid}} -> :already_started
-        _ -> :error
+      case Supervisor.start_link() do
+        {:ok, sup_pid} ->
+          {:ok, sup_pid}
+
+        {:error, {:already_started, _pid}} ->
+          :already_started
+
+        _ ->
+          :error
       end
 
     assert on_start != :error
@@ -187,7 +191,7 @@ defmodule Examples.EEventBroker do
           acc
         end
     end
-    |> Enum.map(&EventBroker.unsubscribe_me(&1))
+    |> Enum.each(&EventBroker.unsubscribe_me(&1))
 
     assert [[]] ==
              :sys.get_state(Registry).registered_filters

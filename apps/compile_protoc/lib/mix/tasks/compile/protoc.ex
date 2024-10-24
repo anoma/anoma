@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Compile.Protoc do
         protoc_bin = protoc_executable()
 
         unless output_files == [] do
-          Enum.map(output_files, &File.rm!/1)
+          Enum.each(output_files, &File.rm!/1)
         end
 
         File.mkdir_p!(compiler_opts[:elixir_out])

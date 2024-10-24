@@ -172,11 +172,12 @@ defmodule Nock.Jets do
   end
 
   def add(core) do
-    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
-           sample(core) do
-      {:ok, an_integer(a) + an_integer(b)}
-    else
-      _ -> :error
+    case sample(core) do
+      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+        {:ok, an_integer(a) + an_integer(b)}
+
+      _ ->
+        :error
     end
   end
 
@@ -193,7 +194,7 @@ defmodule Nock.Jets do
   def lth(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
-         {c, d} = {an_integer(a), an_integer(b)} do
+         {c, d} <- {an_integer(a), an_integer(b)} do
       if c < d do
         {:ok, 0}
       else
@@ -207,7 +208,7 @@ defmodule Nock.Jets do
   def lte(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
-         {c, d} = {an_integer(a), an_integer(b)} do
+         {c, d} <- {an_integer(a), an_integer(b)} do
       if c <= d do
         {:ok, 0}
       else
@@ -221,7 +222,7 @@ defmodule Nock.Jets do
   def gth(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
-         {c, d} = {an_integer(a), an_integer(b)} do
+         {c, d} <- {an_integer(a), an_integer(b)} do
       if c > d do
         {:ok, 0}
       else
@@ -235,7 +236,7 @@ defmodule Nock.Jets do
   def gte(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
-         {c, d} = {an_integer(a), an_integer(b)} do
+         {c, d} <- {an_integer(a), an_integer(b)} do
       if c >= d do
         {:ok, 0}
       else
@@ -364,20 +365,23 @@ defmodule Nock.Jets do
 
   @spec bex(Nock.t()) :: :error | {:ok, Noun.t()}
   def bex(core) do
-    with {:ok, a} when is_noun_atom(a) <- sample(core) do
-      {:ok, 2 ** a}
-    else
-      _ -> :error
+    case sample(core) do
+      {:ok, a} when is_noun_atom(a) ->
+        {:ok, 2 ** a}
+
+      _ ->
+        :error
     end
   end
 
   @spec mix(Nock.t()) :: :error | {:ok, Noun.t()}
   def mix(core) do
-    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
-           sample(core) do
-      {:ok, bxor(a, b)}
-    else
-      _ -> :error
+    case sample(core) do
+      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+        {:ok, bxor(a, b)}
+
+      _ ->
+        :error
     end
   end
 

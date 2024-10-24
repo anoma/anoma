@@ -56,11 +56,11 @@ defmodule Examples.ECrypto do
   ####################################################################
 
   defmemo alice_rsa() do
-    :crypto.generate_key(:rsa, {1024, 65537})
+    :crypto.generate_key(:rsa, {1024, 65_537})
   end
 
   defmemo bob_rsa() do
-    :crypto.generate_key(:rsa, {1024, 65537})
+    :crypto.generate_key(:rsa, {1024, 65_537})
   end
 
   ####################################################################

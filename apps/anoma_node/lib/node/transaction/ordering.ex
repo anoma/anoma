@@ -49,13 +49,15 @@ defmodule Anoma.Node.Transaction.Ordering do
   end
 
   def handle_call({:read, {tx_id, key}}, from, state) do
-    with {:ok, height} <- Map.fetch(state.tx_id_to_height, tx_id) do
-      Task.start(fn ->
-        GenServer.reply(from, Storage.read(state.node_id, {height - 1, key}))
-      end)
+    case Map.fetch(state.tx_id_to_height, tx_id) do
+      {:ok, height} ->
+        Task.start(fn ->
+          GenServer.reply(
+            from,
+            Storage.read(state.node_id, {height - 1, key})
+          )
+        end)
 
-      {:noreply, state}
-    else
       _ ->
         node_id = state.node_id
 
@@ -79,13 +81,14 @@ defmodule Anoma.Node.Transaction.Ordering do
         :append -> &Storage.append(state.node_id, &1)
       end
 
-    with {:ok, height} <- Map.fetch(state.tx_id_to_height, tx_id) do
-      Task.start(fn ->
-        GenServer.reply(from, call.({height, kvlist}))
-      end)
+    case Map.fetch(state.tx_id_to_height, tx_id) do
+      {:ok, height} ->
+        Task.start(fn ->
+          GenServer.reply(from, call.({height, kvlist}))
+        end)
 
-      {:noreply, state}
-    else
+        {:noreply, state}
+
       _ ->
         node_id = state.node_id
 

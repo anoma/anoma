@@ -14,12 +14,12 @@ defimpl Anoma.RM.Intent, for: Anoma.RM.DumbIntent do
   alias Anoma.RM.DumbIntent
 
   @impl true
-  def compose(%DumbIntent{} = intent_1, %DumbIntent{} = intent_2) do
+  def compose(intent_1 = %DumbIntent{}, intent_2 = %DumbIntent{}) do
     %DumbIntent{value: intent_1.value + intent_2.value}
   end
 
   @impl true
-  def verify(%DumbIntent{} = intent) do
+  def verify(intent = %DumbIntent{}) do
     intent.value == 0
   end
 end

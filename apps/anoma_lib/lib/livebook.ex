@@ -47,7 +47,7 @@ defmodule Livebook do
   def example_toc() do
     Livebook.get_all_livemd_documents()
     |> Enum.map(fn x -> String.replace_prefix(x, "documentation/", "") end)
-    |> generate_TOC()
+    |> generate_toc()
     |> IO.puts()
   end
 
@@ -64,13 +64,13 @@ defmodule Livebook do
     paths
     |> Enum.map(fn p ->
       {p,
-       generate_TOC(
+       generate_toc(
          paths_without_doc,
          count_depth(String.replace_prefix(p, "documentation/", ""))
        )}
     end)
     |> Enum.each(fn {path, toc} ->
-      inject_TOC(toc, path)
+      inject_toc(toc, path)
     end)
   end
 
@@ -78,8 +78,8 @@ defmodule Livebook do
   ##                            Injection                            #
   ####################################################################
 
-  @spec inject_TOC(String.t(), Path.t()) :: :ok
-  def inject_TOC(toc, path) do
+  @spec inject_toc(String.t(), Path.t()) :: :ok
+  def inject_toc(toc, path) do
     data =
       File.read!(path)
       |> Livebook.change_header("##", "Index", toc)
@@ -114,13 +114,14 @@ defmodule Livebook do
   ## Example
 
   """
-  @spec generate_TOC(list(Path.t()), non_neg_integer()) :: String.t()
-  @spec generate_TOC(list(Path.t())) :: String.t()
-  def generate_TOC(documents, from_depth \\ 0) do
+  @spec generate_toc(list(Path.t()), non_neg_integer()) :: String.t()
+  @spec generate_toc(list(Path.t())) :: String.t()
+  def generate_toc(documents, from_depth \\ 0) do
     documents
     |> Livebook.add_heading_num()
-    |> Enum.map(fn {f, d, n} -> generate_heading(f, d, n, from_depth) end)
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", fn {f, d, n} ->
+      generate_heading(f, d, n, from_depth)
+    end)
   end
 
   @spec add_heading_num(list(String.t())) ::
