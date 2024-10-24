@@ -4,4 +4,5 @@ defmodule Anoma.Client.Api.Endpoint do
 
   intercept(GRPC.Server.Interceptors.Logger)
   run(Anoma.Client.Api.Server)
+  run(Anoma.Client.Api.ReflectionServer)
 end
