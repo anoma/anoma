@@ -284,7 +284,7 @@ defmodule Anoma.Node.Transaction.Storage do
                       res
                   end
 
-                new_set_value = MapSet.put(old_set_value, value)
+                new_set_value = MapSet.union(old_set_value, value)
 
                 new_kv =
                   Map.put(
