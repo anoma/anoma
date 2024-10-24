@@ -1,4 +1,5 @@
 defmodule Anoma.Client.Api.Server do
+  alias Anoma.Protobuf.Input
   alias Anoma.Client.Connection.GRPCProxy
   alias GRPC.Server.Stream
   alias Anoma.Protobuf.Indexer.Nullifiers
@@ -9,6 +10,7 @@ defmodule Anoma.Client.Api.Server do
   alias Anoma.Protobuf.Intents
   alias Anoma.Protobuf.Prove
   alias Anoma.Protobuf.RunNock
+  alias Anoma.Client.Runner
 
   require Logger
 
@@ -52,40 +54,53 @@ defmodule Anoma.Client.Api.Server do
     }
   end
 
-  @spec prove(Prove.Request.t(), Stream.t()) ::
-          Prove.Response.t()
+  @spec prove(Prove.Request.t(), Stream.t()) :: Prove.Response.t()
   def prove(request, _stream) do
-    # depending if the program is plain text or jammed, unpack it.
-    program = parse_program(request.program)
-    pub_inputs = parse_inputs(request.public_inputs)
-    priv_inputs = parse_inputs(request.private_inputs)
-
     result =
-      case run_nock_program(program, [pub_inputs | priv_inputs]) do
-        {:ok, result} ->
-          {:proof, Nock.Jam.jam(result)}
+      with {:ok, program} <- program_to_noun(request.program),
+           {pub_inpt, []} <- inputs_to_noun(request.public_inputs),
+           {prv_inpt, []} <- inputs_to_noun(request.private_inputs),
+           {:ok, result} <- Runner.prove(program, pub_inpt ++ prv_inpt),
+           jammed <- Nock.Jam.jam(result) do
+        {:proof, jammed}
+      else
+        {_, invalid_inputs} when is_list(invalid_inputs) ->
+          {:error, "invalid inputs: #{inspect(invalid_inputs)}"}
 
-        :error ->
-          {:error, "failed to prove the nock program"}
+        {:error, :invalid_program} ->
+          {:error, "invalid program"}
+
+        {:error, :failed_to_prove} ->
+          {:error, "failed to prove"}
+
+        _ ->
+          {:error, "failed to evaluate"}
       end
 
     %Prove.Response{result: result}
   end
 
-  @spec run_nock(RunNock.Request.t(), Stream.t()) ::
-          RunNock.Response.t()
+  @spec run_nock(RunNock.Request.t(), Stream.t()) :: RunNock.Response.t()
   def run_nock(request, _stream) do
-    # depending if the program is plain text or jammed, unpack it.
-    program = parse_program(request.program)
-    inputs = parse_inputs(request.inputs)
-
     result =
-      case run_nock_program(program, inputs) do
-        {:ok, result} ->
-          {:output, Nock.Jam.jam(result)}
+      with {:ok, program} <- program_to_noun(request.program),
+           {pub_inpt, []} <- inputs_to_noun(request.public_inputs),
+           {prv_inpt, []} <- inputs_to_noun(request.private_inputs),
+           {:ok, result} <- Runner.prove(program, pub_inpt ++ prv_inpt),
+           jammed <- Nock.Jam.jam(result) do
+        {:proof, jammed}
+      else
+        {_, invalid_inputs} when is_list(invalid_inputs) ->
+          {:error, "invalid inputs: #{inspect(invalid_inputs)}"}
 
-        :error ->
-          {:error, "failed to run the nock program"}
+        {:error, :invalid_program} ->
+          {:error, "invalid program"}
+
+        {:error, :failed_to_prove} ->
+          {:error, "failed to prove"}
+
+        _ ->
+          {:error, "failed to evaluate"}
       end
 
     %RunNock.Response{result: result}
@@ -96,61 +111,74 @@ defmodule Anoma.Client.Api.Server do
   #############################################################################
 
   # @doc """
-  # I parse a program from the request into a noun.
+  # I convert the program parameter to a noun.
   # """
-  @spec parse_program(
+  @spec program_to_noun(
           {:jammed_program, binary()}
           | {:text_program, String.t()}
-        ) :: Noun.t()
-  defp parse_program(program) do
-    case program do
-      {:jammed_program, program} ->
-        {:ok, nock_cued} = Nock.Cue.cue(program)
-        nock_cued
+        ) :: {:ok, Noun.t()} | {:error, :invalid_program}
+  defp program_to_noun({:text_program, program}) do
+    case Noun.Format.parse(program) do
+      {:ok, noun} ->
+        {:ok, noun}
 
-      {:text_program, program} ->
-        Noun.Format.parse_always(program)
+      _ ->
+        {:error, :invalid_program}
+    end
+  end
+
+  defp program_to_noun({:jammed_program, program}) do
+    case Nock.Cue.cue(program) do
+      {:ok, noun} ->
+        {:ok, noun}
+
+      _ ->
+        {:error, :invalid_program}
     end
   end
 
   # @doc """
-  # I parse inputs from the protobuf request into a noun.
+  # I convert a list of inputs to nouns.
+
+  # I return a tuple with the successful and failed conversions.
   # """
-  @spec parse_inputs([%{input: {:jammed | :text, any()}}]) ::
-          maybe_improper_list(Noun.t(), Noun.t())
-  defp parse_inputs(inputs) do
+  @spec inputs_to_noun([Input.t()]) :: {list(Noun.t()), list(Noun.t())}
+  defp inputs_to_noun(inputs) do
     inputs
-    |> Enum.map(fn
-      %{input: {:jammed, input}} ->
-        Nock.Cue.cue(input)
+    |> Enum.map(&input_to_noun/1)
+    |> Enum.reduce({[], []}, fn input, {valid, invalid} ->
+      case input do
+        {:ok, input} ->
+          {[input | valid], invalid}
 
-      %{input: {:text, input}} ->
-        Noun.Format.parse_always(input)
+        {:error, _, input} ->
+          {valid, [input | invalid]}
+      end
     end)
-    |> to_improper_list()
   end
 
   # @doc """
-  # I run a nock program with public and private inputs.
-  # If no private inputs are given, they are replaced with an empty list.
+  # I turn an input into a noun.
   # """
-  @spec run_nock_program(Noun.t(), Noun.t()) ::
-          {:ok, Noun.t()} | :error
-  defp run_nock_program(program, arguments) do
-    core =
-      ((program |> Noun.list_nock_to_erlang()) ++ [Nock.rm_core()])
-      |> to_improper_list()
+  @spec input_to_noun(Input.t()) ::
+          {:ok, Noun.t()} | {:error, :invalid_input, any()}
+  defp input_to_noun(%{input: {:jammed, input}}) do
+    case Nock.Cue.cue(input) do
+      {:ok, noun} ->
+        {:ok, noun}
 
-    Nock.nock(core, [9, 2, 10, [6, 1 | arguments], 0 | 1])
+      _ ->
+        {:error, :invalid_input, input}
+    end
   end
 
-  # @doc """
-  # I turn a list into an improper list.
-  # E.g., [1,2,3] -> [1,2|3]
-  # """
-  @spec to_improper_list([any()]) :: maybe_improper_list(any(), any())
-  defp to_improper_list([]), do: []
-  defp to_improper_list([x]), do: [x]
-  defp to_improper_list([x, y]), do: [x | y]
-  defp to_improper_list([h | t]), do: [h | to_improper_list(t)]
+  defp input_to_noun(%{input: {:text, input}}) do
+    case Noun.Format.parse(input) do
+      {:ok, noun} ->
+        {:ok, noun}
+
+      _ ->
+        {:error, :invalid_input, input}
+    end
+  end
 end
