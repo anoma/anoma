@@ -144,7 +144,9 @@ defmodule TestHelper.TestMacro do
           IO.puts("\nAssert statement failed. Stacktrace:\n")
           for info <- list, do: info |> inspect() |> IO.puts()
           IO.puts("")
+          # credo:disable-for-next-line
           require IEx
+          # credo:disable-for-next-line
           IEx.pry()
       end
     end
