@@ -26,7 +26,10 @@ defmodule Anoma.Node.Utility.Indexer do
     {:ok, state}
   end
 
-  @spec get(String.t(), :nlfs | :cms | :unrevealed | :resources | :blocks) ::
+  @spec get(
+          String.t(),
+          :nlfs | :cms | :unrevealed | :resources | :blocks | :root
+        ) ::
           any()
   def get(node_id, flag) do
     name = Registry.via(node_id, __MODULE__)
@@ -57,6 +60,10 @@ defmodule Anoma.Node.Utility.Indexer do
 
   def handle_call(:unrevealed, _from, state) do
     {:reply, unnulified_coms(state.node_id), state}
+  end
+
+  def handle_call(:root, _from, state) do
+    {:reply, read_set(:anchor, state.node_id), state}
   end
 
   def handle_call(:resources, _from, state) do
@@ -96,7 +103,8 @@ defmodule Anoma.Node.Utility.Indexer do
     end)
   end
 
-  @spec read_set(:commitments | :nullifiers, String.t()) :: MapSet.t(binary())
+  @spec read_set(:commitments | :nullifiers | :anchor, String.t()) ::
+          MapSet.t(binary()) | binary()
   defp read_set(key, id) do
     values = Storage.values_table(id)
     updates = Storage.updates_table(id)
