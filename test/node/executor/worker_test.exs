@@ -293,7 +293,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.ensure_new(storage)
     Ordering.reset(env.ordering)
 
-    # create an input resource
+    # 1. create an input resource
     input_nf_key = <<1::256>>
 
     input_resource = %ShieldedResource{
@@ -310,7 +310,7 @@ defmodule AnomaTest.Node.Executor.Worker do
 
     eph_root = Cairo.random_felt() |> :binary.list_to_bin()
 
-    # create an output resource
+    # 2. create an output resource
     input_nf = ShieldedResource.nullifier(input_resource)
     output_resource = ShieldedResource.set_nonce(input_resource, input_nf)
     output_cm = ShieldedResource.commitment(output_resource)
@@ -318,7 +318,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     # rcv is used to generate the binding signature(delta proof)
     rcv = <<3::256>>
 
-    # Mock cm tree history
+    # Mock cm tree history(only for tests)
     cm_tree =
       CommitmentTree.new(
         CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
@@ -330,10 +330,11 @@ defmodule AnomaTest.Node.Executor.Worker do
     {ct, anchor} = CommitmentTree.add(cm_tree, [input_resource_cm])
     # Get the merkle proof of the input resource
     merkle_proof = CommitmentTree.prove(ct, 0)
-    # Insert the cuurent root to the storage
+    # Insert the current root to the storage
     Storage.put(storage, ["rm", "commitment_root", anchor], true)
+    # Mock cm tree history(end)
 
-    # Generate the compliance inputs
+    # 3. Generate the compliance inputs
     compliance_inputs =
       %ComplianceInput{
         input_resource: input_resource,
@@ -348,11 +349,11 @@ defmodule AnomaTest.Node.Executor.Worker do
     {:ok, compliance_proof} =
       ProofRecord.generate_compliance_proof(compliance_inputs)
 
-    # Build resource logic proofs
+    # 4. Generate the resource logic proof for the input and output resources respectively
     {:ok, resource_logic_circuit} =
       File.read("./params/trivial_resource_logic.json")
 
-    # Build resource merkle tree
+    # Build a resource merkle tree for the current ptx
     rt =
       ResourceTree.construct(
         CommitmentTree.Spec.cairo_poseidon_resource_tree_spec(),
@@ -362,7 +363,8 @@ defmodule AnomaTest.Node.Executor.Worker do
     _input_resource_path = ResourceTree.prove(rt, input_nf)
     # IO.inspect(_input_resource_path)
 
-    # Application developers should be responsible to define and fill up the input_resource_logic_inputs json
+    # Application developers should be responsible to define and fill in the input_resource_logic_inputs json
+    # resource_logic_inputs are actually the private inputs of resource logic
     input_resource_logic_inputs = """
     {
       "self_resource": {
@@ -412,12 +414,13 @@ defmodule AnomaTest.Node.Executor.Worker do
         output_resource_logic_inputs
       )
 
+    # 5. Construct the partial transaction with only one input and one output in the simple case
     ptx = %PartialTransaction{
       logic_proofs: [input_resource_logic_proof, output_resource_logic_proof],
       compliance_proofs: [compliance_proof]
     }
 
-    # Generate the binding signature
+    # 6. Construct the final transaction with one ptx(could be a list in practice), and generate the delta proof if balanced
     # priv_keys are from rcvs in compliance_inputs
     priv_keys = <<3::256>>
 
@@ -428,6 +431,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       }
       |> ShieldedTransaction.finalize()
 
+    # 7. The tx will be verified by the worker/executor
     rm_tx_noun = Noun.Nounable.to_noun(rm_tx)
     rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
 
