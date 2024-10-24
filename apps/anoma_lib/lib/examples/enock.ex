@@ -1295,12 +1295,12 @@ defmodule Examples.ENock do
     jam_and_cue(2, atom_integer_to_binary(72))
     jam_and_cue(19, atom_integer_to_binary(2480))
     jam_and_cue(581_949_002, atom_integer_to_binary(1_191_831_557_952))
-    jam_and_cue([0 | 19], atom_integer_to_binary(39689))
+    jam_and_cue([0 | 19], atom_integer_to_binary(39_689))
     jam_and_cue([1 | 1], atom_integer_to_binary(817))
     jam_and_cue([10_000 | 10_000], atom_integer_to_binary(4_952_983_169))
 
     jam_and_cue(
-      [65536 | <<0, 0, 1>>],
+      [65_536 | <<0, 0, 1>>],
       atom_integer_to_binary(158_376_919_809)
     )
 
