@@ -195,7 +195,8 @@ defmodule Anoma.Node.Transaction.Storage do
     )
   end
 
-  @spec append(String.t(), {non_neg_integer(), list(any())}) :: :ok
+  @spec append(String.t(), {non_neg_integer(), list({any(), MapSet.t()})}) ::
+          :ok
   def append(node_id, {height, kvlist}) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
