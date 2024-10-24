@@ -193,7 +193,7 @@ defmodule Nock.Jets do
   def lth(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
-         {c, d} = {an_integer(a), an_integer(b)} do
+         {c, d} <- {an_integer(a), an_integer(b)} do
       if c < d do
         {:ok, 0}
       else
@@ -207,7 +207,7 @@ defmodule Nock.Jets do
   def lte(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
-         {c, d} = {an_integer(a), an_integer(b)} do
+         {c, d} <- {an_integer(a), an_integer(b)} do
       if c <= d do
         {:ok, 0}
       else
@@ -221,7 +221,7 @@ defmodule Nock.Jets do
   def gth(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
-         {c, d} = {an_integer(a), an_integer(b)} do
+         {c, d} <- {an_integer(a), an_integer(b)} do
       if c > d do
         {:ok, 0}
       else
@@ -235,7 +235,7 @@ defmodule Nock.Jets do
   def gte(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
-         {c, d} = {an_integer(a), an_integer(b)} do
+         {c, d} <- {an_integer(a), an_integer(b)} do
       if c >= d do
         {:ok, 0}
       else
