@@ -34,7 +34,7 @@ defmodule Anoma.Node.Supervisor do
        [node_id: args[:node_id], tx_args: args[:tx_args]]},
       {Anoma.Node.Intents.Supervisor, node_id: args[:node_id]},
       {Anoma.Node.Logging, node_id: args[:node_id]},
-      {Anoma.Node.Utility.Supervisor, node_id: args[:node_id]},
+      {Anoma.Node.Utility.Supervisor, node_id: args[:node_id]}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)
