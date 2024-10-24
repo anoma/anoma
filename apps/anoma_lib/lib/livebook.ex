@@ -119,8 +119,9 @@ defmodule Livebook do
   def generate_toc(documents, from_depth \\ 0) do
     documents
     |> Livebook.add_heading_num()
-    |> Enum.map(fn {f, d, n} -> generate_heading(f, d, n, from_depth) end)
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", fn {f, d, n} ->
+      generate_heading(f, d, n, from_depth)
+    end)
   end
 
   @spec add_heading_num(list(String.t())) ::

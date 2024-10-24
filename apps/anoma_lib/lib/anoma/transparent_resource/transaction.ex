@@ -101,7 +101,7 @@ defmodule Anoma.TransparentResource.Transaction do
       |> Enum.reject(&(&1 == true))
 
     Enum.empty?(failed) or
-      {:error, Enum.join(Enum.map(failed, &elem(&1, 1)), "\n")}
+      {:error, Enum.map_join(failed, "\n", &elem(&1, 1))}
   end
 
   # the sum of all action deltas we compute here must equal
