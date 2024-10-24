@@ -36,23 +36,24 @@ defmodule Anoma.ShieldedResource.ProofRecord do
 
   @spec generate_compliance_proof(binary()) :: {:ok, t()} | :error
   def generate_compliance_proof(compliance_inputs) do
-    with {:ok, compliance_circuit} <-
-           File.read("./params/cairo_compliance.json") do
-      {_output, trace, memory, public_inputs} =
-        Cairo.cairo_vm_runner(
-          compliance_circuit,
-          compliance_inputs
-        )
+    case File.read("./params/cairo_compliance.json") do
+      {:ok, compliance_circuit} ->
+        {_output, trace, memory, public_inputs} =
+          Cairo.cairo_vm_runner(
+            compliance_circuit,
+            compliance_inputs
+          )
 
-      {proof, public_inputs} = Cairo.prove(trace, memory, public_inputs)
+        {proof, public_inputs} = Cairo.prove(trace, memory, public_inputs)
 
-      {:ok,
-       %ProofRecord{
-         proof: proof |> :binary.list_to_bin(),
-         public_inputs: public_inputs |> :binary.list_to_bin()
-       }}
-    else
-      _ -> :error
+        {:ok,
+         %ProofRecord{
+           proof: proof |> :binary.list_to_bin(),
+           public_inputs: public_inputs |> :binary.list_to_bin()
+         }}
+
+      _ ->
+        :error
     end
   end
 end
