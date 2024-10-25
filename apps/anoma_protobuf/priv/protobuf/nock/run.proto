@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Nock.Run;
+
+import "nock/input.proto";
+
+message Request {
+  oneof program {
+    bytes jammed_program = 1;
+    string text_program = 2;
+  }
+
+  repeated Anoma.Protobuf.Nock.Input inputs = 3;
+}
+
+message Response {
+  oneof result {
+    bytes output = 1;
+    string error = 2;
+  }
+}
