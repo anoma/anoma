@@ -21,7 +21,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   use GenServer
 
   ############################################################
-  #                      State                               #
+  #                           State                          #
   ############################################################
 
   typedstruct do
@@ -124,7 +124,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   end
 
   ############################################################
-  #                    Genserver Behavior                    #
+  #                 Genserver Implementation                 #
   ############################################################
 
   # @doc """
