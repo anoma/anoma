@@ -260,25 +260,15 @@ defmodule Anoma.Node.Transaction.Backends do
           end
       end
 
+    action_nullifiers = TTransaction.nullifiers(trans)
+
     if latest_root_time > 0 do
       root_coms = Storage.read(node_id, {latest_root_time, :commitments})
-
-      action_nullifiers =
-        trans.actions
-        |> Enum.map(fn x ->
-          x.nullified
-        end)
 
       for <<"NF_", rest::binary>> <- action_nullifiers,
           reduce: MapSet.new([]) do
         cm_set ->
-          nock_boolean =
-            Nock.Cue.cue(rest)
-            |> elem(1)
-            |> List.pop_at(2)
-            |> elem(0)
-
-          if nock_boolean in [0, <<>>, <<0>>, []] do
+          if is_ephemeral?(rest) do
             cm_set
           else
             MapSet.put(cm_set, "CM_" <> rest)
@@ -286,8 +276,20 @@ defmodule Anoma.Node.Transaction.Backends do
       end
       |> MapSet.subset?(root_coms)
     else
-      false
+      Enum.all?(action_nullifiers, fn <<"NF_", rest::binary>> ->
+        is_ephemeral?(rest)
+      end)
     end
+  end
+
+  defp is_ephemeral?(jammed_transaction) do
+    nock_boolean =
+      Nock.Cue.cue(jammed_transaction)
+      |> elem(1)
+      |> List.pop_at(2)
+      |> elem(0)
+
+    nock_boolean in [0, <<>>, <<0>>, []]
   end
 
   @spec send_value(String.t(), binary(), Noun.t(), pid()) :: :ok | :error
