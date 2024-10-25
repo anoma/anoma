@@ -353,26 +353,18 @@ defmodule Anoma.Node.Transaction.Storage do
     for {key, value} <- kvlist,
         reduce: {%__MODULE__{state | uncommitted_height: height}, kvlist} do
       {state_acc, list} ->
-        key_old_updates = Map.get(state_acc.uncommitted_updates, key, [])
-
-        key_new_updates =
-          with [latest_height | _] <- key_old_updates,
-               true <- height == latest_height do
-            key_old_updates
-          else
-            _e -> [height | key_old_updates]
-          end
+        new_key_heights = new_key_heights(key, state_acc)
 
         new_updates =
-          Map.put(state_acc.uncommitted_updates, key, key_new_updates)
+          Map.put(state_acc.uncommitted_updates, key, new_key_heights)
 
         {new_kv, event_writes_local} =
           case flag do
             :append ->
-              do_append(state_acc, state, height, key, value, list)
+              do_append(state_acc, state, key, value, list)
 
             :write ->
-              do_write(state_acc, height, key, value, kvlist)
+              do_write(state_acc, key, value, kvlist)
           end
 
         {%__MODULE__{
@@ -383,9 +375,11 @@ defmodule Anoma.Node.Transaction.Storage do
     end
   end
 
-  @spec do_append(t(), t(), non_neg_integer(), any(), any(), list()) ::
+  @spec do_append(t(), t(), any(), any(), list()) ::
           {any(), list()}
-  defp do_append(state_acc, state, height, key, value, list) do
+  defp do_append(state_acc, state = %__MODULE__{}, key, value, list) do
+    height = state_acc.uncommitted_height
+
     old_set_value =
       case Map.get(state_acc.uncommitted, {height, key}) do
         nil ->
@@ -410,11 +404,14 @@ defmodule Anoma.Node.Transaction.Storage do
     {new_kv, [{key, new_set_value} | list]}
   end
 
-  @spec do_write(t(), non_neg_integer(), any(), any(), list()) ::
+  # Write to the latest
+  @spec do_write(t(), any(), any(), list()) ::
           {any(), list()}
-  defp do_write(state_acc, height, key, value, kvlist) do
+  defp do_write(state, key, value, kvlist) do
+    height = state.uncommitted_height
+
     new_kv =
-      Map.put_new(state_acc.uncommitted, {height, key}, value)
+      Map.put_new(state.uncommitted, {height, key}, value)
 
     {new_kv, kvlist}
   end
@@ -467,6 +464,18 @@ defmodule Anoma.Node.Transaction.Storage do
           _ ->
             Map.fetch(state.uncommitted, {update_height, key})
         end
+    end
+  end
+
+  @spec new_key_heights(any(), t()) :: [non_neg_integer()]
+  defp new_key_heights(key, state = %__MODULE__{uncommitted_height: height}) do
+    key_old_updates = Map.get(state.uncommitted_updates, key, [])
+
+    with [latest_height | _] <- key_old_updates,
+         true <- height == latest_height do
+      key_old_updates
+    else
+      _e -> [height | key_old_updates]
     end
   end
 
