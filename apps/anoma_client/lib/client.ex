@@ -15,6 +15,7 @@ defmodule Anoma.Client do
   end
 
   # some change
+  # some change
   @doc """
   I connect to a remote node over GRPC.
   """
