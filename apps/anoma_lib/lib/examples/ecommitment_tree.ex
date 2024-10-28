@@ -1,4 +1,7 @@
 defmodule Examples.ECommitmentTree do
+  alias Examples.ETransparent.ETransaction
+  alias Anoma.TransparentResource.Transaction
+
   require ExUnit.Assertions
   import ExUnit.Assertions
 
@@ -36,6 +39,24 @@ defmodule Examples.ECommitmentTree do
     assert tree.table == nil
 
     tree
+  end
+
+  @doc """
+  A commitment tree with commits from ETransaction.swap_from_actions/1
+  """
+  @spec memory_backed_ct_with_trivial_swap(term()) ::
+          {CommitmentTree.t(), binary()}
+  def memory_backed_ct_with_trivial_swap(spec \\ sha256_32_spec()) do
+    tree = memory_backed_ct(spec)
+    transaction = ETransaction.swap_from_actions()
+
+    commits = Transaction.commitments(transaction)
+
+    {tree, anchor} = CommitmentTree.add(tree, commits |> Enum.to_list())
+
+    assert tree.size == MapSet.size(commits)
+
+    {tree, anchor}
   end
 
   @spec empty_mnesia_backed_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()

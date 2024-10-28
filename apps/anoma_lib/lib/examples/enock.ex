@@ -5,6 +5,7 @@ defmodule Examples.ENock do
   import ExUnit.Assertions
 
   alias Examples.ECrypto
+  alias Anoma.TransparentResource.Transaction
   import Noun
 
   ####################################################################
@@ -105,6 +106,35 @@ defmodule Examples.ENock do
     assert {:ok, term} = Noun.replace(2, 2, indexed_noun())
     assert {:ok, 2} == Noun.axis(2, term)
     term
+  end
+
+  ####################################################################
+  ##                       Noun Transactions                        ##
+  ####################################################################
+
+  def trivial_swap() do
+    swap = Examples.ETransparent.ETransaction.swap_from_actions()
+    noun = swap |> Noun.Nounable.to_noun()
+    {:ok, cued} = noun |> Nock.Jam.jam() |> Nock.Cue.cue()
+    {:ok, cued_trans} = Transaction.from_noun(cued)
+
+    assert Transaction.from_noun(noun) == {:ok, swap}
+    assert Transaction.verify(cued_trans)
+
+    noun
+  end
+
+  ####################################################################
+  ##                        Noun Submission                         ##
+  ####################################################################
+
+  def transparent_core(
+        tx_noun \\ Examples.ETransparent.ETransaction.swap_from_actions()
+        |> Noun.Nounable.to_noun()
+      ) do
+    trivial_swap_arm = [1 | tx_noun]
+    swap = [[1, trivial_swap_arm, 0 | 909], 0 | 707]
+    swap
   end
 
   ####################################################################
