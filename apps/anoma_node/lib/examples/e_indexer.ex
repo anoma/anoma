@@ -8,7 +8,7 @@ defmodule Anoma.Node.Examples.EIndexer do
   def indexer_reads_height(node_id \\ Node.example_random_id()) do
     ETransaction.inc_counter_submit_after_read(node_id)
     Indexer.start_link(node_id: node_id)
-    1 = Indexer.get(node_id, :blocks)
+    1 = Indexer.get(node_id, :height)
 
     node_id
   end

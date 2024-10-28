@@ -26,14 +26,14 @@ defmodule Anoma.Node.Utility.Indexer do
     {:ok, state}
   end
 
-  @spec get(String.t(), :nlfs | :cms | :unrevealed | :resources | :blocks) ::
+  @spec get(String.t(), :nlfs | :cms | :unrevealed | :resources | :height) ::
           any()
   def get(node_id, flag) do
     name = Registry.via(node_id, __MODULE__)
     GenServer.call(name, flag)
   end
 
-  def handle_call(:blocks, _from, state) do
+  def handle_call(:height, _from, state) do
     table = Storage.blocks_table(state.node_id)
 
     {:atomic, res} =
