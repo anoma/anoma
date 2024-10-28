@@ -277,6 +277,11 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:transparent_resource, ENock.transparent_core(ENock.trivial_swap())}
   end
 
+  def trivial_transparent_transaction_no_eph() do
+    {:transparent_resource,
+     ENock.transparent_core(ENock.trivial_swap_no_eph())}
+  end
+
   ############################################################
   #                        Transactions                      #
   ############################################################
@@ -325,6 +330,19 @@ defmodule Anoma.Node.Examples.ETransaction do
     recieve_logger_failure(node_id, "nullifier already")
 
     EventBroker.unsubscribe_me([])
+    node_id
+  end
+
+  def submit_failed_trivial_swap(node_id \\ Node.example_random_id()) do
+    start_tx_module(node_id)
+    code = trivial_transparent_transaction_no_eph()
+    EventBroker.subscribe_me([])
+
+    Mempool.tx(node_id, code, "id 1")
+    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+
+    recieve_logger_failure(node_id, "not committed")
+
     node_id
   end
 
