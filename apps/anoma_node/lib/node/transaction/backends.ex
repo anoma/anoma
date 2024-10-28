@@ -146,6 +146,8 @@ defmodule Anoma.Node.Transaction.Backends do
 
       nullifier_event(nfs_set, node_id)
 
+      complete_event(id, {:ok, tx}, node_id)
+
       :ok
     else
       _e -> :error
