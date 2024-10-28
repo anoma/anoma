@@ -37,23 +37,17 @@ defmodule Anoma.Node.Utility.Indexer do
 
   @spec get(String.t(), index_type) ::
           any()
+  def get(node_id, :latest_block) do
+    get(node_id, {:after, get_height(node_id) - 1})
+  end
+
   def get(node_id, flag) do
     name = Registry.via(node_id, __MODULE__)
     GenServer.call(name, flag)
   end
 
   def handle_call(:height, _from, state) do
-    table = Storage.blocks_table(state.node_id)
-
-    {:atomic, res} =
-      :mnesia.transaction(fn ->
-        case :mnesia.all_keys(table) |> Enum.sort(:desc) do
-          [] -> :absent
-          [hd | _tl] -> hd
-        end
-      end)
-
-    {:reply, res, state}
+    {:reply, get_height(state.node_id), state}
   end
 
   def handle_call(:nlfs, _from, state) do
@@ -142,5 +136,20 @@ defmodule Anoma.Node.Utility.Indexer do
       end)
 
     set
+  end
+
+  @spec get_height(String.t()) :: non_neg_integer()
+  defp get_height(node_id) do
+    table = Storage.blocks_table(node_id)
+
+    {:atomic, res} =
+      :mnesia.transaction(fn ->
+        case :mnesia.all_keys(table) |> Enum.sort(:desc) do
+          [] -> :absent
+          [hd | _tl] -> hd
+        end
+      end)
+
+    res
   end
 end
