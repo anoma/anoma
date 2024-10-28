@@ -9,10 +9,21 @@ defmodule Examples.ETransparent.ELogicProof do
       resource: EResource.trivial_true_resource(),
       self_tag: {:committed, EResource.trivial_true_commitment()},
       commitments: MapSet.new([EResource.trivial_true_commitment()]),
-      committed_plaintexts: MapSet.new([EResource.trivial_true_resource()])
+      committed_plaintexts: MapSet.new([EResource.trivial_true_resource()]),
+      other_private: 0,
+      other_public: 0
     }
 
     assert LogicProof.verify(res)
+
+    # This should not fail
+    assert {:ok, _} =
+             res
+             |> Noun.Nounable.to_noun()
+             |> Nock.Jam.jam()
+             |> Nock.Cue.cue()
+             |> elem(1)
+             |> LogicProof.from_noun()
 
     res
   end

@@ -6,14 +6,6 @@ defmodule Examples.ETransparent.EResource do
 
   use TestHelper.TestMacro
 
-  @spec trivial_true_resource() :: Resource.t()
-  defmemo trivial_true_resource() do
-    res = %Resource{nonce: Randomness.get_random(32)}
-
-    {:ok, 0} = Nock.nock(res.logic, [9, 2, 0 | 1])
-    res
-  end
-
   @doc """
   I generate out unique trivial true resources.
 
@@ -35,6 +27,14 @@ defmodule Examples.ETransparent.EResource do
   def trivial_false_resource_generator() do
     res = %Resource{logic: [[1 | 1], 0 | 0], nonce: Randomness.get_random(32)}
 
+    assert {:ok, uncued} =
+             Resource.to_noun(res)
+             |> Nock.Jam.jam()
+             |> Nock.Cue.cue()
+             |> elem(1)
+             |> Resource.from_noun()
+
+    assert uncued == res
     {:ok, 1} = Nock.nock(res.logic, [9, 2, 0 | 1])
     res
   end
@@ -51,7 +51,8 @@ defmodule Examples.ETransparent.EResource do
   defmemo trivial_true_resource_2() do
     %Resource{
       trivial_true_resource_generator()
-      | nonce: Randomness.get_random(32)
+      | nonce: Randomness.get_random(32),
+        ephemeral: true
     }
   end
 
