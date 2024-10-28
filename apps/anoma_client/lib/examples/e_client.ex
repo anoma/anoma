@@ -250,7 +250,11 @@ defmodule Anoma.Client.Examples.EClient do
       inputs: inputs
     }
 
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+    assert {:ok,
+            %RunNock.Response{
+              result: {:output, <<240, 61>>},
+              __unknown_fields__: []
+            }} = Intents.Stub.run_nock(conn.channel, request)
   end
 
   @doc """
@@ -276,6 +280,10 @@ defmodule Anoma.Client.Examples.EClient do
       inputs: inputs
     }
 
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+    assert {:ok,
+            %RunNock.Response{
+              result: {:output, <<240, 61>>},
+              __unknown_fields__: []
+            }} = Intents.Stub.run_nock(conn.channel, request)
   end
 end
