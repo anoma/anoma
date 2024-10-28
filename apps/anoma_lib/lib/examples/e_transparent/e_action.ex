@@ -1,4 +1,5 @@
 defmodule Examples.ETransparent.EAction do
+  alias Anoma.TransparentResource.Delta
   alias Anoma.TransparentResource.Action
   alias Examples.ETransparent.ELogicProof
 
@@ -81,6 +82,10 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  def trivial_true_commit_delta() do
+    trivial_true_commit_action() |> Action.delta()
+  end
+
   def trivial_true_2_nullifier_action() do
     logic_proof = ELogicProof.trivial_true_2_nullifier()
 
@@ -91,6 +96,14 @@ defmodule Examples.ETransparent.EAction do
     }
 
     assert Action.verify_correspondence(res)
+
+    res
+  end
+
+  def trivial_true_2_nullifier_delta() do
+    res = trivial_true_2_nullifier_action() |> Action.delta()
+
+    assert res == Delta.negate(trivial_true_commit_delta())
 
     res
   end

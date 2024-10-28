@@ -10,7 +10,6 @@ defmodule Examples.ETransparent.ETransaction do
 
     assert Transaction.verify(res)
     assert Transaction.compose(res, res) == res
-
     res
   end
 
@@ -38,6 +37,45 @@ defmodule Examples.ETransparent.ETransaction do
     res = %Transaction{empty() | actions: actions}
 
     assert {:error, _} = Transaction.verify(res)
+
+    res
+  end
+
+  def commit_intent() do
+    actions =
+      MapSet.new([EAction.trivial_true_commit_action()])
+
+    delta = EAction.trivial_true_commit_delta()
+    res = %Transaction{empty() | actions: actions, delta: delta}
+
+    assert {:error, _} = Transaction.verify(res)
+
+    res
+  end
+
+  def nullify_intent() do
+    actions =
+      MapSet.new([EAction.trivial_true_2_nullifier_action()])
+
+    delta = EAction.trivial_true_2_nullifier_delta()
+    res = %Transaction{empty() | actions: actions, delta: delta}
+
+    assert {:error, _} = Transaction.verify(res)
+
+    # the delta should be negative let's say we can jam and cue this
+    noun = res |> Noun.Nounable.to_noun()
+
+    assert noun |> Nock.Jam.jam() |> Nock.Cue.cue()
+    assert Transaction.from_noun(noun) == {:ok, res}
+
+    res
+  end
+
+  def swap_from_actions() do
+    res = Transaction.compose(nullify_intent(), commit_intent())
+
+    assert %{} = res.delta
+    assert Transaction.verify(res)
 
     res
   end
