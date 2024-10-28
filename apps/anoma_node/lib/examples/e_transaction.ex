@@ -1,6 +1,9 @@
 defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node
   alias Node.Transaction.{Storage, Ordering, Mempool}
+  alias Anoma.TransparentResource.Transaction
+
+  alias Examples.{ENock, ETransparent.ETransaction}
 
   alias Anoma.Node.Examples.ENode
   require ExUnit.Assertions
@@ -270,9 +273,60 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:debug_term_storage, inc}
   end
 
+  def trivial_transparent_transaction() do
+    {:transparent_resource, ENock.transparent_core(ENock.trivial_swap())}
+  end
+
   ############################################################
   #                        Transactions                      #
   ############################################################
+
+  def submit_successful_trivial_swap(node_id \\ Node.example_random_id()) do
+    start_tx_module(node_id)
+
+    code = trivial_transparent_transaction()
+
+    EventBroker.subscribe_me([])
+
+    Mempool.tx(node_id, code, "id 1")
+    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+
+    recieve_round_event(node_id, 0)
+
+    base_swap = ETransaction.swap_from_actions()
+
+    assert {:ok, base_swap |> Transaction.nullifiers()} ==
+             Storage.read(node_id, {1, :nullifiers})
+
+    assert {:ok, base_swap |> Transaction.commitments()} ==
+             Storage.read(node_id, {1, :commitments})
+
+    {tree, anchor} =
+      Examples.ECommitmentTree.memory_backed_ct_with_trivial_swap()
+
+    assert {:ok, tree} == Storage.read(node_id, {1, :ct})
+    assert {:ok, anchor} == Storage.read(node_id, {1, :anchor})
+
+    EventBroker.unsubscribe_me([])
+
+    node_id
+  end
+
+  def resubmit_trivial_swap(node_id \\ Node.example_random_id()) do
+    submit_successful_trivial_swap(node_id)
+
+    code = trivial_transparent_transaction()
+
+    EventBroker.subscribe_me([])
+
+    Mempool.tx(node_id, code, "id 2")
+    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+
+    recieve_logger_failure(node_id, "nullifier already")
+
+    EventBroker.unsubscribe_me([])
+    node_id
+  end
 
   def zero_counter_submit(node_id \\ Node.example_random_id()) do
     key = "key"
@@ -471,5 +525,34 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
     [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
+  end
+
+  defp recieve_round_event(node_id, round) do
+    receive do
+      %EventBroker.Event{
+        body: %Node.Event{
+          node_id: ^node_id,
+          body: %Mempool.BlockEvent{round: ^round}
+        }
+      } ->
+        :ok
+    after
+      1000 -> :error_tx
+    end
+  end
+
+  @spec recieve_logger_failure(binary(), String.t()) :: any()
+  defp recieve_logger_failure(node_id, exp_message) do
+    receive do
+      %EventBroker.Event{
+        body: %Node.Event{
+          node_id: ^node_id,
+          body: %Anoma.Node.Logging.LoggingEvent{flag: :error, msg: msg}
+        }
+      } ->
+        assert msg =~ exp_message
+    after
+      1000 -> assert(false, "Failed to find failure message: #{exp_message}")
+    end
   end
 end
