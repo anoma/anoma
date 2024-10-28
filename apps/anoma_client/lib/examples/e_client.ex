@@ -253,7 +253,9 @@ defmodule Anoma.Client.Examples.EClient do
     assert {:ok,
             %RunNock.Response{
               result: {:output, <<240, 61>>}
-            }} = Intents.Stub.run_nock(conn.channel, request)
+            }} = response = Intents.Stub.run_nock(conn.channel, request)
+
+    response
   end
 
   @doc """
@@ -282,6 +284,8 @@ defmodule Anoma.Client.Examples.EClient do
     assert {:ok,
             %RunNock.Response{
               result: {:output, <<240, 61>>}
-            }} = Intents.Stub.run_nock(conn.channel, request)
+            }} = response = Intents.Stub.run_nock(conn.channel, request)
+
+    response
   end
 end
