@@ -1,7 +1,7 @@
 defmodule Anoma.Node.Examples.EIndexer do
   alias Anoma.Node
   alias Node.Examples.{ETransaction, ENode}
-  alias Node.Transaction.Storage
+  alias Node.Transaction.{Storage, Mempool}
   alias Node.Utility.Indexer
   alias Anoma.TransparentResource.Resource
 
@@ -11,6 +11,70 @@ defmodule Anoma.Node.Examples.EIndexer do
     1 = Indexer.get(node_id, :height)
 
     node_id
+  end
+
+  def indexer_reads_before(node_id \\ Node.example_random_id()) do
+    ETransaction.inc_counter_submit_after_zero(node_id)
+    Indexer.start_link(node_id: node_id)
+    {back, zero} = ETransaction.zero("key")
+
+    [
+      [
+        0,
+        [
+          %Mempool.Tx{
+            code: ^zero,
+            backend: ^back,
+            vm_result: {:ok, [["key" | 0] | 0]},
+            tx_result: {:ok, [["key" | 0]]}
+          }
+        ]
+      ]
+    ] = Indexer.get(node_id, {:before, 1})
+
+    [] = Indexer.get(node_id, {:before, 0})
+  end
+
+  def indexer_reads_after(node_id \\ Node.example_random_id()) do
+    ETransaction.inc_counter_submit_after_zero(node_id)
+    Indexer.start_link(node_id: node_id)
+    {back, inc} = ETransaction.inc("key")
+
+    [
+      [
+        1,
+        [
+          %Mempool.Tx{
+            code: ^inc,
+            backend: ^back,
+            vm_result: {:ok, [["key" | 1] | 0]},
+            tx_result: {:ok, [["key" | 1]]}
+          }
+        ]
+      ]
+    ] = Indexer.get(node_id, {:after, 0})
+
+    [] = Indexer.get(node_id, {:after, 1})
+  end
+
+  def indexer_reads_latest(node_id \\ Node.example_random_id()) do
+    ETransaction.inc_counter_submit_after_zero(node_id)
+    Indexer.start_link(node_id: node_id)
+    {back, inc} = ETransaction.inc("key")
+
+    [
+      [
+        1,
+        [
+          %Mempool.Tx{
+            code: ^inc,
+            backend: ^back,
+            vm_result: {:ok, [["key" | 1] | 0]},
+            tx_result: {:ok, [["key" | 1]]}
+          }
+        ]
+      ]
+    ] = Indexer.get(node_id, :latest_block)
   end
 
   def indexer_reads_nullifier(node_id \\ Node.example_random_id()) do
