@@ -1170,6 +1170,91 @@ defmodule Examples.ENock do
   end
 
   ####################################################################
+  ##                           RNG Core                             ##
+  ####################################################################
+
+  @doc """
+  The gate representing an og core creation with a specified seed.
+
+  Can be gotten by defining
+
+  =l   =>  logics  |=  [seed=@]  ~(. og seed)
+
+  and getting it's arm with [0 2]
+  """
+  def og_arm() do
+    arm = "[8 [9 47 0 63] 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    sample = 0
+    [arm, sample | Nock.logics_core()]
+  end
+
+  def og_call(seed) do
+    Nock.nock(og_arm(), [9, 2, 10, [6, 1 | seed], 0 | 1])
+  end
+
+  @doc """
+  I represent a raws gate with a specified instantiated og core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [rng=_og width=@]  (raws:rng width)
+
+  and grabbing the arm with [0 2]
+  """
+  def raws_with_core() do
+    arm =
+      "[8 [7 [0 12] 9 4 0 1] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0, 0]
+
+    [arm, sample | Nock.logics_core()]
+  end
+
+  def raws_with_core_call(core, width) do
+    Nock.nock(raws_with_core(), [9, 2, 10, [6, 1 | [core | width]], 0 | 1])
+  end
+
+  def raws_with_out_core_test() do
+    {:ok, og_with_27} = og_call(27)
+
+    {:ok, res1} = raws_call(27, 10)
+    {:ok, ^res1} = raws_with_core_call(og_with_27, 10)
+  end
+
+  @doc """
+  I represent a split gate call given an og core with seed.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [rng=_og]  split:rng
+
+  and grabbing the arm with [0 2]
+  """
+  def split_arm() do
+    arm = "[7 [0 6] 9 21 0 1]" |> Noun.Format.parse_always()
+    sample = 0
+    [arm, sample | Nock.logics_core()]
+  end
+
+  def split_call(core) do
+    Nock.nock(split_arm(), [9, 2, 10, [6, 1 | core], 0 | 1])
+  end
+
+  def call_split_test() do
+    {:ok, og_with_123} = og_call(123)
+    {:ok, [rng1 | rng2]} = og_with_123 |> split_call()
+
+    # check that these are actual og cores
+    {:ok, [rbits1 | _core1]} = raws_with_core_call(rng1, 23)
+    {:ok, [rbits2 | _core2]} = raws_with_core_call(rng2, 23)
+
+    # check the bits do not collide
+    assert rbits1 != rbits2
+  end
+
+  ####################################################################
   ##                          Normal Cores                          ##
   ####################################################################
 
