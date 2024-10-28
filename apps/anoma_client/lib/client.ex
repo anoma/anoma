@@ -14,6 +14,7 @@ defmodule Anoma.Client do
     field(:grpc_port, integer())
   end
 
+  # some change
   @doc """
   I connect to a remote node over GRPC.
   """
