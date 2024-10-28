@@ -2,6 +2,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node
   alias Node.Transaction.{Storage, Ordering, Mempool}
 
+  alias Anoma.Node.Examples.ENode
   require ExUnit.Assertions
   import ExUnit.Assertions
 
@@ -214,19 +215,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, 123} = Ordering.read(node_id, {"tx id 2", ["abc"]})
   end
 
-  def start_mempool(node_id \\ Node.example_random_id()) do
-    Anoma.Node.Transaction.Mempool.start_link(node_id: node_id)
-  end
-
-  def start_executor(node_id \\ Node.example_random_id()) do
-    Anoma.Node.Transaction.Executor.start_link(node_id: node_id)
-  end
-
   def start_tx_module(node_id \\ Node.example_random_id()) do
-    start_ordering(node_id)
-    start_storage(node_id)
-    start_executor(node_id)
-    start_mempool(node_id)
+    ENode.start_node(node_id: node_id)
   end
 
   # to be moved to nock
