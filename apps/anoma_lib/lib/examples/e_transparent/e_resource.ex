@@ -51,6 +51,14 @@ defmodule Examples.ETransparent.EResource do
   defmemo trivial_true_resource_2() do
     %Resource{
       trivial_true_resource_generator()
+      | nonce: Randomness.get_random(32)
+    }
+  end
+
+  @spec trivial_true_resource_eph() :: Resource.t()
+  defmemo trivial_true_resource_eph() do
+    %Resource{
+      trivial_true_resource_generator()
       | nonce: Randomness.get_random(32),
         ephemeral: true
     }
@@ -96,6 +104,10 @@ defmodule Examples.ETransparent.EResource do
 
   def trivial_true_nullifier_2() do
     Resource.nullifier(trivial_true_resource_2())
+  end
+
+  def trivial_true_nullifier_eph() do
+    Resource.nullifier(trivial_true_resource_eph())
   end
 
   def trivial_false_commitment() do

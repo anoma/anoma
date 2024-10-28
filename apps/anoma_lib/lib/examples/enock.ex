@@ -124,6 +124,11 @@ defmodule Examples.ENock do
     noun
   end
 
+  def trivial_swap_no_eph() do
+    Examples.ETransparent.ETransaction.swap_from_actions_non_eph_nullifier()
+    |> Noun.Nounable.to_noun()
+  end
+
   ####################################################################
   ##                        Noun Submission                         ##
   ####################################################################

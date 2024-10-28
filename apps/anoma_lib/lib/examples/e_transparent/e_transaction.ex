@@ -53,9 +53,9 @@ defmodule Examples.ETransparent.ETransaction do
     res
   end
 
-  def nullify_intent() do
+  def nullify_intent_eph() do
     actions =
-      MapSet.new([EAction.trivial_true_2_nullifier_action()])
+      MapSet.new([EAction.trivial_true_eph_nullifier_action()])
 
     delta = EAction.trivial_true_2_nullifier_delta()
     res = %Transaction{empty() | actions: actions, delta: delta}
@@ -71,7 +71,26 @@ defmodule Examples.ETransparent.ETransaction do
     res
   end
 
+  def nullify_intent() do
+    actions =
+      MapSet.new([EAction.trivial_true_2_nullifier_action()])
+
+    delta = EAction.trivial_true_2_nullifier_delta()
+    %Transaction{empty() | actions: actions, delta: delta}
+  end
+
   def swap_from_actions() do
+    res = Transaction.compose(nullify_intent_eph(), commit_intent())
+
+    assert %{} = res.delta
+    assert Transaction.verify(res)
+
+    res
+  end
+
+  # This should fail verification on submission if storage is not
+  # primed
+  def swap_from_actions_non_eph_nullifier() do
     res = Transaction.compose(nullify_intent(), commit_intent())
 
     assert %{} = res.delta

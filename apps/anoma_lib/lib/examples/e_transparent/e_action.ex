@@ -100,6 +100,20 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  def trivial_true_eph_nullifier_action() do
+    logic_proof = ELogicProof.trivial_true_eph_nullifier()
+
+    res = %Action{
+      empty()
+      | proofs: MapSet.new([logic_proof]),
+        nullifiers: logic_proof.nullifiers
+    }
+
+    assert Action.verify_correspondence(res)
+
+    res
+  end
+
   def trivial_true_2_nullifier_delta() do
     res = trivial_true_2_nullifier_action() |> Action.delta()
 
