@@ -18,10 +18,11 @@ defmodule Anoma.Protobuf.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       compilers: [:protoc] ++ Mix.compilers(),
-      # as a hack, these also exist in the top level mix.exs
+      # these options are required for running `mix deps.compile` in the umbrella.
+      # make changes here and in ../../mix.exs.
       protoc_options: [
-        elixir_out: "lib",
-        proto_files: ["priv/protobuf/anoma.proto"],
+        elixir_out: "lib/anoma/protobuf",
+        proto_files: ["priv/protobuf"],
         extra_opts:
           "one_file_per_module=true,gen_descriptors=true,plugins=grpc"
       ]
@@ -41,9 +42,6 @@ defmodule Anoma.Protobuf.MixProject do
       {:compile_protoc, in_umbrella: true},
       {:grpc, "~> 0.9"},
       {:protobuf, "~> 0.11.0"}
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
-      # {:sibling_app_in_umbrella, in_umbrella: true}
     ] ++ global_deps()
   end
 
