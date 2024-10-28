@@ -13,6 +13,15 @@ defmodule Anoma.Node.Utility.Indexer do
     field(:node_id, String.t())
   end
 
+  @type index_type() ::
+          :nlfs
+          | :cms
+          | :unrevealed
+          | :resources
+          | :height
+          | :latest_block
+          | {:before | :after, non_neg_integer()}
+
   def start_link(args) do
     args = Keyword.validate!(args, [:node_id])
     name = Registry.via(args[:node_id], __MODULE__)
@@ -26,7 +35,7 @@ defmodule Anoma.Node.Utility.Indexer do
     {:ok, state}
   end
 
-  @spec get(String.t(), :nlfs | :cms | :unrevealed | :resources | :height) ::
+  @spec get(String.t(), index_type) ::
           any()
   def get(node_id, flag) do
     name = Registry.via(node_id, __MODULE__)
@@ -68,6 +77,26 @@ defmodule Anoma.Node.Utility.Indexer do
         res
       end)
       |> MapSet.new()
+
+    {:reply, res, state}
+  end
+
+  def handle_call({flag, height}, _from, state)
+      when flag in [:before, :after] do
+    table = Storage.blocks_table(state.node_id)
+
+    op =
+      case flag do
+        :before -> :<
+        :after -> :>
+      end
+
+    {:atomic, res} =
+      :mnesia.transaction(fn ->
+        :mnesia.select(table, [
+          {{table, :"$1", :"$2"}, [{op, :"$1", height}], [:"$$"]}
+        ])
+      end)
 
     {:reply, res, state}
   end
