@@ -25,8 +25,6 @@ defmodule Nock do
     field(:meter_pid, pid() | nil, default: nil)
   end
 
-  @dialyzer :no_improper_lists
-
   @layers 8
 
   @layer_1_context_mug 1_023_856_422
