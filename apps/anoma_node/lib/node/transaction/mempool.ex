@@ -236,14 +236,6 @@ defmodule Anoma.Node.Transaction.Mempool do
     EventBroker.event(consensus_event)
   end
 
-  def worker_module_filter() do
-    %EventBroker.Filters.SourceModule{module: Anoma.Node.Transaction.Backends}
-  end
-
-  def filter_for_mempool() do
-    %Backends.ForMempoolFilter{}
-  end
-
   @spec process_execution(t(), [{:ok | :error, binary()}]) ::
           {[Mempool.Tx.t()], %{binary() => Mempool.Tx.t()}}
   defp process_execution(state, execution_list) do
@@ -254,5 +246,17 @@ defmodule Anoma.Node.Transaction.Mempool do
 
         {[Map.put(tx_struct, :tx_result, tx_res) | lst], map}
     end
+  end
+
+  ############################################################
+  #                      Public Filters                      #
+  ############################################################
+
+  def worker_module_filter() do
+    %EventBroker.Filters.SourceModule{module: Anoma.Node.Transaction.Backends}
+  end
+
+  def filter_for_mempool() do
+    %Backends.ForMempoolFilter{}
   end
 end
