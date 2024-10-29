@@ -3,6 +3,7 @@ defmodule Anoma.Node.Utility.Indexer do
   A trivial indexer querying the node tables.
   """
 
+  alias Anoma.TransparentResource.Resource
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Storage
 
@@ -11,6 +12,7 @@ defmodule Anoma.Node.Utility.Indexer do
 
   typedstruct do
     field(:node_id, String.t())
+    field(:filters, %{atom() => (any(), any() -> MapSet.t())})
   end
 
   @type index_type() ::
@@ -21,9 +23,18 @@ defmodule Anoma.Node.Utility.Indexer do
           | :height
           | :latest_block
           | {:before | :after, non_neg_integer()}
+          | {:filter, [{:owner, any()} | {:kind, binary()}]}
 
   def start_link(args) do
-    args = Keyword.validate!(args, [:node_id])
+    owner_filter = fn res, owner -> res.nullifier_key == owner end
+    kind_filter = fn res, kind -> Resource.kind(res) == kind end
+
+    args =
+      Keyword.validate!(args, [
+        :node_id,
+        filters: %{:owner => owner_filter, :kind => kind_filter}
+      ])
+
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
