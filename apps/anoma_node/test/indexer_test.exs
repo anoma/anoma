@@ -14,5 +14,6 @@ defmodule IndexerTest do
     EIndexer.indexer_reads_commitments()
     EIndexer.indexer_does_not_read_revealed()
     EIndexer.indexer_reads_unrevealed()
+    EIndexer.indexer_filters_owner()
   end
 end
