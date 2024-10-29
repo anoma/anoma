@@ -69,6 +69,24 @@ defmodule Anoma.Node.Utility.Indexer do
     {:reply, read_set(:commitments, state.node_id), state}
   end
 
+  def handle_call({:filter, list}, _from, state) do
+    ress =
+      unnulified_coms(state.node_id)
+      |> res_from_coms
+      |> Enum.map(fn x -> x |> Resource.from_noun() |> elem(1) end)
+
+    filtered =
+      for {atom, arg} <- list, reduce: ress do
+        unfiltered ->
+          filter = Map.get(state.filters, atom)
+          unfiltered |> Enum.filter(fn x -> filter.(x, arg) end)
+      end
+      |> Enum.map(&Resource.to_noun/1)
+      |> MapSet.new()
+
+    {:reply, filtered, state}
+  end
+
   def handle_call(:unrevealed, _from, state) do
     {:reply, unnulified_coms(state.node_id), state}
   end
@@ -76,12 +94,7 @@ defmodule Anoma.Node.Utility.Indexer do
   def handle_call(:resources, _from, state) do
     res =
       unnulified_coms(state.node_id)
-      |> get_jam_info(:commitments)
-      |> Stream.map(fn x ->
-        {:ok, res} = Nock.Cue.cue(x)
-        res
-      end)
-      |> MapSet.new()
+      |> res_from_coms()
 
     {:reply, res, state}
   end
@@ -104,6 +117,17 @@ defmodule Anoma.Node.Utility.Indexer do
       end)
 
     {:reply, res, state}
+  end
+
+  @spec res_from_coms(MapSet.t()) :: MapSet.t()
+  defp res_from_coms(coms) do
+    coms
+    |> get_jam_info(:commitments)
+    |> Stream.map(fn x ->
+      {:ok, res} = Nock.Cue.cue(x)
+      res
+    end)
+    |> MapSet.new()
   end
 
   @spec unnulified_coms(String.t()) :: MapSet.t(binary())
