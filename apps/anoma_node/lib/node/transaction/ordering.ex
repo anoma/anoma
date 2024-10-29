@@ -71,17 +71,18 @@ defmodule Anoma.Node.Transaction.Ordering do
     end
   end
 
-  def handle_call({write_or_append, {tx_id, kvlist}}, from, state)
-      when write_or_append in [:write, :append] do
+  def handle_call({write_opt, {tx_id, args}}, from, state)
+      when write_opt in [:write, :append, :add] do
     call =
-      case write_or_append do
+      case write_opt do
         :write -> &Storage.write(state.node_id, &1)
         :append -> &Storage.append(state.node_id, &1)
+        :add -> &Storage.add(state.node_id, &1)
       end
 
     with {:ok, height} <- Map.fetch(state.tx_id_to_height, tx_id) do
       Task.start(fn ->
-        GenServer.reply(from, call.({height, kvlist}))
+        GenServer.reply(from, call.({height, args}))
       end)
 
       {:noreply, state}
@@ -92,7 +93,7 @@ defmodule Anoma.Node.Transaction.Ordering do
         block_spawn(
           tx_id,
           fn ->
-            blocking_write(node_id, {tx_id, kvlist}, from)
+            blocking_write(node_id, {tx_id, args}, from)
           end,
           node_id
         )
@@ -165,6 +166,15 @@ defmodule Anoma.Node.Transaction.Ordering do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
       {:append, {id, kvlist}},
+      :infinity
+    )
+  end
+
+  @spec add(String.t(), {binary(), %{write: list(), append: list()}}) :: any()
+  def add(node_id, {id, map}) do
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:add, {id, map}},
       :infinity
     )
   end

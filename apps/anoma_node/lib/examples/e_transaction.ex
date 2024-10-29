@@ -119,6 +119,32 @@ defmodule Anoma.Node.Examples.ETransaction do
     {:ok, ^appended_set} = Storage.read(node_id, {2, :set})
   end
 
+  def add_rewrites(node_id \\ Node.example_random_id()) do
+    write_then_read(node_id)
+
+    Storage.add(
+      node_id,
+      {2, %{write: [{["abc"], 234}], append: [{:set, "value1"}]}}
+    )
+
+    {:ok, 234} = Storage.read(node_id, {2, ["abc"]})
+    new_set = MapSet.new(["value1"])
+    {:ok, ^new_set} = Storage.read(node_id, {2, :set})
+  end
+
+  def add_append(node_id \\ Node.example_random_id()) do
+    append_then_read(node_id)
+
+    Storage.add(
+      node_id,
+      {2, %{write: [{["abc"], 234}], append: [{:set, "new_value"}]}}
+    )
+
+    {:ok, 234} = Storage.read(node_id, {2, ["abc"]})
+    new_set = MapSet.new(["new_value", "value"])
+    {:ok, ^new_set} = Storage.read(node_id, {2, :set})
+  end
+
   def complicated_storage(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
     task1 = Task.async(fn -> Storage.read(node_id, {3, ["abc"]}) end)
