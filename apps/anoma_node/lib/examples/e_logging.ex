@@ -242,8 +242,9 @@ defmodule Anoma.Node.Examples.ELogging do
     end)
 
     write_consensus_leave_one_out(node_id)
+    filter = [%Mempool.TxFilter{}]
 
-    EventBroker.subscribe_me([])
+    EventBroker.subscribe_me(filter)
 
     Logging.restart_with_replay(node_id)
 
@@ -264,7 +265,9 @@ defmodule Anoma.Node.Examples.ELogging do
     write_consensus_leave_one_out(node_id)
     replay_ensure_created_tables(node_id)
 
-    EventBroker.subscribe_me([])
+    filter = [%Mempool.TxFilter{}]
+
+    EventBroker.subscribe_me(filter)
 
     Logging.restart_with_replay(node_id)
 
@@ -287,7 +290,11 @@ defmodule Anoma.Node.Examples.ELogging do
     write_several_consensus(node_id)
     replay_ensure_created_tables(node_id)
 
-    EventBroker.subscribe_me([])
+    txfilter = [%Mempool.TxFilter{}]
+    consensus_filter = [%Mempool.ConsensusFilter{}]
+
+    EventBroker.subscribe_me(txfilter)
+    EventBroker.subscribe_me(consensus_filter)
 
     Logging.restart_with_replay(node_id)
 
@@ -308,7 +315,11 @@ defmodule Anoma.Node.Examples.ELogging do
     write_consensus_with_several_tx(node_id)
     replay_ensure_created_tables(node_id)
 
-    EventBroker.subscribe_me([])
+    txfilter = [%Mempool.TxFilter{}]
+    consensus_filter = [%Mempool.ConsensusFilter{}]
+
+    EventBroker.subscribe_me(txfilter)
+    EventBroker.subscribe_me(consensus_filter)
 
     Logging.restart_with_replay(node_id)
 
@@ -326,7 +337,11 @@ defmodule Anoma.Node.Examples.ELogging do
     write_consensus(node_id)
     replay_ensure_created_tables(node_id)
 
-    EventBroker.subscribe_me([])
+    txfilter = [%Mempool.TxFilter{}]
+    consensus_filter = [%Mempool.ConsensusFilter{}]
+
+    EventBroker.subscribe_me(txfilter)
+    EventBroker.subscribe_me(consensus_filter)
 
     Logging.restart_with_replay(node_id)
 
@@ -341,7 +356,9 @@ defmodule Anoma.Node.Examples.ELogging do
     write_several_tx(node_id)
     replay_ensure_created_tables(node_id)
 
-    EventBroker.subscribe_me([])
+    txfilter = [%Mempool.TxFilter{}]
+
+    EventBroker.subscribe_me(txfilter)
 
     Logging.restart_with_replay(node_id)
 
@@ -356,7 +373,9 @@ defmodule Anoma.Node.Examples.ELogging do
     write_tx(node_id)
     replay_ensure_created_tables(node_id)
 
-    EventBroker.subscribe_me([])
+    txfilter = [%Mempool.TxFilter{}]
+
+    EventBroker.subscribe_me(txfilter)
 
     {:ok, _pid} = Logging.restart_with_replay(node_id)
 
