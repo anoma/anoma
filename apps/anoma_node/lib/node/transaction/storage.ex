@@ -11,8 +11,13 @@ defmodule Anoma.Node.Transaction.Storage do
   use TypedStruct
   require Node.Event
 
+  ############################################################
+  #                         State                            #
+  ############################################################
+
   @type bare_key() :: list(String.t())
   @type qualified_key() :: {integer(), bare_key()}
+  @type write_opts() :: :append | :write | :add
   @typep startup_options() :: {:node_id, String.t()}
 
   typedstruct enforce: true do
@@ -20,7 +25,7 @@ defmodule Anoma.Node.Transaction.Storage do
     field(:uncommitted, %{qualified_key() => term()}, default: %{})
     # the most recent height written.
     # starts at 0 because nothing has been written.
-    field(:uncommitted_height, integer(), default: 0)
+    field(:uncommitted_height, non_neg_integer(), default: 0)
     # reverse-ordered list of heights at which a key was updated.
     field(:uncommitted_updates, %{bare_key() => list(integer())},
       default: %{}
@@ -28,7 +33,7 @@ defmodule Anoma.Node.Transaction.Storage do
   end
 
   typedstruct enforce: true, module: WriteEvent do
-    field(:height, integer())
+    field(:height, non_neg_integer())
     field(:writes, list({Anoma.Node.Transaction.Storage.bare_key(), term()}))
   end
 
@@ -36,6 +41,10 @@ defmodule Anoma.Node.Transaction.Storage do
     %EventBroker.Event{body: %Node.Event{body: %{height: ^height}}} -> true
     _ -> false
   end
+
+  ############################################################
+  #                    Genserver Helpers                     #
+  ############################################################
 
   @spec start_link() :: GenServer.on_start()
   @spec start_link(list(startup_options())) :: GenServer.on_start()
@@ -66,11 +75,134 @@ defmodule Anoma.Node.Transaction.Storage do
     {:ok, state}
   end
 
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+
+  @spec read(String.t(), {non_neg_integer(), any()}) :: :absent | any()
+  def read(node_id, {height, key}) do
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:read, {height, key}},
+      :infinity
+    )
+  end
+
+  @spec add(
+          String.t(),
+          {non_neg_integer(),
+           %{write: list({any(), any()}), append: list({any(), any()})}}
+        ) :: term()
+  def add(node_id, args = {_height, %{write: _writes, append: _appends}}) do
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:add, args},
+      :infinity
+    )
+  end
+
+  @spec write(String.t(), {non_neg_integer(), list({any(), any()})}) :: :ok
+  def write(node_id, {height, kvlist}) do
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:write, {height, kvlist}},
+      :infinity
+    )
+  end
+
+  @spec append(String.t(), {non_neg_integer(), list({any(), any()})}) :: :ok
+  def append(node_id, {height, kvlist}) do
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:append, {height, kvlist}},
+      :infinity
+    )
+  end
+
+  @spec commit(
+          String.t(),
+          non_neg_integer(),
+          list(Anoma.Node.Transaction.Mempool.Tx.t()) | nil
+        ) :: :ok
+  def commit(node_id, block_round, writes) do
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:commit, block_round, writes, self()}
+    )
+  end
+
   def terminate(_reason, state) do
     {:ok, state}
   end
 
+  ############################################################
+  #                      Public Filters                      #
+  ############################################################
+
+  def height_filter(height) do
+    %__MODULE__.HeightFilter{height: height}
+  end
+
+  ############################################################
+  #                       User Calling API                   #
+  ############################################################
+
+  def blocks_table(node_id) do
+    String.to_atom("#{__MODULE__.Blocks}_#{:erlang.phash2(node_id)}")
+  end
+
+  def values_table(node_id) do
+    String.to_atom("#{__MODULE__.Values}_#{:erlang.phash2(node_id)}")
+  end
+
+  def updates_table(node_id) do
+    String.to_atom("#{__MODULE__.Updates}_#{:erlang.phash2(node_id)}")
+  end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+
   def handle_call({:commit, round, writes, _}, _from, state) do
+    handle_commit(round, writes, state)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:read, {0, _key}}, _from, state) do
+    {:reply, :absent, state}
+  end
+
+  def handle_call({:read, {height, key}}, from, state) do
+    handle_read({height, key}, from, state)
+  end
+
+  def handle_call({write_opt, {height, args}}, from, state)
+      when write_opt in [:write, :append, :add] do
+    handle_write(write_opt, {height, args}, from, state)
+  end
+
+  def handle_call(_msg, _from, state) do
+    {:reply, :ok, state}
+  end
+
+  def handle_cast(_msg, state) do
+    {:noreply, state}
+  end
+
+  def handle_info(_info, state) do
+    {:noreply, state}
+  end
+
+  ############################################################
+  #                 Genserver Implementation                 #
+  ############################################################
+
+  @spec handle_commit(
+          non_neg_integer(),
+          list(Anoma.Node.Transaction.Mempool.Tx.t()),
+          t()
+        ) :: t()
+  defp handle_commit(round, writes, state = %__MODULE__{}) do
     mnesia_tx = fn ->
       for {key, value} <- state.uncommitted do
         :mnesia.write({values_table(state.node_id), key, value})
@@ -97,21 +229,17 @@ defmodule Anoma.Node.Transaction.Storage do
 
     :mnesia.transaction(mnesia_tx)
 
-    state = %{
+    %__MODULE__{
       state
       | uncommitted: %{},
         uncommitted_updates: %{},
         uncommitted_height: state.uncommitted_height
     }
-
-    {:reply, :ok, state}
   end
 
-  def handle_call({:read, {0, _key}}, _from, state) do
-    {:reply, :absent, state}
-  end
-
-  def handle_call({:read, {height, key}}, from, state) do
+  @spec handle_read({non_neg_integer(), any()}, GenServer.from(), t()) ::
+          {:noreply, t()} | {:reply, any(), t()}
+  defp handle_read({height, key}, from, state) do
     if height <= state.uncommitted_height do
       # relies on this being a reverse-ordered list
       result =
@@ -133,8 +261,13 @@ defmodule Anoma.Node.Transaction.Storage do
     end
   end
 
-  def handle_call({write_opt, {height, args}}, from, state)
-      when write_opt in [:write, :append, :add] do
+  @spec handle_write(
+          write_opts(),
+          {non_neg_integer(), any()},
+          GenServer.from(),
+          t()
+        ) :: {:noreply, t()} | {:reply, :ok, t()}
+  defp handle_write(write_opt, {height, args}, from, state) do
     unless height == state.uncommitted_height + 1 do
       node_id = state.node_id
 
@@ -162,146 +295,76 @@ defmodule Anoma.Node.Transaction.Storage do
     end
   end
 
-  def handle_call(_msg, _from, state) do
-    {:reply, :ok, state}
-  end
+  ############################################################
+  #                           Helpers                        #
+  ############################################################
 
-  def block_spawn(height, call, node_id) do
-    {:ok, pid} =
-      Task.start(call)
+  ############################################################
+  #                        Initialization                    #
+  ############################################################
 
-    EventBroker.subscribe(pid, [
-      Node.Event.node_filter(node_id),
-      this_module_filter(),
-      height_filter(height)
-    ])
-  end
+  @spec init_tables(atom(), bool()) :: any()
+  defp init_tables(node_id, rocks) do
+    rocks_opt = Anoma.Utility.rock_opts(rocks)
 
-  def handle_cast(_msg, state) do
-    {:noreply, state}
-  end
+    :mnesia.create_table(
+      values_table(node_id),
+      rocks_opt ++ [attributes: [:key, :value]]
+    )
 
-  def handle_info(_info, state) do
-    {:noreply, state}
-  end
+    :mnesia.create_table(
+      updates_table(node_id),
+      rocks_opt ++ [attributes: [:key, :value]]
+    )
 
-  @spec read(String.t(), {non_neg_integer(), any()}) :: :absent | any()
-  def read(node_id, {height, key}) do
-    GenServer.call(
-      Registry.via(node_id, __MODULE__),
-      {:read, {height, key}},
-      :infinity
+    :mnesia.create_table(
+      blocks_table(node_id),
+      rocks_opt ++ [attributes: [:round, :block]]
     )
   end
 
-  def add(node_id, args = {_height, %{write: _writes, append: _appends}}) do
-    GenServer.call(
-      Registry.via(node_id, __MODULE__),
-      {:add, args},
-      :infinity
-    )
+  ############################################################
+  #                      Private Filters                     #
+  ############################################################
+
+  defp this_module_filter() do
+    %EventBroker.Filters.SourceModule{module: __MODULE__}
   end
 
-  @spec write(String.t(), {non_neg_integer(), list(any())}) :: :ok
-  def write(node_id, {height, kvlist}) do
-    GenServer.call(
-      Registry.via(node_id, __MODULE__),
-      {:write, {height, kvlist}},
-      :infinity
-    )
-  end
-
-  @spec append(String.t(), {non_neg_integer(), list(any())}) :: :ok
-  def append(node_id, {height, kvlist}) do
-    GenServer.call(
-      Registry.via(node_id, __MODULE__),
-      {:append, {height, kvlist}},
-      :infinity
-    )
-  end
-
-  @spec commit(
-          String.t(),
-          non_neg_integer(),
-          list(Anoma.Node.Transaction.Mempool.Tx.t()) | nil
-        ) :: :ok
-  def commit(node_id, block_round, writes) do
-    GenServer.call(
-      Registry.via(node_id, __MODULE__),
-      {:commit, block_round, writes, self()}
-    )
-  end
-
-  @spec blocking_read(String.t(), non_neg_integer(), any(), GenServer.from()) ::
-          :ok
-  defp blocking_read(node_id, height, key, from) do
-    receive do
-      # if the key we care about was written at exactly the height we
-      # care about, then we already have the value for free
-      %EventBroker.Event{
-        body: %Node.Event{
-          body: %__MODULE__.WriteEvent{height: ^height, writes: writes}
-        }
-      } ->
-        case Enum.find(writes, fn {keywrite, _value} -> key == keywrite end) do
-          # try reading in history instead
-          nil ->
-            GenServer.reply(from, read(node_id, {height, key}))
-
-          # return value
-          {_key, value} ->
-            GenServer.reply(from, {:ok, value})
-        end
-
-      _ ->
-        IO.puts("this should be unreachable")
-    end
-
-    EventBroker.unsubscribe_me([
-      Node.Event.node_filter(node_id),
-      this_module_filter(),
-      height_filter(height)
-    ])
-  end
+  ############################################################
+  #                      ABWrite Helpers                     #
+  ############################################################
 
   # todo: should exclude same key being overwritten at same height
   @spec abwrite(
-          :append | :write | :add,
+          write_opts(),
           {non_neg_integer(), list(any()) | %{write: list(), append: list()}},
           t()
         ) ::
           {t(), list()}
-  def abwrite(:add, {height, %{write: writes, append: appends}}, state) do
+  defp abwrite(:add, {height, %{write: writes, append: appends}}, state) do
     {new_state, updates1} = abwrite(:write, {height, writes}, state)
     {final_state, updates2} = abwrite(:append, {height, appends}, new_state)
 
     {final_state, updates1 ++ updates2}
   end
 
-  def abwrite(flag, {height, kvlist}, state) do
+  defp abwrite(flag, {height, kvlist}, state) do
     for {key, value} <- kvlist,
         reduce: {%__MODULE__{state | uncommitted_height: height}, []} do
       {state_acc, list} ->
-        key_old_updates = Map.get(state_acc.uncommitted_updates, key, [])
-
-        key_new_updates =
-          with [latest_height | _] <- key_old_updates,
-               true <- height == latest_height do
-            key_old_updates
-          else
-            _e -> [height | key_old_updates]
-          end
+        new_key_heights = new_key_heights(key, state_acc)
 
         new_updates =
-          Map.put(state_acc.uncommitted_updates, key, key_new_updates)
+          Map.put(state_acc.uncommitted_updates, key, new_key_heights)
 
         {new_kv, event_writes_local} =
           case flag do
             :append ->
-              do_append(state_acc, state, height, key, value, list)
+              do_append(state_acc, state, key, value, list)
 
             :write ->
-              do_write(state_acc, height, key, value, kvlist)
+              do_write(state_acc, key, value, kvlist)
           end
 
         {%__MODULE__{
@@ -312,9 +375,11 @@ defmodule Anoma.Node.Transaction.Storage do
     end
   end
 
-  @spec do_append(t(), t(), non_neg_integer(), any(), any(), list()) ::
+  @spec do_append(t(), t(), any(), any(), list()) ::
           {any(), list()}
-  defp do_append(state_acc, state, height, key, value, list) do
+  defp do_append(state_acc, state = %__MODULE__{}, key, value, list) do
+    height = state_acc.uncommitted_height
+
     old_set_value =
       case Map.get(state_acc.uncommitted, {height, key}) do
         nil ->
@@ -339,18 +404,21 @@ defmodule Anoma.Node.Transaction.Storage do
     {new_kv, [{key, new_set_value} | list]}
   end
 
-  @spec do_write(t(), non_neg_integer(), any(), any(), list()) ::
+  # Write to the latest
+  @spec do_write(t(), any(), any(), list()) ::
           {any(), list()}
-  defp do_write(state_acc, height, key, value, kvlist) do
+  defp do_write(state, key, value, kvlist) do
+    height = state.uncommitted_height
+
     new_kv =
-      Map.put_new(state_acc.uncommitted, {height, key}, value)
+      Map.put_new(state.uncommitted, {height, key}, value)
 
     {new_kv, kvlist}
   end
 
   @spec read_in_past(non_neg_integer(), any(), t()) ::
           :absent | :error | {:ok, term()}
-  def read_in_past(height, key, state) do
+  defp read_in_past(height, key, state) do
     case Map.get(state.uncommitted_updates, key) do
       nil ->
         tx1 = fn -> :mnesia.read(updates_table(state.node_id), key) end
@@ -399,6 +467,33 @@ defmodule Anoma.Node.Transaction.Storage do
     end
   end
 
+  @spec new_key_heights(any(), t()) :: [non_neg_integer()]
+  defp new_key_heights(key, state = %__MODULE__{uncommitted_height: height}) do
+    key_old_updates = Map.get(state.uncommitted_updates, key, [])
+
+    with [latest_height | _] <- key_old_updates,
+         true <- height == latest_height do
+      key_old_updates
+    else
+      _e -> [height | key_old_updates]
+    end
+  end
+
+  ############################################################
+  #                    Blocking Operations                   #
+  ############################################################
+
+  defp block_spawn(height, call, node_id) do
+    {:ok, pid} =
+      Task.start(call)
+
+    EventBroker.subscribe(pid, [
+      Node.Event.node_filter(node_id),
+      this_module_filter(),
+      height_filter(height)
+    ])
+  end
+
   def blocking_write(node_id, height, kvlist, from) do
     awaited_height = height - 1
 
@@ -418,43 +513,35 @@ defmodule Anoma.Node.Transaction.Storage do
     ])
   end
 
-  defp this_module_filter() do
-    %EventBroker.Filters.SourceModule{module: __MODULE__}
-  end
+  @spec blocking_read(String.t(), non_neg_integer(), any(), GenServer.from()) ::
+          :ok
+  defp blocking_read(node_id, height, key, from) do
+    receive do
+      # if the key we care about was written at exactly the height we
+      # care about, then we already have the value for free
+      %EventBroker.Event{
+        body: %Node.Event{
+          body: %__MODULE__.WriteEvent{height: ^height, writes: writes}
+        }
+      } ->
+        case Enum.find(writes, fn {keywrite, _value} -> key == keywrite end) do
+          # try reading in history instead
+          nil ->
+            GenServer.reply(from, read(node_id, {height, key}))
 
-  defp height_filter(height) do
-    %__MODULE__.HeightFilter{height: height}
-  end
+          # return value
+          {_key, value} ->
+            GenServer.reply(from, {:ok, value})
+        end
 
-  @spec init_tables(atom(), bool()) :: any()
-  def init_tables(node_id, rocks) do
-    rocks_opt = Anoma.Utility.rock_opts(rocks)
+      _ ->
+        IO.puts("this should be unreachable")
+    end
 
-    :mnesia.create_table(
-      values_table(node_id),
-      rocks_opt ++ [attributes: [:key, :value]]
-    )
-
-    :mnesia.create_table(
-      updates_table(node_id),
-      rocks_opt ++ [attributes: [:key, :value]]
-    )
-
-    :mnesia.create_table(
-      blocks_table(node_id),
-      rocks_opt ++ [attributes: [:round, :block]]
-    )
-  end
-
-  def blocks_table(node_id) do
-    String.to_atom("#{__MODULE__.Blocks}_#{:erlang.phash2(node_id)}")
-  end
-
-  def values_table(node_id) do
-    String.to_atom("#{__MODULE__.Values}_#{:erlang.phash2(node_id)}")
-  end
-
-  def updates_table(node_id) do
-    String.to_atom("#{__MODULE__.Updates}_#{:erlang.phash2(node_id)}")
+    EventBroker.unsubscribe_me([
+      Node.Event.node_filter(node_id),
+      this_module_filter(),
+      height_filter(height)
+    ])
   end
 end
