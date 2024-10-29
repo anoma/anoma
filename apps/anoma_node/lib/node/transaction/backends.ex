@@ -81,7 +81,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   def execute(node_id, {:debug_bloblike, tx}, id) do
-    execute_candidate(node_id, tx, id, &store_value(node_id, &1, &2))
+    execute_candidate(node_id, tx, id, &blob_store(node_id, &1, &2))
   end
 
   def execute(node_id, {:transparent_resource, tx}, id) do
