@@ -8,18 +8,20 @@ defmodule Anoma.Client.Examples.EClient do
   """
   use TypedStruct
 
-  alias __MODULE__
   alias Anoma.Client
+  alias Anoma.Client.Examples.EClient
   alias Anoma.Node.Examples.ENode
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.Intent
-  alias Anoma.Protobuf.IntentPool.AddIntent
-  alias Anoma.Protobuf.IntentPool.ListIntents
-  alias Anoma.Protobuf.Intents
-  alias Anoma.Protobuf.Input
-  alias Anoma.Protobuf.Prove
+  alias Anoma.Protobuf.IndexerService
+  alias Anoma.Protobuf.Intents.Add
+  alias Anoma.Protobuf.Intents.Intent
+  alias Anoma.Protobuf.Intents.List
+  alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.Nock.Input
+  alias Anoma.Protobuf.Nock.Prove
+  alias Anoma.Protobuf.NockService
 
   import ExUnit.Assertions
 
@@ -126,8 +128,11 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_intents(EConnection.t()) :: EConnection.t()
   def list_intents(conn \\ setup()) do
-    request = %ListIntents.Request{}
-    {:ok, _reply} = Intents.Stub.list_intents(conn.channel, request)
+    request = %List.Request{}
+    Anoma.Protobuf.IntentsService.Stub
+
+    {:ok, _reply} = IntentsService.Stub.list_intents(conn.channel, request)
+
     conn
   end
 
@@ -136,14 +141,14 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec add_intent(EConnection.t()) :: EConnection.t()
   def add_intent(conn \\ setup()) do
-    request = %AddIntent.Request{intent: %Intent{value: 1}}
+    request = %Add.Request{intent: %Intent{value: 1}}
 
-    {:ok, _reply} = Intents.Stub.add_intent(conn.channel, request)
+    {:ok, _reply} = IntentsService.Stub.add_intent(conn.channel, request)
 
     # fetch the intents to ensure it was added
-    request = %ListIntents.Request{}
+    request = %List.Request{}
 
-    {:ok, reply} = Intents.Stub.list_intents(conn.channel, request)
+    {:ok, reply} = IntentsService.Stub.list_intents(conn.channel, request)
 
     assert reply.intents == ["1"]
 
@@ -156,7 +161,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec list_nullifiers(EConnection.t()) :: EConnection.t()
   def list_nullifiers(conn \\ setup()) do
     request = %Nullifiers.Request{}
-    {:ok, _reply} = Intents.Stub.list_nullifiers(conn.channel, request)
+    {:ok, _reply} = IndexerService.Stub.list_nullifiers(conn.channel, request)
 
     conn
   end
@@ -169,7 +174,7 @@ defmodule Anoma.Client.Examples.EClient do
     request = %UnrevealedCommits.Request{}
 
     {:ok, _reply} =
-      Intents.Stub.list_unrevealed_commits(conn.channel, request)
+      IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
 
     conn
   end
@@ -182,7 +187,7 @@ defmodule Anoma.Client.Examples.EClient do
     request = %UnspentResources.Request{}
 
     {:ok, _reply} =
-      Intents.Stub.list_unspent_resources(conn.channel, request)
+      IndexerService.Stub.list_unspent_resources(conn.channel, request)
 
     conn
   end
@@ -200,7 +205,7 @@ defmodule Anoma.Client.Examples.EClient do
       public_inputs: [input]
     }
 
-    {:ok, result} = Intents.Stub.prove(conn.channel, request)
+    {:ok, result} = NockService.Stub.prove(conn.channel, request)
 
     assert {:ok, 123} == Nock.Cue.cue(elem(result.result, 1))
 
@@ -220,7 +225,7 @@ defmodule Anoma.Client.Examples.EClient do
       public_inputs: [input]
     }
 
-    {:ok, result} = Intents.Stub.prove(conn.channel, request)
+    {:ok, result} = NockService.Stub.prove(conn.channel, request)
 
     assert {:ok, 123} == Nock.Cue.cue(elem(result.result, 1))
 
@@ -241,7 +246,7 @@ defmodule Anoma.Client.Examples.EClient do
       public_inputs: [input]
     }
 
-    {:ok, result} = Intents.Stub.prove(conn.channel, request)
+    {:ok, result} = NockService.Stub.prove(conn.channel, request)
 
     assert {:ok, 9} == Nock.Cue.cue(elem(result.result, 1))
 
