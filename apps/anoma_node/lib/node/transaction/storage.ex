@@ -110,7 +110,8 @@ defmodule Anoma.Node.Transaction.Storage do
     )
   end
 
-  @spec append(String.t(), {non_neg_integer(), list({any(), any()})}) :: :ok
+  @spec append(String.t(), {non_neg_integer(), list({any(), MapSet.t()})}) ::
+          :ok
   def append(node_id, {height, kvlist}) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
@@ -392,7 +393,7 @@ defmodule Anoma.Node.Transaction.Storage do
           res
       end
 
-    new_set_value = MapSet.put(old_set_value, value)
+    new_set_value = MapSet.union(old_set_value, value)
 
     new_kv =
       Map.put(

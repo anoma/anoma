@@ -78,7 +78,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     )
   end
 
-  @spec append(String.t(), {binary(), list({any(), any()})}) :: :ok
+  @spec append(String.t(), {binary(), list({any(), MapSet.t()})}) :: :ok
   def append(node_id, {id, kvlist}) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
