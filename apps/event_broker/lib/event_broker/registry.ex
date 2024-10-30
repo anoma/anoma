@@ -63,6 +63,7 @@ defmodule EventBroker.Registry do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @spec handle_call(any(), any(), any()) :: any()
   def handle_call({:subscribe, pid, filter_spec_list}, _from, state) do
     registered = state.registered_filters
 

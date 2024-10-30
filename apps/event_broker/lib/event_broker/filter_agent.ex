@@ -47,6 +47,7 @@ defmodule EventBroker.FilterAgent do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @spec handle_call(any(), any(), any()) :: any()
   def handle_call({:subscribe, pid}, _from, state) do
     {:reply, :ok, %{state | subscribers: MapSet.put(state.subscribers, pid)}}
   end

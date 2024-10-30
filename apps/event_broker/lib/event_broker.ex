@@ -110,7 +110,7 @@ defmodule EventBroker do
   all agents which have shut down from my registry map and return `:ok`
   """
 
-  @spec unsubscribe(pid(), filter_spec_list) :: :ok
+  @spec unsubscribe(pid(), filter_spec_list, atom()) :: :ok
   def unsubscribe(pid, filter_spec_list, registry \\ EventBroker.Registry) do
     GenServer.call(registry, {:unsubscribe, pid, filter_spec_list})
   end
