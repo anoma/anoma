@@ -93,19 +93,9 @@ defmodule Anoma.Node.Transaction.Backends do
     )
   end
 
-  @spec gate_call(Noun.t(), Nock.t(), binary(), String.t()) ::
-          {:ok, Noun.t()} | :vm_error
-  defp gate_call(tx_code, env, id, node_id) do
-    with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
-         {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
-         {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
-      res = {:ok, result}
-      result_event(id, res, node_id)
-      res
-    else
-      _e -> :vm_error
-    end
-  end
+  ############################################################
+  #                         Helpers                          #
+  ############################################################
 
   @spec execute_candidate(node_id, Noun.t(), id, process) :: :ok
         when id: binary(),
@@ -124,6 +114,20 @@ defmodule Anoma.Node.Transaction.Backends do
       _e ->
         Ordering.write(node_id, {id, []})
         complete_event(id, :error, node_id)
+    end
+  end
+
+  @spec gate_call(Noun.t(), Nock.t(), binary(), String.t()) ::
+          {:ok, Noun.t()} | :vm_error
+  defp gate_call(tx_code, env, id, node_id) do
+    with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
+         {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
+         {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
+      res = {:ok, result}
+      result_event(id, res, node_id)
+      res
+    else
+      _e -> :vm_error
     end
   end
 
