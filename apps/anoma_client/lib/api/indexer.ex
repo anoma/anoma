@@ -1,4 +1,5 @@
 defmodule Anoma.Client.Api.Servers.Indexer do
+  alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
@@ -6,23 +7,29 @@ defmodule Anoma.Client.Api.Servers.Indexer do
 
   use GRPC.Server, service: Anoma.Protobuf.IndexerService.Service
 
+  require Logger
+
   @spec list_nullifiers(Nullifiers.Request.t(), Stream.t()) ::
           Nullifiers.Response.t()
-  def list_nullifiers(_request, _stream) do
-    %Nullifiers.Response{nullifiers: ["null", "ifier"]}
+  def list_nullifiers(request, _stream) do
+    Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
+    {:ok, nullifiers} = GRPCProxy.list_nullifiers()
+    nullifiers
   end
 
   @spec list_unrevealed_commits(UnrevealedCommits.Request.t(), Stream.t()) ::
           UnrevealedCommits.Response.t()
-  def list_unrevealed_commits(_request, _stream) do
-    %UnrevealedCommits.Response{commits: ["commit1", "commit2"]}
+  def list_unrevealed_commits(request, _stream) do
+    Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
+    {:ok, commits} = GRPCProxy.list_unrevealed_commits()
+    commits
   end
 
   @spec list_unspent_resources(UnspentResources.Request.t(), Stream.t()) ::
           UnspentResources.Response.t()
-  def list_unspent_resources(_request, _stream) do
-    %UnspentResources.Response{
-      unspent_resources: ["unspent resource 1", "unspent resource 2"]
-    }
+  def list_unspent_resources(request, _stream) do
+    Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
+    {:ok, resources} = GRPCProxy.list_unspent_resources()
+    resources
   end
 end
