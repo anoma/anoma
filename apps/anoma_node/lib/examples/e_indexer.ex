@@ -13,8 +13,6 @@ defmodule Anoma.Node.Examples.EIndexer do
   end
 
   def indexer_reads_nullifier(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
-    Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
@@ -29,8 +27,6 @@ defmodule Anoma.Node.Examples.EIndexer do
   end
 
   def indexer_reads_nullifiers(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
-    Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
@@ -46,8 +42,6 @@ defmodule Anoma.Node.Examples.EIndexer do
   end
 
   def indexer_reads_commitments(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
-    Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
@@ -63,8 +57,6 @@ defmodule Anoma.Node.Examples.EIndexer do
   end
 
   def indexer_does_not_read_revealed(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
-    Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
@@ -83,8 +75,6 @@ defmodule Anoma.Node.Examples.EIndexer do
   end
 
   def indexer_reads_unrevealed(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
-    Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
