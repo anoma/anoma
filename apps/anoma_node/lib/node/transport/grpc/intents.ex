@@ -1,6 +1,5 @@
 defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
   alias Anoma.Node.Intents.IntentPool
-  alias Anoma.Node.Registry
   alias Anoma.Protobuf.Intents.Add
   alias Anoma.Protobuf.Intents.List
   alias Anoma.RM.DumbIntent
@@ -16,12 +15,8 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
       "GRPC #{inspect(__ENV__.function)} request: #{inspect(request)}"
     )
 
-    # get the intents from the intenet pool and turn them into
-    # protobuf structs
-    {:ok, local_node_id} = Registry.local_node_id()
-
     intents =
-      IntentPool.intents(local_node_id)
+      IntentPool.intents(request.node_info.node_id)
       |> Enum.map(&inspect(&1.value))
 
     %List.Response{intents: intents}
@@ -35,8 +30,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
     )
 
     new_intent = %DumbIntent{value: request.intent.value}
-    {:ok, local_node_id} = Registry.local_node_id()
-    IntentPool.new_intent(local_node_id, new_intent)
+    IntentPool.new_intent(request.node_info.node_id, new_intent)
 
     %Add.Response{result: "intent added"}
   end

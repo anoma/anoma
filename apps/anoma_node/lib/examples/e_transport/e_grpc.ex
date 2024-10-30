@@ -14,6 +14,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.NodeInfo
 
   import ExUnit.Assertions
 
@@ -29,8 +30,10 @@ defmodule Anoma.Node.Examples.EGRPC do
 
     ### Fields
     - `:channel` - The channel for making grpc requests.
+    - `:node`    - The node to which the client is connected.
     """
     field(:channel, any())
+    field(:node, ENode.t())
   end
 
   @doc """
@@ -55,7 +58,7 @@ defmodule Anoma.Node.Examples.EGRPC do
     result =
       case GRPC.Stub.connect("localhost:#{enode.grpc_port}") do
         {:ok, channel} ->
-          %EGRPC{channel: channel}
+          %EGRPC{channel: channel, node: enode}
 
         {:error, reason} ->
           Logger.error("GRPC connection failed: #{inspect(reason)}")
@@ -71,7 +74,8 @@ defmodule Anoma.Node.Examples.EGRPC do
   I list the intents over grpc on the client.
   """
   def list_intents(%EGRPC{} = client \\ connect_to_node()) do
-    request = %List.Request{}
+    node_id = %NodeInfo{node_id: client.node.node_id}
+    request = %List.Request{node_info: node_id}
 
     {:ok, reply} = IntentsService.Stub.list_intents(client.channel, request)
 
@@ -82,14 +86,17 @@ defmodule Anoma.Node.Examples.EGRPC do
   I add an intent to the client.
   """
   def add_intent(%EGRPC{} = client \\ connect_to_node()) do
+    node_id = %NodeInfo{node_id: client.node.node_id}
+
     request = %Add.Request{
+      node_info: node_id,
       intent: %Intent{value: 1}
     }
 
     {:ok, _reply} = IntentsService.Stub.add_intent(client.channel, request)
 
     # fetch the intents to ensure it was added
-    request = %List.Request{}
+    request = %List.Request{node_info: node_id}
 
     {:ok, reply} = IntentsService.Stub.list_intents(client.channel, request)
 
@@ -100,7 +107,9 @@ defmodule Anoma.Node.Examples.EGRPC do
   I list all nullifiers.
   """
   def list_nullifiers(%EGRPC{} = client \\ connect_to_node()) do
-    request = %Nullifiers.Request{}
+    node_id = %NodeInfo{node_id: client.node.node_id}
+
+    request = %Nullifiers.Request{node_info: node_id}
 
     {:ok, _reply} =
       IndexerService.Stub.list_nullifiers(client.channel, request)
@@ -110,7 +119,8 @@ defmodule Anoma.Node.Examples.EGRPC do
   I list all unrevealed commits.
   """
   def list_unrevealed_commits(%EGRPC{} = client \\ connect_to_node()) do
-    request = %UnrevealedCommits.Request{}
+    node_id = %NodeInfo{node_id: client.node.node_id}
+    request = %UnrevealedCommits.Request{node_info: node_id}
 
     {:ok, _reply} =
       IndexerService.Stub.list_unrevealed_commits(client.channel, request)
@@ -120,7 +130,8 @@ defmodule Anoma.Node.Examples.EGRPC do
   I list all unspent resources.
   """
   def list_unspent_resources(%EGRPC{} = client \\ connect_to_node()) do
-    request = %UnspentResources.Request{}
+    node_id = %NodeInfo{node_id: client.node.node_id}
+    request = %UnspentResources.Request{node_info: node_id}
 
     {:ok, _reply} =
       IndexerService.Stub.list_unspent_resources(client.channel, request)
