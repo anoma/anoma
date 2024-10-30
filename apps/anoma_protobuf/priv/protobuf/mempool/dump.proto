@@ -4,6 +4,4 @@ package Anoma.Protobuf.Mempool.Dump;
 
 message Request {}
 
-message Response {
-  repeated string dumps = 1;
-}
+message Response { repeated string dumps = 1; }
