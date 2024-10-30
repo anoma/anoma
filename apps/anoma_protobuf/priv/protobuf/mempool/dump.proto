@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Mempool.Dump;
+
+import "node_info.proto";
+
+message Request { NodeInfo node_info = 1; }
+
+message Response { repeated string dumps = 1; }

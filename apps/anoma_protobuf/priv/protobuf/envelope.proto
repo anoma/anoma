@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package Anoma.Protobuf;
+
+import "node_info.proto";
+import "announcement.proto";
+import "intents/list_intents.proto";
+import "intents/add_intent.proto";
+import "indexer/nullifiers.proto";
+import "indexer/unrevealed_commits.proto";
+import "indexer/unspent_resources.proto";
+import "mempool/dump.proto";
+
+message Envelope {
+  NodeInfo sender_info = 1; // node information of the sender.
+  bytes message_id = 2;     // the message id.
+
+  oneof inner_message {
+    // announcement
+    Anoma.Protobuf.Announce.Announcement announcement = 3;
+
+    // list intents
+    Anoma.Protobuf.Intents.List.Request list_intents_request = 4;
+    Anoma.Protobuf.Intents.List.Response list_intents_response = 5;
+
+    Anoma.Protobuf.Intents.Add.Request add_intent_request = 6;
+    Anoma.Protobuf.Intents.Add.Response add_intent_response = 7;
+
+    Anoma.Protobuf.Indexer.Nullifiers.Request nullifiers_request = 8;
+    Anoma.Protobuf.Indexer.Nullifiers.Response nullifiers_response = 9;
+
+    Anoma.Protobuf.Indexer.UnrevealedCommits.Request
+        unrevealed_commits_request = 10;
+    Anoma.Protobuf.Indexer.UnrevealedCommits.Response
+        unrevealed_commits_response = 11;
+
+    Anoma.Protobuf.Indexer.UnspentResources.Request unspent_resources_request =
+        12;
+    Anoma.Protobuf.Indexer.UnspentResources.Response
+        unspent_resources_response = 13;
+
+    // mempool dump
+    Anoma.Protobuf.Mempool.Dump.Request mempool_dump_request = 14;
+    Anoma.Protobuf.Mempool.Dump.Response mempool_dump_response = 15;
+  }
+}

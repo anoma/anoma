@@ -8,19 +8,21 @@ defmodule Anoma.Client.Examples.EClient do
   """
   use TypedStruct
 
-  alias __MODULE__
   alias Anoma.Client
+  alias Anoma.Client.Examples.EClient
   alias Anoma.Node.Examples.ENode
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.Intent
-  alias Anoma.Protobuf.IntentPool.AddIntent
-  alias Anoma.Protobuf.IntentPool.ListIntents
-  alias Anoma.Protobuf.Intents
-  alias Anoma.Protobuf.Prove
-  alias Anoma.Protobuf.RunNock
-  alias Anoma.Protobuf.Input
+  alias Anoma.Protobuf.IndexerService
+  alias Anoma.Protobuf.Intents.Add
+  alias Anoma.Protobuf.Intents.Intent
+  alias Anoma.Protobuf.Intents.List
+  alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.Nock.Input
+  alias Anoma.Protobuf.Nock.Prove
+  alias Anoma.Protobuf.NockService
+  alias Anoma.Protobuf.NodeInfo
 
   import ExUnit.Assertions
 
@@ -56,6 +58,7 @@ defmodule Anoma.Client.Examples.EClient do
     - `:channel`    - The channel for making grpc requests.
     """
     field(:channel, any())
+    field(:client, EClient.t())
   end
 
   ############################################################
@@ -91,7 +94,8 @@ defmodule Anoma.Client.Examples.EClient do
   def create_example_client(enode \\ create_single_example_node()) do
     kill_existing_client()
 
-    {:ok, client} = Client.connect("localhost", enode.grpc_port, 0)
+    {:ok, client} =
+      Client.connect("localhost", enode.grpc_port, 0, enode.node_id)
 
     %EClient{supervisor: nil, client: client, node: enode}
   end
@@ -103,7 +107,7 @@ defmodule Anoma.Client.Examples.EClient do
   def create_example_connection(eclient \\ create_example_client()) do
     case GRPC.Stub.connect("localhost:#{eclient.client.grpc_port}") do
       {:ok, channel} ->
-        %EConnection{channel: channel}
+        %EConnection{channel: channel, client: eclient}
 
       {:error, reason} ->
         {:error, reason}
@@ -113,6 +117,7 @@ defmodule Anoma.Client.Examples.EClient do
   @doc """
   I create the setup necessary to run each example below without arguments.
   """
+  @spec setup() :: EConnection.t()
   def setup() do
     create_example_connection()
   end
@@ -126,8 +131,10 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_intents(EConnection.t()) :: EConnection.t()
   def list_intents(conn \\ setup()) do
-    request = %ListIntents.Request{}
-    {:ok, _reply} = Intents.Stub.list_intents(conn.channel, request)
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %List.Request{node_info: node_id}
+
+    {:ok, _reply} = IntentsService.Stub.list_intents(conn.channel, request)
     conn
   end
 
@@ -136,14 +143,15 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec add_intent(EConnection.t()) :: EConnection.t()
   def add_intent(conn \\ setup()) do
-    request = %AddIntent.Request{intent: %Intent{value: 1}}
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %Add.Request{node_info: node_id, intent: %Intent{value: 1}}
 
-    {:ok, _reply} = Intents.Stub.add_intent(conn.channel, request)
+    {:ok, _reply} = IntentsService.Stub.add_intent(conn.channel, request)
 
     # fetch the intents to ensure it was added
-    request = %ListIntents.Request{}
+    request = %List.Request{}
 
-    {:ok, reply} = Intents.Stub.list_intents(conn.channel, request)
+    {:ok, reply} = IntentsService.Stub.list_intents(conn.channel, request)
 
     assert reply.intents == ["1"]
 
@@ -155,8 +163,9 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_nullifiers(EConnection.t()) :: EConnection.t()
   def list_nullifiers(conn \\ setup()) do
-    request = %Nullifiers.Request{}
-    {:ok, _reply} = Intents.Stub.list_nullifiers(conn.channel, request)
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %Nullifiers.Request{node_info: node_id}
+    {:ok, _reply} = IndexerService.Stub.list_nullifiers(conn.channel, request)
 
     conn
   end
@@ -166,10 +175,11 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_unrevealed_commits(EConnection.t()) :: EConnection.t()
   def list_unrevealed_commits(conn \\ setup()) do
-    request = %UnrevealedCommits.Request{}
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %UnrevealedCommits.Request{node_info: node_id}
 
     {:ok, _reply} =
-      Intents.Stub.list_unrevealed_commits(conn.channel, request)
+      IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
 
     conn
   end
@@ -179,103 +189,135 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_unspent_resources(EConnection.t()) :: EConnection.t()
   def list_unspent_resources(conn \\ setup()) do
-    request = %UnspentResources.Request{}
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %UnspentResources.Request{node_info: node_id}
 
     {:ok, _reply} =
-      Intents.Stub.list_unspent_resources(conn.channel, request)
+      IndexerService.Stub.list_unspent_resources(conn.channel, request)
 
     conn
   end
 
   @doc """
-  I prove something using the client.
-  """
-  def prove_something_jammed(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    pub_inputs = [<<>>, <<>>, <<>>]
-    priv_inputs = [<<>>, <<>>, <<>>]
-
-    # the client sends a knock program that is jammed.
-    nock_program = nock_str |> Noun.Format.parse_always() |> Nock.Jam.jam()
-
-    # each input is jammed individually
-    inputs_pub =
-      Enum.map(pub_inputs, &%Input{input: {:jammed, Nock.Jam.jam(&1)}})
-
-    inputs_priv =
-      Enum.map(priv_inputs, &%Input{input: {:jammed, Nock.Jam.jam(&1)}})
-
-    request = %Prove.Request{
-      program: {:jammed_program, nock_program},
-      public_inputs: inputs_pub,
-      private_inputs: inputs_priv
-    }
-
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
-  end
-
-  @doc """
-  I prove something using the client.
-  """
-  def prove_something_plain_text(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    pub_inputs = ["1", "2", "3"]
-    priv_inputs = ["4", "5", "6"]
-
-    # build input structs
-    pub_inputs = Enum.map(pub_inputs, &%Input{input: {:text, "#{&1}"}})
-    priv_inputs = Enum.map(priv_inputs, &%Input{input: {:text, "#{&1}"}})
-
-    request = %Prove.Request{
-      program: {:text_program, nock_str},
-      public_inputs: pub_inputs,
-      private_inputs: priv_inputs
-    }
-
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
-  end
-
-  @doc """
   I run a plaintext nock program using the client.
   """
-  def run_something_plain_text(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    inputs = ["1", "2", "3"]
+  @spec prove_something_text(EConnection.t()) :: Prove.Response.t()
+  def prove_something_text(conn \\ setup()) do
+    program = text_program_example()
+    input = text_input("1")
 
-    # build input structs
-    inputs = Enum.map(inputs, &%Input{input: {:text, "#{&1}"}})
-
-    request = %RunNock.Request{
-      program: {:text_program, nock_str},
-      inputs: inputs
+    request = %Prove.Request{
+      program: {:text_program, program},
+      public_inputs: [input]
     }
 
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+    {:ok, result} = NockService.Stub.prove(conn.channel, request)
+
+    assert {:ok, 123} == Nock.Cue.cue(elem(result.result, 1))
+
+    result
   end
 
   @doc """
   I run a jammed nock program using the client.
   """
-  def run_something_jammed(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    inputs = ["1", "2", "3"]
+  @spec prove_something_jammed(EConnection.t()) :: Prove.Response.t()
+  def prove_something_jammed(conn \\ setup()) do
+    program = Nock.Jam.jam([[1 | 123], 0 | 0])
+    input = jammed_input(Nock.Jam.jam(1))
 
-    nock_program = nock_str |> Noun.Format.parse_always() |> Nock.Jam.jam()
-
-    # build input structs
-    inputs =
-      Enum.map(
-        inputs,
-        &%Input{
-          input: {:jammed, &1 |> Noun.Format.parse_always() |> Nock.Jam.jam()}
-        }
-      )
-
-    request = %RunNock.Request{
-      program: {:jammed_program, nock_program},
-      inputs: inputs
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: [input]
     }
 
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+    {:ok, result} = NockService.Stub.prove(conn.channel, request)
+
+    assert {:ok, 123} == Nock.Cue.cue(elem(result.result, 1))
+
+    result
+  end
+
+  @doc """
+  I run a Juvix program that squares its inputs.
+  """
+  @spec run_juvix_factorial(EConnection.t()) :: Prove.Response.t()
+  def run_juvix_factorial(conn \\ setup()) do
+    # assume the program and inputs are jammed
+    program = jammed_program_juvix_squared()
+    input = jammed_input(Nock.Jam.jam(3))
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: [input]
+    }
+
+    {:ok, result} = NockService.Stub.prove(conn.channel, request)
+
+    assert {:ok, 9} == Nock.Cue.cue(elem(result.result, 1))
+
+    result
+  end
+
+  ############################################################
+  #                           Helpers                        #
+  ############################################################
+
+  @spec jammed_program_juvix_squared() :: binary()
+  def jammed_program_juvix_squared() do
+    :code.priv_dir(:anoma_client)
+    |> Path.join("test_juvix/Squared.nockma")
+    |> File.read!()
+  end
+
+  @spec noun_program_juvix_squared() :: Noun.t()
+  def noun_program_juvix_squared() do
+    jammed_program_juvix_squared()
+    |> Nock.Cue.cue()
+    |> elem(1)
+  end
+
+  @spec text_program_example() :: binary()
+  def text_program_example() do
+    "[[1 123] 0 0]"
+  end
+
+  @spec jammed_program_example() :: binary()
+  def jammed_program_example() do
+    noun_program_example()
+    |> Nock.Jam.jam()
+  end
+
+  @spec noun_program_example() :: Noun.t()
+  def noun_program_example() do
+    text_program_example()
+    |> Noun.Format.parse_always()
+  end
+
+  @spec text_program_minisquare() :: binary()
+  def text_program_minisquare() do
+    "[[1 123] 0 0]"
+  end
+
+  @spec jammed_program_minisquare() :: binary()
+  def jammed_program_minisquare() do
+    noun_program_minisquare()
+    |> Nock.Jam.jam()
+  end
+
+  @spec noun_program_minisquare() :: Noun.t()
+  def noun_program_minisquare() do
+    text_program_minisquare()
+    |> Noun.Format.parse_always()
+  end
+
+  @spec jammed_input(any()) :: Input.t()
+  def jammed_input(value \\ <<>>) do
+    %Input{input: {:jammed, value}}
+  end
+
+  @spec text_input(any()) :: Input.t()
+  def text_input(value \\ "") do
+    %Input{input: {:text, value}}
   end
 end
