@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource.ComplianceInput do
+defmodule Anoma.RM.Shielded.ComplianceInput do
   @moduledoc """
   I represent a compliance's input.
   """
@@ -6,11 +6,11 @@ defmodule Anoma.ShieldedResource.ComplianceInput do
   alias __MODULE__
   use TypedStruct
 
-  alias Anoma.ShieldedResource
+  alias Anoma.RM.Shielded.Resource
 
   typedstruct enforce: true do
     # Input resource
-    field(:input_resource, ShieldedResource.t())
+    field(:input_resource, Resource.t())
     # Input resource merkle path
     field(:merkel_proof, CommitmentTree.Proof.t())
     # Nullifier key of the input resource
@@ -18,7 +18,7 @@ defmodule Anoma.ShieldedResource.ComplianceInput do
     # Ephemeral root
     field(:eph_root, binary(), default: <<0::256>>)
     # Output resource
-    field(:output_resource, ShieldedResource.t())
+    field(:output_resource, Resource.t())
     # Random value in delta proof(binding signature)
     field(:rcv, binary(), default: <<0::256>>)
   end
@@ -39,8 +39,8 @@ defmodule Anoma.ShieldedResource.ComplianceInput do
       )
 
     Cairo.generate_compliance_input_json(
-      ShieldedResource.to_bytes(input.input_resource),
-      ShieldedResource.to_bytes(input.output_resource),
+      Resource.to_bytes(input.input_resource),
+      Resource.to_bytes(input.output_resource),
       path,
       input.merkel_proof.path,
       input.input_nf_key |> :binary.bin_to_list(),

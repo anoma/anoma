@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource do
+defmodule Anoma.RM.Shielded.Resource do
   @moduledoc """
   I am a shielded resource.
   """
@@ -30,22 +30,22 @@ defmodule Anoma.ShieldedResource do
   end
 
   @doc "Randomizes the rseed of a resource."
-  def random(r = %ShieldedResource{}) do
+  def random(r = %Resource{}) do
     rseed = :crypto.strong_rand_bytes(32)
-    %ShieldedResource{r | rseed: rseed}
+    %Resource{r | rseed: rseed}
   end
 
   @doc """
   Set the nonce of a resource, the nonce of output resource comes from the
   nullifer of input recource in the compliance proof.
   """
-  def set_nonce(r = %ShieldedResource{}, nonce) do
-    %ShieldedResource{r | nonce: nonce}
+  def set_nonce(r = %Resource{}, nonce) do
+    %Resource{r | nonce: nonce}
   end
 
-  @spec commitment(ShieldedResource.t()) :: binary()
+  @spec commitment(Resource.t()) :: binary()
   @doc "A commitment to the given resource."
-  def commitment(resource = %ShieldedResource{}) do
+  def commitment(resource = %Resource{}) do
     # TODO: consider if we can get rid of the psi from commitment
     psi =
       [
@@ -92,11 +92,11 @@ defmodule Anoma.ShieldedResource do
     |> :binary.list_to_bin()
   end
 
-  @spec nullifier(ShieldedResource.t()) :: binary()
+  @spec nullifier(Resource.t()) :: binary()
   @doc """
   The nullifier of the given resource.
   """
-  def nullifier(resource = %ShieldedResource{}) do
+  def nullifier(resource = %Resource{}) do
     psi =
       [
         Constants.prf_expand_personalization_felt(),
@@ -114,8 +114,8 @@ defmodule Anoma.ShieldedResource do
     |> :binary.list_to_bin()
   end
 
-  @spec to_bytes(Anoma.ShieldedResource.t()) :: [byte()]
-  def to_bytes(resource = %ShieldedResource{}) do
+  @spec to_bytes(t()) :: [byte()]
+  def to_bytes(resource = %__MODULE__{}) do
     binaries =
       resource.logic <>
         resource.label <>
