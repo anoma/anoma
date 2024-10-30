@@ -147,7 +147,12 @@ defmodule Anoma.RM.Shielded.Transaction do
       resource_logic_valid =
         resource_logics_from_compliance == resource_logic_from_program
 
-      all_proofs_valid && delta_valid && resource_logic_valid
+      # check duplicate nfs
+      has_duplicate_nfs =
+        Enum.uniq(transaction.nullifiers) == transaction.nullifiers
+
+      all_proofs_valid && delta_valid && resource_logic_valid &&
+        has_duplicate_nfs
     end
 
     def cm_tree(_tx, _storage) do
