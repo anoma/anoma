@@ -9,6 +9,4 @@ This message contains all necessary information about a node
 that sends a request.
 */
 
-message NodeInfo {
-    bytes node_id = 1;
-  }
+message NodeInfo { bytes node_id = 1; }
