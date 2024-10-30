@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource.PartialTransaction do
+defmodule Anoma.RM.Shielded.PartialTransaction do
   @moduledoc """
   I am a shielded resource machine partial transaction.
   """
@@ -9,7 +9,7 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
 
   alias __MODULE__
   use TypedStruct
-  alias Anoma.ShieldedResource.ProofRecord
+  alias Anoma.RM.Shielded.{ProofRecord, ComplianceOutput, Tree, LogicOutput}
 
   typedstruct enforce: true do
     field(:logic_proofs, list(ProofRecord.t()), default: [])
@@ -75,7 +75,50 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
           acc && result
       end
 
-    all_logic_proofs_valid && all_compliance_proofs_valid
+    # Decode logic_outputs from resource logics
+    logic_outputs =
+      partial_transaction.logic_proofs
+      |> Enum.map(fn proof_record ->
+        proof_record.public_inputs
+        |> LogicOutput.from_public_input()
+      end)
+
+    # Decode complaince_outputs from compliance_proofs
+    complaince_outputs =
+      partial_transaction.compliance_proofs
+      |> Enum.map(fn proof_record ->
+        proof_record.public_inputs
+        |> ComplianceOutput.from_public_input()
+      end)
+
+    # Get self ids from logic_outputs
+    self_ids = Enum.map(logic_outputs, & &1.self_resource_id)
+
+    # Get cms and nfs from compliance_proofs
+    resource_tree_leaves =
+      complaince_outputs
+      |> Enum.flat_map(fn output -> [output.nullifier, output.output_cm] end)
+
+    # check self resource are all involved
+    all_resource_valid = self_ids == resource_tree_leaves
+
+    # Compute the expected resource tree
+    rt =
+      Tree.construct(
+        CommitmentTree.Spec.cairo_poseidon_resource_tree_spec(),
+        resource_tree_leaves
+      )
+
+    # check roots
+    all_roots_valid =
+      for output <- logic_outputs,
+          reduce: true do
+        acc ->
+          acc && rt.root == output.root
+      end
+
+    all_logic_proofs_valid && all_compliance_proofs_valid &&
+      all_resource_valid && all_roots_valid
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
