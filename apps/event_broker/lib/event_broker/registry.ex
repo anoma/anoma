@@ -2,7 +2,7 @@ defmodule EventBroker.Registry do
   @moduledoc """
   I am the Registry for the PubSub system.
 
-  I am the central registry of all the topic subscirptions and filters. I
+  I am the central registry of all the topic subscriptions and filters. I
   am responsible for spawning filter agents, (un)subscribing to them, and
   keeping track of relations between them.
   """
