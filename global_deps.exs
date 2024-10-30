@@ -2,7 +2,7 @@
 [
   {:cairo,
    git: "https://github.com/anoma/aarm-cairo",
-   ref: "dd2ed877e8d7c326a4a88dcf86ae32cd0183f3ae"},
+   ref: "d58d302857d8e1abb40747bcc603c2903ed3d65e"},
   {:enacl,
    git: "https://github.com/anoma/enacl/",
    ref: "23173637c495b85d56f205e4721cfe5afdef92e9"},
