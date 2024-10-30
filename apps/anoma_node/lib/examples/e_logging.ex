@@ -9,6 +9,8 @@ defmodule Anoma.Node.Examples.ELogging do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  use EventBroker.WithSubscription
+
   def check_tx_event(node_id \\ Node.example_random_id()) do
     ENode.start_node(node_id: node_id)
     table_name = Logging.table_name(node_id)
@@ -244,15 +246,15 @@ defmodule Anoma.Node.Examples.ELogging do
     write_consensus_leave_one_out(node_id)
     filter = [%Mempool.TxFilter{}]
 
-    EventBroker.subscribe_me(filter)
+    with_subscription [filter] do
+      Logging.restart_with_replay(node_id)
 
-    Logging.restart_with_replay(node_id)
+      :ok =
+        wait_for_tx(node_id, "id 2", "code 2")
 
-    :ok =
-      wait_for_tx(node_id, "id 2", "code 2")
-
-    :error_tx =
-      wait_for_tx(node_id, "id 1", "code 1")
+      :error_tx =
+        wait_for_tx(node_id, "id 1", "code 1")
+    end
 
     state = Anoma.Node.Registry.whereis(node_id, Mempool) |> :sys.get_state()
     nil = Map.get(state.transactions, "id 1")
@@ -267,23 +269,23 @@ defmodule Anoma.Node.Examples.ELogging do
 
     filter = [%Mempool.TxFilter{}]
 
-    EventBroker.subscribe_me(filter)
+    with_subscription [filter] do
+      Logging.restart_with_replay(node_id)
 
-    Logging.restart_with_replay(node_id)
+      :ok =
+        wait_for_tx(node_id, "id 1", "code 1")
 
-    :ok =
-      wait_for_tx(node_id, "id 1", "code 1")
+      :ok =
+        wait_for_tx(node_id, "id 2", "code 2")
 
-    :ok =
-      wait_for_tx(node_id, "id 2", "code 2")
+      :ok =
+        wait_for_consensus(node_id, ["id 1"])
 
-    :ok =
-      wait_for_consensus(node_id, ["id 1"])
+      Mempool.execute(node_id, ["id 2"])
 
-    Mempool.execute(node_id, ["id 2"])
-
-    :ok =
-      wait_for_consensus(node_id, ["id 2"])
+      :ok =
+        wait_for_consensus(node_id, ["id 2"])
+    end
   end
 
   def replay_several_consensus(node_id \\ Node.example_random_id()) do
@@ -293,22 +295,21 @@ defmodule Anoma.Node.Examples.ELogging do
     txfilter = [%Mempool.TxFilter{}]
     consensus_filter = [%Mempool.ConsensusFilter{}]
 
-    EventBroker.subscribe_me(txfilter)
-    EventBroker.subscribe_me(consensus_filter)
+    with_subscription [txfilter, consensus_filter] do
+      Logging.restart_with_replay(node_id)
 
-    Logging.restart_with_replay(node_id)
+      :ok =
+        wait_for_tx(node_id, "id 1", "code 1")
 
-    :ok =
-      wait_for_tx(node_id, "id 1", "code 1")
+      :ok =
+        wait_for_tx(node_id, "id 2", "code 2")
 
-    :ok =
-      wait_for_tx(node_id, "id 2", "code 2")
+      :ok =
+        wait_for_consensus(node_id, ["id 1"])
 
-    :ok =
-      wait_for_consensus(node_id, ["id 1"])
-
-    :ok =
-      wait_for_consensus(node_id, ["id 2"])
+      :ok =
+        wait_for_consensus(node_id, ["id 2"])
+    end
   end
 
   def replay_consensus_with_several_txs(node_id \\ Node.example_random_id()) do
@@ -318,19 +319,18 @@ defmodule Anoma.Node.Examples.ELogging do
     txfilter = [%Mempool.TxFilter{}]
     consensus_filter = [%Mempool.ConsensusFilter{}]
 
-    EventBroker.subscribe_me(txfilter)
-    EventBroker.subscribe_me(consensus_filter)
+    with_subscription [txfilter, consensus_filter] do
+      Logging.restart_with_replay(node_id)
 
-    Logging.restart_with_replay(node_id)
+      :ok =
+        wait_for_tx(node_id, "id 1", "code 1")
 
-    :ok =
-      wait_for_tx(node_id, "id 1", "code 1")
+      :ok =
+        wait_for_tx(node_id, "id 2", "code 2")
 
-    :ok =
-      wait_for_tx(node_id, "id 2", "code 2")
-
-    :ok =
-      wait_for_consensus(node_id, ["id 1", "id 2"])
+      :ok =
+        wait_for_consensus(node_id, ["id 1", "id 2"])
+    end
   end
 
   def replay_consensus(node_id \\ Node.example_random_id()) do
@@ -340,16 +340,15 @@ defmodule Anoma.Node.Examples.ELogging do
     txfilter = [%Mempool.TxFilter{}]
     consensus_filter = [%Mempool.ConsensusFilter{}]
 
-    EventBroker.subscribe_me(txfilter)
-    EventBroker.subscribe_me(consensus_filter)
+    with_subscription [txfilter, consensus_filter] do
+      Logging.restart_with_replay(node_id)
 
-    Logging.restart_with_replay(node_id)
+      :ok =
+        wait_for_tx(node_id, "id 1", "code 1")
 
-    :ok =
-      wait_for_tx(node_id, "id 1", "code 1")
-
-    :ok =
-      wait_for_consensus(node_id, ["id 1"])
+      :ok =
+        wait_for_consensus(node_id, ["id 1"])
+    end
   end
 
   def replay_several_txs(node_id \\ Node.example_random_id()) do
@@ -358,15 +357,15 @@ defmodule Anoma.Node.Examples.ELogging do
 
     txfilter = [%Mempool.TxFilter{}]
 
-    EventBroker.subscribe_me(txfilter)
+    with_subscription [txfilter] do
+      Logging.restart_with_replay(node_id)
 
-    Logging.restart_with_replay(node_id)
+      :ok =
+        wait_for_tx(node_id, "id 1", "code 1")
 
-    :ok =
-      wait_for_tx(node_id, "id 1", "code 1")
-
-    :ok =
-      wait_for_tx(node_id, "id 2", "code 2")
+      :ok =
+        wait_for_tx(node_id, "id 2", "code 2")
+    end
   end
 
   def replay_tx(node_id \\ Node.example_random_id()) do
@@ -375,12 +374,12 @@ defmodule Anoma.Node.Examples.ELogging do
 
     txfilter = [%Mempool.TxFilter{}]
 
-    EventBroker.subscribe_me(txfilter)
+    with_subscription [txfilter] do
+      {:ok, _pid} = Logging.restart_with_replay(node_id)
 
-    {:ok, _pid} = Logging.restart_with_replay(node_id)
-
-    :ok =
-      wait_for_tx(node_id, "id 1", "code 1")
+      :ok =
+        wait_for_tx(node_id, "id 1", "code 1")
+    end
   end
 
   defp write_consensus_leave_one_out(node_id) do
