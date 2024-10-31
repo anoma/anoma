@@ -1,5 +1,10 @@
 defmodule Anoma.Node.Examples.EEvent.EDefEvent do
+  alias Anoma.Node
+  alias Anoma.Node.Examples.ENode
+
+  require Node.Event
   require ExUnit.Assertions
+
   import ExUnit.Assertions
 
   @doc """
@@ -11,7 +16,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
   def create_struct_with_fields() do
     quoted_module =
       quote do
-        defmodule DynamicTestEventModule do
+        defmodule TestEventModule do
           use Anoma.Node.Event.DefEvent
 
           defevent SimpleEvent do
@@ -25,11 +30,11 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
 
     quoted_assertion =
       quote do
-        assert %DynamicTestEventModule.SimpleEvent{
+        assert %TestEventModule.SimpleEvent{
                  id: 123,
                  result: {:ok, "success"}
                } ==
-                 %DynamicTestEventModule.SimpleEvent{
+                 %TestEventModule.SimpleEvent{
                    id: 123,
                    result: {:ok, "success"}
                  }
@@ -47,7 +52,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
   def enforce_required_fields() do
     quoted_module =
       quote do
-        defmodule DynamicEnforcedEventModule do
+        defmodule EnforcedEventModule do
           use Anoma.Node.Event.DefEvent
 
           defevent EnforcedEvent, enforce: true do
@@ -63,7 +68,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
       Code.eval_quoted(
         quote do
           # Missing required :status field
-          %DynamicEnforcedEventModule.EnforcedEvent{id: 1}
+          %EnforcedEventModule.EnforcedEvent{id: 1}
         end
       )
     end
@@ -78,7 +83,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
   def create_filter_module() do
     quoted_module =
       quote do
-        defmodule DynamicFilterEventModule do
+        defmodule FilterEventModule do
           use Anoma.Node.Event.DefEvent
 
           defevent FilteredEvent, filter: CustomFilter do
@@ -92,10 +97,10 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
 
     quoted_assertion =
       quote do
-        assert Code.ensure_loaded?(DynamicFilterEventModule.CustomFilter)
+        assert Code.ensure_loaded?(FilterEventModule.CustomFilter)
 
         assert function_exported?(
-                 DynamicFilterEventModule.CustomFilter,
+                 FilterEventModule.CustomFilter,
                  :filter,
                  2
                )
@@ -113,7 +118,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
   def no_filter_module() do
     quoted_module =
       quote do
-        defmodule DynamicNoFilterEventModule do
+        defmodule NoFilterEventModule do
           use Anoma.Node.Event.DefEvent
 
           defevent NoFilterEvent, filter: nil do
@@ -127,11 +132,104 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
 
     quoted_assertion =
       quote do
-        refute Code.ensure_loaded?(
-                 DynamicNoFilterEventModule.NoFilterEventFilter
-               )
+        refute Code.ensure_loaded?(NoFilterEventModule.NoFilterEventFilter)
       end
 
     Code.eval_quoted(quoted_assertion)
+  end
+
+  defmodule EventExample do
+    @moduledoc """
+    I define custom events `FooEvent` and `BarEvent` with filters.
+    """
+
+    use Anoma.Node.Event.DefEvent
+
+    defevent FooEvent, filter: FooFilter do
+      @moduledoc """
+      I represent an event of type Foo with an `id` field.
+      """
+
+      field(:id, integer())
+    end
+
+    defevent BarEvent, filter: BarFilter do
+      @moduledoc """
+      I represent an event of type Bar with an `id` field.
+      """
+
+      field(:id, integer())
+    end
+  end
+
+  @doc """
+  I demonstrate filtered event subscription using `FooEvent` and `BarEvent`.
+  """
+  @spec filtered_event_subscription(String.t()) :: String.t()
+  def filtered_event_subscription(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
+
+    filter_foo = %EventExample.FooFilter{}
+    filter_bar = %EventExample.BarFilter{}
+
+    EventBroker.subscribe_me([filter_foo])
+
+    event_foo =
+      Node.Event.new_with_body(node_id, %EventExample.FooEvent{
+        id: 100
+      })
+
+    event_bar =
+      Node.Event.new_with_body(node_id, %EventExample.BarEvent{
+        id: 200
+      })
+
+    EventBroker.event(event_foo)
+    EventBroker.event(event_bar)
+
+    assert_receive %EventBroker.Event{
+      body: %Node.Event{
+        body: %EventExample.FooEvent{
+          id: 100
+        },
+        node_id: ^node_id
+      },
+      source_module: __MODULE__
+    }
+
+    refute_receive %EventBroker.Event{
+      body: %Node.Event{
+        body: %EventExample.BarEvent{}
+      }
+    }
+
+    EventBroker.subscribe_me([filter_bar])
+
+    EventBroker.event(event_foo)
+    EventBroker.event(event_bar)
+
+    assert_receive %EventBroker.Event{
+      body: %Node.Event{
+        body: %EventExample.FooEvent{
+          id: 100
+        },
+        node_id: ^node_id
+      },
+      source_module: __MODULE__
+    }
+
+    assert_receive %EventBroker.Event{
+      body: %Node.Event{
+        body: %EventExample.BarEvent{
+          id: 200
+        },
+        node_id: ^node_id
+      }
+    }
+
+    EventBroker.unsubscribe_me([filter_foo])
+    EventBroker.unsubscribe_me([filter_bar])
+
+    node_id
   end
 end
