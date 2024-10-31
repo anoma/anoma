@@ -1,6 +1,25 @@
 defmodule Anoma.Node.Transaction.Ordering do
   @moduledoc """
-  abordering genserver
+  I am the Ordering Engine.
+
+  I act as a mediator between Workers and Storage. In particular, Workers
+  working on a transaction may ask to read and write information. However,
+  they do not know when to do it, they only know the ID of the transaction
+  they work on.
+
+  I process such requests, keeping them waiting until consensus provides
+  some ordering to a transaction in question. Once they do, I pair a
+  transaction ID with its timestamp and forward queries to Storage.
+
+  ### Public API
+
+  I provide the following public functonality:
+
+  - `read/2`
+  - `write/2`
+  - `append/2`
+  - `add/2`
+  - `order/2`
   """
 
   use EventBroker.DefFilter
@@ -21,6 +40,22 @@ defmodule Anoma.Node.Transaction.Ordering do
   @typep startup_options() :: {:node_id, String.t()}
 
   typedstruct enforce: true do
+    @typedoc """
+    I am the type of the Ordering Enigine.
+
+    I contain the Node for which the Ordering is launched, the upcoming
+    hight as well as a map from transaction IDs to their global order.
+
+    ### Fields
+
+    - `:node_id` - The ID of the Node to which an Ordering instantiation is
+                   bound.
+    - `:next_height` - The height that the next ordered transaction
+                       candidate will get.
+                       Default: 1
+    - `:tx_id_to_height` - A map from an ID of a transaction candidate to
+                           its order.
+    """
     field(:node_id, String.t())
     field(:next_height, integer(), default: 1)
     # maps tx ids to their height for writing.
@@ -29,6 +64,17 @@ defmodule Anoma.Node.Transaction.Ordering do
   end
 
   typedstruct enforce: true, module: OrderEvent do
+    @typedoc """
+    I am the type of an ordering Event.
+
+    I am sent whenever the transaction with which I am associated gets a
+    global timestamp.
+
+    ### Fields
+
+    - `tx_id` - The ID of the transaction which was ordered.
+    """
+
     field(:tx_id, binary())
   end
 
@@ -36,6 +82,12 @@ defmodule Anoma.Node.Transaction.Ordering do
     %EventBroker.Event{body: %Node.Event{body: %{tx_id: ^tx_id}}} -> true
     _ -> false
   end
+
+  @doc """
+  I am the start_link function for the Ordering Engine.
+
+  I register the engine with supplied node ID provided by the arguments.
+  """
 
   @spec start_link([startup_options()]) :: GenServer.on_start()
   def start_link(args \\ []) do
@@ -46,6 +98,13 @@ defmodule Anoma.Node.Transaction.Ordering do
   ############################################################
   #                    Genserver Helpers                     #
   ############################################################
+
+  @doc """
+  I am the initialization function for the Ordering Engine.
+
+  From the specified arguments, I get the Node ID as well as the info
+  regarding the next height Ordering should be started with.
+  """
 
   @spec init([startup_options()]) :: {:ok, t()}
   def init(args) do
@@ -60,6 +119,24 @@ defmodule Anoma.Node.Transaction.Ordering do
   #                      Public RPC API                      #
   ############################################################
 
+  @doc """
+  I am the Ordering read function.
+
+  I receive a Node ID and an {id, key} tuple. There are two states possible
+  when Ordering processes my request. Either:
+
+  - The id has been assigned an order.
+  - The id has not been assigned an order.
+
+  If the former is true, I send the request to read the key at the
+  specified height minus one to the Storage. That is, we ask the storage to
+  read the most recent value assigned to the key from the point of view of
+  the transaction candidate. See `Storage.read/2`.
+
+  If the latter is true, I leave the caller blocked until the id has been
+  assigned a value, i.e. until a corresponding event gets received.
+  """
+
   @spec read(String.t(), {binary(), any()}) :: any()
   def read(node_id, {id, key}) do
     GenServer.call(
@@ -68,6 +145,22 @@ defmodule Anoma.Node.Transaction.Ordering do
       :infinity
     )
   end
+
+  @doc """
+  I am the Ordering write function.
+
+  I receive a Node ID and an {id, kvlist} tuple. There are two states
+  possible when Ordering processes my request. Either:
+
+  - The id has been assigned an order.
+  - The id has not been assigned an order.
+
+  If the former is true, I send the request to write the key-value list at
+  the specified height to the Storage. See `Storage.write/2`
+
+  If the latter is true, I leave the caller blocked until the id has been
+  assigned a value, i.e. until a corresponding event gets received.
+  """
 
   @spec write(String.t(), {binary(), list({any(), any()})}) :: :ok
   def write(node_id, {id, kvlist}) do
@@ -78,7 +171,23 @@ defmodule Anoma.Node.Transaction.Ordering do
     )
   end
 
-  @spec append(String.t(), {binary(), list({any(), any()})}) :: :ok
+  @doc """
+  I am the Ordering append function.
+
+  I receive a Node ID and an {id, kvlist} tuple. There are two states
+  possible when Ordering processes my request. Either:
+
+  - The id has been assigned an order.
+  - The id has not been assigned an order.
+
+  If the former is true, I send the request to append the key-value list at
+  the specified height to the Storage. See `Storage.append/2`
+
+  If the latter is true, I leave the caller blocked until the id has been
+  assigned a value, i.e. until a corresponding event gets received.
+  """
+
+  @spec append(String.t(), {binary(), list({any(), MapSet.t()})}) :: :ok
   def append(node_id, {id, kvlist}) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
@@ -86,6 +195,22 @@ defmodule Anoma.Node.Transaction.Ordering do
       :infinity
     )
   end
+
+  @doc """
+  I am the Ordering write function.
+
+  I receive a Node ID and an {id, map} tuple. There are two states possible
+  when Ordering processes my request. Either:
+
+  - The id has been assigned an order.
+  - The id has not been assigned an order.
+
+  If the former is true, I send the request to appropriately add the map to
+  the Storage at the specified height. See `Storage.add/2`
+
+  If the latter is true, I leave the caller blocked until the id has been
+  assigned a value, i.e. until a corresponding event gets received.
+  """
 
   @spec add(String.t(), {binary(), %{write: list(), append: list()}}) :: any()
   def add(node_id, {id, map}) do
@@ -96,6 +221,18 @@ defmodule Anoma.Node.Transaction.Ordering do
     )
   end
 
+  @doc """
+  I am the Ordering order function.
+
+  Given a Node ID and a list of transaction IDs, I percieve the latter as a
+  partial ordering of transactions. Afterwards, I assign them a global
+  ordering by adding the next height stored in the Ordering Engine to the
+  respective ordering inside a list.
+
+  Afterwards, I send an event specifying that a particular ID has indeed
+  received an order.
+  """
+
   @spec order(String.t(), [binary()]) :: :ok
   def order(node_id, txs) do
     GenServer.cast(Registry.via(node_id, __MODULE__), {:order, txs})
@@ -104,6 +241,11 @@ defmodule Anoma.Node.Transaction.Ordering do
   ############################################################
   #                      Public Filters                      #
   ############################################################
+
+  @doc """
+  I am a filter spec which filters for any event with a `tx_id` field and
+  matches iff the ID stored is the one supplied.
+  """
 
   def tx_id_filter(tx_id) do
     %__MODULE__.TxIdFilter{tx_id: tx_id}
