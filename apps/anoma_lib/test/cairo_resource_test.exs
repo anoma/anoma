@@ -13,4 +13,7 @@ defmodule AnomaTest.CairoResource do
     for: Examples.ECairo.ETransaction
 
   use TestHelper.GenerateExampleTests, for: Examples.ECairo.EResource
+
+  use TestHelper.GenerateExampleTests,
+    for: Examples.ECairo.EResourceLogic
 end

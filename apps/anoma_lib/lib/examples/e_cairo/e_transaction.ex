@@ -2,6 +2,8 @@ defmodule Examples.ECairo.ETransaction do
   alias Anoma.CairoResource.Transaction
   alias Examples.ECairo.EPartialTransaction
 
+  use TestHelper.TestMacro
+
   @spec a_shielded_transaction() :: Transaction.t()
   def a_shielded_transaction do
     ptx = EPartialTransaction.a_partial_transaction()
@@ -13,6 +15,8 @@ defmodule Examples.ECairo.ETransaction do
         delta: priv_keys
       }
       |> Transaction.finalize()
+
+    assert Anoma.RM.Transaction.verify(shielded_tx)
 
     shielded_tx
   end
@@ -38,6 +42,8 @@ defmodule Examples.ECairo.ETransaction do
       Anoma.RM.Transaction.compose(shielded_tx_1, shielded_tx_2)
       |> Transaction.finalize()
 
+    assert false == Anoma.RM.Transaction.verify(composed_shielded_tx)
+
     composed_shielded_tx
   end
 
@@ -53,6 +59,8 @@ defmodule Examples.ECairo.ETransaction do
         delta: invalid_priv_keys
       }
       |> Transaction.finalize()
+
+    assert false == Anoma.RM.Transaction.verify(invalid_shielded_tx)
 
     invalid_shielded_tx
   end
