@@ -17,8 +17,8 @@ defmodule Examples.ECairo.ETransaction do
     shielded_tx
   end
 
-  @spec another_shielded_transaction() :: Transaction.t()
-  def another_shielded_transaction do
+  @spec duplicate_nfs_shielded_transaction() :: Transaction.t()
+  def duplicate_nfs_shielded_transaction do
     ptx = EPartialTransaction.a_partial_transaction()
     priv_keys = <<3::256>>
 
