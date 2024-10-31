@@ -4,6 +4,7 @@ package Anoma.Protobuf.Nock.Prove;
 
 import "nock/input.proto";
 import "node_info.proto";
+import "nock/result.proto";
 
 message Request {
   NodeInfo node_info = 1;
@@ -19,7 +20,7 @@ message Request {
 
 message Response {
   oneof result {
-    bytes proof = 1;
-    string error = 2;
+    Success success = 1; 
+    Error error = 2;
   }
 }
