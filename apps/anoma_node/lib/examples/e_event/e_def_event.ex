@@ -146,16 +146,16 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     use Anoma.Node.Event.DefEvent
 
     defevent FooEvent, filter: FooFilter do
-      @moduledoc """
-      I represent an event of type Foo with an `id` field.
+      @typedoc """
+      I represent an event of type Foo
       """
 
       field(:id, integer())
     end
 
     defevent BarEvent, filter: BarFilter do
-      @moduledoc """
-      I represent an event of type Bar with an `id` field.
+      @typedoc """
+      I represent an event of type Bar
       """
 
       field(:id, integer())
