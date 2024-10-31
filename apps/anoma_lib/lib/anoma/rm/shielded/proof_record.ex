@@ -66,6 +66,7 @@ defmodule Anoma.RM.Shielded.ProofRecord do
         inputs
       )
 
+    # TODO: handle the error
     {proof, public_inputs} = Cairo.prove(trace, memory, public_inputs)
 
     {:ok,
@@ -81,5 +82,16 @@ defmodule Anoma.RM.Shielded.ProofRecord do
     |> :binary.bin_to_list()
     |> Cairo.get_program_hash()
     |> :binary.list_to_bin()
+  end
+
+  @spec verify(ProofRecord.t()) :: boolean() | {:error, term()}
+  def verify(proof) do
+    public_inputs =
+      proof.public_inputs
+      |> :binary.bin_to_list()
+
+    proof.proof
+    |> :binary.bin_to_list()
+    |> Cairo.verify(public_inputs)
   end
 end
