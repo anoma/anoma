@@ -13,4 +13,7 @@ defmodule AnomaTest.ShieldResourceMachine do
     for: Examples.ERM.EShielded.ETransaction
 
   use TestHelper.GenerateExampleTests, for: Examples.ERM.EShielded.EResource
+
+  use TestHelper.GenerateExampleTests,
+    for: Examples.ERM.EShielded.EResourceLogic
 end

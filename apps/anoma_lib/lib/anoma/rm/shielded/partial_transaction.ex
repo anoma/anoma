@@ -82,7 +82,7 @@ defmodule Anoma.RM.Shielded.PartialTransaction do
       # Compute the expected resource tree
       rt =
         Tree.construct(
-          CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
+          CommitmentTree.Spec.cairo_poseidon_resource_tree_spec(),
           resource_tree_leaves
         )
 
