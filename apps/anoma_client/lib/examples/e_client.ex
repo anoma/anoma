@@ -211,11 +211,12 @@ defmodule Anoma.Client.Examples.EClient do
       public_inputs: [input]
     }
 
-    {:ok, result} = NockService.Stub.prove(conn.channel, request)
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
+    {:success, success} = response.result
 
-    assert {:ok, 123} == Nock.Cue.cue(elem(result.result, 1))
+    assert {:ok, 123} == Nock.Cue.cue(success.result)
 
-    result
+    success.result
   end
 
   @doc """
@@ -231,11 +232,13 @@ defmodule Anoma.Client.Examples.EClient do
       public_inputs: [input]
     }
 
-    {:ok, result} = NockService.Stub.prove(conn.channel, request)
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
 
-    assert {:ok, 123} == Nock.Cue.cue(elem(result.result, 1))
+    {:success, success} = response.result
 
-    result
+    assert {:ok, 123} == Nock.Cue.cue(success.result)
+
+    success.result
   end
 
   @doc """
@@ -252,11 +255,13 @@ defmodule Anoma.Client.Examples.EClient do
       public_inputs: [input]
     }
 
-    {:ok, result} = NockService.Stub.prove(conn.channel, request)
+    {:ok, response} = NockService.Stub.run(conn.channel, request)
 
-    assert {:ok, 9} == Nock.Cue.cue(elem(result.result, 1))
+    {:success, success} = response.result
 
-    result
+    assert {:ok, 9} == Nock.Cue.cue(success.result)
+
+    success.result
   end
 
   ############################################################
