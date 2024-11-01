@@ -11,9 +11,15 @@ defmodule Anoma.Node.Transaction.Storage do
   use TypedStruct
   require Node.Event
 
+  ############################################################
+  #                         State                            #
+  ############################################################
+
   @type bare_key() :: list(String.t())
   @type qualified_key() :: {integer(), bare_key()}
-  @typep startup_options() :: {:node_id, String.t()}
+  @type write_opts() :: :append | :write | :add
+  @typep startup_options() ::
+           {:node_id, String.t()} | {:uncommitted_height, non_neg_integer()}
 
   typedstruct enforce: true do
     field(:node_id, String.t())
