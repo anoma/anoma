@@ -1,7 +1,14 @@
 import Config
 
+level =
+  if Mix.env() == :test do
+    :none
+  else
+    :error
+  end
+
 config :logger,
-  level: :error,
+  level: level,
   handle_otp_reports: true,
   handle_sasl_reports: true
 
