@@ -13,10 +13,7 @@ started:
 actual:
 completed:
 confirmed:
-dependencies:
-- [ ]
-supersedes:
--
+
 ---
 
 <definition of done>
