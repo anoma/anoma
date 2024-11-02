@@ -28,6 +28,7 @@ defmodule Anoma.Node.Examples.ELogging do
              end)
 
     :mnesia.unsubscribe({:table, table_name, :simple})
+    node_id
   end
 
   def check_multiple_tx_events(node_id \\ Node.example_random_id()) do
@@ -63,6 +64,7 @@ defmodule Anoma.Node.Examples.ELogging do
              end)
 
     :mnesia.unsubscribe({:table, table_name, :simple})
+    node_id
   end
 
   ############################################################
@@ -92,6 +94,8 @@ defmodule Anoma.Node.Examples.ELogging do
              :mnesia.transaction(fn ->
                :mnesia.read(table_name, :consensus)
              end)
+
+    node_id
   end
 
   def check_consensus_event_multiple(
@@ -118,6 +122,8 @@ defmodule Anoma.Node.Examples.ELogging do
              :mnesia.transaction(fn ->
                :mnesia.read(table_name, :consensus)
              end)
+
+    node_id
   end
 
   ############################################################
@@ -151,6 +157,8 @@ defmodule Anoma.Node.Examples.ELogging do
              :mnesia.transaction(fn ->
                :mnesia.read(table_name, "id 1")
              end)
+
+    node_id
   end
 
   def check_block_event_multiple(
@@ -196,6 +204,8 @@ defmodule Anoma.Node.Examples.ELogging do
              :mnesia.transaction(fn ->
                :mnesia.read(table_name, "id 2")
              end)
+
+    node_id
   end
 
   def check_block_event_leave_one_out(
@@ -229,6 +239,8 @@ defmodule Anoma.Node.Examples.ELogging do
              :mnesia.transaction(fn ->
                :mnesia.read(table_name, "id 2")
              end)
+
+    node_id
   end
 
   def replay_corrects_result(node_id \\ Node.example_random_id()) do
@@ -257,7 +269,7 @@ defmodule Anoma.Node.Examples.ELogging do
     nil = Map.get(state.transactions, "id 1")
     1 = state.round
 
-    state
+    node_id
   end
 
   def replay_consensus_leave_one_out(node_id \\ Node.example_random_id()) do
@@ -281,6 +293,8 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :ok =
       wait_for_consensus(node_id, ["id 2"])
+
+    node_id
   end
 
   def replay_several_consensus(node_id \\ Node.example_random_id()) do
@@ -302,6 +316,8 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :ok =
       wait_for_consensus(node_id, ["id 2"])
+
+    node_id
   end
 
   def replay_consensus_with_several_txs(node_id \\ Node.example_random_id()) do
@@ -320,6 +336,8 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :ok =
       wait_for_consensus(node_id, ["id 1", "id 2"])
+
+    node_id
   end
 
   def replay_consensus(node_id \\ Node.example_random_id()) do
@@ -335,6 +353,8 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :ok =
       wait_for_consensus(node_id, ["id 1"])
+
+    node_id
   end
 
   def replay_several_txs(node_id \\ Node.example_random_id()) do
@@ -350,6 +370,8 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :ok =
       wait_for_tx(node_id, "id 2", "code 2")
+
+    node_id
   end
 
   def replay_tx(node_id \\ Node.example_random_id()) do
@@ -362,6 +384,8 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :ok =
       wait_for_tx(node_id, "id 1", "code 1")
+
+    node_id
   end
 
   defp write_consensus_leave_one_out(node_id) do
