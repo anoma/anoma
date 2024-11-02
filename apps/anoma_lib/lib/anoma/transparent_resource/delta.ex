@@ -11,25 +11,30 @@ defmodule Anoma.TransparentResource.Delta do
     defexception [:message]
   end
 
+  @spec add(t(), t()) :: t()
   def add(d1 = %{}, d2 = %{}) do
     Map.merge(d1, d2, fn _k, v1, v2 -> v1 + v2 end)
     |> make_sane()
   end
 
+  @spec sub(t(), t()) :: t()
   def sub(d1 = %{}, d2 = %{}) do
     add(d1, negate(d2))
   end
 
+  @spec negate(t()) :: t()
   def negate(d = %{}) do
     for {k, v} <- d, into: %{} do
       {k, -v}
     end
   end
 
+  @spec sane?(t()) :: boolean()
   def sane?(d = %{}) do
     !Enum.any?(d, fn {_, v} -> v == 0 end)
   end
 
+  @spec sane!(t()) :: true
   def sane!(d = %{}) do
     for {_, v} <- d do
       if v == 0 do
@@ -40,6 +45,7 @@ defmodule Anoma.TransparentResource.Delta do
     true
   end
 
+  @spec make_sane(t()) :: t()
   def make_sane(d = %{}) do
     Map.reject(d, fn {_k, v} -> v == 0 end)
   end
