@@ -46,13 +46,14 @@ defmodule Anoma.Node.Logging do
       false
   end
 
+  @spec start_link(list({:node_id, String.t()} | {:table, atom()})) :: term()
   def start_link(args) do
     args = Keyword.validate!(args, [:node_id, :table])
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
-  @spec init(any()) :: {:ok, Logging.t()}
+  @impl true
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -78,6 +79,7 @@ defmodule Anoma.Node.Logging do
     {:ok, %__MODULE__{node_id: node_id, table: table}}
   end
 
+  @impl true
   def handle_info(
         %EventBroker.Event{
           body: %Node.Event{
@@ -179,10 +181,12 @@ defmodule Anoma.Node.Logging do
 
   defp log_fun({:error, msg}), do: Logger.error(msg)
 
+  @spec logging_filter() :: LoggingFilter.t()
   def logging_filter() do
     %__MODULE__.LoggingFilter{}
   end
 
+  @spec log_event(String.t(), flag(), binary()) :: :ok
   def log_event(node_id, flag, msg) do
     Node.Event.new_with_body(node_id, %__MODULE__.LoggingEvent{
       flag: flag,
@@ -312,6 +316,7 @@ defmodule Anoma.Node.Logging do
   @doc """
   Copies the contents of the storage tables into mock Replay tables
   """
+  @spec replay_table_clone(atom(), atom(), String.t()) :: any()
   def replay_table_clone(values_table, updates_table, node_id) do
     :mnesia.transaction(fn ->
       values = :mnesia.match_object({values_table, :_, :_})
@@ -396,6 +401,7 @@ defmodule Anoma.Node.Logging do
     end
   end
 
+  @spec table_name(String.t()) :: atom()
   def table_name(node_id) do
     String.to_atom("#{Logging.Events}_#{:erlang.phash2(node_id)}")
   end
