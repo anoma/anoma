@@ -8,6 +8,7 @@
    ref: "23173637c495b85d56f205e4721cfe5afdef92e9"},
   {:kino, git: "https://github.com/livebook-dev/kino", override: true},
   # until the next Kino release
+  {:grpc_reflection, "~> 0.1.0"},
   {:kino_kroki, "~> 0.1.0"},
   {:memoize, "~> 1.4.3"},
   {:mnesia_rocksdb, git: "https://github.com/mariari/mnesia_rocksdb"},
@@ -20,6 +21,7 @@
   {:rexbug, ">= 2.0.0-rc1"},
   {:toml, "~> 0.7"},
   {:typed_struct, "~> 0.3.0"},
+  {:lexical_credo, "~> 0.1.0", only: [:dev, :test]},
   # non-runtime dependencies below
   {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
   {:dialyxir, "~> 1.3", only: [:dev], runtime: false},

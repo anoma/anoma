@@ -16,6 +16,10 @@ defmodule Anoma.Node.Transaction.Mempool do
   use GenServer
   use TypedStruct
 
+  ############################################################
+  #                         State                            #
+  ############################################################
+
   @type vm_result :: {:ok, Noun.t()} | :error | :in_progress
   @type tx_result :: {:ok, any()} | :error | :in_progress
   @typep startup_options() :: {:node_id, String.t()}
@@ -52,6 +56,10 @@ defmodule Anoma.Node.Transaction.Mempool do
 
     field(:round, non_neg_integer(), default: 0)
   end
+
+  ############################################################
+  #                    Genserver Helpers                     #
+  ############################################################
 
   @spec start_link([startup_options()]) :: GenServer.on_start()
   def start_link(args \\ []) do
@@ -123,6 +131,20 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   ############################################################
+  #                      Public Filters                      #
+  ############################################################
+
+  @spec worker_module_filter() :: EventBroker.Filters.SourceModule.t()
+  def worker_module_filter() do
+    %EventBroker.Filters.SourceModule{module: Anoma.Node.Transaction.Backends}
+  end
+
+  @spec filter_for_mempool() :: Backends.ForMempoolFilter.t()
+  def filter_for_mempool() do
+    %Backends.ForMempoolFilter{}
+  end
+
+  ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
@@ -134,28 +156,12 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:reply, :ok, state}
   end
 
-  def handle_cast({:tx, {backend, code} = tx, tx_id}, state) do
-    value = %Tx{backend: backend, code: code}
-    node_id = state.node_id
-
-    tx_event(tx_id, value, node_id)
-
-    Executor.launch(node_id, tx, tx_id)
-
-    nstate = %Mempool{
-      state
-      | transactions: Map.put(state.transactions, tx_id, value)
-    }
-
-    {:noreply, nstate}
+  def handle_cast({:tx, tx, tx_id}, state) do
+    {:noreply, handle_tx(tx, tx_id, state)}
   end
 
   def handle_cast({:execute, id_list}, state) do
-    node_id = state.node_id
-
-    consensus_event(id_list, node_id)
-    Executor.execute(node_id, id_list)
-
+    handle_execute(id_list, state)
     {:noreply, state}
   end
 
@@ -167,6 +173,49 @@ defmodule Anoma.Node.Transaction.Mempool do
         e = %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}},
         state
       ) do
+    {:noreply, handle_result_event(e, state)}
+  end
+
+  def handle_info(
+        e = %EventBroker.Event{
+          body: %Node.Event{body: %ExecutionEvent{}}
+        },
+        state
+      ) do
+    {:noreply, handle_execution_event(e, state)}
+  end
+
+  def handle_info(_, state) do
+    {:noreply, state}
+  end
+
+  ############################################################
+  #                 Genserver Implementation                 #
+  ############################################################
+
+  @spec handle_tx({Backends.backend(), Noun.t()}, binary(), t()) :: t()
+  defp handle_tx(tx = {backend, code}, tx_id, state = %Mempool{}) do
+    value = %Tx{backend: backend, code: code}
+    node_id = state.node_id
+
+    tx_event(tx_id, value, node_id)
+
+    Executor.launch(node_id, tx, tx_id)
+
+    %Mempool{
+      state
+      | transactions: Map.put(state.transactions, tx_id, value)
+    }
+  end
+
+  @spec handle_execute(list(binary()), t()) :: :ok
+  defp handle_execute(id_list, state = %Mempool{}) do
+    consensus_event(id_list, state.node_id)
+    Executor.execute(state.node_id, id_list)
+  end
+
+  @spec handle_result_event(EventBroker.Event.t(), t()) :: t()
+  defp handle_result_event(e, state = %Mempool{}) do
     id = e.body.body.tx_id
     res = e.body.body.vm_result
 
@@ -176,16 +225,11 @@ defmodule Anoma.Node.Transaction.Mempool do
         Map.put(tx, :vm_result, res)
       end)
 
-    new_state = %__MODULE__{state | transactions: new_map}
-    {:noreply, new_state}
+    %Mempool{state | transactions: new_map}
   end
 
-  def handle_info(
-        e = %EventBroker.Event{
-          body: %Node.Event{body: %ExecutionEvent{result: _}}
-        },
-        state
-      ) do
+  @spec handle_execution_event(EventBroker.Event.t(), t()) :: t()
+  defp handle_execution_event(e, state = %Mempool{}) do
     execution_list = e.body.body.result
     round = state.round
     node_id = state.node_id
@@ -196,18 +240,15 @@ defmodule Anoma.Node.Transaction.Mempool do
 
     block_event(Enum.map(execution_list, &elem(&1, 1)), round, node_id)
 
-    {:noreply, %__MODULE__{state | transactions: map, round: round + 1}}
-  end
-
-  def handle_info(_, state) do
-    {:noreply, state}
+    %Mempool{state | transactions: map, round: round + 1}
   end
 
   ############################################################
   #                           Helpers                        #
   ############################################################
 
-  def block_event(id_list, round, node_id) do
+  @spec block_event(list(binary), non_neg_integer(), String.t()) :: :ok
+  defp block_event(id_list, round, node_id) do
     block_event =
       Node.Event.new_with_body(node_id, %__MODULE__.BlockEvent{
         order: id_list,
@@ -217,7 +258,8 @@ defmodule Anoma.Node.Transaction.Mempool do
     EventBroker.event(block_event)
   end
 
-  def tx_event(tx_id, value, node_id) do
+  @spec tx_event(binary(), Mempool.Tx.t(), String.t()) :: :ok
+  defp tx_event(tx_id, value, node_id) do
     tx_event =
       Node.Event.new_with_body(node_id, %__MODULE__.TxEvent{
         id: tx_id,
@@ -227,21 +269,14 @@ defmodule Anoma.Node.Transaction.Mempool do
     EventBroker.event(tx_event)
   end
 
-  def consensus_event(id_list, node_id) do
+  @spec consensus_event(list(binary()), String.t()) :: :ok
+  defp consensus_event(id_list, node_id) do
     consensus_event =
       Node.Event.new_with_body(node_id, %__MODULE__.ConsensusEvent{
         order: id_list
       })
 
     EventBroker.event(consensus_event)
-  end
-
-  def worker_module_filter() do
-    %EventBroker.Filters.SourceModule{module: Anoma.Node.Transaction.Backends}
-  end
-
-  def filter_for_mempool() do
-    %Backends.ForMempoolFilter{}
   end
 
   @spec process_execution(t(), [{:ok | :error, binary()}]) ::

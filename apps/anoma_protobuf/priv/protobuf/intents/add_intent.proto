@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Intents.Add;
+
+import "intents/intent.proto";
+
+message Request { Anoma.Protobuf.Intents.Intent intent = 1; }
+
+message Response { string result = 1; }

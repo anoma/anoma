@@ -26,10 +26,11 @@ defmodule Anoma.MixProject do
       escript: escript(),
       releases: releases(),
       package: package(),
-      # as a hack, these are copied to the top level mix.exs
+      # these options are required for running `mix compile` in the umbrella.
+      # make changes here and in apps/anoma_protobuf/mix.exs
       protoc_options: [
-        elixir_out: "apps/anoma_protobuf/lib",
-        proto_files: ["apps/anoma_protobuf/priv/protobuf/anoma.proto"],
+        elixir_out: "apps/anoma_protobuf/lib/anoma/protobuf",
+        proto_files: ["apps/anoma_protobuf/priv/protobuf"],
         extra_opts:
           "one_file_per_module=true,gen_descriptors=true,plugins=grpc"
       ]
@@ -121,6 +122,16 @@ defmodule Anoma.MixProject do
 
   def extras() do
     ["README.md" | all_docs("./documentation")]
+  end
+
+  # Run "mix help compile.app" to learn about applications.
+  def application do
+    [
+      extra_applications: [
+        :observer,
+        :wx
+      ]
+    ]
   end
 
   def escript do

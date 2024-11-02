@@ -3,15 +3,15 @@ defmodule Anoma.Node.Transport.Messages do
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Mempool
 
-  alias Anoma.Protobuf.Announcement
+  alias Anoma.Protobuf.Announce.Announcement
   alias Anoma.Protobuf.Envelope
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.IntentPool.AddIntent
-  alias Anoma.Protobuf.IntentPool.ListIntents
-  alias Anoma.Protobuf.MemPool.Dump
+  alias Anoma.Protobuf.Mempool.Dump
   alias Anoma.Protobuf.NodeInfo
+  alias Anoma.Protobuf.Intents.Add
+  alias Anoma.Protobuf.Intents.List
 
   @doc """
   I create an announcement message for the given node id.
@@ -62,17 +62,17 @@ defmodule Anoma.Node.Transport.Messages do
   # ----------------------------------------------------------------------------
   # Add Intent
 
-  def proto_to_call(%AddIntent.Request{}, ref, local_node_id) do
+  def proto_to_call(%Add.Request{}, ref, local_node_id) do
     # call the engine
     result = "intent added"
 
     # construct the reply message
-    response = %AddIntent.Response{result: result}
+    response = %Add.Response{result: result}
 
     {:reply, wrap(response, :add_intent_response, local_node_id, ref)}
   end
 
-  def proto_to_call(response = %AddIntent.Response{}, ref, _local_node_id) do
+  def proto_to_call(response = %Add.Response{}, ref, _local_node_id) do
     # construct the reply message
     result = response.result
     {:is_reply, {:ok, result}, ref}
@@ -81,17 +81,17 @@ defmodule Anoma.Node.Transport.Messages do
   # ----------------------------------------------------------------------------
   # List Intents
 
-  def proto_to_call(%ListIntents.Request{}, ref, local_node_id) do
+  def proto_to_call(%List.Request{}, ref, local_node_id) do
     # call the engine
     result = ["intent1", "intent2"]
 
     # do the call to the intent pool here
-    response = %ListIntents.Response{intents: result}
+    response = %List.Response{intents: result}
 
     {:reply, wrap(response, :list_intents_response, local_node_id, ref)}
   end
 
-  def proto_to_call(response = %ListIntents.Response{}, ref, _local_node_id) do
+  def proto_to_call(response = %List.Response{}, ref, _local_node_id) do
     # construct the reply message
     {:is_reply, {:ok, response.intents}, ref}
   end
@@ -172,7 +172,7 @@ defmodule Anoma.Node.Transport.Messages do
   # Add Intent
 
   def call_to_proto({:add_intent, _intent}, Intentpool, local_node_id) do
-    request = %AddIntent.Request{}
+    request = %Add.Request{}
 
     wrap(request, :add_intent_request, local_node_id)
   end
@@ -181,7 +181,7 @@ defmodule Anoma.Node.Transport.Messages do
   # List Intents
 
   def call_to_proto(:list_intents, Intentpool, local_node_id) do
-    request = %ListIntents.Request{}
+    request = %List.Request{}
 
     wrap(request, :list_intents_request, local_node_id)
   end

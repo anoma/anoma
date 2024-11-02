@@ -5,8 +5,6 @@ defmodule Noun do
   Represented as Elixir cons cells, which might get annoying.
   """
 
-  @dialyzer :no_improper_lists
-
   require Integer
 
   @type noun_atom() :: non_neg_integer() | binary() | []
