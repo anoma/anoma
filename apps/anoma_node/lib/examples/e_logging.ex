@@ -1,7 +1,7 @@
 defmodule Anoma.Node.Examples.ELogging do
   alias Anoma.Node
   alias Node.Logging
-  alias Node.Transaction.{Mempool, Storage}
+  alias Node.Transaction.{Mempool, Storage, Backends}
   alias Node.Examples.ENode
 
   require Node.Event
@@ -9,20 +9,23 @@ defmodule Anoma.Node.Examples.ELogging do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  @spec check_tx_event(String.t()) :: String.t()
   def check_tx_event(node_id \\ Node.example_random_id()) do
     ENode.start_node(node_id: node_id)
     table_name = Logging.table_name(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
 
-    tx_event("id 1", "back 1", "code 1", node_id)
+    tx_event("id 1", :transparent_resource, "code 1", node_id)
 
     assert_receive(
-      {:mnesia_table_event, {:write, {_, "id 1", {"back 1", "code 1"}}, _}},
+      {:mnesia_table_event,
+       {:write, {_, "id 1", {:transparent_resource, "code 1"}}, _}},
       5000
     )
 
-    assert {:atomic, [{^table_name, "id 1", {"back 1", "code 1"}}]} =
+    assert {:atomic,
+            [{^table_name, "id 1", {:transparent_resource, "code 1"}}]} =
              :mnesia.transaction(fn ->
                :mnesia.read(table_name, "id 1")
              end)
@@ -31,6 +34,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec check_multiple_tx_events(String.t()) :: String.t()
   def check_multiple_tx_events(node_id \\ Node.example_random_id()) do
     ENode.start_node(node_id: node_id)
 
@@ -38,27 +42,29 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :mnesia.subscribe({:table, table_name, :simple})
 
-    tx_event("id 1", "back 1", "code 1", node_id)
-    tx_event("id 2", "back 2", "code 2", node_id)
+    tx_event("id 1", :transparent_resource, "code 1", node_id)
+    tx_event("id 2", :transparent_resource, "code 2", node_id)
 
     assert_receive(
       {:mnesia_table_event,
-       {:write, {^table_name, "id 1", {"back 1", "code 1"}}, _}},
+       {:write, {^table_name, "id 1", {:transparent_resource, "code 1"}}, _}},
       5000
     )
 
     assert_receive(
       {:mnesia_table_event,
-       {:write, {^table_name, "id 2", {"back 2", "code 2"}}, _}},
+       {:write, {^table_name, "id 2", {:transparent_resource, "code 2"}}, _}},
       5000
     )
 
-    assert {:atomic, [{^table_name, "id 1", {"back 1", "code 1"}}]} =
+    assert {:atomic,
+            [{^table_name, "id 1", {:transparent_resource, "code 1"}}]} =
              :mnesia.transaction(fn ->
                :mnesia.read(table_name, "id 1")
              end)
 
-    assert {:atomic, [{^table_name, "id 2", {"back 2", "code 2"}}]} =
+    assert {:atomic,
+            [{^table_name, "id 2", {:transparent_resource, "code 2"}}]} =
              :mnesia.transaction(fn ->
                :mnesia.read(table_name, "id 2")
              end)
@@ -71,6 +77,7 @@ defmodule Anoma.Node.Examples.ELogging do
   #                      Consensus event                     #
   ############################################################
 
+  @spec check_consensus_event(String.t()) :: String.t()
   def check_consensus_event(
         node_id \\ Node.example_random_id()
         |> Base.url_encode64()
@@ -98,6 +105,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec check_consensus_event_multiple(String.t()) :: String.t()
   def check_consensus_event_multiple(
         node_id \\ Node.example_random_id()
         |> Base.url_encode64()
@@ -130,6 +138,7 @@ defmodule Anoma.Node.Examples.ELogging do
   #                         Block event                      #
   ############################################################
 
+  @spec check_block_event(String.t()) :: String.t()
   def check_block_event(
         node_id \\ Node.example_random_id()
         |> Base.url_encode64()
@@ -161,6 +170,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec check_block_event_multiple(String.t()) :: String.t()
   def check_block_event_multiple(
         node_id \\ Node.example_random_id()
         |> Base.url_encode64()
@@ -208,6 +218,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec check_block_event_leave_one_out(String.t()) :: String.t()
   def check_block_event_leave_one_out(
         node_id \\ Node.example_random_id()
         |> Base.url_encode64()
@@ -235,7 +246,8 @@ defmodule Anoma.Node.Examples.ELogging do
                :mnesia.read(table_name, "id 1")
              end)
 
-    assert {:atomic, [{^table_name, "id 2", {"back 2", "code 2"}}]} =
+    assert {:atomic,
+            [{^table_name, "id 2", {:transparent_resource, "code 2"}}]} =
              :mnesia.transaction(fn ->
                :mnesia.read(table_name, "id 2")
              end)
@@ -243,6 +255,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec replay_corrects_result(String.t()) :: String.t()
   def replay_corrects_result(node_id \\ Node.example_random_id()) do
     replay_ensure_created_tables(node_id)
     table = Storage.blocks_table(node_id)
@@ -272,6 +285,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec replay_consensus_leave_one_out(String.t()) :: String.t()
   def replay_consensus_leave_one_out(node_id \\ Node.example_random_id()) do
     write_consensus_leave_one_out(node_id)
     replay_ensure_created_tables(node_id)
@@ -297,6 +311,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec replay_several_consensus(String.t()) :: String.t()
   def replay_several_consensus(node_id \\ Node.example_random_id()) do
     write_several_consensus(node_id)
     replay_ensure_created_tables(node_id)
@@ -320,6 +335,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec replay_consensus_with_several_txs(String.t()) :: String.t()
   def replay_consensus_with_several_txs(node_id \\ Node.example_random_id()) do
     write_consensus_with_several_tx(node_id)
     replay_ensure_created_tables(node_id)
@@ -340,6 +356,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec replay_consensus(String.t()) :: String.t()
   def replay_consensus(node_id \\ Node.example_random_id()) do
     write_consensus(node_id)
     replay_ensure_created_tables(node_id)
@@ -357,6 +374,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec replay_several_txs(String.t()) :: String.t()
   def replay_several_txs(node_id \\ Node.example_random_id()) do
     write_several_tx(node_id)
     replay_ensure_created_tables(node_id)
@@ -374,6 +392,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec replay_tx(String.t()) :: String.t()
   def replay_tx(node_id \\ Node.example_random_id()) do
     write_tx(node_id)
     replay_ensure_created_tables(node_id)
@@ -388,6 +407,7 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
+  @spec write_consensus_leave_one_out(String.t()) :: atom()
   defp write_consensus_leave_one_out(node_id) do
     table = write_several_tx(node_id)
 
@@ -398,6 +418,7 @@ defmodule Anoma.Node.Examples.ELogging do
     table
   end
 
+  @spec write_several_consensus(String.t()) :: atom()
   defp write_several_consensus(node_id) do
     table = write_several_tx(node_id)
 
@@ -408,6 +429,7 @@ defmodule Anoma.Node.Examples.ELogging do
     table
   end
 
+  @spec write_consensus_with_several_tx(String.t()) :: atom()
   defp write_consensus_with_several_tx(node_id) do
     table = write_several_tx(node_id)
 
@@ -418,6 +440,7 @@ defmodule Anoma.Node.Examples.ELogging do
     table
   end
 
+  @spec write_consensus(String.t()) :: atom()
   def write_consensus(node_id) do
     table = write_tx(node_id)
 
@@ -428,6 +451,7 @@ defmodule Anoma.Node.Examples.ELogging do
     table
   end
 
+  @spec write_several_tx(String.t()) :: atom()
   defp write_several_tx(node_id) do
     table = create_event_table(node_id)
 
@@ -439,6 +463,7 @@ defmodule Anoma.Node.Examples.ELogging do
     table
   end
 
+  @spec write_tx(String.t()) :: atom()
   defp write_tx(node_id) do
     table = create_event_table(node_id)
 
@@ -449,6 +474,8 @@ defmodule Anoma.Node.Examples.ELogging do
     table
   end
 
+  @spec wait_for_consensus(String.t(), list(binary())) ::
+          :ok | :error_consensus
   defp wait_for_consensus(node_id, consensus) do
     receive do
       %EventBroker.Event{
@@ -465,6 +492,7 @@ defmodule Anoma.Node.Examples.ELogging do
     end
   end
 
+  @spec wait_for_tx(String.t(), binary(), Noun.t()) :: :ok | :error_tx
   defp wait_for_tx(node_id, id, code) do
     receive do
       %EventBroker.Event{
@@ -482,6 +510,7 @@ defmodule Anoma.Node.Examples.ELogging do
     end
   end
 
+  @spec create_event_table(String.t()) :: atom()
   defp create_event_table(node_id) do
     table = Logging.table_name(node_id)
     :mnesia.create_table(table, attributes: [:type, :body])
@@ -493,6 +522,7 @@ defmodule Anoma.Node.Examples.ELogging do
     table
   end
 
+  @spec replay_ensure_created_tables(String.t()) :: [{atom(), atom()}]
   defp replay_ensure_created_tables(node_id) do
     block_table = Storage.blocks_table(node_id)
     values_table = Storage.values_table(node_id)
@@ -509,6 +539,7 @@ defmodule Anoma.Node.Examples.ELogging do
     ]
   end
 
+  @spec tx_event(binary(), Backends.backend(), Noun.t(), String.t()) :: :ok
   def tx_event(id, backend, code, node_id) do
     event =
       Node.Event.new_with_body(node_id, %Mempool.TxEvent{
@@ -519,6 +550,7 @@ defmodule Anoma.Node.Examples.ELogging do
     EventBroker.event(event)
   end
 
+  @spec consensus_event(list(binary()), String.t()) :: :ok
   def consensus_event(order, node_id) do
     event =
       Node.Event.new_with_body(node_id, %Mempool.ConsensusEvent{
@@ -528,6 +560,7 @@ defmodule Anoma.Node.Examples.ELogging do
     EventBroker.event(event)
   end
 
+  @spec block_event(list(binary()), non_neg_integer(), String.t()) :: :ok
   def block_event(order, round, node_id) do
     event =
       Node.Event.new_with_body(node_id, %Mempool.BlockEvent{
