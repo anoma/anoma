@@ -48,6 +48,7 @@ defmodule Examples.ENock do
 
   #### Term Examples
 
+  @spec zero(Noun.t()) :: Noun.t()
   def zero(key \\ "key") do
     zero_counter_arm = [1, key | 0]
     arm = [10, [2 | zero_counter_arm], 1, 0 | 0]
@@ -55,6 +56,7 @@ defmodule Examples.ENock do
     [[8, [1 | sample], [1 | arm], 0 | 1] | 999]
   end
 
+  @spec inc(Noun.t()) :: Noun.t()
   def inc(key \\ "key") do
     increment_value_arm = [[1 | key], 4, 12, [1 | 0], [0 | 6], 1, key | 0]
     # Place the result in a list
@@ -84,6 +86,7 @@ defmodule Examples.ENock do
     term
   end
 
+  @spec incorrectly_nested_noun() :: :error
   def incorrectly_nested_noun() do
     term = Noun.Format.parse("[[[[1]]]]")
     assert :error = term
@@ -129,6 +132,7 @@ defmodule Examples.ENock do
   ##                       Noun Transactions                        ##
   ####################################################################
 
+  @spec trivial_swap() :: Noun.t()
   def trivial_swap() do
     swap = Examples.ETransparent.ETransaction.swap_from_actions()
     noun = swap |> Noun.Nounable.to_noun()
@@ -141,6 +145,7 @@ defmodule Examples.ENock do
     noun
   end
 
+  @spec trivial_swap_no_eph() :: Noun.t()
   def trivial_swap_no_eph() do
     Examples.ETransparent.ETransaction.swap_from_actions_non_eph_nullifier()
     |> Noun.Nounable.to_noun()
@@ -150,6 +155,7 @@ defmodule Examples.ENock do
   ##                        Noun Submission                         ##
   ####################################################################
 
+  @spec transparent_core(Noun.t()) :: Noun.t()
   def transparent_core(
         tx_noun \\ Examples.ETransparent.ETransaction.swap_from_actions()
         |> Noun.Nounable.to_noun()
@@ -481,6 +487,7 @@ defmodule Examples.ENock do
     "[8 [9 22 0 63] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
+  @spec shax() :: Noun.t()
   def shax() do
     sample = 0
     core = [shax_arm(), sample | Nock.logics_core()]
@@ -636,6 +643,8 @@ defmodule Examples.ENock do
   seed and range
   """
 
+  @spec rads_call(non_neg_integer(), non_neg_integer()) ::
+          :error | {:ok, Noun.t()}
   def rads_call(seed, range) do
     Nock.nock(rads_arm(), [9, 2, 10, [6, 1 | [seed | range]], 0 | 1])
   end
@@ -657,6 +666,7 @@ defmodule Examples.ENock do
     "[8 [9 1.515 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
+  @spec abs() :: Noun.t()
   def abs() do
     arm = abs_arm()
     sample = 888
@@ -691,6 +701,7 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
+  @spec dif() :: Noun.t()
   def dif() do
     arm = dif_arm()
     sample = [888 | 999]
@@ -722,6 +733,7 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
+  @spec dul() :: Noun.t()
   def dul() do
     arm = dul_arm()
     sample = [888 | 999]
@@ -757,6 +769,7 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
+  @spec fra() :: Noun.t()
   def fra() do
     arm = fra_arm()
     sample = [888 | 999]
@@ -794,6 +807,7 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
+  @spec new() :: Noun.t()
   def new() do
     arm = new_arm()
     sample = [888 | 999]
@@ -825,6 +839,7 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
+  @spec old() :: Noun.t()
   def old() do
     arm = old_arm()
     sample = 888
@@ -856,6 +871,7 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
+  @spec pro() :: Noun.t()
   def pro() do
     arm = pro_arm()
     sample = [888 | 999]
@@ -887,6 +903,7 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
+  @spec rem() :: Noun.t()
   def rem() do
     arm = rem_arm()
     sample = [888 | 999]
@@ -924,6 +941,7 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
+  @spec sum() :: Noun.t()
   def sum() do
     arm = sum_arm()
     sample = [888 | 999]
@@ -943,6 +961,7 @@ defmodule Examples.ENock do
     "[8 [9 10 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
+  @spec sun() :: Noun.t()
   def sun() do
     arm = sun_arm()
     sample = 888
@@ -959,6 +978,7 @@ defmodule Examples.ENock do
     "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
   end
 
+  @spec syn() :: Noun.t()
   def syn() do
     arm = syn_arm()
     sample = 888
@@ -993,6 +1013,7 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
+  @spec cmp() :: Noun.t()
   def cmp() do
     arm = cmp_arm()
     sample = [888 | 999]
@@ -1234,12 +1255,14 @@ defmodule Examples.ENock do
 
   and getting it's arm with [0 2]
   """
+  @spec og_arm() :: Noun.t()
   def og_arm() do
     arm = "[8 [9 47 0 63] 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
     sample = 0
     [arm, sample | Nock.logics_core()]
   end
 
+  @spec og_call(non_neg_integer()) :: :error | {:ok, Noun.t()}
   def og_call(seed) do
     Nock.nock(og_arm(), [9, 2, 10, [6, 1 | seed], 0 | 1])
   end
@@ -1254,6 +1277,7 @@ defmodule Examples.ENock do
 
   and grabbing the arm with [0 2]
   """
+  @spec raws_with_core() :: Noun.t()
   def raws_with_core() do
     arm =
       "[8 [7 [0 12] 9 4 0 1] 9 2 10 [6 0 29] 0 2]"
@@ -1264,10 +1288,13 @@ defmodule Examples.ENock do
     [arm, sample | Nock.logics_core()]
   end
 
+  @spec raws_with_core_call(non_neg_integer(), non_neg_integer()) ::
+          :error | {:ok, Noun.t()}
   def raws_with_core_call(core, width) do
     Nock.nock(raws_with_core(), [9, 2, 10, [6, 1 | [core | width]], 0 | 1])
   end
 
+  @spec raws_with_out_core_test() :: any()
   def raws_with_out_core_test() do
     {:ok, og_with_27} = og_call(27)
 
@@ -1284,16 +1311,19 @@ defmodule Examples.ENock do
 
   and grabbing the arm with [0 2]
   """
+  @spec split_arm() :: Noun.t()
   def split_arm() do
     arm = "[7 [0 6] 9 21 0 1]" |> Noun.Format.parse_always()
     sample = 0
     [arm, sample | Nock.logics_core()]
   end
 
+  @spec split_call(Noun.t()) :: :error | {:ok, Noun.t()}
   def split_call(core) do
     Nock.nock(split_arm(), [9, 2, 10, [6, 1 | core], 0 | 1])
   end
 
+  @spec call_split_test() :: any()
   def call_split_test() do
     {:ok, og_with_123} = og_call(123)
     {:ok, [rng1 | rng2]} = og_with_123 |> split_call()
@@ -1426,6 +1456,7 @@ defmodule Examples.ENock do
   # Maybe move the tests to the core itself... idk
 
   # todo: BAD. fix the disaster left by integer jam
+  @spec jamming_and_cueing() :: :ok
   def jamming_and_cueing() do
     jam_and_cue(0, atom_integer_to_binary(2))
     jam_and_cue(1, atom_integer_to_binary(12))
@@ -1518,6 +1549,7 @@ defmodule Examples.ENock do
     :ok
   end
 
+  @spec jam_and_cue(any(), any()) :: any()
   def jam_and_cue(jam_value, cue_value) do
     assert Noun.equal(jam_value, Nock.Cue.cue!(cue_value))
     assert cue_value == Nock.Jam.jam(Noun.normalize_noun(jam_value))
