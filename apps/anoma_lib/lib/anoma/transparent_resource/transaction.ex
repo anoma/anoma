@@ -15,6 +15,7 @@ defmodule Anoma.TransparentResource.Transaction do
     field(:delta_proof, <<>>, default: <<>>)
   end
 
+  @spec compose(t(), t()) :: t()
   def compose(tx1 = %Transaction{}, tx2 = %Transaction{}) do
     %Transaction{
       roots: MapSet.union(tx1.roots, tx2.roots),
@@ -164,6 +165,7 @@ defmodule Anoma.TransparentResource.Transaction do
   end
 
   defimpl Noun.Nounable, for: Transaction do
+    @impl true
     def to_noun(trans = %Transaction{}) do
       [
         MapSet.to_list(trans.roots),
