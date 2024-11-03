@@ -35,6 +35,7 @@ defmodule Anoma.Node.Transaction.Executor do
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
+  @impl true
   @spec init([startup_options()]) :: {:ok, Executor.t()}
   def init(args) do
     Process.set_label(__MODULE__)
@@ -79,6 +80,7 @@ defmodule Anoma.Node.Transaction.Executor do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_cast({:launch, tw_w_backend, id}, state) do
     handle_launch(tw_w_backend, id, state)
     {:noreply, state}
