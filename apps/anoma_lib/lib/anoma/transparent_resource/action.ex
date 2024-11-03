@@ -13,6 +13,7 @@ defmodule Anoma.TransparentResource.Action do
     field(:app_data, binary(), default: <<>>)
   end
 
+  @spec precis(t()) :: %{nullified: Delta.t(), committed: Delta.t()}
   def precis(%Action{proofs: proofs}) do
     for proof <- proofs,
         reduce: %{committed: MapSet.new(), nullified: MapSet.new()} do
@@ -29,6 +30,7 @@ defmodule Anoma.TransparentResource.Action do
     end
   end
 
+  @spec delta(t()) :: Delta.t()
   def delta(action = %Action{}) do
     %{committed: committed, nullified: nullified} = precis(action)
 
@@ -123,6 +125,7 @@ defmodule Anoma.TransparentResource.Action do
   end
 
   defimpl Noun.Nounable, for: Action do
+    @impl true
     def to_noun(trans = %Action{}) do
       [
         MapSet.to_list(trans.commitments),
