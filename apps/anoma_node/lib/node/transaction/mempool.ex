@@ -67,6 +67,7 @@ defmodule Anoma.Node.Transaction.Mempool do
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
+  @impl true
   @spec init([startup_options()]) :: {:ok, Mempool.t()}
   def init(args) do
     Process.set_label(__MODULE__)
@@ -148,6 +149,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_call(:dump, _from, state) do
     {:reply, state.transactions |> Map.keys(), state}
   end
@@ -156,6 +158,7 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:reply, :ok, state}
   end
 
+  @impl true
   def handle_cast({:tx, tx, tx_id}, state) do
     {:noreply, handle_tx(tx, tx_id, state)}
   end
@@ -169,6 +172,7 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:noreply, state}
   end
 
+  @impl true
   def handle_info(
         %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}} = e,
         state
