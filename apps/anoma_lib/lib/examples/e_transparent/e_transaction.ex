@@ -5,6 +5,7 @@ defmodule Examples.ETransparent.ETransaction do
 
   use TestHelper.TestMacro
 
+  @spec empty() :: Transaction.t()
   def empty() do
     res = %Transaction{}
 
@@ -13,6 +14,7 @@ defmodule Examples.ETransparent.ETransaction do
     res
   end
 
+  @spec single_swap() :: Transaction.t()
   def single_swap() do
     res = %{empty() | actions: MapSet.new([EAction.trivial_swap_action()])}
 
@@ -22,6 +24,7 @@ defmodule Examples.ETransparent.ETransaction do
     res
   end
 
+  @spec single_swap_invalid_delta() :: Transaction.t()
   def single_swap_invalid_delta() do
     res = %Transaction{single_swap() | delta: %{<<1>> => 1}}
 
@@ -30,6 +33,7 @@ defmodule Examples.ETransparent.ETransaction do
     res
   end
 
+  @spec invalid_swap() :: Transaction.t()
   def invalid_swap() do
     actions =
       MapSet.new([EAction.trivial_action_proofs_missing_nullifier_proof()])
@@ -41,6 +45,7 @@ defmodule Examples.ETransparent.ETransaction do
     res
   end
 
+  @spec commit_intent() :: Transaction.t()
   def commit_intent() do
     actions =
       MapSet.new([EAction.trivial_true_commit_action()])
@@ -53,6 +58,7 @@ defmodule Examples.ETransparent.ETransaction do
     res
   end
 
+  @spec nullify_intent_eph() :: Transaction.t()
   def nullify_intent_eph() do
     actions =
       MapSet.new([EAction.trivial_true_eph_nullifier_action()])
@@ -71,6 +77,7 @@ defmodule Examples.ETransparent.ETransaction do
     res
   end
 
+  @spec nullify_intent() :: Transaction.t()
   def nullify_intent() do
     actions =
       MapSet.new([EAction.trivial_true_2_nullifier_action()])
@@ -79,6 +86,7 @@ defmodule Examples.ETransparent.ETransaction do
     %Transaction{empty() | actions: actions, delta: delta}
   end
 
+  @spec swap_from_actions() :: Transaction.t()
   def swap_from_actions() do
     res = Transaction.compose(nullify_intent_eph(), commit_intent())
 
@@ -90,6 +98,7 @@ defmodule Examples.ETransparent.ETransaction do
 
   # This should fail verification on submission if storage is not
   # primed
+  @spec swap_from_actions_non_eph_nullifier() :: Transaction.t()
   def swap_from_actions_non_eph_nullifier() do
     res = Transaction.compose(nullify_intent(), commit_intent())
 
