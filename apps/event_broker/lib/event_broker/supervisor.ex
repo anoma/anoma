@@ -8,6 +8,13 @@ defmodule EventBroker.Supervisor do
 
   use Supervisor
 
+  @spec start_link(
+          list(
+            {:name, atom()}
+            | {:broker_name, atom()}
+            | {:registry_name, atom()}
+          )
+        ) :: GenServer.on_start()
   def start_link(args \\ []) do
     {:ok, keys} =
       args
@@ -20,6 +27,7 @@ defmodule EventBroker.Supervisor do
     Supervisor.start_link(__MODULE__, keys, name: keys[:name])
   end
 
+  @impl true
   def init(args) do
     dyn_sup_name =
       (Atom.to_string(args[:registry_name]) <> ".DynamicSupervisor")
