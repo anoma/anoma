@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Compile.Protoc do
 
   use Mix.Task.Compiler
 
+  @impl true
   def run(args) do
     forced? = args == ["--force"]
 
