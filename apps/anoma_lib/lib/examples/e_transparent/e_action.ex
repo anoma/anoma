@@ -5,6 +5,7 @@ defmodule Examples.ETransparent.EAction do
 
   use TestHelper.TestMacro
 
+  @spec empty() :: Action.t()
   def empty() do
     res = %Action{}
 
@@ -13,6 +14,7 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  @spec trivial_action_only_proofs() :: Action.t()
   def trivial_action_only_proofs() do
     res = %Action{
       empty()
@@ -24,6 +26,7 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  @spec trivial_action_proofs_proof_and_commitments() :: Action.t()
   def trivial_action_proofs_proof_and_commitments() do
     commitments = ELogicProof.trivial_true_swap_proof_commitment().commitments
 
@@ -37,6 +40,7 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  @spec trivial_action_proofs_missing_nullifier_proof() :: Action.t()
   def trivial_action_proofs_missing_nullifier_proof() do
     nullifiers = ELogicProof.trivial_true_swap_proof_commitment().nullifiers
 
@@ -50,6 +54,7 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  @spec trivial_swap_action() :: Action.t()
   def trivial_swap_action() do
     action = trivial_action_proofs_missing_nullifier_proof()
 
@@ -68,6 +73,7 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  @spec trivial_true_commit_action() :: Action.t()
   def trivial_true_commit_action() do
     logic_proof = ELogicProof.trivial_true_commitment()
 
@@ -82,10 +88,12 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  @spec trivial_true_commit_delta() :: Delta.t()
   def trivial_true_commit_delta() do
     trivial_true_commit_action() |> Action.delta()
   end
 
+  @spec trivial_true_2_nullifier_action() :: Action.t()
   def trivial_true_2_nullifier_action() do
     logic_proof = ELogicProof.trivial_true_2_nullifier()
 
@@ -100,6 +108,7 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  @spec trivial_true_eph_nullifier_action() :: Action.t()
   def trivial_true_eph_nullifier_action() do
     logic_proof = ELogicProof.trivial_true_eph_nullifier()
 
@@ -114,6 +123,7 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  @spec trivial_true_2_nullifier_delta() :: Delta.t()
   def trivial_true_2_nullifier_delta() do
     res = trivial_true_2_nullifier_action() |> Action.delta()
 
