@@ -45,6 +45,7 @@ defmodule Anoma.Node.Transaction.Storage do
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
+  @impl true
   @spec init([startup_options()]) :: {:ok, t()}
   def init(args) do
     Process.set_label(__MODULE__)
@@ -66,10 +67,12 @@ defmodule Anoma.Node.Transaction.Storage do
     {:ok, state}
   end
 
+  @impl true
   def terminate(_reason, state) do
     {:ok, state}
   end
 
+  @impl true
   def handle_call({:commit, round, writes, _}, _from, state) do
     mnesia_tx = fn ->
       for {key, value} <- state.uncommitted do
@@ -177,10 +180,12 @@ defmodule Anoma.Node.Transaction.Storage do
     ])
   end
 
+  @impl true
   def handle_cast(_msg, state) do
     {:noreply, state}
   end
 
+  @impl true
   def handle_info(_info, state) do
     {:noreply, state}
   end
@@ -447,14 +452,17 @@ defmodule Anoma.Node.Transaction.Storage do
     )
   end
 
+  @spec blocks_table(String.t()) :: atom()
   def blocks_table(node_id) do
     String.to_atom("#{__MODULE__.Blocks}_#{:erlang.phash2(node_id)}")
   end
 
+  @spec values_table(String.t()) :: atom()
   def values_table(node_id) do
     String.to_atom("#{__MODULE__.Values}_#{:erlang.phash2(node_id)}")
   end
 
+  @spec updates_table(String.t()) :: atom()
   def updates_table(node_id) do
     String.to_atom("#{__MODULE__.Updates}_#{:erlang.phash2(node_id)}")
   end
