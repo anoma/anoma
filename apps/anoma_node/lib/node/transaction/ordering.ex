@@ -33,13 +33,17 @@ defmodule Anoma.Node.Transaction.Ordering do
     _ -> false
   end
 
+  ############################################################
+  #                    Genserver Helpers                     #
+  ############################################################
+
   @spec start_link([startup_options()]) :: GenServer.on_start()
   def start_link(args \\ []) do
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
-  @spec init([startup_options()]) :: {:ok, t()}
+  @impl true
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -48,6 +52,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     {:ok, state}
   end
 
+  @impl true
   def handle_call({:read, {tx_id, key}}, from, state) do
     with {:ok, height} <- Map.fetch(state.tx_id_to_height, tx_id) do
       Task.start(fn ->
@@ -106,6 +111,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     {:reply, :ok, state}
   end
 
+  @impl true
   def handle_cast({:order, tx_id_list}, state) do
     {map, next_order} =
       for tx_id <- tx_id_list,
@@ -128,6 +134,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     {:noreply, state}
   end
 
+  @impl true
   def handle_info(_info, state) do
     {:noreply, state}
   end
