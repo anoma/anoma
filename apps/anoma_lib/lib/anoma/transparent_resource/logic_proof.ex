@@ -35,6 +35,7 @@ defmodule Anoma.TransparentResource.LogicProof do
     field(:other_private, Noun.t(), default: <<>>)
   end
 
+  @spec verify(t()) :: boolean()
   def verify(proof = %LogicProof{}) do
     {public_inputs, private_inputs} = internal_logic_inputs(proof)
 
@@ -112,6 +113,7 @@ defmodule Anoma.TransparentResource.LogicProof do
 
   defimpl Noun.Nounable, for: __MODULE__ do
     # We chose an interesting Nock encoding
+    @impl true
     def to_noun(proof = %Anoma.TransparentResource.LogicProof{}) do
       {public_inputs, private_inputs} =
         LogicProof.internal_logic_inputs(proof)
