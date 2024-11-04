@@ -63,7 +63,7 @@ defmodule Anoma.Node.Examples.ESolver do
   I insert a single transaction into the solver, which it cannot solve.
   I verify that the transaction is then in the unsolved list.
   """
-  @spec solvable_transaction_via_intent_pool() :: boolean()
+  @spec solvable_transaction_via_intent_pool(ENode.t()) :: boolean()
   def solvable_transaction_via_intent_pool(enode \\ ENode.start_node()) do
     # startup
     # the solver does not have solved transactions.
