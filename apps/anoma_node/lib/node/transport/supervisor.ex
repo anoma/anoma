@@ -9,6 +9,7 @@ defmodule Anoma.Node.Transport.Supervisor do
 
   require Logger
 
+  @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
     args = Keyword.validate!(args, [:node_id, ports: [], grpc_port: 0])
     Supervisor.start_link(__MODULE__, args)

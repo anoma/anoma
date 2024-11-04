@@ -47,6 +47,7 @@ defmodule Anoma.Node.Transport.TCP.Connection do
   #                    Genserver Helpers                     #
   ############################################################
 
+  @spec child_spec([any()]) :: Supervisor.child_spec()
   def child_spec(args) do
     %{
       id: __MODULE__,
@@ -55,6 +56,7 @@ defmodule Anoma.Node.Transport.TCP.Connection do
     }
   end
 
+  @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
   end
