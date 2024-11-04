@@ -11,7 +11,7 @@ defmodule Anoma.Node.Registry do
     field(:label, atom(), default: nil)
   end
 
-  @spec address(String.t(), atom()) :: Address.t()
+  @spec address(String.t(), atom(), any() | nil) :: Address.t()
   def address(node_id, engine, label \\ nil)
 
   def address(node_id, engine, label) do
