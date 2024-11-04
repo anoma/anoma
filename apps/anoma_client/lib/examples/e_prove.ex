@@ -25,6 +25,7 @@ defmodule Anoma.Client.Examples.EProve do
     result
   end
 
+  @spec prove_squared_small() :: {:ok, 9}
   def prove_squared_small() do
     # jammed base64 encoded square function that takes in one parameter
     {:ok, program} =

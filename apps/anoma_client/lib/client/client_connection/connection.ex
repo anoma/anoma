@@ -43,6 +43,7 @@ defmodule Anoma.Client.Connection.TCP do
     field(:callers, %{GenServer.from() => binary()}, default: %{})
   end
 
+  @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end

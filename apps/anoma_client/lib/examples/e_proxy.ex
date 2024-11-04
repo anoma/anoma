@@ -25,6 +25,7 @@ defmodule Anoma.Client.Examples.EProxy do
   #                    Helpers                               #
   ############################################################
 
+  @spec setup() :: EClient.t()
   def setup() do
     EClient.create_example_client()
   end
