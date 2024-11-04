@@ -36,6 +36,7 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   #                    Genserver Helpers                     #
   ############################################################
 
+  @spec start_link(Keyword.t()) :: GenServer.on_start()
   def start_link(args) do
     args = Keyword.validate!(args, [:port, :host])
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
