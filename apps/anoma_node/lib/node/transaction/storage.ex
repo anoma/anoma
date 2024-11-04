@@ -57,13 +57,14 @@ defmodule Anoma.Node.Transaction.Storage do
   @spec init([startup_options()]) :: {:ok, t()}
   def init(args) do
     Process.set_label(__MODULE__)
+    rocks = Mix.env() != :test
 
     keylist =
       args
       |> Keyword.validate!([
         :node_id,
         uncommitted_height: 0,
-        rocks: false
+        rocks: rocks
       ])
 
     node_id = keylist[:node_id]

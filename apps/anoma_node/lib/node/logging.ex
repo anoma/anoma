@@ -55,11 +55,12 @@ defmodule Anoma.Node.Logging do
   @spec init(any()) :: {:ok, Logging.t()}
   def init(args) do
     Process.set_label(__MODULE__)
+    rocks = Mix.env() != :test
 
     args =
       Keyword.validate!(args, [
         :node_id,
-        rocks: false,
+        rocks: rocks,
         table: __MODULE__.Events
       ])
 
