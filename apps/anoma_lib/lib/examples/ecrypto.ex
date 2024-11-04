@@ -67,6 +67,7 @@ defmodule Examples.ECrypto do
   ##                         Signed Messages                        ##
   ####################################################################
 
+  @spec blood_msg() :: String.t()
   def blood_msg() do
     "The blood is already on my hands. Right or wrong, .. I must follow the path .. to its end."
   end
