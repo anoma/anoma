@@ -60,6 +60,7 @@ defmodule Anoma.Node.Transport.TCP.Listener do
 
   I ensure that TCP listeners are not restarted if they terminate.
   """
+  @spec child_spec([any()]) :: Supervisor.child_spec()
   def child_spec(args) do
     %{
       id: __MODULE__,
@@ -68,6 +69,7 @@ defmodule Anoma.Node.Transport.TCP.Listener do
     }
   end
 
+  @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
   end
