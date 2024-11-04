@@ -47,6 +47,7 @@ defmodule Anoma.Node.Intents.Solver do
   @doc """
   I create a new solver process .
   """
+  @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
@@ -186,6 +187,7 @@ defmodule Anoma.Node.Intents.Solver do
   # I try and solve the intents currently in my state.
   # If I can solve some of them, I add them to the solved pool.
   # """
+  @spec do_solve(t()) :: t()
   def do_solve(state) do
     {solved, unsolved} =
       case solve(state.unsolved) do
