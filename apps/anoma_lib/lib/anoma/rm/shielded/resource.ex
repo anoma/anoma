@@ -30,6 +30,7 @@ defmodule Anoma.RM.Shielded.Resource do
   end
 
   @doc "Randomizes the rseed of a resource."
+  @spec random(t()) :: t()
   def random(r = %Resource{}) do
     rseed = :crypto.strong_rand_bytes(32)
     %Resource{r | rseed: rseed}
@@ -39,6 +40,7 @@ defmodule Anoma.RM.Shielded.Resource do
   Set the nonce of a resource, the nonce of output resource comes from the
   nullifer of input recource in the compliance proof.
   """
+  @spec set_nonce(t(), binary()) :: t()
   def set_nonce(r = %Resource{}, nonce) do
     %Resource{r | nonce: nonce}
   end

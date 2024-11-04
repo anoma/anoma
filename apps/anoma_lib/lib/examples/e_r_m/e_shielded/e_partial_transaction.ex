@@ -2,7 +2,7 @@ defmodule Examples.ERM.EShielded.EPartialTransaction do
   alias Anoma.RM.Shielded.PartialTransaction
   alias Examples.ERM.EShielded.EProofRecord
 
-  @spec a_partial_transaction() :: %PartialTransaction{}
+  @spec a_partial_transaction() :: PartialTransaction.t()
   def a_partial_transaction do
     proof = EProofRecord.a_compliance_proof()
     input_resource_logic = proof

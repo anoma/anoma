@@ -4,7 +4,7 @@ defmodule Examples.ERM.EShielded.EProofRecord do
   alias Examples.ERM.EShielded.EComplianceInput
   alias Anoma.RM.Shielded.ProofRecord
 
-  @spec a_compliance_proof() :: %ProofRecord{}
+  @spec a_compliance_proof() :: ProofRecord.t()
 
   defmemo a_compliance_proof do
     compliance_inputs = EComplianceInput.a_compliance_input()

@@ -2,7 +2,7 @@ defmodule Examples.ERM.EShielded.ETransaction do
   alias Anoma.RM
   alias Examples.ERM.EShielded.EPartialTransaction
 
-  @spec a_shielded_transaction() :: %RM.Shielded.Transaction{}
+  @spec a_shielded_transaction() :: RM.Shielded.Transaction.t()
   def a_shielded_transaction do
     ptx = EPartialTransaction.a_partial_transaction()
     priv_keys = <<3::256>>
@@ -17,7 +17,7 @@ defmodule Examples.ERM.EShielded.ETransaction do
     shielded_tx
   end
 
-  @spec another_shielded_transaction() :: %RM.Shielded.Transaction{}
+  @spec another_shielded_transaction() :: RM.Shielded.Transaction.t()
   def another_shielded_transaction do
     ptx = EPartialTransaction.a_partial_transaction()
     priv_keys = <<3::256>>
@@ -41,7 +41,7 @@ defmodule Examples.ERM.EShielded.ETransaction do
     composed_shielded_tx
   end
 
-  @spec a_invalid_shielded_transaction() :: %RM.Shielded.Transaction{}
+  @spec a_invalid_shielded_transaction() :: RM.Shielded.Transaction.t()
   def a_invalid_shielded_transaction do
     ptx = EPartialTransaction.a_partial_transaction()
     # Use an invalid private key (all zeros) to create an invalid transaction

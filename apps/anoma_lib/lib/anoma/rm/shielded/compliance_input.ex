@@ -24,6 +24,7 @@ defmodule Anoma.RM.Shielded.ComplianceInput do
   end
 
   @doc "Generate the compliance input json"
+  @spec to_json_string(t()) :: binary()
   def to_json_string(input = %ComplianceInput{}) do
     {_, _, path} =
       Enum.reduce(

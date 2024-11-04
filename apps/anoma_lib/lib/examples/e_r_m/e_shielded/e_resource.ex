@@ -10,7 +10,7 @@ defmodule Examples.ERM.EShielded.EResource do
     anpk
   end
 
-  @spec a_resource() :: %Resource{}
+  @spec a_resource() :: Resource.t()
   def a_resource do
     zero_binary = <<0::256>>
 
@@ -45,7 +45,7 @@ defmodule Examples.ERM.EShielded.EResource do
     anullifier
   end
 
-  @spec a_output_resource() :: %Resource{}
+  @spec a_output_resource() :: Resource.t()
   def a_output_resource do
     aninput_resource = a_resource()
     anullifier = a_resource_nullifier()

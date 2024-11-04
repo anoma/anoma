@@ -15,6 +15,7 @@ defmodule Anoma.Constants do
         61>>
 
   # cairo_trivial_resource_logic_hash is just for test
+  @spec cairo_trivial_resource_logic_hash() :: binary()
   def cairo_trivial_resource_logic_hash,
     do:
       <<1, 227, 167, 209, 4, 224, 245, 247, 206, 192, 233, 167, 80, 173, 125,
