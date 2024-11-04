@@ -104,6 +104,7 @@ defmodule Anoma.Node.Examples.ERegistry do
   @doc """
   Given a node id and an engine, I generate a name that can be used to register processes.
   """
+  @spec generate_name() :: {:via, atom(), {atom(), Address.t()}}
   def generate_name() do
     node_id =
       "londo_mollari" <>
