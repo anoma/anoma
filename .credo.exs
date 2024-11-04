@@ -35,7 +35,10 @@
           ~r"/_build/",
           ~r"/deps/",
           ~r"/node_modules/",
-          ~r/.*\.pb\.ex/
+          ~r/.*\.pb\.ex/,
+          ~r/mix\.exs/,
+          ~r/.*\.nockma/,
+          ~r/.*\.md/
         ]
       },
       #
