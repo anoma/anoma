@@ -24,6 +24,7 @@ defmodule CommitmentTree do
     field(:table, term())
   end
 
+  @spec init_storage(atom()) :: {:atomic, :ok} | {:aborted, reason :: term()}
   def init_storage(mnesia_table) do
     :mnesia.create_table(mnesia_table, attributes: [:index, :hash])
   end
