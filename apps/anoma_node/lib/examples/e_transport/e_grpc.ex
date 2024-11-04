@@ -40,7 +40,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   The client needs a node to process incoming requests (except prove), so a node is also required
   to run these examples.
   """
-  @spec connect_to_node(ENode.t() | nil) :: %EGRPC{}
+  @spec connect_to_node(ENode.t() | nil) :: EGRPC.t()
   def connect_to_node(enode \\ nil) do
     # if no node was given, this ran in a unit test.
     # we kill all nodes since we can only have a local node for this test.
@@ -70,6 +70,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   @doc """
   I list the intents over grpc on the client.
   """
+  @spec list_intents(EGRPC.t()) :: boolean()
   def list_intents(%EGRPC{} = client \\ connect_to_node()) do
     request = %List.Request{}
 
@@ -81,6 +82,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   @doc """
   I add an intent to the client.
   """
+  @spec add_intent(EGRPC.t()) :: boolean()
   def add_intent(%EGRPC{} = client \\ connect_to_node()) do
     request = %Add.Request{
       intent: %Intent{value: 1}
@@ -99,6 +101,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   @doc """
   I list all nullifiers.
   """
+  @spec list_nullifiers(EGRPC.t()) :: term()
   def list_nullifiers(%EGRPC{} = client \\ connect_to_node()) do
     request = %Nullifiers.Request{}
 
@@ -109,6 +112,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   @doc """
   I list all unrevealed commits.
   """
+  @spec list_unrevealed_commits(EGRPC.t()) :: term()
   def list_unrevealed_commits(%EGRPC{} = client \\ connect_to_node()) do
     request = %UnrevealedCommits.Request{}
 
@@ -119,6 +123,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   @doc """
   I list all unspent resources.
   """
+  @spec list_unspent_resources(EGRPC.t()) :: term()
   def list_unspent_resources(%EGRPC{} = client \\ connect_to_node()) do
     request = %UnspentResources.Request{}
 

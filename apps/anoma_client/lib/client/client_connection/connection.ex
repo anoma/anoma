@@ -206,6 +206,8 @@ defmodule Anoma.Client.Connection.TCP do
   #
   # Every other message is forwarded to the engine proxy.
   # """
+  @spec handle_message_in(Envelope.t() | Announcement.t() | any(), String.t()) ::
+          :ok
   defp handle_message_in(message = %Envelope{}, local_node_id) do
     {_, inner_message} = message.inner_message
     handle_message_in(inner_message, message.message_id, local_node_id)
