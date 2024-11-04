@@ -17,6 +17,7 @@ defmodule CommitmentTree.Proof do
     field(:proof, tuple())
   end
 
+  @spec new(integer(), tuple()) :: t()
   def new(path, proof) do
     %CommitmentTree.Proof{path: path, proof: proof}
   end
@@ -35,6 +36,13 @@ defmodule CommitmentTree.Proof do
     hash == anchor && verified
   end
 
+  @spec verifyx(
+          CommitmentTree.Spec.t(),
+          integer(),
+          integer(),
+          tuple(),
+          binary()
+        ) :: {binary(), boolean()}
   def verifyx(spec, depth, path, proof, cm) do
     if depth == 0 do
       {spec.hash.(proof), cm == elem(proof, path)}
