@@ -5,11 +5,13 @@ defmodule Anoma.Node.Intents.Supervisor do
 
   use Supervisor
 
+  @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
     args = Keyword.validate!(args, [:node_id])
     Supervisor.start_link(__MODULE__, args)
   end
 
+  @impl true
   def init(args) do
     Process.set_label(__MODULE__)
 
