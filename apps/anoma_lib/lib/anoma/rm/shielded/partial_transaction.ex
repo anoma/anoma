@@ -127,6 +127,7 @@ defmodule Anoma.RM.Shielded.PartialTransaction do
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
+    @impl true
     def to_noun(ptx = %PartialTransaction{}) do
       {ptx.logic_proofs, ptx.compliance_proofs}
       |> Noun.Nounable.to_noun()

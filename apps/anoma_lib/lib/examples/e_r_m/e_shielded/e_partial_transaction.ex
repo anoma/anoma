@@ -5,7 +5,7 @@ defmodule Examples.ERM.EShielded.EPartialTransaction do
 
   use TestHelper.TestMacro
 
-  @spec a_partial_transaction() :: %PartialTransaction{}
+  @spec a_partial_transaction() :: PartialTransaction.t()
   def a_partial_transaction do
     proof = EProofRecord.a_compliance_proof()
     input_resource_logic = EResourceLogic.a_input_resource_logic()

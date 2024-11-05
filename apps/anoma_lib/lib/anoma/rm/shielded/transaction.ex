@@ -59,6 +59,7 @@ defmodule Anoma.RM.Shielded.Transaction do
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
+    @impl true
     def to_noun(transaction = %Transaction{}) do
       {
         transaction.roots,
@@ -72,12 +73,17 @@ defmodule Anoma.RM.Shielded.Transaction do
   end
 
   defimpl Anoma.RM.Transaction, for: __MODULE__ do
+    @impl true
     def commitments(%Transaction{commitments: cm}), do: cm
+    @impl true
     def nullifiers(%Transaction{nullifiers: nf}), do: nf
 
+    @impl true
     def storage_commitments(tx), do: commitments(tx)
+    @impl true
     def storage_nullifiers(tx), do: nullifiers(tx)
 
+    @impl true
     def compose(tx1, tx2) do
       unless Anoma.RM.Transaction.Helpers.compose_pre_check(tx1, tx2) do
         nil
@@ -96,6 +102,7 @@ defmodule Anoma.RM.Shielded.Transaction do
     # TODO: We can return roots, commitments, and nullifiers instead of just a
     # boolean value so that we can get rid of them in the Transaction struct. We
     # can apply the same improvement to the transparent Transaction.
+    @impl true
     def verify(transaction = %Transaction{}) do
       with true <- verify_proofs(transaction),
            true <- verify_duplicate_nfs(transaction),
@@ -168,6 +175,7 @@ defmodule Anoma.RM.Shielded.Transaction do
       Enum.uniq(tx.nullifiers) == tx.nullifiers
     end
 
+    @impl true
     def cm_tree(_tx, _storage) do
       CommitmentTree.new(
         CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
@@ -175,6 +183,7 @@ defmodule Anoma.RM.Shielded.Transaction do
       )
     end
 
+    @impl true
     def resource_existence_check(transaction, storage) do
       for root <- transaction.roots, reduce: true do
         acc ->
@@ -193,6 +202,7 @@ defmodule Anoma.RM.Shielded.Transaction do
     end
   end
 
+  @spec get_compliance_outputs(t()) :: list(ComplianceOutput.t())
   def get_compliance_outputs(transaction) do
     transaction.partial_transactions
     |> Enum.flat_map(fn ptx ->

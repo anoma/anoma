@@ -6,7 +6,7 @@ defmodule Examples.ERM.EShielded.EProofRecord do
 
   use TestHelper.TestMacro
 
-  @spec a_compliance_proof() :: %ProofRecord{}
+  @spec a_compliance_proof() :: ProofRecord.t()
 
   defmemo a_compliance_proof do
     compliance_inputs = EComplianceInput.a_compliance_input()
@@ -17,7 +17,7 @@ defmodule Examples.ERM.EShielded.EProofRecord do
     proof
   end
 
-  @spec a_resource_logic(binary()) :: %ProofRecord{}
+  @spec a_resource_logic(binary()) :: ProofRecord.t()
   def a_resource_logic(input_file) do
     witness_dir =
       Path.join(
