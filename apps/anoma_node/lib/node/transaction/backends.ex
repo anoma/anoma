@@ -1,7 +1,15 @@
 defmodule Anoma.Node.Transaction.Backends do
   @moduledoc """
-  Backend module.
-  Support :kv, :ro, :rm, :cairo execution.
+  I am the Transaction Backend module.
+
+  I define a set of backends for the execution of the given transaction candidate.
+  Currently, I support transparent resource machine (RM) execution as well as
+  the following debug executions: read-only, key-value store, and blob store executions.
+
+  ### Public API
+
+  I have the following public functionality:
+  - `execute/3`
   """
 
   alias Anoma.Node
@@ -27,16 +35,43 @@ defmodule Anoma.Node.Transaction.Backends do
   @type transaction() :: {backend(), Noun.t() | binary()}
 
   typedstruct enforce: true, module: ResultEvent do
+    @typedoc """
+    I hold the content of the Result Event, which conveys the result of
+    the transaction candidate code execution on the Anoma VM to
+    the Mempool engine.
+
+    ### Fields
+    - `:tx_id`              - The transaction id.
+    - `:tx_result`          - VM execution result; either :error or an
+                              {:ok, noun} tuple.
+    """
     field(:tx_id, binary())
     field(:vm_result, {:ok, Noun.t()} | :error)
   end
 
   typedstruct enforce: true, module: CompleteEvent do
+    @typedoc """
+    I hold the content of the Complete Event, which communicates the result
+    of the transaction candidate execution to the Executor engine.
+
+    ### Fields
+    - `:tx_id`              - The transaction id.
+    - `:tx_result`          - Execution result; either :error or an
+                              {:ok, value} tuple.
+    """
     field(:tx_id, binary())
     field(:tx_result, {:ok, any()} | :error)
   end
 
   typedstruct enforce: true, module: NullifierEvent do
+    @typedoc """
+    I hold the content of the Nullifier Event, which communicates a set of
+    nullifiers defined by the actions of the transaction candidate to the
+    Intent Pool.
+
+    ### Fields
+    - `:nullifiers`         - The set of nullifiers.
+    """
     field(:nullifiers, MapSet.t(binary()))
   end
 
@@ -59,6 +94,32 @@ defmodule Anoma.Node.Transaction.Backends do
       false
   end
 
+  @doc """
+  I execute the specified transaction candidate using the designated backend.
+  If the transaction is provided as a `jam`med noun atom, I first attempt
+  to apply `cue/1` in order to unpack the transaction code.
+
+  First, I execute the transaction code on the Anoma VM. Next, I apply processing
+  logic to the resulting value, dependent on the selected backend.
+  - For read-only backend, the value is transmitted as a Result Event.
+  - For the key-value and blob store executions, the obtained value is stored
+  and a Complete Event is issued.
+  - For the transparent Resource Machine (RM) execution, I verify the
+    transaction's validity and compute the corresponding set of nullifiers,
+    which is transmitted as a Nullifier Event.
+
+  #### Pattern Matching Variations
+
+  - `execute(node_id, {backend, tx}, id) when Noun.is_noun_atom(tx)` -
+    I try to unpack the transaction code before executing it using the specified backend.
+  - `execute(node_id, {:transparent_resource, tx}, id)` - I perform the RM execution.
+  - `execute(node_id, {:debug_read_term, tx}, id)` - I perform the read-only
+    execution (for debugging purposes).
+  - `execute(node_id, {:debug_term_storage, tx}, id)` - I perform the key-value
+    store execution (for debugging purposes).
+  - `execute(node_id, {:debug_bloblike, tx}, id)` - I perform the blob store
+    execution (for debugging purposes).
+  """
   @spec execute(String.t(), {backend(), Noun.t()}, binary()) :: :ok
   def execute(node_id, {backend, tx}, id)
       when Noun.is_noun_atom(tx) do
@@ -94,19 +155,9 @@ defmodule Anoma.Node.Transaction.Backends do
     )
   end
 
-  @spec gate_call(Noun.t(), Nock.t(), binary(), String.t()) ::
-          {:ok, Noun.t()} | :vm_error
-  defp gate_call(tx_code, env, id, node_id) do
-    with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
-         {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
-         {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
-      res = {:ok, result}
-      result_event(id, res, node_id)
-      res
-    else
-      _e -> :vm_error
-    end
-  end
+  ############################################################
+  #                         Helpers                          #
+  ############################################################
 
   @spec execute_candidate(node_id, Noun.t(), id, process) :: :ok
         when id: binary(),
@@ -125,6 +176,20 @@ defmodule Anoma.Node.Transaction.Backends do
       _e ->
         Ordering.write(node_id, {id, []})
         complete_event(id, :error, node_id)
+    end
+  end
+
+  @spec gate_call(Noun.t(), Nock.t(), binary(), String.t()) ::
+          {:ok, Noun.t()} | :vm_error
+  defp gate_call(tx_code, env, id, node_id) do
+    with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
+         {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
+         {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
+      res = {:ok, result}
+      result_event(id, res, node_id)
+      res
+    else
+      _e -> :vm_error
     end
   end
 
