@@ -82,7 +82,7 @@ defmodule Anoma.RM.Shielded.PartialTransaction do
       # Compute the expected resource tree
       rt =
         Tree.construct(
-          CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
+          CommitmentTree.Spec.cairo_poseidon_resource_tree_spec(),
           resource_tree_leaves
         )
 
@@ -103,14 +103,7 @@ defmodule Anoma.RM.Shielded.PartialTransaction do
   @spec verify_proofs(list(ProofRecord.t()), binary() | nil) :: boolean()
   defp verify_proofs(proofs, debug_msg \\ nil) do
     Enum.reduce_while(proofs, true, fn proof_record, _acc ->
-      public_inputs =
-        proof_record.public_inputs
-        |> :binary.bin_to_list()
-
-      res =
-        proof_record.proof
-        |> :binary.bin_to_list()
-        |> Cairo.verify(public_inputs)
+      res = ProofRecord.verify(proof_record)
 
       if debug_msg do
         Logger.debug("#{debug_msg}: #{inspect(res)}")

@@ -98,6 +98,7 @@ defmodule Anoma.RM.Shielded.Transaction do
     # can apply the same improvement to the transparent Transaction.
     def verify(transaction = %Transaction{}) do
       with true <- verify_proofs(transaction),
+           true <- verify_duplicate_nfs(transaction),
            compliance_outputs = decode_compliance_outputs(transaction),
            true <- verify_delta(transaction, compliance_outputs),
            true <- verify_resource_logic(transaction, compliance_outputs) do
@@ -160,6 +161,11 @@ defmodule Anoma.RM.Shielded.Transaction do
         end)
 
       resource_logics_from_compliance == resource_logic_from_program
+    end
+
+    @spec verify_duplicate_nfs(Anoma.RM.Transaction.t()) :: boolean()
+    defp verify_duplicate_nfs(tx) do
+      Enum.uniq(tx.nullifiers) == tx.nullifiers
     end
 
     def cm_tree(_tx, _storage) do
