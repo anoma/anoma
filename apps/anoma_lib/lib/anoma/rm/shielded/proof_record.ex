@@ -57,4 +57,21 @@ defmodule Anoma.RM.Shielded.ProofRecord do
       _ -> :error
     end
   end
+
+  @spec generate_cairo_proof(binary(), binary()) :: {:ok, t()} | :error
+  def generate_cairo_proof(circuit, inputs) do
+    {_output, trace, memory, public_inputs} =
+      Cairo.cairo_vm_runner(
+        circuit,
+        inputs
+      )
+
+    {proof, public_inputs} = Cairo.prove(trace, memory, public_inputs)
+
+    {:ok,
+     %ProofRecord{
+       proof: proof |> :binary.list_to_bin(),
+       public_inputs: public_inputs |> :binary.list_to_bin()
+     }}
+  end
 end

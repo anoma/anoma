@@ -48,4 +48,13 @@ defmodule CommitmentTree.Spec do
       |> :binary.list_to_bin()
     end)
   end
+
+  # cairo poseidon resource tree spec for ptx
+  @spec cairo_poseidon_resource_tree_spec() :: CommitmentTree.Spec.t()
+  def cairo_poseidon_resource_tree_spec() do
+    new(4, 2, 256, fn {x, y} ->
+      Cairo.poseidon(:binary.bin_to_list(x), :binary.bin_to_list(y))
+      |> :binary.list_to_bin()
+    end)
+  end
 end
