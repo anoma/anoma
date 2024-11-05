@@ -5,6 +5,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
   alias Anoma.Node
   alias Node.Registry
+  alias __MODULE__
 
   use EventBroker.DefFilter
   use GenServer
@@ -15,10 +16,11 @@ defmodule Anoma.Node.Transaction.Storage do
   #                         State                            #
   ############################################################
 
-  @type bare_key() :: list(String.t())
+  @type bare_key() :: any()
   @type qualified_key() :: {integer(), bare_key()}
   @type write_opts() :: :append | :write | :add
-  @typep startup_options() :: {:node_id, String.t()}
+  @typep startup_options() ::
+           {:node_id, String.t()} | {:uncommitted_height, non_neg_integer()}
 
   typedstruct enforce: true do
     field(:node_id, String.t())
@@ -34,7 +36,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
   typedstruct enforce: true, module: WriteEvent do
     field(:height, non_neg_integer())
-    field(:writes, list({Anoma.Node.Transaction.Storage.bare_key(), term()}))
+    field(:writes, list({Storage.bare_key(), term()}))
   end
 
   deffilter HeightFilter, height: non_neg_integer() do

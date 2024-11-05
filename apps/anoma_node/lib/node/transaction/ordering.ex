@@ -18,7 +18,8 @@ defmodule Anoma.Node.Transaction.Ordering do
   #                         State                            #
   ############################################################
 
-  @typep startup_options() :: {:node_id, String.t()}
+  @typep startup_options() ::
+           {:node_id, String.t()} | {:next_height, integer()}
 
   typedstruct enforce: true do
     field(:node_id, String.t())

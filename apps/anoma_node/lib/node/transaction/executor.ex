@@ -21,7 +21,7 @@ defmodule Anoma.Node.Transaction.Executor do
   end
 
   typedstruct enforce: true, module: ExecutionEvent do
-    field(:result, list({:ok | :error, binary()}))
+    field(:result, list({{:ok, any} | :error, binary()}))
   end
 
   ############################################################
@@ -122,7 +122,7 @@ defmodule Anoma.Node.Transaction.Executor do
   ############################################################
 
   @spec listen_for_worker_finish!(integer()) ::
-          {integer, {:ok, any()} | :error}
+          {{:ok, any()} | :error, binary()}
   defp listen_for_worker_finish!(id) do
     receive do
       %EventBroker.Event{
@@ -139,7 +139,8 @@ defmodule Anoma.Node.Transaction.Executor do
     end
   end
 
-  @spec execution_event([{any(), binary()}], String.t()) :: :ok
+  @spec execution_event([{{:ok, any()} | :error, binary()}], String.t()) ::
+          :ok
   defp execution_event(res_list, node_id) do
     event =
       Node.Event.new_with_body(node_id, %__MODULE__.ExecutionEvent{

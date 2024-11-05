@@ -27,12 +27,12 @@ defmodule Anoma.Node.Transaction.Backends do
   @type transaction() :: {backend(), Noun.t() | binary()}
 
   typedstruct enforce: true, module: ResultEvent do
-    field(:tx_id, integer())
+    field(:tx_id, binary())
     field(:vm_result, {:ok, Noun.t()} | :error)
   end
 
   typedstruct enforce: true, module: CompleteEvent do
-    field(:tx_id, integer())
+    field(:tx_id, binary())
     field(:tx_result, {:ok, any()} | :error)
   end
 
