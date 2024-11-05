@@ -264,6 +264,56 @@ defmodule Anoma.Client.Examples.EClient do
     success.result
   end
 
+  @doc """
+  I run a Juvix program that squares its inputs without an argument.
+
+  I expect the result to be 0.
+  """
+  @spec prove_juvix_factorial_no_arguments(EConnection.t()) ::
+          Prove.Response.t()
+  def prove_juvix_factorial_no_arguments(conn \\ setup()) do
+    # assume the program and inputs are jammed
+    program = jammed_program_juvix_squared()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
+
+    {:success, success} = response.result
+
+    assert {:ok, 0} == Nock.Cue.cue(success.result)
+
+    success.result
+  end
+
+  @doc """
+  I run a Juvix program that squares its inputs without an argument.
+
+  I expect the result to be 0.
+  """
+  @spec run_juvix_factorial_no_arguments(EConnection.t()) ::
+          Prove.Response.t()
+  def run_juvix_factorial_no_arguments(conn \\ setup()) do
+    # assume the program and inputs are jammed
+    program = jammed_program_juvix_squared()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.run(conn.channel, request)
+
+    {:success, success} = response.result
+
+    assert {:ok, 0} == Nock.Cue.cue(success.result)
+
+    success.result
+  end
+
   ############################################################
   #                           Helpers                        #
   ############################################################
