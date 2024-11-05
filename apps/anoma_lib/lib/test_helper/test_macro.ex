@@ -119,7 +119,7 @@ defmodule TestHelper.TestMacro do
                                                 left side variables.
   - `call_assert(atom, expr)` - Just call the capture.
   """
-  def call_assert(atom, [{:=, _, [left, _]}] = expr) do
+  def call_assert(atom, expr = [{:=, _, [left, _]}]) do
     quote do
       unquote(left) = unquote(quote_try(atom, expr))
     end
@@ -144,7 +144,9 @@ defmodule TestHelper.TestMacro do
           IO.puts("\nAssert statement failed. Stacktrace:\n")
           for info <- list, do: info |> inspect() |> IO.puts()
           IO.puts("")
+          # credo:disable-for-next-line
           require IEx
+          # credo:disable-for-next-line
           IEx.pry()
       end
     end
@@ -161,7 +163,7 @@ defmodule TestHelper.TestMacro do
                                        original result
   - `try_assert(atom, expr)` - I use the assertion
   """
-  def try_assert(atom, [{:=, _, _}] = expr) do
+  def try_assert(atom, expr = [{:=, _, _}]) do
     quote do
       right = unquote(assertion_alias(atom, expr))
       binding()

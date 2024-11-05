@@ -52,7 +52,7 @@ defmodule Anoma.TransparentResource.Delta do
         [x, [v_sign | v_value] | terminator]
         when terminator in [0, <<>>, <<0>>, []] ->
           {x,
-           if Noun.is_zero(v_sign) do
+           if Noun.zero?(v_sign) do
              v_value
            else
              -v_value
