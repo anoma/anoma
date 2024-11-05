@@ -272,6 +272,11 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     :mnesia.unsubscribe({:table, Storage.blocks_table(node_id), :simple})
 
+    {:atomic, block} =
+      :mnesia.transaction(fn ->
+        :mnesia.read({Storage.blocks_table(node_id), 0})
+      end)
+
     [
       {^blocks_table, 0,
        [
@@ -282,7 +287,7 @@ defmodule Anoma.Node.Examples.ETransaction do
            tx_result: {:ok, [[^key | 0]]}
          }
        ]}
-    ] = :mnesia.dirty_read({Storage.blocks_table(node_id), 0})
+    ] = block
   end
 
   def inc_counter_submit_with_zero(node_id \\ Node.example_random_id()) do
@@ -305,6 +310,9 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     :mnesia.unsubscribe({:table, blocks_table, :simple})
 
+    {:atomic, block} =
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 0}) end)
+
     [
       {^blocks_table, 0,
        [
@@ -321,7 +329,7 @@ defmodule Anoma.Node.Examples.ETransaction do
            tx_result: {:ok, [[^key | 1]]}
          }
        ]}
-    ] = :mnesia.dirty_read({blocks_table, 0})
+    ] = block
   end
 
   def inc_counter_submit_after_zero(node_id \\ Node.example_random_id()) do
@@ -340,6 +348,9 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     :mnesia.unsubscribe({:table, blocks_table, :simple})
 
+    {:atomic, block} =
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
+
     [
       {^blocks_table, 1,
        [
@@ -350,7 +361,7 @@ defmodule Anoma.Node.Examples.ETransaction do
            tx_result: {:ok, [[^key | 1]]}
          }
        ]}
-    ] = :mnesia.dirty_read({blocks_table, 1})
+    ] = block
   end
 
   def inc_counter_submit_after_read(node_id \\ Node.example_random_id()) do
@@ -372,6 +383,9 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     :mnesia.unsubscribe({:table, blocks_table, :simple})
 
+    {:atomic, block} =
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
+
     [
       {^blocks_table, 1,
        [
@@ -388,7 +402,7 @@ defmodule Anoma.Node.Examples.ETransaction do
            tx_result: {:ok, [[^key | 1]]}
          }
        ]}
-    ] = :mnesia.dirty_read({blocks_table, 1})
+    ] = block
   end
 
   def bluf() do
