@@ -1,6 +1,27 @@
 defmodule Anoma.Node.Transaction.Mempool do
   @moduledoc """
+  I am the Mempool Engine.
 
+  I posess the core functionality to submit new transactions, execute
+  incoming consensus, and dump current transactions. Alongside that, I
+  store all currently running transactions as well as their intermediate
+  VM results.
+
+  As the main point of user-input, I also send the events needed for
+  replays.
+
+  All transactions are assumed to come in the form of {backend, noun}.
+
+  All consensus is assumed to come in a form of an orered list of binaries.
+
+  ### Public API
+
+  I provide the following public functionality:
+
+  - `tx_dump/1`
+  - `execute/2`
+  - `tx/2`
+  - `tx/3`
   """
 
   alias __MODULE__
@@ -20,7 +41,14 @@ defmodule Anoma.Node.Transaction.Mempool do
   #                         State                            #
   ############################################################
 
+  @typedoc """
+  I am the type of the Nock VM result.
+  """
   @type vm_result :: {:ok, Noun.t()} | :error | :in_progress
+
+  @typedoc """
+  I am the type of the transaction result.
+  """
   @type tx_result :: {:ok, any()} | :error | :in_progress
   @typep startup_options() ::
            {:node_id, String.t()}
@@ -29,6 +57,22 @@ defmodule Anoma.Node.Transaction.Mempool do
            | {:round, non_neg_integer()}
 
   typedstruct module: Tx do
+    @typedoc """
+    I am the type of a transaction as stores in the Mempool.
+
+    I store all information about transaction results, backend it uses, as
+    well as the Nockma represented code.
+
+    ### Fields
+
+    - `:tx_result` - The transaction execution result.
+                     Default: `:in_progress`
+    - `:vm_result` - The Nock VM result of the transaction code.
+                     Default: `:in_progress`
+    - `:backend` - The backend for the transaction.
+    - `:code` - The Nockma transaction code to be executed.
+    """
+
     field(:tx_result, Mempool.tx_result(), default: :in_progress)
     field(:vm_result, Mempool.vm_result(), default: :in_progress)
     field(:backend, Backends.backend())
@@ -36,20 +80,74 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   typedstruct module: TxEvent do
+    @typedoc """
+    I am the type of a transaction event.
+
+    I am sent upon a launch of a transaction, signaling that a specific
+    transaction has been launched.
+
+    ### Fileds
+
+    - `:id` - The ID of a launched transaction.
+    - `:tx` - The transaction info as stored in Mempool state.
+    """
+
     field(:id, binary())
     field(:tx, Mempool.Tx.t())
   end
 
   typedstruct module: ConsensusEvent do
+    @typedoc """
+    I am the type of a consensus event.
+
+    I am sent upon receiving a consensus, signaling that ordering has been
+    assigned to a specific subset of pending transactions.
+
+    ### Fileds
+
+    - `:order` - The list of transaction IDs in apporpriate consensus
+                 specified order.
+    """
+
     field(:order, list(binary()))
   end
 
   typedstruct module: BlockEvent do
+    @typedoc """
+    I am the type of a block execition event.
+
+    I am sent upon a completion of all transactions submitted by consensus
+    and subsequent creation of a table-backed block.
+
+    ### Fileds
+
+    - `:order` - The consensus info executed, a list of transaction IDs.
+    - `:round` - The block number committed.
+    """
+
     field(:order, list(binary()))
     field(:round, non_neg_integer())
   end
 
   typedstruct do
+    @typedoc """
+    I am the type of the Mempool Engine.
+
+    I contain the core information for the mempool functionality, storing the
+    node ID for which the Mempool is launched, a map of transactions with
+    their IDs, as well as the most recent block round.
+
+    ### Fields
+
+    - `:node_id` - The ID of the Node to which a Mempool instantiation is
+                   is bound.
+    - `:transactions` - A map with keys being the binary IDs of launched
+                        transactions and values the corresponding
+                        transaction data. See `Tx.t()`
+                        Default: %{}
+    - `:round` - The round of the next block to be created.
+                 Default: 0
+    """
     field(:node_id, String.t())
 
     field(
@@ -65,12 +163,33 @@ defmodule Anoma.Node.Transaction.Mempool do
   #                    Genserver Helpers                     #
   ############################################################
 
+  @doc """
+  I am the start_link function for the Mempool Engine.
+
+  I register the mempool with supplied node ID provided by the
+  arguments.
+  """
+
   @spec start_link([startup_options()]) :: GenServer.on_start()
   def start_link(args \\ []) do
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
+  @doc """
+  I am the initialization function for the Mempool Engine.
+
+  I assume that my arguments come with keywords specifying the node id,
+  alongside transactions, pending orders, and a block round.
+
+  If any transactions are provided upon startup, I ask the Mempool to
+  execute them with a particular ID.
+
+  If any orders are provided, I also launch them afterwards in the order
+  specified.
+
+  Afterwards, I initialize the Mempool with round and node ID specified.
+  """
   @impl true
   @spec init([startup_options()]) :: {:ok, Mempool.t()}
   def init(args) do
@@ -110,23 +229,64 @@ defmodule Anoma.Node.Transaction.Mempool do
   #                      Public RPC API                      #
   ############################################################
 
+  @doc """
+  I am a function to dump transactions.
+
+  Given a node ID, I give all the transactions as currently stored in the
+  corresponding Mempool state.
+  """
+
   @spec tx_dump(String.t()) :: [Mempool.Tx.t()]
   def tx_dump(node_id) do
     GenServer.call(Registry.via(node_id, __MODULE__), :dump)
   end
+
+  @doc """
+  I am a launch function for a new transaction.
+
+  Given a node ID with a {backend, tx} tuple, I launch a new transaction
+  with a random ID, sending an appropriate event.
+
+  Afterwards, the transaction code is sent to the Executor Engine to be
+  assigned to a Worder, while the code wrapped in `Tx.t()` will be stored
+  in Mempool's state.
+
+  See `tx/3` for launching a transaction with a given ID.
+  """
 
   @spec tx(String.t(), {Backends.backend(), Noun.t()}) :: :ok
   def tx(node_id, tx_w_backend) do
     tx(node_id, tx_w_backend, :crypto.strong_rand_bytes(16))
   end
 
-  # only to be called by Logging replays directly
+  @doc """
+  I am a launch function for a new transaction with a given ID.
+
+  See `tx/2` for logic documentation. In constrast to it, I launch an new
+  transaction with a particular given ID. This functionality is to be used
+  only for replays and testing.
+  """
+
   @spec tx(String.t(), {Backends.backend(), Noun.t()}, binary()) :: :ok
   def tx(node_id, tx_w_backend, id) do
     GenServer.cast(Registry.via(node_id, __MODULE__), {:tx, tx_w_backend, id})
   end
 
-  # list of ids seen as ordered transactions
+  @doc """
+  I am the execution function.
+
+  I receive a list of binaries, which I recognize as a partial order for
+  block execution, sending an appropriate consensus submission event.
+
+  Once launched, I send the list to the Executor.
+
+  I am asynchronous, meaning that I do not block and blocks can be
+  submitted before the last one got executed.
+
+  If execution is susccesful, the Mempool will handle an appropriate
+  message from the Executor, which will trigger block-creation.
+  """
+
   @spec execute(String.t(), list(binary())) :: :ok
   def execute(node_id, ordered_list_of_txs) do
     GenServer.cast(
@@ -139,10 +299,18 @@ defmodule Anoma.Node.Transaction.Mempool do
   #                      Public Filters                      #
   ############################################################
 
+  @doc """
+  I am a filter spec which filters for messages from the Backends module.
+  """
+
   @spec worker_module_filter() :: EventBroker.Filters.SourceModule.t()
   def worker_module_filter() do
     %EventBroker.Filters.SourceModule{module: Anoma.Node.Transaction.Backends}
   end
+
+  @doc """
+  I am a filter spec which filters for Mempool-related messages.
+  """
 
   @spec filter_for_mempool() :: Backends.ForMempoolFilter.t()
   def filter_for_mempool() do
