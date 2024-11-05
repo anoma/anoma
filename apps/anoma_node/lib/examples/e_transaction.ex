@@ -411,6 +411,9 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     :mnesia.unsubscribe({:table, blocks_table, :simple})
 
+    {:atomic, block} =
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 0}) end)
+
     [
       {^blocks_table, 0,
        [
@@ -421,7 +424,7 @@ defmodule Anoma.Node.Examples.ETransaction do
            tx_result: :error
          }
        ]}
-    ] = :mnesia.dirty_read({blocks_table, 0})
+    ] = block
   end
 
   def read_txs_write_nothing(node_id \\ Node.example_random_id()) do
