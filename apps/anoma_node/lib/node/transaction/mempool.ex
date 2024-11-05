@@ -34,6 +34,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   require Node.Event
   require Logger
 
+  use EventBroker.DefFilter
   use GenServer
   use TypedStruct
 
@@ -157,6 +158,30 @@ defmodule Anoma.Node.Transaction.Mempool do
     )
 
     field(:round, non_neg_integer(), default: 0)
+  end
+
+  deffilter TxFilter do
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.TxEvent{}}} ->
+      true
+
+    _ ->
+      false
+  end
+
+  deffilter ConsensusFilter do
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.ConsensusEvent{}}} ->
+      true
+
+    _ ->
+      false
+  end
+
+  deffilter BlockFilter do
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
+      true
+
+    _ ->
+      false
   end
 
   ############################################################

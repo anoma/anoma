@@ -220,7 +220,7 @@ defmodule Anoma.Node.Logging do
           body: %Node.Event{
             body: %Mempool.BlockEvent{}
           }
-        } ,
+        },
         state
       ) do
     {:noreply, handle_block_event(e, state)}
