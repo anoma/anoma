@@ -31,7 +31,7 @@ defmodule Examples.EEventBroker do
   end
 
   @doc """
-  I am the trivial filter stucture. See `EventBroker.Filters.Trivial`
+  I am the trivial filter structure. See `EventBroker.Filters.Trivial`
   """
 
   @spec trivial_filter_spec() :: EventBroker.Filters.Trivial.t()
@@ -119,14 +119,14 @@ defmodule Examples.EEventBroker do
   end
 
   @doc """
-  I am a function which sneds a million messages through a specified number
+  I am a function which sends a million messages through a specified number
   of filters.
 
   Given a number `n`, I spawn an n-long chain of module-checking filters
   subscribed to each other, send a million messages to the Broker, then
   wait to see how long it takes to finish receiving them all.
 
-  I then unsubsctibe and return the time.
+  I then unsubscribe and return the time.
   """
 
   @spec million_messages(integer()) :: {integer(), any()}
@@ -199,7 +199,7 @@ defmodule Examples.EEventBroker do
   @doc """
   I check that basic subscribing works.
 
-  Given a filter spec, i first unsub from everything using `unsub_all/1`
+  Given a filter spec, I first unsub from everything using `unsub_all/1`
   then ask the Registry to subscribe me to the said filter as specified.
 
   I then check through Registry that the filter has indeed been added, that
@@ -256,7 +256,7 @@ defmodule Examples.EEventBroker do
 
   I start the trivial filter using `check_self_sub/1` and then send an
   event message using the specified string. I then assert that the message
-  was indeed received and return the Registry state, the speicfied filter,
+  was indeed received and return the Registry state, the specified filter,
   as well as the PID of said filter.
   """
 
@@ -308,7 +308,7 @@ defmodule Examples.EEventBroker do
   the message with source from a different module and refute that it was
   ever received.
 
-  I return a tuple with the Resgistry state, the filter spec, and its PID.
+  I return a tuple with the Registry state, the filter spec, and its PID.
   """
 
   @spec message_gets_blocked(String.t()) ::
@@ -378,7 +378,7 @@ defmodule Examples.EEventBroker do
   messages. One is sent from self, so it should pass all filters.
 
   The other is sent from another module, so it should not get received in
-  the end. I assert that I receive the first and refite that I receive the
+  the end. I assert that I receive the first and refute that I receive the
   second one and return the Registry state.
   """
 

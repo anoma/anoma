@@ -17,7 +17,7 @@ defmodule EventBroker.FilterAgent do
     I am the type of the Filter Agent.
 
     I contain the minimal info for a filter to work, namely the filter
-    specification to aplly to incoming messages and subscribers to send
+    specification to apply to incoming messages and subscribers to send
     filtered messages to.
 
     ### Fields
