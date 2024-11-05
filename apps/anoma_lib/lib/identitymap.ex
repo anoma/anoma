@@ -12,6 +12,11 @@ defmodule IdentityMap do
           identityp: function()
         }
 
+  @typep key() :: any()
+  @typep value() :: any()
+
+  @spec new(%{key() => value()}, value(), (value() -> boolean())) ::
+          t(key(), value())
   def new(from \\ %{}, identity, identityp) do
     %IdentityMap{
       map: Map.reject(from, fn {_k, v} -> identityp.(v) end),
@@ -20,10 +25,12 @@ defmodule IdentityMap do
     }
   end
 
+  @spec get(t(key(), value()), key()) :: value()
   def get(map, key) do
     Map.get(map.map, key, map.identity)
   end
 
+  @spec put(t(key(), value()), key(), value()) :: t(key(), value())
   def put(map, key, value) do
     %{
       map
@@ -36,6 +43,7 @@ defmodule IdentityMap do
     }
   end
 
+  @spec update(t(key(), value()), key(), (value() -> value())) :: term()
   def update(map, key, fun) do
     put(map, key, fun.(get(map, key)))
   end

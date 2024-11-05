@@ -1,6 +1,7 @@
 defmodule Anoma.Node do
   use Application
 
+  @impl true
   def start(_type, args) do
     Anoma.Supervisor.start_link(args)
   end

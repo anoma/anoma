@@ -4,6 +4,7 @@ defmodule Examples.ETransparent.ELogicProof do
 
   use TestHelper.TestMacro
 
+  @spec trivial_true_commitment() :: LogicProof.t()
   def trivial_true_commitment() do
     res = %LogicProof{
       resource: EResource.trivial_true_resource(),
@@ -28,6 +29,7 @@ defmodule Examples.ETransparent.ELogicProof do
     res
   end
 
+  @spec trivial_true_2_nullifier() :: LogicProof.t()
   def trivial_true_2_nullifier() do
     res = %LogicProof{
       resource: EResource.trivial_true_resource_2(),
@@ -41,6 +43,7 @@ defmodule Examples.ETransparent.ELogicProof do
     res
   end
 
+  @spec trivial_true_eph_nullifier() :: LogicProof.t()
   def trivial_true_eph_nullifier() do
     res = %LogicProof{
       resource: EResource.trivial_true_resource_eph(),
@@ -55,6 +58,7 @@ defmodule Examples.ETransparent.ELogicProof do
     res
   end
 
+  @spec trivial_true_swap_proof_commitment() :: LogicProof.t()
   def trivial_true_swap_proof_commitment() do
     nullifier_info = trivial_true_2_nullifier()
 
@@ -69,6 +73,7 @@ defmodule Examples.ETransparent.ELogicProof do
     res
   end
 
+  @spec trivial_true_swap_proof_nullifier() :: LogicProof.t()
   def trivial_true_swap_proof_nullifier() do
     commitment_info = trivial_true_commitment()
 
@@ -83,6 +88,7 @@ defmodule Examples.ETransparent.ELogicProof do
     res
   end
 
+  @spec trivial_false_proof() :: LogicProof.t()
   def trivial_false_proof() do
     # We don't need much, since the verify just runs the function
     res = %LogicProof{

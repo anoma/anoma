@@ -37,16 +37,17 @@ defmodule Anoma.Node.Transaction.Ordering do
     _ -> false
   end
 
+  ############################################################
+  #                    Genserver Helpers                     #
+  ############################################################
+
   @spec start_link([startup_options()]) :: GenServer.on_start()
   def start_link(args \\ []) do
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
-  ############################################################
-  #                    Genserver Helpers                     #
-  ############################################################
-
+  @impl true
   @spec init([startup_options()]) :: {:ok, t()}
   def init(args) do
     Process.set_label(__MODULE__)
@@ -105,6 +106,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   #                      Public Filters                      #
   ############################################################
 
+  @spec tx_id_filter(binary()) :: TxIdFilter.t()
   def tx_id_filter(tx_id) do
     %__MODULE__.TxIdFilter{tx_id: tx_id}
   end
@@ -113,6 +115,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_call({write_opt, {tx_id, args}}, from, state)
       when write_opt in [:write, :append, :add] do
     handle_write(write_opt, {tx_id, args}, from, state)
@@ -129,6 +132,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     {:reply, :ok, state}
   end
 
+  @impl true
   def handle_cast({:order, tx_id_list}, state) do
     {:noreply, handle_order(tx_id_list, state)}
   end
@@ -137,6 +141,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     {:noreply, state}
   end
 
+  @impl true
   def handle_info(_info, state) do
     {:noreply, state}
   end

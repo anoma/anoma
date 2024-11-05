@@ -93,13 +93,21 @@ defmodule Nock do
   @doc """
   Gives the total numbers of layers in the standard library
   """
+  @spec stdlib_layers() :: non_neg_integer()
   def stdlib_layers, do: @layers
 
   # temporary stub functions for jet scaffolding
+  @spec get_jet(Noun.t()) ::
+          {:ok,
+           {String.t(), non_neg_integer(), non_neg_integer(),
+            (Noun.t() -> :error | {:ok, Noun.t()}), atom(),
+            non_neg_integer()}}
+          | :error
   def get_jet(battery_mug) do
     Map.fetch(@jet_registry, battery_mug)
   end
 
+  @spec put_jet(Noun.t(), any()) :: any()
   def put_jet(_battery_mug, _jet_info) do
     nil
   end
@@ -248,6 +256,7 @@ defmodule Nock do
     end
   end
 
+  @spec scry_forbidden(Noun.t()) :: :error | {:ok, Noun.t()}
   def scry_forbidden(_) do
     :error
   end
@@ -446,10 +455,12 @@ defmodule Nock do
   end
 
   # process_hint helper: noncontextual, but enough for %puts
+  @spec process_hint(Noun.t()) :: term()
   def process_hint(_) do
   end
 
   # %puts hint: print an atom during evaluation
+  @spec process_hint(Noun.t(), Noun.t()) :: term()
   def process_hint(puts, hint_result)
       when Noun.is_noun_atom(hint_result) and
              puts in [0x73747570, "puts"] do
@@ -460,62 +471,77 @@ defmodule Nock do
   def process_hint(_, _) do
   end
 
+  @spec cons(Noun.t(), Noun.t()) :: Noun.t()
   def cons(a, b) do
     [a | b]
   end
 
+  @spec nock_0(Noun.t()) :: Noun.t()
   def nock_0(axis) do
     [0 | axis]
   end
 
+  @spec nock_1(Noun.t()) :: Noun.t()
   def nock_1(constant) do
     [1 | constant]
   end
 
+  @spec nock_2(Noun.t(), Noun.t()) :: Noun.t()
   def nock_2(subject_formula, formula_formula) do
     [2, subject_formula | formula_formula]
   end
 
+  @spec nock_3(Noun.t()) :: Noun.t()
   def nock_3(sub_formula) do
     [3 | sub_formula]
   end
 
+  @spec nock_4(Noun.t()) :: Noun.t()
   def nock_4(sub_formula) do
     [4 | sub_formula]
   end
 
+  @spec nock_5(Noun.t(), Noun.t()) :: Noun.t()
   def nock_5(formula_1, formula_2) do
     [5, formula_1 | formula_2]
   end
 
+  @spec nock_6(Noun.t(), Noun.t(), Noun.t()) :: Noun.t()
   def nock_6(cond, true_branch, false_branch) do
     [6, cond, true_branch | false_branch]
   end
 
+  @spec nock_7(Noun.t(), Noun.t()) :: Noun.t()
   def nock_7(subject_formula, sub_formula) do
     [7, subject_formula | sub_formula]
   end
 
+  @spec nock_8(Noun.t(), Noun.t()) :: Noun.t()
   def nock_8(push_formula, sub_formula) do
     [8, push_formula | sub_formula]
   end
 
+  @spec nock_9(Noun.t(), Noun.t()) :: Noun.t()
   def nock_9(axis, sub_formula) do
     [9, axis | sub_formula]
   end
 
+  @spec nock_10(Noun.t(), Noun.t(), Noun.t()) :: Noun.t()
   def nock_10(axis, replacement_formula, sub_formula) do
     [10, [axis | replacement_formula] | sub_formula]
   end
 
+  @spec nock_11(Noun.t(), Noun.t(), Noun.t()) :: Noun.t()
   def nock_11(hint_noun, hint_formula, sub_formula) do
     [11, [hint_noun | hint_formula] | sub_formula]
   end
 
+  @spec nock_11(Noun.t(), Noun.t()) :: Noun.t()
   def nock_11(hint_noun, sub_formula) do
     [11, hint_noun | sub_formula]
   end
 
+  @spec decrement_arm() :: Noun.t()
   def decrement_arm do
     nock_8(
       nock_1(0),
@@ -542,6 +568,7 @@ defmodule Nock do
     )
   end
 
+  @spec decrement_core() :: Noun.t()
   def decrement_core do
     context = 0
     sample = 123

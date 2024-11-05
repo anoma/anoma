@@ -5,11 +5,14 @@ defmodule Anoma.Node.Transaction.Supervisor do
 
   use Supervisor
 
+  @spec start_link(list({:node_id, String.t()} | {:tx_args, any()})) ::
+          GenServer.on_start()
   def start_link(args) do
     args = Keyword.validate!(args, [:node_id, :tx_args])
     Supervisor.start_link(__MODULE__, args)
   end
 
+  @impl true
   def init(args) do
     Process.set_label(__MODULE__)
 

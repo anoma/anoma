@@ -54,6 +54,7 @@ defmodule Anoma.Node.Transaction.Storage do
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
+  @impl true
   @spec init([startup_options()]) :: {:ok, t()}
   def init(args) do
     Process.set_label(__MODULE__)
@@ -132,14 +133,11 @@ defmodule Anoma.Node.Transaction.Storage do
     )
   end
 
-  def terminate(_reason, state) do
-    {:ok, state}
-  end
-
   ############################################################
   #                      Public Filters                      #
   ############################################################
 
+  @spec height_filter(non_neg_integer()) :: HeightFilter.t()
   def height_filter(height) do
     %__MODULE__.HeightFilter{height: height}
   end
@@ -148,14 +146,17 @@ defmodule Anoma.Node.Transaction.Storage do
   #                       User Calling API                   #
   ############################################################
 
+  @spec blocks_table(String.t()) :: atom()
   def blocks_table(node_id) do
     String.to_atom("#{__MODULE__.Blocks}_#{:erlang.phash2(node_id)}")
   end
 
+  @spec values_table(String.t()) :: atom()
   def values_table(node_id) do
     String.to_atom("#{__MODULE__.Values}_#{:erlang.phash2(node_id)}")
   end
 
+  @spec updates_table(String.t()) :: atom()
   def updates_table(node_id) do
     String.to_atom("#{__MODULE__.Updates}_#{:erlang.phash2(node_id)}")
   end
@@ -164,6 +165,7 @@ defmodule Anoma.Node.Transaction.Storage do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_call({:commit, round, writes, _}, _from, state) do
     handle_commit(round, writes, state)
     {:reply, :ok, state}
@@ -186,12 +188,19 @@ defmodule Anoma.Node.Transaction.Storage do
     {:reply, :ok, state}
   end
 
+  @impl true
   def handle_cast(_msg, state) do
     {:noreply, state}
   end
 
+  @impl true
   def handle_info(_info, state) do
     {:noreply, state}
+  end
+
+  @impl true
+  def terminate(_reason, state) do
+    {:ok, state}
   end
 
   ############################################################
@@ -304,7 +313,7 @@ defmodule Anoma.Node.Transaction.Storage do
   #                        Initialization                    #
   ############################################################
 
-  @spec init_tables(atom(), bool()) :: any()
+  @spec init_tables(String.t(), bool()) :: any()
   defp init_tables(node_id, rocks) do
     rocks_opt = Anoma.Utility.rock_opts(rocks)
 
@@ -495,6 +504,12 @@ defmodule Anoma.Node.Transaction.Storage do
     ])
   end
 
+  @spec blocking_write(
+          String.t(),
+          non_neg_integer(),
+          list({any(), any()}),
+          GenServer.from()
+        ) :: :ok
   def blocking_write(node_id, height, kvlist, from) do
     awaited_height = height - 1
 

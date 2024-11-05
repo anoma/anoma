@@ -7,6 +7,7 @@ defmodule Examples.ECommitmentTree do
 
   alias Examples.ERM
 
+  @spec tree_storage() :: atom()
   def tree_storage() do
     :cmtree_test
   end

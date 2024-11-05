@@ -2,6 +2,7 @@ defmodule Nock.Cli do
   import Nock
   require Noun.Format
 
+  @spec argument_option() :: list()
   def argument_option() do
     [
       name: "nockma",
@@ -31,6 +32,7 @@ defmodule Nock.Cli do
     ]
   end
 
+  @spec main(term()) :: term()
   def main(%{args: %{infile: infile}, options: %{outfile: outfile}}) do
     outfile = outfile || infile <> ".result"
     {:ok, contents} = File.read(infile)
