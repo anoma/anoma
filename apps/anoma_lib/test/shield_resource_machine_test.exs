@@ -1,6 +1,8 @@
 defmodule AnomaTest.ShieldResourceMachine do
   use TestHelper.TestMacro, async: true
 
+  @moduletag :zk
+
   use TestHelper.GenerateExampleTests,
     for: Examples.ERM.EShielded.EComplianceInput
 
