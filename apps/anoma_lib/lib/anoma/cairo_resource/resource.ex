@@ -23,8 +23,8 @@ defmodule Anoma.CairoResource.Resource do
     field(:eph, bool(), default: false)
     # resource nonce
     field(:nonce, binary(), default: <<0::256>>)
-    # nullifier public key
-    field(:npk, binary(), default: <<0::256>>)
+    # commitment to nullifier key
+    field(:nk_commitment, binary(), default: <<0::256>>)
     # random seed
     field(:rseed, binary(), default: <<0::256>>)
   end
@@ -80,7 +80,7 @@ defmodule Anoma.CairoResource.Resource do
       resource.logic,
       resource.label,
       resource.data,
-      resource.npk,
+      resource.nk_commitment,
       resource.nonce,
       psi,
       resource.quantity,
@@ -108,7 +108,7 @@ defmodule Anoma.CairoResource.Resource do
       |> Cairo.poseidon_many()
       |> :binary.list_to_bin()
 
-    [resource.npk, resource.nonce, psi, commitment(resource)]
+    [resource.nk_commitment, resource.nonce, psi, commitment(resource)]
     |> Enum.map(&:binary.bin_to_list/1)
     |> Cairo.poseidon_many()
     |> :binary.list_to_bin()
@@ -121,7 +121,7 @@ defmodule Anoma.CairoResource.Resource do
         resource.label <>
         resource.quantity <>
         resource.data <>
-        resource.nonce <> resource.npk <> resource.rseed
+        resource.nonce <> resource.nk_commitment <> resource.rseed
 
     binaries =
       if resource.eph do
@@ -133,11 +133,11 @@ defmodule Anoma.CairoResource.Resource do
     binaries |> :binary.bin_to_list()
   end
 
-  @spec get_npk(binary()) :: binary()
+  @spec get_nk_commitment(binary()) :: binary()
   @doc """
-  Generate the nullifier public key from the nulliffier (private)key.
+  Generate the nullifier key commitment from the nulliffier key.
   """
-  def get_npk(nk) do
+  def get_nk_commitment(nk) do
     Cairo.poseidon(
       nk |> :binary.bin_to_list(),
       Constants.felt_zero() |> :binary.bin_to_list()

@@ -28,7 +28,7 @@ defmodule Examples.ECairo.EResourceLogic do
       a_resource.data,
       <<0::256>>,
       a_resource.nonce,
-      a_resource.npk,
+      a_resource.nk_commitment,
       a_resource.rseed,
       <<0::256>>,
       <<0::256>>
