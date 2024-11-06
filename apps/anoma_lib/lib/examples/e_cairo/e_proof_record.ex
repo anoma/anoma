@@ -1,17 +1,18 @@
 defmodule Examples.ECairo.EProofRecord do
   use Memoize
 
-  alias Examples.ECairo.EComplianceInput
+  alias Examples.ECairo.EComplianceWitness
   alias Anoma.CairoResource.ProofRecord
 
   use TestHelper.TestMacro
 
   @spec a_compliance_proof() :: ProofRecord.t()
   defmemo a_compliance_proof do
-    compliance_inputs = EComplianceInput.a_compliance_input()
+    compliance_private_inputs =
+      EComplianceWitness.a_compliance_private_input()
 
     assert {:ok, proof} =
-             ProofRecord.generate_compliance_proof(compliance_inputs)
+             ProofRecord.generate_compliance_proof(compliance_private_inputs)
 
     proof
   end

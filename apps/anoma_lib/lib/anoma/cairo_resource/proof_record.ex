@@ -35,7 +35,7 @@ defmodule Anoma.CairoResource.ProofRecord do
   end
 
   @spec generate_compliance_proof(binary()) :: {:ok, t()} | :error
-  def generate_compliance_proof(compliance_inputs) do
+  def generate_compliance_proof(compliance_private_inputs) do
     dir =
       Path.join(:code.priv_dir(:anoma_lib), "params/cairo_compliance.json")
 
@@ -43,7 +43,7 @@ defmodule Anoma.CairoResource.ProofRecord do
       {_output, trace, memory, public_inputs} =
         Cairo.cairo_vm_runner(
           compliance_circuit,
-          compliance_inputs
+          compliance_private_inputs
         )
 
       {proof, public_inputs} = Cairo.prove(trace, memory, public_inputs)
