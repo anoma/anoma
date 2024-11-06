@@ -112,7 +112,13 @@ defmodule Anoma.Node.Transaction.Ordering do
     Process.set_label(__MODULE__)
 
     args = Keyword.validate!(args, [:node_id, next_height: 1])
-    state = struct(Ordering, Enum.into(args, %{}))
+
+    state =
+      struct(
+        Ordering,
+        Enum.into(args, %{:tx_id_to_height => %{args[:node_id] => 0}})
+      )
+
     {:ok, state}
   end
 

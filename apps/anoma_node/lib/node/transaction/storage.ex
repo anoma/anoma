@@ -387,6 +387,10 @@ defmodule Anoma.Node.Transaction.Storage do
     {:reply, :absent, state}
   end
 
+  def handle_call({:read, {-1, key}}, from, state) do
+    handle_read({state.uncommitted_height, key}, from, state)
+  end
+
   def handle_call({:read, {height, key}}, from, state) do
     handle_read({height, key}, from, state)
   end
