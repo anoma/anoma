@@ -214,7 +214,7 @@ defmodule Anoma.Node.Intents.Solver do
     intents
     |> Enum.to_list()
     |> subsets()
-    |> Stream.drop_while(&(not valid?(&1)))
+    |> Stream.drop_while(&(valid?(&1) != true))
     |> Stream.take(1)
     |> Enum.to_list()
     |> Enum.map(&MapSet.new/1)
@@ -225,8 +225,8 @@ defmodule Anoma.Node.Intents.Solver do
   I check if a list of intents is valid by composing them and verifying if they satisfy
   the Intent.valid? predicate.
   """
-  @spec valid?([Intent.t()]) :: boolean()
-  def valid?([]), do: false
+  @spec valid?([Intent.t()]) :: true | {:error, any()}
+  def valid?([]), do: {:error, :error}
 
   def valid?(intents) do
     intents
