@@ -14,7 +14,7 @@ defmodule Anoma.CairoResource.PartialTransaction do
     ProofRecord,
     ComplianceInstance,
     Tree,
-    LogicOutput
+    LogicInstance
   }
 
   alias Anoma.Constants
@@ -59,12 +59,12 @@ defmodule Anoma.CairoResource.PartialTransaction do
              "compliance result"
            ),
          true <- verify_compliance_hash(partial_transaction.compliance_proofs) do
-      # Decode logic_outputs from resource logics
-      logic_outputs =
+      # Decode logic_instances from resource logics
+      logic_instances =
         partial_transaction.logic_proofs
         |> Enum.map(fn proof_record ->
           proof_record.public_inputs
-          |> LogicOutput.from_public_input()
+          |> LogicInstance.from_public_input()
         end)
 
       # Decode complaince_instance from compliance_proofs
@@ -75,13 +75,15 @@ defmodule Anoma.CairoResource.PartialTransaction do
           |> ComplianceInstance.from_public_input()
         end)
 
-      # Get self ids from logic_outputs
-      self_ids = Enum.map(logic_outputs, & &1.self_resource_id)
+      # Get self ids from logic_instances
+      self_ids = Enum.map(logic_instances, & &1.tag)
 
       # Get cms and nfs from compliance_proofs
       resource_tree_leaves =
         complaince_instance
-        |> Enum.flat_map(fn output -> [output.nullifier, output.output_cm] end)
+        |> Enum.flat_map(fn instance ->
+          [instance.nullifier, instance.output_cm]
+        end)
 
       # check self resource are all involved
       all_resource_valid = self_ids == resource_tree_leaves
@@ -95,10 +97,10 @@ defmodule Anoma.CairoResource.PartialTransaction do
 
       # check roots
       all_roots_valid =
-        for output <- logic_outputs,
+        for instance <- logic_instances,
             reduce: true do
           acc ->
-            acc && rt.root == output.root
+            acc && rt.root == instance.root
         end
 
       all_resource_valid && all_roots_valid

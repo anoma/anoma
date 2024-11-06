@@ -1,26 +1,26 @@
-defmodule Anoma.CairoResource.LogicOutput do
+defmodule Anoma.CairoResource.LogicInstance do
   @moduledoc """
-  I represent a resource logic's output.
+  I represent the resource logic's public inputs.
   """
 
   use TypedStruct
 
   typedstruct enforce: true do
-    # Self resource identity: nullifier of input resource or commitment of output resource
-    field(:self_resource_id, binary())
-    # The merkle root of resources in ptx
+    # nullifier of input resource or commitment of output resource
+    field(:tag, binary())
+    # The merkle root of resources in current action(execution context)
     field(:root, binary())
     # Ciphertext
     field(:cipher, list(binary()))
-    # Custom outputs
-    field(:others, list(binary()))
+    # Custom public inputs
+    field(:app_data, list(binary()))
   end
 
   @spec from_public_input(binary()) :: t()
   def from_public_input(public_input) do
-    ## call cairo api to get output bytes
+    # call cairo api to get output bytes
     [
-      self_resource_id,
+      tag,
       root,
       cipher_text_elem0,
       cipher_text_elem1,
@@ -35,12 +35,12 @@ defmodule Anoma.CairoResource.LogicOutput do
       mac,
       pk_x,
       pk_y,
-      nonce | others
+      nonce | app_data
     ] =
       public_input |> :binary.bin_to_list() |> Cairo.get_output()
 
     %__MODULE__{
-      self_resource_id: self_resource_id |> :binary.list_to_bin(),
+      tag: tag |> :binary.list_to_bin(),
       root: root |> :binary.list_to_bin(),
       cipher: [
         cipher_text_elem0 |> :binary.list_to_bin(),
@@ -58,7 +58,7 @@ defmodule Anoma.CairoResource.LogicOutput do
         pk_y |> :binary.list_to_bin(),
         nonce |> :binary.list_to_bin()
       ],
-      others: others |> Enum.map(&:binary.list_to_bin/1)
+      app_data: app_data |> Enum.map(&:binary.list_to_bin/1)
     }
   end
 
