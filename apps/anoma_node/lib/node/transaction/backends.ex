@@ -152,7 +152,7 @@ defmodule Anoma.Node.Transaction.Backends do
         end
 
       ct =
-        case Ordering.read(node_id, {id, :ct}) do
+        case Ordering.read(node_id, {id, anoma_keyspace("ct")}) do
           :absent -> CommitmentTree.new(Spec.cm_tree_spec(), nil)
           val -> val
         end
@@ -165,10 +165,13 @@ defmodule Anoma.Node.Transaction.Backends do
         {id,
          %{
            append: [
-             {:nullifiers, map.nullifiers},
-             {:commitments, map.commitments}
+             {anoma_keyspace("nullifiers"), map.nullifiers},
+             {anoma_keyspace("commitments"), map.commitments}
            ],
-           write: [{:anchor, anchor}, {:ct, ct_new}]
+           write: [
+             {anoma_keyspace("anchor"), anchor},
+             {anoma_keyspace("ct"), ct_new}
+           ]
          }}
       )
 
@@ -202,8 +205,11 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec storage_check?(String.t(), binary(), TTransaction.t()) ::
           true | {:error, String.t()}
   defp storage_check?(node_id, id, trans) do
-    stored_commitments = Ordering.read(node_id, {id, :commitments})
-    stored_nullifiers = Ordering.read(node_id, {id, :nullifiers})
+    stored_commitments =
+      Ordering.read(node_id, {id, anoma_keyspace("commitments")})
+
+    stored_nullifiers =
+      Ordering.read(node_id, {id, anoma_keyspace("nullifiers")})
 
     # TODO improve error messages
     cond do
@@ -279,7 +285,11 @@ defmodule Anoma.Node.Transaction.Backends do
     action_nullifiers = TTransaction.nullifiers(trans)
 
     if latest_root_time > 0 do
-      root_coms = Storage.read(node_id, {latest_root_time, :commitments})
+      root_coms =
+        Storage.read(
+          node_id,
+          {latest_root_time, anoma_keyspace("commitments")}
+        )
 
       for <<"NF_", rest::binary>> <- action_nullifiers,
           reduce: MapSet.new([]) do
@@ -380,5 +390,10 @@ defmodule Anoma.Node.Transaction.Backends do
       })
 
     EventBroker.event(event)
+  end
+
+  @spec anoma_keyspace(String.t()) :: list(String.t())
+  defp anoma_keyspace(key) do
+    ["anoma", key]
   end
 end
