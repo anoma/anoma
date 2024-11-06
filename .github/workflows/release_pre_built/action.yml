@@ -36,6 +36,10 @@ runs:
       run: |
         export PATH="$PATH:$HOME/.mix/escripts"
         mix release
+    - name: Copy shared libraries
+      if: startsWith(runner.os, 'macOS')
+      shell: bash
+      run: ./scripts/copy-dylibs.zsh _build/dev/rel/anoma
     - name: Build Anoma release
       if: startsWith(runner.os, 'Windows')
       shell: pwsh
