@@ -9,7 +9,14 @@ defmodule Anoma.CairoResource.PartialTransaction do
 
   alias __MODULE__
   use TypedStruct
-  alias Anoma.CairoResource.{ProofRecord, ComplianceOutput, Tree, LogicOutput}
+
+  alias Anoma.CairoResource.{
+    ProofRecord,
+    ComplianceInstance,
+    Tree,
+    LogicOutput
+  }
+
   alias Anoma.Constants
 
   typedstruct enforce: true do
@@ -60,12 +67,12 @@ defmodule Anoma.CairoResource.PartialTransaction do
           |> LogicOutput.from_public_input()
         end)
 
-      # Decode complaince_outputs from compliance_proofs
-      complaince_outputs =
+      # Decode complaince_instance from compliance_proofs
+      complaince_instance =
         partial_transaction.compliance_proofs
         |> Enum.map(fn proof_record ->
           proof_record.public_inputs
-          |> ComplianceOutput.from_public_input()
+          |> ComplianceInstance.from_public_input()
         end)
 
       # Get self ids from logic_outputs
@@ -73,7 +80,7 @@ defmodule Anoma.CairoResource.PartialTransaction do
 
       # Get cms and nfs from compliance_proofs
       resource_tree_leaves =
-        complaince_outputs
+        complaince_instance
         |> Enum.flat_map(fn output -> [output.nullifier, output.output_cm] end)
 
       # check self resource are all involved
