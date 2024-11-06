@@ -9,7 +9,7 @@ defmodule Anoma.CairoResource.Transaction do
 
   alias __MODULE__
   use TypedStruct
-  alias Anoma.CairoResource.PartialTransaction
+  alias Anoma.CairoResource.Action
   alias Anoma.CairoResource.ComplianceInstance
   alias Anoma.CairoResource.ProofRecord
   alias Anoma.Node.DummyStorage, as: Storage
@@ -21,7 +21,7 @@ defmodule Anoma.CairoResource.Transaction do
     field(:roots, list(binary()), default: [])
     field(:commitments, list(binary()), default: [])
     field(:nullifiers, list(binary()), default: [])
-    field(:partial_transactions, list(PartialTransaction.t()), default: [])
+    field(:actions, list(Action.t()), default: [])
 
     # When the tx is not finalized, the delta is the collection of private keys
     # When the tx is finalized, the delta is the binding signature
@@ -33,15 +33,15 @@ defmodule Anoma.CairoResource.Transaction do
         roots,
         commitments,
         nullifiers,
-        partial_transactions
+        actions
         | delta
       ]) do
-    ptxs =
-      partial_transactions
+    actions =
+      actions
       |> Noun.list_nock_to_erlang()
-      |> Enum.map(&PartialTransaction.from_noun/1)
+      |> Enum.map(&Action.from_noun/1)
 
-    checked = Enum.all?(ptxs, &(elem(&1, 0) == :ok))
+    checked = Enum.all?(actions, &(elem(&1, 0) == :ok))
 
     if checked do
       {:ok,
@@ -49,7 +49,7 @@ defmodule Anoma.CairoResource.Transaction do
          roots: roots |> Noun.list_nock_to_erlang(),
          commitments: commitments |> Noun.list_nock_to_erlang(),
          nullifiers: nullifiers |> Noun.list_nock_to_erlang(),
-         partial_transactions: Enum.map(ptxs, &elem(&1, 1)),
+         actions: Enum.map(actions, &elem(&1, 1)),
          delta: delta
        }}
     else
@@ -63,7 +63,7 @@ defmodule Anoma.CairoResource.Transaction do
         transaction.roots,
         transaction.commitments,
         transaction.nullifiers,
-        transaction.partial_transactions,
+        transaction.actions,
         transaction.delta
       }
       |> Noun.Nounable.to_noun()
@@ -85,8 +85,7 @@ defmodule Anoma.CairoResource.Transaction do
           roots: tx1.roots ++ tx2.roots,
           commitments: tx1.commitments ++ tx2.commitments,
           nullifiers: tx1.nullifiers ++ tx2.nullifiers,
-          partial_transactions:
-            tx1.partial_transactions ++ tx2.partial_transactions,
+          actions: tx1.actions ++ tx2.actions,
           delta: tx1.delta <> tx2.delta
         }
       end
@@ -108,18 +107,18 @@ defmodule Anoma.CairoResource.Transaction do
     end
 
     defp verify_proofs(tx) do
-      tx.partial_transactions
-      |> Enum.all?(fn ptx ->
-        res = PartialTransaction.verify(ptx)
-        Logger.debug("partial_transaction result: #{inspect(res)}")
+      tx.actions
+      |> Enum.all?(fn action ->
+        res = Action.verify(action)
+        Logger.debug("action result: #{inspect(res)}")
         res
       end)
     end
 
     defp decode_compliance_instances(tx) do
-      tx.partial_transactions
-      |> Enum.flat_map(fn ptx ->
-        ptx.compliance_proofs
+      tx.actions
+      |> Enum.flat_map(fn action ->
+        action.compliance_proofs
         |> Enum.map(fn proof_record ->
           ComplianceInstance.from_public_input(proof_record.public_inputs)
         end)
@@ -153,9 +152,9 @@ defmodule Anoma.CairoResource.Transaction do
 
       # Compute the program hash of resource logic proofs
       resource_logic_from_program =
-        tx.partial_transactions
-        |> Enum.flat_map(fn ptx ->
-          ptx.logic_proofs
+        tx.actions
+        |> Enum.flat_map(fn action ->
+          action.logic_proofs
           |> Enum.map(&ProofRecord.get_cairo_program_hash/1)
         end)
 
@@ -194,9 +193,9 @@ defmodule Anoma.CairoResource.Transaction do
 
   @spec get_compliance_instances(t()) :: list(ComplianceInstance.t())
   def get_compliance_instances(transaction) do
-    transaction.partial_transactions
-    |> Enum.flat_map(fn ptx ->
-      ptx.compliance_proofs
+    transaction.actions
+    |> Enum.flat_map(fn action ->
+      action.compliance_proofs
       |> Enum.map(fn proof_record ->
         proof_record.public_inputs
         |> ComplianceInstance.from_public_input()

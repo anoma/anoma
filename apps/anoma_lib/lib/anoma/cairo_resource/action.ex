@@ -1,6 +1,6 @@
-defmodule Anoma.CairoResource.PartialTransaction do
+defmodule Anoma.CairoResource.Action do
   @moduledoc """
-  I am a shielded resource machine partial transaction.
+  I am an action in shielded resource machine.
   """
 
   @behaviour Noun.Nounable.Kind
@@ -41,7 +41,7 @@ defmodule Anoma.CairoResource.PartialTransaction do
 
     with true <- checked do
       {:ok,
-       %PartialTransaction{
+       %Action{
          logic_proofs: Enum.map(logic, &elem(&1, 1)),
          compliance_proofs: Enum.map(compilance, &elem(&1, 1))
        }}
@@ -51,17 +51,17 @@ defmodule Anoma.CairoResource.PartialTransaction do
   end
 
   @spec verify(t()) :: boolean()
-  def verify(partial_transaction) do
-    with true <- verify_proofs(partial_transaction.logic_proofs),
+  def verify(action) do
+    with true <- verify_proofs(action.logic_proofs),
          true <-
            verify_proofs(
-             partial_transaction.compliance_proofs,
+             action.compliance_proofs,
              "compliance result"
            ),
-         true <- verify_compliance_hash(partial_transaction.compliance_proofs) do
+         true <- verify_compliance_hash(action.compliance_proofs) do
       # Decode logic_instances from resource logics
       logic_instances =
-        partial_transaction.logic_proofs
+        action.logic_proofs
         |> Enum.map(fn proof_record ->
           proof_record.public_inputs
           |> LogicInstance.from_public_input()
@@ -69,7 +69,7 @@ defmodule Anoma.CairoResource.PartialTransaction do
 
       # Decode complaince_instance from compliance_proofs
       complaince_instance =
-        partial_transaction.compliance_proofs
+        action.compliance_proofs
         |> Enum.map(fn proof_record ->
           proof_record.public_inputs
           |> ComplianceInstance.from_public_input()
@@ -136,8 +136,8 @@ defmodule Anoma.CairoResource.PartialTransaction do
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
-    def to_noun(ptx = %PartialTransaction{}) do
-      {ptx.logic_proofs, ptx.compliance_proofs}
+    def to_noun(action = %Action{}) do
+      {action.logic_proofs, action.compliance_proofs}
       |> Noun.Nounable.to_noun()
     end
   end

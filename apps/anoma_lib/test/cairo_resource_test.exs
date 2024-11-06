@@ -7,7 +7,7 @@ defmodule AnomaTest.CairoResource do
     for: Examples.ECairo.EComplianceWitness
 
   use TestHelper.GenerateExampleTests,
-    for: Examples.ECairo.EPartialTransaction
+    for: Examples.ECairo.EAction
 
   use TestHelper.GenerateExampleTests,
     for: Examples.ECairo.ETransaction

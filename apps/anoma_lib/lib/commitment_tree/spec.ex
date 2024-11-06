@@ -49,7 +49,7 @@ defmodule CommitmentTree.Spec do
     end)
   end
 
-  # cairo poseidon resource tree spec for ptx
+  # cairo poseidon resource tree spec for action
   @spec cairo_poseidon_resource_tree_spec() :: CommitmentTree.Spec.t()
   def cairo_poseidon_resource_tree_spec() do
     new(4, 2, 256, fn {x, y} ->
