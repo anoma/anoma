@@ -14,7 +14,7 @@ defprotocol Anoma.RM.Transaction do
   @spec compose(t(), t()) :: t()
   def compose(tx1, tx2)
 
-  @spec verify(t()) :: boolean()
+  @spec verify(t()) :: true | {:error, String.t()}
   def verify(transaction)
 
   @spec storage_commitments(t()) :: list(binary())

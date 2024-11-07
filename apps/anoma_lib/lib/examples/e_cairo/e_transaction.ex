@@ -42,7 +42,8 @@ defmodule Examples.ECairo.ETransaction do
       Anoma.RM.Transaction.compose(shielded_tx_1, shielded_tx_2)
       |> Transaction.finalize()
 
-    assert false == Anoma.RM.Transaction.verify(composed_shielded_tx)
+    assert {:error, "Duplicate nullifiers error"} ==
+             Anoma.RM.Transaction.verify(composed_shielded_tx)
 
     composed_shielded_tx
   end
@@ -60,7 +61,8 @@ defmodule Examples.ECairo.ETransaction do
       }
       |> Transaction.finalize()
 
-    assert false == Anoma.RM.Transaction.verify(invalid_shielded_tx)
+    assert {:error, "Delta proof verification failure"} ==
+             Anoma.RM.Transaction.verify(invalid_shielded_tx)
 
     invalid_shielded_tx
   end
