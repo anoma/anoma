@@ -21,7 +21,13 @@ defmodule Anoma.Client.Runner do
 
     case Nock.nock(core, eval_call, %Nock{stdio: io_sink}) do
       {:ok, noun} ->
+        # jam the nouns from the output
         {:ok, result} = close_io_sink(io_sink)
+
+        result =
+          result
+          |> Enum.map(&(Nock.Jam.jam(&1) |> Base.encode64()))
+
         {:ok, noun, result}
 
       :error ->
