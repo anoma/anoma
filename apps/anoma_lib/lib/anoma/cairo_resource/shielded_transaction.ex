@@ -15,7 +15,6 @@ defmodule Anoma.CairoResource.Transaction do
   alias Anoma.CairoResource.Resource
   alias Anoma.CairoResource.Utils
   alias Anoma.CairoResource.Workflow
-  alias Anoma.Node.DummyStorage, as: Storage
 
   typedstruct enforce: true do
     # TODO: The roots, commitments, and nullifiers can be eliminated. We can
@@ -174,23 +173,6 @@ defmodule Anoma.CairoResource.Transaction do
     @spec verify_duplicate_nfs(Anoma.RM.Transaction.t()) :: boolean()
     defp verify_duplicate_nfs(tx) do
       Enum.uniq(tx.nullifiers) == tx.nullifiers
-    end
-
-    @impl true
-    def cm_tree(_tx, _storage) do
-      CommitmentTree.new(
-        CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
-        nil
-      )
-    end
-
-    @impl true
-    def resource_existence_check(transaction, storage) do
-      for root <- transaction.roots, reduce: true do
-        acc ->
-          root_key = ["rm", "commitment_root", root]
-          acc && Storage.get(storage, root_key) == {:ok, true}
-      end
     end
 
     @spec get_binding_pub_keys(list(binary())) :: list(byte())
@@ -360,5 +342,13 @@ defmodule Anoma.CairoResource.Transaction do
     else
       {:error, x} -> {:error, x}
     end
+  end
+
+  @spec cm_tree() :: CommitmentTree.t()
+  def cm_tree() do
+    CommitmentTree.new(
+      CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
+      nil
+    )
   end
 end

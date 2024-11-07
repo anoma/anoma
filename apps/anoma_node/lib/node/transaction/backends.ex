@@ -18,6 +18,7 @@ defmodule Anoma.Node.Transaction.Backends do
   alias Anoma.TransparentResource
   alias Anoma.TransparentResource.Transaction, as: TTransaction
   alias Anoma.TransparentResource.Resource, as: TResource
+  alias Anoma.CairoResource.Transaction, as: CTransaction
 
   import Nock
   require Noun
@@ -30,6 +31,7 @@ defmodule Anoma.Node.Transaction.Backends do
           | {:debug_read_term, pid}
           | :debug_bloblike
           | :transparent_resource
+          | :cairo_resource
 
   @type transaction() :: {backend(), Noun.t() | binary()}
 
@@ -181,6 +183,10 @@ defmodule Anoma.Node.Transaction.Backends do
 
   defp backend_logic(:transparent_resource, node_id, id, vm_res) do
     transparent_resource_tx(node_id, id, vm_res)
+  end
+
+  defp backend_logic(:cairo_resource, node_id, id, vm_res) do
+    cairo_resource_tx(node_id, id, vm_res)
   end
 
   @spec transparent_resource_tx(String.t(), binary(), Noun.t()) ::
@@ -401,6 +407,72 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec empty_write(backend(), String.t(), binary()) :: :ok
   defp empty_write(_backend, node_id, id) do
     Ordering.write(node_id, {id, []})
+  end
+
+  @spec cairo_resource_tx(String.t(), binary(), Noun.t()) ::
+          :ok | :error
+  defp cairo_resource_tx(node_id, id, result) do
+    with {:ok, tx} <- CTransaction.from_noun(result),
+         true <- Anoma.RM.Transaction.verify(tx),
+         # No need to check the commitment existence
+         # TODO: add the root check
+         true <- nullifier_existence_check(tx, node_id, id) do
+      ct =
+        case Ordering.read(node_id, {id, :ct}) do
+          :absent -> CTransaction.cm_tree()
+          val -> val
+        end
+
+      {ct_new, anchor} =
+        CommitmentTree.add(ct, tx.commitments)
+
+      Ordering.add(
+        node_id,
+        {id,
+         %{
+           append: [
+             {:nullifiers, MapSet.new(tx.nullifiers)},
+             {:commitments, MapSet.new(tx.commitments)}
+           ],
+           write: [{:anchor, anchor}, {:ct, ct_new}]
+         }}
+      )
+
+      # TODO: emit a proper event here sth like transparent_rm_event in transparent cases.
+
+      {:ok, tx}
+    else
+      # TODO: handle errors, we should redesign Anoma.RM.Transaction interfaces
+      # e ->
+      #   unless e == :error do
+      #     Logging.log_event(
+      #       node_id,
+      #       :error,
+      #       "Transaction verification failed. Reason: #{inspect(e)}"
+      #     )
+      #   end
+
+      #   :error
+      _ -> :error
+    end
+  end
+
+  @spec nullifier_existence_check(CTransaction.t(), String.t(), binary()) ::
+          true | {:error, String.t()}
+  def nullifier_existence_check(transaction, node_id, id) do
+    with {:ok, stored_nullifiers} <-
+           Ordering.read(node_id, {id, :nullifiers}) do
+      if Enum.any?(
+           transaction.nullifiers,
+           &MapSet.member?(stored_nullifiers, &1)
+         ) do
+        {:error, "A submitted nullifier already exists in storage"}
+      else
+        true
+      end
+    else
+      _ -> true
+    end
   end
 
   ############################################################
