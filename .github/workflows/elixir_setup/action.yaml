@@ -1,0 +1,15 @@
+name: configure the elixir installation
+description: configure the elixir installation
+runs:
+  using: "composite"
+  steps:
+    # setup the beam
+    - name: configure beam
+      uses: erlef/setup-beam@v1
+      with:
+        otp-version: "27.1"
+        elixir-version: "1.17"
+    # install protobuf package
+    - name: Install Protobuf Elixir dependencies
+      shell: bash
+      run: mix escript.install hex protobuf --force
