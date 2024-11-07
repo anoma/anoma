@@ -421,8 +421,8 @@ defmodule Anoma.Node.Transaction.Backends do
   defp cairo_resource_tx(node_id, id, result) do
     with {:ok, tx} <- CTransaction.from_noun(result),
          true <- Anoma.RM.Transaction.verify(tx),
+         true <- root_existence_check(tx, node_id, id),
          # No need to check the commitment existence
-         # TODO: add the root check
          true <- nullifier_existence_check(tx, node_id, id) do
       ct =
         case Ordering.read(node_id, {id, :ct}) do
@@ -439,7 +439,8 @@ defmodule Anoma.Node.Transaction.Backends do
          %{
            append: [
              {:nullifiers, MapSet.new(tx.nullifiers)},
-             {:commitments, MapSet.new(tx.commitments)}
+             {:commitments, MapSet.new(tx.commitments)},
+             {:roots, MapSet.new([anchor])}
            ],
            write: [{:anchor, anchor}, {:ct, ct_new}]
          }}
@@ -477,6 +478,19 @@ defmodule Anoma.Node.Transaction.Backends do
       end
     else
       _ -> true
+    end
+  end
+
+  @spec root_existence_check(CTransaction.t(), String.t(), binary()) ::
+          true | {:error, String.t()}
+  def root_existence_check(transaction, node_id, id) do
+    with {:ok, stored_roots} <-
+           Ordering.read(node_id, {id, :roots}),
+         true <-
+           Enum.all?(transaction.roots, &MapSet.member?(stored_roots, &1)) do
+      true
+    else
+      _ -> {:error, "A submitted root dose not exist in storage"}
     end
   end
 
