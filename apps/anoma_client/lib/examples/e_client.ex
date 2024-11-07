@@ -314,9 +314,51 @@ defmodule Anoma.Client.Examples.EClient do
     success.result
   end
 
+  @spec run_juvix_with_hints(EConnection.t()) :: Prove.Response.t()
+  def run_juvix_with_hints(conn \\ setup()) do
+    # assume the program and inputs are jammed
+    program = jammed_program_tracing()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.run(conn.channel, request)
+
+    {:success, success} = response.result
+
+    assert [1, 4, 2, 4] == Enum.map(success.output, &Nock.Cue.cue!/1)
+
+    assert {:ok, 0} == Nock.Cue.cue(success.result)
+
+    success.result
+  end
+
   ############################################################
   #                           Helpers                        #
   ############################################################
+
+  @spec jammed_program_juvix_squared() :: binary()
+  def jammed_program_tracing() do
+    :code.priv_dir(:anoma_client)
+    |> Path.join("test_juvix/Tracing.nockma")
+    |> File.read!()
+  end
+
+  @spec noun_program_tracing() :: Noun.t()
+  def noun_program_tracing() do
+    jammed_program_tracing()
+    |> Nock.Cue.cue()
+    |> elem(1)
+  end
+
+  @spec text_program_tracing() :: String.t()
+  def text_program_tracing() do
+    jammed_program_tracing()
+    |> Nock.Cue.cue()
+    |> elem(1)
+  end
 
   @spec jammed_program_juvix_squared() :: binary()
   def jammed_program_juvix_squared() do
