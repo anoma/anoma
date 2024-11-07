@@ -577,6 +577,10 @@ defmodule Nock.Jets do
 
   defp a_signed_integer(x), do: Noun.atom_binary_to_signed_integer(x)
 
+  ############################################################
+  #                   Arithmetic Helpers                     #
+  ############################################################
+
   defp partial_sub(x, y) do
     if x >= y, do: {:ok, x - y}, else: :error
   end
