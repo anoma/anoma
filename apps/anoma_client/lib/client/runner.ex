@@ -3,7 +3,7 @@ defmodule Anoma.Client.Runner do
   I run the given Nock program with its inputs and return the result.
   """
   @spec prove(Noun.t(), [Noun.t()]) ::
-          {:ok, Noun.t(), [String.t()]} | {:error, :failed_to_prove}
+          {:ok, Noun.t(), [Noun.t()]} | {:error, :failed_to_prove}
   def prove(program, inputs) do
     core =
       (Noun.list_nock_to_erlang(program) ++ [Nock.rm_core()])
