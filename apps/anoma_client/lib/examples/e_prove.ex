@@ -70,7 +70,7 @@ defmodule Anoma.Client.Examples.EProve do
     {:ok, result, stdio} = Runner.prove(program, inputs)
 
     assert result == 0
-    assert stdio == ["DA==", "mA==", "SA==", "mA=="]
+    assert stdio == [1, 4, 2, 4]
 
     {:ok, result, stdio}
   end
@@ -88,7 +88,7 @@ defmodule Anoma.Client.Examples.EProve do
     {:ok, result, stdio} = Runner.prove(program, inputs)
 
     assert result == 3
-    assert stdio == ["wAsTGwM="]
+    assert stdio == [6513249]
 
     {:ok, result, stdio}
   end

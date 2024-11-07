@@ -21,12 +21,7 @@ defmodule Anoma.Client.Runner do
 
     case Nock.nock(core, eval_call, %Nock{stdio: io_sink}) do
       {:ok, noun} ->
-        # jam the nouns from the output
         {:ok, result} = close_io_sink(io_sink)
-
-        result =
-          result
-          |> Enum.map(&(Nock.Jam.jam(&1) |> Base.encode64()))
 
         {:ok, noun, result}
 
@@ -70,9 +65,11 @@ defmodule Anoma.Client.Runner do
 
   defp capture(acc \\ []) do
     receive do
-      {:io_request, from, ref, {:put_chars, _, output}} ->
+      {:io_request, from, ref, {:put_chars, _, noun_str}} ->
         send(from, {:io_reply, ref, :ok})
-        capture([output | acc])
+        # noun = Noun.Format.parse_always(noun_str)
+        noun = Base.decode64!(noun_str) |> Nock.Cue.cue!()
+        capture([noun | acc])
 
       {:quit, from} ->
         output = acc |> Enum.reverse()
