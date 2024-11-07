@@ -92,4 +92,22 @@ defmodule Anoma.Client.Examples.EProve do
 
     {:ok, result, stdio}
   end
+
+  def prove_with_cell_hint() do
+    {:ok, program} =
+      :code.priv_dir(:anoma_client)
+      |> Path.join("test_juvix/CellHint.nockma")
+      |> File.read!()
+      |> Nock.Cue.cue()
+
+    inputs =
+      Enum.map(["3"], &Noun.Format.parse_always/1)
+
+    {:ok, result, stdio} = Runner.prove(program, inputs)
+
+    assert result == [1, 2 | 0]
+    assert stdio == [1, 0, 0, [1 | 0], 1, [1, 2 | 0]]
+
+    {:ok, result, stdio}
+  end
 end
