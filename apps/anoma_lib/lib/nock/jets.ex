@@ -182,9 +182,8 @@ defmodule Nock.Jets do
 
   def sub(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
-           sample(core),
-         {c, d} when c >= d <- {an_integer(a), an_integer(b)} do
-      {:ok, c - d}
+           sample(core) do
+      partial_sub(an_integer(a), an_integer(b))
     else
       _ -> :error
     end
@@ -462,5 +461,9 @@ defmodule Nock.Jets do
     else
       _ -> :error
     end
+  end
+
+  defp partial_sub(x, y) do
+    if x >= y, do: {:ok, x - y}, else: :error
   end
 end
