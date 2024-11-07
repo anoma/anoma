@@ -11,6 +11,7 @@ defmodule Anoma.Node.Transaction.Backends do
   alias Anoma.TransparentResource.Transaction, as: TTransaction
   alias Anoma.TransparentResource.Resource, as: TResource
   alias CommitmentTree.Spec
+  alias Anoma.CairoResource.Transaction, as: CTransaction
 
   import Nock
   require Noun
@@ -23,6 +24,7 @@ defmodule Anoma.Node.Transaction.Backends do
           | {:debug_read_term, pid}
           | :debug_bloblike
           | :transparent_resource
+          | :cairo_resource
 
   @type transaction() :: {backend(), Noun.t() | binary()}
 
@@ -91,6 +93,15 @@ defmodule Anoma.Node.Transaction.Backends do
       tx,
       id,
       &transparent_resource_tx(node_id, &1, &2)
+    )
+  end
+
+  def execute(node_id, {:cairo_resource, tx}, id) do
+    execute_candidate(
+      node_id,
+      tx,
+      id,
+      &cairo_resource_tx(node_id, &1, &2)
     )
   end
 
@@ -380,5 +391,73 @@ defmodule Anoma.Node.Transaction.Backends do
       })
 
     EventBroker.event(event)
+  end
+
+  @spec cairo_resource_tx(String.t(), binary(), Noun.t()) ::
+          :ok | :error
+  defp cairo_resource_tx(node_id, id, result) do
+    with {:ok, tx} <- CTransaction.from_noun(result),
+         true <- Anoma.RM.Transaction.verify(tx),
+         # No need to check the commitment existence
+         # TODO: add the root check
+         true <- nullifier_existence_check(tx, node_id, id) do
+      ct =
+        case Ordering.read(node_id, {id, :ct}) do
+          :absent -> CTransaction.cm_tree()
+          val -> val
+        end
+
+      {ct_new, anchor} =
+        CommitmentTree.add(ct, tx.commitments)
+
+      Ordering.add(
+        node_id,
+        {id,
+         %{
+           append: [
+             {:nullifiers, MapSet.new(tx.nullifiers)},
+             {:commitments, MapSet.new(tx.commitments)}
+           ],
+           write: [{:anchor, anchor}, {:ct, ct_new}]
+         }}
+      )
+
+      nullifier_event(tx.nullifiers, node_id)
+
+      complete_event(id, {:ok, tx}, node_id)
+
+      :ok
+    else
+      # TODO: handle errors
+      # e ->
+      #   unless e == :error do
+      #     Logging.log_event(
+      #       node_id,
+      #       :error,
+      #       "Transaction verification failed. Reason: #{inspect(e)}"
+      #     )
+      #   end
+
+      #   :error
+      _ -> :error
+    end
+  end
+
+  @spec nullifier_existence_check(CTransaction.t(), String.t(), binary()) ::
+          true | {:error, String.t()}
+  def nullifier_existence_check(transaction, node_id, id) do
+    with {:ok, stored_nullifiers} <-
+           Ordering.read(node_id, {id, :nullifiers}) do
+      if Enum.any?(
+           transaction.nullifiers,
+           &MapSet.member?(stored_nullifiers, &1)
+         ) do
+        {:error, "A submitted nullifier already exists in storage"}
+      else
+        true
+      end
+    else
+      _ -> true
+    end
   end
 end
