@@ -21,10 +21,10 @@ runs:
         RELEASE="$(gh release list --repo anoma/anoma --json name | jq '.[] | select(.name == \"${{ inputs.release_name }}\") | .name')" ; \
         echo $RELEASE 
         
-        # if [ -n "$(gh release list --repo anoma/anoma --json "name,tagName" | jq '.[] | select(.name == "") | .name')" ]; then echo "something" ; else ; echo "nothing"; fi
-        # gh release create ${{ inputs.release_name }} \
-        #   --title ${{ github.ref_name }}             \
-        #   --repo ${{ github.repository }}
+# if [ -n "$(gh release list --repo anoma/anoma --json "name,tagName" | jq '.[] | select(.name == "") | .name')" ]; then echo "something" ; else ; echo "nothing"; fi
+# gh release create ${{ inputs.release_name }} \
+#   --title ${{ github.ref_name }}             \
+#   --repo ${{ github.repository }}
 
     # #---------------------------------------------------------------------------
     # # Anoma Client binary
