@@ -32,7 +32,7 @@ runs:
       run: echo "SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
     # checkout the target branch
-    - name: checkout the target branch 
+    - name: checkout the target branch
       shell: bash
       run: git checkout ${{ inputs.merge_into }}
 
