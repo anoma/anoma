@@ -8,7 +8,7 @@
 
 name: Push
 
-run-name: Push to a branch
+run-name: Push to ${{ github.ref_name }}
 
 on: [push]
 
