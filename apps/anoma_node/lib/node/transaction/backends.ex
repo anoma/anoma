@@ -107,94 +107,81 @@ defmodule Anoma.Node.Transaction.Backends do
   - For the transparent Resource Machine (RM) execution, I verify the
     transaction's validity and compute the corresponding set of nullifiers,
     which is transmitted as a Nullifier Event.
-
-  #### Pattern Matching Variations
-
-  - `execute(node_id, {backend, tx}, id) when Noun.is_noun_atom(tx)` -
-    I try to unpack the transaction code before executing it using the specified backend.
-  - `execute(node_id, {:transparent_resource, tx}, id)` - I perform the RM execution.
-  - `execute(node_id, {:debug_read_term, tx}, id)` - I perform the read-only
-    execution (for debugging purposes).
-  - `execute(node_id, {:debug_term_storage, tx}, id)` - I perform the key-value
-    store execution (for debugging purposes).
-  - `execute(node_id, {:debug_bloblike, tx}, id)` - I perform the blob store
-    execution (for debugging purposes).
   """
-  @spec execute(String.t(), {backend(), Noun.t()}, binary()) :: :ok
-  def execute(node_id, {backend, tx}, id)
-      when Noun.is_noun_atom(tx) do
-    case Nock.Cue.cue(tx) do
-      {:ok, tx} ->
-        execute(node_id, {backend, tx}, id)
 
-      :error ->
-        error_handle(node_id, id)
-    end
-  end
-
-  def execute(node_id, {{:debug_read_term, pid}, tx}, id) do
-    execute_candidate(node_id, tx, id, fn x, y ->
-      send_value(node_id, x, y, pid)
-    end)
-  end
-
-  def execute(node_id, {:debug_term_storage, tx}, id) do
-    execute_candidate(node_id, tx, id, &store_value(node_id, &1, &2))
-  end
-
-  def execute(node_id, {:debug_bloblike, tx}, id) do
-    execute_candidate(node_id, tx, id, &blob_store(node_id, &1, &2))
-  end
-
-  def execute(node_id, {:transparent_resource, tx}, id) do
-    execute_candidate(
-      node_id,
-      tx,
-      id,
-      &transparent_resource_tx(node_id, &1, &2)
-    )
-  end
-
-  ############################################################
-  #                         Helpers                          #
-  ############################################################
-
-  @spec execute_candidate(node_id, Noun.t(), id, process) :: :ok
+  @spec execute(node_id, {back, Noun.t()}, id) :: :ok
         when id: binary(),
              node_id: String.t(),
-             process: (id, Noun.t() -> :ok | :error)
-  defp execute_candidate(node_id, tx_code, id, process) do
+             back: backend()
+  def execute(node_id, {backend, tx_code}, id) do
     env = %Nock{scry_function: fn a -> Ordering.read(node_id, a) end}
+    vm_result = gate_call(tx_code, env, id)
+    result_event(id, vm_result, node_id, backend)
 
-    with {:ok, result} <- gate_call(tx_code, env, id, node_id),
-         :ok <- process.(id, result) do
-      :ok
-    else
-      :vm_error ->
-        error_handle(node_id, id)
+    res =
+      with {:ok, vm_res} <- vm_result,
+           {:ok, backend_res} <- backend_logic(backend, node_id, id, vm_res) do
+        {:ok, backend_res}
+      else
+        _e ->
+          empty_write(backend, node_id, id)
 
-      _e ->
-        Ordering.write(node_id, {id, []})
-        complete_event(id, :error, node_id)
-    end
+          :error
+      end
+
+    complete_event(id, res, node_id, backend)
   end
 
-  @spec gate_call(Noun.t(), Nock.t(), binary(), String.t()) ::
+  ############################################################
+  #                       VM Execution                       #
+  ############################################################
+
+  @spec gate_call(Noun.t(), Nock.t(), binary()) ::
           {:ok, Noun.t()} | :vm_error
-  defp gate_call(tx_code, env, id, node_id) do
-    with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
+  defp gate_call(tx_code, env, id) do
+    with {:ok, code} <- cue_when_atom(tx_code),
+         {:ok, stage_2_tx} <- nock(code, [9, 2, 0 | 1], env),
          {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
          {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
-      res = {:ok, result}
-      result_event(id, res, node_id)
-      res
+      {:ok, result}
     else
       _e -> :vm_error
     end
   end
 
+  @spec cue_when_atom(Noun.t()) :: :error | {:ok, Noun.t()}
+  defp cue_when_atom(tx_code) when Noun.is_noun_atom(tx_code) do
+    Nock.Cue.cue(tx_code)
+  end
+
+  defp cue_when_atom(tx_code) do
+    {:ok, tx_code}
+  end
+
+  ############################################################
+  #                     Backend Execution                    #
+  ############################################################
+
+  @spec backend_logic(backend(), String.t(), binary(), Noun.t()) ::
+          :error | {:ok, any()}
+  defp backend_logic(:debug_term_storage, node_id, id, vm_res) do
+    store_value(node_id, id, vm_res)
+  end
+
+  defp backend_logic({:debug_read_term, pid}, node_id, id, vm_res) do
+    send_value(node_id, id, vm_res, pid)
+  end
+
+  defp backend_logic(:debug_bloblike, node_id, id, vm_res) do
+    blob_store(node_id, id, vm_res)
+  end
+
+  defp backend_logic(:transparent_resource, node_id, id, vm_res) do
+    transparent_resource_tx(node_id, id, vm_res)
+  end
+
   @spec transparent_resource_tx(String.t(), binary(), Noun.t()) ::
-          :ok | :error
+          {:ok, any} | :error
   defp transparent_resource_tx(node_id, id, result) do
     storage_checks = fn tx -> storage_check?(node_id, id, tx) end
     verify_tx_root = fn tx -> verify_tx_root(node_id, tx) end
@@ -239,9 +226,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
       nullifier_event(map.nullifiers, node_id)
 
-      complete_event(id, {:ok, tx}, node_id)
-
-      :ok
+      {:ok, tx}
     else
       e ->
         unless e == :error do
@@ -374,23 +359,24 @@ defmodule Anoma.Node.Transaction.Backends do
     nock_boolean in [0, <<>>, <<0>>, []]
   end
 
-  @spec send_value(String.t(), binary(), Noun.t(), pid()) :: :ok | :error
+  @spec send_value(String.t(), binary(), Noun.t(), pid()) ::
+          {:ok, any()} | :error
   defp send_value(node_id, id, result, reply_to) do
     # send the value to reply-to address and the topic
     reply_msg = {:read_value, result}
     send(reply_to, reply_msg)
     Ordering.write(node_id, {id, []})
-    complete_event(id, {:ok, reply_msg}, node_id)
+    {:ok, reply_msg}
   end
 
-  @spec blob_store(String.t(), binary(), Noun.t()) :: :ok | :error
+  @spec blob_store(String.t(), binary(), Noun.t()) :: {:ok, any} | :error
   def blob_store(node_id, id, result) do
     key = :crypto.hash(:sha256, :erlang.term_to_binary(result))
     Ordering.write(node_id, {id, [{key, result}]})
-    complete_event(id, {:ok, key}, node_id)
+    {:ok, key}
   end
 
-  @spec store_value(String.t(), binary(), Noun.t()) :: :ok | :error
+  @spec store_value(String.t(), binary(), Noun.t()) :: {:ok, any} | :error
   def store_value(node_id, id, result) do
     with {:ok, list} <- result |> Noun.list_nock_to_erlang_safe(),
          true <-
@@ -403,39 +389,46 @@ defmodule Anoma.Node.Transaction.Backends do
         {id, list |> Enum.map(fn [k | v] -> {k, v} end)}
       )
 
-      complete_event(id, {:ok, list}, node_id)
+      {:ok, list}
     else
       _ -> :error
     end
   end
 
-  @spec error_handle(String.t(), binary()) :: :ok
-  defp error_handle(node_id, id) do
-    result_event(id, :error, node_id)
+  @spec empty_write(backend(), String.t(), binary()) :: :ok
+  defp empty_write(_backend, node_id, id) do
     Ordering.write(node_id, {id, []})
-    complete_event(id, :error, node_id)
   end
 
-  @spec complete_event(String.t(), :error | {:ok, any()}, String.t()) :: :ok
-  defp complete_event(id, result, node_id) do
+  ############################################################
+  #                        Helpers                           #
+  ############################################################
+
+  @spec complete_event(
+          String.t(),
+          :error | {:ok, any()},
+          String.t(),
+          backend()
+        ) :: :ok
+  defp complete_event(id, result, node_id, backend) do
     event =
       Node.Event.new_with_body(node_id, %__MODULE__.CompleteEvent{
         tx_id: id,
         tx_result: result
       })
 
-    EventBroker.event(event)
+    event(backend, event)
   end
 
-  @spec result_event(String.t(), any(), String.t()) :: :ok
-  defp result_event(id, result, node_id) do
+  @spec result_event(String.t(), any(), String.t(), backend()) :: :ok
+  defp result_event(id, result, node_id, backend) do
     event =
       Node.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
         tx_id: id,
         vm_result: result
       })
 
-    EventBroker.event(event)
+    event(backend, event)
   end
 
   @spec nullifier_event(MapSet.t(binary()), String.t()) :: :ok
@@ -445,6 +438,11 @@ defmodule Anoma.Node.Transaction.Backends do
         nullifiers: set
       })
 
+    EventBroker.event(event)
+  end
+
+  @spec event(backend(), EventBroker.Event.t()) :: :ok
+  defp event(_backend, event) do
     EventBroker.event(event)
   end
 end
