@@ -35,5 +35,4 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        gh release upload --clobber "${{ inputs.release_name }}" \
-          releases/client/anoma_node
+        gh release upload releases/client/anoma_node
