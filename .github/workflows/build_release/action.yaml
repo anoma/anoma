@@ -5,4 +5,4 @@ runs:
   steps:
     - name: build the anoma client release 
       shell: bash 
-      run: mix do --app anoma_client escript.build
+      run: MIX_ENV=prod mix do --app anoma_client escript.build
