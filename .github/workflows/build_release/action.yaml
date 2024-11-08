@@ -21,14 +21,14 @@ runs:
         RELEASE=$(gh release list --repo anoma/anoma --json name | jq '.[] | select(.name == "${{ inputs.release_name }}") | .name') \
         test -z "${RELEASE}"
 
-    - name: create the release on github
+    - name: create the release on githubb
       env:
         GH_TOKEN: ${{ inputs.github_token }}
       shell: bash
       run: |
         gh release create ${{ inputs.release_name }} \
           --title ${{ github.ref_name }}             \
-          --repo ${{ github.repository }}            \
+          --repo ${{ github.repository }}
 
     # #---------------------------------------------------------------------------
     # # Anoma Client binary
