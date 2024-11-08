@@ -189,6 +189,9 @@ jobs:
       matrix:
         mix_env: ["dev"]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
     steps:
       # checkout the repo
       - name: Check out the repository to the runner
@@ -212,8 +215,7 @@ jobs:
       # todo: this should not be run again
       # run mix docs
       - run: make docs-release
-      # run the makefile docs
-      - run: make docs-release
+
       # deploy the docs on github pages
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -240,7 +242,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write
     steps:
       # checkout the repo
       - name: Check out the repository to the runner
