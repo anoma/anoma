@@ -67,38 +67,23 @@ jobs:
           mix_env: "dev"
 
 
-  # #-----------------------------------------------------------------------------
-  # # Run the test suite against the code base.
+  #-----------------------------------------------------------------------------
+  # Run the test suite against the code base.
 
-  # test:
-  #   needs: [compile]
-  #   name: run tests
-  #   strategy:
-  #     matrix:
-  #       mix_env: ["test"]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     # checkout the repo
-  #     - name: Check out the repository to the runner
-  #       uses: actions/checkout@v4
+  test:
+    needs: [compile]
+    name: run tests
+    strategy:
+      matrix:
+        mix_env: ["test"]
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the repo
+      - name: Check out the repository to the runner
+        uses: actions/checkout@v4
 
-  #     # install os deps
-  #     - uses: ./.github/workflows/os_dependencies
-
-  #     # install erlang/elixir/protobuf
-  #     - uses: ./.github/workflows/elixir_setup
-
-  #     # setup build cache
-  #     - uses: ./.github/workflows/cache
-  #       with:
-  #         os: ${{ runner.os }}
-  #         mix_env: ${{ matrix.mix_env }}
-  #         paths: |
-  #           ${{ github.workspace }}/deps
-  #           ${{ github.workspace }}/_build
-
-  #     # run mix test
-  #     - run: MIX_ENV=${{matrix.mix_env}} mix test
+      # run the lint jobs
+      - uses: ./.github/workflows/tasks/test
 
   # #-----------------------------------------------------------------------------
   # # Generate the documentation of the code base.
