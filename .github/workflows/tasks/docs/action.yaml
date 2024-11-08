@@ -1,9 +1,5 @@
-name: lint elixir code base
-description: lint elixir code base
-inputs:
-  mix_env:
-    description: "mix environment to use"
-    required: true
+name: compile the documentation
+description: compile the documentation
 runs:
   using: "composite"
   steps:
@@ -18,7 +14,6 @@ runs:
       with:
         os: ${{ runner.os }}
         mix_env: ${{ inputs.mix_env }}
-        tag: "plt"
         paths: |
           ${{ github.workspace }}/deps
           ${{ github.workspace }}/_build

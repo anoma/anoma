@@ -73,9 +73,6 @@ jobs:
   test:
     needs: [compile]
     name: run tests
-    strategy:
-      matrix:
-        mix_env: ["test"]
     runs-on: ubuntu-latest
     steps:
       # checkout the repo
