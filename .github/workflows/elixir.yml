@@ -256,6 +256,9 @@ jobs:
 
       # build the release binaries
       - uses: ./.github/workflows/build_release
+
+      # build the release binaries
+      - uses: ./.github/workflows/github_release
         with:
           release_name: ${{ github.ref_name }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
