@@ -20,6 +20,7 @@ runs:
       run: |
         export RELEASE=$(gh release list --json name | jq '.[] | select(.name == "${{ inputs.release_name }}") | .name') ; \
         test -z "${RELEASE}" || echo "release ${RELEASE} already exists"
+      continue-on-error: true
 
     - name: create the release on github
       env:
