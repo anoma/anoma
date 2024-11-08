@@ -1,5 +1,5 @@
-name: compile the documentation
-description: compile the documentation
+name: build and publish releases on github
+description: build and publish releases on github
 runs:
   using: "composite"
   steps:
@@ -18,7 +18,11 @@ runs:
           ${{ github.workspace }}/deps
           ${{ github.workspace }}/_build
 
-    # run mix credo
-    - name: "compile docs"
-      shell: bash
-      run: make docs-release
+      # build the release binaries
+      - uses: ./.github/workflows/subtasks/build_release
+
+      # build the release binaries
+      - uses: ./.github/workflows/subtasks/github_release
+        with:
+          release_name: ${{ github.ref_name }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

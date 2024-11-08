@@ -1,0 +1,20 @@
+name: publish docs on github pages
+description: publish docs on github pages
+runs:
+  using: "composite"
+  steps:
+    # create the docs
+    - uses: ./.github/workflows/tasks/publish_docs
+
+    # deploy the docs on github pages
+    - name: setup github pages
+      uses: actions/configure-pages@v5
+
+    - name: upload docs to github pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: "./doc"
+
+    - name: deploy github pages
+      id: deployment
+      uses: actions/deploy-pages@v4

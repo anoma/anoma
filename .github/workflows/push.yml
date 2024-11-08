@@ -15,6 +15,7 @@ on: [push]
 jobs:
   #-----------------------------------------------------------------------------
   # Merge the current branch into the `next` branch.
+  
   try_merge:
     name: try merge into next
     runs-on: ubuntu-latest
@@ -66,7 +67,6 @@ jobs:
         with:
           mix_env: "dev"
 
-
   #-----------------------------------------------------------------------------
   # Run the test suite against the code base.
 
@@ -82,91 +82,36 @@ jobs:
       # run the lint jobs
       - uses: ./.github/workflows/tasks/test
 
-  # #-----------------------------------------------------------------------------
-  # # Generate the documentation of the code base.
+  #-----------------------------------------------------------------------------
+  # Generate the documentation of the code base.
 
-  # docs:
-  #   needs: [compile]
-  #   name: compile docs
-  #   strategy:
-  #     matrix:
-  #       mix_env: ["dev"]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     # checkout the repo
-  #     - name: Check out the repository to the runner
-  #       uses: actions/checkout@v4
+  docs:
+    needs: [compile]
+    name: compile docs
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the repo
+      - name: Check out the repository to the runner
+        uses: actions/checkout@v4
 
-  #     # install os deps
-  #     - uses: ./.github/workflows/os_dependencies
+      # run the lint jobs
+      - uses: ./.github/workflows/tasks/docs
 
-  #     # install erlang/elixir/protobuf
-  #     - uses: ./.github/workflows/elixir_setup
+  #-----------------------------------------------------------------------------
+  # Generate the documentation of the code base.
 
-  #     # setup build cache
-  #     - uses: ./.github/workflows/cache
-  #       with:
-  #         os: ${{ runner.os }}
-  #         mix_env: ${{ matrix.mix_env }}
-  #         paths: |
-  #           ${{ github.workspace }}/deps
-  #           ${{ github.workspace }}/_build
+  publish_docs:
+    needs: [compile]
+    name: publish docs
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the repo
+      - name: Check out the repository to the runner
+        uses: actions/checkout@v4
 
-  #     # run mix docs
-  #     - run: make docs-release
-  #     # run the makefile docs
-  #     - run: make docs-release
+      # run the lint jobs
+      - uses: ./.github/workflows/tasks/publish_docs
 
-  # #-----------------------------------------------------------------------------
-  # # Publish the docs on Github Pages
-
-  # publish_docs:
-  #   needs: [docs]
-  #   name: publish docs on github pages
-  #   strategy:
-  #     matrix:
-  #       mix_env: ["dev"]
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: write
-  #     id-token: write
-  #     pages: write
-  #   steps:
-  #     # checkout the repo
-  #     - name: Check out the repository to the runner
-  #       uses: actions/checkout@v4
-
-  #     # install os deps
-  #     - uses: ./.github/workflows/os_dependencies
-
-  #     # install erlang/elixir/protobuf
-  #     - uses: ./.github/workflows/elixir_setup
-
-  #     # setup build cache
-  #     - uses: ./.github/workflows/cache
-  #       with:
-  #         os: ${{ runner.os }}
-  #         mix_env: ${{ matrix.mix_env }}
-  #         paths: |
-  #           ${{ github.workspace }}/deps
-  #           ${{ github.workspace }}/_build
-
-  #     # todo: this should not be run again
-  #     # run mix docs
-  #     - run: make docs-release
-
-  #     # deploy the docs on github pages
-  #     - name: Setup Pages
-  #       uses: actions/configure-pages@v5
-
-  #     - name: Upload artifact
-  #       uses: actions/upload-pages-artifact@v3
-  #       with:
-  #         path: './doc'
-
-  #     - name: Deploy to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v4
 
   # #-----------------------------------------------------------------------------
   # # Publish the docs on Github Pages
