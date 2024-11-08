@@ -44,7 +44,7 @@ jobs:
         uses: actions/checkout@v4
       # compile the code for all mix environments
       - uses: ./.github/workflows/tasks/compile
-        with: 
+        with:
           mix_env: ${{ matrix.mix_env }}
 
   #-----------------------------------------------------------------------------
@@ -63,7 +63,7 @@ jobs:
 
       # run the lint jobs
       - uses: ./.github/workflows/tasks/lint
-        with: 
+        with:
           mix_env: "dev"
 
 

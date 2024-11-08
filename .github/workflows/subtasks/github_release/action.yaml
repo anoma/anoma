@@ -33,7 +33,7 @@ runs:
 
     #---------------------------------------------------------------------------
     # Publish releases
-    
+
     - name: publish client release
       shell: bash
       env:
