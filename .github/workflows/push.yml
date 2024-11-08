@@ -35,12 +35,17 @@ jobs:
   compile:
     name: compile code
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mix_env: ["prod", "dev", "test"]
     steps:
       # checkout the repo
       - name: Check out the repository to the runner
         uses: actions/checkout@v4
       # checkout the repo
       - uses: ./.github/workflows/tasks/compile
+        with: 
+          mix_env: ${{ matrix.mix_env }}
 
   # #-----------------------------------------------------------------------------
   # # Run linting jobs on the code base.
@@ -204,7 +209,6 @@ jobs:
   #     - name: Deploy to GitHub Pages
   #       id: deployment
   #       uses: actions/deploy-pages@v4
-
 
   # #-----------------------------------------------------------------------------
   # # Publish the docs on Github Pages

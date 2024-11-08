@@ -4,6 +4,7 @@ inputs:
   os:
     description: "The operating system to use"
     required: true
+
   paths:
     description: "paths to cache"
     required: true
@@ -13,15 +14,8 @@ inputs:
     required: true
 
 runs:
-  strategy:
-      matrix:
-          mix_env: ["prod", "dev", "test"]
-  using: "composite"
-  steps:
-    # checkout the repo
-    - name: Check out the repository to the runner
-      uses: actions/checkout@v4
 
+  steps:
     # install os deps
     - uses: ./.github/workflows/os_dependencies
 
@@ -32,11 +26,11 @@ runs:
     - uses: ./.github/workflows/cache
       with:
         os: ${{ runner.os }}
-        mix_env: ${{ matrix.mix_env }}
+        mix_env: ${{ inputs.mix_env }}
         paths: |
           ${{ github.workspace }}/deps
           ${{ github.workspace }}/_build
 
     # fetch deps and compile
-    - run: MIX_ENV=${{matrix.mix_env}} mix deps.get --only ${{matrix.mix_env}}
-    - run: MIX_ENV=${{matrix.mix_env}} mix compile --warnings-as-errors
+    - run: MIX_ENV=${{inputs.mix_env}} mix deps.get --only ${{inputs.mix_env}}
+    - run: MIX_ENV=${{inputs.mix_env}} mix compile --warnings-as-errors
