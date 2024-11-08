@@ -232,6 +232,8 @@ jobs:
       matrix:
         mix_env: ["prod"]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write 
     steps:
       # checkout the repo
       - name: Check out the repository to the runner
