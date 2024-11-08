@@ -17,13 +17,13 @@ runs:
 
   steps:
     # install os deps
-    - uses: ./.github/workflows/os_dependencies
+    - uses: ./.github/workflows/subtasks/os_dependencies
 
     # install erlang/elixir/protobuf
-    - uses: ./.github/workflows/elixir_setup
+    - uses: ./.github/workflows/subtasks/elixir_setup
 
     # setup build cache
-    - uses: ./.github/workflows/cache
+    - uses: ./.github/workflows/subtasks/cache
       with:
         os: ${{ runner.os }}
         mix_env: ${{ inputs.mix_env }}
