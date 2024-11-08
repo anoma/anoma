@@ -65,8 +65,7 @@
       #     {Credo.Check.Design.DuplicatedCode, false}
       #
       checks: %{
-        enabled: [
-        ],
+        enabled: [],
         disabled: [
           #
           # Checks scheduled for next check update (opt-in for now)
