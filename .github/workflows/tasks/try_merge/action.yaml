@@ -28,7 +28,7 @@ runs:
     # get the current commit hash and store in the environment under `$SHA`
     - name: get the current commit hash
       id: commit_hash
-      shell: bash 
+      shell: bash
       run: echo "SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
     # checkout the target branch
