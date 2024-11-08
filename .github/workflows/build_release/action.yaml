@@ -1,0 +1,20 @@
+name: build the release binaries
+description: build the release binaries
+inputs:
+    os:
+        description: "The operating system to use"
+        required: true
+    paths:
+        description: "paths to cache"
+        required: true
+
+    mix_env:
+        description: "mix environment to use"
+        required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: build the anoma client release 
+      shell: bash 
+      run: mix do --app anoma_client escript.build

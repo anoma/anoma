@@ -221,3 +221,36 @@ jobs:
       #     deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
       #     publish_dir: ./doc
       #     publish_branch: gh-pages
+
+  #-----------------------------------------------------------------------------
+  # Publish the docs on Github Pages
+
+  build_releases:
+    needs: [publish_docs,test,lint]
+    name: build the releases
+    strategy:
+      matrix:
+        mix_env: ["prod"]
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the repo
+      - name: Check out the repository to the runner
+        uses: actions/checkout@v4
+
+      # install os deps
+      - uses: ./.github/workflows/os_dependencies
+
+      # install erlang/elixir/protobuf
+      - uses: ./.github/workflows/elixir_setup
+
+      # setup build cache
+      - uses: ./.github/workflows/cache
+        with:
+          os: ${{ runner.os }}
+          mix_env: ${{ matrix.mix_env }}
+          paths: |
+            ${{ github.workspace }}/deps
+            ${{ github.workspace }}/_build
+
+      # build the release binaries
+      - uses: ./github/workflows/build_release
