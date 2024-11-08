@@ -253,4 +253,5 @@ jobs:
             ${{ github.workspace }}/_build
 
       # build the release binaries
+      - run: echo "${{ github.ref_name }}"
       - uses: ./.github/workflows/build_release
