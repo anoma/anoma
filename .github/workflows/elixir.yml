@@ -215,13 +215,18 @@ jobs:
       # run the makefile docs
       - run: make docs-release
       # deploy the docs on github pages
-      - name: publish to github pages
-        uses: peaceiris/actions-gh-pages@v3.9.3
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          keep_files: true
-          deploy_key: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./doc
-          publish_branch: gh-pages
+          path: './doc'
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
 
   #-----------------------------------------------------------------------------
   # Publish the docs on Github Pages
