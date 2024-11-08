@@ -62,7 +62,6 @@ jobs:
           paths: |
             ${{ github.workspace }}/deps
             ${{ github.workspace }}/_build
-            ${{ github.workspace }}/doc
 
       # fetch deps and compile
       - run: MIX_ENV=${{matrix.mix_env}} mix deps.get --only ${{matrix.mix_env}}
@@ -99,7 +98,6 @@ jobs:
           paths: |
             ${{ github.workspace }}/deps
             ${{ github.workspace }}/_build
-            ${{ github.workspace }}/doc
 
       # run mix credo
       - run: MIX_ENV=${{matrix.mix_env}} mix credo
@@ -142,7 +140,6 @@ jobs:
           paths: |
             ${{ github.workspace }}/deps
             ${{ github.workspace }}/_build
-            ${{ github.workspace }}/doc
 
       # run mix test
       - run: MIX_ENV=${{matrix.mix_env}} mix test
@@ -176,7 +173,6 @@ jobs:
           paths: |
             ${{ github.workspace }}/deps
             ${{ github.workspace }}/_build
-            ${{ github.workspace }}/doc
 
       # run mix docs
       - run: make docs-release
@@ -212,11 +208,12 @@ jobs:
           paths: |
             ${{ github.workspace }}/deps
             ${{ github.workspace }}/_build
-            ${{ github.workspace }}/doc
 
-      # publish to github pages
-      - name: publish to github pages 
-        run: ls -la
+      # todo: this should not be run again
+      # run mix docs
+      - run: make docs-release
+      # run the makefile docs
+      - run: make docs-release
       # - name: publish to github pages
       #   uses: peaceiris/actions-gh-pages@v3.9.3
       #   with:
