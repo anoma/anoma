@@ -62,6 +62,7 @@ jobs:
           paths: |
             ${{ github.workspace }}/deps
             ${{ github.workspace }}/_build
+            ${{ github.workspace }}/doc
 
       # fetch deps and compile
       - run: MIX_ENV=${{matrix.mix_env}} mix deps.get --only ${{matrix.mix_env}}
@@ -98,6 +99,7 @@ jobs:
           paths: |
             ${{ github.workspace }}/deps
             ${{ github.workspace }}/_build
+            ${{ github.workspace }}/doc
 
       # run mix credo
       - run: MIX_ENV=${{matrix.mix_env}} mix credo
@@ -140,6 +142,7 @@ jobs:
           paths: |
             ${{ github.workspace }}/deps
             ${{ github.workspace }}/_build
+            ${{ github.workspace }}/doc
 
       # run mix test
       - run: MIX_ENV=${{matrix.mix_env}} mix test
@@ -173,8 +176,51 @@ jobs:
           paths: |
             ${{ github.workspace }}/deps
             ${{ github.workspace }}/_build
+            ${{ github.workspace }}/doc
 
       # run mix docs
-      - run: MIX_ENV=${{matrix.mix_env}} mix docs
+      - run: make docs-release
       # run the makefile docs
       - run: make docs-release
+
+  #-----------------------------------------------------------------------------
+  # Publish the docs on Github Pages
+
+  publish_docs:
+    needs: [docs]
+    name: publish docs on github pages
+    strategy:
+      matrix:
+        mix_env: ["dev"]
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the repo
+      - name: Check out the repository to the runner
+        uses: actions/checkout@v4
+
+      # install os deps
+      - uses: ./.github/workflows/os_dependencies
+
+      # install erlang/elixir/protobuf
+      - uses: ./.github/workflows/elixir_setup
+
+      # setup build cache
+      - uses: ./.github/workflows/cache
+        with:
+          os: ${{ runner.os }}
+          mix_env: ${{ matrix.mix_env }}
+          paths: |
+            ${{ github.workspace }}/deps
+            ${{ github.workspace }}/_build
+            ${{ github.workspace }}/doc
+
+      # publish to github pages
+      - name: publish to github pages 
+        run: ls -la ./doc
+      # - name: publish to github pages
+      #   uses: peaceiris/actions-gh-pages@v3.9.3
+      #   with:
+      #     keep_files: true
+      #     deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+      #     publish_dir: ./doc
+      #     publish_branch: gh-pages
