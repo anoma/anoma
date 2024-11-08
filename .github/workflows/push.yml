@@ -6,13 +6,9 @@
 #   - Run linting jobs on the code base (credo, formatting, dialyzer, and whitespace check).
 #   - Run the test suite against the code base.
 
-name: Compile, test, lint, and deploy
+name: Push
 
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-
-# on:
-#   pull_request:
-#     branches: [ "base" ]
+run-name: Push to a branch
 
 on: [push]
 
