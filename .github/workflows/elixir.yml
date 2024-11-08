@@ -210,6 +210,8 @@ jobs:
           os: ${{ runner.os }}
           mix_env: ${{ matrix.mix_env }}
           paths: |
+            ${{ github.workspace }}/deps
+            ${{ github.workspace }}/_build
             ${{ github.workspace }}/doc
 
       # publish to github pages
