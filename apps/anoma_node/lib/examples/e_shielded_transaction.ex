@@ -1,0 +1,61 @@
+defmodule Anoma.Node.Examples.EShieldedTransaction do
+  alias Anoma.Node
+  alias Node.Transaction.{Storage, Mempool, Backends}
+  alias Examples.{ENock, ETransparent.ETransaction}
+  alias Examples.ECairo.EResource, as: ESResource
+  alias Anoma.Node.Examples.ETransaction
+  require ExUnit.Assertions
+  import ExUnit.Assertions
+
+  @spec submit_successful_trivial_cairo_tx(String.t()) :: String.t()
+  def submit_successful_trivial_cairo_tx(node_id \\ Node.example_random_id()) do
+    ETransaction.start_tx_module(node_id)
+
+    tx_w_backend = trivial_cairo_transaction()
+
+    EventBroker.subscribe_me([])
+
+    Mempool.tx(node_id, tx_w_backend, "id 1")
+    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+
+    ETransaction.recieve_round_event(node_id, 0)
+
+    # Generate the nf and cm from fixed resources
+    input_nullifier = ESResource.a_resource_nullifier()
+
+    output_commitment =
+      ESResource.a_fixed_output_resource()
+      |> Anoma.CairoResource.Resource.commitment()
+
+    assert {:ok, MapSet.new([input_nullifier])} ==
+             Storage.read(node_id, {1, :nullifiers})
+
+    assert {:ok, MapSet.new([output_commitment])} ==
+             Storage.read(node_id, {1, :commitments})
+
+    {tree, anchor} =
+      Examples.ECommitmentTree.memory_backed_ct_with_trivial_cairo_tx()
+
+    {_ct, _merkle_proof, old_root} = Examples.ECommitmentTree.a_merkle_proof()
+
+    assert {:ok, MapSet.new([old_root, anchor])} ==
+             Storage.read(node_id, {1, :roots})
+
+    assert {:ok, tree} == Storage.read(node_id, {1, :ct})
+    assert {:ok, anchor} == Storage.read(node_id, {1, :anchor})
+
+    EventBroker.unsubscribe_me([])
+
+    node_id
+  end
+
+  @spec trivial_cairo_transaction() :: {Backends.backend(), Noun.t()}
+  def trivial_cairo_transaction() do
+    s_tx = Examples.ECairo.ETransaction.a_shielded_transaction()
+    noun = s_tx |> Noun.Nounable.to_noun()
+
+    assert Anoma.CairoResource.Transaction.from_noun(noun) == {:ok, s_tx}
+
+    {:cairo_resource, ENock.transparent_core(noun)}
+  end
+end

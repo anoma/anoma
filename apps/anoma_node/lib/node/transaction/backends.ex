@@ -440,7 +440,8 @@ defmodule Anoma.Node.Transaction.Backends do
            append: [
              {:nullifiers, MapSet.new(tx.nullifiers)},
              {:commitments, MapSet.new(tx.commitments)},
-             {:roots, MapSet.new([anchor])}
+             {:roots,
+              MapSet.new([anchor, Anoma.Constants.default_cairo_rm_root()])}
            ],
            write: [{:anchor, anchor}, {:ct, ct_new}]
          }}
@@ -477,6 +478,7 @@ defmodule Anoma.Node.Transaction.Backends do
         true
       end
     else
+      # stored_nullifiers is empty
       _ -> true
     end
   end
@@ -484,14 +486,14 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec root_existence_check(CTransaction.t(), String.t(), binary()) ::
           true | {:error, String.t()}
   def root_existence_check(transaction, node_id, id) do
-    with {:ok, stored_roots} <-
-           Ordering.read(node_id, {id, :roots}),
-         true <-
-           Enum.all?(transaction.roots, &MapSet.member?(stored_roots, &1)) do
-      true
-    else
-      _ -> {:error, "A submitted root dose not exist in storage"}
-    end
+    stored_roots =
+      case Ordering.read(node_id, {id, :roots}) do
+        :absent -> MapSet.new([Anoma.Constants.default_cairo_rm_root()])
+        val -> val
+      end
+
+    Enum.all?(transaction.roots, &MapSet.member?(stored_roots, &1)) or
+      {:error, "A submitted root dose not exist in storage"}
   end
 
   ############################################################
