@@ -18,23 +18,27 @@ runs:
         GH_TOKEN: ${{ inputs.github_token }}
       shell: bash
       run: |
-        gh release create ${{ inputs.release_name }} \
-          --title ${{ github.ref_name }}             \
-          --repo ${{ github.repository }}
-
-    #---------------------------------------------------------------------------
-    # Anoma Client binary
-    - name: build the anoma client release
-      shell: bash
-      run: |
-        MIX_ENV=prod mix do --app anoma_client escript.build
+        RELEASE="$(gh release list --repo anoma/anoma --json name | jq '.[] | select(.name == \"${{ inputs.release_name }}\") | .name')" ; \
+        echo $RELEASE 
         
-    #---------------------------------------------------------------------------
-    # Publish releases
-    - name: publish client release
-      shell: bash
-      env:
-        GH_TOKEN: ${{ inputs.github_token }}
-      run: |
-        gh release upload ${{ inputs.release_name }} \
-        apps/anoma_client/anoma_client
+        # if [ -n "$(gh release list --repo anoma/anoma --json "name,tagName" | jq '.[] | select(.name == "") | .name')" ]; then echo "something" ; else ; echo "nothing"; fi
+        # gh release create ${{ inputs.release_name }} \
+        #   --title ${{ github.ref_name }}             \
+        #   --repo ${{ github.repository }}
+
+    # #---------------------------------------------------------------------------
+    # # Anoma Client binary
+    # - name: build the anoma client release
+    #   shell: bash
+    #   run: |
+    #     MIX_ENV=prod mix do --app anoma_client escript.build
+        
+    # #---------------------------------------------------------------------------
+    # # Publish releases
+    # - name: publish client release
+    #   shell: bash
+    #   env:
+    #     GH_TOKEN: ${{ inputs.github_token }}
+    #   run: |
+    #     gh release upload ${{ inputs.release_name }} \
+    #     apps/anoma_client/anoma_client
