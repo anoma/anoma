@@ -26,7 +26,7 @@ runs:
         fetch-depth: 0
 
     # get the current commit hash and store in the environment under `$SHA`
-    - name: get the current commit hash 
+    - name: get the current commit hash
       id: commit_hash
       shell: bash 
       run: echo "SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
