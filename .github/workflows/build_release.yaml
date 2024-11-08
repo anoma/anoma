@@ -1,0 +1,66 @@
+name: Build release
+on:
+  workflow_call:
+    inputs:
+      mix-env:
+        required: true
+        type: string
+      elixir-version:
+        required: true
+        type: string
+      otp-version:
+        required: true
+        type: string
+jobs:
+  build_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout the repository
+        uses: actions/checkout@v4
+
+      - name: setup deps and _build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/deps
+            ${{ github.workspace }}/_build
+          key: ${{ runner.os }}-build-${{ inputs.mix-env }}-${{ hashFiles('mix.lock') }}
+
+      - name: setup elixir
+        uses: ./.github/actions/elixir_setup
+        with:
+          elixir-version: ${{ inputs.elixir-version }}
+          otp-version: ${{ inputs.otp-version }}
+
+      - name: install apt packages
+        uses: ./.github/actions/os_setup
+
+      - name: ensure that the release does not exist yet
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          export RELEASE=$(gh release list --json name | jq '.[] | select(.name == "${{ github.ref_name }}") | .name') ; \
+          test -z "${RELEASE}" || echo "release ${RELEASE} already exists"
+
+      - name: create the release on github
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release create ${{ github.ref_name }} \
+            --title ${{ github.ref_name }}             \
+            --repo ${{ github.repository }}
+
+        #   #---------------------------------------------------------------------------
+        #   # Publish releases
+
+        #   - name: publish client release
+        #     shell: bash
+        #     env:
+        #       GH_TOKEN: ${{ inputs.github_token }}
+        #     run: |
+        #       gh release upload ${{ inputs.release_name }} \
+        #       -- clobber                                   \
+        #       apps/anoma_client/anoma_client

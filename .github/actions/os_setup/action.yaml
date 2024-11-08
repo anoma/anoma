@@ -1,8 +1,8 @@
-name: try and merge
-description: configure os dependencies
+name: install apt packages
+description: install apt packages
 runs:
   using: "composite"
   steps:
-    - name: install system dependencies
+    - name: install apt packages
       shell: bash
       run: sudo apt-get install -y libsodium-dev protobuf-compiler

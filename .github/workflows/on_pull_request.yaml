@@ -1,0 +1,37 @@
+name: Pull request
+run-name: Pull request
+on:
+    pull_request:
+      branches: [ "base" ]
+
+jobs:
+  try_merge:
+    uses: ./.github/workflows/try_merge.yaml
+    with:
+      merge_with: "main"
+
+  compile:
+    strategy:
+      matrix:
+        target: [dev, test, prod]
+    uses: ./.github/workflows/compile.yaml
+    with:
+      mix-env: ${{ matrix.target }}
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  lint:
+    needs: compile
+    uses: ./.github/workflows/lint.yaml
+    with:
+      mix-env: "dev"
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  test:
+    needs: compile
+    uses: ./.github/workflows/test.yaml
+    with:
+      mix-env: "test"
+      elixir-version: "1.17"
+      otp-version: "27.1"

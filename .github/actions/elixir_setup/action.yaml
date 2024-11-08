@@ -1,5 +1,12 @@
 name: configure the elixir installation
 description: configure the elixir installation
+inputs:
+  elixir-version:
+    description: "elixir version"
+    required: true
+  otp-version:
+    description: "otp version"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -7,8 +14,8 @@ runs:
     - name: configure beam
       uses: erlef/setup-beam@v1
       with:
-        otp-version: "27.1"
-        elixir-version: "1.17"
+        otp-version: ${{ inputs.otp-version }}
+        elixir-version: ${{ inputs.elixir-version }}
     # install protobuf package
     - name: Install Protobuf Elixir dependencies
       shell: bash

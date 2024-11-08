@@ -1,0 +1,32 @@
+name: Push on base
+run-name: Push on base
+on:
+    push:
+      branches: [ "base" ]
+
+jobs:
+  compile:
+    strategy:
+      matrix:
+        target: [dev, test, prod]
+    uses: ./.github/workflows/compile.yaml
+    with:
+      mix-env: ${{ matrix.target }}
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  lint:
+    needs: compile
+    uses: ./.github/workflows/lint.yaml
+    with:
+      mix-env: "dev"
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  test:
+    needs: compile
+    uses: ./.github/workflows/test.yaml
+    with:
+      mix-env: "test"
+      elixir-version: "1.17"
+      otp-version: "27.1"
