@@ -18,7 +18,9 @@ runs:
         GH_TOKEN: ${{ inputs.github_token }}
       shell: bash
       run: |
-        gh release create ${{ inputs.release_name }}
+        gh release create ${{ inputs.release_name }} \
+          --title ${{ github.ref_name }}             \
+          --repo ${{ github.repository }}
 
     #---------------------------------------------------------------------------
     # Anoma Client binary
@@ -34,4 +36,5 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github_token }}
       run: |
-        gh release upload ${{ inputs.release_name }}  apps/anoma_client/anoma_client
+        gh release upload ${{ inputs.release_name }} \
+        apps/anoma_client/anoma_client
