@@ -14,6 +14,7 @@ inputs:
     required: true
 
 runs:
+  using: "composite"
   steps:
     # install os deps
     - uses: ./.github/workflows/subtasks/os_dependencies
