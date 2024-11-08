@@ -29,7 +29,7 @@ runs:
         mix_env: ${{ inputs.mix_env }}
         paths: |
           ${{ github.workspace }}/plts
-          
+
     # run mix credo
     - name: "credo"
       shell: bash
