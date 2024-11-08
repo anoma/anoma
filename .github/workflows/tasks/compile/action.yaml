@@ -1,0 +1,42 @@
+name: compile all elixir environments
+description: compile all elixir environments
+inputs:
+  os:
+    description: "The operating system to use"
+    required: true
+  paths:
+    description: "paths to cache"
+    required: true
+
+  mix_env:
+    description: "mix environment to use"
+    required: true
+
+runs:
+  strategy:
+      matrix:
+          mix_env: ["prod", "dev", "test"]
+  using: "composite"
+  steps:
+    # checkout the repo
+    - name: Check out the repository to the runner
+      uses: actions/checkout@v4
+
+    # install os deps
+    - uses: ./.github/workflows/os_dependencies
+
+    # install erlang/elixir/protobuf
+    - uses: ./.github/workflows/elixir_setup
+
+    # setup build cache
+    - uses: ./.github/workflows/cache
+      with:
+        os: ${{ runner.os }}
+        mix_env: ${{ matrix.mix_env }}
+        paths: |
+          ${{ github.workspace }}/deps
+          ${{ github.workspace }}/_build
+
+    # fetch deps and compile
+    - run: MIX_ENV=${{matrix.mix_env}} mix deps.get --only ${{matrix.mix_env}}
+    - run: MIX_ENV=${{matrix.mix_env}} mix compile --warnings-as-errors
