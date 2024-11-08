@@ -166,7 +166,7 @@ defmodule Anoma.Node.Transaction.Backends do
   defp execute_candidate(node_id, tx_code, id, process) do
     env = %Nock{scry_function: fn a -> Ordering.read(node_id, a) end}
 
-    with {:ok, result} <- gate_call(tx_code, env, id, node_id),
+    with {:ok, result} <- vm_execute(tx_code, env, id, node_id),
          :ok <- process.(id, result) do
       :ok
     else
@@ -179,9 +179,9 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
-  @spec gate_call(Noun.t(), Nock.t(), binary(), String.t()) ::
+  @spec vm_execute(Noun.t(), Nock.t(), binary(), String.t()) ::
           {:ok, Noun.t()} | :vm_error
-  defp gate_call(tx_code, env, id, node_id) do
+  defp vm_execute(tx_code, env, id, node_id) do
     with {:ok, stage_2_tx} <- nock(tx_code, [9, 2, 0 | 1], env),
          {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
          {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
