@@ -29,7 +29,6 @@ jobs:
 
       # install os deps
       - uses: ./.github/workflows/try_merge
-        continue-on-error: true
         with:
           merge_into: "main"
 
