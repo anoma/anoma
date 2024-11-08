@@ -1,5 +1,10 @@
 name: build the release binaries
 description: build the release binaries
+inputs:
+  release_name:
+    description: "The name of the release"
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -13,7 +18,6 @@ runs:
       run: |
         MIX_ENV=prod mix do --app anoma_client escript.build
         mv apps/anoma_client/anoma_client releases/client/anoma_client
-
     #---------------------------------------------------------------------------
     # Anoma Node binary 
     - name: build the anoma node release 
@@ -21,3 +25,11 @@ runs:
       run: |
         MIX_ENV=prod mix do --app anoma_client escript.build
         mv apps/anoma_client/anoma_client releases/client/anoma_node
+    #---------------------------------------------------------------------------
+    # Publish releases
+    - name: publish client release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release upload --clobber "${{ inputs.release_name }}" \
+          releases/client/anoma_node
