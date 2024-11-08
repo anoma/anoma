@@ -31,6 +31,10 @@ runs:
           ${{ github.workspace }}/deps
           ${{ github.workspace }}/_build
 
-    # fetch deps and compile
-    - run: MIX_ENV=${{inputs.mix_env}} mix deps.get --only ${{inputs.mix_env}}
-    - run: MIX_ENV=${{inputs.mix_env}} mix compile --warnings-as-errors
+    - name: fetch deps 
+      shell: bash 
+      run: MIX_ENV=${{inputs.mix_env}} mix deps.get --only ${{inputs.mix_env}}
+
+    - name: compile
+      shell: bash 
+      run: MIX_ENV=${{inputs.mix_env}} mix compile --warnings-as-errors
