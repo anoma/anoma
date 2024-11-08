@@ -226,7 +226,7 @@ jobs:
   # Publish the docs on Github Pages
 
   build_releases:
-    # needs: [publish_docs,test,lint]
+    needs: [publish_docs,test,lint]
     name: build the releases
     strategy:
       matrix:
