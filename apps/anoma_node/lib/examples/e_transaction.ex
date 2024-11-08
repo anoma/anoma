@@ -482,6 +482,38 @@ defmodule Anoma.Node.Examples.ETransaction do
     node_id
   end
 
+  @spec read_txs_actually_read(String.t()) :: String.t()
+  def read_txs_actually_read(node_id \\ Node.example_random_id()) do
+    read_txs_write_nothing(node_id)
+    key = "key"
+
+    {_backend, code} = inc(key)
+
+    zero_counter_submit(node_id)
+
+    Executor.launch(node_id, {{:read_only, self()}, code}, node_id)
+
+    assert_receive({1, [[^key | 1] | 0]}, 5000)
+
+    node_id
+  end
+
+  @spec read_txs_read_recent(String.t()) :: String.t()
+  def read_txs_read_recent(node_id \\ Node.example_random_id()) do
+    read_txs_write_nothing(node_id)
+    key = "key"
+
+    {_backend, code} = inc(key)
+
+    inc_counter_submit_with_zero(node_id)
+
+    Executor.launch(node_id, {{:read_only, self()}, code}, node_id)
+
+    assert_receive({2, [[^key | 2] | 0]}, 5000)
+
+    node_id
+  end
+
   @spec inc_counter_submit_after_bluff(String.t()) :: String.t()
   def inc_counter_submit_after_bluff(node_id \\ Node.example_random_id()) do
     blocks_table = Storage.blocks_table(node_id)
