@@ -4,24 +4,27 @@ inputs:
   release_name:
     description: "The name of the release"
     required: true
+  github_token:
+    description: "The github token"
+    required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Create release output directory 
-      shell: bash 
-      run: mkdir -p releases/client releases/node 
+    - name: Create release output directory
+      shell: bash
+      run: mkdir -p releases/client releases/node
     #---------------------------------------------------------------------------
-    # Anoma Client binary 
-    - name: build the anoma client release 
-      shell: bash 
+    # Anoma Client binary
+    - name: build the anoma client release
+      shell: bash
       run: |
         MIX_ENV=prod mix do --app anoma_client escript.build
         mv apps/anoma_client/anoma_client releases/client/anoma_client
     #---------------------------------------------------------------------------
-    # Anoma Node binary 
-    - name: build the anoma node release 
-      shell: bash 
+    # Anoma Node binary
+    - name: build the anoma node release
+      shell: bash
       run: |
         MIX_ENV=prod mix do --app anoma_client escript.build
         mv apps/anoma_client/anoma_client releases/client/anoma_node
@@ -29,7 +32,7 @@ runs:
     # Publish releases
     - name: publish client release
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
         gh release upload --clobber "${{ inputs.release_name }}" \
           releases/client/anoma_node

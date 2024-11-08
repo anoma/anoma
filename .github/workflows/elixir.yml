@@ -258,3 +258,4 @@ jobs:
       - uses: ./.github/workflows/build_release
         with:
           release_name: ${{ github.ref_name }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
