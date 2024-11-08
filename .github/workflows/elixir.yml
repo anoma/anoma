@@ -192,6 +192,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      pages: write
     steps:
       # checkout the repo
       - name: Check out the repository to the runner
