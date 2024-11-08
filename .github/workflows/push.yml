@@ -37,6 +37,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # checkout the repo
+      - name: Check out the repository to the runner
+        uses: actions/checkout@v4
+      # checkout the repo
       - uses: ./.github/workflows/tasks/compile
 
   # #-----------------------------------------------------------------------------
