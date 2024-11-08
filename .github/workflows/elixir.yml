@@ -222,7 +222,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: './doc'
-          
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
@@ -239,7 +239,8 @@ jobs:
         mix_env: ["prod"]
     runs-on: ubuntu-latest
     permissions:
-      contents: write 
+      contents: write
+      id-token: write
     steps:
       # checkout the repo
       - name: Check out the repository to the runner
