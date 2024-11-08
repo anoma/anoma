@@ -1,21 +1,21 @@
 name: setup the build cache
 description: setup the build cache
 inputs:
-    os:
-        description: "The operating system to use"
-        required: true
-    paths:
-        description: "paths to cache"
-        required: true
+  os:
+    description: "The operating system to use"
+    required: true
+  paths:
+    description: "paths to cache"
+    required: true
 
-        mix_env:
-            description: "mix environment to use"
-            required: true
+  mix_env:
+    description: "mix environment to use"
+    required: true
 
-    tag:
-        description: "additional tag to label the cache"
-        required: false
-        default: "build"
+  tag:
+    description: "additional tag to label the cache"
+    required: false
+    default: "build"
 
 runs:
   using: "composite"

@@ -13,21 +13,21 @@ run-name: Push to ${{ github.ref_name }}
 on: [push]
 
 jobs:
-  #-----------------------------------------------------------------------------
-  # Merge the current branch into the `next` branch.
+  # #-----------------------------------------------------------------------------
+  # # Merge the current branch into the `next` branch.
   
-  try_merge:
-    name: try merge into next
-    runs-on: ubuntu-latest
-    steps:
-      # checkout the repo
-      - name: Check out the repository to the runner
-        uses: actions/checkout@v4
+  # try_merge:
+  #   name: try merge into next
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # checkout the repo
+  #     - name: Check out the repository to the runner
+  #       uses: actions/checkout@v4
 
-      # try merge with next
-      - uses: ./.github/workflows/tasks/try_merge
-        with:
-          merge_into: "main"
+  #     # try merge with next
+  #     - uses: ./.github/workflows/tasks/try_merge
+  #       with:
+  #         merge_into: "main"
 
   #-----------------------------------------------------------------------------
   # Compile the code base for the different mix environments
@@ -48,108 +48,66 @@ jobs:
         with:
           mix_env: ${{ matrix.mix_env }}
 
-  #-----------------------------------------------------------------------------
-  # Run linting jobs on the code base.
-  # This includes credo, formatting, trailing whitespaces, and dialyzer.
-  # Reuses the cache from above, and updates the cache when the job is done.
-
-  lint:
-    needs: [compile]
-    name: lint codebase
-    runs-on: ubuntu-latest
-    steps:
-      # checkout the repo
-      - name: Check out the repository to the runner
-        uses: actions/checkout@v4
-
-      # run the lint jobs
-      - uses: ./.github/workflows/tasks/lint
-        with:
-          mix_env: "dev"
-
-  #-----------------------------------------------------------------------------
-  # Run the test suite against the code base.
-
-  test:
-    needs: [compile]
-    name: run tests
-    runs-on: ubuntu-latest
-    steps:
-      # checkout the repo
-      - name: Check out the repository to the runner
-        uses: actions/checkout@v4
-
-      # run the lint jobs
-      - uses: ./.github/workflows/tasks/test
-
-  #-----------------------------------------------------------------------------
-  # Generate the documentation of the code base.
-
-  docs:
-    needs: [compile]
-    name: compile docs
-    runs-on: ubuntu-latest
-    steps:
-      # checkout the repo
-      - name: Check out the repository to the runner
-        uses: actions/checkout@v4
-
-      # run the lint jobs
-      - uses: ./.github/workflows/tasks/docs
-
-  #-----------------------------------------------------------------------------
-  # Generate the documentation of the code base.
-
-  publish_docs:
-    needs: [compile]
-    name: publish docs
-    runs-on: ubuntu-latest
-    steps:
-      # checkout the repo
-      - name: Check out the repository to the runner
-        uses: actions/checkout@v4
-
-      # run the lint jobs
-      - uses: ./.github/workflows/tasks/publish_docs
-
-
   # #-----------------------------------------------------------------------------
-  # # Publish the docs on Github Pages
+  # # Run linting jobs on the code base.
+  # # This includes credo, formatting, trailing whitespaces, and dialyzer.
+  # # Reuses the cache from above, and updates the cache when the job is done.
 
-  # build_releases:
-  #   needs: [publish_docs,test,lint]
-  #   name: build the releases
-  #   strategy:
-  #     matrix:
-  #       mix_env: ["prod"]
+  # lint:
+  #   needs: [compile]
+  #   name: lint codebase
   #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: write
   #   steps:
   #     # checkout the repo
   #     - name: Check out the repository to the runner
   #       uses: actions/checkout@v4
 
-  #     # install os deps
-  #     - uses: ./.github/workflows/os_dependencies
-
-  #     # install erlang/elixir/protobuf
-  #     - uses: ./.github/workflows/elixir_setup
-
-  #     # setup build cache
-  #     - uses: ./.github/workflows/cache
+  #     # run the lint jobs
+  #     - uses: ./.github/workflows/tasks/lint
   #       with:
-  #         os: ${{ runner.os }}
-  #         mix_env: ${{ matrix.mix_env }}
-  #         paths: |
-  #           ${{ github.workspace }}/deps
-  #           ${{ github.workspace }}/_build
+  #         mix_env: "dev"
 
-  #     # build the release binaries
-  #     - uses: ./.github/workflows/build_release
+  # #-----------------------------------------------------------------------------
+  # # Run the test suite against the code base.
 
-  #     # build the release binaries
-  #     - uses: ./.github/workflows/github_release
-  #       with:
-  #         release_name: ${{ github.ref_name }}
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  # test:
+  #   needs: [compile]
+  #   name: run tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # checkout the repo
+  #     - name: Check out the repository to the runner
+  #       uses: actions/checkout@v4
+
+  #     # run the lint jobs
+  #     - uses: ./.github/workflows/tasks/test
+
+  # #-----------------------------------------------------------------------------
+  # # Generate the documentation of the code base.
+
+  # docs:
+  #   needs: [compile]
+  #   name: compile docs
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # checkout the repo
+  #     - name: Check out the repository to the runner
+  #       uses: actions/checkout@v4
+
+  #     # run the lint jobs
+  #     - uses: ./.github/workflows/tasks/docs
+
+  # #-----------------------------------------------------------------------------
+  # # Generate the documentation of the code base.
+
+  # publish_docs:
+  #   needs: [compile]
+  #   name: publish docs
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # checkout the repo
+  #     - name: Check out the repository to the runner
+  #       uses: actions/checkout@v4
+
+  #     # run the lint jobs
+  #     - uses: ./.github/workflows/tasks/publish_docs
