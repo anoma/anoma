@@ -26,14 +26,6 @@ runs:
       shell: bash
       run: |
         MIX_ENV=prod mix do --app anoma_client escript.build
-
-    #---------------------------------------------------------------------------
-    # Anoma Node binary
-    - name: build the anoma node release
-      shell: bash
-      run: |
-        MIX_ENV=prod mix do --app anoma_client escript.build
-        mv apps/anoma_client/anoma_client releases/client/anoma_node
         
     #---------------------------------------------------------------------------
     # Publish releases
