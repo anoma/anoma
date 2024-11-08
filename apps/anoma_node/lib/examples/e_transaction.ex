@@ -533,7 +533,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
   end
 
-  defp recieve_round_event(node_id, round) do
+  @spec recieve_round_event(String.t(), non_neg_integer()) :: :ok | :error_tx
+  def recieve_round_event(node_id, round) do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
