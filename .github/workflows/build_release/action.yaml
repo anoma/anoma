@@ -12,7 +12,7 @@ runs:
   using: "composite"
   steps:
     #---------------------------------------------------------------------------
-    # Create the release on GitHub
+    # Create the release on GitHub, or fail if it exists.
     - name: ensure that the release does not exist yet
       env:
         GH_TOKEN: ${{ inputs.github_token }}
@@ -30,19 +30,21 @@ runs:
           --title ${{ github.ref_name }}             \
           --repo ${{ github.repository }}
 
-    # #---------------------------------------------------------------------------
-    # # Anoma Client binary
-    # - name: build the anoma client release
-    #   shell: bash
-    #   run: |
-    #     MIX_ENV=prod mix do --app anoma_client escript.build
+    #---------------------------------------------------------------------------
+    # Anoma Client binary
 
-    # #---------------------------------------------------------------------------
-    # # Publish releases
-    # - name: publish client release
-    #   shell: bash
-    #   env:
-    #     GH_TOKEN: ${{ inputs.github_token }}
-    #   run: |
-    #     gh release upload ${{ inputs.release_name }} \
-    #     apps/anoma_client/anoma_client
+    - name: build the anoma client release
+      shell: bash
+      run: |
+        MIX_ENV=prod mix do --app anoma_client escript.build
+
+    #---------------------------------------------------------------------------
+    # Publish releases
+    
+    - name: publish client release
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        gh release upload ${{ inputs.release_name }} \
+        apps/anoma_client/anoma_client
