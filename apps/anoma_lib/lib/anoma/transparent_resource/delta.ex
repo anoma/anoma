@@ -49,9 +49,10 @@ defmodule Anoma.TransparentResource.Delta do
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun(noun) do
     maybe_record =
-      Enum.map(Noun.list_nock_to_erlang(noun), fn
+      Noun.list_nock_to_erlang(noun)
+      |> Enum.map(fn
         [x, y | terminator] when terminator in [0, <<>>, <<0>>, []] ->
-          {x, y}
+          {x, Noun.atom_binary_to_signed_integer(y)}
 
         _ ->
           :error
