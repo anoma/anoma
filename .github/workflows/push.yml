@@ -42,7 +42,7 @@ jobs:
       # checkout the repo
       - name: Check out the repository to the runner
         uses: actions/checkout@v4
-      # checkout the repo
+      # compile the code for all mix environments
       - uses: ./.github/workflows/tasks/compile
         with: 
           mix_env: ${{ matrix.mix_env }}
