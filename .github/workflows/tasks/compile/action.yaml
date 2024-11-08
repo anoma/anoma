@@ -14,7 +14,6 @@ inputs:
     required: true
 
 runs:
-
   steps:
     # install os deps
     - uses: ./.github/workflows/subtasks/os_dependencies
@@ -31,10 +30,10 @@ runs:
           ${{ github.workspace }}/deps
           ${{ github.workspace }}/_build
 
-    - name: fetch deps 
-      shell: bash 
+    - name: fetch deps
+      shell: bash
       run: MIX_ENV=${{inputs.mix_env}} mix deps.get --only ${{inputs.mix_env}}
 
     - name: compile
-      shell: bash 
+      shell: bash
       run: MIX_ENV=${{inputs.mix_env}} mix compile --warnings-as-errors
