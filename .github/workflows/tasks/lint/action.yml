@@ -22,6 +22,14 @@ runs:
           ${{ github.workspace }}/deps
           ${{ github.workspace }}/_build
 
+    # setup plt cache
+    - uses: ./.github/workflows/subtasks/cache
+      with:
+        os: ${{ runner.os }}
+        mix_env: ${{ inputs.mix_env }}
+        paths: |
+          ${{ github.workspace }}/plts
+          
     # run mix credo
     - name: "credo"
       shell: bash
