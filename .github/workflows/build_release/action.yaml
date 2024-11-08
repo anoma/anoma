@@ -33,6 +33,6 @@ runs:
     - name: publish client release
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ inputs.release_name }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        gh release upload ${{ inputs.github_token }} releases/client/anoma_node
+        gh release upload ${{ inputs.release_name }} releases/client/anoma_node
