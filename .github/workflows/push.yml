@@ -55,9 +55,6 @@ jobs:
   lint:
     needs: [compile]
     name: lint codebase
-    strategy:
-      matrix:
-        mix_env: ["dev"]
     runs-on: ubuntu-latest
     steps:
       # checkout the repo
@@ -67,7 +64,7 @@ jobs:
       # run the lint jobs
       - uses: ./.github/workflows/tasks/lint
         with: 
-          mix_env: ${{ matrix.mix_env }}
+          mix_env: "dev"
 
 
   # #-----------------------------------------------------------------------------
