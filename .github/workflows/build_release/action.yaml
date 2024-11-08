@@ -11,10 +11,11 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Create release output directory
-      shell: bash
-      run: mkdir -p releases/client releases/node
+    #---------------------------------------------------------------------------
+    # Create the release on GitHub
     - name: create the github release
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
       shell: bash
       run: |
         gh release create ${{ inputs.release_name }}
@@ -25,7 +26,7 @@ runs:
       shell: bash
       run: |
         MIX_ENV=prod mix do --app anoma_client escript.build
-        mv apps/anoma_client/anoma_client releases/client/anoma_client
+
     #---------------------------------------------------------------------------
     # Anoma Node binary
     - name: build the anoma node release
@@ -33,11 +34,12 @@ runs:
       run: |
         MIX_ENV=prod mix do --app anoma_client escript.build
         mv apps/anoma_client/anoma_client releases/client/anoma_node
+        
     #---------------------------------------------------------------------------
     # Publish releases
     - name: publish client release
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GH_TOKEN: ${{ inputs.github_token }}
       run: |
-        gh release upload ${{ inputs.release_name }} releases/client/anoma_node
+        gh release upload ${{ inputs.release_name }}  apps/anoma_client/anoma_client
