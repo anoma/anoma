@@ -31,6 +31,7 @@ runs:
     #---------------------------------------------------------------------------
     # Publish releases
     - name: publish client release
+      shell: bashs
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
