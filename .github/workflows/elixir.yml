@@ -210,13 +210,11 @@ jobs:
           os: ${{ runner.os }}
           mix_env: ${{ matrix.mix_env }}
           paths: |
-            ${{ github.workspace }}/deps
-            ${{ github.workspace }}/_build
             ${{ github.workspace }}/doc
 
       # publish to github pages
       - name: publish to github pages 
-        run: ls -la ./doc
+        run: ls -la
       # - name: publish to github pages
       #   uses: peaceiris/actions-gh-pages@v3.9.3
       #   with:
