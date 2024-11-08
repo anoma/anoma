@@ -115,7 +115,7 @@ defmodule Anoma.Node.Transaction.Backends do
              back: backend()
   def execute(node_id, {backend, tx_code}, id) do
     env = %Nock{scry_function: fn a -> Ordering.read(node_id, a) end}
-    vm_result = gate_call(tx_code, env, id)
+    vm_result = vm_execute(tx_code, env, id)
     result_event(id, vm_result, node_id, backend)
 
     res =
@@ -136,11 +136,11 @@ defmodule Anoma.Node.Transaction.Backends do
   #                       VM Execution                       #
   ############################################################
 
-  @spec gate_call(Noun.t(), Nock.t(), binary()) ::
+  @spec vm_execute(Noun.t(), Nock.t(), binary()) ::
           {:ok, Noun.t()} | :vm_error
-  defp gate_call(tx_code, env, id) do
+  defp vm_execute(tx_code, env, id) do
     with {:ok, code} <- cue_when_atom(tx_code),
-         {:ok, stage_2_tx} <- nock(code, [9, 2, 0 | 1], env),
+         {:ok, [_ | stage_2_tx]} <- nock(code, [9, 2, 0 | 1], env),
          {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
          {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
       {:ok, result}
