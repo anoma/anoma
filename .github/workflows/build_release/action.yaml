@@ -3,6 +3,21 @@ description: build the release binaries
 runs:
   using: "composite"
   steps:
+    - name: Create release output directory 
+      shell: bash 
+      run: mkdir -p releases/client releases/node 
+    #---------------------------------------------------------------------------
+    # Anoma Client binary 
     - name: build the anoma client release 
       shell: bash 
-      run: MIX_ENV=prod mix do --app anoma_client escript.build
+      run: |
+        MIX_ENV=prod mix do --app anoma_client escript.build
+        mv apps/anoma_client/anoma_client releases/client/anoma_client
+
+    #---------------------------------------------------------------------------
+    # Anoma Node binary 
+    - name: build the anoma node release 
+      shell: bash 
+      run: |
+        MIX_ENV=prod mix do --app anoma_client escript.build
+        mv apps/anoma_client/anoma_client releases/client/anoma_node
