@@ -40,6 +40,10 @@ runs:
       if: startsWith(runner.os, 'macOS')
       shell: bash
       run: ./scripts/copy-dylibs.zsh _build/dev/rel/anoma
+    - name: Copy shared libraries
+      if: startsWith(runner.os, 'Linux')
+      shell: bash
+      run: ./scripts/copy-sos.sh _build/dev/rel/anoma
     - name: Build Anoma release
       if: startsWith(runner.os, 'Windows')
       shell: pwsh

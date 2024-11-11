@@ -6,7 +6,6 @@
 # an infinite recurse stemming from a self-referential shared library.
 function cp_dylibs {
     object_file="$1"
-    source_object_file="$2"
     echo "Patching $object_file";
     # Find all the shared library dependencies of the given object file
     otool -L "$object_file" |
@@ -14,16 +13,18 @@ function cp_dylibs {
     grep -o "/opt/.*dylib" |
     # For each shared library that has been added to the base system
     while read -r shared_library; do
+        shared_lib_basename="$(basename $shared_library)"
+        target_object_file="${object_file%/*}/$shared_lib_basename"
         # Only do something if we have not encountered this shared library yet
-        if ! [[ $shared_library -ef $source_object_file ]]; then
+        if ! [ -e $target_object_file ]; then
             # Copy the shared library found into the release
-            cp -v "$shared_library" "${object_file%/*}/";
+            cp -v "$shared_library" "$target_object_file";
             # Patch the given object file to point the shared library copy
-            install_name_tool -change "$shared_library" "@loader_path/$(basename $shared_library)" "$object_file";
+            install_name_tool -change "$shared_library" "@loader_path/$shared_lib_basename" "$object_file";
             # The above patching invalidates any existing signatures, so force ad-hoc signing of the object file
             codesign -s - -f "$object_file";
             # Recurse to handle the dependencies of the current shared library
-            cp_dylibs "${object_file%/*}/$(basename $shared_library)" "$shared_library"
+            cp_dylibs "$target_object_file"
         fi
     done
 }
@@ -33,6 +34,6 @@ cd $1
 # Copy the shared libraries required by each file in the release
 find . -type f |
 while read object_file; do
-    # Recursively copy the shared libraries used by this object file and patch it
-    cp_dylibs "$object_file" "$object_file";
+    # Recursively copy the shared libraries used by this object file and patch them
+    cp_dylibs "$object_file";
 done
