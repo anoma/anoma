@@ -5,6 +5,7 @@ defmodule Anoma.RM.Risc0.ProofRecord do
 
   alias __MODULE__
   alias Anoma.RM.Risc0.ComplianceWitness
+  alias Anoma.RM.Risc0.Resource
   use TypedStruct
 
   @behaviour Noun.Nounable.Kind
@@ -38,7 +39,7 @@ defmodule Anoma.RM.Risc0.ProofRecord do
       output_resource: output_resource,
       rcv: rcv,
       merkle_path: merkle_path,
-      input_nf_key: input_nf_key
+      nsk: nsk
     }
   ) do
     guest_path = Path.join([
@@ -55,16 +56,19 @@ defmodule Anoma.RM.Risc0.ProofRecord do
     ])
 
     IO.puts("Guest path: #{inspect(guest_path)}")
+    IO.puts("File exists?: #{File.exists?(guest_path)}")
+
     with {:ok, compliance_guest_elf} <- File.read(guest_path) do
       IO.puts("Compliance guest elf: #{inspect(compliance_guest_elf)}")
       compliance_circuit = Risc0.generate_compliance_circuit(
-        input_resource |> :binary.bin_to_list(),
-        output_resource |> :binary.bin_to_list(),
-        rcv |> :binary.bin_to_list(),
-        merkle_path |> :binary.bin_to_list(),
-        input_nf_key |> :binary.bin_to_list()
+        input_resource |> Resource.to_bytes(),
+        output_resource |> Resource.to_bytes(),
+        rcv,
+        merkle_path,
+        nsk
       )
-      receipt = Risc0.prove(compliance_circuit, compliance_guest_elf)
+      IO.puts("Compliance circuit: #{inspect(compliance_circuit)}")
+      receipt = Risc0.prove(compliance_circuit, compliance_guest_elf |> :binary.bin_to_list())
       IO.puts("Receipt: #{inspect(receipt)}")
 
       {:ok,

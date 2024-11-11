@@ -10,20 +10,27 @@ defmodule Examples.ERisc0.EResource do
     anpk
   end
 
-  @spec a_resource() :: %Resource{}
-  def a_resource do
-    zero_binary = <<0::256>>
+  @spec a_resource(nsk: list(byte())) :: %Resource{}
+  def a_resource(nsk: nsk) do
+    logic = Risc0.random_32()
+    label = Risc0.random_32()
+    nonce = Risc0.random_32()
+    quantity = Risc0.random_32()
+    data = Risc0.random_32()
+    eph = false
+    npk = Risc0.generate_npk(nsk)
+    rseed = Risc0.random_32()
 
     aresource = %Resource{
       # we don't have a real resource logic, use the compliance circuit as resource logic
-      logic: Constants.random_hash(),
-      label: zero_binary,
-      quantity: <<5::256>>,
-      data: zero_binary,
-      eph: false,
-      nonce: zero_binary,
-      npk: a_npk(),
-      rseed: zero_binary
+      logic: logic |> :binary.list_to_bin(),
+      label: label |> :binary.list_to_bin(),
+      quantity: quantity |> :binary.list_to_bin(),
+      data: data |> :binary.list_to_bin(),
+      eph: eph,
+      nonce: nonce |> :binary.list_to_bin(),
+      npk: npk |> :binary.list_to_bin(),
+      rseed: rseed |> :binary.list_to_bin()
     }
 
     aresource
@@ -31,7 +38,8 @@ defmodule Examples.ERisc0.EResource do
 
   @spec a_resource_commitment() :: binary()
   def a_resource_commitment do
-    aresource = a_resource()
+    nsk = Risc0.random_32()
+    aresource = a_resource(nsk)
     acommitment = Resource.commitment(aresource)
 
     acommitment
@@ -39,15 +47,17 @@ defmodule Examples.ERisc0.EResource do
 
   @spec a_resource_nullifier() :: binary()
   def a_resource_nullifier do
-    resource = a_resource()
-    anullifier = Resource.nullifier(resource)
+    nsk = Risc0.random_32()
+    aresource = a_resource(nsk)
+    anullifier = Resource.nullifier(aresource)
 
     anullifier
   end
 
   @spec a_output_resource() :: %Resource{}
   def a_output_resource do
-    aninput_resource = a_resource()
+    nsk = Risc0.random_32()
+    aninput_resource = a_resource(nsk)
     anullifier = a_resource_nullifier()
     output_resource = Resource.set_nonce(aninput_resource, anullifier)
 

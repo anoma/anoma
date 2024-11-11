@@ -113,21 +113,16 @@ defmodule Anoma.RM.Risc0.Resource do
 
   @spec to_bytes(t()) :: [byte()]
   def to_bytes(resource = %__MODULE__{}) do
-    binaries =
-      resource.logic <>
-        resource.label <>
-        resource.quantity <>
-        resource.data <>
-        resource.nonce <> resource.npk <> resource.rseed
-
-    binaries =
-      if resource.eph do
-        binaries <> <<1>>
-      else
-        binaries <> <<0>>
-      end
-
-    binaries |> :binary.bin_to_list()
+    Risc0.generate_resource(
+      resource.label |> :binary.bin_to_list(),
+      resource.nonce |> :binary.bin_to_list(),
+      resource.quantity |> :binary.bin_to_list(),
+      resource.data |> :binary.bin_to_list(),
+      resource.eph,
+      resource.npk |> :binary.bin_to_list(),
+      resource.logic |> :binary.bin_to_list(),
+      resource.rseed |> :binary.bin_to_list()
+    )
   end
 
   @spec get_npk(binary()) :: binary()
