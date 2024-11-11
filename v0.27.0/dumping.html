@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.27.0">
+
+
+    <title>Dumping — Anoma v0.27.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.27.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>Dumping</span>
+  </h1>
+
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
+
+<pre><code class="makeup elixir" translate="no"><span class="nc">Mix</span><span class="o">.</span><span class="n">install</span><span class="p" data-group-id="7204934510-1">(</span><span class="p" data-group-id="7204934510-2">[</span><span class="w">
+  </span><span class="p" data-group-id="7204934510-3">{</span><span class="ss">:kino_vega_lite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;~&gt; 0.1.10&quot;</span><span class="p" data-group-id="7204934510-3">}</span><span class="w">
+</span><span class="p" data-group-id="7204934510-2">]</span><span class="p" data-group-id="7204934510-1">)</span></code></pre><h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a></li></ol><h2 id="dumping-nock" class="section-heading">
+  <a href="#dumping-nock" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Dumping Nock</span>
+</h2>
+<p>Given a functioning Hoon environment with Anoma loaded, we can now start <a href="https://en.wikipedia.org/wiki/Core_dump">dumping</a> various data in the environment.</p><p>This guide hopefully serves as a good way to give you the tools needed to <a href="https://en.wikipedia.org/wiki/Core_dump">dump</a> anything for yourself.</p><h2 id="dumping-functions" class="section-heading">
+  <a href="#dumping-functions" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Dumping Functions</span>
+</h2>
+<p><a href="https://en.wikipedia.org/wiki/Core_dump">Dumping</a> any <a href="https://developers.urbit.org/reference/glossary/gate">Hoon gate</a> is relatively easy.</p><p>However, first we need to learn how to get Hoon to let us use Nock properly. A good way is by reading the <a href="https://developers.urbit.org/reference/hoon/rune/dot">dot(.)</a> section, as <a href="https://developers.urbit.org/reference/hoon/rune">runes</a> starting with <code class="inline">.</code> deal with nock operations.</p><p>In particular we wish to focus on <a href="https://developers.urbit.org/reference/hoon/rune/dot#-dottar">dottar(.*)</a>, which deals with calling nock on some expression.</p><p>We won't go into detail about calling functions in this section, however there is another section that focuses solely on how to call functions and how it works in Nock.</p><!-- livebook:{"break_markdown":true} --><p>Speaking of functions, we should know just a few things about the layout of functions, and their important indicies.</p><p>Functions in Hoon are laid out as the following:</p><pre><code class="nock">[function sample environment-defined-in]</code></pre><ul><li><em>Function</em> is some nock logic we wish to run</li><li><em>Sample</em> is the default argument of the function if non is given</li><li><em>Environment-defined-in</em> is the environment the function is defined in and relies upon.</li></ul><p>A good basic example can be seen below:</p><pre><code class="hoon">[[0 6] 777 999]</code></pre><p>This function has an arbitrary environment of <code class="inline">999</code> and a sample of <code class="inline">777</code>. The logic itself simply grabs the sample from the environment.</p><p>A good visualization of the indexing can be seen below</p><pre><code class="mermaid">stateDiagram-v2
+1 --&gt; 2
+1 --&gt; 3
+2 --&gt; 4
+2 --&gt; 5
+3 --&gt; 6
+3 --&gt; 7</code></pre><p>where we have in our concrete example</p><table><thead><tr><th style="text-align: left;">Index</th><th style="text-align: left;">Nock</th></tr></thead><tbody><tr><td style="text-align: left;">1</td><td style="text-align: left;"><code class="inline">[[0 6] 777 999]</code></td></tr><tr><td style="text-align: left;">2</td><td style="text-align: left;"><code class="inline">[0 6]</code></td></tr><tr><td style="text-align: left;">3</td><td style="text-align: left;"><code class="inline">[777 999]</code></td></tr><tr><td style="text-align: left;">4</td><td style="text-align: left;"><code class="inline">0</code></td></tr><tr><td style="text-align: left;">5</td><td style="text-align: left;"><code class="inline">6</code></td></tr><tr><td style="text-align: left;">6</td><td style="text-align: left;"><code class="inline">777</code></td></tr><tr><td style="text-align: left;">7</td><td style="text-align: left;"><code class="inline">999</code></td></tr></tbody></table><p>With some basics out of the way, let us get to <a href="https://en.wikipedia.org/wiki/Core_dump">dumping</a> hoon functions!</p><!-- livebook:{"break_markdown":true} --><p>We shall dump the most basic of functions, decrement!</p><p>We can do this simply by bringing decrement to the front of the environment, and getting it in the function form of <code class="inline">[function sample environment]</code> we saw before. We can do this by simply stating the name of the function we wish, and then get the function out of it by getting the second index!</p><p>Note that Hoon uses <code class="inline">function:module</code> (<code class="inline">f:mn:...:m1</code>) form.</p><pre><code class="nock">.*  dec:anoma  [0 2]
+[6 [5 [1 0] 0 6] [0 0] 8 [1 0] 8 [1 6 [5 [0 30] 4 0 6] [0 6] 9 2 10 [6 4 0 6] 0 1] 9 2 0 1]</code></pre><p>The logic here doesn't particularly matter, but here we have the nock definiton of decrement, which is wonderful!</p><!-- livebook:{"break_markdown":true} --><p>This can be done to any function, regardless of how nested the modules are</p><pre><code class="hoon">&gt; .*  lsh:block:anoma  [0 2]
+[ 8
+  [9 4 0 255]
+  9
+  2
+  10
+  [6 [0 29] 7 [0 3] 8 [9 4 0 31] 9 2 10 [6 7 [0 3] 8 [9 4 0 255] 9 2 10 [6 [7 [0 3] 9 182 0 7] 0 28] 0 2] 0 2]
+  0
+  2
+]</code></pre><h2 id="casting-to-nock-a-useful-tool" class="section-heading">
+  <a href="#casting-to-nock-a-useful-tool" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Casting to Nock, a useful tool</span>
+</h2>
+<p>A good way to visualize the dump, is by casting the result to nock</p><pre><code class="hoon">&gt; ;;  nock  [9 2 0 1]
+[%9 p=2 q=[%0 p=1]</code></pre><p>the <code class="inline">p</code>'s and <code class="inline">q</code>'s are arguments and the <code class="inline">%9</code> and <code class="inline">%0</code> are the nock instructions being ran.</p><p>From here, the <a href="https://developers.urbit.org/reference/nock/definition#instructions">instruction set can be consluted for the meaning of any particular instruction</a>.</p><pre><code class="hoon">&gt; ;;  nock  .*  dec.anoma  [0 2]
+[ %6
+  p=[%5 p=[%1 p=0] q=[%0 p=6]]
+  q=[%0 p=0]
+  r=[%8 p=[%1 p=0] q=[%8 p=[%1 p=[6 [5 [0 30] 4 0 6] [0 6] 9 2 10 [6 4 0 6] 0 1]] q=[%9 p=2 q=[%0 p=1]]]]
+]</code></pre><h2 id="dumping-types" class="section-heading">
+  <a href="#dumping-types" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Dumping Types</span>
+</h2>
+<p>Types in Hoon are just functions!</p><p>A good example can be found by looking at the resource-type</p><pre><code class="hoon">&gt; .*  resource:resource-machine  [0 2]
+[ 8
+  [ [8 [7 [0 7] 9 47 0 1] 9 2 10 [6 0 28] 0 2]
+    [6 [6 [3 0 26] [1 1] 1 0] [0 26] 0 0]
+    [6 [6 [3 0 54] [1 1] 1 0] [0 54] 0 0]
+    [6 [6 [3 0 110] [1 1] 1 0] [0 110] 0 0]
+    [6 [5 [1 0] 0 222] [1 0] 6 [5 [1 1] 0 222] [1 1] 0 0]
+    [6 [6 [3 0 446] [1 1] 1 0] [0 446] 0 0]
+    [6 [6 [3 0 894] [1 1] 1 0] [0 894] 0 0]
+    6
+    [6 [3 0 895] [1 1] 1 0]
+    [0 895]
+    0
+    0
+  ]
+  8
+  [5 [0 14] 0 2]
+  0
+  6
+]</code></pre><p>This however does not show how to dump the structure of a type well enough, however this can be fixed by simply just calling it!</p><!-- livebook:{"break_markdown":true} --><p>calling a type leads to something like this</p><pre><code class="hoon">&gt; (resource:resource-machine)
+[   logic
+  &lt; 1|xpg
+    [ [ roots=it(@)
+        commitments=it(@)
+        nullifiers=it(@)
+        proofs=it(#4)
+        delta=it([denom=@ sign=?(%.y %.n) amount=@])
+        extra=@
+        preference=%~
+      ]
+      [ roots=it(@)
+        commitments=it(@)
+        nullifiers=it(@)
+          proofs
+        it( ^#4
+          [   logic
+            &lt; 1|xpg
+              [ [ roots=it(@)
+                  commitments=it(@)
+                  nullifiers=it(@)
+                  proofs=it(#4)
+                  delta=it([denom=@ sign=?(%.y %.n) amount=@])
+                  extra=@
+                  preference=%~
+                ]
+                [ roots=it(@)
+                  commitments=it(@)
+                  nullifiers=it(@)
+                  proofs=it(#4)
+                  delta=it([denom=@ sign=?(%.y %.n) amount=@])
+                  extra=@
+                  preference=%~
+                ]
+                ?(%.y %.n)
+              ]
+            &gt;
+            label=@t
+            quantity=@
+            data=@
+            eph=?(%.y %.n)
+            nonce=@
+            npk=@
+            rseed=@
+          ]
+        )
+        delta=it([denom=@ sign=?(%.y %.n) amount=@])
+        extra=@
+        preference=%~
+      ]
+      ?(%.y %.n)
+    ]
+  &gt;
+  label=''
+  quantity=0
+  data=0
+  eph=%.y
+  nonce=0
+  npk=0
+  rseed=0
+]</code></pre><p>Which just gives the default values. If the result is hard to read, then no problem, just forget the type information!</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="err">`</span><span class="o">*</span><span class="err">`</span><span class="p" data-group-id="7041772802-1">(</span><span class="n">resource</span><span class="ss">:resource</span><span class="o">-</span><span class="n">machine</span><span class="p" data-group-id="7041772802-1">)</span><span class="w">
+</span><span class="p" data-group-id="7041772802-2">[</span><span class="p" data-group-id="7041772802-3">[</span><span class="p" data-group-id="7041772802-4">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">15</span><span class="p" data-group-id="7041772802-4">]</span><span class="w"> </span><span class="p" data-group-id="7041772802-5">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="7041772802-5">]</span><span class="w"> </span><span class="p" data-group-id="7041772802-6">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="7041772802-6">]</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="7041772802-3">]</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="7041772802-2">]</span></code></pre><p>Here we simply jsut cast it to the any type, forgetting all information, and we can now see the format of the empty resource.</p><h2 id="dump-modules" class="section-heading">
+  <a href="#dump-modules" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Dump Modules</span>
+</h2>
+<p>Dumping modules is the same as dumping functions, it's just a matter that one's terminal will be flooded</p><pre><code class="hoon">&gt; .*  resource-machine  [0 2]
+[ [1 0]
+...
+  0
+  1
+]</code></pre><p>Thus feel free to dump away. This is only useful when trying to copy this to the Elixir codebase.</p><h2 id="dumping-hoon-for-elixir" class="section-heading">
+  <a href="#dumping-hoon-for-elixir" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Dumping Hoon for Elixir</span>
+</h2>
+<p>Since Anoma itself runs Nock and not Hoon, we have to take the Hoon code we have and include it in Elixir somehow.</p><p>This process isn't particular difficult, and we can do it by simply using the tools we've learned in this document.</p><!-- livebook:{"break_markdown":true} --><p>For example, it's not uncommon when the standard library that test indicies are not out of date and need to be updated, or maybe we define out a new hoon function for testing.</p><p>In these scenarios, there is a very easy way to update the code.</p><p>Let us look at the fibonacci example in Elixir</p><!-- livebook:{"break_markdown":true} --><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="c1"># can be found in https://github.com/anoma/anoma/blob/base/lib/test_helper/nock.ex</span><span class="w">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">factorial</span><span class="p" data-group-id="1501368978-1">(</span><span class="p" data-group-id="1501368978-1">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="1501368978-2">(</span><span class="p" data-group-id="1501368978-2">)</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">factorial</span><span class="p" data-group-id="1501368978-3">(</span><span class="p" data-group-id="1501368978-3">)</span><span class="w"> </span><span class="k" data-group-id="1501368978-4">do</span><span class="w">
+    </span><span class="n">arm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Noun.Format</span><span class="o">.</span><span class="n">parse_always</span><span class="p" data-group-id="1501368978-5">(</span><span class="s">&quot;
+    [ 8
+      [1 1 0]
+      8
+      [ 1
+        6
+        [5 [0 30] 1 0]
+        [0 13]
+        9
+        2
+        10
+        [30 8 [9 342 0 255] 9 2 10 [6 0 62] 0 2]
+        10
+        [6 [8 [9 20 0 255] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+        0
+        1
+      ]
+      9
+      2
+      0
+      1
+    ]&quot;</span><span class="p" data-group-id="1501368978-5">)</span><span class="w">
+    </span><span class="n">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+    </span><span class="p" data-group-id="1501368978-6">[</span><span class="n">arm</span><span class="p">,</span><span class="w"> </span><span class="n">sample</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">logics_core</span><span class="p" data-group-id="1501368978-7">(</span><span class="p" data-group-id="1501368978-7">)</span><span class="p" data-group-id="1501368978-6">]</span><span class="w">
+  </span><span class="k" data-group-id="1501368978-4">end</span></code></pre><!-- livebook:{"break_markdown":true} --><p>Here we have some just plain old nock string representing the function, and we append the context to it via normal Elixir. We do this to save space, as we really don't want to dump the entire <a href="Nock.html#logics_core/0"><code class="inline">Nock.logics_core/0</code></a> for every simple function.</p><p>On the Hoon side we just run this to get the proper new logic</p><pre><code class="hoon">&gt; .*  fib:tests  [0 2]
+[ 8
+  [1 1 0]
+  8
+  [ 1
+    6
+    [5 [0 30] 1 0]
+    [0 13]
+    9
+    2
+    10
+    [30 8 [9 342 0 1.023] 9 2 10 [6 0 62] 0 2]
+    10
+    [6 [8 [9 20 0 1.023] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+    0
+    1
+  ]
+  9
+  2
+  0
+  1
+]</code></pre><p>and then replace the old logic with the new code.</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="na">@spec</span><span class="w"> </span><span class="n">factorial</span><span class="p" data-group-id="4436959694-1">(</span><span class="p" data-group-id="4436959694-1">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="4436959694-2">(</span><span class="p" data-group-id="4436959694-2">)</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">factorial</span><span class="p" data-group-id="4436959694-3">(</span><span class="p" data-group-id="4436959694-3">)</span><span class="w"> </span><span class="k" data-group-id="4436959694-4">do</span><span class="w">
+    </span><span class="n">arm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Noun.Format</span><span class="o">.</span><span class="n">parse_always</span><span class="p" data-group-id="4436959694-5">(</span><span class="s">&quot;
+    [ 8
+      [1 1 0]
+      8
+      [ 1
+        6
+        [5 [0 30] 1 0]
+        [0 13]
+        9
+        2
+        10
+        [30 8 [9 342 0 1.023] 9 2 10 [6 0 62] 0 2]
+        10
+        [6 [8 [9 20 0 1.023] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+        0
+        1
+      ]
+      9
+      2
+      0
+      1
+    ]&quot;</span><span class="p" data-group-id="4436959694-5">)</span><span class="w">
+    </span><span class="n">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+    </span><span class="p" data-group-id="4436959694-6">[</span><span class="n">arm</span><span class="p">,</span><span class="p">,</span><span class="w"> </span><span class="n">sample</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">logics_core</span><span class="p" data-group-id="4436959694-7">(</span><span class="p" data-group-id="4436959694-7">)</span><span class="p" data-group-id="4436959694-6">]</span><span class="w">
+  </span><span class="k" data-group-id="4436959694-4">end</span></code></pre><p>The process is the same for the code in <a href="Nock.html"><code class="inline">Nock</code></a>, just dump the <code class="inline">[0 2]</code> index of the module and replace the string with the result you get in your terminal.</p><h2 id="dumping-indexing-offsets" class="section-heading">
+  <a href="#dumping-indexing-offsets" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Dumping Indexing Offsets</span>
+</h2>
+<p>The tools that we have explored so far only deal with dumping definitions, however they do not explain where these functions are stored in the environment.</p><p>That is where <a href="https://developers.urbit.org/reference/hoon/rune/zap#-zaptis">zaptis(!=)</a> comes handy.</p><p><a href="https://developers.urbit.org/reference/hoon/rune/zap#-zaptis">zaptis(!=)</a> simply gives us the hoon expression of the argument handed to it.</p><!-- livebook:{"break_markdown":true} --><p>Let us start off simple with <a href="https://developers.urbit.org/reference/hoon/rune/zap#-zaptis">zaptis(!=)</a>, let us look at what saying <code class="inline">anoma</code> actually does.</p><pre><code class="hoon">&gt; !=(anoma)
+[0 46]</code></pre><p>Interesting, we can see that saying anoma, indexs into the current environment by <code class="inline">46</code>. The current environment in Hoon can be conjured with <code class="inline">.</code>.</p><pre><code class="hoon">&gt; !=(.)
+[0 1]</code></pre><p>With this knowledge in hand, we can verify that anoma really is at index 46!</p><pre><code class="hoon">&gt; =(.*(. [0 46]) anoma)
+%.y</code></pre><!-- livebook:{"break_markdown":true} --><p>Now that we know how to get the index for names like anoma, what about trying to get the index of a function like <code class="inline">dec</code> inside of the anoma environment.</p><pre><code class="hoon">&gt; !=(dec:anoma)
+[7 [0 46] 9 342 0 15]
+&gt; ;;  nock  !=(dec:anoma)
+[%7 p=[%0 p=46] q=[%9 p=342 q=[%0 p=15]]]</code></pre><p>Here it's a bit more complicated to let us break it down step by step.</p><ol><li><code class="inline">[%7 p=[%0 p=46] q=...]</code><ul><li>In the section where we are calling <code class="inline">%7</code>.</li><li>This has the effect of just trying to get anoma to be the subject of the following <code class="inline">q</code> computation.</li></ul></li><li>Now at <code class="inline">q=[%9 p=342 q=[%0 p=15]]</code> we are running this on anoma itself.<ul><li><code class="inline">%9</code> is rather basic, trying to call the given index <code class="inline">p</code> at arm <code class="inline">q</code>.</li><li>In our case, <code class="inline">dec</code> is located at index <code class="inline">342</code> inside of arm at the layer/module located at <code class="inline">[0 15]</code>.</li><li><code class="inline">[0 15]</code> is really layer 1 in the source code and is properly documented as such</li></ul></li></ol><pre><code class="hoon">~%  %one  +  ~
+|%
+++  dec  ::  +342
+  ~/  %dec
+  |=  a=@
+  ?&lt;  =(0 a)
+  =|  b=@
+  |-  ^-  @
+  ?:  =(a +(b))  b
+  $(b +(b))
+</code></pre><p>Thus, it's not very complicated, thus in the form</p><pre><code class="hoon">&gt; !=(dec:anoma)
+[7 [0 46] 9 342 0 15]</code></pre><p>all we have to pay attention to is the <code class="inline">342</code> and the <code class="inline">15</code>, some more examples show this off well</p><pre><code class="hoon">&gt; !=(dec:anoma) ::  index 342 at layer 1
+[7 [0 46] 9 342 0 15]
+&gt; !=(add:anoma) ::  index 20 at layer 1
+[7 [0 46] 9 20 0 15]
+&gt; !=(trap:anoma) ::  index 20 at layer 2
+[7 [0 46] 9 20 0 7]
+&gt; !=(unit:anoma) ::  index 42 at layer 2
+[7 [0 46] 9 42 0 7]</code></pre><p>Here for any non nested module we can see the layers and indexs quite plainly!</p><!-- livebook:{"branch_parent_index":7} --><h2 id="how-index-of-layers-change" class="section-heading">
+  <a href="#how-index-of-layers-change" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">How Index of Layers Change</span>
+</h2>
+<p>The hoon environment is a binary tree. Included below is an extended diagram that we will use for our explanation.</p><pre><code class="mermaid">stateDiagram-v2
+1 --&gt; 2
+1 --&gt; 3
+3 --&gt; 6
+3 --&gt; 7
+7 --&gt; 14
+7 --&gt; 15
+15 --&gt; 30
+15 --&gt; 31</code></pre><p>Whenever, a layer is made in hoon, we should think of it as pushed onto the env. So for Anoma the layers can be seen like this</p><pre><code class="mermaid">stateDiagram-v2
+layer_four --&gt; code_in_layer_four
+layer_four --&gt; layer_three
+layer_three --&gt; code_in_layer_three
+layer_three --&gt; layer_two
+layer_two --&gt; code_in_layer_two
+layer_two --&gt; layer_one
+layer_one --&gt; code_in_layer_one
+layer_one --&gt; 0_3_99</code></pre><p>If we pushed layer 5, then everything shifts, layer 1 moves from 15 to 31.</p><p>Thus the indexing works on a rather simple formula that can be read about: <a href="https://oeis.org/A000918">here</a>. The code is not exactly this formula, but below we will show how it shapes up.</p><pre><code class="makeup elixir" translate="no"><span class="n">series</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">5</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">map</span><span class="p" data-group-id="0955996909-1">(</span><span class="k" data-group-id="0955996909-2">fn</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k" data-group-id="0955996909-2">end</span><span class="p" data-group-id="0955996909-1">)</span><span class="w">
+</span><span class="n">indicies</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">5</span><span class="w">
+</span><span class="n">my_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="0955996909-3">%{</span><span class="ss">series</span><span class="p">:</span><span class="w"> </span><span class="n">series</span><span class="p">,</span><span class="w"> </span><span class="ss">indicies</span><span class="p">:</span><span class="w"> </span><span class="n">indicies</span><span class="p" data-group-id="0955996909-3">}</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="9580873981-1">%{</span><span class="ss">series</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9580873981-2">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">31</span><span class="p" data-group-id="9580873981-2">]</span><span class="p">,</span><span class="w"> </span><span class="ss">indicies</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">5</span><span class="p" data-group-id="9580873981-1">}</span></code></pre><!-- livebook:{"attrs":"eyJjaGFydF90aXRsZSI6IkluZGV4aW5nIFNlcmllcyIsImhlaWdodCI6MzAwLCJsYXllcnMiOlt7ImFjdGl2ZSI6dHJ1ZSwiY2hhcnRfdHlwZSI6ImJhciIsImNvbG9yX2ZpZWxkIjpudWxsLCJjb2xvcl9maWVsZF9hZ2dyZWdhdGUiOm51bGwsImNvbG9yX2ZpZWxkX2JpbiI6bnVsbCwiY29sb3JfZmllbGRfc2NhbGVfc2NoZW1lIjpudWxsLCJjb2xvcl9maWVsZF90eXBlIjpudWxsLCJkYXRhX3ZhcmlhYmxlIjoibXlfZGF0YSIsImdlb2RhdGFfY29sb3IiOiJncmVlbiIsImxhdGl0dWRlX2ZpZWxkIjoiYSIsImxvbmdpdHVkZV9maWVsZCI6ImIiLCJ4X2ZpZWxkIjoiaW5kaWNpZXMiLCJ4X2ZpZWxkX2FnZ3JlZ2F0ZSI6bnVsbCwieF9maWVsZF9iaW4iOm51bGwsInhfZmllbGRfc2NhbGVfdHlwZSI6bnVsbCwieF9maWVsZF90eXBlIjoicXVhbnRpdGF0aXZlIiwieV9maWVsZCI6InNlcmllcyIsInlfZmllbGRfYWdncmVnYXRlIjpudWxsLCJ5X2ZpZWxkX2JpbiI6bnVsbCwieV9maWVsZF9zY2FsZV90eXBlIjpudWxsLCJ5X2ZpZWxkX3R5cGUiOiJxdWFudGl0YXRpdmUifV0sInZsX2FsaWFzIjoiRWxpeGlyLlZlZ2FMaXRlIiwid2lkdGgiOjIwMH0","chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} --><pre><code class="makeup elixir" translate="no"><span class="nc">VegaLite</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="3725783328-1">(</span><span class="ss">width</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="ss">height</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w"> </span><span class="ss">title</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Indexing Series&quot;</span><span class="p" data-group-id="3725783328-1">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">VegaLite</span><span class="o">.</span><span class="n">data_from_values</span><span class="p" data-group-id="3725783328-2">(</span><span class="n">my_data</span><span class="p">,</span><span class="w"> </span><span class="ss">only</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3725783328-3">[</span><span class="s">&quot;indicies&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;series&quot;</span><span class="p" data-group-id="3725783328-3">]</span><span class="p" data-group-id="3725783328-2">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">VegaLite</span><span class="o">.</span><span class="n">mark</span><span class="p" data-group-id="3725783328-4">(</span><span class="ss">:bar</span><span class="p" data-group-id="3725783328-4">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">VegaLite</span><span class="o">.</span><span class="n">encode_field</span><span class="p" data-group-id="3725783328-5">(</span><span class="ss">:x</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;indicies&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:quantitative</span><span class="p" data-group-id="3725783328-5">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">VegaLite</span><span class="o">.</span><span class="n">encode_field</span><span class="p" data-group-id="3725783328-6">(</span><span class="ss">:y</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;series&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:quantitative</span><span class="p" data-group-id="3725783328-6">)</span></code></pre>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="calling.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Calling
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="setting-up.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Setting up Hoon
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.27.0/show/documentation/hoon/dumping.livemd">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

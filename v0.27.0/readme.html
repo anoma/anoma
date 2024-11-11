@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.27.0">
+
+
+    <title>Anoma — Anoma v0.27.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-extra">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.27.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>Anoma</span>
+  </h1>
+
+<p>This is an implementation of the Anoma protocol, whose specs can be
+found <a href="https://specs.anoma.net/latest">here</a>.</p><h2 id="docs" class="section-heading">
+  <a href="#docs" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Docs</span>
+</h2>
+<ul><li><a href="https://anoma.github.io/anoma/readme.html">Contributors documentation</a></li><li><a href="https://specs.anoma.net/latest/">Specification</a></li><li>Developer Docs (Coming Soon™)</li><li>User Docs (Coming Soon™)</li></ul><h2 id="following-development" class="section-heading">
+  <a href="#following-development" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Following Development</span>
+</h2>
+<p>Work is merged into <code class="inline">base</code> on a bi-weekly (once every two weeks)
+schedule.</p><p>Development can be followed in multiple ways:</p><ol><li><a href="https://github.com/orgs/anoma/projects/19">Issues are put into the project overview</a><ul><li>This is a good way to see what work is assigned and the various
+views into how goals are being met</li></ul></li><li><a href="https://github.com/orgs/anoma/projects/20" title="A good view on how topics are progressing throughout a cycle">What's Cooking on Anoma</a></li><li><a href="https://research.anoma.net/">Research Forums</a><ul><li>This is good for seeing discussions on the direction of Anoma</li><li><a href="https://research.anoma.net/tags/c/protocol-design/25/architecture">The architecture posts</a>
+in particular are a practical vision for how the codebase's
+architecture will evolve. Around two of these get posted per week</li></ul></li><li><a href="https://github.com/anoma/anoma/issues">Issues</a> and <a href="https://github.com/anoma/anoma/pulls">pull requests</a><ul><li>This is good for viewing new issues and work coming in, but the
+other views are typically a better way to view this</li></ul></li></ol><h2 id="running-pre-built-binaries" class="section-heading">
+  <a href="#running-pre-built-binaries" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Running pre-built binaries</span>
+</h2>
+<h3 id="release-dependencies" class="section-heading">
+  <a href="#release-dependencies" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Release Dependencies</span>
+</h3>
+<p>To run a working Anoma Node the following dependencies are required:</p><ol><li>Mac OS X Development Environment:<ul><li>Install Apple Command Line Developer Tools: <code class="inline">xcode-select --install</code></li><li>Install <a href="https://www.macports.org/install.php">MacPorts</a> (or equivalent package manager)</li></ul></li><li>Install <a href="https://ports.macports.org/port/ncurses/">ncurses</a> (Mac OS X only)</li><li>Install OpenSSL:<ul><li>Mac OS X and Linux: use package manager</li><li>Windows: not required</li></ul></li></ol><h3 id="running" class="section-heading">
+  <a href="#running" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Running</span>
+</h3>
+<p>Download the <a href="https://github.com/anoma/anoma/releases">Anoma release</a> for your platform, extract it, and run <code class="inline">bin/anoma</code>.</p><h2 id="compilation-from-sources" class="section-heading">
+  <a href="#compilation-from-sources" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Compilation from sources</span>
+</h2>
+<h3 id="build-dependencies" class="section-heading">
+  <a href="#build-dependencies" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Build Dependencies</span>
+</h3>
+<p>To compile a working Anoma Node the following dependencies are required:</p><ol><li>Mac OS X Development Environment:<ul><li>Install Apple Command Line Developer Tools: <code class="inline">xcode-select --install</code></li><li>Install <a href="https://www.macports.org/install.php">MacPorts</a> (or equivalent package manager)</li></ul></li><li>Windows Development Environment:<ul><li>Install <a href="https://visualstudio.microsoft.com/downloads/">Build Tools for Visual Studio 2022</a> (Workload: Visual C++ build tools)</li><li>Install <a href="https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4">PowerShell</a></li></ul></li><li>Install <a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git</a> (Windows and Linux only)</li><li>Install CMake:<ul><li>Linux and Mac OS X: use package manager</li><li>Windows: not required</li></ul></li><li>Install <a href="https://doc.libsodium.org/installation#pre-built-libraries">Sodium</a> (Windows only)<ul><li>Ensure that the <code class="inline">LIB</code> and <code class="inline">INCLUDE</code> environment variables point to this installation</li></ul></li><li>Install <a href="https://grpc.io/docs/protoc-installation/">Protocol Buffers</a></li><li>Install <a href="https://elixir-lang.org/install.html">Elixir</a> (version 1.17.0 or higher) and with it:<ul><li>Install <a href="https://hexdocs.pm/mix/1.13/Mix.Tasks.Local.Hex.html">Hex package manager</a></li><li>Install <a href="https://hexdocs.pm/mix/1.14/Mix.Tasks.Local.Rebar.html">Rebar3</a></li><li>Install protobuf-elixir: <code class="inline">mix escript.install hex protobuf</code></li></ul></li><li>Install <a href="https://www.rust-lang.org/tools/install">Rust</a> (version 1.76.0 or newer)</li></ol><h3 id="compiling-and-running" class="section-heading">
+  <a href="#compiling-and-running" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Compiling and Running</span>
+</h3>
+<p>To install the dependencies as well as Anoma run:</p><pre><code class="makeup bash" translate="no"><span class="">mix deps.get
+</span><span class="">mix escript.install hex protobuf
+</span><span class="">mix compile
+</span></code></pre><p>To start an Anoma instance run one of these:</p><pre><code class="makeup bash" translate="no"><span class="">iex -S mix # starts an interactive shell
+</span><span class="">mix run --no-halt # starts a non-interactive shell
+</span></code></pre><p>See the Contributing section for how to get the best use of the
+interactive shell.</p><p>Further see the Known issues section if you encounter an issue.</p><h2 id="docker-images" class="section-heading">
+  <a href="#docker-images" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Docker images</span>
+</h2>
+<p>To work with Docker images, do the following:</p><ol><li>Install <a href="https://docs.docker.com/engine/install/">Docker</a>, this is necessary for both building and running Docker images</li><li>Build the Anoma image from the repository root: <code class="inline">docker build -t &lt;IMAGE&gt; .</code><ul><li><code class="inline">&lt;IMAGE&gt;</code> is your chosen image name</li></ul></li><li>Run the Anoma image: <code class="inline">docker run -it --network host &lt;IMAGE&gt; &lt;SUBCOMMAND&gt;</code><ul><li><code class="inline">&lt;IMAGE&gt;</code> is the name of Anoma Docker image to be run</li><li><code class="inline">&lt;SUBCOMMAND&gt;</code>is interpreted by the Anoma binary</li><li><code class="inline">--network host</code> will enable connections from the host</li></ul></li></ol><h2 id="contributing" class="section-heading">
+  <a href="#contributing" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Contributing</span>
+</h2>
+<p>Please read the <a href="contributing.html">contributor's guide</a> for in
+depth details about the codebase.</p><h2 id="known-issues" class="section-heading">
+  <a href="#known-issues" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Known Issues</span>
+</h2>
+<h3 id="mix-could-not-compile-dependency-enacl" class="section-heading">
+  <a href="#mix-could-not-compile-dependency-enacl" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">(Mix) Could not compile dependency :enacl</span>
+</h3>
+<p>For some versions of OSX (and Linux), our
+<a href="https://github.com/jlouis/enacl">enacl</a> package may have compilation issues.</p><p>To get around it please run</p><pre><code class="makeup sh" translate="no"><span class="">git checkout mariari/no-libsodium
+</span><span class="">mix clean
+</span><span class="">mix deps.get
+</span><span class="">mix compile
+</span></code></pre><h3 id="could-not-compile-dependency-cairo-mix-compile" class="section-heading">
+  <a href="#could-not-compile-dependency-cairo-mix-compile" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">could not compile dependency :cairo, &quot;mix compile&quot;</span>
+</h3>
+<p>The rust compiler can be quite picky about our
+<a href="https://github.com/anoma/aarm-cairo">cairo</a> dependencies. This is
+likely caused by an incompatible rust-toolchain.</p><p>To get around it you may have to run a command like:</p><pre><code class="makeup sh" translate="no"><span class="">rustup toolchain add 1.76.0
+</span><span class=""># for OSX you may try 1.76.0-aarch64-apple-darwin
+</span></code></pre><p>Once this is had, the Cairo issues should go away.</p><h3 id="git" class="section-heading">
+  <a href="#git" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Git</span>
+</h3>
+<p>This codebase follows a git style similar to
+<a href="https://git-scm.com/">git</a> or
+<a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git">linux</a>.</p><p>New code should be based on <code class="inline">base</code>, and no attempt to keep it up to
+sync with <code class="inline">main</code> should be had. When one's topic is ready, just submit
+a PR on github and a maintainer will handle any merge conflicts.</p><p>There are bi-weekly releases, so do not be afraid if a maintainer says
+the PR is merged but it's still open, this just means that it's merged
+into <code class="inline">next</code> or <code class="inline">main</code> and will be included in the next scheduled
+release.</p><p>For more information on a smooth git experience check out the <a href="git.html">git
+section in contributor's guide</a></p><p>Happy hacking, and don't be afraid to submit patches.</p>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="api-reference.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+API Reference
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="analysis.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Analysis
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.27.0/show/README.md">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

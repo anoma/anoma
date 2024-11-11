@@ -1,0 +1,59 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Mnesia Vs Actor State
+
+## Index
+1. [Toc](./../toc.livemd)
+2. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Style Guide](./../contributing/style-guide.livemd)
+   3. [Writing Documents](./../contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./../contributing/examples-over-testing.livemd)
+   5. [Git](./../contributing/git.livemd)
+   6. [Iex](./../contributing/iex.livemd)
+   7. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   8. [Observer](./../contributing/observer.livemd)
+   9. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+3. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+4. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+5. [Analysis](./../analysis.livemd)
+
+## Where should state be stored
+
+One interesting thing about our system is that in the [user data](./../user/data.livemd) section of our documentation we talk about how Anoma's state is stored in [RocksDB](https://en.wikipedia.org/wiki/RocksDB) tables on disc. And that we have some kind of `dump` format that goes along with the tables.
+
+The `dump` format stores 2 kinds of information:
+
+1. Actor State
+2. [Mnesia](https://en.wikipedia.org/wiki/Mnesia) State
+
+As discussed in the [user data documentation](./../user/data.livemd), loading a `dump` file overwrites the DB. However what we did not cover is what the differences are between [Mnesia](https://en.wikipedia.org/wiki/Mnesia) storage and Actor storage.
+
+## Mnesia Storage
+
+The philosophy for what is stored in Mnesia should be: "Is this something the user should be able to query and write code over". Since Anoma is a distributed operating system project, many of the answers should be yes. The user should be able to make full fledged progrmas on Anoma and extend the system.
+
+## Actor Storage
+
+Actor storage on the other hand are for things we don't wish the user to be able to query. Thus implementaiton details about the execution should be omitted from user visible storage, and would be better served stored on the Actor.
+
+A good example of this is the old ordering logic.
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  typedstruct do
+    field(:table, Router.Addr.t())
+    field(:next_order, non_neg_integer(), default: 1)
+    field(:hash_to_order, %{key() => non_neg_integer()}, default: %{})
+    field(:logger, Router.Addr.t(), enforce: false)
+  end
+```
+
+In this example, we store things like specific order information, the live router addresses for storage and for the logger. None of this is relevant to the users and are just coincidental with how we wrote the system.
