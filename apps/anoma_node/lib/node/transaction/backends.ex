@@ -203,19 +203,33 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   @spec any_nullifiers_already_exist?(
-          MapSet.t(TResource.nullifier()),
+          {:ok, MapSet.t(TResource.nullifier())} | :absent,
           TTransaction.t()
         ) :: boolean()
-  defp any_nullifiers_already_exist?(stored_nulls, trans = %TTransaction{}) do
+  defp any_nullifiers_already_exist?(:absent, _) do
+    false
+  end
+
+  defp any_nullifiers_already_exist?(
+         {:ok, stored_nulls},
+         trans = %TTransaction{}
+       ) do
     nullifiers = TTransaction.nullifiers(trans)
     Enum.any?(nullifiers, &MapSet.member?(stored_nulls, &1))
   end
 
   @spec any_commitments_already_exist?(
-          MapSet.t(TResource.commitment()),
+          {:ok, MapSet.t(TResource.commitment())} | :absent,
           TTransaction.t()
         ) :: boolean()
-  defp any_commitments_already_exist?(stored_comms, trans = %TTransaction{}) do
+  defp any_commitments_already_exist?(:absent, _) do
+    false
+  end
+
+  defp any_commitments_already_exist?(
+         {:ok, stored_comms},
+         trans = %TTransaction{}
+       ) do
     commitments = TTransaction.commitments(trans)
     Enum.any?(commitments, &MapSet.member?(stored_comms, &1))
   end
