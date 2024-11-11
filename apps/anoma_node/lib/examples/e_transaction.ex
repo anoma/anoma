@@ -77,44 +77,48 @@ defmodule Anoma.Node.Examples.ETransaction do
 
   def append_then_read(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
-    Storage.append(node_id, {1, [{:set, "value"}]})
     new_set = MapSet.new(["value"])
+    Storage.append(node_id, {1, [{:set, new_set}]})
     {:ok, ^new_set} = Storage.read(node_id, {1, :set})
   end
 
   def append_then_read_same(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
-    Storage.append(node_id, {1, [{:set, "value"}, {:set, "value"}]})
     new_set = MapSet.new(["value"])
+    Storage.append(node_id, {1, [{:set, new_set}, {:set, new_set}]})
     {:ok, ^new_set} = Storage.read(node_id, {1, :set})
   end
 
   def append_then_read_several(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
-    Storage.append(node_id, {1, [{:set, "value1"}, {:set, "value2"}]})
+    set1 = MapSet.new(["value1"])
+    set2 = MapSet.new(["value2"])
+    Storage.append(node_id, {1, [{:set, set1}, {:set, set2}]})
     new_set = MapSet.new(["value1", "value2"])
     {:ok, ^new_set} = Storage.read(node_id, {1, :set})
   end
 
   def append_twice_then_read(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
-    Storage.append(node_id, {1, [{:set, "value1"}]})
-    new_set = MapSet.new(["value1"])
-    {:ok, ^new_set} = Storage.read(node_id, {1, :set})
-    Storage.append(node_id, {2, [{:set, "value2"}]})
+    set1 = MapSet.new(["value1"])
+    Storage.append(node_id, {1, [{:set, set1}]})
+    {:ok, ^set1} = Storage.read(node_id, {1, :set})
+    set2 = MapSet.new(["value2"])
+    Storage.append(node_id, {2, [{:set, set2}]})
     appended_set = MapSet.new(["value1", "value2"])
     {:ok, ^appended_set} = Storage.read(node_id, {2, :set})
   end
 
   def append_twice_then_read_with_commit(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
-    Storage.append(node_id, {1, [{:set, "value1"}]})
-    new_set = MapSet.new(["value1"])
-    {:ok, ^new_set} = Storage.read(node_id, {1, :set})
+    set1 = MapSet.new(["value1"])
+    Storage.append(node_id, {1, [{:set, set1}]})
+    {:ok, ^set1} = Storage.read(node_id, {1, :set})
 
     Storage.commit(node_id, 1, nil)
 
-    Storage.append(node_id, {2, [{:set, "value2"}]})
+    set2 = MapSet.new(["value2"])
+    Storage.append(node_id, {2, [{:set, set2}]})
     appended_set = MapSet.new(["value1", "value2"])
     {:ok, ^appended_set} = Storage.read(node_id, {2, :set})
   end
