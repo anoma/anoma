@@ -1,6 +1,8 @@
 defmodule Examples.ESparseMerkleTree do
   import SparseMerkleTree
 
+  use Memoize
+
   def empty_tree() do
     %{
       root:
@@ -88,8 +90,8 @@ defmodule Examples.ESparseMerkleTree do
     :error = prove_absent(abc_tree(), "abc")
   end
 
-  def big_tree() do
-    for n <- 1..(2 ** 8), reduce: empty_tree() do
+  defmemo big_tree() do
+    for n <- 1..(2 ** 16), reduce: new() do
       tree ->
         tree |> insert(Integer.to_string(n))
     end

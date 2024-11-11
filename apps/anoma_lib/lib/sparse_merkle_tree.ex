@@ -9,7 +9,7 @@ defmodule SparseMerkleTree do
   @type hash() :: <<_::256>>
   @type digest_map() :: %{bitstring() => hash()}
 
-  @present_constant <<255>>
+  @present_constant <<1>>
   @present_hash :crypto.hash(:sha256, @present_constant)
   @absent_constant <<>>
   @absent_hash :crypto.hash(:sha256, @absent_constant)
@@ -121,7 +121,7 @@ defmodule SparseMerkleTree do
     l_digest = get_digest(digests, l_key)
     r_digest = get_digest(digests, r_key)
 
-    hash(l_digest <> r_digest)
+    hash_pair(l_digest, r_digest)
   end
 
   @spec compute_absence_digest(digest_map(), hash()) :: hash()
@@ -139,19 +139,65 @@ defmodule SparseMerkleTree do
     Map.get(digests, bits, default_hash(bit_size(bits)))
   end
 
-  @spec default_hash(256) :: hash()
-  defmemop default_hash(256) do
-    @absent_hash
+  defp default_hash(_depth) do
+    <<0::256>>
   end
 
-  @spec default_hash(0..255) :: hash()
-  defmemop default_hash(depth) do
-    hash_below = default_hash(depth + 1)
-    hash(hash_below <> hash_below)
+  @spec hash_pair_specialized(hash(), hash()) :: hash()
+  def hash_pair_specialized(l, r) when l != <<0::256>> and r != <<0::256>> do
+    <<_::16, h::binary>> = hash_pair_sha256(l, r)
+    <<1::16>> <> h
+  end
+
+  def hash_pair_specialized(<<0::256>>, <<0::256>>) do
+    <<0::256>>
+  end
+
+  def hash_pair_specialized(l = <<1::1, _::255>>, r) do
+    <<_::16, h::binary>> = hash_pair_sha256(l, r)
+    <<1::16>> <> h
+  end
+
+  def hash_pair_specialized(l = <<0::16, _ :: 240>>, r) do
+    <<_::16, h::binary>> = hash_pair_sha256(l, r)
+    <<1::16>> <> h
+  end
+
+  def hash_pair_specialized(l, r = <<1::1, _::255>>) do
+    <<_::16, h::binary>> = hash_pair_sha256(l, r)
+    <<1::16>> <> h
+  end
+
+  def hash_pair_specialized(l, r = <<0::16, _ :: 240>>) do
+    <<_::16, h::binary>> = hash_pair_sha256(l, r)
+    <<1::16>> <> h
+  end
+
+  def hash_pair_specialized(l, <<0::256>>) do
+    <<l::255, 0::1>>
+  end
+
+  def hash_pair_specialized(<<0::256>>, r) do
+    <<r::255, 1::1>>
   end
 
   @spec hash(binary()) :: hash()
   defp hash(bytes) do
+    hash_sha256(bytes)
+  end
+
+  @spec hash_pair(hash(), hash()) :: hash()
+  defp hash_pair(l, r) do
+    hash_pair_specialized(l, r)
+  end
+
+  @spec hash_pair_sha256(binary(), binary()) :: hash()
+  defp hash_pair_sha256(l, r) do
+    hash_sha256(l <> r)
+  end
+
+  @spec hash_sha256(binary()) :: hash()
+  defp hash_sha256(bytes) do
     :crypto.hash(:sha256, bytes)
   end
 end
