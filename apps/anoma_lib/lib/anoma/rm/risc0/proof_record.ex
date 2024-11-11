@@ -55,11 +55,9 @@ defmodule Anoma.RM.Risc0.ProofRecord do
       "compliance_guest"
     ])
 
-    IO.puts("Guest path: #{inspect(guest_path)}")
     IO.puts("File exists?: #{File.exists?(guest_path)}")
 
     with {:ok, compliance_guest_elf} <- File.read(guest_path) do
-      IO.puts("Compliance guest elf: #{inspect(compliance_guest_elf)}")
       compliance_circuit = Risc0.generate_compliance_circuit(
         input_resource |> Resource.to_bytes(),
         output_resource |> Resource.to_bytes(),
@@ -67,9 +65,7 @@ defmodule Anoma.RM.Risc0.ProofRecord do
         merkle_path,
         nsk
       )
-      IO.puts("Compliance circuit: #{inspect(compliance_circuit)}")
       receipt = Risc0.prove(compliance_circuit, compliance_guest_elf |> :binary.bin_to_list())
-      IO.puts("Receipt: #{inspect(receipt)}")
 
       {:ok,
        %ProofRecord{
