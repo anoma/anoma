@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.26.0">
+    <meta name="project" content="Anoma v0.27.0">
 
 
-    <title>Anoma.Client.Examples.EClient — Anoma v0.26.0</title>
+    <title>Anoma.Client.Examples.EClient — Anoma v0.27.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-9E851CD4.js"></script>
+    <script src="dist/sidebar_items-03F30E6E.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.26.0
+          v0.27.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Client.Examples.EClient</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.26.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
 
   </h1>
 
@@ -205,6 +205,38 @@ by killing all other nodes.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#jammed_input/1" data-no-tooltip translate="no">jammed_input(value \\ &lt;&lt;&gt;&gt;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#jammed_program_example/0" data-no-tooltip translate="no">jammed_program_example()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#jammed_program_juvix_squared/0" data-no-tooltip translate="no">jammed_program_juvix_squared()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#jammed_program_minisquare/0" data-no-tooltip translate="no">jammed_program_minisquare()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#kill_existing_client/0" data-no-tooltip translate="no">kill_existing_client()</a>
 
       </div>
@@ -255,27 +287,31 @@ by killing all other nodes.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#noun_program_example/0" data-no-tooltip translate="no">noun_program_example()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#noun_program_juvix_squared/0" data-no-tooltip translate="no">noun_program_juvix_squared()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#noun_program_minisquare/0" data-no-tooltip translate="no">noun_program_minisquare()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#prove_something_jammed/1" data-no-tooltip translate="no">prove_something_jammed(conn \\ setup())</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I prove something using the client.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#prove_something_plain_text/1" data-no-tooltip translate="no">prove_something_plain_text(conn \\ setup())</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I prove something using the client.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#run_something_jammed/1" data-no-tooltip translate="no">run_something_jammed(conn \\ setup())</a>
 
       </div>
 
@@ -285,11 +321,21 @@ by killing all other nodes.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#run_something_plain_text/1" data-no-tooltip translate="no">run_something_plain_text(conn \\ setup())</a>
+        <a href="#prove_something_text/1" data-no-tooltip translate="no">prove_something_text(conn \\ setup())</a>
 
       </div>
 
         <div class="summary-synopsis"><p>I run a plaintext nock program using the client.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run_juvix_factorial/1" data-no-tooltip translate="no">run_juvix_factorial(conn \\ setup())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I run a Juvix program that squares its inputs.</p></div>
 
     </div>
 
@@ -300,6 +346,30 @@ by killing all other nodes.</p></div>
       </div>
 
         <div class="summary-synopsis"><p>I create the setup necessary to run each example below without arguments.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#text_input/1" data-no-tooltip translate="no">text_input(value \\ &quot;&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#text_program_example/0" data-no-tooltip translate="no">text_program_example()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#text_program_minisquare/0" data-no-tooltip translate="no">text_program_minisquare()</a>
+
+      </div>
 
     </div>
 
@@ -456,6 +526,100 @@ by killing all other nodes.</p></div>
 by killing all other nodes.</p>
   </section>
 </section>
+<section class="detail" id="jammed_input/1">
+
+    <span id="jammed_input/0"></span>
+
+  <div class="detail-header">
+    <a href="#jammed_input/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">jammed_input(value \\ &lt;&lt;&gt;&gt;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jammed_input(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: Anoma.Protobuf.Input.t()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="jammed_program_example/0">
+
+  <div class="detail-header">
+    <a href="#jammed_program_example/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">jammed_program_example()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jammed_program_example() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="jammed_program_juvix_squared/0">
+
+  <div class="detail-header">
+    <a href="#jammed_program_juvix_squared/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">jammed_program_juvix_squared()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jammed_program_juvix_squared() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="jammed_program_minisquare/0">
+
+  <div class="detail-header">
+    <a href="#jammed_program_minisquare/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">jammed_program_minisquare()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jammed_program_minisquare() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="kill_existing_client/0">
 
   <div class="detail-header">
@@ -583,6 +747,75 @@ by killing all other nodes.</p>
 <p>I list all unspent resources.</p>
   </section>
 </section>
+<section class="detail" id="noun_program_example/0">
+
+  <div class="detail-header">
+    <a href="#noun_program_example/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">noun_program_example()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> noun_program_example() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="noun_program_juvix_squared/0">
+
+  <div class="detail-header">
+    <a href="#noun_program_juvix_squared/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">noun_program_juvix_squared()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> noun_program_juvix_squared() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="noun_program_minisquare/0">
+
+  <div class="detail-header">
+    <a href="#noun_program_minisquare/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">noun_program_minisquare()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> noun_program_minisquare() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="prove_something_jammed/1">
 
     <span id="prove_something_jammed/0"></span>
@@ -599,64 +832,66 @@ by killing all other nodes.</p>
 
   <section class="docstring">
 
-<p>I prove something using the client.</p>
-  </section>
-</section>
-<section class="detail" id="prove_something_plain_text/1">
+      <div class="specs">
 
-    <span id="prove_something_plain_text/0"></span>
+          <pre translate="no"><span class="attribute">@spec</span> prove_something_jammed(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
+  Anoma.Protobuf.Prove.Response.t()</pre>
 
-  <div class="detail-header">
-    <a href="#prove_something_plain_text/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">prove_something_plain_text(conn \\ setup())</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>I prove something using the client.</p>
-  </section>
-</section>
-<section class="detail" id="run_something_jammed/1">
-
-    <span id="run_something_jammed/0"></span>
-
-  <div class="detail-header">
-    <a href="#run_something_jammed/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">run_something_jammed(conn \\ setup())</h1>
-
-
-  </div>
-
-  <section class="docstring">
+      </div>
 
 <p>I run a jammed nock program using the client.</p>
   </section>
 </section>
-<section class="detail" id="run_something_plain_text/1">
+<section class="detail" id="prove_something_text/1">
 
-    <span id="run_something_plain_text/0"></span>
+    <span id="prove_something_text/0"></span>
 
   <div class="detail-header">
-    <a href="#run_something_plain_text/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#prove_something_text/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">run_something_plain_text(conn \\ setup())</h1>
+    <h1 class="signature" translate="no">prove_something_text(conn \\ setup())</h1>
 
 
   </div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> prove_something_text(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
+  Anoma.Protobuf.Prove.Response.t()</pre>
+
+      </div>
+
 <p>I run a plaintext nock program using the client.</p>
+  </section>
+</section>
+<section class="detail" id="run_juvix_factorial/1">
+
+    <span id="run_juvix_factorial/0"></span>
+
+  <div class="detail-header">
+    <a href="#run_juvix_factorial/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">run_juvix_factorial(conn \\ setup())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> run_juvix_factorial(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
+  Anoma.Protobuf.Prove.Response.t()</pre>
+
+      </div>
+
+<p>I run a Juvix program that squares its inputs.</p>
   </section>
 </section>
 <section class="detail" id="setup/0">
@@ -673,7 +908,84 @@ by killing all other nodes.</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> setup() :: <a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()</pre>
+
+      </div>
+
 <p>I create the setup necessary to run each example below without arguments.</p>
+  </section>
+</section>
+<section class="detail" id="text_input/1">
+
+    <span id="text_input/0"></span>
+
+  <div class="detail-header">
+    <a href="#text_input/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">text_input(value \\ &quot;&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> text_input(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: Anoma.Protobuf.Input.t()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="text_program_example/0">
+
+  <div class="detail-header">
+    <a href="#text_program_example/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">text_program_example()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> text_program_example() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="text_program_minisquare/0">
+
+  <div class="detail-header">
+    <a href="#text_program_minisquare/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">text_program_minisquare()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> text_program_minisquare() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
 
@@ -684,9 +996,9 @@ by killing all other nodes.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.26.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.26.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
 
           </span>
 

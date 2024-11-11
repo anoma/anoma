@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.26.0">
+    <meta name="project" content="Anoma v0.27.0">
 
 
-    <title>Anoma.Node.Examples.ETransaction — Anoma v0.26.0</title>
+    <title>Anoma.Node.Examples.ETransaction — Anoma v0.27.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-9E851CD4.js"></script>
+    <script src="dist/sidebar_items-03F30E6E.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.26.0
+          v0.27.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Examples.ETransaction</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.26.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
 
   </h1>
 
@@ -141,6 +141,22 @@ GUIDES
   <h2>
     <a href="#functions">Functions</a>
   </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_append/1" data-no-tooltip translate="no">add_append(node_id \\ Node.example_random_id())</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_rewrites/1" data-no-tooltip translate="no">add_rewrites(node_id \\ Node.example_random_id())</a>
+
+      </div>
+
+    </div>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -304,15 +320,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_executor/1" data-no-tooltip translate="no">start_executor(node_id \\ Node.example_random_id())</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#start_mempool/1" data-no-tooltip translate="no">start_mempool(node_id \\ Node.example_random_id())</a>
+        <a href="#resubmit_trivial_swap/1" data-no-tooltip translate="no">resubmit_trivial_swap(node_id \\ Node.example_random_id())</a>
 
       </div>
 
@@ -337,6 +345,38 @@ GUIDES
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#start_tx_module/1" data-no-tooltip translate="no">start_tx_module(node_id \\ Node.example_random_id())</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#submit_failed_trivial_swap/1" data-no-tooltip translate="no">submit_failed_trivial_swap(node_id \\ Node.example_random_id())</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#submit_successful_trivial_swap/1" data-no-tooltip translate="no">submit_successful_trivial_swap(node_id \\ Node.example_random_id())</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#trivial_transparent_transaction/0" data-no-tooltip translate="no">trivial_transparent_transaction()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#trivial_transparent_transaction_no_eph/0" data-no-tooltip translate="no">trivial_transparent_transaction_no_eph()</a>
 
       </div>
 
@@ -411,6 +451,44 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="add_append/1">
+
+    <span id="add_append/0"></span>
+
+  <div class="detail-header">
+    <a href="#add_append/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add_append(node_id \\ Node.example_random_id())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="add_rewrites/1">
+
+    <span id="add_rewrites/0"></span>
+
+  <div class="detail-header">
+    <a href="#add_rewrites/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add_rewrites(node_id \\ Node.example_random_id())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="append_then_read/1">
 
     <span id="append_then_read/0"></span>
@@ -789,35 +867,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="start_executor/1">
+<section class="detail" id="resubmit_trivial_swap/1">
 
-    <span id="start_executor/0"></span>
+    <span id="resubmit_trivial_swap/0"></span>
 
   <div class="detail-header">
-    <a href="#start_executor/1" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#resubmit_trivial_swap/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_executor(node_id \\ Node.example_random_id())</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="start_mempool/1">
-
-    <span id="start_mempool/0"></span>
-
-  <div class="detail-header">
-    <a href="#start_mempool/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">start_mempool(node_id \\ Node.example_random_id())</h1>
+    <h1 class="signature" translate="no">resubmit_trivial_swap(node_id \\ Node.example_random_id())</h1>
 
 
   </div>
@@ -875,6 +934,78 @@ GUIDES
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">start_tx_module(node_id \\ Node.example_random_id())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="submit_failed_trivial_swap/1">
+
+    <span id="submit_failed_trivial_swap/0"></span>
+
+  <div class="detail-header">
+    <a href="#submit_failed_trivial_swap/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">submit_failed_trivial_swap(node_id \\ Node.example_random_id())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="submit_successful_trivial_swap/1">
+
+    <span id="submit_successful_trivial_swap/0"></span>
+
+  <div class="detail-header">
+    <a href="#submit_successful_trivial_swap/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">submit_successful_trivial_swap(node_id \\ Node.example_random_id())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="trivial_transparent_transaction/0">
+
+  <div class="detail-header">
+    <a href="#trivial_transparent_transaction/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">trivial_transparent_transaction()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="trivial_transparent_transaction_no_eph/0">
+
+  <div class="detail-header">
+    <a href="#trivial_transparent_transaction_no_eph/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">trivial_transparent_transaction_no_eph()</h1>
 
 
   </div>
@@ -1025,9 +1156,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.26.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.26.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
 
           </span>
 

@@ -8,7 +8,7 @@
     <meta name="project" content="Anoma v0.27.0">
 
 
-    <title>Examples.ECrypto — Anoma v0.27.0</title>
+    <title>Examples.ETransparent.ETransaction — Anoma v0.27.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
@@ -122,7 +122,7 @@ GUIDES
 <div id="top-content">
   <h1>
 
-    <span translate="no">Examples.ECrypto</span> 
+    <span translate="no">Examples.ETransparent.ETransaction</span> 
     <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
 
   </h1>
@@ -144,7 +144,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#alice/0" data-no-tooltip translate="no">alice()</a>
+        <a href="#commit_intent/0" data-no-tooltip translate="no">commit_intent()</a>
 
       </div>
 
@@ -152,7 +152,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#alice_rsa/0" data-no-tooltip translate="no">alice_rsa()</a>
+        <a href="#empty/0" data-no-tooltip translate="no">empty()</a>
 
       </div>
 
@@ -160,7 +160,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bertha/0" data-no-tooltip translate="no">bertha()</a>
+        <a href="#invalid_swap/0" data-no-tooltip translate="no">invalid_swap()</a>
 
       </div>
 
@@ -168,7 +168,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#blood_l_signed/0" data-no-tooltip translate="no">blood_l_signed()</a>
+        <a href="#nullify_intent/0" data-no-tooltip translate="no">nullify_intent()</a>
 
       </div>
 
@@ -176,7 +176,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#blood_l_signed_detached/0" data-no-tooltip translate="no">blood_l_signed_detached()</a>
+        <a href="#nullify_intent_eph/0" data-no-tooltip translate="no">nullify_intent_eph()</a>
 
       </div>
 
@@ -184,7 +184,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#blood_msg/0" data-no-tooltip translate="no">blood_msg()</a>
+        <a href="#single_swap/0" data-no-tooltip translate="no">single_swap()</a>
 
       </div>
 
@@ -192,7 +192,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bob_rsa/0" data-no-tooltip translate="no">bob_rsa()</a>
+        <a href="#single_swap_invalid_delta/0" data-no-tooltip translate="no">single_swap_invalid_delta()</a>
 
       </div>
 
@@ -200,7 +200,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#eve/0" data-no-tooltip translate="no">eve()</a>
+        <a href="#swap_from_actions/0" data-no-tooltip translate="no">swap_from_actions()</a>
 
       </div>
 
@@ -208,15 +208,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#londo/0" data-no-tooltip translate="no">londo()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#xcc/0" data-no-tooltip translate="no">xcc()</a>
+        <a href="#swap_from_actions_non_eph_nullifier/0" data-no-tooltip translate="no">swap_from_actions_non_eph_nullifier()</a>
 
       </div>
 
@@ -235,37 +227,14 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="alice/0">
+<section class="detail" id="commit_intent/0">
 
   <div class="detail-header">
-    <a href="#alice/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#commit_intent/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">alice()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> alice() :: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="alice_rsa/0">
-
-  <div class="detail-header">
-    <a href="#alice_rsa/0" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">alice_rsa()</h1>
+    <h1 class="signature" translate="no">commit_intent()</h1>
 
 
   </div>
@@ -275,83 +244,14 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="bertha/0">
+<section class="detail" id="empty/0">
 
   <div class="detail-header">
-    <a href="#bertha/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#empty/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">bertha()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> bertha() :: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="blood_l_signed/0">
-
-  <div class="detail-header">
-    <a href="#blood_l_signed/0" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">blood_l_signed()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> blood_l_signed() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="blood_l_signed_detached/0">
-
-  <div class="detail-header">
-    <a href="#blood_l_signed_detached/0" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">blood_l_signed_detached()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> blood_l_signed_detached() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="blood_msg/0">
-
-  <div class="detail-header">
-    <a href="#blood_msg/0" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">blood_msg()</h1>
+    <h1 class="signature" translate="no">empty()</h1>
 
 
   </div>
@@ -361,14 +261,14 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="bob_rsa/0">
+<section class="detail" id="invalid_swap/0">
 
   <div class="detail-header">
-    <a href="#bob_rsa/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#invalid_swap/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">bob_rsa()</h1>
+    <h1 class="signature" translate="no">invalid_swap()</h1>
 
 
   </div>
@@ -378,71 +278,104 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="eve/0">
+<section class="detail" id="nullify_intent/0">
 
   <div class="detail-header">
-    <a href="#eve/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#nullify_intent/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">eve()</h1>
+    <h1 class="signature" translate="no">nullify_intent()</h1>
 
 
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> eve() :: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>()</pre>
-
-      </div>
 
 
   </section>
 </section>
-<section class="detail" id="londo/0">
+<section class="detail" id="nullify_intent_eph/0">
 
   <div class="detail-header">
-    <a href="#londo/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#nullify_intent_eph/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">londo()</h1>
+    <h1 class="signature" translate="no">nullify_intent_eph()</h1>
 
 
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> londo() :: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>()</pre>
-
-      </div>
 
 
   </section>
 </section>
-<section class="detail" id="xcc/0">
+<section class="detail" id="single_swap/0">
 
   <div class="detail-header">
-    <a href="#xcc/0" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#single_swap/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">xcc()</h1>
+    <h1 class="signature" translate="no">single_swap()</h1>
 
 
   </div>
 
   <section class="docstring">
 
-      <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> xcc() :: <a href="Anoma.Crypto.Symmetric.html#t:t/0">Anoma.Crypto.Symmetric.t</a>()</pre>
+  </section>
+</section>
+<section class="detail" id="single_swap_invalid_delta/0">
 
-      </div>
+  <div class="detail-header">
+    <a href="#single_swap_invalid_delta/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">single_swap_invalid_delta()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="swap_from_actions/0">
+
+  <div class="detail-header">
+    <a href="#swap_from_actions/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">swap_from_actions()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="swap_from_actions_non_eph_nullifier/0">
+
+  <div class="detail-header">
+    <a href="#swap_from_actions_non_eph_nullifier/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">swap_from_actions_non_eph_nullifier()</h1>
+
+
+  </div>
+
+  <section class="docstring">
 
 
   </section>

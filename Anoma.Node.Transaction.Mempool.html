@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.26.0">
+    <meta name="project" content="Anoma v0.27.0">
 
 
-    <title>Anoma.Node.Transaction.Mempool — Anoma v0.26.0</title>
+    <title>Anoma.Node.Transaction.Mempool — Anoma v0.27.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-9E851CD4.js"></script>
+    <script src="dist/sidebar_items-03F30E6E.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.26.0
+          v0.27.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Mempool</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.26.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
 
   </h1>
 
@@ -178,27 +178,11 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#block_event/3" data-no-tooltip translate="no">block_event(id_list, round, node_id)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
 
       </div>
 
         <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#consensus_event/2" data-no-tooltip translate="no">consensus_event(id_list, node_id)</a>
-
-      </div>
 
     </div>
 
@@ -255,14 +239,6 @@ GUIDES
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#tx_dump/1" data-no-tooltip translate="no">tx_dump(node_id)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#tx_event/3" data-no-tooltip translate="no">tx_event(tx_id, value, node_id)</a>
 
       </div>
 
@@ -374,23 +350,6 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="block_event/3">
-
-  <div class="detail-header">
-    <a href="#block_event/3" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">block_event(id_list, round, node_id)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
@@ -406,23 +365,6 @@ GUIDES
   <section class="docstring">
 
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="consensus_event/2">
-
-  <div class="detail-header">
-    <a href="#consensus_event/2" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">consensus_event(id_list, node_id)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
   </section>
 </section>
 <section class="detail" id="execute/2">
@@ -461,6 +403,12 @@ GUIDES
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> filter_for_mempool() :: <a href="Anoma.Node.Transaction.Backends.ForMempoolFilter.html#t:t/0">Anoma.Node.Transaction.Backends.ForMempoolFilter.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -586,23 +534,6 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="tx_event/3">
-
-  <div class="detail-header">
-    <a href="#tx_event/3" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">tx_event(tx_id, value, node_id)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="worker_module_filter/0">
 
   <div class="detail-header">
@@ -617,6 +548,12 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> worker_module_filter() :: <a href="EventBroker.Filters.SourceModule.html#t:t/0">EventBroker.Filters.SourceModule.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -628,9 +565,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.26.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.26.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
 
           </span>
 

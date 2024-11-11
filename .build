@@ -28,7 +28,9 @@ Anoma.Client.Connection.Supervisor.html
 Anoma.Client.Connection.TCP.html
 Anoma.Client.Examples.EClient.EConnection.html
 Anoma.Client.Examples.EClient.html
+Anoma.Client.Examples.EProve.html
 Anoma.Client.Examples.EProxy.html
+Anoma.Client.Runner.html
 Anoma.Client.html
 Anoma.Constants.html
 Anoma.Crypto.Encrypt.html
@@ -132,6 +134,7 @@ Examples.ENock.html
 Examples.ETransparent.EAction.html
 Examples.ETransparent.ELogicProof.html
 Examples.ETransparent.EResource.html
+Examples.ETransparent.ETransaction.html
 Glossary.html
 IdentityMap.html
 Livebook.html
@@ -173,8 +176,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-491EDB08.js
-dist/sidebar_items-9E851CD4.js
+dist/search_data-F32126D3.js
+dist/sidebar_items-03F30E6E.js
 dumping.html
 examples-over-testing.html
 git.html

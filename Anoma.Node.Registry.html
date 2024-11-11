@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.26.0">
+    <meta name="project" content="Anoma v0.27.0">
 
 
-    <title>Anoma.Node.Registry — Anoma v0.26.0</title>
+    <title>Anoma.Node.Registry — Anoma v0.27.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-9E851CD4.js"></script>
+    <script src="dist/sidebar_items-03F30E6E.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.26.0
+          v0.27.0
         </div>
       </div>
     </div>
@@ -123,10 +123,22 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Registry</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.26.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
 
   </h1>
 
+
+    <section id="moduledoc">
+<p>I am the Node Registry module.</p><p>I provide functionality for creating addresses, registering engines to
+specific addresses, and querying information regarding the registered
+addresses and engines.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<ul><li><a href="#address/3"><code class="inline">address/3</code></a></li><li><a href="#register/3"><code class="inline">register/3</code></a></li><li><a href="#via/3"><code class="inline">via/3</code></a></li><li><a href="#whereis/3"><code class="inline">whereis/3</code></a></li><li><a href="#engines_for/1"><code class="inline">engines_for/1</code></a></li><li><a href="#local_node_id/0"><code class="inline">local_node_id/0</code></a></li><li><a href="#dump_register/0"><code class="inline">dump_register/0</code></a></li></ul>
+    </section>
 
 </div>
 
@@ -147,6 +159,8 @@ GUIDES
         <a href="#address/3" data-no-tooltip translate="no">address(node_id, engine, label \\ nil)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I create an address with specified node id, engine name and label.</p></div>
 
     </div>
 
@@ -240,7 +254,13 @@ and return the pid.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> address(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="Anoma.Node.Registry.Address.html#t:t/0">Anoma.Node.Registry.Address.t</a>()</pre>
+
+      </div>
+
+<p>I create an address with specified node id, engine name and label.</p>
   </section>
 </section>
 <section class="detail" id="dump_register/0">
@@ -397,9 +417,9 @@ and return the pid.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.26.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.26.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
 
           </span>
 
