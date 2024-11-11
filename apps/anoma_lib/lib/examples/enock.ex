@@ -45,6 +45,23 @@ defmodule Examples.ENock do
     ]
   end
 
+  #### Term Examples
+
+  def zero(key \\ "key") do
+    zero_counter_arm = [1, key | 0]
+    arm = [10, [2 | zero_counter_arm], 1, 0 | 0]
+    sample = 0
+    [[8, [1 | sample], [1 | arm], 0 | 1] | 999]
+  end
+
+  def inc(key \\ "key") do
+    increment_value_arm = [[1 | key], 4, 12, [1 | 0], [0 | 6], 1, key | 0]
+    # Place the result in a list
+    arm = [10, [2 | increment_value_arm], 1, 0 | 0]
+    sample = 0
+    [[8, [1 | sample], [1 | arm], 0 | 1] | 999]
+  end
+
   ####################################################################
   ##                           Noun fun                             ##
   ####################################################################

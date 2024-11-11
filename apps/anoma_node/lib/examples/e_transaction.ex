@@ -255,24 +255,12 @@ defmodule Anoma.Node.Examples.ETransaction do
     start_mempool(node_id)
   end
 
-  # to be moved to nock
   def zero(key \\ "key") do
-    zero_counter_arm = [1, key | 0]
-    arm = [10, [2 | zero_counter_arm], 1, 0 | 0]
-    sample = 0
-    zero_tx = [[8, [1 | sample], [1 | arm], 0 | 1] | 999]
-
-    {:debug_term_storage, zero_tx}
+    {:debug_term_storage, Examples.ENock.zero(key)}
   end
 
   def inc(key \\ "key") do
-    increment_value_arm = [[1 | key], 4, 12, [1 | 0], [0 | 6], 1, key | 0]
-    # Place the result in a list
-    arm = [10, [2 | increment_value_arm], 1, 0 | 0]
-    sample = 0
-    inc = [[8, [1 | sample], [1 | arm], 0 | 1] | 999]
-
-    {:debug_term_storage, inc}
+    {:debug_term_storage, Examples.ENock.inc(key)}
   end
 
   ############################################################
