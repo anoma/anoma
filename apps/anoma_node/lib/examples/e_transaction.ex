@@ -125,23 +125,24 @@ defmodule Anoma.Node.Examples.ETransaction do
 
   def add_rewrites(node_id \\ Node.example_random_id()) do
     write_then_read(node_id)
+    new_set = MapSet.new(["value1"])
 
     Storage.add(
       node_id,
-      {2, %{write: [{["abc"], 234}], append: [{:set, "value1"}]}}
+      {2, %{write: [{["abc"], 234}], append: [{:set, new_set}]}}
     )
 
     {:ok, 234} = Storage.read(node_id, {2, ["abc"]})
-    new_set = MapSet.new(["value1"])
     {:ok, ^new_set} = Storage.read(node_id, {2, :set})
   end
 
   def add_append(node_id \\ Node.example_random_id()) do
     append_then_read(node_id)
+    new_value_set = MapSet.new(["new_value"])
 
     Storage.add(
       node_id,
-      {2, %{write: [{["abc"], 234}], append: [{:set, "new_value"}]}}
+      {2, %{write: [{["abc"], 234}], append: [{:set, new_value_set}]}}
     )
 
     {:ok, 234} = Storage.read(node_id, {2, ["abc"]})
