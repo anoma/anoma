@@ -188,11 +188,10 @@ defmodule Anoma.Node.Transaction.IntentPool do
     set_of_txs = state.intents
 
     new_intents =
-      Enum.reject(set_of_txs, fn x ->
-        Stream.map(x.actions, fn x -> x.proofs end)
-        |> Stream.map(fn x ->
-          x.resource |> Anoma.TransparentResource.Resource.nullifier()
-        end)
+      set_of_txs
+      |> Enum.reject(fn tx ->
+        tx
+        |> Anoma.TransparentResource.Transaction.nullifiers()
         |> Enum.any?(&MapSet.member?(nlfs_set, &1))
       end)
       |> MapSet.new()
