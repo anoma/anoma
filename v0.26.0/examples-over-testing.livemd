@@ -1,0 +1,530 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Examples over Testing
+
+## Index
+1. [Toc](./../toc.livemd)
+2. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Style Guide](./../contributing/style-guide.livemd)
+   3. [Writing Documents](./../contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./../contributing/examples-over-testing.livemd)
+   5. [Git](./../contributing/git.livemd)
+   6. [Iex](./../contributing/iex.livemd)
+   7. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   8. [Observer](./../contributing/observer.livemd)
+   9. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+3. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+4. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+5. [Analysis](./../analysis.livemd)
+
+## Intro
+
+In complex software projects, there are a variety of automated tools employed to make sure the system works as intended. The two most popular examples are `tests` and `type systems`. As of the time of this writing, the `Anoma` codebase has embraced both of these; having a `73%` test coverage and the majority of functions with type signatures!
+
+This article will focus on the downside of `testing` in elixir, and give a compelling argument for `examples` over testing!
+
+## What are Examples
+
+The word `testing` in the context of software development is widely understood, however the term `examples` does not have the same level of recognition.
+
+In order to clarify the meaning within `Anoma`, we will take [Glamorous Toolkit](https://gtoolkit.com/)'s definition of example, as they have created a well-thought-out system that successfully replaces most `tests` with `examples`
+
+<!-- livebook:{"break_markdown":true} -->
+
+[According to Glamorous Toolkit examples are](https://book.gtoolkit.com/examples-6k9vwuau8psg5ghsgb64zriih):
+
+"a way of demonstrating how to use the system and check that it is operating correctly.
+
+They are similar to SUnit tests in that they make assertions to confirm that the system is operating correctly, but unlike SUnit tests, which typically don't return anything, they answer an object which is useful in its own right."
+
+<!-- livebook:{"break_markdown":true} -->
+
+For the purposes of discussion, we can consider [SUnit](https://en.wikipedia.org/wiki/SUnit) and [ExUnit](https://hexdocs.pm/ex_unit/ExUnit.html) to be the same. Meaning that there are large overlaps in the practical function between `examples` and `tests`.
+
+## Downsides of testing in Elixir
+
+To get a feeling for what `examples` can offer the codebase, we should first discuss the downsides with how `Anoma` interacts with tests.
+
+1. Tests are not loaded into `IEx` at startup.
+2. To run tests by hand, we need to copy paste:
+   1. Imports.
+   2. `setup_all` logic.
+   3. the test up until the point we care about.
+3. Tests can't be abstracted in the test module without breaking copy and pasting.
+4. Tests can't have dialyzer run over them.
+5. `IEx` does not re-run tests on demand, one has to recompile the test after already running the tests
+6. [LSP](https://en.wikipedia.org/wiki/Language_Server_Protocol) seems to not be able to calculate references of values to tests due to them not being compiled.
+
+## How would Examples work in Elixir?
+
+Before we go and talk about addressing the issues with testing, let us first envision how we would go about making examples. Below are rules that we can apply to creating our very first examples.
+
+<!-- livebook:{"break_markdown":true} -->
+
+1. They belong in a module `example/e<module-name>`. Where `module-name` is the module one is interested in testing.
+2. Any piece of logic that is relied upon by other parts, is an example.
+3. If any code spawns actors, they should either register themselves or be memoized.
+4. We should run asserts on data whenever possible.
+
+<!-- livebook:{"break_markdown":true} -->
+
+For demonstration purposes, let us take the most common kinds of tests we have and imagine what they would look like as examples
+
+1. The first kind of test is testing non actors.
+2. The second kind of test is testing stateful actors.
+
+Tests in the first category tend to care about the form of data and making assertions about said data, while the second category is more about testing the interactions between multiple actors and the final state they produce.
+
+The translation of tests in classification `2.` into examples can be split into two phases:
+
+1. The first phase will cover translating the `setup` state as global examples. This is not perfect but maintains the same semantics as the test.
+2. The second phase will make the global setup logic specific per example, making stateful examples return the final network state.
+
+<!-- livebook:{"branch_parent_index":4} -->
+
+## Examplifying non Actors
+
+A good example we can use, is a test in our `resource` test file.
+
+```elixir
+defmodule AnomaTest.Resource do
+  test "commitments and nullifiers" do
+    keypair_a = Sign.new_keypair()
+    keypair_b = Sign.new_keypair()
+
+    a_r1 = new_with_npk(keypair_a.public)
+    a_r2 = new_with_npk(keypair_a.public)
+    b_r0 = new_with_npk(keypair_b.public)
+
+    # just in case
+    assert a_r1 != a_r2
+
+    c_a_r1 = commitment(a_r1)
+    c_a_r2 = commitment(a_r2)
+    c_b_r0 = commitment(b_r0)
+
+    n_a_r1 = nullifier(a_r1, keypair_a.secret)
+    n_a_r2 = nullifier(a_r2, keypair_a.secret)
+    n_b_r0 = nullifier(b_r0, keypair_b.secret)
+
+    assert c_a_r1 |> commits_to(a_r1)
+    refute c_a_r1 |> commits_to(a_r2)
+    refute c_a_r1 |> commits_to(b_r0)
+
+    refute c_a_r2 |> commits_to(a_r1)
+    assert c_a_r2 |> commits_to(a_r2)
+    refute c_a_r2 |> commits_to(b_r0)
+
+    refute c_b_r0 |> commits_to(a_r1)
+    refute c_b_r0 |> commits_to(a_r2)
+    assert c_b_r0 |> commits_to(b_r0)
+
+    assert n_a_r1 |> nullifies(a_r1)
+    refute n_a_r1 |> nullifies(a_r2)
+    refute n_a_r1 |> nullifies(b_r0)
+
+    refute n_a_r2 |> nullifies(a_r1)
+    assert n_a_r2 |> nullifies(a_r2)
+    refute n_a_r2 |> nullifies(b_r0)
+
+    refute n_b_r0 |> nullifies(a_r1)
+    refute n_b_r0 |> nullifies(a_r2)
+    assert n_b_r0 |> nullifies(b_r0)
+  end
+
+  test "nullify with wrong key" do
+    keypair_a = Sign.new_keypair()
+    keypair_b = Sign.new_keypair()
+
+    a_resource = new_with_npk(keypair_a.public)
+    wrong_nullifier = nullifier(a_resource, keypair_b.secret)
+
+    refute wrong_nullifier |> nullifies(a_resource)
+  end
+end
+```
+
+The crux of this module is creating some resources, and testing that they behave properly!
+
+However since tests are not composable, we have to waste time recreating more resources in another test!
+
+If we were to reimagine this test as an example it would look something like this.
+
+```elixir
+defmodule Example.EResource do
+  # Memoize it as we want it to always be the same!
+  defmemo(keypair_a(), do: Sign.new_keypair())
+  defmemo(keypair_b(), do: Sign.new_keypair())
+
+  # new_with_npk gives new resources, so memo again
+  defmemo(a_resource(), do: new_with_npk(keypair_a().public))
+  defmemo(b_resource(), do: new_with_npk(keypair_b().public))
+  defmemo(a2_resource(), do: new_with_npk(keypair_a().public))
+
+  # Now we get interesting
+  def commit_a() do
+    commitment = commitment(a_resource())
+    assert commitment |> commits_to(a_resource())
+    refute commitment |> commits_to(b_resource())
+    commitment
+  end
+
+  def commit_a2() do
+    commitment = commitment(a2_resource())
+    assert commitment |> commits_to(a2_resource())
+    refute commitment |> commits_to(a_resource())
+    assert commitment != commit_a()
+    commitment
+  end
+
+  def commit_b() do
+    commitment = commitment(a2_resource())
+    assert commitment |> commits_to(b_resource())
+    refute commitment |> commits_to(a_resource())
+    commitment
+  end
+
+  def nullifier_a() do
+    nullifier = nullifies(a_resource(), keypair_a().private)
+    assert nullifier |> nullifies(a_resource())
+    refute nullifier |> nullifies(b_resource())
+    nullifier
+  end
+
+  def nullifier_a2() do
+    nullifier = nullifies(a_resource(), keypair_a2().private)
+    assert nullifier |> nullifies(a2_resource())
+    refute nullifier |> nullifies(a_resource())
+    assert nullifier != nullifier_a()
+    nullifier
+  end
+
+  def nullifier_b() do
+    nullifier = nullifies(b_resource(), keypair_b().private)
+    assert nullifier |> nullifies(b_resource())
+    refute nullifier |> nullifies(a_resource())
+    nullifier
+  end
+
+  def invalid_nullifier() do
+    nullifier = nullifies(a_resource(), keypair_b().private)
+    refute nullifier |> nullifies(a_resource())
+    nullifier
+  end
+end
+```
+
+Although this code is `5` more lines of code, it has many strong properties:
+
+1. Each component is now a top level name. Meaning we can now play with `nullifier_a` in `IEx`. No copy and pasting needed!
+2. We can add type signatures for each definition, to ensure we have type checking and writing down our own intents!
+3. We didn't need to unnecessarily generate extra keys, and resources. We can reuse them!
+4. We are writing properties about the data we wish to have.
+5. Any other example files can rely on this example file! (hint maybe our next example will use this one)
+
+Point `4.` should be expanded upon. In a test, one is testing many things at once, but what makes examples strong is that we are denoting the dynamic properties we wish data to respect! Because we are doing this on a data basis, it becomes easy to later come back to these and add new facts to the examples.
+
+Tests discourage this, as they have a singular purpose they exist for, they do not encourage good behavior!
+
+Further, if we were to not do a 1 to 1 extraction, we could factor some of the data here to `Signature` examples as well! We will see how this principle works out in practice in the next section.
+
+<!-- livebook:{"branch_parent_index":4} -->
+
+## Examplifying stateful code
+
+```elixir
+defmodule AnomaTest.Node.Executor.Worker do
+  use ExUnit.Case, async: true
+
+  setup_all do
+    storage = %Storage{
+      qualified: AnomaTest.Worker.Qualified,
+      order: AnomaTest.Worker.Order
+    }
+
+    {:ok, router, _} = Anoma.Node.Router.start()
+
+    {:ok, storage} =
+      Anoma.Node.Router.start_engine(router, Storage, storage)
+
+    {:ok, ordering} =
+      Anoma.Node.Router.start_engine(router, Ordering, table: storage)
+
+    snapshot_path = [:my_special_nock_snaphsot | 0]
+
+    env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
+
+    [env: env]
+  end
+
+  test "worker evaluates resource transaction", %{env: env} do
+    import Anoma.Resource
+    alias Anoma.Resource.ProofRecord
+    alias Anoma.Resource.Transaction
+
+    id = System.unique_integer([:positive])
+
+    storage = Ordering.get_storage(env.ordering)
+
+    Storage.ensure_new(storage)
+    Ordering.reset(env.ordering)
+
+    keypair = Anoma.Crypto.Sign.new_keypair()
+
+    in_resource = %{
+      new_with_npk(keypair.public)
+      | label: "space bucks",
+        quantity: 10
+    }
+
+    nf_in = nullifier(in_resource, keypair.secret)
+    pf_in = ProofRecord.prove(in_resource)
+
+    out_resource = %{
+      new_with_npk(keypair.public)
+      | label: "space bucks",
+        quantity: 10
+    }
+
+    cm_out = commitment(out_resource)
+    pf_out = ProofRecord.prove(out_resource)
+
+    rm_tx = %Transaction{
+      commitments: [cm_out],
+      nullifiers: [nf_in],
+      proofs: [pf_in, pf_out],
+      delta: %{}
+    }
+
+    rm_tx_noun = Transaction.to_noun(rm_tx)
+    rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
+
+    spawn = Task.async(Worker, :run, [id, {:rm, rm_executor_tx}, env])
+    Ordering.new_order(env.ordering, [Order.new(0, id, spawn.pid)])
+
+    send(spawn.pid, {:write_ready, 0})
+    assert :ok == Task.await(spawn)
+  end
+end
+```
+
+This test has a few parts, one part is a `test_setup` and another part is the actual testing code itself.
+
+I will reimagine this module in two phases. The first respecting the fact that `setup_all` is unique and is efficient as it spawns only 1 network for the entire module. The second will instead make the node specific to each example that relies upon it. Returning the network as the interesting object.
+
+```elixir
+defmodule Example.Worker.Phase1 do
+
+  defmemo router() do
+    assert {:ok, router, _} = Router.start()
+    router
+  end
+
+  def raw_storage() do
+    storage = %Storage{
+      qualified: AnomaTest.Worker.Qualified,
+      order: AnomaTest.Worker.Order
+    }
+  end
+
+  defmemo storage() do
+     {:ok, storage} = Router.start_engine(router(), Storage, raw_storage())
+     storage
+  end
+
+  defmemo ordering() do
+    {:ok, ordering} = Router.start_engine(router(), Ordering, table: storage())
+     ordering
+  end
+
+  def env() do
+   %Nock{snapshot_path: Enock.snapshot_path(), ordering: ordering}
+  end
+
+  # Let's get an unique number
+  defmemo unique_id() do
+    System.unique_integer([:positive])
+  end
+
+  def successfully_fire_trans() do
+    Storage.ensure_new(storage())
+    Ordering.reset(ordering())
+
+    spawn = Task.async(Worker, :run, [id, {:rm, space_trans_candidate()}, env()])
+    Ordering.new_order(ordering(), [Order.new(0, id, spawn.pid)])
+
+    send(spawn.pid, {:write_ready, 0})
+    assert :ok == Task.await(spawn)
+    :ok
+  end
+end
+
+defmodule Example.ProofRecord do
+  def proved_spacebucks_a() do
+    ProofRecord.prove(Eresource.space_bucks_10_a())
+  end
+
+  def proved_spacebucks_b() do
+    ProofRecord.prove(Eresource.space_bucks_10_b())
+  end
+end
+
+defmodule Example.Transaction do
+  def balanced_space_transaction() do
+    trans = %Transaction{
+      commitments: [EResource.commitment_space_bucks_a()]
+      nullifiers: [ERsource.nullifier_space_bucks_b()],
+      proofs: [proved_spacebucks_a(), proved_spacebucks_b()]
+    }
+    # This wans't in the original test!
+    assert verify(trans)
+    trans
+  end
+
+  def space_trans_candidate() do
+    Transaction.to_noun(balanced_space_transaction())
+    [[1 | rm_tx_noun], 0 | 0]
+  end
+end
+```
+
+Notice we ended up calling a lot of examples from `EResource`. Some of the examples already existed even without this test (we really had `spacebucks` already in the codebase! Duplicated in the `Worker` and in `Resource`).
+
+Further most of the logic that recreates `resources` are better placed in the actual `Example.EResource` file, as they are relevant examples for someone who is looking for resources. Why would they look at the worker to see examples of the Resources? Likewise, people who are looking at the worker code, would want to look at worker logic, not resource logic!
+
+We can see the benefits examples offer even stateful tests:
+
+1. Most of the boilerplate of creating unrelated types are confined in the proper modules!
+2. There may be an example off hand which satisfies what we want (we already had spacebucks in `EResource`)
+3. Rephrasing a test as an example doesn't lose any information. the actual example is simply not interesting!
+4. We can run the stateful tests from IEx and even pry into it without any issues!
+
+With these benefits of mind let us see if `Phase2` can improve point `3.` a bit:
+
+```elixir
+defmodule Example.Worker.Phase2 do
+  def router() do
+    assert {:ok, router, _} = Router.start()
+    router
+  end
+
+  def raw_storage() do
+    storage = %Storage{
+      qualified: AnomaTest.Worker.Qualified,
+      order: AnomaTest.Worker.Order
+    }
+  end
+
+  def storage(router) do
+    {:ok, storage} = Router.start_engine(router, Storage, raw_storage())
+    storage
+  end
+
+  def ordering(router, storage) do
+    {:ok, ordering} = Router.start_engine(router, Ordering, table: storage)
+    ordering
+  end
+
+  def env(ordering) do
+    %Nock{snapshot_path: Enock.snapshot_path(), ordering: ordering}
+  end
+
+  def network() do
+    router = router()
+    storage = storage(router)
+    %Node{router: router, ordering: ordering(router, storage), storage: storage}
+  end
+
+  # Let's get an unique number
+  defmemo unique_id() do
+    System.unique_integer([:positive])
+  end
+
+  def successfully_fire_trans() do
+    net = network()
+    env = env(net.ordering)
+    spawn = Task.async(Worker, :run, [id, {:rm, space_trans_candidate()}, env])
+    Ordering.new_order(net.ordering, [Order.new(0, id, spawn.pid)])
+
+    send(spawn.pid, {:write_ready, 0})
+    assert :ok == Task.await(spawn)
+    net
+  end
+end
+```
+
+In Phase2 we abstracted out some examples, so that they are no longer standalone examples.
+
+Sadly `storage`, `router`, `env` and `ordering` are no longer examples, but are generator functions for the data we care about. (maybe we can restore this somehow!)
+
+However, notice that the return of `sucessfully_fire_trans/0`, now returns the network!
+
+This means that if we wanted, we can use this environment for further tests. Such as making sure nullifiers don't insert twice
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+def failed_trans() do
+  net = succesfully_fire_trans()
+  env = env(net.ordering)
+  spawn = Task.async(Worker, :run, [id, {:rm, space_trans_candidate()}, env])
+  Ordering.new_order(net.ordering, [Order.new(0, id, spawn.pid)])
+  assert :error == Task.await(spawn)
+  for nullifier <- space_trans_candidate().nullifiers do
+    assert in_nullifer_set(env, nullifier)
+  end
+  net
+end
+```
+
+Besides reuse we get the following advantages in `Phase2`:
+
+1. If we had visualization tooling, we can take the result of `successfully_fire_trans/0` and view all the views of the data. Meaning that if we made tooling that charts simulated latency, connected node graphs, successful and failed transactions, we would be able to chart them all and visually see the difference between this one and `failed_trans/0`.
+2. We can inspect the state of the network querying for new facts we did not know about before. And consider if any facts are interesting enough to assert that the property holds in the particular example.
+
+<!-- livebook:{"branch_parent_index":4} -->
+
+## Temporary Setbacks
+
+One small annoyance, is that in order to run the tests, we have to currently by hand put the examples in a test file to make sure they are ran.
+
+This can be offset by a macro that scrapes the examples modules and automatically registers the tests. So this is not a hard issue for the `example` style.
+
+## Addressing testing issues
+
+Now that we have a concrete idea of what `examples` look like, let us see how they fix our problems with tests:
+
+1. Tests are not loaded into `IEx` at startup.
+   * They are in the lib folder, they are loaded!
+2. To run tests by hand, we need to copy paste:
+   * No copy and pasting required, we can pry and avoid copy and paste!
+3. Tests can't be abstracted in the test module without breaking copy and pasting.
+   * We can abstract as much as we want
+4. Tests can't have dialyzer run over them.
+   * We can run dialyzer and even type our examples!
+5. `IEx` does not re-run tests on demand, one has to recompile the test after already running the tests
+   * We can re-run the example whenever we want
+6. [LSP](https://en.wikipedia.org/wiki/Language_Server_Protocol) seems to not be able to calculate references of values to tests due to them not being compiled.
+   * LSP should work as it's compiled like everything else.
+
+## Outstanding questions
+
+The most straight forward strategy would be:
+
+1. Take each test module and convert it to tests.
+2. Once most of the modules are done, convert all stateful tests into `phase2`.
+
+However there are open questions:
+
+1. How slow is node setup? Will `phase2` make tests run longer than 2 seconds (unacceptable)?
+2. How long until we have a macro that auto registers the examples so they can be ran with `mix test`?
+3. How will our usage of `examples` evolve over time?
+4. How to deal with tests that make socket files then deletes them after all is done? Will Phase2 make this question obsolete?
+5. Can the process be improved? [One of the Authors of GT has a paper about converting `JUnit` to `JExample`. This can probably inform our own transition and ideas on creating examples](https://scg.unibe.ch/archive/masters/Haen09a.pdf)
