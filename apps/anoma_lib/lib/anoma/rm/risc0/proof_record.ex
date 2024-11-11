@@ -47,6 +47,7 @@ defmodule Anoma.RM.Risc0.ProofRecord do
       "deps",
       "risc0",
       "native",
+      "examples",
       "compliance-circuit",
       "target",
       "riscv-guest",
@@ -55,15 +56,16 @@ defmodule Anoma.RM.Risc0.ProofRecord do
       "compliance_guest"
     ])
 
+
     IO.puts("File exists?: #{File.exists?(guest_path)}")
 
     with {:ok, compliance_guest_elf} <- File.read(guest_path) do
       compliance_circuit = Risc0.generate_compliance_circuit(
         input_resource |> Resource.to_bytes(),
         output_resource |> Resource.to_bytes(),
-        rcv,
+        rcv |> :binary.bin_to_list(),
         merkle_path,
-        nsk
+        nsk |> :binary.bin_to_list()
       )
       receipt = Risc0.prove(compliance_circuit, compliance_guest_elf |> :binary.bin_to_list())
 

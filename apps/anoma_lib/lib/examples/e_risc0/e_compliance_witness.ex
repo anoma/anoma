@@ -13,9 +13,9 @@ defmodule Examples.ERisc0.EComplianceWitness do
       %ComplianceWitness{
         input_resource: EResource.a_resource(nsk: nsk),
         output_resource: EResource.a_resource(nsk: nsk),
-        rcv: rcv,
+        rcv: rcv |> :binary.list_to_bin(),
         merkle_path: merkle_path,
-        nsk: nsk,
+        nsk: nsk |> :binary.list_to_bin(),
       }
 
     IO.puts("Compliance witness: #{inspect(compliance_witness)}")

@@ -5,7 +5,7 @@
    ref: "dd2ed877e8d7c326a4a88dcf86ae32cd0183f3ae"},
   {:risc0,
    git: "https://github.com/anoma/aarm-risc0",
-   ref: "ed3cff542dee61707b3156ddbf39808ac107b4bb"},
+   ref: "cb284a05eebe542a2e5e6511c4053cf750eb474d"},
   #  path: "/Users/albertocentelles/Dropbox/heliax/aarm-risc0"},
   {:enacl,
    git: "https://github.com/anoma/enacl/",

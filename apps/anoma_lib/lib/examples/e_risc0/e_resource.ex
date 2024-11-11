@@ -1,5 +1,4 @@
 defmodule Examples.ERisc0.EResource do
-  alias Anoma.RM.Risc0.Constants
   alias Anoma.RM.Risc0.Resource
 
   @spec a_npk() :: binary()
