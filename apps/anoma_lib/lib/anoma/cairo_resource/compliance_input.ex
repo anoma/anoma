@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource.ComplianceInput do
+defmodule Anoma.CairoResource.ComplianceInput do
   @moduledoc """
   I represent a compliance's input.
   """
