@@ -1,0 +1,117 @@
+module trivial_resource_logic;
+
+import Stdlib.Prelude open;
+import Stdlib.Cairo.Ec as Ec;
+import Stdlib.Cairo.Poseidon open;
+import Stdlib.Cairo.Pedersen open;
+
+type Resource :=
+  mkResource {
+    logic : Field;
+    label : Field;
+    quantity : Field;
+    data : Field;
+    eph : Bool;
+    nonce : Field;
+    npk : Field;
+    rseed : Field
+  };
+
+type LogicResult :=
+  mkResult {
+    -- nullifier of input resource or commitment of output resource
+    self_resource_id : Field;
+    -- The merkle root of resources
+    root : Field;
+  };
+
+check_merkle (current_root : Field) : Pair Field Bool -> Field
+  | (node, is_left) :=
+    let
+      pair :=
+        if
+          | is_left := node, current_root
+          | else := current_root, node;
+
+    in case pair of lhs, rhs := poseidonHash2 lhs rhs;
+
+--- Check the merkle tree path validity and return the root
+check_merkle_path
+  (cur : Field) : List (Pair Field Bool) -> Field
+  | [] := cur
+  | (p :: ps) := check_merkle_path (check_merkle cur p) ps;
+
+main
+  (self_resource : Resource)
+  (resource_nf_key : Field)
+  (merkle_path : List (Pair Field Bool))
+  : LogicResult :=
+
+  -- Check the self_resource resource commitment:
+  let
+    generated_npk : Field := poseidonHash2 resource_nf_key 0;
+
+    is_output_resource := case merkle_path of
+    -- merkle_path can not be empty
+       | nil := true
+       | (_, is_left) :: t := is_left;
+
+    -- Actual npk
+    actual_npk :=
+      if
+        | is_output_resource := Resource.npk self_resource
+        | else := generated_npk;
+
+    -- check outside of circuit: assert resource_npk == (Resource.npk self_resource)
+
+    -- PRF_EXPAND_PERSONALIZATION_FELT is from cairo_prover/src/lib.rs/PRF_EXPAND_PERSONALIZATION_FELT
+    PRF_EXPAND_PERSONALIZATION_FELT :=
+      89564067232354163924078705540990330212;
+    resource_psi :=
+      poseidonHashList
+        [ PRF_EXPAND_PERSONALIZATION_FELT
+        ; 0
+        ; Resource.rseed self_resource
+        ; Resource.nonce self_resource
+        ];
+    resource_rcm :=
+      poseidonHashList
+        [ PRF_EXPAND_PERSONALIZATION_FELT
+        ; 1
+        ; Resource.rseed self_resource
+        ; Resource.nonce self_resource
+        ];
+
+    resource_eph_field : Field :=
+      if
+        | Resource.eph self_resource := 1
+        | else := 0;
+    resource_cm :=
+      poseidonHashList
+        [ Resource.logic self_resource
+        ; Resource.label self_resource
+        ; Resource.data self_resource
+        ; actual_npk
+        ; Resource.nonce self_resource
+        ; resource_psi
+        ; Resource.quantity self_resource
+        ; resource_eph_field
+        ; resource_rcm
+        ];
+
+    -- Generate the nullifier of self_resource resource
+    resource_nullifier_ :=
+      poseidonHashList
+        [actual_npk; Resource.nonce self_resource; resource_psi; resource_cm];
+
+    self_resource_id_ :=
+      if
+        | is_output_resource := resource_cm
+        | else := resource_nullifier_;
+
+    root_ := check_merkle_path self_resource_id_ merkle_path
+
+  in mkResult@{
+    self_resource_id := self_resource_id_;
+    root := root_;
+  };
