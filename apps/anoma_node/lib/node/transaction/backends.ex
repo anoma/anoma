@@ -424,10 +424,14 @@ defmodule Anoma.Node.Transaction.Backends do
          true <- root_existence_check(tx, node_id, id),
          # No need to check the commitment existence
          true <- nullifier_existence_check(tx, node_id, id) do
-      ct =
+      {ct, append_roots} =
         case Ordering.read(node_id, {id, :ct}) do
-          :absent -> CTransaction.cm_tree()
-          val -> val
+          :absent ->
+            {CTransaction.cm_tree(),
+             MapSet.new([Anoma.Constants.default_cairo_rm_root()])}
+
+          val ->
+            {val, MapSet.new()}
         end
 
       {ct_new, anchor} =
@@ -440,8 +444,7 @@ defmodule Anoma.Node.Transaction.Backends do
            append: [
              {:nullifiers, MapSet.new(tx.nullifiers)},
              {:commitments, MapSet.new(tx.commitments)},
-             {:roots,
-              MapSet.new([anchor, Anoma.Constants.default_cairo_rm_root()])}
+             {:roots, MapSet.put(append_roots, anchor)}
            ],
            write: [{:anchor, anchor}, {:ct, ct_new}]
          }}
