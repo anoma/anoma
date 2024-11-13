@@ -473,7 +473,7 @@ defmodule Anoma.Node.Examples.ETransaction do
     start_tx_module(node_id)
     {_backend, code} = zero(key)
 
-    Executor.launch(node_id, {{:read_only, self()}, code}, node_id)
+    Executor.launch(node_id, {{:read_only, self()}, code})
 
     assert_receive({0, [[^key | 0] | 0]}, 5000)
 
@@ -491,7 +491,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     zero_counter_submit(node_id)
 
-    Executor.launch(node_id, {{:read_only, self()}, code}, node_id)
+    Executor.launch(node_id, {{:read_only, self()}, code})
 
     assert_receive({1, [[^key | 1] | 0]}, 5000)
 
@@ -507,7 +507,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     inc_counter_submit_with_zero(node_id)
 
-    Executor.launch(node_id, {{:read_only, self()}, code}, node_id)
+    Executor.launch(node_id, {{:read_only, self()}, code})
 
     assert_receive({2, [[^key | 2] | 0]}, 5000)
 
