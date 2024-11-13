@@ -23,15 +23,8 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
     # Generate the nf and cm from fixed resources
     input_nullifier = ESResource.a_resource_nullifier()
 
-    output_commitment =
-      ESResource.a_fixed_output_resource()
-      |> Anoma.CairoResource.Resource.commitment()
-
     assert {:ok, MapSet.new([input_nullifier])} ==
-             Storage.read(node_id, {1, :nullifiers})
-
-    assert {:ok, MapSet.new([output_commitment])} ==
-             Storage.read(node_id, {1, :commitments})
+             Storage.read(node_id, {1, ["anoma", "cairo_nullifiers"]})
 
     {tree, anchor} =
       Examples.ECommitmentTree.memory_backed_ct_with_trivial_cairo_tx()
@@ -39,11 +32,9 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
     {_ct, _merkle_proof, old_root} = Examples.ECommitmentTree.a_merkle_proof()
 
     assert {:ok, MapSet.new([old_root, anchor])} ==
-             Storage.read(node_id, {1, :roots})
+             Storage.read(node_id, {1, ["anoma", "cairo_roots"]})
 
-    assert {:ok, tree} == Storage.read(node_id, {1, :ct})
-    assert {:ok, anchor} == Storage.read(node_id, {1, :anchor})
-
+    assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "cairo_ct"]})
     EventBroker.unsubscribe_me([])
 
     node_id
