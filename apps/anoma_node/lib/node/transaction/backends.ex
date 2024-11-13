@@ -416,8 +416,12 @@ defmodule Anoma.Node.Transaction.Backends do
             {val, MapSet.new()}
         end
 
+      commitments = tx.commitments
+
       {ct_new, anchor} =
-        CommitmentTree.add(ct, tx.commitments)
+        CommitmentTree.add(ct, commitments)
+
+      new_indices = new_indices(node_id, id, commitments)
 
       Ordering.add(
         node_id,
@@ -425,7 +429,9 @@ defmodule Anoma.Node.Transaction.Backends do
          %{
            append: [
              {anoma_keyspace("cairo_nullifiers"), MapSet.new(tx.nullifiers)},
-             {anoma_keyspace("cairo_roots"), MapSet.put(append_roots, anchor)}
+             {anoma_keyspace("cairo_roots"),
+              MapSet.put(append_roots, anchor)},
+             {anoma_keyspace("cairo_indices"), new_indices}
            ],
            write: [{anoma_keyspace("cairo_ct"), ct_new}]
          }}
@@ -480,5 +486,19 @@ defmodule Anoma.Node.Transaction.Backends do
 
     Enum.all?(transaction.roots, &MapSet.member?(stored_roots, &1)) or
       {:error, "A submitted root dose not exist in storage"}
+  end
+
+  @spec new_indices(String.t(), binary, list(binary)) ::
+          MapSet.t({binary(), non_neg_integer()})
+  defp new_indices(node_id, id, commitments) do
+    next_index =
+      case Ordering.read(node_id, {id, anoma_keyspace("cairo_indices")}) do
+        :absent -> 0
+        val -> MapSet.size(val)
+      end
+
+    commitments
+    |> Enum.with_index(next_index)
+    |> MapSet.new()
   end
 end
