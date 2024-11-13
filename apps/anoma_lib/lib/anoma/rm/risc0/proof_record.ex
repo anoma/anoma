@@ -77,4 +77,16 @@ defmodule Anoma.RM.Risc0.ProofRecord do
       _ -> :error
     end
   end
+
+  @spec generate_risc0_proof(binary(), binary()) :: {:ok, t()} | :error
+  def generate_risc0_proof(witness, elf) do
+    receipt = Risc0.prove(witness |> :binary.bin_to_list(), elf |> :binary.bin_to_list())
+
+    {:ok, %ProofRecord{proof: receipt |> :binary.list_to_bin()}}
+  end
+
+  @spec verify(t(), binary()) :: boolean()
+  def verify(%ProofRecord{proof: proof}, guest_id) do
+    Risc0.verify(proof |> :binary.bin_to_list(), guest_id)
+  end
 end

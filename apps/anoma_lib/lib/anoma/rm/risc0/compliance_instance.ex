@@ -1,4 +1,4 @@
-defmodule Anoma.RM.Shielded.ComplianceInstance do
+defmodule Anoma.RM.Risc0.ComplianceInstance do
   @moduledoc """
   I represent the resource's public inputs.
   """
@@ -24,7 +24,7 @@ defmodule Anoma.RM.Shielded.ComplianceInstance do
   Anoma.RM.Risc0.ComplianceInstance.t()
   def from_proof(proof) do
   ## call cairo api to get output bytes
-  [input_nf, output_cm, root, input_logic, output_logic, merkle_root, delta] =
+  [input_nf, output_cm, input_logic, output_logic, merkle_root, delta] =
   proof |> :binary.bin_to_list() |> Risc0.get_compliance_instance()
 
     %Anoma.RM.Risc0.ComplianceInstance{
