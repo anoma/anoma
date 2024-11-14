@@ -53,8 +53,16 @@ defmodule Anoma.Node.Transaction.Executor do
   #                      Public RPC API                      #
   ############################################################
 
+  @doc """
+  I am the Executor launch function.
+
+  Given a transaction in {backend, code} format with specific ID,
+  I launch that transaction as a task. If no ID is provided, I generate one
+  randomly.
+  """
+
   @spec launch(String.t(), {Backends.backend(), Noun.t()}, binary()) :: :ok
-  def launch(node_id, tw_w_backend, id) do
+  def launch(node_id, tw_w_backend, id \\ :crypto.strong_rand_bytes(16)) do
     GenServer.cast(
       Registry.via(node_id, __MODULE__),
       {:launch, tw_w_backend, id}
