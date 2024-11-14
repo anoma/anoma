@@ -45,85 +45,92 @@ defmodule Anoma.CairoResource.PartialTransaction do
 
   @spec verify(t()) :: boolean()
   def verify(partial_transaction) do
-    all_logic_proofs_valid =
-      for proof_record <- partial_transaction.logic_proofs,
-          reduce: true do
-        acc ->
-          result =
-            proof_record.proof
-            |> :binary.bin_to_list()
-            |> Cairo.verify(
-              proof_record.public_inputs
-              |> :binary.bin_to_list()
-            )
+    with true <- verify_proofs(partial_transaction.logic_proofs),
+         true <-
+           verify_proofs(
+             partial_transaction.compliance_proofs,
+             "compliance result"
+           ),
+         true <- verify_compliance_hash(partial_transaction.compliance_proofs) do
+      # Decode logic_outputs from resource logics
+      logic_outputs =
+        partial_transaction.logic_proofs
+        |> Enum.map(fn proof_record ->
+          proof_record.public_inputs
+          |> LogicOutput.from_public_input()
+        end)
 
-          acc && result
-      end
+      # Decode complaince_outputs from compliance_proofs
+      complaince_outputs =
+        partial_transaction.compliance_proofs
+        |> Enum.map(fn proof_record ->
+          proof_record.public_inputs
+          |> ComplianceOutput.from_public_input()
+        end)
 
-    all_compliance_proofs_valid =
-      for proof_record <- partial_transaction.compliance_proofs,
-          reduce: true do
-        acc ->
-          result =
-            proof_record.proof
-            |> :binary.bin_to_list()
-            |> Cairo.verify(
-              proof_record.public_inputs
-              |> :binary.bin_to_list()
-            )
+      # Get self ids from logic_outputs
+      self_ids = Enum.map(logic_outputs, & &1.self_resource_id)
 
-          compliance_hash_valid =
-            ProofRecord.get_cairo_program_hash(proof_record) ==
-              Constants.cairo_compliance_program_hash()
+      # Get cms and nfs from compliance_proofs
+      resource_tree_leaves =
+        complaince_outputs
+        |> Enum.flat_map(fn output -> [output.nullifier, output.output_cm] end)
 
-          Logger.debug("compliance result: #{inspect(result)}")
-          acc && result && compliance_hash_valid
-      end
+      # check self resource are all involved
+      all_resource_valid = self_ids == resource_tree_leaves
 
-    # Decode logic_outputs from resource logics
-    logic_outputs =
-      partial_transaction.logic_proofs
-      |> Enum.map(fn proof_record ->
-        proof_record.public_inputs
-        |> LogicOutput.from_public_input()
-      end)
+      # Compute the expected resource tree
+      rt =
+        Tree.construct(
+          CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
+          resource_tree_leaves
+        )
 
-    # Decode complaince_outputs from compliance_proofs
-    complaince_outputs =
-      partial_transaction.compliance_proofs
-      |> Enum.map(fn proof_record ->
-        proof_record.public_inputs
-        |> ComplianceOutput.from_public_input()
-      end)
+      # check roots
+      all_roots_valid =
+        for output <- logic_outputs,
+            reduce: true do
+          acc ->
+            acc && rt.root == output.root
+        end
 
-    # Get self ids from logic_outputs
-    self_ids = Enum.map(logic_outputs, & &1.self_resource_id)
-
-    # Get cms and nfs from compliance_proofs
-    resource_tree_leaves =
-      complaince_outputs
-      |> Enum.flat_map(fn output -> [output.nullifier, output.output_cm] end)
-
-    # check self resource are all involved
-    all_resource_valid = self_ids == resource_tree_leaves
-
-    # Compute the expected resource tree
-    rt =
-      Tree.construct(
-        CommitmentTree.Spec.cairo_poseidon_resource_tree_spec(),
-        resource_tree_leaves
-      )
-
-    # check roots
-    all_roots_valid =
-      for output <- logic_outputs,
-          reduce: true do
-        acc ->
-          acc && rt.root == output.root
-      end
-
-    all_logic_proofs_valid && all_compliance_proofs_valid &&
       all_resource_valid && all_roots_valid
+    else
+      _ -> false
+    end
+  end
+
+  @spec verify_proofs(list(ProofRecord.t()), binary() | nil) :: boolean()
+  defp verify_proofs(proofs, debug_msg \\ nil) do
+    Enum.reduce_while(proofs, true, fn proof_record, _acc ->
+      public_inputs =
+        proof_record.public_inputs
+        |> :binary.bin_to_list()
+
+      res =
+        proof_record.proof
+        |> :binary.bin_to_list()
+        |> Cairo.verify(public_inputs)
+
+      if debug_msg do
+        Logger.debug("#{debug_msg}: #{inspect(res)}")
+      end
+
+      case res do
+        true -> {:cont, true}
+        false -> {:halt, false}
+        {:error, _} -> {:halt, false}
+      end
+    end)
+  end
+
+  @spec verify_compliance_hash(list(ProofRecord.t())) :: boolean()
+  def verify_compliance_hash(compliance_proofs) do
+    compliance_proofs
+    |> Enum.all?(
+      &(ProofRecord.get_cairo_program_hash(&1) ==
+          Constants.cairo_compliance_program_hash())
+    )
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
