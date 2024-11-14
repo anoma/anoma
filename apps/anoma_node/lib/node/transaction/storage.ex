@@ -73,7 +73,8 @@ defmodule Anoma.Node.Transaction.Storage do
   I am a type of writing options.
   """
   @type write_opts() :: :append | :write | :add
-  @typep startup_options() :: {:node_id, String.t()}
+  @typep startup_options() ::
+           {:node_id, String.t()} | {:uncommitted_height, non_neg_integer()}
 
   typedstruct enforce: true do
     @typedoc """

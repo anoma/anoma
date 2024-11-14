@@ -50,8 +50,11 @@ defmodule Anoma.Node.Transaction.Mempool do
   I am the type of the transaction result.
   """
   @type tx_result :: {:ok, any()} | :error | :in_progress
-
-  @typep startup_options() :: {:node_id, String.t()}
+  @typep startup_options() ::
+           {:node_id, String.t()}
+           | {:transactions, list({binary, {Backends.backend(), Noun.t()}})}
+           | {:consensus, list(list(binary))}
+           | {:round, non_neg_integer()}
 
   typedstruct module: Tx do
     @typedoc """
@@ -453,7 +456,7 @@ defmodule Anoma.Node.Transaction.Mempool do
     EventBroker.event(consensus_event)
   end
 
-  @spec process_execution(t(), [{:ok | :error, binary()}]) ::
+  @spec process_execution(t(), [{{:ok, any()} | :error, binary()}]) ::
           {[Mempool.Tx.t()], %{binary() => Mempool.Tx.t()}}
   defp process_execution(state, execution_list) do
     for {tx_res, id} <- execution_list, reduce: {[], state.transactions} do

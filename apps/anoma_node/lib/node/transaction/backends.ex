@@ -45,7 +45,7 @@ defmodule Anoma.Node.Transaction.Backends do
     - `:tx_result`          - VM execution result; either :error or an
                               {:ok, noun} tuple.
     """
-    field(:tx_id, integer())
+    field(:tx_id, binary())
     field(:vm_result, {:ok, Noun.t()} | :error)
   end
 
@@ -59,7 +59,7 @@ defmodule Anoma.Node.Transaction.Backends do
     - `:tx_result`          - Execution result; either :error or an
                               {:ok, value} tuple.
     """
-    field(:tx_id, integer())
+    field(:tx_id, binary())
     field(:tx_result, {:ok, any()} | :error)
   end
 
