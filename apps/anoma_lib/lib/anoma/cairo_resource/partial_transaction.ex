@@ -10,6 +10,7 @@ defmodule Anoma.CairoResource.PartialTransaction do
   alias __MODULE__
   use TypedStruct
   alias Anoma.CairoResource.{ProofRecord, ComplianceOutput, Tree, LogicOutput}
+  alias Anoma.Constants
 
   typedstruct enforce: true do
     field(:logic_proofs, list(ProofRecord.t()), default: [])
@@ -71,8 +72,12 @@ defmodule Anoma.CairoResource.PartialTransaction do
               |> :binary.bin_to_list()
             )
 
+          compliance_hash_valid =
+            ProofRecord.get_cairo_program_hash(proof_record) ==
+              Constants.cairo_compliance_program_hash()
+
           Logger.debug("compliance result: #{inspect(result)}")
-          acc && result
+          acc && result && compliance_hash_valid
       end
 
     # Decode logic_outputs from resource logics

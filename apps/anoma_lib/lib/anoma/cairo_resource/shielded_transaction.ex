@@ -11,6 +11,7 @@ defmodule Anoma.CairoResource.Transaction do
   use TypedStruct
   alias Anoma.CairoResource.PartialTransaction
   alias Anoma.CairoResource.ComplianceOutput
+  alias Anoma.CairoResource.ProofRecord
   alias Anoma.Node.DummyStorage, as: Storage
 
   typedstruct enforce: true do
@@ -139,12 +140,7 @@ defmodule Anoma.CairoResource.Transaction do
         transaction.partial_transactions
         |> Enum.flat_map(fn ptx ->
           ptx.logic_proofs
-          |> Enum.map(fn proof_record ->
-            proof_record.public_inputs
-            |> :binary.bin_to_list()
-            |> Cairo.get_program_hash()
-            |> :binary.list_to_bin()
-          end)
+          |> Enum.map(&ProofRecord.get_cairo_program_hash/1)
         end)
 
       resource_logic_valid =
