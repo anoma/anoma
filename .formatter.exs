@@ -1,8 +1,17 @@
-# Used by "mix format"
+# files that have to be formatted
+inputs =
+  [
+    "*.{ex,exs}",
+    "{apps,config,lib,test}/**/*.{ex,exs}"
+  ]
+  |> Enum.flat_map(&Path.wildcard(&1, match_dot: true))
+
+# files that cannot be formatted
+rejected =
+  ["**/*.pb.ex"]
+  |> Enum.flat_map(&Path.wildcard(&1, match_dot: true))
+
 [
-  inputs:
-    ["*.{ex,exs}", "{apps,config,lib,test}/**/*.{ex,exs}"]
-    |> Enum.flat_map(&Path.wildcard(&1, match_dot: true))
-    |> Enum.reject(&(&1 =~ ~r/^.*.pb.ex/)),
+  inputs: inputs -- rejected,
   line_length: 78
 ]
