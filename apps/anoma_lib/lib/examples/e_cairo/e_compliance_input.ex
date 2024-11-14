@@ -13,9 +13,9 @@ defmodule Examples.ECairo.EComplianceInput do
 
     compliance_input =
       %ComplianceInput{
-        input_resource: EResource.a_resource(),
+        input_resource: EResource.a_fixed_resource(),
         merkel_proof: merkle_proof,
-        output_resource: EResource.a_output_resource(),
+        output_resource: EResource.a_fixed_output_resource(),
         input_nf_key: input_nf_key,
         eph_root: eph_root,
         rcv: rcv
