@@ -1,0 +1,14 @@
+{
+    "self_resource": {
+        "logic" : "0x373bb1d37414c2edf111cf2f9f076517da99d38e44cdd716ca2ad00a07731e5",
+        "label" : "0x0",
+        "quantity" : "0x5",
+        "data" : "0x0",
+        "eph" : false,
+        "nonce" : "0x699702ee181e6ed852a527a51878a5c6b425ed3cf36d45ba5d6f22496fe85fb",
+        "npk" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
+        "rseed" : "0x0"
+    },
+    "resource_nf_key": "0x1",
+    "merkle_path": [{"fst": "0x699702ee181e6ed852a527a51878a5c6b425ed3cf36d45ba5d6f22496fe85fb", "snd": true}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}]
+  }

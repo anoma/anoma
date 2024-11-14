@@ -1,16 +1,16 @@
-defmodule Anoma.ShieldedResource.ComplianceOutput do
+defmodule Anoma.CairoResource.ComplianceInstance do
   @moduledoc """
-  I represent a resource's output.
+  I represent the resource's public inputs.
   """
 
   use TypedStruct
 
   typedstruct enforce: true do
-    # Nullifier
+    # Input resource nullifier
     field(:nullifier, binary(), default: <<0::256>>)
-    # Output output commitment
+    # Output resource commitment
     field(:output_cm, binary(), default: <<0::256>>)
-    # Resource commitment Merkle tree root
+    # Merkle tree root of input resouce
     field(:root, binary(), default: <<0::256>>)
     # Resource delta
     field(:delta_x, binary(), default: <<0::256>>)
@@ -21,14 +21,13 @@ defmodule Anoma.ShieldedResource.ComplianceOutput do
     field(:output_logic, binary(), default: <<0::256>>)
   end
 
-  @spec from_public_input(binary()) ::
-          Anoma.ShieldedResource.ComplianceOutput.t()
+  @spec from_public_input(binary()) :: t()
   def from_public_input(public_input) do
     ## call cairo api to get output bytes
     [nullifier, output_cm, root, delta_x, delta_y, input_logic, output_logic] =
       public_input |> :binary.bin_to_list() |> Cairo.get_output()
 
-    %Anoma.ShieldedResource.ComplianceOutput{
+    %__MODULE__{
       nullifier: nullifier |> :binary.list_to_bin(),
       output_cm: output_cm |> :binary.list_to_bin(),
       root: root |> :binary.list_to_bin(),

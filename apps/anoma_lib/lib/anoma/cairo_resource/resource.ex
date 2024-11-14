@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource do
+defmodule Anoma.CairoResource.Resource do
   @moduledoc """
   I am a shielded resource.
   """
@@ -23,29 +23,29 @@ defmodule Anoma.ShieldedResource do
     field(:eph, bool(), default: false)
     # resource nonce
     field(:nonce, binary(), default: <<0::256>>)
-    # nullifier public key
-    field(:npk, binary(), default: <<0::256>>)
+    # commitment to nullifier key
+    field(:nk_commitment, binary(), default: <<0::256>>)
     # random seed
     field(:rseed, binary(), default: <<0::256>>)
   end
 
   @doc "Randomizes the rseed of a resource."
-  def random(r = %ShieldedResource{}) do
+  def random(r = %Resource{}) do
     rseed = :crypto.strong_rand_bytes(32)
-    %ShieldedResource{r | rseed: rseed}
+    %Resource{r | rseed: rseed}
   end
 
   @doc """
   Set the nonce of a resource, the nonce of output resource comes from the
   nullifer of input recource in the compliance proof.
   """
-  def set_nonce(r = %ShieldedResource{}, nonce) do
-    %ShieldedResource{r | nonce: nonce}
+  def set_nonce(r = %Resource{}, nonce) do
+    %Resource{r | nonce: nonce}
   end
 
-  @spec commitment(ShieldedResource.t()) :: binary()
+  @spec commitment(Resource.t()) :: binary()
   @doc "A commitment to the given resource."
-  def commitment(resource = %ShieldedResource{}) do
+  def commitment(resource = %Resource{}) do
     # TODO: consider if we can get rid of the psi from commitment
     psi =
       [
@@ -80,7 +80,7 @@ defmodule Anoma.ShieldedResource do
       resource.logic,
       resource.label,
       resource.data,
-      resource.npk,
+      resource.nk_commitment,
       resource.nonce,
       psi,
       resource.quantity,
@@ -92,11 +92,11 @@ defmodule Anoma.ShieldedResource do
     |> :binary.list_to_bin()
   end
 
-  @spec nullifier(ShieldedResource.t()) :: binary()
+  @spec nullifier(Resource.t()) :: binary()
   @doc """
   The nullifier of the given resource.
   """
-  def nullifier(resource = %ShieldedResource{}) do
+  def nullifier(resource = %Resource{}) do
     psi =
       [
         Constants.prf_expand_personalization_felt(),
@@ -108,20 +108,20 @@ defmodule Anoma.ShieldedResource do
       |> Cairo.poseidon_many()
       |> :binary.list_to_bin()
 
-    [resource.npk, resource.nonce, psi, commitment(resource)]
+    [resource.nk_commitment, resource.nonce, psi, commitment(resource)]
     |> Enum.map(&:binary.bin_to_list/1)
     |> Cairo.poseidon_many()
     |> :binary.list_to_bin()
   end
 
-  @spec to_bytes(Anoma.ShieldedResource.t()) :: [byte()]
-  def to_bytes(resource = %ShieldedResource{}) do
+  @spec to_bytes(t()) :: [byte()]
+  def to_bytes(resource = %Resource{}) do
     binaries =
       resource.logic <>
         resource.label <>
         resource.quantity <>
         resource.data <>
-        resource.nonce <> resource.npk <> resource.rseed
+        resource.nonce <> resource.nk_commitment <> resource.rseed
 
     binaries =
       if resource.eph do
@@ -133,11 +133,11 @@ defmodule Anoma.ShieldedResource do
     binaries |> :binary.bin_to_list()
   end
 
-  @spec get_npk(binary()) :: binary()
+  @spec get_nk_commitment(binary()) :: binary()
   @doc """
-  Generate the nullifier public key from the nulliffier (private)key.
+  Generate the nullifier key commitment from the nulliffier key.
   """
-  def get_npk(nk) do
+  def get_nk_commitment(nk) do
     Cairo.poseidon(
       nk |> :binary.bin_to_list(),
       Constants.felt_zero() |> :binary.bin_to_list()

@@ -1,0 +1,247 @@
+module trivial_resource_logic;
+
+import Stdlib.Prelude open;
+import Stdlib.Cairo.Ec as Ec;
+import Stdlib.Cairo.Poseidon open;
+import Stdlib.Cairo.Pedersen open;
+
+type Resource :=
+  mkResource {
+    logic : Field;
+    label : Field;
+    quantity : Field;
+    data : Field;
+    eph : Bool;
+    nonce : Field;
+    npk : Field;
+    rseed : Field
+  };
+
+type LogicResult :=
+  mkResult {
+    -- nullifier of input resource or commitment of output resource
+    self_resource_id : Field;
+    -- The merkle root of resources
+    root : Field;
+    cipher_text_elem0 : Field;
+      cipher_text_elem1 : Field;
+      cipher_text_elem2 : Field;
+      cipher_text_elem3 : Field;
+      cipher_text_elem4 : Field;
+      cipher_text_elem5 : Field;
+      cipher_text_elem6 : Field;
+      cipher_text_elem7 : Field;
+      cipher_text_elem8 : Field;
+      cipher_text_elem9 : Field;
+      mac : Field;
+      pk_x : Field;
+      pk_y : Field;
+      nonce : Field;
+        };
+
+check_merkle (current_root : Field) : Pair Field Bool -> Field
+  | (node, is_left) :=
+    let
+      pair :=
+        if
+          | is_left := node, current_root
+          | else := current_root, node;
+
+    in case pair of lhs, rhs := poseidonHash2 lhs rhs;
+
+--- Check the merkle tree path validity and return the root
+check_merkle_path
+  (cur : Field) : List (Pair Field Bool) -> Field
+  | [] := cur
+  | (p :: ps) := check_merkle_path (check_merkle cur p) ps;
+
+type EncryptionResult :=
+  mkEncryptionResult@{
+    cipher_text_elem0 : Field;
+    cipher_text_elem1 : Field;
+    cipher_text_elem2 : Field;
+    cipher_text_elem3 : Field;
+    cipher_text_elem4 : Field;
+    cipher_text_elem5 : Field;
+    cipher_text_elem6 : Field;
+    cipher_text_elem7 : Field;
+    cipher_text_elem8 : Field;
+    cipher_text_elem9 : Field;
+    mac : Field;
+    sender_pk_x : Field;
+    sender_pk_y : Field;
+    nonce : Field
+  };
+
+type Cipher :=
+  mkCipher@{
+    cipher_text : List Field;
+    cur_state : Field
+  };
+
+update_poseidon_state (cur_msg secret_key_x : Field) (cipher : Cipher) : Cipher :=
+  let
+    new_state := Cipher.cur_state cipher + cur_msg;
+    new_text := new_state :: Cipher.cipher_text cipher;
+  in mkCipher@{
+    cipher_text := new_text;
+    cur_state := poseidonHash2 new_state secret_key_x
+  };
+
+generate_cipher (poseidon_state : Field) (secret_key_x : Field) (plaintext : List Field) : Cipher :=
+  let
+    go (cipher : Cipher) : List Field -> Cipher
+      | [] := cipher@Cipher{cipher_text := reverse (Cipher.cipher_text cipher)}
+      | (m :: ms) := go (update_poseidon_state m secret_key_x cipher) ms;
+  in go
+    mkCipher@{
+      cipher_text := [];
+      cur_state := poseidon_state
+    }
+    plaintext;
+
+encryption
+  (messages : List Field)
+  (pk_x : Field)
+  (pk_y : Field)
+  (sk : Field)
+  (nonce : Field)
+  : EncryptionResult :=
+
+  let
+    -- Generate encryption key
+    pk := Ec.mkPoint pk_x pk_y;
+    secret_key := Ec.mul sk pk;
+
+    -- PLAINTEXT_NUM := 10;
+
+    -- TODO: Pad the messages here or outside of the circuit?
+    plaintext := messages;
+
+    -- Init poseidon state
+    secret_key_x := Ec.Point.x secret_key;
+    poseidon_state := poseidonHashList [secret_key_x; Ec.Point.y secret_key; nonce; 10];
+
+    -- Generate cipher
+    final_cipher := generate_cipher poseidon_state secret_key_x plaintext;
+
+    -- Get MAC
+    mac := Cipher.cur_state final_cipher;
+
+    -- Generate sender's pk
+    generator := Ec.mkPoint Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y;
+    sender_pk := Ec.mul sk generator;
+
+  in case Cipher.cipher_text final_cipher of
+       | [elem0; elem1; elem2; elem3; elem4; elem5; elem6; elem7; elem8; elem9] :=
+         mkEncryptionResult@{
+           cipher_text_elem0 := elem0;
+           cipher_text_elem1 := elem1;
+           cipher_text_elem2 := elem2;
+           cipher_text_elem3 := elem3;
+           cipher_text_elem4 := elem4;
+           cipher_text_elem5 := elem5;
+           cipher_text_elem6 := elem6;
+           cipher_text_elem7 := elem7;
+           cipher_text_elem8 := elem8;
+           cipher_text_elem9 := elem9;
+           mac;
+           sender_pk_x := Ec.Point.x sender_pk;
+           sender_pk_y := Ec.Point.y sender_pk;
+           nonce
+         }
+       | _ := mkEncryptionResult 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+
+main
+  (self_resource : Resource)
+  (resource_nf_key : Field)
+  (merkle_path : List (Pair Field Bool))
+  : LogicResult :=
+
+  -- Check the self_resource resource commitment:
+  let
+    generated_npk : Field := poseidonHash2 resource_nf_key 0;
+
+    is_output_resource := case merkle_path of
+    -- merkle_path can not be empty
+       | nil := true
+       | (_, is_left) :: t := is_left;
+
+    -- Actual npk
+    actual_npk :=
+      if
+        | is_output_resource := Resource.npk self_resource
+        | else := generated_npk;
+
+    -- check outside of circuit: assert resource_npk == (Resource.npk self_resource)
+
+    -- PRF_EXPAND_PERSONALIZATION_FELT is from cairo_prover/src/lib.rs/PRF_EXPAND_PERSONALIZATION_FELT
+    PRF_EXPAND_PERSONALIZATION_FELT :=
+      89564067232354163924078705540990330212;
+    resource_psi :=
+      poseidonHashList
+        [ PRF_EXPAND_PERSONALIZATION_FELT
+        ; 0
+        ; Resource.rseed self_resource
+        ; Resource.nonce self_resource
+        ];
+    resource_rcm :=
+      poseidonHashList
+        [ PRF_EXPAND_PERSONALIZATION_FELT
+        ; 1
+        ; Resource.rseed self_resource
+        ; Resource.nonce self_resource
+        ];
+
+    resource_eph_field : Field :=
+      if
+        | Resource.eph self_resource := 1
+        | else := 0;
+    resource_cm :=
+      poseidonHashList
+        [ Resource.logic self_resource
+        ; Resource.label self_resource
+        ; Resource.data self_resource
+        ; actual_npk
+        ; Resource.nonce self_resource
+        ; resource_psi
+        ; Resource.quantity self_resource
+        ; resource_eph_field
+        ; resource_rcm
+        ];
+
+    -- Generate the nullifier of self_resource resource
+    resource_nullifier_ :=
+      poseidonHashList
+        [actual_npk; Resource.nonce self_resource; resource_psi; resource_cm];
+
+    self_resource_id_ :=
+      if
+        | is_output_resource := resource_cm
+        | else := resource_nullifier_;
+
+    root_ := check_merkle_path self_resource_id_ merkle_path;
+
+    -- Encryption
+    messages := [Resource.logic self_resource; Resource.label self_resource; Resource.quantity self_resource; Resource.data self_resource ; resource_eph_field ; Resource.nonce self_resource ; Resource.npk self_resource ; Resource.rseed self_resource ; 0 ; 0 ];
+
+    cihper := encryption messages Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
+    -- cihper_ := encryption [Resource.logic self_resource; Resource.label self_resource; Resource.quantity self_resource; Resource.data self_resource; Resource.eph self_resource; Resource.nonce self_resource; Resource.npk self_resource; Resource.rseed self_resource; 0; 0 ] Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
+  in mkResult@{
+    self_resource_id := self_resource_id_;
+    root := root_;
+    cipher_text_elem0 := EncryptionResult.cipher_text_elem0 cihper;
+    cipher_text_elem1 := EncryptionResult.cipher_text_elem1 cihper;
+      cipher_text_elem2 := EncryptionResult.cipher_text_elem2 cihper;
+      cipher_text_elem3 := EncryptionResult.cipher_text_elem3 cihper;
+      cipher_text_elem4 := EncryptionResult.cipher_text_elem4 cihper;
+      cipher_text_elem5 := EncryptionResult.cipher_text_elem5 cihper;
+      cipher_text_elem6 := EncryptionResult.cipher_text_elem6 cihper;
+      cipher_text_elem7 := EncryptionResult.cipher_text_elem7 cihper;
+      cipher_text_elem8 := EncryptionResult.cipher_text_elem8 cihper;
+      cipher_text_elem9 := EncryptionResult.cipher_text_elem9 cihper;
+      mac := EncryptionResult.mac cihper;
+      pk_x := EncryptionResult.sender_pk_x cihper;
+      pk_y := EncryptionResult.sender_pk_y cihper;
+      nonce := EncryptionResult.nonce cihper;
+  };
