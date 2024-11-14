@@ -977,7 +977,7 @@ defmodule Examples.ENock do
   end
 
   @doc """
-  I represent the sum gate call as a 2-argument gate.
+  I represent the cmp gate call as a 2-argument gate.
 
   Can be obtained by defining
 
