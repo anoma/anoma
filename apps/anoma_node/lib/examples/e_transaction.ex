@@ -515,7 +515,7 @@ defmodule Anoma.Node.Examples.ETransaction do
          %Mempool.Tx{
            code: [0 | 0],
            backend: :debug_term_storage,
-           vm_result: :error,
+           vm_result: :vm_error,
            tx_result: :error
          }
        ]}
