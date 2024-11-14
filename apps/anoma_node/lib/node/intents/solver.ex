@@ -112,7 +112,7 @@ defmodule Anoma.Node.Intents.Solver do
   end
 
   @impl true
-  def handle_info(%Event{} = event, state) do
+  def handle_info(event = %Event{}, state) do
     state = handle_event(event, state)
     {:noreply, state}
   end
@@ -126,7 +126,7 @@ defmodule Anoma.Node.Intents.Solver do
   # I am only interested in new intents.
   # """
   @spec handle_event(Event.t(), t()) :: t()
-  defp handle_event(%Event{} = event, state) do
+  defp handle_event(event = %Event{}, state) do
     case event do
       %Event{
         source_module: IntentPool,

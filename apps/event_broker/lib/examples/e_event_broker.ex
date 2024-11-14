@@ -187,7 +187,7 @@ defmodule Examples.EEventBroker do
           acc
         end
     end
-    |> Enum.map(&EventBroker.unsubscribe_me(&1))
+    |> Enum.each(&EventBroker.unsubscribe_me(&1))
 
     assert [[]] ==
              :sys.get_state(Registry).registered_filters

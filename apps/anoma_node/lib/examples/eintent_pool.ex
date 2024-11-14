@@ -53,7 +53,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
     IntentPool.remove_intent(enode.node_id, intent)
 
     # the intent will be removed from the mapset.
-    assert Enum.count(IntentPool.intents(enode.node_id)) == 0
+    assert Enum.empty?(IntentPool.intents(enode.node_id))
 
     enode
   end
