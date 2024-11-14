@@ -32,10 +32,12 @@ defmodule EventBroker.FilterAgent do
     field(:subscribers, MapSet.t(pid()), default: MapSet.new())
   end
 
+  @spec start_link(struct()) :: GenServer.on_start()
   def start_link(filter_params) do
     GenServer.start_link(__MODULE__, filter_params)
   end
 
+  @impl true
   def init(filter_params) do
     {:ok,
      %FilterAgent{
@@ -47,6 +49,7 @@ defmodule EventBroker.FilterAgent do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_call({:subscribe, pid}, _from, state) do
     {:reply, :ok, %{state | subscribers: MapSet.put(state.subscribers, pid)}}
   end
@@ -67,10 +70,12 @@ defmodule EventBroker.FilterAgent do
     {:reply, :ok, state}
   end
 
+  @impl true
   def handle_cast(_msg, state) do
     {:noreply, state}
   end
 
+  @impl true
   def handle_info(event = %EventBroker.Event{}, state) do
     if state.spec.__struct__.filter(event, state.spec) do
       for pid <- state.subscribers do

@@ -8,6 +8,7 @@ defmodule Anoma.Client.Connection.Supervisor do
 
   require Logger
 
+  @spec child_spec([any()]) :: Supervisor.child_spec()
   def child_spec(args) do
     %{
       id: __MODULE__,
@@ -19,6 +20,8 @@ defmodule Anoma.Client.Connection.Supervisor do
   @doc """
   I start_link a new client connection supervision tree.
   """
+
+  @spec start_link(Keyword.t()) :: GenServer.on_start()
   def start_link(args) do
     args = Keyword.validate!(args, [:listen_port, :host, :port, type: :grpc])
 

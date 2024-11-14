@@ -54,6 +54,7 @@ defmodule Livebook do
   @doc """
   I generate out the TOC for all liveview docs
   """
+  @spec toc_toplevel() :: :ok
   def toc_toplevel() do
     paths = Livebook.get_all_livemd_documents()
 
@@ -257,6 +258,8 @@ defmodule Livebook do
        All good
       :ok
   """
+  @spec change_header(String.t(), String.t(), String.t(), String.t()) ::
+          String.t()
   def change_header(markdown, header_level, start_header, new_text) do
     header_regex =
       ~r/^#{header_level}\s+#{start_header}\s*$(.*?)(?=\n#{header_level}\s+|##|\z)/ms

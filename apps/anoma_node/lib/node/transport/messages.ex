@@ -42,7 +42,11 @@ defmodule Anoma.Node.Transport.Messages do
 
   # ----------------------------------------------------------------------------
   # Dump Mempool
-
+  @spec proto_to_call(
+          UnspentResources.Request.t() | any(),
+          binary(),
+          String.t()
+        ) :: {:reply, Envelope.t()} | {:is_reply, {:ok, any()}, binary()}
   def proto_to_call(%Dump.Request{}, ref, local_node_id) do
     # call the engine
     result = ["dump1", "dump2"]
@@ -180,6 +184,7 @@ defmodule Anoma.Node.Transport.Messages do
   # ----------------------------------------------------------------------------
   # List Intents
 
+  @spec call_to_proto(atom(), module(), String.t()) :: Envelope.t()
   def call_to_proto(:list_intents, Intentpool, local_node_id) do
     request = %ListIntents.Request{}
 

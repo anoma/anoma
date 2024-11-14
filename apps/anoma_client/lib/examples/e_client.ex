@@ -98,7 +98,7 @@ defmodule Anoma.Client.Examples.EClient do
   @doc """
   I create an example stub to a given clients GRPC endpoint.
   """
-  @spec create_example_connection() :: EConnection.t()
+  @spec create_example_connection(t()) :: EConnection.t()
   def create_example_connection(eclient \\ create_example_client()) do
     case GRPC.Stub.connect("localhost:#{eclient.client.grpc_port}") do
       {:ok, channel} ->

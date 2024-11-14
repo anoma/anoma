@@ -106,7 +106,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   regarding the next height Ordering should be started with.
   """
 
-  @spec init([startup_options()]) :: {:ok, t()}
+  @impl true
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -247,6 +247,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   matches iff the ID stored is the one supplied.
   """
 
+  @spec tx_id_filter(binary()) :: TxIdFilter.t()
   def tx_id_filter(tx_id) do
     %__MODULE__.TxIdFilter{tx_id: tx_id}
   end
@@ -255,6 +256,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_call({write_opt, {tx_id, args}}, from, state)
       when write_opt in [:write, :append, :add] do
     handle_write(write_opt, {tx_id, args}, from, state)
@@ -271,6 +273,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     {:reply, :ok, state}
   end
 
+  @impl true
   def handle_cast({:order, tx_id_list}, state) do
     {:noreply, handle_order(tx_id_list, state)}
   end
@@ -279,6 +282,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     {:noreply, state}
   end
 
+  @impl true
   def handle_info(_info, state) do
     {:noreply, state}
   end

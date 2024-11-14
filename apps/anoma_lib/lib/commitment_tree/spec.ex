@@ -21,6 +21,7 @@ defmodule CommitmentTree.Spec do
     field(:splay_suff_prod, list(integer()))
   end
 
+  @spec new(integer(), integer(), integer(), function()) :: t()
   def new(depth, splay, key_size, hash) do
     %CommitmentTree.Spec{
       depth: depth,

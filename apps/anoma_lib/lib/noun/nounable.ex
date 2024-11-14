@@ -127,6 +127,7 @@ defimpl Nounable, for: Tuple do
   @spec from_noun(Noun.t()) :: {:ok, tuple()}
   def from_noun(noun), do: :erlang.list_to_tuple(from_noun_internal(noun))
 
+  @spec from_noun_internal(Noun.t()) :: list()
   def from_noun_internal([h | t]), do: [h | from_noun_internal(t)]
   def from_noun_internal([]), do: [0]
   def from_noun_internal(x), do: [x]

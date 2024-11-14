@@ -24,6 +24,7 @@ defmodule Examples.ETransparent.EResource do
 
   Use me when random resources are wanted.
   """
+  @spec trivial_false_resource_generator() :: Resource.t()
   def trivial_false_resource_generator() do
     res = %Resource{logic: [[1 | 1], 0 | 0], nonce: Randomness.get_random(32)}
 
@@ -72,6 +73,7 @@ defmodule Examples.ETransparent.EResource do
     }
   end
 
+  @spec trivial_true_commitment() :: Resource.commitment()
   def trivial_true_commitment() do
     res = Resource.commitment(trivial_true_resource())
 
@@ -87,6 +89,7 @@ defmodule Examples.ETransparent.EResource do
     res
   end
 
+  @spec trivial_true_nullifier() :: Resource.nullifier()
   def trivial_true_nullifier() do
     res = Resource.nullifier(trivial_true_resource())
 
@@ -102,14 +105,17 @@ defmodule Examples.ETransparent.EResource do
     res
   end
 
+  @spec trivial_true_nullifier_2() :: Resource.nullifier()
   def trivial_true_nullifier_2() do
     Resource.nullifier(trivial_true_resource_2())
   end
 
+  @spec trivial_true_nullifier_eph() :: Resource.nullifier()
   def trivial_true_nullifier_eph() do
     Resource.nullifier(trivial_true_resource_eph())
   end
 
+  @spec trivial_false_commitment() :: Resource.commitment()
   def trivial_false_commitment() do
     Resource.commitment(trivial_false_resource())
   end
