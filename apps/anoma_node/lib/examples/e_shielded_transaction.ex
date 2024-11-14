@@ -11,7 +11,9 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
   def submit_successful_trivial_cairo_tx(node_id \\ Node.example_random_id()) do
     ETransaction.start_tx_module(node_id)
 
-    tx_w_backend = trivial_cairo_transaction()
+    s_tx = Examples.ECairo.ETransaction.a_shielded_transaction()
+
+    tx_w_backend = trivial_cairo_transaction(s_tx)
 
     EventBroker.subscribe_me([])
 
@@ -35,14 +37,27 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
              Storage.read(node_id, {1, ["anoma", "cairo_roots"]})
 
     assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "cairo_ct"]})
+
+    commitment = s_tx.commitments |> hd()
+
+    assert {:ok, MapSet.new([{commitment, 0}])} ==
+             Storage.read(node_id, {1, ["anoma", "cairo_indices"]})
+
+    proof = CommitmentTree.prove(tree, 0)
+    spec = CommitmentTree.Spec.cairo_poseidon_cm_tree_spec()
+
+    assert CommitmentTree.Proof.verify(spec, proof, anchor, commitment) ==
+             true
+
     EventBroker.unsubscribe_me([])
 
     node_id
   end
 
   @spec trivial_cairo_transaction() :: {Backends.backend(), Noun.t()}
-  def trivial_cairo_transaction() do
-    s_tx = Examples.ECairo.ETransaction.a_shielded_transaction()
+  def trivial_cairo_transaction(
+        s_tx \\ Examples.ECairo.ETransaction.a_shielded_transaction()
+      ) do
     noun = s_tx |> Noun.Nounable.to_noun()
 
     assert Anoma.CairoResource.Transaction.from_noun(noun) == {:ok, s_tx}
