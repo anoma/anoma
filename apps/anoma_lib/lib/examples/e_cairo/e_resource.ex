@@ -15,7 +15,7 @@ defmodule Examples.ECairo.EResource do
       data: zero_binary,
       eph: false,
       nonce: zero_binary,
-      npk: Resource.get_npk(input_nf_key),
+      nk_commitment: Resource.get_nk_commitment(input_nf_key),
       rseed: zero_binary
     }
 

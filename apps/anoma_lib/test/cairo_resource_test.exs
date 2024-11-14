@@ -4,10 +4,10 @@ defmodule AnomaTest.CairoResource do
   @moduletag :zk
 
   use TestHelper.GenerateExampleTests,
-    for: Examples.ECairo.EComplianceInput
+    for: Examples.ECairo.EComplianceWitness
 
   use TestHelper.GenerateExampleTests,
-    for: Examples.ECairo.EPartialTransaction
+    for: Examples.ECairo.EAction
 
   use TestHelper.GenerateExampleTests,
     for: Examples.ECairo.ETransaction

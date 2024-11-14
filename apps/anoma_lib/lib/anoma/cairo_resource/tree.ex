@@ -9,7 +9,7 @@ defmodule Anoma.CairoResource.Tree do
   typedstruct enforce: true do
     # The resource merkle tree
     field(:tree, CommitmentTree.t())
-    # The merkle root of resources in ptx
+    # The merkle root of resources in action
     field(:root, binary())
     # The tree leaves: help find the target index
     field(:leaves, list(binary()))

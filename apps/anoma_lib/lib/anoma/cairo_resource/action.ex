@@ -1,6 +1,6 @@
-defmodule Anoma.CairoResource.PartialTransaction do
+defmodule Anoma.CairoResource.Action do
   @moduledoc """
-  I am a shielded resource machine partial transaction.
+  I am an action in shielded resource machine.
   """
 
   @behaviour Noun.Nounable.Kind
@@ -9,7 +9,14 @@ defmodule Anoma.CairoResource.PartialTransaction do
 
   alias __MODULE__
   use TypedStruct
-  alias Anoma.CairoResource.{ProofRecord, ComplianceOutput, Tree, LogicOutput}
+
+  alias Anoma.CairoResource.{
+    ProofRecord,
+    ComplianceInstance,
+    Tree,
+    LogicInstance
+  }
+
   alias Anoma.Constants
 
   typedstruct enforce: true do
@@ -34,7 +41,7 @@ defmodule Anoma.CairoResource.PartialTransaction do
 
     with true <- checked do
       {:ok,
-       %PartialTransaction{
+       %Action{
          logic_proofs: Enum.map(logic, &elem(&1, 1)),
          compliance_proofs: Enum.map(compilance, &elem(&1, 1))
        }}
@@ -44,37 +51,39 @@ defmodule Anoma.CairoResource.PartialTransaction do
   end
 
   @spec verify(t()) :: boolean()
-  def verify(partial_transaction) do
-    with true <- verify_proofs(partial_transaction.logic_proofs),
+  def verify(action) do
+    with true <- verify_proofs(action.logic_proofs),
          true <-
            verify_proofs(
-             partial_transaction.compliance_proofs,
+             action.compliance_proofs,
              "compliance result"
            ),
-         true <- verify_compliance_hash(partial_transaction.compliance_proofs) do
-      # Decode logic_outputs from resource logics
-      logic_outputs =
-        partial_transaction.logic_proofs
+         true <- verify_compliance_hash(action.compliance_proofs) do
+      # Decode logic_instances from resource logics
+      logic_instances =
+        action.logic_proofs
         |> Enum.map(fn proof_record ->
           proof_record.public_inputs
-          |> LogicOutput.from_public_input()
+          |> LogicInstance.from_public_input()
         end)
 
-      # Decode complaince_outputs from compliance_proofs
-      complaince_outputs =
-        partial_transaction.compliance_proofs
+      # Decode complaince_instance from compliance_proofs
+      complaince_instance =
+        action.compliance_proofs
         |> Enum.map(fn proof_record ->
           proof_record.public_inputs
-          |> ComplianceOutput.from_public_input()
+          |> ComplianceInstance.from_public_input()
         end)
 
-      # Get self ids from logic_outputs
-      self_ids = Enum.map(logic_outputs, & &1.self_resource_id)
+      # Get self ids from logic_instances
+      self_ids = Enum.map(logic_instances, & &1.tag)
 
       # Get cms and nfs from compliance_proofs
       resource_tree_leaves =
-        complaince_outputs
-        |> Enum.flat_map(fn output -> [output.nullifier, output.output_cm] end)
+        complaince_instance
+        |> Enum.flat_map(fn instance ->
+          [instance.nullifier, instance.output_cm]
+        end)
 
       # check self resource are all involved
       all_resource_valid = self_ids == resource_tree_leaves
@@ -88,10 +97,10 @@ defmodule Anoma.CairoResource.PartialTransaction do
 
       # check roots
       all_roots_valid =
-        for output <- logic_outputs,
+        for instance <- logic_instances,
             reduce: true do
           acc ->
-            acc && rt.root == output.root
+            acc && rt.root == instance.root
         end
 
       all_resource_valid && all_roots_valid
@@ -127,8 +136,8 @@ defmodule Anoma.CairoResource.PartialTransaction do
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
-    def to_noun(ptx = %PartialTransaction{}) do
-      {ptx.logic_proofs, ptx.compliance_proofs}
+    def to_noun(action = %Action{}) do
+      {action.logic_proofs, action.compliance_proofs}
       |> Noun.Nounable.to_noun()
     end
   end
