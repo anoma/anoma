@@ -136,6 +136,7 @@ defmodule Anoma.CairoResource.Action do
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
+    @impl true
     def to_noun(action = %Action{}) do
       {action.logic_proofs, action.compliance_proofs}
       |> Noun.Nounable.to_noun()
