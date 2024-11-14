@@ -6,7 +6,7 @@ defprotocol Anoma.RM.Intent do
   @spec compose(t(), t()) :: t()
   def compose(intent_1, intent_2)
 
-  @spec verify(t()) :: boolean()
+  @spec verify(t()) :: true | {:error, any()}
   def verify(intent)
 end
 
