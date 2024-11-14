@@ -36,8 +36,10 @@ defmodule Anoma.CairoResource.ProofRecord do
 
   @spec generate_compliance_proof(binary()) :: {:ok, t()} | :error
   def generate_compliance_proof(compliance_inputs) do
-    with {:ok, compliance_circuit} <-
-           File.read("./params/cairo_compliance.json") do
+    dir =
+      Path.join(:code.priv_dir(:anoma_lib), "params/cairo_compliance.json")
+
+    with {:ok, compliance_circuit} <- File.read(dir) do
       {_output, trace, memory, public_inputs} =
         Cairo.cairo_vm_runner(
           compliance_circuit,
