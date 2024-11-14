@@ -11,6 +11,7 @@ defmodule Anoma.Client.Examples.EProxy do
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Client.Examples.EClient
   alias Anoma.Protobuf.Intent
+  alias Anoma.Protobuf.Intents.Intent
 
   require ExUnit.Assertions
 
