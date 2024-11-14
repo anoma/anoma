@@ -29,11 +29,15 @@ message Envelope {
     Anoma.Protobuf.Indexer.Nullifiers.Request nullifiers_request = 8;
     Anoma.Protobuf.Indexer.Nullifiers.Response nullifiers_response = 9;
 
-    Anoma.Protobuf.Indexer.UnrevealedCommits.Request unrevealed_commits_request = 10;
-    Anoma.Protobuf.Indexer.UnrevealedCommits.Response unrevealed_commits_response = 11;
+    Anoma.Protobuf.Indexer.UnrevealedCommits.Request
+        unrevealed_commits_request = 10;
+    Anoma.Protobuf.Indexer.UnrevealedCommits.Response
+        unrevealed_commits_response = 11;
 
-    Anoma.Protobuf.Indexer.UnspentResources.Request unspent_resources_request = 12;
-    Anoma.Protobuf.Indexer.UnspentResources.Response unspent_resources_response = 13;
+    Anoma.Protobuf.Indexer.UnspentResources.Request unspent_resources_request =
+        12;
+    Anoma.Protobuf.Indexer.UnspentResources.Response
+        unspent_resources_response = 13;
 
     // mempool dump
     Anoma.Protobuf.Mempool.Dump.Request mempool_dump_request = 14;

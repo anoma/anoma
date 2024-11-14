@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package Anoma.Protobuf.Mempool.Dump;
 
-message Request {}
+import "node_info.proto";
 
-message Response {
-  repeated string dumps = 1;
-}
+message Request { NodeInfo node_info = 1; }
+
+message Response { repeated string dumps = 1; }

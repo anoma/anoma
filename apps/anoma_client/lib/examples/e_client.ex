@@ -22,6 +22,7 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.Nock.Input
   alias Anoma.Protobuf.Nock.Prove
   alias Anoma.Protobuf.NockService
+  alias Anoma.Protobuf.NodeInfo
 
   import ExUnit.Assertions
 
@@ -57,6 +58,7 @@ defmodule Anoma.Client.Examples.EClient do
     - `:channel`    - The channel for making grpc requests.
     """
     field(:channel, any())
+    field(:client, EClient.t())
   end
 
   ############################################################
@@ -92,7 +94,8 @@ defmodule Anoma.Client.Examples.EClient do
   def create_example_client(enode \\ create_single_example_node()) do
     kill_existing_client()
 
-    {:ok, client} = Client.connect("localhost", enode.grpc_port, 0)
+    {:ok, client} =
+      Client.connect("localhost", enode.grpc_port, 0, enode.node_id)
 
     %EClient{supervisor: nil, client: client, node: enode}
   end
@@ -104,7 +107,7 @@ defmodule Anoma.Client.Examples.EClient do
   def create_example_connection(eclient \\ create_example_client()) do
     case GRPC.Stub.connect("localhost:#{eclient.client.grpc_port}") do
       {:ok, channel} ->
-        %EConnection{channel: channel}
+        %EConnection{channel: channel, client: eclient}
 
       {:error, reason} ->
         {:error, reason}
@@ -128,11 +131,10 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_intents(EConnection.t()) :: EConnection.t()
   def list_intents(conn \\ setup()) do
-    request = %List.Request{}
-    Anoma.Protobuf.IntentsService.Stub
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %List.Request{node_info: node_id}
 
     {:ok, _reply} = IntentsService.Stub.list_intents(conn.channel, request)
-
     conn
   end
 
@@ -141,7 +143,8 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec add_intent(EConnection.t()) :: EConnection.t()
   def add_intent(conn \\ setup()) do
-    request = %Add.Request{intent: %Intent{value: 1}}
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %Add.Request{node_info: node_id, intent: %Intent{value: 1}}
 
     {:ok, _reply} = IntentsService.Stub.add_intent(conn.channel, request)
 
@@ -160,7 +163,8 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_nullifiers(EConnection.t()) :: EConnection.t()
   def list_nullifiers(conn \\ setup()) do
-    request = %Nullifiers.Request{}
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %Nullifiers.Request{node_info: node_id}
     {:ok, _reply} = IndexerService.Stub.list_nullifiers(conn.channel, request)
 
     conn
@@ -171,7 +175,8 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_unrevealed_commits(EConnection.t()) :: EConnection.t()
   def list_unrevealed_commits(conn \\ setup()) do
-    request = %UnrevealedCommits.Request{}
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %UnrevealedCommits.Request{node_info: node_id}
 
     {:ok, _reply} =
       IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
@@ -184,7 +189,8 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_unspent_resources(EConnection.t()) :: EConnection.t()
   def list_unspent_resources(conn \\ setup()) do
-    request = %UnspentResources.Request{}
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %UnspentResources.Request{node_info: node_id}
 
     {:ok, _reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
