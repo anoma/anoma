@@ -34,6 +34,7 @@ defmodule Nock do
   @layer_5_context_mug 4_018_337_361
   @layer_6_context_mug 3_932_234_981
   @layer_7_context_mug 4_202_542_228
+  @layer_8_context_mug 1_736_366_676
   @layer_4_block_context_mug 2_756_805_836
 
   # hardcoded jet registry
@@ -89,7 +90,27 @@ defmodule Nock do
     3_534_989_962 =>
       {"lsh", 14, @layer_4_block_context_mug, &Nock.Jets.lsh/1, :enabled, 20},
     3_410_895_654 =>
-      {"rsh", 14, @layer_4_block_context_mug, &Nock.Jets.rsh/1, :enabled, 20}
+      {"rsh", 14, @layer_4_block_context_mug, &Nock.Jets.rsh/1, :enabled, 20},
+    724_462_226 =>
+      {"abs", 7, @layer_8_context_mug, &Nock.Jets.abs/1, :enabled, 30},
+    2_668_782_675 =>
+      {"dif", 7, @layer_8_context_mug, &Nock.Jets.dif/1, :enabled, 30},
+    1_814_685_155 =>
+      {"dul", 7, @layer_8_context_mug, &Nock.Jets.dul/1, :enabled, 30},
+    2_357_319_448 =>
+      {"fra", 7, @layer_8_context_mug, &Nock.Jets.fra/1, :enabled, 30},
+    2_272_237_948 =>
+      {"pro", 7, @layer_8_context_mug, &Nock.Jets.pro/1, :enabled, 30},
+    2_517_398_177 =>
+      {"rem", 7, @layer_8_context_mug, &Nock.Jets.rem/1, :enabled, 30},
+    2_325_836_748 =>
+      {"sum", 7, @layer_8_context_mug, &Nock.Jets.sum/1, :enabled, 30},
+    244_446_486 =>
+      {"sun", 7, @layer_8_context_mug, &Nock.Jets.sun/1, :enabled, 30},
+    1_720_910_226 =>
+      {"syn", 7, @layer_8_context_mug, &Nock.Jets.syn/1, :enabled, 30},
+    3_800_851_664 =>
+      {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30}
   }
 
   @doc """
