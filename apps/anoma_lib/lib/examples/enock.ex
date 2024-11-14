@@ -1519,7 +1519,7 @@ defmodule Examples.ENock do
   end
 
   def jam_and_cue(jam_value, cue_value) do
-    assert Noun.equal(jam_value, Nock.Cue.cue!(cue_value))
+    assert Noun.equal?(jam_value, Nock.Cue.cue!(cue_value))
     assert cue_value == Nock.Jam.jam(Noun.normalize_noun(jam_value))
   end
 end
