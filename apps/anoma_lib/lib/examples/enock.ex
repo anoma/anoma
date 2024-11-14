@@ -1034,6 +1034,40 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  I represent the lte gate call as a 2-argument gate.
+
+  Can be obtained by defining
+
+  =llte =>  logics  |=   [a=@s b=@s]  (lte [a b])
+
+  and computing
+
+  .*  llte  [0 2]
+  """
+  @spec lte_arm() :: Noun.t()
+  def lte_arm() do
+    "[8 [9 84 0 4.095] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  @spec lte() :: Noun.t()
+  def lte() do
+    sample = [888 | 999]
+    core = [lte_arm(), sample | Nock.logics_core()]
+
+    max_test_val = 4
+
+    for i <- 0..max_test_val, j <- 0..max_test_val do
+      expected = if i <= j, do: 0, else: 1
+
+      assert Nock.nock(core, [9, 2, 10, [6, 1 | [i | j]], 0 | 1]) ==
+               {:ok, expected}
+    end
+
+    core
+  end
+
   ############################################################
   ##                      Block Cores                       ##
   ############################################################
