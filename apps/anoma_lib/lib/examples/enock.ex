@@ -1076,6 +1076,7 @@ defmodule Examples.ENock do
   def met0() do
     met = met(0)
     assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 5}
+    assert Nock.nock(met, [9, 2, 10, [6, 1 | <<28>>], 0 | 1]) == {:ok, 5}
     met
   end
 
@@ -1090,6 +1091,7 @@ defmodule Examples.ENock do
   def met1() do
     met = met(1)
     assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 3}
+    assert Nock.nock(met, [9, 2, 10, [6, 1 | <<28>>], 0 | 1]) == {:ok, 3}
     met
   end
 
@@ -1104,6 +1106,7 @@ defmodule Examples.ENock do
   def met2() do
     met = met(2)
     assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 2}
+    assert Nock.nock(met, [9, 2, 10, [6, 1 | <<28>>], 0 | 1]) == {:ok, 2}
     met
   end
 
