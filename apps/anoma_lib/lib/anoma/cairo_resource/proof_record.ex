@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource.ProofRecord do
+defmodule Anoma.CairoResource.ProofRecord do
   @moduledoc """
   I am a proof record for a shielded resource.
   """

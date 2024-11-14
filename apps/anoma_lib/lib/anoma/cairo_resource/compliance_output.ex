@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource.ComplianceOutput do
+defmodule Anoma.CairoResource.ComplianceOutput do
   @moduledoc """
   I represent a resource's output.
   """
@@ -22,13 +22,13 @@ defmodule Anoma.ShieldedResource.ComplianceOutput do
   end
 
   @spec from_public_input(binary()) ::
-          Anoma.ShieldedResource.ComplianceOutput.t()
+          Anoma.CairoResource.ComplianceOutput.t()
   def from_public_input(public_input) do
     ## call cairo api to get output bytes
     [nullifier, output_cm, root, delta_x, delta_y, input_logic, output_logic] =
       public_input |> :binary.bin_to_list() |> Cairo.get_output()
 
-    %Anoma.ShieldedResource.ComplianceOutput{
+    %Anoma.CairoResource.ComplianceOutput{
       nullifier: nullifier |> :binary.list_to_bin(),
       output_cm: output_cm |> :binary.list_to_bin(),
       root: root |> :binary.list_to_bin(),

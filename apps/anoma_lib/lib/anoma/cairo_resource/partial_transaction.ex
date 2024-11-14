@@ -1,4 +1,4 @@
-defmodule Anoma.ShieldedResource.PartialTransaction do
+defmodule Anoma.CairoResource.PartialTransaction do
   @moduledoc """
   I am a shielded resource machine partial transaction.
   """
@@ -9,7 +9,7 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
 
   alias __MODULE__
   use TypedStruct
-  alias Anoma.ShieldedResource.ProofRecord
+  alias Anoma.CairoResource.ProofRecord
 
   typedstruct enforce: true do
     field(:logic_proofs, list(ProofRecord.t()), default: [])

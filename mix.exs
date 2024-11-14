@@ -85,7 +85,7 @@ defmodule Anoma.MixProject do
       "Resource Machine": [
         ~r/^Anoma.RM.?/,
         ~r/^Anoma.Resource.?/,
-        ~r/^Anoma.ShieldedResource.?/
+        ~r/^Anoma.CairoResource.Resource.?/
       ],
       "Anoma Actors": [Anoma.Node],
       Mempool: ~r/^Anoma.Node.Mempool.?/,
