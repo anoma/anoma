@@ -18,14 +18,14 @@ defmodule Anoma.Client.Examples.EProve do
     inputs =
       Enum.map(["3"], &Noun.Format.parse_always/1)
 
-    result = Runner.prove(program, inputs)
+    {:ok, result, _stdio} = Runner.prove(program, inputs)
 
-    assert result == {:ok, 9}
+    assert result == 9
 
-    result
+    {:ok, result}
   end
 
-  @spec prove_squared_small() :: {:ok, 9}
+  @spec prove_squared_small() :: any()
   def prove_squared_small() do
     # jammed base64 encoded square function that takes in one parameter
     {:ok, program} =
@@ -34,10 +34,29 @@ defmodule Anoma.Client.Examples.EProve do
       |> Nock.Cue.cue()
 
     inputs = Enum.map(["3"], &Noun.Format.parse_always/1)
-    result = Runner.prove(program, inputs)
+    {:ok, result, _stdio} = Runner.prove(program, inputs)
 
-    assert result == {:ok, 9}
+    assert result == 9
 
     result
+  end
+
+  @spec prove_with_hint() :: {:ok, any(), any()}
+  def prove_with_hint() do
+    {:ok, program} =
+      :code.priv_dir(:anoma_client)
+      |> Path.join("test_juvix/Identity.nockma")
+      |> File.read!()
+      |> Nock.Cue.cue()
+
+    inputs =
+      Enum.map(["3"], &Noun.Format.parse_always/1)
+
+    {:ok, result, stdio} = Runner.prove(program, inputs)
+
+    assert result == 3
+    assert stdio == ["abc"]
+
+    {:ok, result, stdio}
   end
 end
