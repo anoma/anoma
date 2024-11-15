@@ -21,7 +21,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   use GenServer
 
   ############################################################
-  #                      State                               #
+  #                           State                          #
   ############################################################
 
   typedstruct do
@@ -124,7 +124,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   end
 
   ############################################################
-  #                    Genserver Behavior                    #
+  #                 Genserver Implementation                 #
   ############################################################
 
   # @doc """
@@ -195,7 +195,7 @@ defmodule Anoma.Node.Intents.IntentPool do
         end)
         |> Enum.any?(&MapSet.member?(nlfs_set, &1))
       end)
-      |> Enum.into(&MapSet.new/1)
+      |> MapSet.new()
 
     %__MODULE__{state | intents: new_intents}
   end

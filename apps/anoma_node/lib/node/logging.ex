@@ -15,7 +15,7 @@ defmodule Anoma.Node.Logging do
   require Node.Event
   require Logger
 
-  @type flag :: :info | :debug | :error
+  @type flag :: :info | :debug | :warning | :error
 
   typedstruct module: LoggingEvent do
     field(:flag, Logging.flag())
@@ -47,7 +47,7 @@ defmodule Anoma.Node.Logging do
   end
 
   def start_link(args) do
-    args = Keyword.validate!(args, [:node_id, :table])
+    args = Keyword.validate!(args, [:node_id, :table, :rocks])
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
@@ -174,6 +174,8 @@ defmodule Anoma.Node.Logging do
   defp log_fun({:debug, msg}), do: Logger.debug(msg)
 
   defp log_fun({:info, msg}), do: Logger.info(msg)
+
+  defp log_fun({:warning, msg}), do: Logger.warning(msg)
 
   defp log_fun({:error, msg}), do: Logger.error(msg)
 
