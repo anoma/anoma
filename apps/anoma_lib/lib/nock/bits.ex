@@ -36,4 +36,51 @@ defmodule Nock.Bits do
   defp byte_to_bits(byte) do
     Enum.map(0..7, fn shift -> byte >>> shift &&& 1 end)
   end
+
+  def match_byte_reverse(
+        <<x_1::1, x_2::1, x_3::1, x_4::1, x_5::1, x_6::1, x_7::1, x_8::1>>
+      ) do
+    <<x_8::1, x_7::1, x_6::1, x_5::1, x_4::1, x_3::1, x_2::1, x_1::1>>
+  end
+
+  @spec to_number(bitstring(), non_neg_integer(), non_neg_integer()) :: non_neg_integer()
+  def to_number(stream) do
+    to_number(stream, 0, 0)
+  end
+
+  def to_number(<<x::1, stream::bitstring>>, acc, position) do
+    to_number(stream, acc + (x <<< position), position + 1)
+  end
+
+  def to_number(<<>>, acc, _position) do
+    acc
+  end
+
+  @spec pad_to_byte(bitstring()) :: binary()
+  def pad_to_byte(stream) do
+    pad_to_byte(stream, 8 - band(bit_size(stream), 0b111))
+  end
+
+  def pad_to_byte(stream, 0) do
+    stream
+  end
+
+  def pad_to_byte(stream, counter) do
+    pad_to_byte(<<stream :: bitstring, 0 :: 1>> , counter - 1)
+  end
+
+  def reverse_all(xs) do
+    reverse_all(xs, <<>>)
+  end
+
+  def reverse_all(<<>>, acc) do
+    acc
+  end
+
+  def reverse_all(<<x::bits-size(8), xs::binary>>, acc) do
+    reverse_all(
+      xs,
+      <<acc::binary, Nock.Bits.match_byte_reverse(x)::bits-size(8)>>
+    )
+  end
 end
