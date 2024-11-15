@@ -204,17 +204,21 @@ defmodule Anoma.Client.Examples.EClient do
   @spec prove_something_text(EConnection.t()) :: Prove.Response.t()
   def prove_something_text(conn \\ setup()) do
     program = text_program_example()
-    input = text_input("1")
+    input1 = text_input("1")
+    input2 = text_input("2")
+    input3 = text_input("3")
+    input4 = text_input("4")
 
     request = %Prove.Request{
       program: {:text_program, program},
-      public_inputs: [input]
+      public_inputs: [input1, input2],
+      private_inputs: [input3, input4]
     }
 
     {:ok, response} = NockService.Stub.prove(conn.channel, request)
     {:success, success} = response.result
 
-    assert {:ok, 123} == Nock.Cue.cue(success.result)
+    assert {:ok, [1, 2, 3 | 4]} == Nock.Cue.cue(success.result)
 
     success.result
   end
@@ -224,19 +228,23 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec prove_something_jammed(EConnection.t()) :: Prove.Response.t()
   def prove_something_jammed(conn \\ setup()) do
-    program = Nock.Jam.jam([[1 | 123], 0 | 0])
-    input = jammed_input(Nock.Jam.jam(1))
+    program = jammed_program_example()
+    input1 = jammed_input(Nock.Jam.jam(1))
+    input2 = jammed_input(Nock.Jam.jam(2))
+    input3 = jammed_input(Nock.Jam.jam(3))
+    input4 = jammed_input(Nock.Jam.jam(4))
 
     request = %Prove.Request{
       program: {:jammed_program, program},
-      public_inputs: [input]
+      public_inputs: [input1, input2],
+      private_inputs: [input3, input4]
     }
 
     {:ok, response} = NockService.Stub.prove(conn.channel, request)
 
     {:success, success} = response.result
 
-    assert {:ok, 123} == Nock.Cue.cue(success.result)
+    assert {:ok, [1, 2, 3 | 4]} == Nock.Cue.cue(success.result)
 
     success.result
   end
@@ -284,7 +292,7 @@ defmodule Anoma.Client.Examples.EClient do
 
   @spec text_program_example() :: binary()
   def text_program_example() do
-    "[[1 123] 0 0]"
+    "[[0 6] 0 0]"
   end
 
   @spec jammed_program_example() :: binary()
