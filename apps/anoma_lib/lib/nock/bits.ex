@@ -1,7 +1,12 @@
 defmodule Nock.Bits do
   import Bitwise
 
-  @spec num_bits(non_neg_integer(), non_neg_integer()) :: non_neg_integer()
+  @spec num_bits(Noun.noun_atom(), non_neg_integer()) ::
+          non_neg_integer()
+  def num_bits(n, block_size) when is_binary(n) do
+    n |> Noun.atom_binary_to_integer() |> num_bits(block_size)
+  end
+
   def num_bits(n, block_size) when n >= 0 do
     num_bits(n, 1 <<< block_size, 0)
   end
