@@ -47,7 +47,7 @@ defmodule Nue do
       # backref: fetch from the cache
       <<rest::size(size - 2)-bitstring, 1::size(1), 1::size(1)>> ->
         {backref_key, continuation, new_offset, _unused_new_cache} =
-          cue_atom(rest, size - 2, offset + 2, cache, 2)
+          cue_atom(rest, size - 2, offset, cache, 2)
 
         {Map.fetch!(cache, :binary.decode_unsigned(backref_key)),
          continuation, new_offset, cache}
