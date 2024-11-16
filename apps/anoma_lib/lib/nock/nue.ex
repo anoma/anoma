@@ -2,7 +2,7 @@ defmodule Nue do
   def cue(bytes) do
     # we could store binary atoms the other way to not do this.
     # if we did, our strings would print reversed.
-    bytes = byte_order_flip(bytes)
+    bytes = Nock.Bits.byte_order_little_to_big(bytes)
 
     # now, trim leading zeroes and turn it into a bitstring rather than
     # a binary made of octets.
@@ -88,9 +88,10 @@ defmodule Nue do
 
     # at last, return the atom and remaining bitstream.
     # got to flip it (on a byte level) here given how we store them.
-    final_atom = atom |> byte_order_flip()
+    final_atom = atom |> Nock.Bits.byte_order_big_to_little()
 
-    bits_consumed = length + (2 * length_of_length) + tag_bits
+    bits_consumed = length + 2 * length_of_length + tag_bits
+
     {final_atom, rest, offset + bits_consumed,
      Map.put(cache, offset, final_atom)}
   end
@@ -103,12 +104,6 @@ defmodule Nue do
       <<_::size(size - 1), 1::1>> ->
         0
     end
-  end
-
-  defp byte_order_flip(bytes) do
-    bytes
-    |> :binary.decode_unsigned()
-    |> :binary.encode_unsigned(:little)
   end
 
   defp real_size(<<0::1, rest::bitstring>>) do
