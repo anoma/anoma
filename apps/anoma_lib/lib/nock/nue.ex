@@ -49,7 +49,7 @@ defmodule Nue do
         {backref_key, continuation, new_offset, _unused_new_cache} =
           cue_atom(rest, size - 2, offset, cache, 2)
 
-        {Map.fetch!(cache, :binary.decode_unsigned(backref_key)),
+        {Map.fetch!(cache, :binary.decode_unsigned(backref_key, :little)),
          continuation, new_offset, cache}
     end
   end
