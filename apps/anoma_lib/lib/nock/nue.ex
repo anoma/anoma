@@ -12,7 +12,7 @@ defmodule Nue do
     <<0::size(padded_size - real_size), bits::size(real_size)-bitstring>> =
       bytes
 
-    {result, <<>>, _, _} = cue_bits(bits, real_size)
+    {result, <<>>, ^real_size, _} = cue_bits(bits, real_size)
     result
   end
 
