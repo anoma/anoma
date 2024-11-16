@@ -90,7 +90,8 @@ defmodule Nue do
     # got to flip it (on a byte level) here given how we store them.
     final_atom = atom |> byte_order_flip()
 
-    {final_atom, rest, length + 2 * length_of_length + tag_bits,
+    bits_consumed = length + (2 * length_of_length) + tag_bits
+    {final_atom, rest, offset + bits_consumed,
      Map.put(cache, offset, final_atom)}
   end
 
