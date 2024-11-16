@@ -31,7 +31,7 @@ defmodule Nue do
       # cell: just the head, followed by the tail.
       <<rest::size(size - 2)-bitstring, 0::size(1), 1::size(1)>> ->
         {head, continuation_1, offset_1, cache_1} =
-          cue_bits(rest, size - 2, offset, cache)
+          cue_bits(rest, size - 2, offset + 2, cache)
 
         {tail, continuation_2, offset_2, cache_2} =
           cue_bits(
@@ -44,9 +44,13 @@ defmodule Nue do
         cell = [head | tail]
         {cell, continuation_2, offset_2, Map.put(cache_2, offset, cell)}
 
-      # backref: not supported yet
-      <<_rest::size(size - 2)-bitstring, 1::size(1), 1::size(1)>> ->
-        raise "backrefs not supported yet"
+      # backref: fetch from the cache
+      <<rest::size(size - 2)-bitstring, 1::size(1), 1::size(1)>> ->
+        {backref_key, continuation, new_offset, _unused_new_cache} =
+          cue_atom(rest, size - 2, offset + 2, cache, 2)
+
+        {Map.fetch!(cache, :binary.decode_unsigned(backref_key)),
+         continuation, new_offset, cache}
     end
   end
 
