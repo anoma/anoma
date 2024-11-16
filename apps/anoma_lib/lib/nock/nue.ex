@@ -83,7 +83,7 @@ defmodule Nue do
     # this throws away information; alas!
     # maybe we should just support all bitstrings???
     atom_bits = bit_size(atom)
-    padding_bits = 8 - Kernel.rem(atom_bits, 8)
+    padding_bits = Kernel.rem(8 - Kernel.rem(atom_bits, 8), 8)
     atom = <<0::size(padding_bits), atom::bitstring>>
 
     # at last, return the atom and remaining bitstream.
@@ -106,8 +106,8 @@ defmodule Nue do
 
   defp byte_order_flip(bytes) do
     bytes
-    |> :binary.decode_unsigned(:little)
-    |> :binary.encode_unsigned()
+    |> :binary.decode_unsigned()
+    |> :binary.encode_unsigned(:little)
   end
 
   defp real_size(<<0::1, rest::bitstring>>) do
