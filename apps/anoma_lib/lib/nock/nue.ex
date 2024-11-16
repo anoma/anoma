@@ -12,30 +12,37 @@ defmodule Nue do
     <<0::size(padded_size - real_size), bits::size(real_size)-bitstring>> =
       bytes
 
-    {result, <<>>} = cue_bits(bits, real_size)
+    {result, <<>>, _, _} = cue_bits(bits, real_size)
     result
   end
 
-  def cue_bits(bits, size) do
+  def cue_bits(bits, size, offset \\ 0, cache \\ %{}) do
     case bits do
       # special case for atom 0, which is 0-length.
       # this does comply with the format but would require encoding a
       # bit string of -1 bits in length. the special case is best.
       <<rest::size(size - 2)-bitstring, 1::size(1), 0::size(1)>> ->
-        {<<>>, rest}
+        {<<>>, rest, offset + 2, Map.put(cache, offset, <<>>)}
 
       # atom: encoded in a mildly complicated way.
       <<rest::size(size - 1)-bitstring, 0::size(1)>> ->
-        cue_atom(rest, size - 1)
+        cue_atom(rest, size - 1, offset, cache, 1)
 
       # cell: just the head, followed by the tail.
       <<rest::size(size - 2)-bitstring, 0::size(1), 1::size(1)>> ->
-        {head, continuation_1} = cue_bits(rest, size - 2)
+        {head, continuation_1, offset_1, cache_1} =
+          cue_bits(rest, size - 2, offset, cache)
 
-        {tail, continuation_2} =
-          cue_bits(continuation_1, bit_size(continuation_1))
+        {tail, continuation_2, offset_2, cache_2} =
+          cue_bits(
+            continuation_1,
+            bit_size(continuation_1),
+            offset_1,
+            cache_1
+          )
 
-        {[head | tail], continuation_2}
+        cell = [head | tail]
+        {cell, continuation_2, offset_2, Map.put(cache_2, offset, cell)}
 
       # backref: not supported yet
       <<_rest::size(size - 2)-bitstring, 1::size(1), 1::size(1)>> ->
@@ -43,7 +50,7 @@ defmodule Nue do
     end
   end
 
-  def cue_atom(bits, size) do
+  def cue_atom(bits, size, offset, cache, tag_bits) do
     # the length of the length is stored in unary; as zeroes terminated by a 1.
     length_of_length = count_trailing_zeros(bits, size)
     length_of_length_of_length = length_of_length + 1
@@ -78,7 +85,9 @@ defmodule Nue do
     # at last, return the atom and remaining bitstream.
     # got to flip it (on a byte level) here given how we store them.
     final_atom = atom |> byte_order_flip()
-    {final_atom, rest}
+
+    {final_atom, rest, length + 2 * length_of_length + tag_bits,
+     Map.put(cache, offset, final_atom)}
   end
 
   def count_trailing_zeros(bits, size) do
