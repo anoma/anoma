@@ -3,7 +3,42 @@ defmodule Nue do
   Nue cue implementation.
   """
 
+  require Noun
+
+  @type jam_cache() :: %{Noun.t() => non_neg_integer()}
   @type cue_cache() :: %{non_neg_integer() => Noun.t()}
+
+  @spec jam!(Noun.t()) :: binary()
+  def jam!(noun) do
+    {bits, _cache} = jam_inner(noun, %{})
+    bits |> pad_to_binary() |> Nock.Bits.byte_order_big_to_little()
+  end
+
+  @spec jam_inner(Noun.t(), jam_cache()) :: {bitstring(), jam_cache()}
+  def jam_inner(noun, cache) do
+    case noun do
+      [head | tail] ->
+        {jammed_head, cache_after_head} = jam_inner(head, cache)
+        {jammed_tail, new_cache} = jam_inner(tail, cache_after_head)
+
+        {<<jammed_tail::bitstring, jammed_head::bitstring, 0::1, 1::1>>,
+         new_cache}
+
+      zero when Noun.is_noun_zero(zero) ->
+        # there is no possible backref shorter than this,
+        # and 0 is not a valid backref offset since it means
+        # "the entire noun we are jamming".
+        # offset 1 would be 0b11011, 2.5x the size
+        # so no cache update. 0s are never backreffed-to
+        {<<1::1, 0::1>>, cache}
+
+      atom when Noun.is_noun_atom(atom) ->
+        {atom_bits, atom_size} =
+          atom |> Noun.normalize_noun() |> unpad_from_binary()
+
+        raise "nonzero atoms not implemented yet for #{inspect(atom_bits)} with size #{atom_size}"
+    end
+  end
 
   @spec cue(binary()) :: {:ok, Noun.t()} | :error
   def cue(bytes) do
@@ -22,11 +57,7 @@ defmodule Nue do
 
     # now, trim leading zeroes and turn it into a bitstring rather than
     # a binary made of octets.
-    padded_size = bit_size(bytes)
-    real_size = real_size(bytes)
-
-    <<0::size(padded_size - real_size), bits::size(real_size)-bitstring>> =
-      bytes
+    {bits, real_size} = unpad_from_binary(bytes)
 
     # we expect to consume real_size bits and have nothing left over.
     {result, <<>>, ^real_size, _} = cue_bits(bits, real_size)
@@ -118,9 +149,7 @@ defmodule Nue do
     # now pad the atom back into a binary.
     # this throws away information; alas!
     # maybe we should just support all bitstrings???
-    atom_bits = bit_size(atom)
-    padding_bits = Kernel.rem(8 - Kernel.rem(atom_bits, 8), 8)
-    padded_atom = <<0::size(padding_bits), atom::bitstring>>
+    padded_atom = pad_to_binary(atom)
 
     # at last, return the atom and remaining bitstream.
     # got to flip it (on a byte level) here given how we store them.
@@ -130,6 +159,23 @@ defmodule Nue do
 
     {final_atom, bits, offset + bits_consumed,
      Map.put(cache, offset, final_atom)}
+  end
+
+  @spec pad_to_binary(bitstring()) :: binary()
+  defp pad_to_binary(bits) do
+    padding_bits = Kernel.rem(8 - Kernel.rem(bit_size(bits), 8), 8)
+    <<0::size(padding_bits), bits::bitstring>>
+  end
+
+  @spec unpad_from_binary(binary()) :: {bitstring(), non_neg_integer()}
+  defp unpad_from_binary(bytes) do
+    padded_size = bit_size(bytes)
+    real_size = real_size(bytes)
+
+    <<0::size(padded_size - real_size), bits::size(real_size)-bitstring>> =
+      bytes
+
+    {bits, real_size}
   end
 
   @spec count_trailing_zeros(bitstring(), non_neg_integer()) ::
@@ -145,6 +191,10 @@ defmodule Nue do
   end
 
   @spec real_size(bitstring()) :: non_neg_integer()
+  defp real_size(<<>>) do
+    0
+  end
+
   defp real_size(<<0::1, rest::bitstring>>) do
     real_size(rest)
   end
