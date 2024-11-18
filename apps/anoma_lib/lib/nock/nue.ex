@@ -3,7 +3,7 @@ defmodule Nue do
   Nue cue implementation.
   """
 
-  @type cache() :: %{integer() => Noun.t()}
+  @type cue_cache() :: %{non_neg_integer() => Noun.t()}
 
   @spec cue(binary()) :: {:ok, Noun.t()} | :error
   def cue(bytes) do
@@ -33,8 +33,13 @@ defmodule Nue do
     result
   end
 
-  @spec cue_bits(bitstring(), integer(), integer(), cache()) ::
-          {Noun.t(), bitstring(), integer(), cache()}
+  @spec cue_bits(
+          bitstring(),
+          non_neg_integer(),
+          non_neg_integer(),
+          cue_cache()
+        ) ::
+          {Noun.t(), bitstring(), non_neg_integer(), cue_cache()}
   defp cue_bits(bits, size, offset \\ 0, cache \\ %{}) do
     case bits do
       # special case for atom 0, which is 0-length.
@@ -76,8 +81,14 @@ defmodule Nue do
     end
   end
 
-  @spec cue_atom(bitstring(), integer(), integer(), cache(), 1 | 2) ::
-          {Noun.t(), bitstring(), integer(), cache()}
+  @spec cue_atom(
+          bitstring(),
+          non_neg_integer(),
+          non_neg_integer(),
+          cue_cache(),
+          1 | 2
+        ) ::
+          {Noun.t(), bitstring(), non_neg_integer(), cue_cache()}
   defp cue_atom(bits, size, offset, cache, tag_bits) do
     # the length of the length is stored in unary; as zeroes terminated by a 1.
     length_of_length = count_trailing_zeros(bits, size)
@@ -121,7 +132,8 @@ defmodule Nue do
      Map.put(cache, offset, final_atom)}
   end
 
-  @spec count_trailing_zeros(bitstring(), integer()) :: integer()
+  @spec count_trailing_zeros(bitstring(), non_neg_integer()) ::
+          non_neg_integer()
   defp count_trailing_zeros(bits, size) do
     case bits do
       <<rest::size(size - 1)-bitstring, 0::1>> ->
@@ -132,7 +144,7 @@ defmodule Nue do
     end
   end
 
-  @spec real_size(bitstring()) :: integer()
+  @spec real_size(bitstring()) :: non_neg_integer()
   defp real_size(<<0::1, rest::bitstring>>) do
     real_size(rest)
   end
