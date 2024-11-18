@@ -1,6 +1,6 @@
 defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node
-  alias Node.Transaction.{Storage, Ordering, Mempool}
+  alias Node.Transaction.{Storage, Ordering, Mempool, Backends}
   alias Anoma.TransparentResource.Transaction
 
   alias Examples.{ENock, ETransparent.ETransaction}
@@ -291,14 +291,11 @@ defmodule Anoma.Node.Examples.ETransaction do
     assert {:ok, base_swap |> Transaction.nullifiers()} ==
              Storage.read(node_id, {1, :nullifiers})
 
-    assert {:ok, base_swap |> Transaction.commitments()} ==
-             Storage.read(node_id, {1, :commitments})
+    cms = base_swap |> Transaction.commitments()
 
-    {tree, anchor} =
-      Examples.ECommitmentTree.memory_backed_ct_with_trivial_swap()
+    assert {:ok, cms} == Storage.read(node_id, {1, :commitments})
 
-    assert {:ok, tree} == Storage.read(node_id, {1, :ct})
-    assert {:ok, anchor} == Storage.read(node_id, {1, :anchor})
+    assert {:ok, Backends.value(cms)} == Storage.read(node_id, {1, :anchor})
 
     EventBroker.unsubscribe_me([])
 

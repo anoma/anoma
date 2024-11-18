@@ -10,7 +10,6 @@ defmodule Anoma.Node.Transaction.Backends do
   alias Anoma.TransparentResource
   alias Anoma.TransparentResource.Transaction, as: TTransaction
   alias Anoma.TransparentResource.Resource, as: TResource
-  alias CommitmentTree.Spec
 
   import Nock
   require Noun
@@ -151,15 +150,6 @@ defmodule Anoma.Node.Transaction.Backends do
             }
         end
 
-      ct =
-        case Ordering.read(node_id, {id, :ct}) do
-          :absent -> CommitmentTree.new(Spec.cm_tree_spec(), nil)
-          val -> val
-        end
-
-      {ct_new, anchor} =
-        CommitmentTree.add(ct, map.commitments |> MapSet.to_list())
-
       Ordering.add(
         node_id,
         {id,
@@ -168,7 +158,7 @@ defmodule Anoma.Node.Transaction.Backends do
              {:nullifiers, map.nullifiers},
              {:commitments, map.commitments}
            ],
-           write: [{:anchor, anchor}, {:ct, ct_new}]
+           write: [{:anchor, value(map.commitments)}]
          }}
       )
 
