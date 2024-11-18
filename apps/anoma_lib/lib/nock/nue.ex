@@ -95,24 +95,25 @@ defmodule Nue do
     <<length::size(length_of_length)-integer>> =
       <<1::size(1), length::bitstring>>
 
-    # now we have the actual length and can read that many bits off the bitstream.
+    # now we have the actual length and can read that many bits off the
+    # bitstream. shadowing bits and length once more.
     size = size - length
-    <<rest::size(size)-bitstring, atom::size(length)-bitstring>> = bits
+    <<bits::size(size)-bitstring, atom::size(length)-bitstring>> = bits
 
     # now pad the atom back into a binary.
     # this throws away information; alas!
     # maybe we should just support all bitstrings???
     atom_bits = bit_size(atom)
     padding_bits = Kernel.rem(8 - Kernel.rem(atom_bits, 8), 8)
-    atom = <<0::size(padding_bits), atom::bitstring>>
+    padded_atom = <<0::size(padding_bits), atom::bitstring>>
 
     # at last, return the atom and remaining bitstream.
     # got to flip it (on a byte level) here given how we store them.
-    final_atom = atom |> Nock.Bits.byte_order_big_to_little()
+    final_atom = padded_atom |> Nock.Bits.byte_order_big_to_little()
 
     bits_consumed = length + 2 * length_of_length + tag_bits
 
-    {final_atom, rest, offset + bits_consumed,
+    {final_atom, bits, offset + bits_consumed,
      Map.put(cache, offset, final_atom)}
   end
 
