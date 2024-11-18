@@ -1,5 +1,21 @@
 defmodule Nue do
+  @moduledoc """
+  Nue cue implementation.
+  """
+
+  @type cache() :: %{integer() => Noun.t()}
+
+  @spec cue(binary()) :: {:ok, Noun.t()} | :error
   def cue(bytes) do
+    try do
+      {:ok, cue!(bytes)}
+    rescue
+      _ -> :error
+    end
+  end
+
+  @spec cue!(binary()) :: Noun.t()
+  def cue!(bytes) do
     # we could store binary atoms the other way to not do this.
     # if we did, our strings would print reversed.
     bytes = Nock.Bits.byte_order_little_to_big(bytes)
@@ -16,7 +32,9 @@ defmodule Nue do
     result
   end
 
-  def cue_bits(bits, size, offset \\ 0, cache \\ %{}) do
+  @spec cue_bits(bitstring(), integer(), integer(), cache()) ::
+          {Noun.t(), bitstring(), integer(), cache()}
+  defp cue_bits(bits, size, offset \\ 0, cache \\ %{}) do
     case bits do
       # special case for atom 0, which is 0-length.
       # this does comply with the format but would require encoding a
@@ -54,7 +72,9 @@ defmodule Nue do
     end
   end
 
-  def cue_atom(bits, size, offset, cache, tag_bits) do
+  @spec cue_atom(bitstring(), integer(), integer(), cache(), 1 | 2) ::
+          {Noun.t(), bitstring(), integer(), cache()}
+  defp cue_atom(bits, size, offset, cache, tag_bits) do
     # the length of the length is stored in unary; as zeroes terminated by a 1.
     length_of_length = count_trailing_zeros(bits, size)
     length_of_length_of_length = length_of_length + 1
@@ -96,7 +116,8 @@ defmodule Nue do
      Map.put(cache, offset, final_atom)}
   end
 
-  def count_trailing_zeros(bits, size) do
+  @spec count_trailing_zeros(bitstring(), integer()) :: integer()
+  defp count_trailing_zeros(bits, size) do
     case bits do
       <<rest::size(size - 1)-bitstring, 0::1>> ->
         1 + count_trailing_zeros(rest, size - 1)
@@ -106,6 +127,7 @@ defmodule Nue do
     end
   end
 
+  @spec real_size(bitstring()) :: integer()
   defp real_size(<<0::1, rest::bitstring>>) do
     real_size(rest)
   end
