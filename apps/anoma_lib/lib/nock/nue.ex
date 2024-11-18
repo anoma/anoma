@@ -28,6 +28,7 @@ defmodule Nue do
     <<0::size(padded_size - real_size), bits::size(real_size)-bitstring>> =
       bytes
 
+    # we expect to consume real_size bits and have nothing left over.
     {result, <<>>, ^real_size, _} = cue_bits(bits, real_size)
     result
   end
@@ -42,11 +43,11 @@ defmodule Nue do
       <<rest::size(size - 2)-bitstring, 1::size(1), 0::size(1)>> ->
         {<<>>, rest, offset + 2, Map.put(cache, offset, <<>>)}
 
-      # atom: encoded in a mildly complicated way.
+      # atom: encoded in a mildly complicated way. 1 tag bit.
       <<rest::size(size - 1)-bitstring, 0::size(1)>> ->
         cue_atom(rest, size - 1, offset, cache, 1)
 
-      # cell: just the head, followed by the tail.
+      # cell: after the 2 tag bits, just the head, followed by the tail.
       <<rest::size(size - 2)-bitstring, 0::size(1), 1::size(1)>> ->
         {head, continuation_1, offset_1, cache_1} =
           cue_bits(rest, size - 2, offset + 2, cache)
@@ -62,7 +63,10 @@ defmodule Nue do
         cell = [head | tail]
         {cell, continuation_2, offset_2, Map.put(cache_2, offset, cell)}
 
-      # backref: fetch from the cache
+      # backref: fetch from the cache. encoded the same way as atoms,
+      # but there's 2 tag bits so we pass a 2 there. while cue_atom
+      # returns a new cache for simplicity, the number isn't actually
+      # an encoded atom, so we ignore the updated cache value.
       <<rest::size(size - 2)-bitstring, 1::size(1), 1::size(1)>> ->
         {backref_key, continuation, new_offset, _unused_new_cache} =
           cue_atom(rest, size - 2, offset, cache, 2)
@@ -80,13 +84,13 @@ defmodule Nue do
     length_of_length_of_length = length_of_length + 1
 
     # having found the length of the length, advance the bitstream.
-    # shadowing bits and size here.
+    # shadowing bits and size here to accomplish that.
     size = size - length_of_length_of_length
     <<bits::size(size)-bitstring, _::size(length_of_length_of_length)>> = bits
 
-    # now we can read the length, which is actually one shorter, the most
-    # significant bit is always 1, and not stored.
-    # advance the bitstream by shadowing again.
+    # now we can read the length, which is actually one bit shorter;
+    # the most significant bit is always 1, and not stored.
+    # advance the bitstream by shadowing bits and size again.
     size = size - (length_of_length - 1)
 
     <<bits::size(size)-bitstring,
