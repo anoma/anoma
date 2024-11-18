@@ -10,19 +10,25 @@ defmodule Nue do
 
   @spec jam!(Noun.t()) :: binary()
   def jam!(noun) do
-    {bits, _cache} = jam_inner(noun)
+    {bits, _cache, offset} = jam_inner(noun)
+    # sanity check
+    ^offset = bit_size(bits)
     bits |> pad_to_binary() |> Nock.Bits.byte_order_big_to_little()
   end
 
-  @spec jam_inner(Noun.t(), jam_cache()) :: {bitstring(), jam_cache()}
-  def jam_inner(noun, cache \\ %{}) do
+  @spec jam_inner(Noun.t(), jam_cache(), non_neg_integer()) ::
+          {bitstring(), jam_cache(), non_neg_integer()}
+  def jam_inner(noun, cache \\ %{}, offset \\ 0) do
     case noun do
       [head | tail] ->
-        {jammed_head, cache_after_head} = jam_inner(head, cache)
-        {jammed_tail, new_cache} = jam_inner(tail, cache_after_head)
+        {jammed_head, cache_after_head, offset_after_head} =
+          jam_inner(head, cache, offset + 2)
+
+        {jammed_tail, new_cache, new_offset} =
+          jam_inner(tail, cache_after_head, offset_after_head)
 
         {<<jammed_tail::bitstring, jammed_head::bitstring, 0::1, 1::1>>,
-         new_cache}
+         new_cache, new_offset}
 
       zero when Noun.is_noun_zero(zero) ->
         # there is no possible backref shorter than this,
@@ -30,7 +36,7 @@ defmodule Nue do
         # "the entire noun we are jamming". (it would be 0b111 anyway.)
         # offset 1 would be 0b11011, 2.5x the size
         # so no cache update. 0s are never backreffed-to
-        {<<1::1, 0::1>>, cache}
+        {<<1::1, 0::1>>, cache, offset + 2}
 
       atom when Noun.is_noun_atom(atom) ->
         {atom_bits, atom_size} =
@@ -50,7 +56,9 @@ defmodule Nue do
           <<atom_bits::bitstring, atom_size_truncated::bitstring, 1::1,
             0::size(atom_size_of_size), 0::1>>
 
-        {encoded_atom, cache}
+        encoded_atom_size = bit_size(encoded_atom)
+
+        {encoded_atom, cache, offset + encoded_atom_size}
     end
   end
 
