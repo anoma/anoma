@@ -5,17 +5,17 @@ defmodule Nue do
 
   require Noun
 
-  @type jam_cache() :: %{Noun.t() => non_neg_integer()}
+  @type jam_cache() :: %{Noun.t() => {bitstring(), non_neg_integer()}}
   @type cue_cache() :: %{non_neg_integer() => Noun.t()}
 
   @spec jam!(Noun.t()) :: binary()
   def jam!(noun) do
-    {bits, _cache} = jam_inner(noun, %{})
+    {bits, _cache} = jam_inner(noun)
     bits |> pad_to_binary() |> Nock.Bits.byte_order_big_to_little()
   end
 
   @spec jam_inner(Noun.t(), jam_cache()) :: {bitstring(), jam_cache()}
-  def jam_inner(noun, cache) do
+  def jam_inner(noun, cache \\ %{}) do
     case noun do
       [head | tail] ->
         {jammed_head, cache_after_head} = jam_inner(head, cache)
