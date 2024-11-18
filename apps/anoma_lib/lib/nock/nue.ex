@@ -27,16 +27,30 @@ defmodule Nue do
       zero when Noun.is_noun_zero(zero) ->
         # there is no possible backref shorter than this,
         # and 0 is not a valid backref offset since it means
-        # "the entire noun we are jamming".
+        # "the entire noun we are jamming". (it would be 0b111 anyway.)
         # offset 1 would be 0b11011, 2.5x the size
         # so no cache update. 0s are never backreffed-to
         {<<1::1, 0::1>>, cache}
 
       atom when Noun.is_noun_atom(atom) ->
         {atom_bits, atom_size} =
-          atom |> Noun.normalize_noun() |> unpad_from_binary()
+          atom
+          |> Noun.normalize_noun()
+          |> Nock.Bits.byte_order_little_to_big()
+          |> unpad_from_binary()
 
-        raise "nonzero atoms not implemented yet for #{inspect(atom_bits)} with size #{atom_size}"
+        {atom_size_as_bits, atom_size_of_size} =
+          atom_size |> :binary.encode_unsigned(:big) |> unpad_from_binary()
+
+        <<1::1, atom_size_truncated::bitstring>> = atom_size_as_bits
+
+        # from right to left: tag bit for atom, unary size of size,
+        # atom size with leading 1 chopped off, actual atom bits
+        encoded_atom =
+          <<atom_bits::bitstring, atom_size_truncated::bitstring, 1::1,
+            0::size(atom_size_of_size), 0::1>>
+
+        {encoded_atom, cache}
     end
   end
 
