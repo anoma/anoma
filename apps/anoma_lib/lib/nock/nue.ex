@@ -104,8 +104,7 @@ defmodule Nue do
   @spec jam_atom_encode(bitstring(), non_neg_integer()) ::
           {bitstring(), non_neg_integer()}
   defp jam_atom_encode(atom_bits, atom_size) do
-    {atom_size_as_bits, atom_size_of_size} =
-      atom_size |> :binary.encode_unsigned(:big) |> unpad_from_binary()
+    {atom_size_as_bits, atom_size_of_size} = integer_to_bits(atom_size)
 
     <<1::1, atom_size_truncated::bitstring>> = atom_size_as_bits
 
