@@ -264,29 +264,30 @@ defmodule Nue do
 
   @spec count_trailing_zeros(bitstring(), non_neg_integer()) ::
           non_neg_integer()
-  defp count_trailing_zeros(bits, size) do
+  defp count_trailing_zeros(bits, size, acc \\ 0) do
     case bits do
       <<>> ->
-        0
-
-      <<rest::size(size - 1)-bitstring, 0::1>> ->
-        1 + count_trailing_zeros(rest, size - 1)
+        acc
 
       <<_::size(size - 1), 1::1>> ->
-        0
+        acc
+
+      <<rest::size(size - 1)-bitstring, 0::1>> ->
+        count_trailing_zeros(rest, size - 1, acc + 1)
     end
   end
 
-  defp count_leading_zeros(bits) do
+  @spec count_leading_zeros(bitstring()) :: non_neg_integer()
+  defp count_leading_zeros(bits, acc \\ 0) do
     case bits do
       <<>> ->
-        0
-
-      <<0::1, rest::bitstring>> ->
-        1 + count_leading_zeros(rest)
+        acc
 
       <<1::1, _::bitstring>> ->
-        0
+        acc
+
+      <<0::1, rest::bitstring>> ->
+        count_leading_zeros(rest, acc + 1)
     end
   end
 
