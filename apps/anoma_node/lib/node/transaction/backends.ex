@@ -62,7 +62,7 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec execute(String.t(), {backend(), Noun.t()}, binary()) :: :ok
   def execute(node_id, {backend, tx}, id)
       when Noun.is_noun_atom(tx) do
-    case Nock.Cue.cue(tx) do
+    case Noun.Jam.cue(tx) do
       {:ok, tx} ->
         execute(node_id, {backend, tx}, id)
 
@@ -300,7 +300,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   defp is_ephemeral?(jammed_transaction) do
     nock_boolean =
-      Nock.Cue.cue(jammed_transaction)
+      Noun.Jam.cue(jammed_transaction)
       |> elem(1)
       |> Noun.list_nock_to_erlang_safe()
       |> elem(1)

@@ -32,8 +32,8 @@ defmodule Examples.ETransparent.EResource do
 
     assert {:ok, uncued} =
              Resource.to_noun(res)
-             |> Nock.Jam.jam()
-             |> Nock.Cue.cue()
+             |> Noun.Jam.jam()
+             |> Noun.Jam.cue()
              |> elem(1)
              |> Resource.from_noun()
 

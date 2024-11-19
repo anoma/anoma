@@ -202,7 +202,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, result} = Intents.Stub.prove(conn.channel, request)
 
-    assert {:ok, <<123>>} == Nock.Cue.cue(elem(result.result, 1))
+    assert {:ok, <<123>>} == Noun.Jam.cue(elem(result.result, 1))
 
     result
   end
@@ -212,8 +212,8 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec prove_something_jammed(EConnection.t()) :: Prove.Response.t()
   def prove_something_jammed(conn \\ setup()) do
-    program = Nock.Jam.jam([[1 | 123], 0 | 0])
-    input = jammed_input(Nock.Jam.jam(1))
+    program = Noun.Jam.jam([[1 | 123], 0 | 0])
+    input = jammed_input(Noun.Jam.jam(1))
 
     request = %Prove.Request{
       program: {:jammed_program, program},
@@ -222,7 +222,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, result} = Intents.Stub.prove(conn.channel, request)
 
-    assert {:ok, <<123>>} == Nock.Cue.cue(elem(result.result, 1))
+    assert {:ok, <<123>>} == Noun.Jam.cue(elem(result.result, 1))
 
     result
   end
@@ -234,7 +234,7 @@ defmodule Anoma.Client.Examples.EClient do
   def run_juvix_factorial(conn \\ setup()) do
     # assume the program and inputs are jammed
     program = jammed_program_juvix_squared()
-    input = jammed_input(Nock.Jam.jam(3))
+    input = jammed_input(Noun.Jam.jam(3))
 
     request = %Prove.Request{
       program: {:jammed_program, program},
@@ -243,7 +243,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, result} = Intents.Stub.prove(conn.channel, request)
 
-    assert {:ok, <<9>>} == Nock.Cue.cue(elem(result.result, 1))
+    assert {:ok, <<9>>} == Noun.Jam.cue(elem(result.result, 1))
 
     result
   end
@@ -262,7 +262,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec noun_program_juvix_squared() :: Noun.t()
   def noun_program_juvix_squared() do
     jammed_program_juvix_squared()
-    |> Nock.Cue.cue()
+    |> Noun.Jam.cue()
     |> elem(1)
   end
 
@@ -274,7 +274,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec jammed_program_example() :: binary()
   def jammed_program_example() do
     noun_program_example()
-    |> Nock.Jam.jam()
+    |> Noun.Jam.jam()
   end
 
   @spec noun_program_example() :: Noun.t()
@@ -291,7 +291,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec jammed_program_minisquare() :: binary()
   def jammed_program_minisquare() do
     noun_program_minisquare()
-    |> Nock.Jam.jam()
+    |> Noun.Jam.jam()
   end
 
   @spec noun_program_minisquare() :: Noun.t()
