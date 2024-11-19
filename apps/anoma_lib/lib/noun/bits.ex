@@ -31,4 +31,28 @@ defmodule Noun.Bits do
   defp byte_to_bits(byte) do
     Enum.map(0..7, fn shift -> byte >>> shift &&& 1 end)
   end
+
+  @doc """
+  I take in little endian encoded bytes and switch the encoding to big
+  endian.
+  """
+
+  @spec byte_order_little_to_big(binary()) :: binary()
+  def byte_order_little_to_big(bytes) do
+    bytes
+    |> :binary.decode_unsigned(:little)
+    |> :binary.encode_unsigned()
+  end
+
+  @doc """
+  I take in big endian encoded bytes and switch the encoding to little
+  endian.
+  """
+
+  @spec byte_order_big_to_little(binary()) :: binary()
+  def byte_order_big_to_little(bytes) do
+    bytes
+    |> :binary.decode_unsigned()
+    |> :binary.encode_unsigned(:little)
+  end
 end
