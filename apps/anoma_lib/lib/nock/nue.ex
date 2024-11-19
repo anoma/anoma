@@ -19,47 +19,105 @@ defmodule Nue do
   @spec jam_inner(Noun.t(), jam_cache(), non_neg_integer()) ::
           {bitstring(), jam_cache(), non_neg_integer()}
   def jam_inner(noun, cache \\ %{}, offset \\ 0) do
-    case noun do
-      [head | tail] ->
-        {jammed_head, cache_after_head, offset_after_head} =
-          jam_inner(head, cache, offset + 2)
+    # this could be Map.get_lazy if the offset tracking
+    # didn't make using that awkward.
+    with {backref, backref_size} <- Map.get(cache, noun) do
+      {backref, cache, offset + backref_size}
+    else
+      _ ->
+        # compute a backref to our offset here first
+        {offset_bits, offset_bits_size} = integer_to_bits(offset)
 
-        {jammed_tail, new_cache, new_offset} =
-          jam_inner(tail, cache_after_head, offset_after_head)
+        {encoded_offset, encoded_offset_size} =
+          jam_atom_encode(offset_bits, offset_bits_size)
 
-        {<<jammed_tail::bitstring, jammed_head::bitstring, 0::1, 1::1>>,
-         new_cache, new_offset}
+        backref = <<encoded_offset::bitstring, 1::1, 1::1>>
+        backref_size = encoded_offset_size + 2
+        # sanity check
+        ^backref_size = bit_size(backref)
 
-      zero when Noun.is_noun_zero(zero) ->
-        # there is no possible backref shorter than this,
-        # and 0 is not a valid backref offset since it means
-        # "the entire noun we are jamming". (it would be 0b111 anyway.)
-        # offset 1 would be 0b11011, 2.5x the size
-        # so no cache update. 0s are never backreffed-to
-        {<<1::1, 0::1>>, cache, offset + 2}
+        case noun do
+          [head | tail] ->
+            {jammed_head, cache_after_head, offset_after_head} =
+              jam_inner(head, cache, offset + 2)
 
-      atom when Noun.is_noun_atom(atom) ->
-        {atom_bits, atom_size} =
-          atom
-          |> Noun.normalize_noun()
-          |> Nock.Bits.byte_order_little_to_big()
-          |> unpad_from_binary()
+            {jammed_tail, new_cache, new_offset} =
+              jam_inner(tail, cache_after_head, offset_after_head)
 
-        {atom_size_as_bits, atom_size_of_size} =
-          atom_size |> :binary.encode_unsigned(:big) |> unpad_from_binary()
+            encoded_cell =
+              <<jammed_tail::bitstring, jammed_head::bitstring, 0::1, 1::1>>
 
-        <<1::1, atom_size_truncated::bitstring>> = atom_size_as_bits
+            encoded_cell_size = bit_size(encoded_cell)
 
-        # from right to left: tag bit for atom, unary size of size,
-        # atom size with leading 1 chopped off, actual atom bits
-        encoded_atom =
-          <<atom_bits::bitstring, atom_size_truncated::bitstring, 1::1,
-            0::size(atom_size_of_size), 0::1>>
+            # if the backref to here would be no larger than the encoding,
+            # put it in the cache.
+            maybe_updated_cache =
+              if backref_size <= encoded_cell_size do
+                Map.put(new_cache, noun, {backref, backref_size})
+              else
+                new_cache
+              end
 
-        encoded_atom_size = bit_size(encoded_atom)
+            {encoded_cell, maybe_updated_cache, new_offset}
 
-        {encoded_atom, cache, offset + encoded_atom_size}
+          zero when Noun.is_noun_zero(zero) ->
+            # there is no possible backref shorter than this,
+            # and 0 is not a valid backref offset since it means
+            # "the entire noun we are jamming". (it would be 0b111 anyway.)
+            # offset 1 would be 0b11011, 2.5x the size
+            # so no cache update. 0s are never backreffed-to
+            {<<1::1, 0::1>>, cache, offset + 2}
+
+          atom when Noun.is_noun_atom(atom) ->
+            {atom_bits, atom_size} =
+              atom
+              |> Noun.normalize_noun()
+              |> Nock.Bits.byte_order_little_to_big()
+              |> unpad_from_binary()
+
+            {encoded_atom, encoded_atom_size} =
+              jam_atom_encode(atom_bits, atom_size)
+
+            # add the atom tag bit, shadowing encoded_atom and encoded_atom_size
+            encoded_atom = <<encoded_atom::bitstring, 0::1>>
+            encoded_atom_size = encoded_atom_size + 1
+
+            # if the backref to here would be no larger than the encoding,
+            # put it in the cache.
+            maybe_updated_cache =
+              if backref_size <= encoded_atom_size do
+                Map.put(cache, noun, {backref, backref_size})
+              else
+                cache
+              end
+
+            {encoded_atom, maybe_updated_cache, offset + encoded_atom_size}
+        end
     end
+  end
+
+  @spec jam_atom_encode(<<>>, 0) :: {<<_::1>>, 1}
+  defp jam_atom_encode(<<>>, 0) do
+    {<<1::1>>, 1}
+  end
+
+  @spec jam_atom_encode(bitstring(), non_neg_integer()) ::
+          {bitstring(), non_neg_integer()}
+  defp jam_atom_encode(atom_bits, atom_size) do
+    {atom_size_as_bits, atom_size_of_size} =
+      atom_size |> :binary.encode_unsigned(:big) |> unpad_from_binary()
+
+    <<1::1, atom_size_truncated::bitstring>> = atom_size_as_bits
+
+    # from right to left: unary size of size,
+    # atom size with leading 1 chopped off, actual atom bits
+    encoded_atom =
+      <<atom_bits::bitstring, atom_size_truncated::bitstring, 1::1,
+        0::size(atom_size_of_size)>>
+
+    encoded_atom_size = bit_size(encoded_atom)
+
+    {encoded_atom, encoded_atom_size}
   end
 
   @spec cue(binary()) :: {:ok, Noun.t()} | :error
@@ -198,6 +256,11 @@ defmodule Nue do
       bytes
 
     {bits, real_size}
+  end
+
+  @spec integer_to_bits(non_neg_integer()) :: {bitstring(), non_neg_integer()}
+  defp integer_to_bits(n) do
+    n |> :binary.encode_unsigned(:big) |> unpad_from_binary()
   end
 
   @spec count_trailing_zeros(bitstring(), non_neg_integer()) ::
