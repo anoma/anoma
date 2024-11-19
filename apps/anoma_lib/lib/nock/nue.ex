@@ -1,6 +1,17 @@
 defmodule Nue do
   @moduledoc """
-  Nue cue implementation.
+  I provide jam and cue, the serializer and deserializer for nouns.
+
+  Jam is optimized for small output size; cue is optimized for speed.
+  Any improvements made here should neither make jam outputs larger nor
+  make cue slower. Additionally, cue compatibility across all existing
+  implementations is a hard requirement.
+
+  This implementation, unlike others, only emits references in jam if
+  they would not make the output larger; existing implementations have
+  a bug in calculating this. However, all existing implementations of
+  cue are compatible with both encoders' output. Correctly calculating
+  this makes outputs significantly smaller on large nouns.
   """
 
   require Noun
