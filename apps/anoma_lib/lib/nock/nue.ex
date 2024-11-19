@@ -293,6 +293,27 @@ defmodule Nue do
       <<1::1, _::bitstring>> ->
         acc
 
+      # hereinafter, unroll the cases we actually expect;
+      # this is slightly faster and it's a hotspot
+
+      <<0::7, rest::bitstring>> ->
+        count_leading_zeros(rest, acc + 7)
+
+      <<0::6, rest::bitstring>> ->
+        count_leading_zeros(rest, acc + 6)
+
+      <<0::5, rest::bitstring>> ->
+        count_leading_zeros(rest, acc + 5)
+
+      <<0::4, rest::bitstring>> ->
+        count_leading_zeros(rest, acc + 4)
+
+      <<0::3, rest::bitstring>> ->
+        count_leading_zeros(rest, acc + 3)
+
+      <<0::2, rest::bitstring>> ->
+        count_leading_zeros(rest, acc + 2)
+
       <<0::1, rest::bitstring>> ->
         count_leading_zeros(rest, acc + 1)
     end
