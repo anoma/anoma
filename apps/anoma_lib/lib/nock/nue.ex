@@ -25,16 +25,23 @@ defmodule Nue do
       {backref, cache, offset + backref_size}
     else
       _ ->
-        # compute a backref to our offset here first
-        {offset_bits, offset_bits_size} = integer_to_bits(offset)
+        # cases where we will obviously never store a backref
+        {backref, backref_size} =
+          if offset == 0 or Noun.is_noun_zero(noun) do
+            {nil, nil}
+          else
+            # compute a backref to our offset here first
+            {offset_bits, offset_bits_size} = integer_to_bits(offset)
 
-        {encoded_offset, encoded_offset_size} =
-          jam_atom_encode(offset_bits, offset_bits_size)
+            {encoded_offset, encoded_offset_size} =
+              jam_atom_encode(offset_bits, offset_bits_size)
 
-        backref = <<encoded_offset::bitstring, 1::1, 1::1>>
-        backref_size = encoded_offset_size + 2
-        # sanity check
-        ^backref_size = bit_size(backref)
+            backref = <<encoded_offset::bitstring, 1::1, 1::1>>
+            backref_size = encoded_offset_size + 2
+            # sanity check
+            ^backref_size = bit_size(backref)
+            {backref, backref_size}
+          end
 
         case noun do
           [head | tail] ->
