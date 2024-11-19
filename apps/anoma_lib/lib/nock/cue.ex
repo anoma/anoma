@@ -155,13 +155,13 @@ defmodule Nock.Cue do
   end
 
   @spec pad_to_binary(bitstring()) :: binary()
-  defp pad_to_binary(bits) do
+  def pad_to_binary(bits) do
     padding_bits = Kernel.rem(8 - Kernel.rem(bit_size(bits), 8), 8)
     <<0::size(padding_bits), bits::bitstring>>
   end
 
   @spec unpad_from_binary(binary()) :: {bitstring(), non_neg_integer()}
-  defp unpad_from_binary(bytes) do
+  def unpad_from_binary(bytes) do
     padded_size = bit_size(bytes)
     real_size = real_size(bytes)
 
