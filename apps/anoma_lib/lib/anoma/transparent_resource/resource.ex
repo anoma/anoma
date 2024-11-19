@@ -97,7 +97,7 @@ defmodule Anoma.TransparentResource.Resource do
   end
 
   def kind(%Resource{label: label, logic: logic}) do
-    kind = label <> Noun.atom_integer_to_binary(Nock.Jam.jam(logic))
+    kind = label <> Noun.atom_integer_to_binary(Noun.Jam.jam(logic))
     :crypto.hash(:sha256, kind)
   end
 
@@ -106,12 +106,12 @@ defmodule Anoma.TransparentResource.Resource do
   end
 
   def commitment(resource = %Resource{}) do
-    binary_resource = resource |> to_noun() |> Nock.Jam.jam()
+    binary_resource = resource |> to_noun() |> Noun.Jam.jam()
     "CM_" <> binary_resource
   end
 
   def nullifier(resource = %Resource{}) do
-    binary_resource = resource |> to_noun() |> Nock.Jam.jam()
+    binary_resource = resource |> to_noun() |> Noun.Jam.jam()
     "NF_" <> binary_resource
   end
 

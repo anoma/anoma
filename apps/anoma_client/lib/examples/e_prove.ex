@@ -13,7 +13,7 @@ defmodule Anoma.Client.Examples.EProve do
       :code.priv_dir(:anoma_client)
       |> Path.join("test_juvix/Squared.nockma")
       |> File.read!()
-      |> Nock.Cue.cue()
+      |> Noun.Jam.cue()
 
     inputs =
       Enum.map(["3"], &Noun.Format.parse_always/1)
@@ -30,7 +30,7 @@ defmodule Anoma.Client.Examples.EProve do
     {:ok, program} =
       "BcGCZJgJ7v9BMmQQLewS4uPxRKY="
       |> Base.decode64!()
-      |> Nock.Cue.cue()
+      |> Noun.Jam.cue()
 
     inputs = Enum.map(["3"], &Noun.Format.parse_always/1)
     result = Runner.prove(program, inputs)
