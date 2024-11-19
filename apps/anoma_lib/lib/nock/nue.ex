@@ -267,6 +267,9 @@ defmodule Nue do
           non_neg_integer()
   defp count_trailing_zeros(bits, size) do
     case bits do
+      <<>> ->
+        0
+
       <<rest::size(size - 1)-bitstring, 0::1>> ->
         1 + count_trailing_zeros(rest, size - 1)
 
@@ -275,16 +278,21 @@ defmodule Nue do
     end
   end
 
+  defp count_leading_zeros(bits) do
+    case bits do
+      <<>> ->
+        0
+
+      <<0::1, rest::bitstring>> ->
+        1 + count_leading_zeros(rest)
+
+      <<1::1, _::bitstring>> ->
+        0
+    end
+  end
+
   @spec real_size(bitstring()) :: non_neg_integer()
-  defp real_size(<<>>) do
-    0
-  end
-
-  defp real_size(<<0::1, rest::bitstring>>) do
-    real_size(rest)
-  end
-
-  defp real_size(bits = <<1::1, _::bitstring>>) do
-    bit_size(bits)
+  defp real_size(bits) do
+    bit_size(bits) - count_leading_zeros(bits)
   end
 end
