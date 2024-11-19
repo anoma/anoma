@@ -202,7 +202,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, result} = Intents.Stub.prove(conn.channel, request)
 
-    assert {:ok, 123} == Nock.Cue.cue(elem(result.result, 1))
+    assert {:ok, <<123>>} == Nock.Cue.cue(elem(result.result, 1))
 
     result
   end
@@ -222,7 +222,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, result} = Intents.Stub.prove(conn.channel, request)
 
-    assert {:ok, 123} == Nock.Cue.cue(elem(result.result, 1))
+    assert {:ok, <<123>>} == Nock.Cue.cue(elem(result.result, 1))
 
     result
   end
@@ -243,7 +243,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, result} = Intents.Stub.prove(conn.channel, request)
 
-    assert {:ok, 9} == Nock.Cue.cue(elem(result.result, 1))
+    assert {:ok, <<9>>} == Nock.Cue.cue(elem(result.result, 1))
 
     result
   end

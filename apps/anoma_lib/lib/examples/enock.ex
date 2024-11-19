@@ -1512,8 +1512,10 @@ defmodule Examples.ENock do
       )
     )
 
-    assert dec() ==
+    assert Noun.equal(
+             dec(),
              dec() |> Nock.Jam.jam() |> Nock.Cue.cue!()
+           )
 
     :ok
   end

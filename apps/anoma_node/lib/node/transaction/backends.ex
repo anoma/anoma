@@ -302,6 +302,8 @@ defmodule Anoma.Node.Transaction.Backends do
     nock_boolean =
       Nock.Cue.cue(jammed_transaction)
       |> elem(1)
+      |> Noun.list_nock_to_erlang_safe()
+      |> elem(1)
       |> List.pop_at(2)
       |> elem(0)
 
