@@ -22,7 +22,7 @@ defmodule Nock.Cue do
   @spec cue!(Noun.noun_atom()) :: Noun.t()
   def cue!(number) do
     number
-    |> Nock.Bits.integer_to_bits()
+    |> Noun.Bits.integer_to_bits()
     |> parse()
     |> elem(0)
   end
@@ -47,7 +47,7 @@ defmodule Nock.Cue do
 
     # this number is missing the MSB, so we need to or it with the mask
     length_parsed_number =
-      Nock.Bits.bit_list_to_integer(length_decode)
+      Noun.Bits.bit_list_to_integer(length_decode)
 
     masked_number = 1 <<< bit_width_left
 
@@ -56,7 +56,7 @@ defmodule Nock.Cue do
     {integer_decode, new_stream} = Enum.split(new_stream, length)
 
     atom =
-      Nock.Bits.bit_list_to_integer(integer_decode)
+      Noun.Bits.bit_list_to_integer(integer_decode)
 
     {atom, new_stream,
      %__MODULE__{env | position: env.position + length + bit_width_left}}
