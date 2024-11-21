@@ -81,49 +81,49 @@ defmodule Anoma.Node.Examples.ETransaction do
   def append_then_read(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
     new_set = MapSet.new(["value"])
-    Storage.append(node_id, {1, [{:set, new_set}]})
-    {:ok, ^new_set} = Storage.read(node_id, {1, :set})
+    Storage.append(node_id, {1, [{["set"], new_set}]})
+    {:ok, ^new_set} = Storage.read(node_id, {1, ["set"]})
   end
 
   def append_then_read_same(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
     new_set = MapSet.new(["value"])
-    Storage.append(node_id, {1, [{:set, new_set}, {:set, new_set}]})
-    {:ok, ^new_set} = Storage.read(node_id, {1, :set})
+    Storage.append(node_id, {1, [{["set"], new_set}, {["set"], new_set}]})
+    {:ok, ^new_set} = Storage.read(node_id, {1, ["set"]})
   end
 
   def append_then_read_several(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
     set1 = MapSet.new(["value1"])
     set2 = MapSet.new(["value2"])
-    Storage.append(node_id, {1, [{:set, set1}, {:set, set2}]})
+    Storage.append(node_id, {1, [{["set"], set1}, {["set"], set2}]})
     new_set = MapSet.new(["value1", "value2"])
-    {:ok, ^new_set} = Storage.read(node_id, {1, :set})
+    {:ok, ^new_set} = Storage.read(node_id, {1, ["set"]})
   end
 
   def append_twice_then_read(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
     set1 = MapSet.new(["value1"])
-    Storage.append(node_id, {1, [{:set, set1}]})
-    {:ok, ^set1} = Storage.read(node_id, {1, :set})
+    Storage.append(node_id, {1, [{["set"], set1}]})
+    {:ok, ^set1} = Storage.read(node_id, {1, ["set"]})
     set2 = MapSet.new(["value2"])
-    Storage.append(node_id, {2, [{:set, set2}]})
+    Storage.append(node_id, {2, [{["set"], set2}]})
     appended_set = MapSet.new(["value1", "value2"])
-    {:ok, ^appended_set} = Storage.read(node_id, {2, :set})
+    {:ok, ^appended_set} = Storage.read(node_id, {2, ["set"]})
   end
 
   def append_twice_then_read_with_commit(node_id \\ Node.example_random_id()) do
     start_storage(node_id)
     set1 = MapSet.new(["value1"])
-    Storage.append(node_id, {1, [{:set, set1}]})
-    {:ok, ^set1} = Storage.read(node_id, {1, :set})
+    Storage.append(node_id, {1, [{["set"], set1}]})
+    {:ok, ^set1} = Storage.read(node_id, {1, ["set"]})
 
     Storage.commit(node_id, 1, nil)
 
     set2 = MapSet.new(["value2"])
-    Storage.append(node_id, {2, [{:set, set2}]})
+    Storage.append(node_id, {2, [{["set"], set2}]})
     appended_set = MapSet.new(["value1", "value2"])
-    {:ok, ^appended_set} = Storage.read(node_id, {2, :set})
+    {:ok, ^appended_set} = Storage.read(node_id, {2, ["set"]})
   end
 
   def add_rewrites(node_id \\ Node.example_random_id()) do
@@ -132,11 +132,11 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     Storage.add(
       node_id,
-      {2, %{write: [{["abc"], 234}], append: [{:set, new_set}]}}
+      {2, %{write: [{["abc"], 234}], append: [{["set"], new_set}]}}
     )
 
     {:ok, 234} = Storage.read(node_id, {2, ["abc"]})
-    {:ok, ^new_set} = Storage.read(node_id, {2, :set})
+    {:ok, ^new_set} = Storage.read(node_id, {2, ["set"]})
   end
 
   def add_append(node_id \\ Node.example_random_id()) do
@@ -145,12 +145,12 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     Storage.add(
       node_id,
-      {2, %{write: [{["abc"], 234}], append: [{:set, new_value_set}]}}
+      {2, %{write: [{["abc"], 234}], append: [{["set"], new_value_set}]}}
     )
 
     {:ok, 234} = Storage.read(node_id, {2, ["abc"]})
     new_set = MapSet.new(["new_value", "value"])
-    {:ok, ^new_set} = Storage.read(node_id, {2, :set})
+    {:ok, ^new_set} = Storage.read(node_id, {2, ["set"]})
   end
 
   def complicated_storage(node_id \\ Node.example_random_id()) do
@@ -289,13 +289,17 @@ defmodule Anoma.Node.Examples.ETransaction do
     base_swap = ETransaction.swap_from_actions()
 
     assert {:ok, base_swap |> Transaction.nullifiers()} ==
-             Storage.read(node_id, {1, :nullifiers})
+             Storage.read(node_id, {1, ["anoma", "nullifiers"]})
+
+    assert {:ok, base_swap |> Transaction.commitments()} ==
+             Storage.read(node_id, {1, ["anoma", "commitments"]})
 
     cms = base_swap |> Transaction.commitments()
 
-    assert {:ok, cms} == Storage.read(node_id, {1, :commitments})
+    assert {:ok, cms} == Storage.read(node_id, {1, ["anoma", "commitments"]})
 
-    assert {:ok, Backends.value(cms)} == Storage.read(node_id, {1, :anchor})
+    assert {:ok, Backends.value(cms)} ==
+             Storage.read(node_id, {1, ["anoma", "anchor"]})
 
     EventBroker.unsubscribe_me([])
 

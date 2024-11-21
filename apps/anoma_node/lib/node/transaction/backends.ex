@@ -155,10 +155,10 @@ defmodule Anoma.Node.Transaction.Backends do
         {id,
          %{
            append: [
-             {:nullifiers, map.nullifiers},
-             {:commitments, map.commitments}
+             {anoma_keyspace("nullifiers"), map.nullifiers},
+             {anoma_keyspace("commitments"), map.commitments}
            ],
-           write: [{:anchor, value(map.commitments)}]
+           write: [{anoma_keyspace("anchor"), value(map.commitments)}]
          }}
       )
 
@@ -192,8 +192,11 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec storage_check?(String.t(), binary(), TTransaction.t()) ::
           true | {:error, String.t()}
   defp storage_check?(node_id, id, trans) do
-    stored_commitments = Ordering.read(node_id, {id, :commitments})
-    stored_nullifiers = Ordering.read(node_id, {id, :nullifiers})
+    stored_commitments =
+      Ordering.read(node_id, {id, anoma_keyspace("commitments")})
+
+    stored_nullifiers =
+      Ordering.read(node_id, {id, anoma_keyspace("nullifiers")})
 
     # TODO improve error messages
     cond do
@@ -269,7 +272,11 @@ defmodule Anoma.Node.Transaction.Backends do
     action_nullifiers = TTransaction.nullifiers(trans)
 
     if latest_root_time > 0 do
-      root_coms = Storage.read(node_id, {latest_root_time, :commitments})
+      root_coms =
+        Storage.read(
+          node_id,
+          {latest_root_time, anoma_keyspace("commitments")}
+        )
 
       for <<"NF_", rest::binary>> <- action_nullifiers,
           reduce: MapSet.new([]) do
@@ -424,5 +431,10 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec verify(binary(), MapSet.t(), binary()) :: bool()
   def verify(cm, w, val) do
     val == value(w) and MapSet.member?(w, cm)
+  end
+
+  @spec anoma_keyspace(String.t()) :: list(String.t())
+  defp anoma_keyspace(key) do
+    ["anoma", key]
   end
 end
