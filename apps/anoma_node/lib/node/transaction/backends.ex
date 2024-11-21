@@ -35,7 +35,8 @@ defmodule Anoma.Node.Transaction.Backends do
     field(:tx_result, {:ok, any()} | :error)
   end
 
-  typedstruct enforce: true, module: NullifierEvent do
+  typedstruct enforce: true, module: TRMEvent do
+    field(:commitments, MapSet.t(binary()))
     field(:nullifiers, MapSet.t(binary()))
   end
 
@@ -162,7 +163,7 @@ defmodule Anoma.Node.Transaction.Backends do
          }}
       )
 
-      nullifier_event(map.nullifiers, node_id)
+      transparent_rm_event(map.commitments, map.nullifiers, node_id)
 
       complete_event(id, {:ok, tx}, node_id)
 
@@ -369,11 +370,16 @@ defmodule Anoma.Node.Transaction.Backends do
     EventBroker.event(event)
   end
 
-  @spec nullifier_event(MapSet.t(binary()), String.t()) :: :ok
-  defp nullifier_event(set, node_id) do
+  @spec transparent_rm_event(
+          MapSet.t(binary()),
+          MapSet.t(binary()),
+          String.t()
+        ) :: :ok
+  defp transparent_rm_event(cms, nlfs, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.NullifierEvent{
-        nullifiers: set
+      Node.Event.new_with_body(node_id, %__MODULE__.TRMEvent{
+        commitments: cms,
+        nullifiers: nlfs
       })
 
     EventBroker.event(event)

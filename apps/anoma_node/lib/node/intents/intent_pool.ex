@@ -53,7 +53,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
     EventBroker.subscribe_me([
       Node.Event.node_filter(node_id),
-      nullifier_filter()
+      trm_filter()
     ])
 
     {:ok, %IntentPool{node_id: args[:node_id]}}
@@ -116,7 +116,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   @impl true
   def handle_info(
         %EventBroker.Event{
-          body: %Node.Event{body: %Backends.NullifierEvent{nullifiers: set}}
+          body: %Node.Event{body: %Backends.TRMEvent{nullifiers: set}}
         },
         state
       ) do
@@ -204,9 +204,9 @@ defmodule Anoma.Node.Intents.IntentPool do
   #                         Helpers                          #
   ############################################################
 
-  deffilter NullifierFilter do
+  deffilter TRMFilter do
     %EventBroker.Event{
-      body: %Anoma.Node.Event{body: %Backends.NullifierEvent{}}
+      body: %Anoma.Node.Event{body: %Backends.TRMEvent{}}
     } ->
       true
 
@@ -214,7 +214,7 @@ defmodule Anoma.Node.Intents.IntentPool do
       false
   end
 
-  defp nullifier_filter() do
-    %__MODULE__.NullifierFilter{}
+  defp trm_filter() do
+    %__MODULE__.TRMFilter{}
   end
 end
