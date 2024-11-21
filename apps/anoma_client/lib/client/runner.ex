@@ -9,11 +9,17 @@ defmodule Anoma.Client.Runner do
       (Noun.list_nock_to_erlang(program) ++ [Nock.rm_core()])
       |> to_improper_list()
 
-    stuff = to_improper_list([6, 1] ++ inputs)
+    eval_call =
+      if inputs == [] do
+        [9, 2, 0 | 1]
+      else
+        sample_replace = to_improper_list([6, 1] ++ inputs)
+        [9, 2, 10, sample_replace, 0 | 1]
+      end
 
     io_sink = open_io_sink()
 
-    case Nock.nock(core, [9, 2, 10, stuff, 0 | 1], %Nock{stdio: io_sink}) do
+    case Nock.nock(core, eval_call, %Nock{stdio: io_sink}) do
       {:ok, noun} ->
         {:ok, result} = close_io_sink(io_sink)
         {:ok, noun, result}
