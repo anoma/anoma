@@ -43,6 +43,7 @@ defmodule Anoma.Node.Event do
       false
   end
 
+  @spec node_filter(String.t()) :: NodeFilter.t()
   def node_filter(node_id) do
     %__MODULE__.NodeFilter{node_id: node_id}
   end

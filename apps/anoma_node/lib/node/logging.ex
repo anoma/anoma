@@ -118,6 +118,7 @@ defmodule Anoma.Node.Logging do
   and check that the table keyword has been provided.
   """
 
+  @spec start_link(list(startup_options())) :: term()
   def start_link(args) do
     args = Keyword.validate!(args, [:node_id, :table, :rocks])
     name = Registry.via(args[:node_id], __MODULE__)
@@ -135,7 +136,7 @@ defmodule Anoma.Node.Logging do
   options.
   """
 
-  @spec init(list(startup_options())) :: {:ok, Logging.t()}
+  @impl true
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -171,6 +172,7 @@ defmodule Anoma.Node.Logging do
   I filter for any incoming messages the Logging Engine cares about.
   """
 
+  @spec logging_filter() :: LoggingFilter.t()
   def logging_filter() do
     %__MODULE__.LoggingFilter{}
   end
@@ -179,45 +181,46 @@ defmodule Anoma.Node.Logging do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_info(
-        %EventBroker.Event{
+        e = %EventBroker.Event{
           body: %Node.Event{
             body: %Logging.LoggingEvent{}
           }
-        } = e,
+        },
         state
       ) do
     {:noreply, handle_logging_event(e, state)}
   end
 
   def handle_info(
-        %EventBroker.Event{
+        e = %EventBroker.Event{
           body: %Node.Event{
             body: %Mempool.TxEvent{}
           }
-        } = e,
+        },
         state
       ) do
     {:noreply, handle_tx_event(e, state)}
   end
 
   def handle_info(
-        %EventBroker.Event{
+        e = %EventBroker.Event{
           body: %Node.Event{
             body: %Mempool.ConsensusEvent{}
           }
-        } = e,
+        },
         state
       ) do
     {:noreply, handle_consensus_event(e, state)}
   end
 
   def handle_info(
-        %EventBroker.Event{
+        e = %EventBroker.Event{
           body: %Node.Event{
             body: %Mempool.BlockEvent{}
           }
-        } = e,
+        },
         state
       ) do
     {:noreply, handle_block_event(e, state)}
@@ -227,12 +230,7 @@ defmodule Anoma.Node.Logging do
   #                 Genserver Implementation                 #
   ############################################################
 
-  @spec handle_logging_event(
-          %EventBroker.Event{
-            body: %Node.Event{body: Logging.LoggingEvent.t()}
-          },
-          t()
-        ) :: t()
+  @spec handle_logging_event(EventBroker.Event.t(), t()) :: t()
   defp handle_logging_event(
          %EventBroker.Event{
            body: %Node.Event{
@@ -248,10 +246,7 @@ defmodule Anoma.Node.Logging do
     state
   end
 
-  @spec handle_tx_event(
-          %EventBroker.Event{body: %Node.Event{body: Mempool.TxEvent.t()}},
-          t()
-        ) :: t()
+  @spec handle_tx_event(EventBroker.Event.t(), t()) :: t()
   defp handle_tx_event(
          %EventBroker.Event{
            body: %Node.Event{
@@ -271,12 +266,7 @@ defmodule Anoma.Node.Logging do
     state
   end
 
-  @spec handle_consensus_event(
-          %EventBroker.Event{
-            body: %Node.Event{body: Mempool.ConsensusEvent.t()}
-          },
-          t()
-        ) :: t()
+  @spec handle_consensus_event(EventBroker.Event.t(), t()) :: t()
   defp handle_consensus_event(
          %EventBroker.Event{
            body: %Node.Event{
@@ -296,10 +286,7 @@ defmodule Anoma.Node.Logging do
     state
   end
 
-  @spec handle_block_event(
-          %EventBroker.Event{body: %Node.Event{body: Mempool.BlockEvent.t()}},
-          t()
-        ) :: t()
+  @spec handle_block_event(EventBroker.Event.t(), t()) :: t()
   defp handle_block_event(
          %EventBroker.Event{
            body: %Node.Event{
@@ -473,6 +460,7 @@ defmodule Anoma.Node.Logging do
   data to separate tables for a new node. Used for trying a replay on a
   mock node.
   """
+  @spec replay_table_clone(atom(), atom(), String.t()) :: any()
   def replay_table_clone(values_table, updates_table, node_id) do
     :mnesia.transaction(fn ->
       values = :mnesia.match_object({values_table, :_, :_})
@@ -532,6 +520,7 @@ defmodule Anoma.Node.Logging do
   appropriate flag and message.
   """
 
+  @spec log_event(String.t(), flag(), binary()) :: :ok
   def log_event(node_id, flag, msg) do
     Node.Event.new_with_body(node_id, %__MODULE__.LoggingEvent{
       flag: flag,
@@ -606,6 +595,7 @@ defmodule Anoma.Node.Logging do
   Given a Node ID, I create an appropriately named Event table for it.
   """
 
+  @spec table_name(String.t()) :: atom()
   def table_name(node_id) do
     String.to_atom("#{Logging.Events}_#{:erlang.phash2(node_id)}")
   end

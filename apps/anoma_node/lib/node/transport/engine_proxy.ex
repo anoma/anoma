@@ -41,6 +41,7 @@ defmodule Anoma.Node.Transport.EngineProxy do
   #                    Genserver Helpers                     #
   ############################################################
 
+  @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
     args = Keyword.validate!(args, [:node_id, :remote_node_id, :type])
 

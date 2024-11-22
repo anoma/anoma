@@ -19,6 +19,7 @@ defmodule EventBroker do
 
   use Application
 
+  @impl true
   def start(_type, args \\ []) do
     EventBroker.Supervisor.start_link(args)
   end
@@ -43,6 +44,7 @@ defmodule EventBroker do
   """
 
   @spec event(EventBroker.Event.t()) :: :ok
+  @spec event(EventBroker.Event.t(), atom()) :: :ok
   def event(event = %EventBroker.Event{}, broker \\ EventBroker.Broker) do
     GenServer.cast(broker, {:event, event})
   end
@@ -79,6 +81,7 @@ defmodule EventBroker do
   """
 
   @spec subscribe(pid(), filter_spec_list) :: :ok | String.t()
+  @spec subscribe(pid(), filter_spec_list, atom()) :: :ok | String.t()
   def subscribe(pid, filter_spec_list, registry \\ EventBroker.Registry) do
     GenServer.call(registry, {:subscribe, pid, filter_spec_list})
   end
@@ -90,6 +93,7 @@ defmodule EventBroker do
   """
 
   @spec subscribe_me(filter_spec_list) :: :ok | String.t()
+  @spec subscribe_me(filter_spec_list, atom()) :: :ok | String.t()
   def subscribe_me(filter_spec_list, registry \\ EventBroker.Registry) do
     subscribe(self(), filter_spec_list, registry)
   end
@@ -110,7 +114,7 @@ defmodule EventBroker do
   all agents which have shut down from my registry map and return `:ok`
   """
 
-  @spec unsubscribe(pid(), filter_spec_list) :: :ok
+  @spec unsubscribe(pid(), filter_spec_list, atom()) :: :ok
   def unsubscribe(pid, filter_spec_list, registry \\ EventBroker.Registry) do
     GenServer.call(registry, {:unsubscribe, pid, filter_spec_list})
   end
@@ -122,6 +126,7 @@ defmodule EventBroker do
   """
 
   @spec unsubscribe_me(filter_spec_list) :: :ok
+  @spec unsubscribe_me(filter_spec_list, atom()) :: :ok
   def unsubscribe_me(filter_spec_list, registry \\ EventBroker.Registry) do
     unsubscribe(self(), filter_spec_list, registry)
   end

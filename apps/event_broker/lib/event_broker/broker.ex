@@ -23,12 +23,14 @@ defmodule EventBroker.Broker do
     field(:subscribers, MapSet.t(pid()), default: MapSet.new())
   end
 
+  @spec start_link(list()) :: GenServer.on_start()
   def start_link(args \\ []) do
     GenServer.start_link(__MODULE__, %EventBroker.Broker{},
       name: args[:broker_name] || __MODULE__
     )
   end
 
+  @impl true
   def init(_opts) do
     {:ok, %EventBroker.Broker{}}
   end
@@ -37,6 +39,7 @@ defmodule EventBroker.Broker do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_call({:subscribe, pid}, _from, state) do
     {:reply, :ok, %{state | subscribers: MapSet.put(state.subscribers, pid)}}
   end
@@ -50,6 +53,7 @@ defmodule EventBroker.Broker do
     {:reply, :ok, state}
   end
 
+  @impl true
   def handle_cast({:event, event}, state) do
     handle_info(event, state)
   end
@@ -58,6 +62,7 @@ defmodule EventBroker.Broker do
     {:noreply, state}
   end
 
+  @impl true
   def handle_info(event = %EventBroker.Event{}, state) do
     for pid <- state.subscribers do
       send(pid, event)

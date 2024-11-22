@@ -81,6 +81,7 @@ defmodule Anoma.Node.Transaction.Executor do
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
+  @impl true
   @doc """
   I am the intialization function for the Executor Engine.
 
@@ -156,6 +157,7 @@ defmodule Anoma.Node.Transaction.Executor do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_cast({:launch, tw_w_backend, id}, state) do
     handle_launch(tw_w_backend, id, state)
     {:noreply, state}

@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Compile.Protoc do
 
   use Mix.Task.Compiler
 
+  @impl true
   def run(_args) do
     # parse the options from mix.exs
     compiler_opts =

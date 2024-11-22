@@ -38,10 +38,12 @@ defmodule EventBroker.Registry do
     field(:registered_filters, registered_filters, default: %{})
   end
 
+  @spec start_link(list()) :: GenServer.on_start()
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: args[:registry_name])
   end
 
+  @impl true
   def init(args) do
     broker = args[:broker_name]
 
@@ -63,6 +65,7 @@ defmodule EventBroker.Registry do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_call({:subscribe, pid, filter_spec_list}, _from, state) do
     registered = state.registered_filters
 
@@ -114,6 +117,7 @@ defmodule EventBroker.Registry do
     {:reply, :ok, state}
   end
 
+  @impl true
   def handle_cast(_msg, state) do
     {:noreply, state}
   end

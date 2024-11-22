@@ -160,7 +160,7 @@ defmodule Anoma.Node.Transaction.Storage do
   Afterwards I launch the Storage engine with given arguments.
   """
 
-  @spec init([startup_options()]) :: {:ok, t()}
+  @impl true
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -319,6 +319,7 @@ defmodule Anoma.Node.Transaction.Storage do
     )
   end
 
+  @impl true
   def terminate(_reason, state) do
     {:ok, state}
   end
@@ -333,7 +334,7 @@ defmodule Anoma.Node.Transaction.Storage do
   Given a height, I provide a filter for for messages of a particular
   height.
   """
-
+  @spec height_filter(non_neg_integer()) :: HeightFilter.t()
   def height_filter(height) do
     %__MODULE__.HeightFilter{height: height}
   end
@@ -349,6 +350,7 @@ defmodule Anoma.Node.Transaction.Storage do
   connected to it.
   """
 
+  @spec blocks_table(String.t()) :: atom()
   def blocks_table(node_id) do
     String.to_atom("#{__MODULE__.Blocks}_#{:erlang.phash2(node_id)}")
   end
@@ -359,7 +361,7 @@ defmodule Anoma.Node.Transaction.Storage do
   Given a Node ID, I produce the name of the appropriate values table
   connected to it.
   """
-
+  @spec values_table(String.t()) :: atom()
   def values_table(node_id) do
     String.to_atom("#{__MODULE__.Values}_#{:erlang.phash2(node_id)}")
   end
@@ -370,7 +372,7 @@ defmodule Anoma.Node.Transaction.Storage do
   Given a Node ID, I produce the name of the appropriate updates table
   connected to it.
   """
-
+  @spec updates_table(String.t()) :: atom()
   def updates_table(node_id) do
     String.to_atom("#{__MODULE__.Updates}_#{:erlang.phash2(node_id)}")
   end
@@ -379,6 +381,7 @@ defmodule Anoma.Node.Transaction.Storage do
   #                    Genserver Behavior                    #
   ############################################################
 
+  @impl true
   def handle_call({:commit, round, writes, _}, _from, state) do
     handle_commit(round, writes, state)
     {:reply, :ok, state}
@@ -401,10 +404,12 @@ defmodule Anoma.Node.Transaction.Storage do
     {:reply, :ok, state}
   end
 
+  @impl true
   def handle_cast(_msg, state) do
     {:noreply, state}
   end
 
+  @impl true
   def handle_info(_info, state) do
     {:noreply, state}
   end
@@ -519,7 +524,7 @@ defmodule Anoma.Node.Transaction.Storage do
   #                        Initialization                    #
   ############################################################
 
-  @spec init_tables(atom(), bool()) :: any()
+  @spec init_tables(String.t(), bool()) :: any()
   defp init_tables(node_id, rocks) do
     rocks_opt = Anoma.Utility.rock_opts(rocks)
 
