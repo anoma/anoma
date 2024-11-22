@@ -16,7 +16,11 @@ defmodule Anoma.MixProject do
       dialyzer: [
         plt_local_path: "plts/anoma.plt",
         plt_core_path: "plts/core.plt",
-        flags: ["-Wno_improper_lists"],
+        flags: [
+          # Turn off the warning for improper lists, because we use
+          # bare cons frequently and deliberately.
+          "-Wno_improper_lists"
+        ],
         plt_add_apps: [:mix, :ex_unit]
       ],
       # Docs
