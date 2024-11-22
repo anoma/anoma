@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>EventBroker.FilterAgent — Anoma v0.27.0</title>
+    <title>EventBroker.FilterAgent — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">EventBroker.FilterAgent</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
@@ -176,16 +176,6 @@ send whichever events I receive to them.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" data-no-tooltip translate="no">init(filter_params)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#start_link/1" data-no-tooltip translate="no">start_link(filter_params)</a>
 
       </div>
@@ -233,7 +223,7 @@ filtered messages to.</p><h3 id="t:t/0-fields" class="section-heading">
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:spec</code> - The filter specification. This is a structure of a module<pre><code class="makeup elixir" translate="no"><span class="w">      </span><span class="k">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">public</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="nc">API</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">agent</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">call</span><span class="o">.</span></code></pre></li><li><code class="inline">:subscribers</code> - The list of subscribers to send filtered messages to.<pre><code class="makeup elixir" translate="no"><span class="w">             </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">MapSet</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="0819337667-1">(</span><span class="p" data-group-id="0819337667-1">)</span></code></pre></li></ul>
+<ul><li><code class="inline">:spec</code> - The filter specification. This is a structure of a module<pre><code class="makeup elixir" translate="no"><span class="w">      </span><span class="k">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">public</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="nc">API</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">agent</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">call</span><span class="o">.</span></code></pre></li><li><code class="inline">:subscribers</code> - The list of subscribers to send filtered messages to.<pre><code class="makeup elixir" translate="no"><span class="w">             </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">MapSet</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="6574288963-1">(</span><span class="p" data-group-id="6574288963-1">)</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -265,23 +255,6 @@ filtered messages to.</p><h3 id="t:t/0-fields" class="section-heading">
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="init/1">
-
-  <div class="detail-header">
-    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">init(filter_params)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
-  </section>
-</section>
 <section class="detail" id="start_link/1">
 
   <div class="detail-header">
@@ -296,6 +269,12 @@ filtered messages to.</p><h3 id="t:t/0-fields" class="section-heading">
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_link(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">struct</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -307,9 +286,9 @@ filtered messages to.</p><h3 id="t:t/0-fields" class="section-heading">
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

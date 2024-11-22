@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Livebook — Anoma v0.27.0</title>
+    <title>Livebook — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Livebook</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
@@ -222,7 +222,7 @@ order</p><h2 id="module-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#generate_TOC/2" data-no-tooltip translate="no">generate_TOC(documents, from_depth \\ 0)</a>
+        <a href="#generate_toc/2" data-no-tooltip translate="no">generate_toc(documents, from_depth \\ 0)</a>
 
       </div>
 
@@ -252,7 +252,7 @@ order</p><h2 id="module-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#inject_TOC/2" data-no-tooltip translate="no">inject_TOC(toc, path)</a>
+        <a href="#inject_toc/2" data-no-tooltip translate="no">inject_toc(toc, path)</a>
 
       </div>
 
@@ -362,6 +362,12 @@ order</p><h2 id="module-api" class="section-heading">
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> change_header(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
 
 <p>I replace the header with the given TOC</p><h3 id="change_header/4-example" class="section-heading">
   <a href="#change_header/4-example" class="hover-link">
@@ -484,16 +490,16 @@ order</p><h2 id="module-api" class="section-heading">
 
   </section>
 </section>
-<section class="detail" id="generate_TOC/2">
+<section class="detail" id="generate_toc/2">
 
-    <span id="generate_TOC/1"></span>
+    <span id="generate_toc/1"></span>
 
   <div class="detail-header">
-    <a href="#generate_TOC/2" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#generate_toc/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">generate_TOC(documents, from_depth \\ 0)</h1>
+    <h1 class="signature" translate="no">generate_toc(documents, from_depth \\ 0)</h1>
 
 
   </div>
@@ -502,12 +508,12 @@ order</p><h2 id="module-api" class="section-heading">
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> generate_TOC([<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()], <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> generate_toc([<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()], <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
 
       </div>
 
-<p>Generates out a TOC, given a series of nested documents</p><p>We take a path, and a place where we should be calculating the TOC from.</p><h2 id="generate_TOC/2-example" class="section-heading">
-  <a href="#generate_TOC/2-example" class="hover-link">
+<p>Generates out a TOC, given a series of nested documents</p><p>We take a path, and a place where we should be calculating the TOC from.</p><h2 id="generate_toc/2-example" class="section-heading">
+  <a href="#generate_toc/2-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Example</span>
@@ -561,14 +567,14 @@ order</p><h2 id="module-api" class="section-heading">
 <p>Gets all livemd documents in a sorted list given a path.</p>
   </section>
 </section>
-<section class="detail" id="inject_TOC/2">
+<section class="detail" id="inject_toc/2">
 
   <div class="detail-header">
-    <a href="#inject_TOC/2" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#inject_toc/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">inject_TOC(toc, path)</h1>
+    <h1 class="signature" translate="no">inject_toc(toc, path)</h1>
 
 
   </div>
@@ -577,7 +583,7 @@ order</p><h2 id="module-api" class="section-heading">
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> inject_TOC(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()) :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> inject_toc(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()) :: :ok</pre>
 
       </div>
 
@@ -621,6 +627,12 @@ order</p><h2 id="module-api" class="section-heading">
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> toc_toplevel() :: :ok</pre>
+
+      </div>
+
 <p>I generate out the TOC for all liveview docs</p>
   </section>
 </section>
@@ -632,9 +644,9 @@ order</p><h2 id="module-api" class="section-heading">
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

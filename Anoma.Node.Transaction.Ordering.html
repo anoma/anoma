@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Anoma.Node.Transaction.Ordering — Anoma v0.27.0</title>
+    <title>Anoma.Node.Transaction.Ordering — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,13 +123,24 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Ordering</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>abordering genserver</p>
+<p>I am the Ordering Engine.</p><p>I act as a mediator between Workers and Storage. In particular, Workers
+working on a transaction may ask to read and write information. However,
+they do not know when to do it, they only know the ID of the transaction
+they work on.</p><p>I process such requests, keeping them waiting until consensus provides
+some ordering to a transaction in question. Once they do, I pair a
+transaction ID with its timestamp and forward queries to Storage.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functonality:</p><ul><li><a href="#read/2"><code class="inline">read/2</code></a></li><li><a href="#write/2"><code class="inline">write/2</code></a></li><li><a href="#append/2"><code class="inline">append/2</code></a></li><li><a href="#add/2"><code class="inline">add/2</code></a></li><li><a href="#order/2"><code class="inline">order/2</code></a></li></ul>
     </section>
 
 </div>
@@ -152,6 +163,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the Ordering Enigine.</p></div>
+
     </div>
 
 </div>
@@ -166,6 +179,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the Ordering write function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -174,37 +189,7 @@ GUIDES
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#block/4" data-no-tooltip translate="no">block(from, tx_id, call, node_id)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#block_spawn/3" data-no-tooltip translate="no">block_spawn(id, call, node_id)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#blocking_read/3" data-no-tooltip translate="no">blocking_read(node_id, arg, from)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#blocking_write/3" data-no-tooltip translate="no">blocking_write(node_id, arg, from)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I am the Ordering append function.</p></div>
 
     </div>
 
@@ -224,7 +209,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the initialization function for the Ordering Engine.</p></div>
 
     </div>
 
@@ -234,6 +219,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the Ordering order function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -241,6 +228,8 @@ GUIDES
         <a href="#read/2" data-no-tooltip translate="no">read(node_id, arg)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the Ordering read function.</p></div>
 
     </div>
 
@@ -250,13 +239,7 @@ GUIDES
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#this_module_filter/0" data-no-tooltip translate="no">this_module_filter()</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I am the start_link function for the Ordering Engine.</p></div>
 
     </div>
 
@@ -266,6 +249,9 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a filter spec which filters for any event with a <code class="inline">tx_id</code> field and
+matches iff the ID stored is the one supplied.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -273,6 +259,8 @@ GUIDES
         <a href="#write/2" data-no-tooltip translate="no">write(node_id, arg)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the Ordering write function.</p></div>
 
     </div>
 
@@ -313,7 +301,15 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of the Ordering Enigine.</p><p>I contain the Node for which the Ordering is launched, the upcoming
+hight as well as a map from transaction IDs to their global order.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:node_id</code> - The ID of the Node to which an Ordering instantiation is<pre><code class="makeup elixir" translate="no"><span class="w">         </span><span class="n">bound</span><span class="o">.</span></code></pre></li><li><code class="inline">:next_height</code> - The height that the next ordered transaction<pre><code class="makeup elixir" translate="no"><span class="w">             </span><span class="n">candidate</span><span class="w"> </span><span class="n">will</span><span class="w"> </span><span class="n">get</span><span class="o">.</span><span class="w">
+             </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span></code></pre></li><li><code class="inline">:tx_id_to_height</code> - A map from an ID of a transaction candidate to<pre><code class="makeup elixir" translate="no"><span class="w">                 </span><span class="n">its</span><span class="w"> </span><span class="n">order</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -351,7 +347,10 @@ GUIDES
 
       </div>
 
-
+<p>I am the Ordering write function.</p><p>I receive a Node ID and an {id, map} tuple. There are two states possible
+when Ordering processes my request. Either:</p><ul><li>The id has been assigned an order.</li><li>The id has not been assigned an order.</li></ul><p>If the former is true, I send the request to appropriately add the map to
+the Storage at the specified height. See <code class="inline">Storage.add/2</code></p><p>If the latter is true, I leave the caller blocked until the id has been
+assigned a value, i.e. until a corresponding event gets received.</p>
   </section>
 </section>
 <section class="detail" id="append/2">
@@ -377,93 +376,10 @@ GUIDES
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="block/4">
-
-  <div class="detail-header">
-    <a href="#block/4" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">block(from, tx_id, call, node_id)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> block(<a href="https://hexdocs.pm/elixir/GenServer.html#t:from/0">GenServer.from</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), (-&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: :ok</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="block_spawn/3">
-
-  <div class="detail-header">
-    <a href="#block_spawn/3" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">block_spawn(id, call, node_id)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="blocking_read/3">
-
-  <div class="detail-header">
-    <a href="#blocking_read/3" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">blocking_read(node_id, arg, from)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> blocking_read(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}, <a href="https://hexdocs.pm/elixir/GenServer.html#t:from/0">GenServer.from</a>()) :: :ok</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="blocking_write/3">
-
-  <div class="detail-header">
-    <a href="#blocking_write/3" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">blocking_write(node_id, arg, from)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> blocking_write(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]}, <a href="https://hexdocs.pm/elixir/GenServer.html#t:from/0">GenServer.from</a>()) :: :ok</pre>
-
-      </div>
-
-
+<p>I am the Ordering append function.</p><p>I receive a Node ID and an {id, kvlist} tuple. There are two states
+possible when Ordering processes my request. Either:</p><ul><li>The id has been assigned an order.</li><li>The id has not been assigned an order.</li></ul><p>If the former is true, I send the request to append the key-value list at
+the specified height to the Storage. See <code class="inline">Storage.append/2</code></p><p>If the latter is true, I leave the caller blocked until the id has been
+assigned a value, i.e. until a corresponding event gets received.</p>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
@@ -497,13 +413,8 @@ GUIDES
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> init([startup_options()]) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
-
-      </div>
-
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+<p>I am the initialization function for the Ordering Engine.</p><p>From the specified arguments, I get the Node ID as well as the info
+regarding the next height Ordering should be started with.</p>
   </section>
 </section>
 <section class="detail" id="order/2">
@@ -526,7 +437,11 @@ GUIDES
 
       </div>
 
-
+<p>I am the Ordering order function.</p><p>Given a Node ID and a list of transaction IDs, I percieve the latter as a
+partial ordering of transactions. Afterwards, I assign them a global
+ordering by adding the next height stored in the Ordering Engine to the
+respective ordering inside a list.</p><p>Afterwards, I send an event specifying that a particular ID has indeed
+received an order.</p>
   </section>
 </section>
 <section class="detail" id="read/2">
@@ -552,7 +467,12 @@ GUIDES
 
       </div>
 
-
+<p>I am the Ordering read function.</p><p>I receive a Node ID and an {id, key} tuple. There are two states possible
+when Ordering processes my request. Either:</p><ul><li>The id has been assigned an order.</li><li>The id has not been assigned an order.</li></ul><p>If the former is true, I send the request to read the key at the
+specified height minus one to the Storage. That is, we ask the storage to
+read the most recent value assigned to the key from the point of view of
+the transaction candidate. See <code class="inline">Storage.read/2</code>.</p><p>If the latter is true, I leave the caller blocked until the id has been
+assigned a value, i.e. until a corresponding event gets received.</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -577,24 +497,7 @@ GUIDES
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="this_module_filter/0">
-
-  <div class="detail-header">
-    <a href="#this_module_filter/0" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">this_module_filter()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
+<p>I am the start_link function for the Ordering Engine.</p><p>I register the engine with supplied node ID provided by the arguments.</p>
   </section>
 </section>
 <section class="detail" id="tx_id_filter/1">
@@ -611,7 +514,14 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> tx_id_filter(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: <a href="Anoma.Node.Transaction.Ordering.TxIdFilter.html#t:t/0">Anoma.Node.Transaction.Ordering.TxIdFilter.t</a>()</pre>
+
+      </div>
+
+<p>I am a filter spec which filters for any event with a <code class="inline">tx_id</code> field and
+matches iff the ID stored is the one supplied.</p>
   </section>
 </section>
 <section class="detail" id="write/2">
@@ -637,7 +547,10 @@ GUIDES
 
       </div>
 
-
+<p>I am the Ordering write function.</p><p>I receive a Node ID and an {id, kvlist} tuple. There are two states
+possible when Ordering processes my request. Either:</p><ul><li>The id has been assigned an order.</li><li>The id has not been assigned an order.</li></ul><p>If the former is true, I send the request to write the key-value list at
+the specified height to the Storage. See <code class="inline">Storage.write/2</code></p><p>If the latter is true, I leave the caller blocked until the id has been
+assigned a value, i.e. until a corresponding event gets received.</p>
   </section>
 </section>
 
@@ -648,9 +561,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

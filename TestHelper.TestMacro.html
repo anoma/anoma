@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>TestHelper.TestMacro — Anoma v0.27.0</title>
+    <title>TestHelper.TestMacro — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">TestHelper.TestMacro</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
@@ -321,6 +321,12 @@ different arities.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> assertion_abstract(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()) :: <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()</pre>
+
+      </div>
+
 <p>I catch a variable binding expression in debug mode and call <code class="inline">call_assert</code>
 on it.</p><p>If the expression caught is variable-bining, after evaluating I also
 call said binding at AST level to bind it outside try-rescue.</p><p>If the expression is not in debug mode, I simply call the assertion on
@@ -341,6 +347,12 @@ the expression.</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> assertion_alias(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()) :: <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()</pre>
+
+      </div>
+
 <p>I add the ExUnit.Assertions prefix to the function call on the AST level
 and apply it to the expression as a quoted structure.</p>
   </section>
@@ -358,6 +370,12 @@ and apply it to the expression as a quoted structure.</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> call_assert(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()) :: <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()</pre>
+
+      </div>
 
 <p>I call the try functionality to capture the error.</p><h3 id="call_assert/2-pattern-matching-variations" class="section-heading">
   <a href="#call_assert/2-pattern-matching-variations" class="hover-link">
@@ -382,6 +400,12 @@ and apply it to the expression as a quoted structure.</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> message_parse(<a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil) :: <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()</pre>
+
+      </div>
+
 <p>Depending on the given message, I call either <code class="inline">assert</code> or <code class="inline">refute</code> with
 different arities.</p>
   </section>
@@ -399,6 +423,12 @@ different arities.</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> quote_try(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()) :: <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()</pre>
+
+      </div>
 
 <p>I quote the error-capturing of expressions.</p>
   </section>
@@ -461,6 +491,12 @@ different arities.</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> try_assert(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()) :: <a href="https://hexdocs.pm/elixir/Macro.html#t:input/0">Macro.input</a>()</pre>
+
+      </div>
+
 <p>I present a quoted expression to try depending on the input.</p><h3 id="try_assert/2-pattern-matching-variations" class="section-heading">
   <a href="#try_assert/2-pattern-matching-variations" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -480,9 +516,9 @@ different arities.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

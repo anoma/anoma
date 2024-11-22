@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Nock — Anoma v0.27.0</title>
+    <title>Nock — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Nock</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
@@ -380,7 +380,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#process_hint/2" data-no-tooltip translate="no">process_hint(puts, hint_result)</a>
+        <a href="#process_hint/3" data-no-tooltip translate="no">process_hint(puts, hint_result, environment)</a>
 
       </div>
 
@@ -467,7 +467,8 @@ GUIDES
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Nock{
   meter_pid: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>() | nil,
-  scry_function: (<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>() -&gt; {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()} | :error)
+  scry_function: (<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>() -&gt; {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()} | :error),
+  stdio: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()
 }</pre>
 
       </div>
@@ -502,6 +503,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cons(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -519,6 +526,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> decrement_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -535,6 +548,12 @@ determine if we should be using jets or not</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> decrement_core() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -598,6 +617,16 @@ determine if we should be using jets or not</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_jet(<a href="Noun.html#t:t/0">Noun.t</a>()) ::
+  {:ok,
+   {<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+    (<a href="Noun.html#t:t/0">Noun.t</a>() -&gt; :error | {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}}
+  | :error</pre>
+
+      </div>
 
 
   </section>
@@ -779,6 +808,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_0(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -795,6 +830,12 @@ determine if we should be using jets or not</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_1(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -813,6 +854,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_2(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -829,6 +876,12 @@ determine if we should be using jets or not</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_3(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -847,6 +900,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_4(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -863,6 +922,12 @@ determine if we should be using jets or not</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_5(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -881,6 +946,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_6(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -897,6 +968,12 @@ determine if we should be using jets or not</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_7(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -915,6 +992,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_8(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -931,6 +1014,12 @@ determine if we should be using jets or not</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_9(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -949,6 +1038,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_10(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -965,6 +1060,12 @@ determine if we should be using jets or not</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_11(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -983,6 +1084,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nock_11(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -1000,22 +1107,34 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> process_hint(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
-<section class="detail" id="process_hint/2">
+<section class="detail" id="process_hint/3">
 
   <div class="detail-header">
-    <a href="#process_hint/2" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#process_hint/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">process_hint(puts, hint_result)</h1>
+    <h1 class="signature" translate="no">process_hint(puts, hint_result, environment)</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> process_hint(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -1033,6 +1152,12 @@ determine if we should be using jets or not</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> put_jet(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -1097,6 +1222,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> scry_forbidden(<a href="Noun.html#t:t/0">Noun.t</a>()) :: :error | {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -1137,6 +1268,12 @@ determine if we should be using jets or not</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> stdlib_layers() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
 <p>Gives the total numbers of layers in the standard library</p>
   </section>
 </section>
@@ -1148,9 +1285,9 @@ determine if we should be using jets or not</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

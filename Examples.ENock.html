@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Examples.ENock — Anoma v0.27.0</title>
+    <title>Examples.ENock — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Examples.ENock</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
@@ -198,7 +198,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>I represent the sum gate call as a 2-argument gate.</p></div>
+        <div class="summary-synopsis"><p>I represent the cmp gate call as a 2-argument gate.</p></div>
 
     </div>
 
@@ -447,6 +447,24 @@ GUIDES
       </div>
 
         <div class="summary-synopsis"><p>I am an lash arm in the block door.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lte/0" data-no-tooltip translate="no">lte()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lte_arm/0" data-no-tooltip translate="no">lte_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the lte gate call as a 2-argument gate.</p></div>
 
     </div>
 
@@ -1086,6 +1104,12 @@ as an extra argument.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> abs() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -1172,6 +1196,12 @@ as an extra argument.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> call_split_test() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -1188,6 +1218,12 @@ as an extra argument.</p></div>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cmp() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -1212,7 +1248,7 @@ as an extra argument.</p></div>
 
       </div>
 
-<p>I represent the sum gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=lcmp =&gt;  logics  |=   [a=@s b=@s]  (cmp [a b])</p><p>and computing</p><p>.*  lcmp  [0 2]</p>
+<p>I represent the cmp gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=lcmp =&gt;  logics  |=   [a=@s b=@s]  (cmp [a b])</p><p>and computing</p><p>.*  lcmp  [0 2]</p>
   </section>
 </section>
 <section class="detail" id="counter_arm/0">
@@ -1367,6 +1403,12 @@ as an extra argument.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dif() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -1406,6 +1448,12 @@ as an extra argument.</p></div>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dul() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -1493,6 +1541,12 @@ as an extra argument.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> fra() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -1535,6 +1589,12 @@ as an extra argument.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> inc(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -1574,6 +1634,12 @@ as an extra argument.</p></div>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> incorrectly_nested_noun() :: :error</pre>
+
+      </div>
 
 
   </section>
@@ -1684,6 +1750,12 @@ as an extra argument.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jam_and_cue(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -1723,6 +1795,12 @@ as an extra argument.</p></div>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jamming_and_cueing() :: :ok</pre>
+
+      </div>
 
 
   </section>
@@ -1821,6 +1899,52 @@ as an extra argument.</p></div>
 
 <p>I am an lash arm in the block door.</p><p>My index inside the door can be seen by asking to dump the logic of
 =llsh   =&gt;  logics  |=  a=@  lsh:block</p>
+  </section>
+</section>
+<section class="detail" id="lte/0">
+
+  <div class="detail-header">
+    <a href="#lte/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lte()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> lte() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="lte_arm/0">
+
+  <div class="detail-header">
+    <a href="#lte_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lte_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> lte_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the lte gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=llte =&gt;  logics  |=   [a=@s b=@s]  (lte [a b])</p><p>and computing</p><p>.*  llte  [0 2]</p>
   </section>
 </section>
 <section class="detail" id="mat/0">
@@ -2048,6 +2172,12 @@ as an extra argument.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -2088,6 +2218,12 @@ as an extra argument.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> og_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 <p>The gate representing an og core creation with a specified seed.</p><p>Can be gotten by defining</p><p>=l   =&gt;  logics  |=  [seed=@]  ~(. og seed)</p><p>and getting it's arm with [0 2]</p>
   </section>
 </section>
@@ -2105,6 +2241,12 @@ as an extra argument.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> og_call(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: :error | {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -2121,6 +2263,12 @@ as an extra argument.</p></div>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> old() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -2184,6 +2332,12 @@ as an extra argument.</p></div>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> pro() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -2317,6 +2471,12 @@ seed and range</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rads_call(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: :error | {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
 
 <p>I am function calling the rads gate of the og door with specified
 seed and range</p>
@@ -2499,6 +2659,12 @@ seed and bitwidth.</p>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_with_core() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 <p>I represent a raws gate with a specified instantiated og core given
 as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt;  logics  |=  [rng=_og width=@]  (raws:rng width)</p><p>and grabbing the arm with [0 2]</p>
   </section>
@@ -2517,6 +2683,13 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_with_core_call(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
+  :error | {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -2534,6 +2707,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_with_out_core_test() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -2550,6 +2729,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rem() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -2710,6 +2895,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> shax() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -2842,6 +3033,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> split_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 <p>I represent a split gate call given an og core with seed.</p><p>Can be gotten by defining locally</p><p>=l    =&gt;  logics  |=  [rng=_og]  split:rng</p><p>and grabbing the arm with [0 2]</p>
   </section>
 </section>
@@ -2859,6 +3056,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> split_call(<a href="Noun.html#t:t/0">Noun.t</a>()) :: :error | {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -2875,6 +3078,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sum() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -2916,6 +3125,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sun() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -2955,6 +3170,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> syn() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -2998,6 +3219,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> transparent_core(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -3015,6 +3242,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> trivial_swap() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -3031,6 +3264,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> trivial_swap_no_eph() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -3216,6 +3455,12 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> zero(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -3273,9 +3518,9 @@ as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt; 
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

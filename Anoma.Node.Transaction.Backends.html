@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Anoma.Node.Transaction.Backends — Anoma v0.27.0</title>
+    <title>Anoma.Node.Transaction.Backends — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,14 +123,21 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Backends</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>Backend module.
-Support :kv, :ro, :rm, :cairo execution.</p>
+<p>I am the Transaction Backend module.</p><p>I define a set of backends for the execution of the given transaction candidate.
+Currently, I support transparent resource machine (RM) execution as well as
+the following debug executions: read-only, key-value store, and blob store executions.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I have the following public functionality:</p><ul><li><a href="#execute/3"><code class="inline">execute/3</code></a></li></ul>
     </section>
 
 </div>
@@ -182,6 +189,10 @@ Support :kv, :ro, :rm, :cairo execution.</p>
         <a href="#execute/3" data-no-tooltip translate="no">execute(node_id, arg, id)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I execute the specified transaction candidate using the designated backend.
+If the transaction is provided as a <code class="inline">jam</code>med noun atom, I first attempt
+to apply <code class="inline">cue/1</code> in order to unpack the transaction code.</p></div>
 
     </div>
 
@@ -284,7 +295,7 @@ Support :kv, :ro, :rm, :cairo execution.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> blob_store(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: :ok | :error</pre>
+          <pre translate="no"><span class="attribute">@spec</span> blob_store(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()} | :error</pre>
 
       </div>
 
@@ -307,11 +318,18 @@ Support :kv, :ro, :rm, :cairo execution.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> execute(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), {<a href="#t:backend/0">backend</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()}, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> execute(node_id, {back, <a href="Noun.html#t:t/0">Noun.t</a>()}, id) :: :ok
+when id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), node_id: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), back: <a href="#t:backend/0">backend</a>()</pre>
 
       </div>
 
-
+<p>I execute the specified transaction candidate using the designated backend.
+If the transaction is provided as a <code class="inline">jam</code>med noun atom, I first attempt
+to apply <code class="inline">cue/1</code> in order to unpack the transaction code.</p><p>First, I execute the transaction code on the Anoma VM. Next, I apply processing
+logic to the resulting value, dependent on the selected backend.</p><ul><li>For read-only backend, the value is transmitted as a Result Event.</li><li>For the key-value and blob store executions, the obtained value is stored
+and a Complete Event is issued.</li><li>For the transparent Resource Machine (RM) execution, I verify the
+transaction's validity and compute the corresponding set of nullifiers,
+which is transmitted as a Nullifier Event.</li></ul>
   </section>
 </section>
 <section class="detail" id="store_value/3">
@@ -330,7 +348,7 @@ Support :kv, :ro, :rm, :cairo execution.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> store_value(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: :ok | :error</pre>
+          <pre translate="no"><span class="attribute">@spec</span> store_value(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()} | :error</pre>
 
       </div>
 
@@ -345,9 +363,9 @@ Support :kv, :ro, :rm, :cairo execution.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

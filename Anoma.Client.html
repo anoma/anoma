@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Anoma.Client — Anoma v0.27.0</title>
+    <title>Anoma.Client — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Client</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
@@ -162,7 +162,17 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#connect/3" data-no-tooltip translate="no">connect(host, port, listen_port)</a>
+        <a href="#add_intent/1" data-no-tooltip translate="no">add_intent(intent)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I return the list of intents in the node I'm connected to.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#connect/4" data-no-tooltip translate="no">connect(host, port, listen_port, node_id)</a>
 
       </div>
 
@@ -177,6 +187,56 @@ GUIDES
       </div>
 
         <div class="summary-synopsis"><p>Given a Client, I disconnect it and cleanup.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_intents/0" data-no-tooltip translate="no">list_intents()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I return the list of intents in the node I'm connected to.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_nullifiers/0" data-no-tooltip translate="no">list_nullifiers()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I return the list of intents in the node I'm connected to.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_unrevealed_commits/0" data-no-tooltip translate="no">list_unrevealed_commits()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I return the list of intents in the node I'm connected to.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_unspent_resources/0" data-no-tooltip translate="no">list_unspent_resources()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I return the list of intents in the node I'm connected to.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run_nock/2" data-no-tooltip translate="no">run_nock(program, inputs)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I run a Nock program with its inputs, and return the result.</p></div>
 
     </div>
 
@@ -232,14 +292,14 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="connect/3">
+<section class="detail" id="add_intent/1">
 
   <div class="detail-header">
-    <a href="#connect/3" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#add_intent/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">connect(host, port, listen_port)</h1>
+    <h1 class="signature" translate="no">add_intent(intent)</h1>
 
 
   </div>
@@ -248,7 +308,30 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> connect(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> add_intent(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>I return the list of intents in the node I'm connected to.</p>
+  </section>
+</section>
+<section class="detail" id="connect/4">
+
+  <div class="detail-header">
+    <a href="#connect/4" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">connect(host, port, listen_port, node_id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> connect(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
   {:ok, <a href="#t:t/0">t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
 
       </div>
@@ -279,6 +362,121 @@ GUIDES
 <p>Given a Client, I disconnect it and cleanup.</p>
   </section>
 </section>
+<section class="detail" id="list_intents/0">
+
+  <div class="detail-header">
+    <a href="#list_intents/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">list_intents()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_intents() :: [<a href="Noun.html#t:t/0">Noun.t</a>()]</pre>
+
+      </div>
+
+<p>I return the list of intents in the node I'm connected to.</p>
+  </section>
+</section>
+<section class="detail" id="list_nullifiers/0">
+
+  <div class="detail-header">
+    <a href="#list_nullifiers/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">list_nullifiers()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_nullifiers() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>I return the list of intents in the node I'm connected to.</p>
+  </section>
+</section>
+<section class="detail" id="list_unrevealed_commits/0">
+
+  <div class="detail-header">
+    <a href="#list_unrevealed_commits/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">list_unrevealed_commits()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_unrevealed_commits() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>I return the list of intents in the node I'm connected to.</p>
+  </section>
+</section>
+<section class="detail" id="list_unspent_resources/0">
+
+  <div class="detail-header">
+    <a href="#list_unspent_resources/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">list_unspent_resources()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_unspent_resources() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>I return the list of intents in the node I'm connected to.</p>
+  </section>
+</section>
+<section class="detail" id="run_nock/2">
+
+  <div class="detail-header">
+    <a href="#run_nock/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">run_nock(program, inputs)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> run_nock(<a href="Noun.html#t:t/0">Noun.t</a>(), [<a href="Noun.html#t:t/0">Noun.t</a>()]) :: {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p>I run a Nock program with its inputs, and return the result.</p>
+  </section>
+</section>
 
     </div>
   </section>
@@ -287,9 +485,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Anoma.Node.Transaction.Mempool.Tx — Anoma v0.27.0</title>
+    <title>Anoma.Node.Transaction.Mempool.Tx — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Mempool.Tx</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
@@ -147,6 +147,8 @@ GUIDES
         <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of a transaction as stores in the Mempool.</p></div>
 
     </div>
 
@@ -188,7 +190,14 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of a transaction as stores in the Mempool.</p><p>I store all information about transaction results, backend it uses, as
+well as the Nockma represented code.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:tx_result</code> - The transaction execution result.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="ss">:in_progress</span><span class="err">`</span></code></pre></li><li><code class="inline">:vm_result</code> - The Nock VM result of the transaction code.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="ss">:in_progress</span><span class="err">`</span></code></pre></li><li><code class="inline">:backend</code> - The backend for the transaction.</li><li><code class="inline">:code</code> - The Nockma transaction code to be executed.</li></ul>
   </section>
 </section>
 
@@ -199,9 +208,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

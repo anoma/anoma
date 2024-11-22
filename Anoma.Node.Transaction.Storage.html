@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Anoma.Node.Transaction.Storage — Anoma v0.27.0</title>
+    <title>Anoma.Node.Transaction.Storage — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,13 +123,30 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Storage</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>abstorage genserver</p>
+<p>I am the Storage Engine.</p><p>I represent a timestamped table-backed key-value store. I provide
+the API to read and write at specific heights and keep track of what the
+last timestamp is.</p><p>Any time before the next timestamp or at the timestamp itself is
+considered the past. Anyting else is considered the future.</p><p>The semantics for reads and writes are as follows:</p><h4>Writing</h4><p>If an actor wants to write at time T which is structly larger than the
+last timestamp I keep track of, they need to wait until my latest
+timestamp becomes T-1. In other words, you only write when your time
+comes.</p><p>If an actor writes at time T when my timestamp is T-1, then they can
+freely write whatever they need and set my latest timestamp to T.</p><h4>Reading</h4><p>If an actor reads at time T which is strictly larger than the last
+timestamp I have, they need to wait until my latest timestamp becomes T.
+In other words to read in the future, you need the future to come.</p><p>If and actor reads key K at time T which is less than or equal to my last
+timestamp, then there are two cases.</p><ul><li>K was never written to have any value.</li><li>K was written to have some values at times T1 &lt; T2 ... &lt; Tn</li></ul><p>In the former case, I return <code class="inline">:absent</code>. In the latter case, I return the
+value of K at time Tn.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><ul><li><a href="#read/2"><code class="inline">read/2</code></a></li><li><a href="#write/2"><code class="inline">write/2</code></a></li><li><a href="#append/2"><code class="inline">append/2</code></a></li><li><a href="#add/2"><code class="inline">add/2</code></a></li><li><a href="#commit/3"><code class="inline">commit/3</code></a></li></ul>
     </section>
 
 </div>
@@ -152,6 +169,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the key to be stored.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -160,6 +179,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the key at a specific timestamp.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -167,6 +188,18 @@ GUIDES
         <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of a Storage Engine.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:write_opts/0" data-no-tooltip translate="no">write_opts()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am a type of writing options.</p></div>
 
     </div>
 
@@ -178,17 +211,11 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#abwrite/3" data-no-tooltip translate="no">abwrite(flag, arg, state)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#add/2" data-no-tooltip translate="no">add(node_id, args)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the Storage add function.</p></div>
 
     </div>
 
@@ -198,21 +225,7 @@ GUIDES
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#block_spawn/3" data-no-tooltip translate="no">block_spawn(height, call, node_id)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#blocking_write/4" data-no-tooltip translate="no">blocking_write(node_id, height, kvlist, from)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I am the Storage append function.</p></div>
 
     </div>
 
@@ -221,6 +234,8 @@ GUIDES
         <a href="#blocks_table/1" data-no-tooltip translate="no">blocks_table(node_id)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a block table name function.</p></div>
 
     </div>
 
@@ -240,6 +255,18 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the Storage commit function.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#height_filter/1" data-no-tooltip translate="no">height_filter(height)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the height filter.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -248,15 +275,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#init_tables/2" data-no-tooltip translate="no">init_tables(node_id, rocks)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I am the initialization function for the Storage Engine.</p></div>
 
     </div>
 
@@ -266,13 +285,7 @@ GUIDES
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#read_in_past/3" data-no-tooltip translate="no">read_in_past(height, key, state)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I am the Storage read function.</p></div>
 
     </div>
 
@@ -282,6 +295,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the start_link function of the Storage Engine.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -289,6 +304,8 @@ GUIDES
         <a href="#updates_table/1" data-no-tooltip translate="no">updates_table(node_id)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am an updates table name function.</p></div>
 
     </div>
 
@@ -298,6 +315,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a values table name function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -305,6 +324,8 @@ GUIDES
         <a href="#write/2" data-no-tooltip translate="no">write(node_id, arg)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the Storage write function.</p></div>
 
     </div>
 
@@ -341,7 +362,7 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of the key to be stored.</p>
   </section>
 </section>
 <section class="detail" id="t:qualified_key/0">
@@ -364,7 +385,7 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of the key at a specific timestamp.</p>
   </section>
 </section>
 <section class="detail" id="t:t/0">
@@ -386,13 +407,45 @@ GUIDES
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Transaction.Storage{
   node_id: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
   uncommitted: %{required(<a href="#t:qualified_key/0">qualified_key</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()},
-  uncommitted_height: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
+  uncommitted_height: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
   uncommitted_updates: %{required(<a href="#t:bare_key/0">bare_key</a>()) =&gt; [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()]}
 }</pre>
 
       </div>
 
+<p>I am the type of a Storage Engine.</p><p>I store all in-progress information for matching keys and values to
+specific timestamps.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><p><code class="inline">:node_id</code> - The ID of the Node to which a Storage instantiation is</p><pre><code class="makeup elixir" translate="no"><span class="w">         </span><span class="n">bound</span><span class="o">.</span></code></pre></li><li><p><code class="inline">:uncommitted</code> - The map of keys at a specific height to its value.</p><pre><code class="makeup elixir" translate="no"><span class="w">             </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9641299986-1">%{</span><span class="p" data-group-id="9641299986-1">}</span></code></pre></li><li><p><code class="inline">:uncommitted_height</code> - The latest timestamp of Storage.</p><pre><code class="makeup elixir" translate="no"><span class="w">                    </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><p><code class="inline">:uncommitted_updates</code> - The map mapping a key to a list of all</p><pre><code class="makeup elixir" translate="no"><span class="w">                     </span><span class="n">timestamps</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">which</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">was</span><span class="w"> </span><span class="n">updated</span><span class="o">.</span><span class="w"> </span><span class="nc">Reverse</span><span class="w">
+                     </span><span class="n">ordered</span><span class="o">.</span><span class="w">
+                     </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4973551193-1">%{</span><span class="p" data-group-id="4973551193-1">}</span></code></pre></li></ul>
+  </section>
+</section>
+<section class="detail" id="t:write_opts/0">
 
+  <div class="detail-header">
+    <a href="#t:write_opts/0" class="detail-link" data-no-tooltip title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">write_opts()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> write_opts() :: :append | :write | :add</pre>
+
+      </div>
+
+<p>I am a type of writing options.</p>
   </section>
 </section>
 
@@ -407,33 +460,6 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="abwrite/3">
-
-  <div class="detail-header">
-    <a href="#abwrite/3" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">abwrite(flag, arg, state)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> abwrite(
-  :append | :write | :add,
-  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()] | %{write: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(), append: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()}},
-  <a href="#t:t/0">t</a>()
-) :: {<a href="#t:t/0">t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="add/2">
 
   <div class="detail-header">
@@ -448,7 +474,20 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> add(
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+   %{write: [{<a href="#t:bare_key/0">bare_key</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}], append: [{<a href="#t:bare_key/0">bare_key</a>(), <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>()}]}}
+) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()</pre>
+
+      </div>
+
+<p>I am the Storage add function.</p><p>I provide functionality to write and append at the same height. I am
+provided a map of things to write and things to append. I write the list
+of key-values and append the list of key-sets provided all at the same
+height.</p><p>To check my semantics, see <a href="#write/2"><code class="inline">write/2</code></a> and <a href="#append/2"><code class="inline">append/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="append/2">
@@ -469,46 +508,22 @@ GUIDES
 
           <pre translate="no"><span class="attribute">@spec</span> append(
   <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), [{<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>()}]}
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), [{<a href="#t:bare_key/0">bare_key</a>(), <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>()}]}
 ) :: :ok</pre>
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="block_spawn/3">
-
-  <div class="detail-header">
-    <a href="#block_spawn/3" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">block_spawn(height, call, node_id)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="blocking_write/4">
-
-  <div class="detail-header">
-    <a href="#blocking_write/4" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">blocking_write(node_id, height, kvlist, from)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
+<p>I am the Storage append function.</p><p>I am a Storage-level abstraction for rewriting set values by appending
+new values to them.</p><p>I am given a node ID alongside a height T and a list of key-value pairs
+where all values are expected to be sets.</p><p>If T is larger than the uncommitted height plus one, I block the caller
+to wait until T is exactly one above the current height in the storage.
+That is, I block the caller until it is their time to write.</p><p>When that time comes, I first read the most recent values of the keys
+supplied. If none are, I produce an empty set. Afterwards, I go through
+the list of key-values, add the height to the list which records all
+height at which those keys have been updated, then map the tuple of
+{T, key} to the union of their most recent value and the new value,
+therefore appendin to the set.</p><p>Once that is done, I sent a write event specifying what has been written
+and at white height, while setting the uncommitted height to T.</p>
   </section>
 </section>
 <section class="detail" id="blocks_table/1">
@@ -525,7 +540,14 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> blocks_table(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>I am a block table name function.</p><p>Given a Node ID, I produce the name of the appropriate block table
+connected to it.</p>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
@@ -569,7 +591,35 @@ GUIDES
 
       </div>
 
+<p>I am the Storage commit function.</p><p>I am called when an actor with Mempool functionality decides that a block
+round has been complitted, prompting the commitment of the in-progress
+storage to appropriate table and the creation of a block with supplied
+content.</p>
+  </section>
+</section>
+<section class="detail" id="height_filter/1">
 
+  <div class="detail-header">
+    <a href="#height_filter/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">height_filter(height)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> height_filter(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
+  <a href="Anoma.Node.Transaction.Storage.HeightFilter.html#t:t/0">Anoma.Node.Transaction.Storage.HeightFilter.t</a>()</pre>
+
+      </div>
+
+<p>I am the height filter.</p><p>Given a height, I provide a filter for for messages of a particular
+height.</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -586,36 +636,9 @@ GUIDES
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> init([startup_options()]) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
-
-      </div>
-
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="init_tables/2">
-
-  <div class="detail-header">
-    <a href="#init_tables/2" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">init_tables(node_id, rocks)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> init_tables(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), bool()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
-
-      </div>
-
-
+<p>I am the initialization function for the Storage Engine.</p><p>From the specified arguments, I get the node ID, the uncommitted height
+and the option to make the table Storage uses rocks-backed.</p><p>Given a rocks flag, launch rocks-backed tables, if not, launch usual
+mnesia tables.</p><p>Afterwards I launch the Storage engine with given arguments.</p>
   </section>
 </section>
 <section class="detail" id="read/2">
@@ -636,35 +659,17 @@ GUIDES
 
           <pre translate="no"><span class="attribute">@spec</span> read(
   <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="#t:bare_key/0">bare_key</a>()}
 ) :: :absent | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="read_in_past/3">
-
-  <div class="detail-header">
-    <a href="#read_in_past/3" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">read_in_past(height, key, state)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> read_in_past(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="#t:t/0">t</a>()) :: :absent | :error | {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
-
-      </div>
-
-
+<p>I am the Storage read function.</p><p>I provide functionality to read a specific key at a specific height T.</p><p>If the height provided is higher than the height of the Storage, I block
+the actor using me and wait for the height to become the one in the
+Storage, then read the key at T.</p><p>To do that, I see whether the key has been updated in the state. If so, I
+get the value of that key at the most recent height it was updated, i.e.
+at the value closest to T.</p><p>If not, then it might have been committed in the past and I do the same
+procedure yet in the corresponding mnesia tables.</p><p>If nothing is found, I return <code class="inline">:absent</code></p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -689,7 +694,8 @@ GUIDES
 
       </div>
 
-
+<p>I am the start_link function of the Storage Engine.</p><p>I register the enfine with supplied node ID provided by the arguments and
+check that the uncommitted height has been supplied.</p>
   </section>
 </section>
 <section class="detail" id="updates_table/1">
@@ -706,7 +712,14 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> updates_table(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>I am an updates table name function.</p><p>Given a Node ID, I produce the name of the appropriate updates table
+connected to it.</p>
   </section>
 </section>
 <section class="detail" id="values_table/1">
@@ -723,7 +736,14 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> values_table(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>I am a values table name function.</p><p>Given a Node ID, I produce the name of the appropriate values table
+connected to it.</p>
   </section>
 </section>
 <section class="detail" id="write/2">
@@ -744,12 +764,18 @@ GUIDES
 
           <pre translate="no"><span class="attribute">@spec</span> write(
   <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]}
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), [{<a href="#t:bare_key/0">bare_key</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}]}
 ) :: :ok</pre>
 
       </div>
 
-
+<p>I am the Storage write function.</p><p>I am given a node ID alongside a height T and a list of key-value pairs.</p><p>If T is larger than the uncommitted height plus one, I block the caller
+to wait until T is exactly one above the current height in the storage.
+That is, I block the caller until it is their time to write.</p><p>When that time comes, I go through the list of key-values, add the height
+to the list which records all height at which those keys have been
+updated, then map the tuple of {T, key} to the new value and store
+it in the state.</p><p>Once that is done, I sent a write event specifying what has been written
+and at white height, while setting the uncommitted height to T.</p>
   </section>
 </section>
 
@@ -760,9 +786,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

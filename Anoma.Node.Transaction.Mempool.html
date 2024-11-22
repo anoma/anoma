@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Anoma.Node.Transaction.Mempool — Anoma v0.27.0</title>
+    <title>Anoma.Node.Transaction.Mempool — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,13 +123,23 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Mempool</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-
+<p>I am the Mempool Engine.</p><p>I posess the core functionality to submit new transactions, execute
+incoming consensus, and dump current transactions. Alongside that, I
+store all currently running transactions as well as their intermediate
+VM results.</p><p>As the main point of user-input, I also send the events needed for
+replays.</p><p>All transactions are assumed to come in the form of {backend, noun}.</p><p>All consensus is assumed to come in a form of an orered list of binaries.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><ul><li><a href="#tx_dump/1"><code class="inline">tx_dump/1</code></a></li><li><a href="#execute/2"><code class="inline">execute/2</code></a></li><li><a href="#tx/2"><code class="inline">tx/2</code></a></li><li><a href="#tx/3"><code class="inline">tx/3</code></a></li></ul>
     </section>
 
 </div>
@@ -152,6 +162,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the Mempool Engine.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -160,6 +172,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the transaction result.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -167,6 +181,8 @@ GUIDES
         <a href="#t:vm_result/0" data-no-tooltip translate="no">vm_result()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of the Nock VM result.</p></div>
 
     </div>
 
@@ -192,6 +208,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the execution function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -199,6 +217,8 @@ GUIDES
         <a href="#filter_for_mempool/0" data-no-tooltip translate="no">filter_for_mempool()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a filter spec which filters for Mempool-related messages.</p></div>
 
     </div>
 
@@ -208,7 +228,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the initialization function for the Mempool Engine.</p></div>
 
     </div>
 
@@ -218,6 +238,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the start_link function for the Mempool Engine.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -225,6 +247,8 @@ GUIDES
         <a href="#tx/2" data-no-tooltip translate="no">tx(node_id, tx_w_backend)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a launch function for a new transaction.</p></div>
 
     </div>
 
@@ -234,6 +258,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a launch function for a new transaction with a given ID.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -242,6 +268,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a function to dump transactions.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -249,6 +277,8 @@ GUIDES
         <a href="#worker_module_filter/0" data-no-tooltip translate="no">worker_module_filter()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a filter spec which filters for messages from the Backends module.</p></div>
 
     </div>
 
@@ -289,7 +319,17 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of the Mempool Engine.</p><p>I contain the core information for the mempool functionality, storing the
+node ID for which the Mempool is launched, a map of transactions with
+their IDs, as well as the most recent block round.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:node_id</code> - The ID of the Node to which a Mempool instantiation is<pre><code class="makeup elixir" translate="no"><span class="w">         </span><span class="n">is</span><span class="w"> </span><span class="n">bound</span><span class="o">.</span></code></pre></li><li><code class="inline">:transactions</code> - A map with keys being the binary IDs of launched<pre><code class="makeup elixir" translate="no"><span class="w">              </span><span class="n">transactions</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">corresponding</span><span class="w">
+              </span><span class="n">transaction</span><span class="w"> </span><span class="n">data</span><span class="o">.</span><span class="w"> </span><span class="nc">See</span><span class="w"> </span><span class="err">`</span><span class="nc">Tx</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="9738631606-1">(</span><span class="p" data-group-id="9738631606-1">)</span><span class="err">`</span><span class="w">
+              </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9738631606-2">%{</span><span class="p" data-group-id="9738631606-2">}</span></code></pre></li><li><code class="inline">:round</code> - The round of the next block to be created.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="t:tx_result/0">
@@ -312,7 +352,7 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of the transaction result.</p>
   </section>
 </section>
 <section class="detail" id="t:vm_result/0">
@@ -335,7 +375,7 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of the Nock VM result.</p>
   </section>
 </section>
 
@@ -387,7 +427,10 @@ GUIDES
 
       </div>
 
-
+<p>I am the execution function.</p><p>I receive a list of binaries, which I recognize as a partial order for
+block execution, sending an appropriate consensus submission event.</p><p>Once launched, I send the list to the Executor.</p><p>I am asynchronous, meaning that I do not block and blocks can be
+submitted before the last one got executed.</p><p>If execution is susccesful, the Mempool will handle an appropriate
+message from the Executor, which will trigger block-creation.</p>
   </section>
 </section>
 <section class="detail" id="filter_for_mempool/0">
@@ -410,7 +453,7 @@ GUIDES
 
       </div>
 
-
+<p>I am a filter spec which filters for Mempool-related messages.</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -433,7 +476,10 @@ GUIDES
 
       </div>
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+<p>I am the initialization function for the Mempool Engine.</p><p>I assume that my arguments come with keywords specifying the node id,
+alongside transactions, pending orders, and a block round.</p><p>If any transactions are provided upon startup, I ask the Mempool to
+execute them with a particular ID.</p><p>If any orders are provided, I also launch them afterwards in the order
+specified.</p><p>Afterwards, I initialize the Mempool with round and node ID specified.</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -458,7 +504,8 @@ GUIDES
 
       </div>
 
-
+<p>I am the start_link function for the Mempool Engine.</p><p>I register the mempool with supplied node ID provided by the
+arguments.</p>
   </section>
 </section>
 <section class="detail" id="tx/2">
@@ -484,7 +531,10 @@ GUIDES
 
       </div>
 
-
+<p>I am a launch function for a new transaction.</p><p>Given a node ID with a {backend, tx} tuple, I launch a new transaction
+with a random ID, sending an appropriate event.</p><p>Afterwards, the transaction code is sent to the Executor Engine to be
+assigned to a Worder, while the code wrapped in <code class="inline">Tx.t()</code> will be stored
+in Mempool's state.</p><p>See <a href="#tx/3"><code class="inline">tx/3</code></a> for launching a transaction with a given ID.</p>
   </section>
 </section>
 <section class="detail" id="tx/3">
@@ -508,7 +558,9 @@ GUIDES
 
       </div>
 
-
+<p>I am a launch function for a new transaction with a given ID.</p><p>See <a href="#tx/2"><code class="inline">tx/2</code></a> for logic documentation. In constrast to it, I launch an new
+transaction with a particular given ID. This functionality is to be used
+only for replays and testing.</p>
   </section>
 </section>
 <section class="detail" id="tx_dump/1">
@@ -531,7 +583,8 @@ GUIDES
 
       </div>
 
-
+<p>I am a function to dump transactions.</p><p>Given a node ID, I give all the transactions as currently stored in the
+corresponding Mempool state.</p>
   </section>
 </section>
 <section class="detail" id="worker_module_filter/0">
@@ -554,7 +607,7 @@ GUIDES
 
       </div>
 
-
+<p>I am a filter spec which filters for messages from the Backends module.</p>
   </section>
 </section>
 
@@ -565,9 +618,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

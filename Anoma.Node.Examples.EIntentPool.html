@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Anoma.Node.Examples.EIntentPool — Anoma v0.27.0</title>
+    <title>Anoma.Node.Examples.EIntentPool — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Examples.EIntentPool</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
@@ -158,6 +158,17 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#add_intent_transaction_nullifier/1" data-no-tooltip translate="no">add_intent_transaction_nullifier(enode \\ ENode.start_node())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I submit a transaction containing a nullifier to an ephemeral resource
+used in a trivial swap transaction.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#list_intents/1" data-no-tooltip translate="no">list_intents(enode \\ ENode.start_node())</a>
 
       </div>
@@ -173,6 +184,17 @@ GUIDES
       </div>
 
         <div class="summary-synopsis"><p>I add and remove an intent from the pool and ensure that it's actually gone.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_intents_with_nulllified_resources/1" data-no-tooltip translate="no">remove_intents_with_nulllified_resources(enode \\ ENode.start_node())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I use <code class="inline">add_intent_transaction_nullifier</code> and then execute the trivial
+swap.</p></div>
 
     </div>
 
@@ -212,6 +234,33 @@ GUIDES
       </div>
 
 <p>I check that when an intent is added to the pool, is is present in the mapset.</p>
+  </section>
+</section>
+<section class="detail" id="add_intent_transaction_nullifier/1">
+
+    <span id="add_intent_transaction_nullifier/0"></span>
+
+  <div class="detail-header">
+    <a href="#add_intent_transaction_nullifier/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add_intent_transaction_nullifier(enode \\ ENode.start_node())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_intent_transaction_nullifier(<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()) ::
+  <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()</pre>
+
+      </div>
+
+<p>I submit a transaction containing a nullifier to an ephemeral resource
+used in a trivial swap transaction.</p>
   </section>
 </section>
 <section class="detail" id="list_intents/1">
@@ -264,6 +313,34 @@ GUIDES
 <p>I add and remove an intent from the pool and ensure that it's actually gone.</p>
   </section>
 </section>
+<section class="detail" id="remove_intents_with_nulllified_resources/1">
+
+    <span id="remove_intents_with_nulllified_resources/0"></span>
+
+  <div class="detail-header">
+    <a href="#remove_intents_with_nulllified_resources/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">remove_intents_with_nulllified_resources(enode \\ ENode.start_node())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_intents_with_nulllified_resources(<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()) ::
+  <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()</pre>
+
+      </div>
+
+<p>I use <code class="inline">add_intent_transaction_nullifier</code> and then execute the trivial
+swap.</p><p>The nullifier of the ephemeral resource used gets trasmitted to the
+intent pool, hence removing the specified intent from the pool.</p>
+  </section>
+</section>
 
     </div>
   </section>
@@ -272,9 +349,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

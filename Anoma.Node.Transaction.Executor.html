@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Anoma.Node.Transaction.Executor — Anoma v0.27.0</title>
+    <title>Anoma.Node.Transaction.Executor — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,10 +123,24 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Executor</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
+
+    <section id="moduledoc">
+<p>I am the Executor Engine.</p><p>My main functionality is to launch new workers and keep track of
+finalized transaction execution, sending the consensus ordering data to
+the Ordering Engine and waiting for workers to signal process completion.
+That is, I mark beginning and end of the transaction execution,
+abstracting the functionality away from the Mempool.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><ul><li><a href="#complete_filter/0"><code class="inline">complete_filter/0</code></a></li><li><a href="#execute/2"><code class="inline">execute/2</code></a></li><li><a href="#launch/3"><code class="inline">launch/3</code></a></li></ul>
+    </section>
 
 </div>
 
@@ -147,6 +161,8 @@ GUIDES
         <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of the Executor Engine.</p></div>
 
     </div>
 
@@ -172,6 +188,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a filter for completion messages from workers.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -179,6 +197,8 @@ GUIDES
         <a href="#execute/2" data-no-tooltip translate="no">execute(node_id, consensus)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the Executor execute function.</p></div>
 
     </div>
 
@@ -188,7 +208,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the intialization function for the Executor Engine.</p></div>
 
     </div>
 
@@ -198,6 +218,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the Executor launch function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -205,6 +227,8 @@ GUIDES
         <a href="#start_link/1" data-no-tooltip translate="no">start_link(args)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the start_link function of the Executor Engine.</p></div>
 
     </div>
 
@@ -241,7 +265,13 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of the Executor Engine.</p><p>Currently I only keep information of the relevant node identitfication.</p><h3 id="t:t/0-fileds" class="section-heading">
+  <a href="#t:t/0-fileds" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fileds</span>
+</h3>
+<ul><li><code class="inline">:node_id</code> - The ID of the node to which an Executor instantiation is<pre><code class="makeup elixir" translate="no"><span class="w">         </span><span class="n">bound</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -293,7 +323,7 @@ GUIDES
 
       </div>
 
-
+<p>I am a filter for completion messages from workers.</p>
   </section>
 </section>
 <section class="detail" id="execute/2">
@@ -316,7 +346,11 @@ GUIDES
 
       </div>
 
-
+<p>I am the Executor execute function.</p><p>I accept the node ID and a list of transaction IDs as my arguments.
+Afterwards, the list is sent to the Ordering.</p><p>At that point, I make Executor go into a receive loop processing all
+messages about finished workers. If all consensus-provided workers with
+specified IDs have finished in time, I broadcast a completion message
+with all the execution results. Otherwise, Executor crashes.</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -339,7 +373,9 @@ GUIDES
 
       </div>
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+<p>I am the intialization function for the Executor Engine.</p><p>Given the arguments containing a node ID, I subscribe to all messages
+which come from completed workers of that node and launch the Executor
+with appropriate state.</p>
   </section>
 </section>
 <section class="detail" id="launch/3">
@@ -366,7 +402,8 @@ GUIDES
 
       </div>
 
-
+<p>I am the Executor launch function.</p><p>Given a transaction in {backend, code} format with specific ID,
+I launch that transaction as a task.</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -389,7 +426,7 @@ GUIDES
 
       </div>
 
-
+<p>I am the start_link function of the Executor Engine.</p><p>I register the engine with supplied node ID provided by the arguments.</p>
   </section>
 </section>
 
@@ -400,9 +437,9 @@ GUIDES
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Anoma.Node.Logging — Anoma v0.27.0</title>
+    <title>Anoma.Node.Logging — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,13 +123,21 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Logging</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>Replay manager with logger functionality</p>
+<p>I am the Logging Engine.</p><p>I combine the classic logger with replay functionality. In particular,
+I store the most recent data coming outside of a Node so that if it fails
+I can re-do the actions fed to me in a linear fashion.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><h4>Replay</h4><ul><li><a href="#restart_with_replay/1"><code class="inline">restart_with_replay/1</code></a></li><li><a href="#replay_args/1"><code class="inline">replay_args/1</code></a></li><li><a href="#try_launch/2"><code class="inline">try_launch/2</code></a></li><li><a href="#replay_setup/2"><code class="inline">replay_setup/2</code></a></li><li><a href="#replay_table_clone/3"><code class="inline">replay_table_clone/3</code></a></li></ul><h4>Other</h4><ul><li><a href="#table_name/1"><code class="inline">table_name/1</code></a></li><li><code class="inline">init_table/2</code></li><li><a href="#log_event/3"><code class="inline">log_event/3</code></a></li></ul>
     </section>
 
 </div>
@@ -152,6 +160,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the loggging message type flag.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -159,6 +169,8 @@ GUIDES
         <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of the Logging Engine.</p></div>
 
     </div>
 
@@ -184,15 +196,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#init_table/2" data-no-tooltip translate="no">init_table(table, rocks)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I am the initialization function for the Logging Engine.</p></div>
 
     </div>
 
@@ -202,6 +206,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the log event function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -209,6 +215,8 @@ GUIDES
         <a href="#logging_filter/0" data-no-tooltip translate="no">logging_filter()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the logging filter.</p></div>
 
     </div>
 
@@ -218,6 +226,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the function getting the replay arguments for replay.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -226,7 +236,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>The first step in the replay process.</p></div>
+        <div class="summary-synopsis"><p>I am the replay setup function, the first step in the replay process.</p></div>
 
     </div>
 
@@ -236,7 +246,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>Copies the contents of the storage tables into mock Replay tables</p></div>
+        <div class="summary-synopsis"><p>I am the function making a table copy for replay.</p></div>
 
     </div>
 
@@ -256,6 +266,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the start_link function of the Logging Engine.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -264,6 +276,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the name of the event table.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -271,6 +285,8 @@ GUIDES
         <a href="#try_launch/2" data-no-tooltip translate="no">try_launch(mock_id, replay_args)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am a function trying to launch a node.</p></div>
 
     </div>
 
@@ -307,7 +323,8 @@ GUIDES
 
       </div>
 
-
+<p>I am the loggging message type flag.</p><p>I specify what logging levels are currently supported by the Logging
+Engine.</p>
   </section>
 </section>
 <section class="detail" id="t:t/0">
@@ -330,7 +347,15 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of the Logging Engine.</p><p>I store a Node ID with which I am associated alongside a table which
+stores all relevant events.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:node_id</code> - The ID of the Node to which a Logging Engine<pre><code class="makeup elixir" translate="no"><span class="w">         </span><span class="n">instantiation</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">bound</span><span class="o">.</span></code></pre></li><li><code class="inline">:table</code> - The name of the table to which all replay events are<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="n">written</span><span class="o">.</span><span class="w">
+       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="bp">__MODULE__</span><span class="o">.</span><span class="nc">Events</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -376,36 +401,10 @@ GUIDES
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> init(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
-
-      </div>
-
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="init_table/2">
-
-  <div class="detail-header">
-    <a href="#init_table/2" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">init_table(table, rocks)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> init_table(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), bool()) :: {:atomic, :ok}</pre>
-
-      </div>
-
-
+<p>I am the initialization function for the Logging Engine.</p><p>From the specified arguments, I get the Node ID, the table name, as well
+as the boolean indicating whether the table should be backed by RocksDB.</p><p>I then initialize the table with the given name and backing options,
+subscribe to logging messages and then launch the Engine with the given
+options.</p>
   </section>
 </section>
 <section class="detail" id="log_event/3">
@@ -422,7 +421,14 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> log_event(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="#t:flag/0">flag</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: :ok</pre>
+
+      </div>
+
+<p>I am the log event function.</p><p>I provide an interface to &quot;log&quot; new messages in an easy format.</p><p>Given a Node ID, a flag, and a message, I create a new event with
+appropriate flag and message.</p>
   </section>
 </section>
 <section class="detail" id="logging_filter/0">
@@ -439,7 +445,13 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> logging_filter() :: <a href="Anoma.Node.Logging.LoggingFilter.html#t:t/0">Anoma.Node.Logging.LoggingFilter.t</a>()</pre>
+
+      </div>
+
+<p>I am the logging filter.</p><p>I filter for any incoming messages the Logging Engine cares about.</p>
   </section>
 </section>
 <section class="detail" id="replay_args/1">
@@ -466,7 +478,9 @@ GUIDES
 
       </div>
 
-
+<p>I am the function getting the replay arguments for replay.</p><p>Given a current height alongside mempool info, I set the ordering and
+storage info appropriately and put all transaction trifecta arguments in
+an order.</p>
   </section>
 </section>
 <section class="detail" id="replay_setup/2">
@@ -489,7 +503,7 @@ GUIDES
 
       </div>
 
-<p>The first step in the replay process.</p><p>All tables here are the original ones from which we get info.</p><p>This gives us the height, the round, as well as the replay Mempool struct</p>
+<p>I am the replay setup function, the first step in the replay process.</p><p>All tables here are the original ones from which we get info.</p><p>This gives me the height, the round, as well as the replay Mempool struct.</p>
   </section>
 </section>
 <section class="detail" id="replay_table_clone/3">
@@ -506,7 +520,15 @@ GUIDES
 
   <section class="docstring">
 
-<p>Copies the contents of the storage tables into mock Replay tables</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> replay_table_clone(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>I am the function making a table copy for replay.</p><p>Given original updates and values table used by the Storage, I copy their
+data to separate tables for a new node. Used for trying a replay on a
+mock node.</p>
   </section>
 </section>
 <section class="detail" id="restart_with_replay/1">
@@ -549,7 +571,14 @@ and rounds for the Transaction subsystem.</p>
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> start_link([startup_options()]) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()</pre>
+
+      </div>
+
+<p>I am the start_link function of the Logging Engine.</p><p>I register the Engine with the supplied Node ID provided by the arguments
+and check that the table keyword has been provided.</p>
   </section>
 </section>
 <section class="detail" id="table_name/1">
@@ -566,7 +595,13 @@ and rounds for the Transaction subsystem.</p>
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> table_name(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>I am the name of the event table.</p><p>Given a Node ID, I create an appropriately named Event table for it.</p>
   </section>
 </section>
 <section class="detail" id="try_launch/2">
@@ -589,7 +624,10 @@ and rounds for the Transaction subsystem.</p>
 
       </div>
 
-
+<p>I am a function trying to launch a node.</p><p>Given some replay arguments, I provide the core logic to be run by a
+separate task to test whether the original data has been corrupted or
+note.</p><p>Namely, a launch a Node with given replay arguments and make sure that
+the final consensus gets provided.</p>
   </section>
 </section>
 
@@ -600,9 +638,9 @@ and rounds for the Transaction subsystem.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 

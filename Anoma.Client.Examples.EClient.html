@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.27.0">
+    <meta name="project" content="Anoma v0.28.0">
 
 
-    <title>Anoma.Client.Examples.EClient — Anoma v0.27.0</title>
+    <title>Anoma.Client.Examples.EClient — Anoma v0.28.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-03F30E6E.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.27.0
+          v0.28.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Client.Examples.EClient</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.27.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
 
   </h1>
 
@@ -237,6 +237,14 @@ by killing all other nodes.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#jammed_program_tracing/0" data-no-tooltip translate="no">jammed_program_tracing()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#kill_existing_client/0" data-no-tooltip translate="no">kill_existing_client()</a>
 
       </div>
@@ -311,6 +319,24 @@ by killing all other nodes.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#noun_program_tracing/0" data-no-tooltip translate="no">noun_program_tracing()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#prove_juvix_factorial_no_arguments/1" data-no-tooltip translate="no">prove_juvix_factorial_no_arguments(conn \\ setup())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I run a Juvix program that squares its inputs without an argument.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#prove_something_jammed/1" data-no-tooltip translate="no">prove_something_jammed(conn \\ setup())</a>
 
       </div>
@@ -336,6 +362,24 @@ by killing all other nodes.</p></div>
       </div>
 
         <div class="summary-synopsis"><p>I run a Juvix program that squares its inputs.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run_juvix_factorial_no_arguments/1" data-no-tooltip translate="no">run_juvix_factorial_no_arguments(conn \\ setup())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I run a Juvix program that squares its inputs without an argument.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run_juvix_with_hints/1" data-no-tooltip translate="no">run_juvix_with_hints(conn \\ setup())</a>
+
+      </div>
 
     </div>
 
@@ -368,6 +412,14 @@ by killing all other nodes.</p></div>
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#text_program_minisquare/0" data-no-tooltip translate="no">text_program_minisquare()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#text_program_tracing/0" data-no-tooltip translate="no">text_program_tracing()</a>
 
       </div>
 
@@ -499,6 +551,12 @@ by killing all other nodes.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_example_connection(<a href="#t:t/0">t</a>()) :: <a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()</pre>
+
+      </div>
+
 <p>I create an example stub to a given clients GRPC endpoint.</p>
   </section>
 </section>
@@ -544,7 +602,7 @@ by killing all other nodes.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> jammed_input(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: Anoma.Protobuf.Input.t()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> jammed_input(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: Anoma.Protobuf.Nock.Input.t()</pre>
 
       </div>
 
@@ -614,6 +672,29 @@ by killing all other nodes.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> jammed_program_minisquare() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="jammed_program_tracing/0">
+
+  <div class="detail-header">
+    <a href="#jammed_program_tracing/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">jammed_program_tracing()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jammed_program_tracing() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
 
       </div>
 
@@ -816,6 +897,57 @@ by killing all other nodes.</p>
 
   </section>
 </section>
+<section class="detail" id="noun_program_tracing/0">
+
+  <div class="detail-header">
+    <a href="#noun_program_tracing/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">noun_program_tracing()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> noun_program_tracing() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="prove_juvix_factorial_no_arguments/1">
+
+    <span id="prove_juvix_factorial_no_arguments/0"></span>
+
+  <div class="detail-header">
+    <a href="#prove_juvix_factorial_no_arguments/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">prove_juvix_factorial_no_arguments(conn \\ setup())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> prove_juvix_factorial_no_arguments(
+  <a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()
+) ::
+  Anoma.Protobuf.Nock.Prove.Response.t()</pre>
+
+      </div>
+
+<p>I run a Juvix program that squares its inputs without an argument.</p><p>I expect the result to be 0.</p>
+  </section>
+</section>
 <section class="detail" id="prove_something_jammed/1">
 
     <span id="prove_something_jammed/0"></span>
@@ -835,7 +967,7 @@ by killing all other nodes.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> prove_something_jammed(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
-  Anoma.Protobuf.Prove.Response.t()</pre>
+  Anoma.Protobuf.Nock.Prove.Response.t()</pre>
 
       </div>
 
@@ -861,7 +993,7 @@ by killing all other nodes.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> prove_something_text(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
-  Anoma.Protobuf.Prove.Response.t()</pre>
+  Anoma.Protobuf.Nock.Prove.Response.t()</pre>
 
       </div>
 
@@ -887,11 +1019,63 @@ by killing all other nodes.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> run_juvix_factorial(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
-  Anoma.Protobuf.Prove.Response.t()</pre>
+  Anoma.Protobuf.Nock.Prove.Response.t()</pre>
 
       </div>
 
 <p>I run a Juvix program that squares its inputs.</p>
+  </section>
+</section>
+<section class="detail" id="run_juvix_factorial_no_arguments/1">
+
+    <span id="run_juvix_factorial_no_arguments/0"></span>
+
+  <div class="detail-header">
+    <a href="#run_juvix_factorial_no_arguments/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">run_juvix_factorial_no_arguments(conn \\ setup())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> run_juvix_factorial_no_arguments(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
+  Anoma.Protobuf.Nock.Prove.Response.t()</pre>
+
+      </div>
+
+<p>I run a Juvix program that squares its inputs without an argument.</p><p>I expect the result to be 0.</p>
+  </section>
+</section>
+<section class="detail" id="run_juvix_with_hints/1">
+
+    <span id="run_juvix_with_hints/0"></span>
+
+  <div class="detail-header">
+    <a href="#run_juvix_with_hints/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">run_juvix_with_hints(conn \\ setup())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> run_juvix_with_hints(<a href="Anoma.Client.Examples.EClient.EConnection.html#t:t/0">Anoma.Client.Examples.EClient.EConnection.t</a>()) ::
+  Anoma.Protobuf.Nock.Prove.Response.t()</pre>
+
+      </div>
+
+
   </section>
 </section>
 <section class="detail" id="setup/0">
@@ -935,7 +1119,7 @@ by killing all other nodes.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> text_input(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: Anoma.Protobuf.Input.t()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> text_input(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: Anoma.Protobuf.Nock.Input.t()</pre>
 
       </div>
 
@@ -988,6 +1172,29 @@ by killing all other nodes.</p>
 
   </section>
 </section>
+<section class="detail" id="text_program_tracing/0">
+
+  <div class="detail-header">
+    <a href="#text_program_tracing/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">text_program_tracing()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> text_program_tracing() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 
     </div>
   </section>
@@ -996,9 +1203,9 @@ by killing all other nodes.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.27.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.27.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
 
           </span>
 
