@@ -25,6 +25,23 @@ defmodule Anoma.Client.Examples.EProve do
     {:ok, result}
   end
 
+  @spec squared_without_arguments() :: {:ok, Noun.t()} | :error
+  def squared_without_arguments() do
+    {:ok, program} =
+      :code.priv_dir(:anoma_client)
+      |> Path.join("test_juvix/Squared.nockma")
+      |> File.read!()
+      |> Nock.Cue.cue()
+
+    inputs = []
+
+    {:ok, result, _stdio} = Runner.prove(program, inputs)
+
+    assert result == 0
+
+    {:ok, result}
+  end
+
   @spec prove_squared_small() :: any()
   def prove_squared_small() do
     # jammed base64 encoded square function that takes in one parameter
