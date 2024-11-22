@@ -124,6 +124,16 @@ defmodule Anoma.MixProject do
     ["README.md" | all_docs("./documentation")]
   end
 
+  # Run "mix help compile.app" to learn about applications.
+  def application do
+    [
+      extra_applications: [
+        :observer,
+        :wx
+      ]
+    ]
+  end
+
   def escript do
     [
       main_module: Anoma.Cli,

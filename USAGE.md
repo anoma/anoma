@@ -14,7 +14,7 @@ Your Client <---> Anoma Client <---> Anoma Node
 The API of the Anoma Client is the same as the one of the Anoma Node, save for the `prove` and
 `runNock` endpoints which allow clients to run Nock code.
 
-# Setup 
+# Setup
 
 ## Setting up the node
 
@@ -44,7 +44,7 @@ The client can be started in two different ways. Either from the Elixir repl, or
 
 ### From the REPL
 
-An Anoma client can be started in the same repl that started the node. Note here that the client 
+An Anoma client can be started in the same repl that started the node. Note here that the client
 will listen for requests on port `50051`.
 
 ```iex
@@ -110,7 +110,7 @@ To get started with Postman, look here: https://learning.postman.com/docs/sendin
 
 ## GRPCurl
 
-For those so inclined, `grpcurl` is a command-line tool to make GRPC requests. 
+For those so inclined, `grpcurl` is a command-line tool to make GRPC requests.
 Instalation instructions can be found here: https://github.com/fullstorydev/grpcurl?tab=readme-ov-file#installation
 
 ### Listing the root services
@@ -143,9 +143,9 @@ Anoma.Protobuf.IndexerService.ListUnspentResources
 
 # Making requests
 
-## List intents 
+## List intents
 
-```shell 
+```shell
 grpcurl -plaintext localhost:50051 Anoma.Protobuf.IntentsService.ListIntents
 ```
 
@@ -157,11 +157,11 @@ results in the output below.
 
 ## Prove
 
-A prove request contains a program, private inputs, and public inputs. 
+A prove request contains a program, private inputs, and public inputs.
 
 Each of these can be either a jammed Nock noun, or a plain-text representation of the Nock noun.
 
-An example request with a jammed program, and a single jammed input looks as follows. 
+An example request with a jammed program, and a single jammed input looks as follows.
 The program below is squares its input.
 
 ```json

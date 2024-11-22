@@ -1,20 +1,41 @@
 defmodule Anoma.Node.Registry do
+  @moduledoc """
+  I am the Node Registry module.
+
+  I provide functionality for creating addresses, registering engines to
+  specific addresses, and querying information regarding the registered
+  addresses and engines.
+
+  ### Public API
+  - `address/3`
+  - `register/3`
+  - `via/3`
+  - `whereis/3`
+  - `engines_for/1`
+  - `local_node_id/0`
+  - `dump_register/0`
+  """
   use TypedStruct
 
-  ############################################################
-  #                    State                                 #
-  ############################################################
-
   typedstruct enforce: true, module: Address do
+    @typedoc """
+    I represent the Anoma Address.
+
+    ### Fields
+    - `:node_id`         - The node id.
+    - `:engine`          - The engine name.
+    - `:label`           - The label. Default: nil.
+    """
     field(:node_id, String.t())
     field(:engine, atom())
     field(:label, atom(), default: nil)
   end
 
-  @spec address(String.t(), atom()) :: Address.t()
-  def address(node_id, engine, label \\ nil)
-
-  def address(node_id, engine, label) do
+  @doc """
+  I create an address with specified node id, engine name and label.
+  """
+  @spec address(String.t(), atom(), atom()) :: Address.t()
+  def address(node_id, engine, label \\ nil) do
     %Address{node_id: node_id, engine: engine, label: label}
   end
 

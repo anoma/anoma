@@ -5,6 +5,7 @@ defmodule Examples.ENock do
   import ExUnit.Assertions
 
   alias Examples.ECrypto
+  alias Anoma.TransparentResource.Transaction
   import Noun
 
   ####################################################################
@@ -43,6 +44,23 @@ defmodule Examples.ENock do
       counter_arm(),
       0 | Nock.logics_core()
     ]
+  end
+
+  #### Term Examples
+
+  def zero(key \\ "key") do
+    zero_counter_arm = [1, key | 0]
+    arm = [10, [2 | zero_counter_arm], 1, 0 | 0]
+    sample = 0
+    [[8, [1 | sample], [1 | arm], 0 | 1] | 999]
+  end
+
+  def inc(key \\ "key") do
+    increment_value_arm = [[1 | key], 4, 12, [1 | 0], [0 | 6], 1, key | 0]
+    # Place the result in a list
+    arm = [10, [2 | increment_value_arm], 1, 0 | 0]
+    sample = 0
+    [[8, [1 | sample], [1 | arm], 0 | 1] | 999]
   end
 
   ####################################################################
@@ -105,6 +123,40 @@ defmodule Examples.ENock do
     assert {:ok, term} = Noun.replace(2, 2, indexed_noun())
     assert {:ok, 2} == Noun.axis(2, term)
     term
+  end
+
+  ####################################################################
+  ##                       Noun Transactions                        ##
+  ####################################################################
+
+  def trivial_swap() do
+    swap = Examples.ETransparent.ETransaction.swap_from_actions()
+    noun = swap |> Noun.Nounable.to_noun()
+    {:ok, cued} = noun |> Nock.Jam.jam() |> Nock.Cue.cue()
+    {:ok, cued_trans} = Transaction.from_noun(cued)
+
+    assert Transaction.from_noun(noun) == {:ok, swap}
+    assert Transaction.verify(cued_trans)
+
+    noun
+  end
+
+  def trivial_swap_no_eph() do
+    Examples.ETransparent.ETransaction.swap_from_actions_non_eph_nullifier()
+    |> Noun.Nounable.to_noun()
+  end
+
+  ####################################################################
+  ##                        Noun Submission                         ##
+  ####################################################################
+
+  def transparent_core(
+        tx_noun \\ Examples.ETransparent.ETransaction.swap_from_actions()
+        |> Noun.Nounable.to_noun()
+      ) do
+    trivial_swap_arm = [1 | tx_noun]
+    swap = [[1, trivial_swap_arm, 0 | 909], 0 | 707]
+    swap
   end
 
   ####################################################################
@@ -1167,6 +1219,91 @@ defmodule Examples.ENock do
     rsh = rsh(2)
     assert {:ok, 2} == Nock.nock(rsh, [9, 2, 10, [6, 1, 1 | 40], 0 | 1])
     rsh
+  end
+
+  ####################################################################
+  ##                           RNG Core                             ##
+  ####################################################################
+
+  @doc """
+  The gate representing an og core creation with a specified seed.
+
+  Can be gotten by defining
+
+  =l   =>  logics  |=  [seed=@]  ~(. og seed)
+
+  and getting it's arm with [0 2]
+  """
+  def og_arm() do
+    arm = "[8 [9 47 0 63] 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    sample = 0
+    [arm, sample | Nock.logics_core()]
+  end
+
+  def og_call(seed) do
+    Nock.nock(og_arm(), [9, 2, 10, [6, 1 | seed], 0 | 1])
+  end
+
+  @doc """
+  I represent a raws gate with a specified instantiated og core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [rng=_og width=@]  (raws:rng width)
+
+  and grabbing the arm with [0 2]
+  """
+  def raws_with_core() do
+    arm =
+      "[8 [7 [0 12] 9 4 0 1] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0, 0]
+
+    [arm, sample | Nock.logics_core()]
+  end
+
+  def raws_with_core_call(core, width) do
+    Nock.nock(raws_with_core(), [9, 2, 10, [6, 1 | [core | width]], 0 | 1])
+  end
+
+  def raws_with_out_core_test() do
+    {:ok, og_with_27} = og_call(27)
+
+    {:ok, res1} = raws_call(27, 10)
+    {:ok, ^res1} = raws_with_core_call(og_with_27, 10)
+  end
+
+  @doc """
+  I represent a split gate call given an og core with seed.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [rng=_og]  split:rng
+
+  and grabbing the arm with [0 2]
+  """
+  def split_arm() do
+    arm = "[7 [0 6] 9 21 0 1]" |> Noun.Format.parse_always()
+    sample = 0
+    [arm, sample | Nock.logics_core()]
+  end
+
+  def split_call(core) do
+    Nock.nock(split_arm(), [9, 2, 10, [6, 1 | core], 0 | 1])
+  end
+
+  def call_split_test() do
+    {:ok, og_with_123} = og_call(123)
+    {:ok, [rng1 | rng2]} = og_with_123 |> split_call()
+
+    # check that these are actual og cores
+    {:ok, [rbits1 | _core1]} = raws_with_core_call(rng1, 23)
+    {:ok, [rbits2 | _core2]} = raws_with_core_call(rng2, 23)
+
+    # check the bits do not collide
+    assert rbits1 != rbits2
   end
 
   ####################################################################
