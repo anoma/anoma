@@ -3,7 +3,7 @@ defmodule Anoma.Node.Examples.EIndexer do
   alias Node.Examples.{ETransaction, ENode}
   alias Node.Transaction.Storage
   alias Node.Utility.Indexer
-  alias Anoma.TransparentResource.Resource
+  alias Anoma.TransparentResource.{Resource, Transaction}
 
   def indexer_reads_height(node_id \\ Node.example_random_id()) do
     ETransaction.inc_counter_submit_after_read(node_id)
@@ -141,6 +141,20 @@ defmodule Anoma.Node.Examples.EIndexer do
     end)
 
     ^hash = Indexer.get(node_id, :root)
+
+    node_id
+  end
+
+  def indexer_works_with_transactions(node_id \\ Node.example_random_id()) do
+    Anoma.Node.Examples.ETransaction.submit_successful_trivial_swap(node_id)
+
+    base_swap = Examples.ETransparent.ETransaction.swap_from_actions()
+
+    nulfs = base_swap |> Transaction.nullifiers()
+    coms = base_swap |> Transaction.commitments()
+
+    ^nulfs = Indexer.get(node_id, :nlfs)
+    ^coms = Indexer.get(node_id, :cms)
 
     node_id
   end
