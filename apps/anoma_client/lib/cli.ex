@@ -10,12 +10,13 @@ defmodule Anoma.Client.CLI do
   - `--listen-port` - The port on which the client will listen for incoming connections.
   - `--node-host`   - The host of the remote node.
   - `--node-port`   - The port of the remote node.
+  - `--node-id`     - The id of the remote node.
 
   For example, assuming an Anoma node running on ip 'localhost' and port '4000', start the client
   with the following command.
 
   ```shell
-  ./anoma_client --listen-port 4001 --node-host localhost --node-port 4000
+  ./anoma_client --listen-port 4001 --node-host localhost --node-port 4000 --node-id 123456
   ```
 
   ## Running a node
@@ -75,7 +76,8 @@ defmodule Anoma.Client.CLI do
     case Client.connect(
            args[:node_host],
            args[:node_port],
-           args[:listen_port]
+           args[:listen_port],
+           args[:node_id]
          ) do
       {:error, :node_unreachable} ->
         terminate(show_error({:error, :node_unreachable}))

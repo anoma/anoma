@@ -23,7 +23,14 @@ defmodule Anoma.Client.Connection.Supervisor do
 
   @spec start_link(Keyword.t()) :: GenServer.on_start()
   def start_link(args) do
-    args = Keyword.validate!(args, [:listen_port, :host, :port, type: :grpc])
+    args =
+      Keyword.validate!(args, [
+        :node_id,
+        :listen_port,
+        :host,
+        :port,
+        type: :grpc
+      ])
 
     if args[:type] != :grpc do
       raise ArgumentError, "only grpc connections are supported at the moment"
@@ -39,10 +46,18 @@ defmodule Anoma.Client.Connection.Supervisor do
   def init(args) do
     Logger.debug("starting client supervisor #{inspect(args)}")
 
-    args = Keyword.validate!(args, [:listen_port, :host, :port, type: :grpc])
+    args =
+      Keyword.validate!(args, [
+        :node_id,
+        :listen_port,
+        :host,
+        :port,
+        type: :grpc
+      ])
 
     children = [
-      {Anoma.Client.Connection.GRPCProxy, Keyword.take(args, [:host, :port])},
+      {Anoma.Client.Connection.GRPCProxy,
+       Keyword.take(args, [:host, :port, :node_id])},
       GrpcReflection,
       {GRPC.Server.Supervisor,
        endpoint: Anoma.Client.Api.Endpoint,

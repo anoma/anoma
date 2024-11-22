@@ -20,12 +20,18 @@ defmodule Anoma.Client do
   @doc """
   I connect to a remote node over GRPC.
   """
-  @spec connect(String.t(), integer(), integer()) ::
+  @spec connect(String.t(), integer(), integer(), String.t()) ::
           {:ok, Client.t()} | {:error, term()} | {:error, term(), term()}
-  def connect(host, port, listen_port) do
+  def connect(host, port, listen_port, node_id) do
     spec =
       {Connection.Supervisor,
-       [host: host, port: port, type: :grpc, listen_port: listen_port]}
+       [
+         host: host,
+         port: port,
+         type: :grpc,
+         listen_port: listen_port,
+         node_id: node_id
+       ]}
 
     case DynamicSupervisor.start_child(ConnectionSupervisor, spec) do
       {:ok, pid} ->

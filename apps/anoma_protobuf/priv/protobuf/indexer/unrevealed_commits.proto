@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package Anoma.Protobuf.Indexer.UnrevealedCommits;
 
-message Request {}
+import "node_info.proto";
+
+message Request { NodeInfo node_info = 1; }
 
 message Response {
   repeated string commits = 1; // a list of intents.
