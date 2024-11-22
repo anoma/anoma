@@ -6,5 +6,6 @@ defmodule Anoma.Client.Api.Endpoint do
   run(Anoma.Client.Api.Servers.Intents)
   run(Anoma.Client.Api.Servers.Indexer)
   run(Anoma.Client.Api.Servers.Nock)
+  run(Anoma.Client.Api.Servers.Mempool)
   run(Anoma.Client.Api.ReflectionServer)
 end

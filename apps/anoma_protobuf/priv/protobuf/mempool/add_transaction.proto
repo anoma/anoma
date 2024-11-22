@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Mempool.AddTransaction;
+
+import "node_info.proto";
+
+message Request {
+  NodeInfo node_info = 1;
+
+  bytes transaction = 2;
+}
+
+message Response {}
