@@ -19,7 +19,10 @@ defmodule Anoma.MixProject do
         flags: [
           # Turn off the warning for improper lists, because we use
           # bare cons frequently and deliberately.
-          "-Wno_improper_lists"
+          "-Wno_improper_lists",
+          # Checks for some unmatched return values, i.e., an
+          # exhaustiveness check on structured returns.
+          "-Wunmatched_returns"
         ],
         plt_add_apps: [:mix, :ex_unit]
       ],
