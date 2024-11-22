@@ -340,16 +340,16 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   def handle_info(
-        %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}} = e,
+        e = %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}},
         state
       ) do
     {:noreply, handle_result_event(e, state)}
   end
 
   def handle_info(
-        %EventBroker.Event{
+        e = %EventBroker.Event{
           body: %Node.Event{body: %ExecutionEvent{}}
-        } = e,
+        },
         state
       ) do
     {:noreply, handle_execution_event(e, state)}
@@ -364,7 +364,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   ############################################################
 
   @spec handle_tx({Backends.backend(), Noun.t()}, binary(), t()) :: t()
-  defp handle_tx({backend, code} = tx, tx_id, state = %Mempool{}) do
+  defp handle_tx(tx = {backend, code}, tx_id, state = %Mempool{}) do
     value = %Tx{backend: backend, code: code}
     node_id = state.node_id
 
