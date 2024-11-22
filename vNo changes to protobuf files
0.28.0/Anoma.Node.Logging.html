@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.28.0">
+
+
+    <title>Anoma.Node.Logging — Anoma v0.28.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.28.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+    <span translate="no">Anoma.Node.Logging</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
+
+  </h1>
+
+
+    <section id="moduledoc">
+<p>I am the Logging Engine.</p><p>I combine the classic logger with replay functionality. In particular,
+I store the most recent data coming outside of a Node so that if it fails
+I can re-do the actions fed to me in a linear fashion.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><h4>Replay</h4><ul><li><a href="#restart_with_replay/1"><code class="inline">restart_with_replay/1</code></a></li><li><a href="#replay_args/1"><code class="inline">replay_args/1</code></a></li><li><a href="#try_launch/2"><code class="inline">try_launch/2</code></a></li><li><a href="#replay_setup/2"><code class="inline">replay_setup/2</code></a></li><li><a href="#replay_table_clone/3"><code class="inline">replay_table_clone/3</code></a></li></ul><h4>Other</h4><ul><li><a href="#table_name/1"><code class="inline">table_name/1</code></a></li><li><code class="inline">init_table/2</code></li><li><a href="#log_event/3"><code class="inline">log_event/3</code></a></li></ul>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:flag/0" data-no-tooltip translate="no">flag()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the loggging message type flag.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the type of the Logging Engine.</p></div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#init/1" data-no-tooltip translate="no">init(args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the initialization function for the Logging Engine.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#log_event/3" data-no-tooltip translate="no">log_event(node_id, flag, msg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the log event function.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#logging_filter/0" data-no-tooltip translate="no">logging_filter()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the logging filter.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#replay_args/1" data-no-tooltip translate="no">replay_args(list)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the function getting the replay arguments for replay.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#replay_setup/2" data-no-tooltip translate="no">replay_setup(event_table, block_table)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the replay setup function, the first step in the replay process.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#replay_table_clone/3" data-no-tooltip translate="no">replay_table_clone(values_table, updates_table, node_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the function making a table copy for replay.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#restart_with_replay/1" data-no-tooltip translate="no">restart_with_replay(node_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the function to be played on restarts of the Anoma node with known ID.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_link/1" data-no-tooltip translate="no">start_link(args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the start_link function of the Logging Engine.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#table_name/1" data-no-tooltip translate="no">table_name(node_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the name of the event table.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#try_launch/2" data-no-tooltip translate="no">try_launch(mock_id, replay_args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am a function trying to launch a node.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:flag/0">
+
+  <div class="detail-header">
+    <a href="#t:flag/0" class="detail-link" data-no-tooltip title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">flag()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> flag() :: :info | :debug | :warning | :error</pre>
+
+      </div>
+
+<p>I am the loggging message type flag.</p><p>I specify what logging levels are currently supported by the Logging
+Engine.</p>
+  </section>
+</section>
+<section class="detail" id="t:t/0">
+
+  <div class="detail-header">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">t()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Logging{node_id: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil, table: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+
+      </div>
+
+<p>I am the type of the Logging Engine.</p><p>I store a Node ID with which I am associated alongside a table which
+stores all relevant events.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:node_id</code> - The ID of the Node to which a Logging Engine<pre><code class="makeup elixir" translate="no"><span class="w">         </span><span class="n">instantiation</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">bound</span><span class="o">.</span></code></pre></li><li><code class="inline">:table</code> - The name of the table to which all replay events are<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="n">written</span><span class="o">.</span><span class="w">
+       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="bp">__MODULE__</span><span class="o">.</span><span class="nc">Events</span></code></pre></li></ul>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="child_spec/1">
+
+  <div class="detail-header">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">child_spec(init_arg)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="init/1">
+
+  <div class="detail-header">
+    <a href="#init/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">init(args)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I am the initialization function for the Logging Engine.</p><p>From the specified arguments, I get the Node ID, the table name, as well
+as the boolean indicating whether the table should be backed by RocksDB.</p><p>I then initialize the table with the given name and backing options,
+subscribe to logging messages and then launch the Engine with the given
+options.</p>
+  </section>
+</section>
+<section class="detail" id="log_event/3">
+
+  <div class="detail-header">
+    <a href="#log_event/3" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">log_event(node_id, flag, msg)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> log_event(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="#t:flag/0">flag</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: :ok</pre>
+
+      </div>
+
+<p>I am the log event function.</p><p>I provide an interface to &quot;log&quot; new messages in an easy format.</p><p>Given a Node ID, a flag, and a message, I create a new event with
+appropriate flag and message.</p>
+  </section>
+</section>
+<section class="detail" id="logging_filter/0">
+
+  <div class="detail-header">
+    <a href="#logging_filter/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">logging_filter()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> logging_filter() :: <a href="Anoma.Node.Logging.LoggingFilter.html#t:t/0">Anoma.Node.Logging.LoggingFilter.t</a>()</pre>
+
+      </div>
+
+<p>I am the logging filter.</p><p>I filter for any incoming messages the Logging Engine cares about.</p>
+  </section>
+</section>
+<section class="detail" id="replay_args/1">
+
+  <div class="detail-header">
+    <a href="#replay_args/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">replay_args(list)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> replay_args(height: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), mempool: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()) :: [
+  mempool: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  ordering: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()
+]</pre>
+
+      </div>
+
+<p>I am the function getting the replay arguments for replay.</p><p>Given a current height alongside mempool info, I set the ordering and
+storage info appropriately and put all transaction trifecta arguments in
+an order.</p>
+  </section>
+</section>
+<section class="detail" id="replay_setup/2">
+
+  <div class="detail-header">
+    <a href="#replay_setup/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">replay_setup(event_table, block_table)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> replay_setup(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: [height: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), mempool: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()]</pre>
+
+      </div>
+
+<p>I am the replay setup function, the first step in the replay process.</p><p>All tables here are the original ones from which we get info.</p><p>This gives me the height, the round, as well as the replay Mempool struct.</p>
+  </section>
+</section>
+<section class="detail" id="replay_table_clone/3">
+
+  <div class="detail-header">
+    <a href="#replay_table_clone/3" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">replay_table_clone(values_table, updates_table, node_id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> replay_table_clone(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>I am the function making a table copy for replay.</p><p>Given original updates and values table used by the Storage, I copy their
+data to separate tables for a new node. Used for trying a replay on a
+mock node.</p>
+  </section>
+</section>
+<section class="detail" id="restart_with_replay/1">
+
+  <div class="detail-header">
+    <a href="#restart_with_replay/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">restart_with_replay(node_id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> restart_with_replay(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/DynamicSupervisor.html#t:on_start_child/0">DynamicSupervisor.on_start_child</a>()</pre>
+
+      </div>
+
+<p>I am the function to be played on restarts of the Anoma node with known ID.</p><p>I sync the event table with the blocks submitted and then launch a mock
+node with a new ID with replay arguments.</p><p>If the replay succeeds, I reproduce it on the node with the ID provided.
+Otherwise, the only initialization information I reproduce are heights
+and rounds for the Transaction subsystem.</p>
+  </section>
+</section>
+<section class="detail" id="start_link/1">
+
+  <div class="detail-header">
+    <a href="#start_link/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">start_link(args)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_link([startup_options()]) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()</pre>
+
+      </div>
+
+<p>I am the start_link function of the Logging Engine.</p><p>I register the Engine with the supplied Node ID provided by the arguments
+and check that the table keyword has been provided.</p>
+  </section>
+</section>
+<section class="detail" id="table_name/1">
+
+  <div class="detail-header">
+    <a href="#table_name/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">table_name(node_id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> table_name(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>I am the name of the event table.</p><p>Given a Node ID, I create an appropriately named Event table for it.</p>
+  </section>
+</section>
+<section class="detail" id="try_launch/2">
+
+  <div class="detail-header">
+    <a href="#try_launch/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">try_launch(mock_id, replay_args)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> try_launch(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: :ok | :error</pre>
+
+      </div>
+
+<p>I am a function trying to launch a node.</p><p>Given some replay arguments, I provide the core logic to be run by a
+separate task to test whether the original data has been corrupted or
+note.</p><p>Namely, a launch a Node with given replay arguments and make sure that
+the final consensus gets provided.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

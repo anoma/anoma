@@ -1,0 +1,3594 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.28.0">
+
+
+    <title>Examples.ENock — Anoma v0.28.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.28.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+    <span translate="no">Examples.ENock</span> 
+    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
+
+  </h1>
+
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#abs/0" data-no-tooltip translate="no">abs()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#abs_arm/0" data-no-tooltip translate="no">abs_arm()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#bex/0" data-no-tooltip translate="no">bex()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#bex_arm/0" data-no-tooltip translate="no">bex_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The bex arm for taking bex:anoma from the logics core environment.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#call_split_test/0" data-no-tooltip translate="no">call_split_test()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#cmp/0" data-no-tooltip translate="no">cmp()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#cmp_arm/0" data-no-tooltip translate="no">cmp_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the cmp gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#counter_arm/0" data-no-tooltip translate="no">counter_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The counter arm.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#counter_logic/0" data-no-tooltip translate="no">counter_logic()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#cue/0" data-no-tooltip translate="no">cue()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#cue_arm/0" data-no-tooltip translate="no">cue_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>A cue arm for taking cue:anoma out of the logics core environment.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dec/0" data-no-tooltip translate="no">dec()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dec_arm/0" data-no-tooltip translate="no">dec_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The decrement arm in the tests core.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dif/0" data-no-tooltip translate="no">dif()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dif_arm/0" data-no-tooltip translate="no">dif_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the dif gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dul/0" data-no-tooltip translate="no">dul()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dul_arm/0" data-no-tooltip translate="no">dul_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the dul gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#factorial/0" data-no-tooltip translate="no">factorial()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#factorial_arm/0" data-no-tooltip translate="no">factorial_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the battery of the fib:tests gate of the anoma stadard library.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#fra/0" data-no-tooltip translate="no">fra()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#fra_arm/0" data-no-tooltip translate="no">fra_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the fra gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#inc/1" data-no-tooltip translate="no">inc(key \\ &quot;key&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#incorrectly_ending/0" data-no-tooltip translate="no">incorrectly_ending()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#incorrectly_nested_noun/0" data-no-tooltip translate="no">incorrectly_nested_noun()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#incorrectly_starting/0" data-no-tooltip translate="no">incorrectly_starting()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#increment_counter_val/1" data-no-tooltip translate="no">increment_counter_val(val)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#indexed_noun/0" data-no-tooltip translate="no">indexed_noun()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#jam/0" data-no-tooltip translate="no">jam()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#jam_and_cue/2" data-no-tooltip translate="no">jam_and_cue(jam_value, cue_value)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#jam_arm/0" data-no-tooltip translate="no">jam_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>A cue arm for taking jam:anoma out of the logics core environment.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#jamming_and_cueing/0" data-no-tooltip translate="no">jamming_and_cueing()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lsh0/0" data-no-tooltip translate="no">lsh0()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate lsh at block size 0 and gate-input [2 6].</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lsh1/0" data-no-tooltip translate="no">lsh1()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate lsh at block size 1 and gate-input [2 6].</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lsh2/0" data-no-tooltip translate="no">lsh2()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate lsh at block size 1 and gate-input [2 6].</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lsh/1" data-no-tooltip translate="no">lsh(value)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am an lash arm in the block door.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lte/0" data-no-tooltip translate="no">lte()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lte_arm/0" data-no-tooltip translate="no">lte_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the lte gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#mat/0" data-no-tooltip translate="no">mat()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#mat_arm/0" data-no-tooltip translate="no">mat_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The mat arm for taking mat:anoma from the logics core environment.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#met0/0" data-no-tooltip translate="no">met0()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate met at block size 0 and gate-input 28.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#met1/0" data-no-tooltip translate="no">met1()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate met at block size 1 and gate-input 28.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#met2/0" data-no-tooltip translate="no">met2()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate met at block size 2 and gate-input 28.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#met/1" data-no-tooltip translate="no">met(value)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am an lash arm in the block door.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#mix/0" data-no-tooltip translate="no">mix()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#mix_arm/0" data-no-tooltip translate="no">mix_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The mix arm for taking mix:anoma from the logics core environment.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#nesting_noun/0" data-no-tooltip translate="no">nesting_noun()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new/0" data-no-tooltip translate="no">new()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new_arm/0" data-no-tooltip translate="no">new_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the new gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#og_arm/0" data-no-tooltip translate="no">og_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The gate representing an og core creation with a specified seed.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#og_call/1" data-no-tooltip translate="no">og_call(seed)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#old/0" data-no-tooltip translate="no">old()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#old_arm/0" data-no-tooltip translate="no">old_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the old gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#one_two/0" data-no-tooltip translate="no">one_two()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#pro/0" data-no-tooltip translate="no">pro()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#pro_arm/0" data-no-tooltip translate="no">pro_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the pro gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rad_arm/0" data-no-tooltip translate="no">rad_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the rad gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rad_call/2" data-no-tooltip translate="no">rad_call(seed, range)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am function calling the rad gate of the og door with specified
+seed and range</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rad_tests/0" data-no-tooltip translate="no">rad_tests()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rads_arm/0" data-no-tooltip translate="no">rads_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the rads gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rads_call/2" data-no-tooltip translate="no">rads_call(seed, range)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am function calling the rads gate of the og door with specified
+seed and range</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rads_tests/0" data-no-tooltip translate="no">rads_tests()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raw_27_4/0" data-no-tooltip translate="no">raw_27_4()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raw_arm/0" data-no-tooltip translate="no">raw_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the raw gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raw_call/2" data-no-tooltip translate="no">raw_call(seed, width)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am function calling the raw gate of the og door with specified
+seed and bitwidth.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raws_arm/0" data-no-tooltip translate="no">raws_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the raws gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raws_call/2" data-no-tooltip translate="no">raws_call(seed, width)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am function calling the raws gate of the og door with specified
+seed and bitwidth.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raws_test/0" data-no-tooltip translate="no">raws_test()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raws_with_core/0" data-no-tooltip translate="no">raws_with_core()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent a raws gate with a specified instantiated og core given
+as an extra argument.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raws_with_core_call/2" data-no-tooltip translate="no">raws_with_core_call(core, width)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raws_with_out_core_test/0" data-no-tooltip translate="no">raws_with_out_core_test()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rem/0" data-no-tooltip translate="no">rem()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rem_arm/0" data-no-tooltip translate="no">rem_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the rem gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#replacing_terms/0" data-no-tooltip translate="no">replacing_terms()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rsh0/0" data-no-tooltip translate="no">rsh0()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate rsh at block size 0 and gate-input [2 40].</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rsh1/0" data-no-tooltip translate="no">rsh1()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate rsh at block size 1 and gate-input [2 40].</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rsh2/0" data-no-tooltip translate="no">rsh2()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate rsh at block size 2 and gate-input [2 40].</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rsh/1" data-no-tooltip translate="no">rsh(value)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am an lash arm in the block door.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#shax/0" data-no-tooltip translate="no">shax()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#shax_arm/0" data-no-tooltip translate="no">shax_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The shax arm for taking shax:anoma from the logics core environment.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sign/0" data-no-tooltip translate="no">sign()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sign_arm/0" data-no-tooltip translate="no">sign_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The sign arm for taking sign:anoma from the logics core environment.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sign_detatched/0" data-no-tooltip translate="no">sign_detatched()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sign_detatched_arm/0" data-no-tooltip translate="no">sign_detatched_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The sign-detatched arm for taking sign-detached:anoma from the logics core environment.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#split_arm/0" data-no-tooltip translate="no">split_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent a split gate call given an og core with seed.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#split_call/1" data-no-tooltip translate="no">split_call(core)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sum/0" data-no-tooltip translate="no">sum()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sum_arm/0" data-no-tooltip translate="no">sum_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I represent the sum gate call as a 2-argument gate.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sun/0" data-no-tooltip translate="no">sun()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sun_arm/0" data-no-tooltip translate="no">sun_arm()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#syn/0" data-no-tooltip translate="no">syn()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#syn_arm/0" data-no-tooltip translate="no">syn_arm()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#transparent_core/1" data-no-tooltip translate="no">transparent_core(tx_noun \\ Examples.ETransparent.ETransaction.swap_from_actions() |&gt; Noun.Nounable.to_noun())</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#trivial_swap/0" data-no-tooltip translate="no">trivial_swap()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#trivial_swap_no_eph/0" data-no-tooltip translate="no">trivial_swap_no_eph()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#uend0/0" data-no-tooltip translate="no">uend0()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate uend at block size 0 and gate-input [5 80].</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#uend1/0" data-no-tooltip translate="no">uend1()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I evaluate uend at block size 1 and gate-input [3 80] and [4 80].</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#uend/1" data-no-tooltip translate="no">uend(value)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am an lash arm in the block door.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#verify/0" data-no-tooltip translate="no">verify()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#verify_arm/0" data-no-tooltip translate="no">verify_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The verify arm for taking verify:anoma from the logics core environment.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#verify_detatched/0" data-no-tooltip translate="no">verify_detatched()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#verify_detatched_arm/0" data-no-tooltip translate="no">verify_detatched_arm()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The verify-detatched arm for taking verify-detached:anoma from the logics core environment.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#zero/1" data-no-tooltip translate="no">zero(key \\ &quot;key&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#zero_counter/1" data-no-tooltip translate="no">zero_counter(val)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#zero_delta_logic/0" data-no-tooltip translate="no">zero_delta_logic()</a>
+
+      </div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="abs/0">
+
+  <div class="detail-header">
+    <a href="#abs/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">abs()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> abs() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="abs_arm/0">
+
+  <div class="detail-header">
+    <a href="#abs_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">abs_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> abs_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="bex/0">
+
+  <div class="detail-header">
+    <a href="#bex/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">bex()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> bex() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="bex_arm/0">
+
+  <div class="detail-header">
+    <a href="#bex_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">bex_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> bex_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The bex arm for taking bex:anoma from the logics core environment.</p><p>Can be gotten by defining gate locally as:</p><p>=localbex   =&gt;  logics  |=  a=@  (bex a)</p><p>and then grabbing the arm of localbex.</p>
+  </section>
+</section>
+<section class="detail" id="call_split_test/0">
+
+  <div class="detail-header">
+    <a href="#call_split_test/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">call_split_test()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> call_split_test() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="cmp/0">
+
+  <div class="detail-header">
+    <a href="#cmp/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">cmp()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cmp() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="cmp_arm/0">
+
+  <div class="detail-header">
+    <a href="#cmp_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">cmp_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cmp_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the cmp gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=lcmp =&gt;  logics  |=   [a=@s b=@s]  (cmp [a b])</p><p>and computing</p><p>.*  lcmp  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="counter_arm/0">
+
+  <div class="detail-header">
+    <a href="#counter_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">counter_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> counter_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The counter arm.</p><p>Availiable through <code class="inline">counter:logics</code> core.</p>
+  </section>
+</section>
+<section class="detail" id="counter_logic/0">
+
+  <div class="detail-header">
+    <a href="#counter_logic/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">counter_logic()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> counter_logic() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="cue/0">
+
+  <div class="detail-header">
+    <a href="#cue/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">cue()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cue() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="cue_arm/0">
+
+  <div class="detail-header">
+    <a href="#cue_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">cue_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cue_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>A cue arm for taking cue:anoma out of the logics core environment.</p><p>Can be gotten by defining gate locally as</p><p>=localcue   =&gt;  logics  |=  a=@  (cue a)</p><p>and then grabbing the arm of localcue.</p>
+  </section>
+</section>
+<section class="detail" id="dec/0">
+
+  <div class="detail-header">
+    <a href="#dec/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dec()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dec() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="dec_arm/0">
+
+  <div class="detail-header">
+    <a href="#dec_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dec_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dec_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The decrement arm in the tests core.</p><p>Availiable through <code class="inline">use-dec:tests</code> core.</p>
+  </section>
+</section>
+<section class="detail" id="dif/0">
+
+  <div class="detail-header">
+    <a href="#dif/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dif()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dif() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="dif_arm/0">
+
+  <div class="detail-header">
+    <a href="#dif_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dif_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dif_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the dif gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=ldif =&gt;  logics  |=   [a=@ b=@]  (dif [a b])</p><p>and computing</p><p>.*  ldif  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="dul/0">
+
+  <div class="detail-header">
+    <a href="#dul/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dul()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dul() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="dul_arm/0">
+
+  <div class="detail-header">
+    <a href="#dul_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dul_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dul_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the dul gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=ldul =&gt;  logics  |=   [a=@s b=@]  (dul [a b])</p><p>and computing</p><p>.*  ldul  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="factorial/0">
+
+  <div class="detail-header">
+    <a href="#factorial/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">factorial()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> factorial() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="factorial_arm/0">
+
+  <div class="detail-header">
+    <a href="#factorial_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">factorial_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> factorial_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I am the battery of the fib:tests gate of the anoma stadard library.</p><p>You can dump me by calling</p><p>.*  fib:tests  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="fra/0">
+
+  <div class="detail-header">
+    <a href="#fra/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">fra()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> fra() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="fra_arm/0">
+
+  <div class="detail-header">
+    <a href="#fra_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">fra_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> fra_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the fra gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=lfra =&gt;  logics  |=   [a=@s b=@s]  (fra [a b])</p><p>and computing</p><p>.*  lfra  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="inc/1">
+
+    <span id="inc/0"></span>
+
+  <div class="detail-header">
+    <a href="#inc/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">inc(key \\ &quot;key&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> inc(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="incorrectly_ending/0">
+
+  <div class="detail-header">
+    <a href="#incorrectly_ending/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">incorrectly_ending()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> incorrectly_ending() :: :error</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="incorrectly_nested_noun/0">
+
+  <div class="detail-header">
+    <a href="#incorrectly_nested_noun/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">incorrectly_nested_noun()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> incorrectly_nested_noun() :: :error</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="incorrectly_starting/0">
+
+  <div class="detail-header">
+    <a href="#incorrectly_starting/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">incorrectly_starting()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> incorrectly_starting() :: :error</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="increment_counter_val/1">
+
+  <div class="detail-header">
+    <a href="#increment_counter_val/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">increment_counter_val(val)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> increment_counter_val(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="indexed_noun/0">
+
+  <div class="detail-header">
+    <a href="#indexed_noun/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">indexed_noun()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> indexed_noun() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="jam/0">
+
+  <div class="detail-header">
+    <a href="#jam/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">jam()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jam() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="jam_and_cue/2">
+
+  <div class="detail-header">
+    <a href="#jam_and_cue/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">jam_and_cue(jam_value, cue_value)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jam_and_cue(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="jam_arm/0">
+
+  <div class="detail-header">
+    <a href="#jam_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">jam_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jam_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>A cue arm for taking jam:anoma out of the logics core environment.</p><p>Can be gotten by defining gate locally as</p><p>=localjam   =&gt;  logics  |=  a=@  (jam a)</p><p>and then grabbing the arm of localjam.</p>
+  </section>
+</section>
+<section class="detail" id="jamming_and_cueing/0">
+
+  <div class="detail-header">
+    <a href="#jamming_and_cueing/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">jamming_and_cueing()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> jamming_and_cueing() :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="lsh0/0">
+
+  <div class="detail-header">
+    <a href="#lsh0/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lsh0()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> lsh0() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate lsh at block size 0 and gate-input [2 6].</p><p>lsh(0) evaluates the gate of the block door at block size 0,
+[6 1 2 6] replaces the sample with [2 6].</p>
+  </section>
+</section>
+<section class="detail" id="lsh1/0">
+
+  <div class="detail-header">
+    <a href="#lsh1/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lsh1()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> lsh1() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate lsh at block size 1 and gate-input [2 6].</p><p>lsh(1) evaluates the gate of the block door at block size 1,
+[6 1 2 6] replaces the sample with [2 6].</p>
+  </section>
+</section>
+<section class="detail" id="lsh2/0">
+
+  <div class="detail-header">
+    <a href="#lsh2/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lsh2()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> lsh2() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate lsh at block size 1 and gate-input [2 6].</p><p>lsh(2) evaluates the gate of the block door at block size 2,
+[6 1 2 6] replaces the sample with [2 6].</p>
+  </section>
+</section>
+<section class="detail" id="lsh/1">
+
+  <div class="detail-header">
+    <a href="#lsh/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lsh(value)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> lsh(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I am an lash arm in the block door.</p><p>My index inside the door can be seen by asking to dump the logic of
+=llsh   =&gt;  logics  |=  a=@  lsh:block</p>
+  </section>
+</section>
+<section class="detail" id="lte/0">
+
+  <div class="detail-header">
+    <a href="#lte/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lte()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> lte() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="lte_arm/0">
+
+  <div class="detail-header">
+    <a href="#lte_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lte_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> lte_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the lte gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=llte =&gt;  logics  |=   [a=@s b=@s]  (lte [a b])</p><p>and computing</p><p>.*  llte  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="mat/0">
+
+  <div class="detail-header">
+    <a href="#mat/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">mat()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> mat() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="mat_arm/0">
+
+  <div class="detail-header">
+    <a href="#mat_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">mat_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> mat_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The mat arm for taking mat:anoma from the logics core environment.</p><p>Can be gotten by defining gate locally as:</p><p>=localmat   =&gt;  logics  |=  a  (mat a)</p><p>and then grabbing the arm of locamix.</p>
+  </section>
+</section>
+<section class="detail" id="met0/0">
+
+  <div class="detail-header">
+    <a href="#met0/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">met0()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> met0() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate met at block size 0 and gate-input 28.</p><p>met(0) evaluates the gate of the block door at block size 0,
+[6 1 28] replaces the sample with 28.</p>
+  </section>
+</section>
+<section class="detail" id="met1/0">
+
+  <div class="detail-header">
+    <a href="#met1/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">met1()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> met1() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate met at block size 1 and gate-input 28.</p><p>met(1) evaluates the gate of the block door at block size 1,
+[6 1 28] replaces the sample with 28.</p>
+  </section>
+</section>
+<section class="detail" id="met2/0">
+
+  <div class="detail-header">
+    <a href="#met2/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">met2()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> met2() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate met at block size 2 and gate-input 28.</p><p>met(2) evaluates the gate of the block door at block size 2,
+[6 1 28] replaces the sample with 28.</p>
+  </section>
+</section>
+<section class="detail" id="met/1">
+
+  <div class="detail-header">
+    <a href="#met/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">met(value)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> met(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I am an lash arm in the block door.</p><p>My index inside the door can be seen by asking to dump the logic of
+=lmet   =&gt;  logics  |=  a=@  met:block</p>
+  </section>
+</section>
+<section class="detail" id="mix/0">
+
+  <div class="detail-header">
+    <a href="#mix/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">mix()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> mix() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="mix_arm/0">
+
+  <div class="detail-header">
+    <a href="#mix_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">mix_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> mix_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The mix arm for taking mix:anoma from the logics core environment.</p><p>Can be gotten by defining gate locally as:</p><p>=localmix   =&gt;  logics  |=  [a=@ b=@]  (mix [a b])</p><p>and then grabbing the arm of locamix.</p>
+  </section>
+</section>
+<section class="detail" id="nesting_noun/0">
+
+  <div class="detail-header">
+    <a href="#nesting_noun/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">nesting_noun()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nesting_noun() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="new/0">
+
+  <div class="detail-header">
+    <a href="#new/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">new()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="new_arm/0">
+
+  <div class="detail-header">
+    <a href="#new_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">new_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the new gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=lnew =&gt;  logics  |=   [a=? b=@]  (new [a b])</p><p>and computing</p><p>.*  lnew  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="og_arm/0">
+
+  <div class="detail-header">
+    <a href="#og_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">og_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> og_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The gate representing an og core creation with a specified seed.</p><p>Can be gotten by defining</p><p>=l   =&gt;  logics  |=  [seed=@]  ~(. og seed)</p><p>and getting it's arm with [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="og_call/1">
+
+  <div class="detail-header">
+    <a href="#og_call/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">og_call(seed)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> og_call(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: :error | {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="old/0">
+
+  <div class="detail-header">
+    <a href="#old/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">old()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> old() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="old_arm/0">
+
+  <div class="detail-header">
+    <a href="#old_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">old_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> old_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the old gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=lold =&gt;  logics  |=   [a=@s]  (old a)</p><p>and computing</p><p>.*  lold  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="one_two/0">
+
+  <div class="detail-header">
+    <a href="#one_two/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">one_two()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> one_two() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="pro/0">
+
+  <div class="detail-header">
+    <a href="#pro/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">pro()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> pro() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="pro_arm/0">
+
+  <div class="detail-header">
+    <a href="#pro_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">pro_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> pro_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the pro gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=lpro =&gt;  logics  |=   [a=@s b=@s]  (pro [a b])</p><p>and computing</p><p>.*  lpro  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="rad_arm/0">
+
+  <div class="detail-header">
+    <a href="#rad_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rad_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rad_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the rad gate call as a 2-argument gate.</p><p>Can be gotten by defining</p><p>=lrad   =&gt;  logics  |=   [a=@ b=@]  (~(rad og a) b)</p>
+  </section>
+</section>
+<section class="detail" id="rad_call/2">
+
+  <div class="detail-header">
+    <a href="#rad_call/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rad_call(seed, range)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rad_call(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+<p>I am function calling the rad gate of the og door with specified
+seed and range</p>
+  </section>
+</section>
+<section class="detail" id="rad_tests/0">
+
+  <div class="detail-header">
+    <a href="#rad_tests/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rad_tests()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rad_tests() :: {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="rads_arm/0">
+
+  <div class="detail-header">
+    <a href="#rads_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rads_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rads_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the rads gate call as a 2-argument gate.</p><p>Can be gotten by defining</p><p>=lrad   =&gt;  logics  |=   [a=@ b=@]  (~(rads og a) b)</p>
+  </section>
+</section>
+<section class="detail" id="rads_call/2">
+
+  <div class="detail-header">
+    <a href="#rads_call/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rads_call(seed, range)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rads_call(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: :error | {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+<p>I am function calling the rads gate of the og door with specified
+seed and range</p>
+  </section>
+</section>
+<section class="detail" id="rads_tests/0">
+
+  <div class="detail-header">
+    <a href="#rads_tests/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rads_tests()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rads_tests() :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="raw_27_4/0">
+
+  <div class="detail-header">
+    <a href="#raw_27_4/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raw_27_4()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raw_27_4() :: {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="raw_arm/0">
+
+  <div class="detail-header">
+    <a href="#raw_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raw_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raw_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the raw gate call as a 2-argument gate.</p><p>Can be gotten by defining</p><p>=lraw   =&gt;  logics  |=   [a=@ b=@]  (~(raw og a) b)</p>
+  </section>
+</section>
+<section class="detail" id="raw_call/2">
+
+  <div class="detail-header">
+    <a href="#raw_call/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raw_call(seed, width)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raw_call(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+<p>I am function calling the raw gate of the og door with specified
+seed and bitwidth.</p>
+  </section>
+</section>
+<section class="detail" id="raws_arm/0">
+
+  <div class="detail-header">
+    <a href="#raws_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raws_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the raws gate call as a 2-argument gate.</p><p>Can be gotten by defining</p><p>=lraw   =&gt;  logics  |=   [a=@ b=@]  (~(raws og a) b)</p>
+  </section>
+</section>
+<section class="detail" id="raws_call/2">
+
+  <div class="detail-header">
+    <a href="#raws_call/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raws_call(seed, width)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_call(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+<p>I am function calling the raws gate of the og door with specified
+seed and bitwidth.</p>
+  </section>
+</section>
+<section class="detail" id="raws_test/0">
+
+  <div class="detail-header">
+    <a href="#raws_test/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raws_test()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_test() :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="raws_with_core/0">
+
+  <div class="detail-header">
+    <a href="#raws_with_core/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raws_with_core()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_with_core() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent a raws gate with a specified instantiated og core given
+as an extra argument.</p><p>Can be gotten by defining locally</p><p>=l    =&gt;  logics  |=  [rng=_og width=@]  (raws:rng width)</p><p>and grabbing the arm with [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="raws_with_core_call/2">
+
+  <div class="detail-header">
+    <a href="#raws_with_core_call/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raws_with_core_call(core, width)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_with_core_call(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
+  :error | {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="raws_with_out_core_test/0">
+
+  <div class="detail-header">
+    <a href="#raws_with_out_core_test/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raws_with_out_core_test()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raws_with_out_core_test() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="rem/0">
+
+  <div class="detail-header">
+    <a href="#rem/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rem()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rem() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="rem_arm/0">
+
+  <div class="detail-header">
+    <a href="#rem_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rem_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rem_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the rem gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=lrem =&gt;  logics  |=   [a=@s b=@s]  (rem [a b])</p><p>and computing</p><p>.*  lrem  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="replacing_terms/0">
+
+  <div class="detail-header">
+    <a href="#replacing_terms/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">replacing_terms()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> replacing_terms() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="rsh0/0">
+
+  <div class="detail-header">
+    <a href="#rsh0/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rsh0()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rsh0() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate rsh at block size 0 and gate-input [2 40].</p><p>rsh(0) evaluates the gate of the block door at block size 0,
+[6 1 2 40] replaces the sample with [2 40].</p>
+  </section>
+</section>
+<section class="detail" id="rsh1/0">
+
+  <div class="detail-header">
+    <a href="#rsh1/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rsh1()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rsh1() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate rsh at block size 1 and gate-input [2 40].</p><p>rsh(1) evaluates the gate of the block door at block size 1,
+[6 1 2 40] replaces the sample with [2 40].</p>
+  </section>
+</section>
+<section class="detail" id="rsh2/0">
+
+  <div class="detail-header">
+    <a href="#rsh2/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rsh2()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rsh2() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate rsh at block size 2 and gate-input [2 40].</p><p>rsh(2) evaluates the gate of the block door at block size 2,
+[6 1 1 40] replaces the sample with [1 40].</p>
+  </section>
+</section>
+<section class="detail" id="rsh/1">
+
+  <div class="detail-header">
+    <a href="#rsh/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rsh(value)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> rsh(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I am an lash arm in the block door.</p><p>My index inside the door can be seen by asking to dump the logic of
+=rsh   =&gt;  logics  |=  a=@  rsh:block</p>
+  </section>
+</section>
+<section class="detail" id="shax/0">
+
+  <div class="detail-header">
+    <a href="#shax/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">shax()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> shax() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="shax_arm/0">
+
+  <div class="detail-header">
+    <a href="#shax_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">shax_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> shax_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The shax arm for taking shax:anoma from the logics core environment.</p><p>Can be gotten by defining gate locally as:</p><p>=localshax   =&gt;  logics  |=  a=@  (shax a)</p><p>and then grabbing the arm of localshax.</p>
+  </section>
+</section>
+<section class="detail" id="sign/0">
+
+  <div class="detail-header">
+    <a href="#sign/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">sign()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sign() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="sign_arm/0">
+
+  <div class="detail-header">
+    <a href="#sign_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">sign_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sign_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The sign arm for taking sign:anoma from the logics core environment.</p><p>Can be gotten by defining gate locally as:</p><p>=localsign   =&gt;  logics  |=  [a=@ b=@]  (sign [a b])</p><p>and then grabbing the arm of localsign.</p>
+  </section>
+</section>
+<section class="detail" id="sign_detatched/0">
+
+  <div class="detail-header">
+    <a href="#sign_detatched/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">sign_detatched()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sign_detatched() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="sign_detatched_arm/0">
+
+  <div class="detail-header">
+    <a href="#sign_detatched_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">sign_detatched_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sign_detatched_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The sign-detatched arm for taking sign-detached:anoma from the logics core environment.</p><p>Can be gotten by defining gate locally as:</p><p>=localsigndetached   =&gt;  logics  |=  [a=@ b=@]  (sign-detached [a b])</p><p>and then grabbing the arm of localsighdetached.</p>
+  </section>
+</section>
+<section class="detail" id="split_arm/0">
+
+  <div class="detail-header">
+    <a href="#split_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">split_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> split_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent a split gate call given an og core with seed.</p><p>Can be gotten by defining locally</p><p>=l    =&gt;  logics  |=  [rng=_og]  split:rng</p><p>and grabbing the arm with [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="split_call/1">
+
+  <div class="detail-header">
+    <a href="#split_call/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">split_call(core)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> split_call(<a href="Noun.html#t:t/0">Noun.t</a>()) :: :error | {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="sum/0">
+
+  <div class="detail-header">
+    <a href="#sum/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">sum()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sum() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="sum_arm/0">
+
+  <div class="detail-header">
+    <a href="#sum_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">sum_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sum_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I represent the sum gate call as a 2-argument gate.</p><p>Can be obtained by defining</p><p>=lsum =&gt;  logics  |=   [a=@s b=@s]  (sum [a b])</p><p>and computing</p><p>.*  lsum  [0 2]</p>
+  </section>
+</section>
+<section class="detail" id="sun/0">
+
+  <div class="detail-header">
+    <a href="#sun/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">sun()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sun() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="sun_arm/0">
+
+  <div class="detail-header">
+    <a href="#sun_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">sun_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sun_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="syn/0">
+
+  <div class="detail-header">
+    <a href="#syn/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">syn()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> syn() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="syn_arm/0">
+
+  <div class="detail-header">
+    <a href="#syn_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">syn_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> syn_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="transparent_core/1">
+
+    <span id="transparent_core/0"></span>
+
+  <div class="detail-header">
+    <a href="#transparent_core/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">transparent_core(tx_noun \\ Examples.ETransparent.ETransaction.swap_from_actions() |&gt; Noun.Nounable.to_noun())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> transparent_core(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="trivial_swap/0">
+
+  <div class="detail-header">
+    <a href="#trivial_swap/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">trivial_swap()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> trivial_swap() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="trivial_swap_no_eph/0">
+
+  <div class="detail-header">
+    <a href="#trivial_swap_no_eph/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">trivial_swap_no_eph()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> trivial_swap_no_eph() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="uend0/0">
+
+  <div class="detail-header">
+    <a href="#uend0/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">uend0()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> uend0() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate uend at block size 0 and gate-input [5 80].</p><p>uend(0) evaluates the gate of the block door at block size 0,
+[6 1 5 80] replaces the sample with [5 80].</p>
+  </section>
+</section>
+<section class="detail" id="uend1/0">
+
+  <div class="detail-header">
+    <a href="#uend1/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">uend1()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> uend1() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I evaluate uend at block size 1 and gate-input [3 80] and [4 80].</p><p>uend(1) evaluates the gate of the block door at block size 1,
+[6 1 3 80] replaces the sample with [3 80],
+[6 1 4 80] replaces the sample with [3 80]</p>
+  </section>
+</section>
+<section class="detail" id="uend/1">
+
+  <div class="detail-header">
+    <a href="#uend/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">uend(value)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> uend(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>I am an lash arm in the block door.</p><p>My index inside the door can be seen by asking to dump the logic of
+=luend   =&gt;  logics  |=  a=@  luend:block</p>
+  </section>
+</section>
+<section class="detail" id="verify/0">
+
+  <div class="detail-header">
+    <a href="#verify/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">verify()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> verify() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="verify_arm/0">
+
+  <div class="detail-header">
+    <a href="#verify_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">verify_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> verify_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The verify arm for taking verify:anoma from the logics core environment.</p><p>Can be gotten by defining gate locally as:</p><p>=localverify   =&gt;  logics  |=  [a=@ b=@]  (verify [a b])</p><p>and then grabbing the arm of localverify.</p>
+  </section>
+</section>
+<section class="detail" id="verify_detatched/0">
+
+  <div class="detail-header">
+    <a href="#verify_detatched/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">verify_detatched()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> verify_detatched() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="verify_detatched_arm/0">
+
+  <div class="detail-header">
+    <a href="#verify_detatched_arm/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">verify_detatched_arm()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> verify_detatched_arm() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+<p>The verify-detatched arm for taking verify-detached:anoma from the logics core environment.</p><p>Can be gotten by defining gate locally as:</p><p>=localverifydetached   =&gt;  logics  |=  [a=@ b=@ c=@]  (verify-detached [a b])</p><p>and then grabbing the arm of localverifydetached.</p>
+  </section>
+</section>
+<section class="detail" id="zero/1">
+
+    <span id="zero/0"></span>
+
+  <div class="detail-header">
+    <a href="#zero/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">zero(key \\ &quot;key&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> zero(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="zero_counter/1">
+
+  <div class="detail-header">
+    <a href="#zero_counter/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">zero_counter(val)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> zero_counter(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="zero_delta_logic/0">
+
+  <div class="detail-header">
+    <a href="#zero_delta_logic/0" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">zero_delta_logic()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> zero_delta_logic() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

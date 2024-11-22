@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.28.0">
+
+
+    <title>Style Guide — Anoma v0.28.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-E5C3E840.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.28.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>Style Guide</span>
+  </h1>
+
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a></li></ol><h2 id="structural-rules" class="section-heading">
+  <a href="#structural-rules" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Structural Rules</span>
+</h2>
+<p>A module is <strong>documented</strong> if</p><ul><li>It has nonempty module documentation.</li><li>All of its public functions capable of having documentation have nonempty documentation.</li><li>All of its public functions capable of having types assigned have assigned types.</li><li>All types have type documentation.</li></ul><h4>Rule 1.1</h4><p>Any module which is specified under the Node directory ought to be <strong>documented</strong>.</p><h4>Rule 1.2</h4><p>Any public function which is used in a public function by a module specified under the Node directory ought to have nonempty documentation.</p><h4>Rule 1.3</h4><p>Documentation should be given in first person.</p><h4>Rule 1.4</h4><p>If <code class="inline">foo</code> uses <code class="inline">bar</code> in the same module in the Node dir then <code class="inline">foo</code> is placed higher than <code class="inline">bar</code> in the module.</p><p>Exceptions might exist but should be noted explicitly in PR and commit messages.</p><h4>Rule 1.5 (CQRS)</h4><p>If <code class="inline">foo</code> uses Router or GenServer functionality, it should be a <code class="inline">call</code> if and only if either</p><ol><li>The underlying state is unchanged by calling <code class="inline">foo</code></li><li>There are synchronizaton requirements that <code class="inline">foo</code> has to fullfill.</li></ol><h4>Rule 1.6</h4><p>If <code class="inline">foo</code> uses <code class="inline">call</code> functionality then the corresponding <code class="inline">handle_call</code> shall have body</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="6732343875-1">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="n">do_foo</span><span class="p" data-group-id="6732343875-2">(</span><span class="n">...</span><span class="p" data-group-id="6732343875-2">)</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="6732343875-1">}</span></code></pre><p>with <code class="inline">do_foo</code> implementing core logic.</p><p>If <code class="inline">foo</code> has synchronization requirements, the return of <code class="inline">do_foo</code> should only contain information regarding the
+success or failure of the operation.</p><h4>Rule 1.7</h4><p>Calling a callback function from another callback functions is <em>not</em> allowed.</p><h4>Rule 1.8</h4><p>Every actor module should have mandatory <code class="inline">Public RPC API</code>, <code class="inline">GenServer Behavior</code>, and <code class="inline">GenServer Implementation</code> sections with following formatting:</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="c1">############################################################</span><span class="w">
+  </span><span class="c1">#                      Public RPC API                      #</span><span class="w">
+  </span><span class="c1">############################################################</span></code></pre><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="c1">############################################################</span><span class="w">
+  </span><span class="c1">#                    GenServer Behavior                    #</span><span class="w">
+  </span><span class="c1">############################################################</span></code></pre><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="c1">############################################################</span><span class="w">
+  </span><span class="c1">#                  GenServer Implementation                #</span><span class="w">
+  </span><span class="c1">############################################################</span></code></pre><p>where</p><ul><li><code class="inline">Public RPC API</code> contains public functions using <code class="inline">call</code> or <code class="inline">cast</code> functionality</li><li><code class="inline">GenServer Behavior</code> contains all callback functions <code class="inline">handle_call</code>, <code class="inline">handle_cast</code>, <code class="inline">handle_info</code>, and <code class="inline">handle_continue</code></li><li><code class="inline">GenServer Implementation</code> contains all functions explicitly used in the <code class="inline">GenServer Behavior</code> sections.</li></ul><p>Extra functions can be contained in the latter section or can further be separated into <code class="inline">Helper</code> functions.</p><h4>Rule 1.9</h4><p>Actor module may have an optional <code class="inline">Logging Info</code> section with following formatting:</p><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="c1">############################################################</span><span class="w">
+  </span><span class="c1">#                     Logging Info                         #</span><span class="w">
+  </span><span class="c1">############################################################</span></code></pre><p>that contains functions related to logging.</p><h2 id="module-documentation" class="section-heading">
+  <a href="#module-documentation" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Module Documentation</span>
+</h2>
+<h4>Rule 2.1</h4><p>Module documentation starts with stating its core purpose in one sentence followed by a new line. If it is related to an Engine X mentioned in the specs, specify that it is an implementation.</p><ul><li><code class="inline">I am the Storage Engine implementing the Local Key Value Storage Engine.</code></li><li><code class="inline">I am the Dumper Engine.</code> (in case the names match)</li><li><code class="inline">I am the Blah module which implements foo functionality.</code></li></ul><h4>Rule 2.2</h4><p>Module documentation ought to have an API section separated by a <code class="inline">### Public API</code> line followed by a line: <code class="inline">I have the following public functionality:</code> followed by a list of functions or subsections of lists of functions. All public module functions should appear in this section.</p><p>A subsection named <code class="inline">Section Name</code> should be formatted as <code class="inline">#### Section Name</code> followed by a short description of the section and a list of functions.</p><p>The format for the list is: if a module has public function <code class="inline">foo</code> of <code class="inline">n</code> entries we list it as <code class="inline">- `foo/n`</code>.  Every line - except those in the function list - should be separated by a newline. Functions should be grouped by argument number with fewer argument numbers on top.</p><p>If subsections were used yet not all functions feature in their lists, the rest of the functions should appear in the <code class="inline">#### Other</code> subsection placed at the end.</p><ul><li><pre><code class="makeup elixir" translate="no"><span class="c1">### Public API</span><span class="w">
+</span><span class="nc">I</span><span class="w"> </span><span class="n">have</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">following</span><span class="w"> </span><span class="n">public</span><span class="w"> </span><span class="ss">functionality</span><span class="p">:</span><span class="w">
+
+</span><span class="c1">#### Transaction Functions</span><span class="w">
+
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">new_transaction</span><span class="o">/</span><span class="mi">3</span><span class="err">`</span><span class="w">
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">fire_new_transaction</span><span class="o">/</span><span class="mi">3</span><span class="err">`</span><span class="w">
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">new_transaction</span><span class="o">/</span><span class="mi">4</span><span class="err">`</span><span class="w">
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">fire_new_transaction</span><span class="o">/</span><span class="mi">4</span><span class="err">`</span><span class="w">
+
+</span><span class="c1">#### Other</span><span class="w">
+
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">snapshot</span><span class="o">/</span><span class="mi">1</span><span class="err">`</span><span class="w">
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">subscribe</span><span class="o">/</span><span class="mi">2</span><span class="err">`</span></code></pre></li></ul><h3 id="example" class="section-heading">
+  <a href="#example" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h3>
+<!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Anoma.Node.Clock</span><span class="w"> </span><span class="k" data-group-id="4464028714-1">do</span><span class="w">
+    </span><span class="na">@moduledoc</span><span class="w"> </span><span class="s">&quot;&quot;&quot;
+    I am the Clock module implementing the Local Wall Clock Engine.
+
+    I provide info on the time elapsed in milliseconds after the node launched
+    and the epoch from which it has been calculated using monotonic time.
+
+    The current implementation launches the epoch by asking for the system
+    monotonic time at the point of an Anoma node launch. This is recommended
+    as all my public API uses system monotonic time to give measurements.
+
+    ### Public API
+
+    I have the following public functionality:
+
+    - `get_time/1`
+    - `get_epoch/1`
+    &quot;&quot;&quot;</span></code></pre><h2 id="type-documentation" class="section-heading">
+  <a href="#type-documentation" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Type Documentation</span>
+</h2>
+<h4>Rule 3.1</h4><p>The type documentation should start with stating the purpose of the type in one sentence.</p><ul><li><code class="inline">I control options for `launch_min/2`</code></li><li><code class="inline">I am the type of the Executor Engine</code></li></ul><h4>Rule 3.2</h4><p>Every product type documentation should have a <code class="inline">### Fields</code> section followed by a list of field atoms with their descriptions.</p><p>The list should be formatted as follows:</p><p>Given a field <code class="inline">:field</code> we list it as <code class="inline">- `:field` -</code> followed by a short description. This is followed by a sentence <code class="inline">Enforced: bool</code> where <code class="inline">bool</code> is either <code class="inline">true</code> or <code class="inline">false</code>. If it has a default value, should be also followed by <code class="inline">Default: value</code>.</p><ul><li><pre><code class="makeup elixir" translate="no"><span class="c1">### Fields</span><span class="w">
+
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="ss">:intents_topic</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">The</span><span class="w"> </span><span class="n">address</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">intents</span><span class="w"> </span><span class="n">topic</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">which</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">engine</span><span class="w"> </span><span class="n">broadcasts</span><span class="o">.</span><span class="w">
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="ss">:intents</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">The</span><span class="w"> </span><span class="n">set</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">intents</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">solved</span><span class="o">.</span><span class="w"> </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">MapSet</span><span class="o">.</span><span class="n">new</span><span class="o">/</span><span class="mi">0</span><span class="err">`</span><span class="w">
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="ss">:logger</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">The</span><span class="w"> </span><span class="n">address</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="n">used</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">logging</span><span class="o">.</span><span class="w"> </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="o">.</span></code></pre></li></ul><h4>Rule 3.3</h4><p>Every sum type documentation should have an <code class="inline">### Options</code> section followed by a list of field atoms with their descriptions.</p><p>The list should be formatted as follows:</p><p>Given an option <code class="inline">:option</code> we list it as <code class="inline">- `:option` -</code> followed by a short description.</p><ul><li><pre><code class="makeup elixir" translate="no"><span class="c1">### Options</span><span class="w">
+
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="ss">:use_rocksdb</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">See</span><span class="w"> </span><span class="err">`</span><span class="n">t</span><span class="ss">:Anoma</span><span class="o">.</span><span class="nc">Node</span><span class="o">.</span><span class="n">configuration</span><span class="o">/</span><span class="mi">0</span><span class="err">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">more</span><span class="w">
+</span><span class="n">information</span><span class="o">.</span><span class="w">
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="ss">:supervisor</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">This</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="n">determine</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">we</span><span class="w"> </span><span class="kn">use</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">supervisor</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="k">if</span><span class="w">
+</span><span class="n">so</span><span class="w"> </span><span class="n">what</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="w"> </span><span class="nc">See</span><span class="w"> </span><span class="err">`</span><span class="n">t</span><span class="nc">:Supervisor</span><span class="o">.</span><span class="n">option</span><span class="o">/</span><span class="mi">0</span><span class="w"> </span><span class="err">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">supervisor</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="w">
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="ss">:testing</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">This</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">we</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">testing</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="w"> </span><span class="nc">This</span><span class="w"> </span><span class="n">gets</span><span class="w">
+  </span><span class="n">fed</span><span class="w"> </span><span class="n">directly</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="err">`</span><span class="n">t</span><span class="ss">:Anoma</span><span class="o">.</span><span class="nc">Node</span><span class="o">.</span><span class="n">configuration</span><span class="o">/</span><span class="mi">0</span><span class="err">`</span><span class="w"> </span><span class="k">for</span><span class="w">
+  </span><span class="err">`</span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="n">start_link</span><span class="o">/</span><span class="mi">1</span><span class="err">`</span><span class="o">.</span><span class="w"> </span><span class="nc">Please</span><span class="w"> </span><span class="n">consult</span><span class="w"> </span><span class="n">the</span><span class="w">
+  </span><span class="err">`</span><span class="n">t</span><span class="ss">:Anoma</span><span class="o">.</span><span class="nc">Node</span><span class="o">.</span><span class="n">configuration</span><span class="o">/</span><span class="mi">0</span><span class="err">`</span><span class="w"> </span><span class="n">documentation</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">full</span><span class="w"> </span><span class="n">effect</span><span class="w">
+  </span><span class="n">this</span><span class="w"> </span><span class="n">has</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">node</span><span class="o">.</span></code></pre></li></ul><h3 id="example-1" class="section-heading">
+  <a href="#example-1" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h3>
+<!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="n">typedstruct</span><span class="w"> </span><span class="k" data-group-id="4098305643-1">do</span><span class="w">
+    </span><span class="na">@typedoc</span><span class="w"> </span><span class="s">&quot;&quot;&quot;
+    I am the type of the Pinger Engine.
+
+    I store minimal info required to ask the mempool to execute, namely the
+    mempool address and the time specified by the user.
+
+    - `:mempool` - The Mempool Engine address which is called to execute.
+    - `:time` - The time that should be elapsed between the calls to
+                execute or an atom saying that no timer should be set.
+                Default: `:no_timer`
+    &quot;&quot;&quot;</span><span class="w">
+
+    </span><span class="n">field</span><span class="p" data-group-id="4098305643-2">(</span><span class="ss">:mempool</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="4098305643-3">(</span><span class="p" data-group-id="4098305643-3">)</span><span class="p" data-group-id="4098305643-2">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="4098305643-4">(</span><span class="ss">:time</span><span class="p">,</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="4098305643-5">(</span><span class="p" data-group-id="4098305643-5">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">atom</span><span class="p" data-group-id="4098305643-6">(</span><span class="p" data-group-id="4098305643-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="ss">:no_timer</span><span class="p" data-group-id="4098305643-4">)</span><span class="w">
+  </span><span class="k" data-group-id="4098305643-1">end</span><span class="w">
+
+  </span><span class="na">@typedoc</span><span class="w"> </span><span class="s">&quot;&quot;&quot;
+  I control options for `launch_min/2`.
+
+  ### Options
+
+  - `:use_rocksdb` - See `t:Anoma.Node.configuration/0` for more
+  information.
+  - `:supervisor` - This flag determine if we use a supervisor and if
+  so what options. See `t:Supervisor.option/0 ` for supervisor options.
+  - `:testing` - This flag notes if we are testing the node. This gets
+    fed directly into the type `t:Anoma.Node.configuration/0` for
+    `Anoma.Node.start_link/1`. Please consult the
+    `t:Anoma.Node.configuration/0` documentation for the full effect
+    this has on the node.
+  &quot;&quot;&quot;</span><span class="w">
+  </span><span class="na">@type</span><span class="w"> </span><span class="n">launch_option</span><span class="w"> </span><span class="o">::</span><span class="w">
+          </span><span class="p" data-group-id="4098305643-7">{</span><span class="ss">:use_rocksdb</span><span class="p">,</span><span class="w"> </span><span class="n">boolean</span><span class="p" data-group-id="4098305643-8">(</span><span class="p" data-group-id="4098305643-8">)</span><span class="p" data-group-id="4098305643-7">}</span><span class="w">
+          </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="4098305643-9">{</span><span class="ss">:supervisor</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4098305643-10">[</span><span class="nc">Supervisor</span><span class="o">.</span><span class="n">option</span><span class="p" data-group-id="4098305643-11">(</span><span class="p" data-group-id="4098305643-11">)</span><span class="p" data-group-id="4098305643-10">]</span><span class="p" data-group-id="4098305643-9">}</span><span class="w">
+          </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="4098305643-12">{</span><span class="ss">:testing</span><span class="p">,</span><span class="w"> </span><span class="n">boolean</span><span class="p" data-group-id="4098305643-13">(</span><span class="p" data-group-id="4098305643-13">)</span><span class="p" data-group-id="4098305643-12">}</span></code></pre><h2 id="function-documentation" class="section-heading">
+  <a href="#function-documentation" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Function Documentation</span>
+</h2>
+<h4>Rule 4.1</h4><p>The function documentation should begin with stating its purpose in one sentence. If the function is an implementation of a specs-related function, it should mention this by name.</p><ul><li><code class="inline">I am delete_key function, implementing DeleteValueKVStorage functionality.</code></li><li><code class="inline">Given a server S and time T, I change the timer set for the struct connected to S setting it to T.</code></li></ul><h4>Rule 4.2</h4><p>If a documented function has functions of same arity in the same module which pattern match arguments differently, they should be listed in a <code class="inline">### Pattern-Match Variations</code> section in the following format:</p><p>If function <code class="inline">foo</code> has a variation <code class="inline">foo(x1, ... , xn)</code> where <code class="inline">x1,...,xn</code> are some Elixir object capable of being pattern-matched to, we present it in a list as <code class="inline">- foo(x1, ... ,xn) -</code> followed by a short description.</p><p>If the arguments are not pattern-matched, provide the variable names as in the definition.</p><ul><li><pre><code class="makeup elixir" translate="no"><span class="c1">### Pattern-Matching Variations</span><span class="w">
+
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">init</span><span class="p" data-group-id="5600322200-1">(</span><span class="p" data-group-id="5600322200-2">%</span><span class="nc" data-group-id="5600322200-2">Clock</span><span class="p" data-group-id="5600322200-2">{</span><span class="p" data-group-id="5600322200-2">}</span><span class="p" data-group-id="5600322200-1">)</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">initialize</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">given</span><span class="w"> </span><span class="n">state</span><span class="o">.</span><span class="w">
+
+</span><span class="o">-</span><span class="w"> </span><span class="err">`</span><span class="n">init</span><span class="p" data-group-id="5600322200-3">(</span><span class="n">args</span><span class="p" data-group-id="5600322200-3">)</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">expect</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">keylist</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">check</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="ss">:start</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="n">then</span><span class="w">
+                 </span><span class="n">launch</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Clock</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">said</span><span class="w"> </span><span class="n">setting</span><span class="o">.</span></code></pre></li></ul><h4>Rule 4.3</h4><p>Any function application which a non-constant output and an appropriate EModule example, it should have a reference to the appropriate example function in the codebase.</p><h3 id="example-2" class="section-heading">
+  <a href="#example-2" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h3>
+<!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="na">@doc</span><span class="w"> </span><span class="s">&quot;&quot;&quot;
+  I am the initialization function of the Clock Engine.
+
+  ### Pattern-Matching Variations
+
+  - `init(%Clock{})` - I initialize the Engine with the given state.
+
+  - `init(args)` - I expect a keylist and check for the :start key then
+                   launch the Clock with said setting.
+  &quot;&quot;&quot;</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="3822243514-1">(</span><span class="p" data-group-id="3822243514-2">%</span><span class="nc" data-group-id="3822243514-2">Clock</span><span class="p" data-group-id="3822243514-2">{</span><span class="p" data-group-id="3822243514-2">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="3822243514-1">)</span><span class="w"> </span><span class="k" data-group-id="3822243514-3">do</span><span class="w">
+    </span><span class="p" data-group-id="3822243514-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="3822243514-4">}</span><span class="w">
+  </span><span class="k" data-group-id="3822243514-3">end</span><span class="w">
+
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">init</span><span class="p" data-group-id="3822243514-5">(</span><span class="n">list</span><span class="p" data-group-id="3822243514-6">(</span><span class="p" data-group-id="3822243514-7">{</span><span class="ss">:start</span><span class="p">,</span><span class="w"> </span><span class="n">integer</span><span class="p" data-group-id="3822243514-8">(</span><span class="p" data-group-id="3822243514-8">)</span><span class="p" data-group-id="3822243514-7">}</span><span class="p" data-group-id="3822243514-6">)</span><span class="p" data-group-id="3822243514-5">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="3822243514-9">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="nc">Clock</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="3822243514-10">(</span><span class="p" data-group-id="3822243514-10">)</span><span class="p" data-group-id="3822243514-9">}</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="3822243514-11">(</span><span class="n">args</span><span class="p" data-group-id="3822243514-11">)</span><span class="w"> </span><span class="k" data-group-id="3822243514-12">do</span><span class="w">
+    </span><span class="p" data-group-id="3822243514-13">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3822243514-14">%</span><span class="nc" data-group-id="3822243514-14">Clock</span><span class="p" data-group-id="3822243514-14">{</span><span class="ss">start</span><span class="p">:</span><span class="w"> </span><span class="n">args</span><span class="p" data-group-id="3822243514-15">[</span><span class="ss">:start</span><span class="p" data-group-id="3822243514-15">]</span><span class="p" data-group-id="3822243514-14">}</span><span class="p" data-group-id="3822243514-13">}</span><span class="w">
+  </span><span class="k" data-group-id="3822243514-12">end</span></code></pre>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="observer.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Observer
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="testing.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Testing
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.28.0/show/documentation/contributing/style-guide.livemd">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>
