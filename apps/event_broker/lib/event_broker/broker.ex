@@ -3,7 +3,7 @@ defmodule EventBroker.Broker do
   I am a Broker module.
 
   I specify the behavior of the server acting as a central broker of the
-  PubSub servive. My functionality is minimal. I wait for messages and
+  PubSub service. My functionality is minimal. I wait for messages and
   relay them to my subscribers.
   """
 

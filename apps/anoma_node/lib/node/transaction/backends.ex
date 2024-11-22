@@ -82,7 +82,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   def execute(node_id, {:debug_bloblike, tx}, id) do
-    execute_candidate(node_id, tx, id, &store_value(node_id, &1, &2))
+    execute_candidate(node_id, tx, id, &blob_store(node_id, &1, &2))
   end
 
   def execute(node_id, {:transparent_resource, tx}, id) do
@@ -152,7 +152,7 @@ defmodule Anoma.Node.Transaction.Backends do
         end
 
       ct =
-        case Ordering.read(node_id, {id, :ct}) do
+        case Ordering.read(node_id, {id, anoma_keyspace("ct")}) do
           :absent -> CommitmentTree.new(Spec.cm_tree_spec(), nil)
           val -> val
         end
@@ -165,14 +165,19 @@ defmodule Anoma.Node.Transaction.Backends do
         {id,
          %{
            append: [
-             {:nullifiers, map.nullifiers},
-             {:commitments, map.commitments}
+             {anoma_keyspace("nullifiers"), map.nullifiers},
+             {anoma_keyspace("commitments"), map.commitments}
            ],
-           write: [{:anchor, anchor}, {:ct, ct_new}]
+           write: [
+             {anoma_keyspace("anchor"), anchor},
+             {anoma_keyspace("ct"), ct_new}
+           ]
          }}
       )
 
       nullifier_event(map.nullifiers, node_id)
+
+      complete_event(id, {:ok, tx}, node_id)
 
       :ok
     else
@@ -200,8 +205,11 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec storage_check?(String.t(), binary(), TTransaction.t()) ::
           true | {:error, String.t()}
   defp storage_check?(node_id, id, trans) do
-    stored_commitments = Ordering.read(node_id, {id, :commitments})
-    stored_nullifiers = Ordering.read(node_id, {id, :nullifiers})
+    stored_commitments =
+      Ordering.read(node_id, {id, anoma_keyspace("commitments")})
+
+    stored_nullifiers =
+      Ordering.read(node_id, {id, anoma_keyspace("nullifiers")})
 
     # TODO improve error messages
     cond do
@@ -217,19 +225,33 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   @spec any_nullifiers_already_exist?(
-          MapSet.t(TResource.nullifier()),
+          {:ok, MapSet.t(TResource.nullifier())} | :absent,
           TTransaction.t()
         ) :: boolean()
-  defp any_nullifiers_already_exist?(stored_nulls, trans = %TTransaction{}) do
+  defp any_nullifiers_already_exist?(:absent, _) do
+    false
+  end
+
+  defp any_nullifiers_already_exist?(
+         {:ok, stored_nulls},
+         trans = %TTransaction{}
+       ) do
     nullifiers = TTransaction.nullifiers(trans)
     Enum.any?(nullifiers, &MapSet.member?(stored_nulls, &1))
   end
 
   @spec any_commitments_already_exist?(
-          MapSet.t(TResource.commitment()),
+          {:ok, MapSet.t(TResource.commitment())} | :absent,
           TTransaction.t()
         ) :: boolean()
-  defp any_commitments_already_exist?(stored_comms, trans = %TTransaction{}) do
+  defp any_commitments_already_exist?(:absent, _) do
+    false
+  end
+
+  defp any_commitments_already_exist?(
+         {:ok, stored_comms},
+         trans = %TTransaction{}
+       ) do
     commitments = TTransaction.commitments(trans)
     Enum.any?(commitments, &MapSet.member?(stored_comms, &1))
   end
@@ -263,7 +285,11 @@ defmodule Anoma.Node.Transaction.Backends do
     action_nullifiers = TTransaction.nullifiers(trans)
 
     if latest_root_time > 0 do
-      root_coms = Storage.read(node_id, {latest_root_time, :commitments})
+      root_coms =
+        Storage.read(
+          node_id,
+          {latest_root_time, anoma_keyspace("commitments")}
+        )
 
       for <<"NF_", rest::binary>> <- action_nullifiers,
           reduce: MapSet.new([]) do
@@ -364,5 +390,10 @@ defmodule Anoma.Node.Transaction.Backends do
       })
 
     EventBroker.event(event)
+  end
+
+  @spec anoma_keyspace(String.t()) :: list(String.t())
+  defp anoma_keyspace(key) do
+    ["anoma", key]
   end
 end

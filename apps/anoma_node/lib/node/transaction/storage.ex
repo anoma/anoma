@@ -40,7 +40,7 @@ defmodule Anoma.Node.Transaction.Storage do
   @spec start_link() :: GenServer.on_start()
   @spec start_link(list(startup_options())) :: GenServer.on_start()
   def start_link(args \\ []) do
-    args = Keyword.validate!(args, [:node_id, :uncommitted_height])
+    args = Keyword.validate!(args, [:node_id, :uncommitted_height, :rocks])
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
@@ -185,7 +185,7 @@ defmodule Anoma.Node.Transaction.Storage do
     {:noreply, state}
   end
 
-  @spec read(String.t(), {non_neg_integer(), any()}) :: :absent | any()
+  @spec read(String.t(), {non_neg_integer(), bare_key()}) :: :absent | any()
   def read(node_id, {height, key}) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
@@ -194,6 +194,14 @@ defmodule Anoma.Node.Transaction.Storage do
     )
   end
 
+  @spec add(
+          String.t(),
+          {non_neg_integer(),
+           %{
+             write: list({bare_key(), any()}),
+             append: list({bare_key(), MapSet.t()})
+           }}
+        ) :: term()
   def add(node_id, args = {_height, %{write: _writes, append: _appends}}) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
@@ -202,7 +210,8 @@ defmodule Anoma.Node.Transaction.Storage do
     )
   end
 
-  @spec write(String.t(), {non_neg_integer(), list(any())}) :: :ok
+  @spec write(String.t(), {non_neg_integer(), list({bare_key(), any()})}) ::
+          :ok
   def write(node_id, {height, kvlist}) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
@@ -211,8 +220,10 @@ defmodule Anoma.Node.Transaction.Storage do
     )
   end
 
-  @spec append(String.t(), {non_neg_integer(), list({any(), MapSet.t()})}) ::
-          :ok
+  @spec append(
+          String.t(),
+          {non_neg_integer(), list({bare_key(), MapSet.t()})}
+        ) :: :ok
   def append(node_id, {height, kvlist}) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
@@ -281,7 +292,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
   def abwrite(flag, {height, kvlist}, state) do
     for {key, value} <- kvlist,
-        reduce: {%__MODULE__{state | uncommitted_height: height}, kvlist} do
+        reduce: {%__MODULE__{state | uncommitted_height: height}, []} do
       {state_acc, list} ->
         key_old_updates = Map.get(state_acc.uncommitted_updates, key, [])
 

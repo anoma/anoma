@@ -18,9 +18,8 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.IntentPool.AddIntent
   alias Anoma.Protobuf.IntentPool.ListIntents
   alias Anoma.Protobuf.Intents
-  alias Anoma.Protobuf.Prove
-  alias Anoma.Protobuf.RunNock
   alias Anoma.Protobuf.Input
+  alias Anoma.Protobuf.Prove
 
   import ExUnit.Assertions
 
@@ -113,6 +112,7 @@ defmodule Anoma.Client.Examples.EClient do
   @doc """
   I create the setup necessary to run each example below without arguments.
   """
+  @spec setup() :: EConnection.t()
   def setup() do
     create_example_connection()
   end
@@ -188,94 +188,125 @@ defmodule Anoma.Client.Examples.EClient do
   end
 
   @doc """
-  I prove something using the client.
-  """
-  def prove_something_jammed(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    pub_inputs = [<<>>, <<>>, <<>>]
-    priv_inputs = [<<>>, <<>>, <<>>]
-
-    # the client sends a knock program that is jammed.
-    nock_program = nock_str |> Noun.Format.parse_always() |> Nock.Jam.jam()
-
-    # each input is jammed individually
-    inputs_pub =
-      Enum.map(pub_inputs, &%Input{input: {:jammed, Nock.Jam.jam(&1)}})
-
-    inputs_priv =
-      Enum.map(priv_inputs, &%Input{input: {:jammed, Nock.Jam.jam(&1)}})
-
-    request = %Prove.Request{
-      program: {:jammed_program, nock_program},
-      public_inputs: inputs_pub,
-      private_inputs: inputs_priv
-    }
-
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
-  end
-
-  @doc """
-  I prove something using the client.
-  """
-  def prove_something_plain_text(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    pub_inputs = ["1", "2", "3"]
-    priv_inputs = ["4", "5", "6"]
-
-    # build input structs
-    pub_inputs = Enum.map(pub_inputs, &%Input{input: {:text, "#{&1}"}})
-    priv_inputs = Enum.map(priv_inputs, &%Input{input: {:text, "#{&1}"}})
-
-    request = %Prove.Request{
-      program: {:text_program, nock_str},
-      public_inputs: pub_inputs,
-      private_inputs: priv_inputs
-    }
-
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
-  end
-
-  @doc """
   I run a plaintext nock program using the client.
   """
-  def run_something_plain_text(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    inputs = ["1", "2", "3"]
+  @spec prove_something_text(EConnection.t()) :: Prove.Response.t()
+  def prove_something_text(conn \\ setup()) do
+    program = text_program_example()
+    input = text_input("1")
 
-    # build input structs
-    inputs = Enum.map(inputs, &%Input{input: {:text, "#{&1}"}})
-
-    request = %RunNock.Request{
-      program: {:text_program, nock_str},
-      inputs: inputs
+    request = %Prove.Request{
+      program: {:text_program, program},
+      public_inputs: [input]
     }
 
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+    {:ok, result} = Intents.Stub.prove(conn.channel, request)
+
+    assert {:ok, 123} == Nock.Cue.cue(elem(result.result, 1))
+
+    result
   end
 
   @doc """
   I run a jammed nock program using the client.
   """
-  def run_something_jammed(conn \\ setup()) do
-    nock_str = "[[1 123] 0 0]"
-    inputs = ["1", "2", "3"]
+  @spec prove_something_jammed(EConnection.t()) :: Prove.Response.t()
+  def prove_something_jammed(conn \\ setup()) do
+    program = Nock.Jam.jam([[1 | 123], 0 | 0])
+    input = jammed_input(Nock.Jam.jam(1))
 
-    nock_program = nock_str |> Noun.Format.parse_always() |> Nock.Jam.jam()
-
-    # build input structs
-    inputs =
-      Enum.map(
-        inputs,
-        &%Input{
-          input: {:jammed, &1 |> Noun.Format.parse_always() |> Nock.Jam.jam()}
-        }
-      )
-
-    request = %RunNock.Request{
-      program: {:jammed_program, nock_program},
-      inputs: inputs
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: [input]
     }
 
-    {:ok, _reply} = Intents.Stub.prove(conn.channel, request)
+    {:ok, result} = Intents.Stub.prove(conn.channel, request)
+
+    assert {:ok, 123} == Nock.Cue.cue(elem(result.result, 1))
+
+    result
+  end
+
+  @doc """
+  I run a Juvix program that squares its inputs.
+  """
+  @spec run_juvix_factorial(EConnection.t()) :: Prove.Response.t()
+  def run_juvix_factorial(conn \\ setup()) do
+    # assume the program and inputs are jammed
+    program = jammed_program_juvix_squared()
+    input = jammed_input(Nock.Jam.jam(3))
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: [input]
+    }
+
+    {:ok, result} = Intents.Stub.prove(conn.channel, request)
+
+    assert {:ok, 9} == Nock.Cue.cue(elem(result.result, 1))
+
+    result
+  end
+
+  ############################################################
+  #                           Helpers                        #
+  ############################################################
+
+  @spec jammed_program_juvix_squared() :: binary()
+  def jammed_program_juvix_squared() do
+    :code.priv_dir(:anoma_client)
+    |> Path.join("test_juvix/Squared.nockma")
+    |> File.read!()
+  end
+
+  @spec noun_program_juvix_squared() :: Noun.t()
+  def noun_program_juvix_squared() do
+    jammed_program_juvix_squared()
+    |> Nock.Cue.cue()
+    |> elem(1)
+  end
+
+  @spec text_program_example() :: binary()
+  def text_program_example() do
+    "[[1 123] 0 0]"
+  end
+
+  @spec jammed_program_example() :: binary()
+  def jammed_program_example() do
+    noun_program_example()
+    |> Nock.Jam.jam()
+  end
+
+  @spec noun_program_example() :: Noun.t()
+  def noun_program_example() do
+    text_program_example()
+    |> Noun.Format.parse_always()
+  end
+
+  @spec text_program_minisquare() :: binary()
+  def text_program_minisquare() do
+    "[[1 123] 0 0]"
+  end
+
+  @spec jammed_program_minisquare() :: binary()
+  def jammed_program_minisquare() do
+    noun_program_minisquare()
+    |> Nock.Jam.jam()
+  end
+
+  @spec noun_program_minisquare() :: Noun.t()
+  def noun_program_minisquare() do
+    text_program_minisquare()
+    |> Noun.Format.parse_always()
+  end
+
+  @spec jammed_input(any()) :: Input.t()
+  def jammed_input(value \\ <<>>) do
+    %Input{input: {:jammed, value}}
+  end
+
+  @spec text_input(any()) :: Input.t()
+  def text_input(value \\ "") do
+    %Input{input: {:text, value}}
   end
 end
