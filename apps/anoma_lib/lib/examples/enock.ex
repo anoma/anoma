@@ -53,7 +53,8 @@ defmodule Examples.ENock do
     zero_counter_arm = [1, key | 0]
     arm = [10, [2 | zero_counter_arm], 1, 0 | 0]
     sample = 0
-    [[8, [1 | sample], [1 | arm], 0 | 1] | 999]
+    keyspace = 0
+    [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
   end
 
   @spec inc(Noun.t()) :: Noun.t()
@@ -62,7 +63,8 @@ defmodule Examples.ENock do
     # Place the result in a list
     arm = [10, [2 | increment_value_arm], 1, 0 | 0]
     sample = 0
-    [[8, [1 | sample], [1 | arm], 0 | 1] | 999]
+    keyspace = 0
+    [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
   end
 
   ####################################################################
@@ -161,7 +163,8 @@ defmodule Examples.ENock do
         |> Noun.Nounable.to_noun()
       ) do
     trivial_swap_arm = [1 | tx_noun]
-    swap = [[1, trivial_swap_arm, 0 | 909], 0 | 707]
+    keyspace = 0
+    swap = [[1, keyspace, trivial_swap_arm, 0 | 909], 0 | 707]
     swap
   end
 
