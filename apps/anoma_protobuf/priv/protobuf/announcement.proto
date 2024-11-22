@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Announce;
+
+import "node_info.proto";
+
+message Announcement {
+  NodeInfo node_info = 1;
+  repeated string engines = 2;
+}

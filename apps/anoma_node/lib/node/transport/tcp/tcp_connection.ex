@@ -10,7 +10,7 @@ defmodule Anoma.Node.Transport.TCP.Connection do
   alias Anoma.Node.Transport
   alias Anoma.Node.Transport.Messages
   alias EventBroker.Event
-  alias Anoma.Protobuf.Announcement
+  alias Anoma.Protobuf.Announce.Announcement
   alias Anoma.Protobuf.Envelope
 
   @typedoc """
