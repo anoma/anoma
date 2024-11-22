@@ -347,7 +347,7 @@ defmodule Anoma.Client.Examples.EClient do
   #                           Helpers                        #
   ############################################################
 
-  @spec jammed_program_juvix_squared() :: binary()
+  @spec jammed_program_tracing() :: binary()
   def jammed_program_tracing() do
     :code.priv_dir(:anoma_client)
     |> Path.join("test_juvix/Tracing.nockma")

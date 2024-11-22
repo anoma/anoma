@@ -95,6 +95,7 @@ defmodule Anoma.Client.Examples.EProve do
     {:ok, result, stdio}
   end
 
+  @spec prove_with_cell_hint() :: {:ok, any(), any()}
   def prove_with_cell_hint() do
     {:ok, program} =
       :code.priv_dir(:anoma_client)
