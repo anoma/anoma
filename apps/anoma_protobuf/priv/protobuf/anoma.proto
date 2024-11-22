@@ -10,6 +10,7 @@ import "intents/add_intent.proto";
 import "indexer/nullifiers.proto";
 import "indexer/unrevealed_commits.proto";
 import "indexer/unspent_resources.proto";
+import "mempool/add_transaction.proto";
 
 service NockService {
   rpc Prove(Anoma.Protobuf.Nock.Prove.Request)
@@ -36,4 +37,10 @@ service IndexerService {
 
   rpc ListUnspentResources(Anoma.Protobuf.Indexer.UnspentResources.Request)
       returns (Anoma.Protobuf.Indexer.UnspentResources.Response) {}
+}
+
+service MempoolService {
+  rpc Add(Anoma.Protobuf.Mempool.AddTransaction.Request)
+      returns (Anoma.Protobuf.Mempool.AddTransaction.Response) {}
+
 }
