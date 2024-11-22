@@ -31,7 +31,10 @@ defmodule Anoma.MixProject do
           # Checks for underspecified functions, i.e. functions whose
           # specifications are strictly more permissive than their
           # success typing.
-          "-Wunderspecs"
+          "-Wunderspecs",
+          # Checks for some unmatched return values, i.e., an
+          # exhaustiveness check on structured returns.
+          "-Wunmatched_returns"
         ],
         plt_add_apps: [:mix, :ex_unit]
       ],
