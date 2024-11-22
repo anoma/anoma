@@ -193,9 +193,8 @@ defmodule Nock.Jets do
   @spec sub(Noun.t()) :: :error | {:ok, Noun.t()}
   def sub(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
-           sample(core),
-         {c, d} when c >= d <- {an_integer(a), an_integer(b)} do
-      {:ok, c - d}
+           sample(core) do
+      partial_sub(an_integer(a), an_integer(b))
     else
       _ -> :error
     end
@@ -484,4 +483,130 @@ defmodule Nock.Jets do
       _ -> :error
     end
   end
+
+  ### Signed integer arithmetic
+
+  @spec abs(Noun.t()) :: :error | {:ok, Noun.t()}
+  def abs(core) do
+    with {:ok, noun} when is_noun_atom(noun) <- sample(core) do
+      res = a_signed_integer(noun) |> Kernel.abs()
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec dif(Noun.t()) :: :error | {:ok, Noun.t()}
+  def dif(core) do
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {c, d} = {a_signed_integer(a), a_signed_integer(b)}
+      {:ok, (c - d) |> encode_signed}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec dul(Noun.t()) :: :error | {:ok, Noun.t()}
+  def dul(core) do
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {c, d} = {a_signed_integer(a), an_integer(b)}
+
+      cond do
+        c >= 0 -> {:ok, Kernel.rem(c, d)}
+        c < 0 -> partial_sub(d, Kernel.abs(c))
+      end
+    else
+      _ -> :error
+    end
+  end
+
+  @spec fra(Noun.t()) :: :error | {:ok, Noun.t()}
+  def fra(core) do
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {c, d} = {a_signed_integer(a), a_signed_integer(b)}
+      {:ok, div(c, d) |> encode_signed}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec pro(Noun.t()) :: :error | {:ok, Noun.t()}
+  def pro(core) do
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {c, d} = {a_signed_integer(a), a_signed_integer(b)}
+      {:ok, (c * d) |> encode_signed}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec rem(Noun.t()) :: :error | {:ok, Noun.t()}
+  def rem(core) do
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {c, d} = {a_signed_integer(a), a_signed_integer(b)}
+      {:ok, rem(c, d) |> encode_signed}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec sum(Noun.t()) :: :error | {:ok, Noun.t()}
+  def sum(core) do
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {c, d} = {a_signed_integer(a), a_signed_integer(b)}
+      {:ok, (c + d) |> encode_signed}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec sun(Noun.t()) :: :error | {:ok, Noun.t()}
+  def sun(core) do
+    with {:ok, noun} when is_noun_atom(noun) <- sample(core) do
+      {:ok, 2 * an_integer(noun)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec syn(Noun.t()) :: :error | {:ok, Noun.t()}
+  def syn(core) do
+    with {:ok, noun} when is_noun_atom(noun) <- sample(core) do
+      res = if a_signed_integer(noun) < 0, do: 1, else: 0
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec cmp(Noun.t()) :: :error | {:ok, Noun.t()}
+  def cmp(core) do
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {c, d} = {a_signed_integer(a), a_signed_integer(b)}
+      {:ok, compare(c, d) |> encode_signed}
+    else
+      _ -> :error
+    end
+  end
+
+  defp a_signed_integer(x), do: Noun.atom_binary_to_signed_integer(x)
+
+  ############################################################
+  #                   Arithmetic Helpers                     #
+  ############################################################
+
+  defp partial_sub(x, y) do
+    if x >= y, do: {:ok, x - y}, else: :error
+  end
+
+  defp compare(x, y) when x == y, do: 0
+  defp compare(x, y) when x < y, do: -1
+  defp compare(x, y) when x > y, do: 1
 end

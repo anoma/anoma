@@ -241,6 +241,38 @@ defmodule Noun do
     atom_binary_to_integer(0)
   end
 
+  @doc """
+  I convert the noun atom to a signed integer.
+  """
+  @spec atom_binary_to_signed_integer(noun_atom()) :: integer()
+  def atom_binary_to_signed_integer(atom) do
+    atom |> atom_binary_to_integer |> decode_signed
+  end
+
+  @doc """
+  I decode the signed integer from its [ZigZag](https://protobuf.dev/programming-guides/encoding/#signed-ints) representation.
+  """
+  @spec decode_signed(non_neg_integer()) :: integer()
+  def decode_signed(x) when Integer.is_even(x) do
+    div(x, 2)
+  end
+
+  def decode_signed(x) when Integer.is_odd(x) do
+    -div(x + 1, 2)
+  end
+
+  @doc """
+  I convert the signed integer to a noun using the [ZigZag](https://protobuf.dev/programming-guides/encoding/#signed-ints) encoding.
+  """
+  @spec encode_signed(integer()) :: non_neg_integer()
+  def encode_signed(x) when x >= 0 do
+    x * 2
+  end
+
+  def encode_signed(x) when x < 0 do
+    -x * 2 - 1
+  end
+
   @spec condensed_print(t()) :: String.t()
   def condensed_print([]) do
     "~"
