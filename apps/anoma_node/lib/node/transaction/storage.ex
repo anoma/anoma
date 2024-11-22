@@ -205,7 +205,7 @@ defmodule Anoma.Node.Transaction.Storage do
   If nothing is found, I return `:absent`
   """
 
-  @spec read(String.t(), {non_neg_integer(), any()}) :: :absent | any()
+  @spec read(String.t(), {non_neg_integer(), bare_key()}) :: :absent | any()
   def read(node_id, {height, key}) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
@@ -228,7 +228,10 @@ defmodule Anoma.Node.Transaction.Storage do
   @spec add(
           String.t(),
           {non_neg_integer(),
-           %{write: list({any(), any()}), append: list({any(), any()})}}
+           %{
+             write: list({bare_key(), any()}),
+             append: list({bare_key(), MapSet.t()})
+           }}
         ) :: term()
   def add(node_id, args = {_height, %{write: _writes, append: _appends}}) do
     GenServer.call(
@@ -256,7 +259,8 @@ defmodule Anoma.Node.Transaction.Storage do
   and at white height, while setting the uncommitted height to T.
   """
 
-  @spec write(String.t(), {non_neg_integer(), list({any(), any()})}) :: :ok
+  @spec write(String.t(), {non_neg_integer(), list({bare_key(), any()})}) ::
+          :ok
   def write(node_id, {height, kvlist}) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
@@ -289,7 +293,10 @@ defmodule Anoma.Node.Transaction.Storage do
   and at white height, while setting the uncommitted height to T.
   """
 
-  @spec append(String.t(), {non_neg_integer(), list({any(), MapSet.t()})}) ::
+  @spec append(
+          String.t(),
+          {non_neg_integer(), list({bare_key(), MapSet.t()})}
+        ) ::
           :ok
   def append(node_id, {height, kvlist}) do
     GenServer.call(
