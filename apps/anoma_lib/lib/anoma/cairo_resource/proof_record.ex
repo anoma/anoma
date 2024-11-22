@@ -25,6 +25,7 @@ defmodule Anoma.CairoResource.ProofRecord do
   def from_noun(_), do: :error
 
   defimpl Noun.Nounable, for: __MODULE__ do
+    @impl true
     def to_noun(proof_record = %ProofRecord{}) do
       {
         proof_record.proof,
