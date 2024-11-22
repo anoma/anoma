@@ -43,6 +43,7 @@ defmodule Anoma.Client.Connection.Supervisor do
 
     children = [
       {Anoma.Client.Connection.GRPCProxy, Keyword.take(args, [:host, :port])},
+      GrpcReflection,
       {GRPC.Server.Supervisor,
        endpoint: Anoma.Client.Api.Endpoint,
        port: args[:listen_port],
