@@ -27,7 +27,11 @@ defmodule Anoma.MixProject do
           "-Wmissing_return",
           # Turn off the warning for improper lists, because we use
           # bare cons frequently and deliberately.
-          "-Wno_improper_lists"
+          "-Wno_improper_lists",
+          # Checks for underspecified functions, i.e. functions whose
+          # specifications are strictly more permissive than their
+          # success typing.
+          "-Wunderspecs"
         ],
         plt_add_apps: [:mix, :ex_unit]
       ],
