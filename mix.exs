@@ -19,6 +19,9 @@ defmodule Anoma.MixProject do
         flags: [
           # Checks for functions which can only return via an exception.
           "-Werror_handling",
+          # Check for functions whose specs include types the function
+          # can never return.
+          "-Wextra_return",
           # Turn off the warning for improper lists, because we use
           # bare cons frequently and deliberately.
           "-Wno_improper_lists"
