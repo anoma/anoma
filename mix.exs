@@ -22,6 +22,9 @@ defmodule Anoma.MixProject do
           # Check for functions whose specs include types the function
           # can never return.
           "-Wextra_return",
+          # Check for functions which return values not included in
+          # their spec.
+          "-Wmissing_return",
           # Turn off the warning for improper lists, because we use
           # bare cons frequently and deliberately.
           "-Wno_improper_lists"
