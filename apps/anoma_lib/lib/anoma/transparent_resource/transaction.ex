@@ -225,3 +225,17 @@ defmodule Anoma.TransparentResource.Transaction do
     |> Enum.reduce(MapSet.new(), &MapSet.union/2)
   end
 end
+
+defimpl Anoma.RM.Intent, for: Anoma.TransparentResource.Transaction do
+  alias Anoma.TransparentResource.Transaction
+
+  @impl true
+  def compose(t1 = %Transaction{}, t2 = %Transaction{}) do
+    Transaction.compose(t1, t2)
+  end
+
+  @impl true
+  def verify(tx = %Transaction{}) do
+    Transaction.verify(tx)
+  end
+end
