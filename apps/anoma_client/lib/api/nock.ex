@@ -127,6 +127,9 @@ defmodule Anoma.Client.Api.Servers.Nock do
           {valid, [input | invalid]}
       end
     end)
+    |> then(fn {valid, invalid} ->
+      {Enum.reverse(valid), Enum.reverse(invalid)}
+    end)
   end
 
   # @doc """
