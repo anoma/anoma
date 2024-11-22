@@ -42,5 +42,4 @@ service IndexerService {
 service MempoolService {
   rpc Add(Anoma.Protobuf.Mempool.AddTransaction.Request)
       returns (Anoma.Protobuf.Mempool.AddTransaction.Response) {}
-
 }

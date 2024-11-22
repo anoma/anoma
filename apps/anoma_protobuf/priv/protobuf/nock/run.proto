@@ -16,7 +16,6 @@ message Request {
   repeated Input inputs = 4;
 }
 
-
 message Response {
   oneof result {
     Success success = 1;
