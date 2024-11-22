@@ -8,7 +8,7 @@ defmodule Anoma.Client.Connection.TCP do
   require Logger
 
   alias Anoma.Node.Transport.Messages
-  alias Anoma.Protobuf.Announcement
+  alias Anoma.Protobuf.Announce.Announcement
   alias Anoma.Protobuf.Envelope
   alias Anoma.Protobuf.NodeInfo
 
