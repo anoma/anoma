@@ -203,6 +203,35 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
+  def indexer_filters_owner(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
+    Indexer.start_link(node_id: node_id)
+    updates = Storage.updates_table(node_id)
+    values = Storage.values_table(node_id)
+
+    res1 = %Resource{rseed: "random1", nullifier_key: "jeremy"}
+    res2 = %Resource{rseed: "random2", nullifier_key: "michael"}
+    list = [res1, res2]
+
+    write_new(
+      updates,
+      values,
+      [1],
+      nil,
+      list |> Enum.map(&Resource.commitment/1) |> MapSet.new()
+    )
+
+    # nullifier keys are assumed to be 32 bytes long
+    jeremy = "jeremy" |> Noun.pad_trailing(32)
+    michael = "michael" |> Noun.pad_trailing(32)
+
+    2 = Indexer.get(node_id, {:filter, []}) |> MapSet.size()
+    1 = Indexer.get(node_id, {:filter, [{:owner, jeremy}]}) |> MapSet.size()
+    1 = Indexer.get(node_id, {:filter, [{:owner, michael}]}) |> MapSet.size()
+
+    node_id
+  end
+
   defp write_new(updates, values, heights, nlfs, coms) do
     :mnesia.transaction(fn ->
       if nlfs do
