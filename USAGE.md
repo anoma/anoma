@@ -1,0 +1,197 @@
+# How this works
+
+There are three parties in this setup: the anoma node, the anoma client, and a third party client.
+The Anoma client serves the purpose of taking in requests from the third party client and relaying them
+to an arbitrary Anoma node.
+
+```
+Your Client <---> Anoma Client <---> Anoma Node
+                   Full API            Full API
+                   + Prove
+                   + RunNock
+```
+
+The API of the Anoma Client is the same as the one of the Anoma Node, save for the `prove` and
+`runNock` endpoints which allow clients to run Nock code.
+
+# Setup
+
+## Setting up the node
+
+Start a node from the Elixir repl. These nodes are considered "ephemeral", meaning that you can
+create and destroy them as you please. Every time a node is started it's a clean slate.
+
+```text
+~/Documents/Work/anoma  (testnet-01) % iex -S mix
+Erlang/OTP 27 [erts-15.0] [source] [64-bit] [smp:10:10] [ds:10:10:10] [async-threads:1] [jit]
+
+Interactive Elixir (1.17.1) - press Ctrl+C to exit (type h() ENTER for help)
+iex(1)> node = Anoma.Node.Examples.ENode.start_node()
+%Anoma.Node.Examples.ENode{
+  grpc_port: 58447,
+  tcp_ports: [],
+  pid: #PID<0.318.0>,
+  node_id: "2615099"
+}
+iex(2)>
+```
+
+Not the `grpc_port` in the output. That is the GRPC port of the _node_.
+
+## Setting up the client
+
+The client can be started in two different ways. Either from the Elixir repl, or via the binary.
+
+### From the REPL
+
+An Anoma client can be started in the same repl that started the node. Note here that the client
+will listen for requests on port `50051`.
+
+```iex
+~/Documents/Work/anoma  (testnet-01) % iex -S mix
+Erlang/OTP 27 [erts-15.1.2] [source] [64-bit] [smp:10:10] [ds:10:10:10] [async-threads:1] [jit]
+
+Interactive Elixir (1.17.1) - press Ctrl+C to exit (type h() ENTER for help)
+iex(1)> node = ENode.start_node(grpc_port: 0)
+%Anoma.Node.Examples.ENode{
+  grpc_port: 63796,
+  tcp_ports: [],
+  pid: #PID<0.345.0>,
+  node_id: "62831092"
+}
+iex(3)> {:ok, client} = Anoma.Client.connect("localhost", node.grpc_port, 50051, node.node_id)
+{:ok, %Anoma.Client{grpc_port: 50051, supervisor: #PID<0.396.0>, type: :grpc}}
+```
+
+### Using a binary
+
+You build the binary from within the root directory of the Anoma project.
+
+```text
+~/Documents/Work/anoma  (testnet-01) % mix do --app anoma_client escript.build
+==> anoma_client
+Generated escript anoma_client with MIX_ENV=dev
+```
+
+The binary can be started if you know the hostname and port of the Anoma node (see above).
+Assuming the client has to listen for request on port `50051`, it can be started with the following
+command from the root of the Anoma project.
+
+```text
+~/Documents/Work/anoma  (testnet-01) % ./apps/anoma_client/anoma_client --listen-port 50051 --node-host localhost --node-port 63796 --node-id 62831092
+Connected to node. Listening on port 50051
+```
+
+Note here that the `--node-port` is the value obtained from starting a node.
+
+# The tools for using GRPC
+
+The client exposes a GRPC endpoint. There are multiple ways to make GRPC requests, and depending
+on how motivated you are, you can do one of the following.
+
+## A very quick explanation of GRPC
+
+GRPC works around a single file called a `protobuf`.
+The proto file (apps/anoma_protobuf/priv/protobuf/anoma.proto) defines the structure and data types
+of messages to be sent and received by a client and GRPC endpoint.
+The contents of messages are serialized and deserialized for performance reasons.
+More info here: https://grpc.io/docs/what-is-grpc/introduction/
+
+## Postman
+
+The author's favourite tool for this job is called Postman (https://www.postman.com/).
+To get started with Postman, look here: https://learning.postman.com/docs/sending-requests/grpc/first-grpc-request/
+
+- Create a new GRPC request.
+- Import the protobuf file from the Anoma repository.
+- Set the URL to `localhost:50051`
+- Pick any request from the list
+- Fill out the message (tip: click on "example message" to get scaffolding for a message)
+
+## GRPCurl
+
+For those so inclined, `grpcurl` is a command-line tool to make GRPC requests.
+Instalation instructions can be found here: https://github.com/fullstorydev/grpcurl?tab=readme-ov-file#installation
+
+### Listing the root services
+
+```shell
+grpcurl -plaintext localhost:50051 list
+```
+
+results in the output below.
+
+```text
+Anoma.Protobuf.IndexerService
+Anoma.Protobuf.IntentsService
+Anoma.Protobuf.NockService
+```
+
+### Listing individual services
+
+```shell
+grpcurl -plaintext localhost:50051 list Anoma.Protobuf.IndexerService
+```
+
+results in the output below.
+
+```text
+Anoma.Protobuf.IndexerService.ListNullifiers
+Anoma.Protobuf.IndexerService.ListUnrevealedCommits
+Anoma.Protobuf.IndexerService.ListUnspentResources
+```
+
+# Making requests
+
+## List intents
+
+```shell
+grpcurl -plaintext localhost:50051 Anoma.Protobuf.IntentsService.ListIntents
+```
+
+results in the output below.
+
+```json
+{}
+```
+
+## Prove
+
+A prove request contains a program, private inputs, and public inputs.
+
+Each of these can be either a jammed Nock noun, or a plain-text representation of the Nock noun.
+
+An example request with a jammed program, and a single jammed input looks as follows.
+The program below is squares its input.
+
+```json
+{
+  "jammed_program": "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",
+  "private_inputs": [
+    {
+      "jammed": "aA=="
+    }
+  ],
+  "public_inputs": []
+}
+```
+
+This request invokes the Juvix program "Squared" with private input `3` and no public inputs.
+The request returns `9` as its result.
+Both values are base64 encoded jammed Nock nouns.
+
+### Proving with GRPCurl
+
+Store the request from above into a file on disk, such as `/tmp/my_input`.
+
+```shell
+grpcurl -plaintext -d @ localhost:50051 Anoma.Protobuf.NockService/Prove < /tmp/my_input
+```
+
+results in the output below.
+
+```json
+{
+  "proof": "kAQ="
+}
+```

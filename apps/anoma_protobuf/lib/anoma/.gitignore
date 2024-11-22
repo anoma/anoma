@@ -1,1 +1,2 @@
-protobuf/
+protobuf/*
+!protobuf/.gitkeep

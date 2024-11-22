@@ -11,10 +11,12 @@ defmodule Anoma.Supervisor do
 
   use Supervisor
 
+  @spec start_link(any()) :: Supervisor.on_start()
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
   end
 
+  @impl true
   def init(_args) do
     Process.set_label(__MODULE__)
 
@@ -29,6 +31,13 @@ defmodule Anoma.Supervisor do
   @doc """
   I start a new node with the given `node_id`.
   """
+  @spec start_node(
+          list(
+            {:node_id, String.t()}
+            | {:grpc_port, non_neg_integer()}
+            | {:tx_args, any()}
+          )
+        ) :: DynamicSupervisor.on_start_child()
   def start_node(args) do
     args =
       Keyword.validate!(args, [

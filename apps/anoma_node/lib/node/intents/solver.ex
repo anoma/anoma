@@ -47,6 +47,7 @@ defmodule Anoma.Node.Intents.Solver do
   @doc """
   I create a new solver process .
   """
+  @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
@@ -112,7 +113,7 @@ defmodule Anoma.Node.Intents.Solver do
   end
 
   @impl true
-  def handle_info(%Event{} = event, state) do
+  def handle_info(event = %Event{}, state) do
     state = handle_event(event, state)
     {:noreply, state}
   end
@@ -126,7 +127,7 @@ defmodule Anoma.Node.Intents.Solver do
   # I am only interested in new intents.
   # """
   @spec handle_event(Event.t(), t()) :: t()
-  defp handle_event(%Event{} = event, state) do
+  defp handle_event(event = %Event{}, state) do
     case event do
       %Event{
         source_module: IntentPool,
@@ -186,6 +187,7 @@ defmodule Anoma.Node.Intents.Solver do
   # I try and solve the intents currently in my state.
   # If I can solve some of them, I add them to the solved pool.
   # """
+  @spec do_solve(t()) :: t()
   def do_solve(state) do
     {solved, unsolved} =
       case solve(state.unsolved) do
@@ -214,7 +216,7 @@ defmodule Anoma.Node.Intents.Solver do
     intents
     |> Enum.to_list()
     |> subsets()
-    |> Stream.drop_while(&(not valid?(&1)))
+    |> Stream.drop_while(&(valid?(&1) != true))
     |> Stream.take(1)
     |> Enum.to_list()
     |> Enum.map(&MapSet.new/1)
@@ -225,8 +227,8 @@ defmodule Anoma.Node.Intents.Solver do
   I check if a list of intents is valid by composing them and verifying if they satisfy
   the Intent.valid? predicate.
   """
-  @spec valid?([Intent.t()]) :: boolean()
-  def valid?([]), do: false
+  @spec valid?([Intent.t()]) :: true | {:error, any()}
+  def valid?([]), do: {:error, :error}
 
   def valid?(intents) do
     intents

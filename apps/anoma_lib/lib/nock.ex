@@ -23,6 +23,7 @@ defmodule Nock do
     )
 
     field(:meter_pid, pid() | nil, default: nil)
+    field(:stdio, any(), default: :stdio)
   end
 
   @dialyzer :no_improper_lists
@@ -34,6 +35,7 @@ defmodule Nock do
   @layer_5_context_mug 4_018_337_361
   @layer_6_context_mug 3_932_234_981
   @layer_7_context_mug 4_202_542_228
+  @layer_8_context_mug 1_736_366_676
   @layer_4_block_context_mug 2_756_805_836
 
   # hardcoded jet registry
@@ -89,19 +91,47 @@ defmodule Nock do
     3_534_989_962 =>
       {"lsh", 14, @layer_4_block_context_mug, &Nock.Jets.lsh/1, :enabled, 20},
     3_410_895_654 =>
-      {"rsh", 14, @layer_4_block_context_mug, &Nock.Jets.rsh/1, :enabled, 20}
+      {"rsh", 14, @layer_4_block_context_mug, &Nock.Jets.rsh/1, :enabled, 20},
+    724_462_226 =>
+      {"abs", 7, @layer_8_context_mug, &Nock.Jets.abs/1, :enabled, 30},
+    2_668_782_675 =>
+      {"dif", 7, @layer_8_context_mug, &Nock.Jets.dif/1, :enabled, 30},
+    1_814_685_155 =>
+      {"dul", 7, @layer_8_context_mug, &Nock.Jets.dul/1, :enabled, 30},
+    2_357_319_448 =>
+      {"fra", 7, @layer_8_context_mug, &Nock.Jets.fra/1, :enabled, 30},
+    2_272_237_948 =>
+      {"pro", 7, @layer_8_context_mug, &Nock.Jets.pro/1, :enabled, 30},
+    2_517_398_177 =>
+      {"rem", 7, @layer_8_context_mug, &Nock.Jets.rem/1, :enabled, 30},
+    2_325_836_748 =>
+      {"sum", 7, @layer_8_context_mug, &Nock.Jets.sum/1, :enabled, 30},
+    244_446_486 =>
+      {"sun", 7, @layer_8_context_mug, &Nock.Jets.sun/1, :enabled, 30},
+    1_720_910_226 =>
+      {"syn", 7, @layer_8_context_mug, &Nock.Jets.syn/1, :enabled, 30},
+    3_800_851_664 =>
+      {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30}
   }
 
   @doc """
   Gives the total numbers of layers in the standard library
   """
+  @spec stdlib_layers() :: non_neg_integer()
   def stdlib_layers, do: @layers
 
   # temporary stub functions for jet scaffolding
+  @spec get_jet(Noun.t()) ::
+          {:ok,
+           {String.t(), non_neg_integer(), non_neg_integer(),
+            (Noun.t() -> :error | {:ok, Noun.t()}), atom(),
+            non_neg_integer()}}
+          | :error
   def get_jet(battery_mug) do
     Map.fetch(@jet_registry, battery_mug)
   end
 
+  @spec put_jet(Noun.t(), any()) :: any()
   def put_jet(_battery_mug, _jet_info) do
     nil
   end
@@ -250,6 +280,7 @@ defmodule Nock do
     end
   end
 
+  @spec scry_forbidden(Noun.t()) :: :error | {:ok, Noun.t()}
   def scry_forbidden(_) do
     :error
   end
@@ -429,7 +460,7 @@ defmodule Nock do
         when eleven in [11, <<11>>] ->
           # must be computed, but is discarded
           {:ok, hint_result} = nock(subject, hint_formula, environment)
-          process_hint(hint_noun, hint_result)
+          process_hint(hint_noun, hint_result, environment)
           {:ok, real_result} = nock(subject, sub_formula, environment)
           nock([hint_result | real_result], [0 | 3], environment)
 
@@ -448,76 +479,100 @@ defmodule Nock do
   end
 
   # process_hint helper: noncontextual, but enough for %puts
+  @spec process_hint(Noun.t()) :: term()
   def process_hint(_) do
   end
 
   # %puts hint: print an atom during evaluation
-  def process_hint(puts, hint_result)
-      when Noun.is_noun_atom(hint_result) and
-             puts in [0x73747570, "puts"] do
-    string_to_print = Noun.normalize_noun(hint_result)
-    IO.puts(string_to_print)
+  @spec process_hint(Noun.t(), Noun.t(), t()) :: term()
+  def process_hint(puts, hint_result, environment)
+      when puts in [0x73747570, "puts"] do
+    # if the output is not stdio, then the hint is jammed.
+    # right now there is no way to reliably turn a noun into a string and read it back
+    # if it has binaries. So this is a temporary workaround.
+    if environment.stdio == :stdio do
+      IO.write(environment.stdio, "#{inspect(hint_result)}\n")
+    else
+      # hint_str = Noun.Format.print(hint_result)
+      hint_str = Nock.Jam.jam(hint_result) |> Base.encode64()
+      IO.write(environment.stdio, hint_str)
+    end
   end
 
-  def process_hint(_, _) do
+  def process_hint(_puts, _hint_result, _environment) do
   end
 
+  @spec cons(Noun.t(), Noun.t()) :: Noun.t()
   def cons(a, b) do
     [a | b]
   end
 
+  @spec nock_0(Noun.t()) :: Noun.t()
   def nock_0(axis) do
     [0 | axis]
   end
 
+  @spec nock_1(Noun.t()) :: Noun.t()
   def nock_1(constant) do
     [1 | constant]
   end
 
+  @spec nock_2(Noun.t(), Noun.t()) :: Noun.t()
   def nock_2(subject_formula, formula_formula) do
     [2, subject_formula | formula_formula]
   end
 
+  @spec nock_3(Noun.t()) :: Noun.t()
   def nock_3(sub_formula) do
     [3 | sub_formula]
   end
 
+  @spec nock_4(Noun.t()) :: Noun.t()
   def nock_4(sub_formula) do
     [4 | sub_formula]
   end
 
+  @spec nock_5(Noun.t(), Noun.t()) :: Noun.t()
   def nock_5(formula_1, formula_2) do
     [5, formula_1 | formula_2]
   end
 
+  @spec nock_6(Noun.t(), Noun.t(), Noun.t()) :: Noun.t()
   def nock_6(cond, true_branch, false_branch) do
     [6, cond, true_branch | false_branch]
   end
 
+  @spec nock_7(Noun.t(), Noun.t()) :: Noun.t()
   def nock_7(subject_formula, sub_formula) do
     [7, subject_formula | sub_formula]
   end
 
+  @spec nock_8(Noun.t(), Noun.t()) :: Noun.t()
   def nock_8(push_formula, sub_formula) do
     [8, push_formula | sub_formula]
   end
 
+  @spec nock_9(Noun.t(), Noun.t()) :: Noun.t()
   def nock_9(axis, sub_formula) do
     [9, axis | sub_formula]
   end
 
+  @spec nock_10(Noun.t(), Noun.t(), Noun.t()) :: Noun.t()
   def nock_10(axis, replacement_formula, sub_formula) do
     [10, [axis | replacement_formula] | sub_formula]
   end
 
+  @spec nock_11(Noun.t(), Noun.t(), Noun.t()) :: Noun.t()
   def nock_11(hint_noun, hint_formula, sub_formula) do
     [11, [hint_noun | hint_formula] | sub_formula]
   end
 
+  @spec nock_11(Noun.t(), Noun.t()) :: Noun.t()
   def nock_11(hint_noun, sub_formula) do
     [11, hint_noun | sub_formula]
   end
 
+  @spec decrement_arm() :: Noun.t()
   def decrement_arm do
     nock_8(
       nock_1(0),
@@ -544,6 +599,7 @@ defmodule Nock do
     )
   end
 
+  @spec decrement_core() :: Noun.t()
   def decrement_core do
     context = 0
     sample = 123

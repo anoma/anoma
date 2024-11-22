@@ -42,10 +42,10 @@ defmodule Anoma.Node.Examples.ENode do
   My only reason for existence is to keep track of the nodes that are created in the system and their
   GRPC ports.
   """
+  @spec initialize_ets() :: atom()
   def initialize_ets() do
     unless @table_name in :ets.all() do
-      :ok
-      :ets.new(@table_name, [:set, :protected, :named_table])
+      :ets.new(@table_name, [:named_table, :set, :named_table, :public])
     end
 
     @table_name

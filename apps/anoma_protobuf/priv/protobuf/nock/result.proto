@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Nock;
+
+message Success {
+  bytes result = 1;
+  repeated bytes output = 2;
+}
+
+message Error {
+  string error = 1;
+  repeated bytes output = 2;
+}

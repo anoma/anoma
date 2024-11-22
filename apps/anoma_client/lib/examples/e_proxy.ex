@@ -11,6 +11,7 @@ defmodule Anoma.Client.Examples.EProxy do
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Client.Examples.EClient
   alias Anoma.Protobuf.Intent
+  alias Anoma.Protobuf.Intents.Intent
 
   require ExUnit.Assertions
 
@@ -24,6 +25,7 @@ defmodule Anoma.Client.Examples.EProxy do
   #                    Helpers                               #
   ############################################################
 
+  @spec setup() :: EClient.t()
   def setup() do
     EClient.create_example_client()
   end

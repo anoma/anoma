@@ -3,5 +3,7 @@ defmodule Anoma.Node.Transport.GRPC.Endpoint do
   use GRPC.Endpoint
 
   intercept(GRPC.Server.Interceptors.Logger)
-  run(Anoma.Node.Transport.GRPC.Server)
+  run(Anoma.Node.Transport.GRPC.Servers.Intents)
+  run(Anoma.Node.Transport.GRPC.Servers.Indexer)
+  run(Anoma.Node.Transport.GRPC.Servers.Mempool)
 end

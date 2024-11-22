@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Nock;
+
+message Input {
+  oneof input {
+    bytes jammed = 1;
+    string text = 2;
+  }
+}

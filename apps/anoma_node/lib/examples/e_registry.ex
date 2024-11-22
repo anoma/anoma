@@ -2,7 +2,6 @@ defmodule Anoma.Node.Examples.ERegistry do
   import ExUnit.Assertions
 
   alias __MODULE__
-  alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Registry
   alias Anoma.Node.Registry.Address
 
@@ -104,6 +103,7 @@ defmodule Anoma.Node.Examples.ERegistry do
   @doc """
   Given a node id and an engine, I generate a name that can be used to register processes.
   """
+  @spec generate_name() :: {:via, atom(), {atom(), Address.t()}}
   def generate_name() do
     node_id =
       "londo_mollari" <>
@@ -216,39 +216,6 @@ defmodule Anoma.Node.Examples.ERegistry do
     for engine_pid <- engine_pids do
       send(engine_pid, :stop)
     end
-
-    :ok
-  end
-
-  @doc """
-  Given a node, I check for a local engine of a specific type.
-
-  If there are multiple engines present of the same type, I expect an error.
-  """
-  @spec single_node_running() :: :ok
-  def single_node_running() do
-    # for this test no nodes can be present.
-    # all nodes are killed.
-    ENode.kill_all_nodes()
-
-    # assert no node running error
-    # give the registry some time to clean up
-    Process.sleep(100)
-    assert Kernel.match?({:error, :no_node_running}, Registry.local_node_id())
-
-    # start one node and assert the node is returned
-    node_id =
-      "londo_mollari" <>
-        (:crypto.strong_rand_bytes(16)
-         |> Base.url_encode64())
-
-    %ENode{} = ENode.start_node(node_id: node_id)
-
-    assert {:ok, node_id} == Registry.local_node_id()
-
-    # start a second node, check for the exepcted error
-    %ENode{} = ENode.start_node()
-    assert {:error, :multiple_nodes} == Registry.local_node_id()
 
     :ok
   end

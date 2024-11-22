@@ -21,6 +21,7 @@ defmodule CommitmentTree.Spec do
     field(:splay_suff_prod, list(integer()))
   end
 
+  @spec new(integer(), integer(), integer(), function()) :: t()
   def new(depth, splay, key_size, hash) do
     %CommitmentTree.Spec{
       depth: depth,
@@ -44,6 +45,15 @@ defmodule CommitmentTree.Spec do
   @spec cairo_poseidon_cm_tree_spec() :: CommitmentTree.Spec.t()
   def cairo_poseidon_cm_tree_spec() do
     new(32, 2, 256, fn {x, y} ->
+      Cairo.poseidon(:binary.bin_to_list(x), :binary.bin_to_list(y))
+      |> :binary.list_to_bin()
+    end)
+  end
+
+  # cairo poseidon resource tree spec for action
+  @spec cairo_poseidon_resource_tree_spec() :: CommitmentTree.Spec.t()
+  def cairo_poseidon_resource_tree_spec() do
+    new(4, 2, 256, fn {x, y} ->
       Cairo.poseidon(:binary.bin_to_list(x), :binary.bin_to_list(y))
       |> :binary.list_to_bin()
     end)

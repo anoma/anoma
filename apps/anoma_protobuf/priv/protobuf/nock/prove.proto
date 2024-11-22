@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Nock.Prove;
+
+import "nock/input.proto";
+import "node_info.proto";
+import "nock/result.proto";
+
+message Request {
+  NodeInfo node_info = 1;
+
+  oneof program {
+    bytes jammed_program = 2;
+    string text_program = 3;
+  }
+
+  repeated Anoma.Protobuf.Nock.Input public_inputs = 4;
+  repeated Anoma.Protobuf.Nock.Input private_inputs = 5;
+}
+
+message Response {
+  oneof result {
+    Success success = 1;
+    Error error = 2;
+  }
+}

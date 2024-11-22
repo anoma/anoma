@@ -53,7 +53,42 @@ defmodule Anoma.Node.Examples.EIntentPool do
     IntentPool.remove_intent(enode.node_id, intent)
 
     # the intent will be removed from the mapset.
-    assert Enum.count(IntentPool.intents(enode.node_id)) == 0
+    assert Enum.empty?(IntentPool.intents(enode.node_id))
+
+    enode
+  end
+
+  @doc """
+  I submit a transaction containing a nullifier to an ephemeral resource
+  used in a trivial swap transaction.
+  """
+  @spec add_intent_transaction_nullifier(ENode.t()) :: ENode.t()
+  def add_intent_transaction_nullifier(enode \\ ENode.start_node()) do
+    intent = Examples.ETransparent.ETransaction.nullify_intent_eph()
+    node_id = enode.node_id
+    IntentPool.new_intent(node_id, intent)
+
+    assert IntentPool.intents(node_id) == MapSet.new([intent])
+
+    enode
+  end
+
+  @doc """
+  I use `add_intent_transaction_nullifier` and then execute the trivial
+  swap.
+
+  The nullifier of the ephemeral resource used gets trasmitted to the
+  intent pool, hence removing the specified intent from the pool.
+  """
+  @spec remove_intents_with_nulllified_resources(ENode.t()) :: ENode.t()
+  def remove_intents_with_nulllified_resources(enode \\ ENode.start_node()) do
+    add_intent_transaction_nullifier(enode)
+
+    Anoma.Node.Examples.ETransaction.submit_successful_trivial_swap(
+      enode.node_id
+    )
+
+    assert enode.node_id |> IntentPool.intents() |> Enum.empty?()
 
     enode
   end

@@ -15,6 +15,7 @@ defmodule Anoma.TransparentResource.Transaction do
     field(:delta_proof, <<>>, default: <<>>)
   end
 
+  @spec compose(t(), t()) :: t()
   def compose(tx1 = %Transaction{}, tx2 = %Transaction{}) do
     %Transaction{
       roots: MapSet.union(tx1.roots, tx2.roots),
@@ -101,7 +102,7 @@ defmodule Anoma.TransparentResource.Transaction do
       |> Enum.reject(&(&1 == true))
 
     Enum.empty?(failed) or
-      {:error, Enum.join(Enum.map(failed, &elem(&1, 1)), "\n")}
+      {:error, Enum.map_join(failed, "\n", &elem(&1, 1))}
   end
 
   # the sum of all action deltas we compute here must equal
@@ -164,14 +165,13 @@ defmodule Anoma.TransparentResource.Transaction do
   end
 
   defimpl Noun.Nounable, for: Transaction do
+    @impl true
     def to_noun(trans = %Transaction{}) do
       [
         MapSet.to_list(trans.roots),
         Enum.map(trans.actions, &Noun.Nounable.to_noun/1),
         Map.to_list(trans.delta)
-        |> Enum.map(fn {x, y} ->
-          [x, [if(y >= 0, do: 0, else: 1) | abs(y)]]
-        end),
+        |> Enum.map(fn {x, y} -> [x, Noun.encode_signed(y)] end),
         # Consider better provinance value
         trans.delta_proof
       ]
@@ -223,5 +223,19 @@ defmodule Anoma.TransparentResource.Transaction do
     self.actions
     |> Stream.map(&Action.nullified_resources/1)
     |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+  end
+end
+
+defimpl Anoma.RM.Intent, for: Anoma.TransparentResource.Transaction do
+  alias Anoma.TransparentResource.Transaction
+
+  @impl true
+  def compose(t1 = %Transaction{}, t2 = %Transaction{}) do
+    Transaction.compose(t1, t2)
+  end
+
+  @impl true
+  def verify(tx = %Transaction{}) do
+    Transaction.verify(tx)
   end
 end

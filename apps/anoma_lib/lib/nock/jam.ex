@@ -106,7 +106,7 @@ defmodule Nock.Jam do
     write_to_env(env, atom |> Nock.Bits.integer_to_bits() |> Enum.reverse())
   end
 
-  @spec write_atom(t(), non_neg_integer()) :: t()
+  @spec write_back_ref(t(), non_neg_integer()) :: t()
   def write_back_ref(env, position) do
     env
     |> write_to_env([1, 1])

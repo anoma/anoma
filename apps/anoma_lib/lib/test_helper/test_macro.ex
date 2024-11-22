@@ -80,7 +80,8 @@ defmodule TestHelper.TestMacro do
   Depending on the given message, I call either `assert` or `refute` with
   different arities.
   """
-
+  @spec message_parse(Macro.input(), atom(), String.t() | nil) ::
+          Macro.input()
   def message_parse(expr, atom, msg) do
     assert_expression =
       unless msg do
@@ -102,6 +103,7 @@ defmodule TestHelper.TestMacro do
   If the expression is not in debug mode, I simply call the assertion on
   the expression.
   """
+  @spec assertion_abstract(atom(), atom(), Macro.input()) :: Macro.input()
   def assertion_abstract(:debug, atom, expr) do
     call_assert(atom, expr)
   end
@@ -119,7 +121,8 @@ defmodule TestHelper.TestMacro do
                                                 left side variables.
   - `call_assert(atom, expr)` - Just call the capture.
   """
-  def call_assert(atom, [{:=, _, [left, _]}] = expr) do
+  @spec call_assert(atom(), Macro.input()) :: Macro.input()
+  def call_assert(atom, expr = [{:=, _, [left, _]}]) do
     quote do
       unquote(left) = unquote(quote_try(atom, expr))
     end
@@ -132,6 +135,7 @@ defmodule TestHelper.TestMacro do
   @doc """
   I quote the error-capturing of expressions.
   """
+  @spec quote_try(atom(), Macro.input()) :: Macro.input()
   def quote_try(atom, expr) do
     quote do
       try do
@@ -161,7 +165,8 @@ defmodule TestHelper.TestMacro do
                                        original result
   - `try_assert(atom, expr)` - I use the assertion
   """
-  def try_assert(atom, [{:=, _, _}] = expr) do
+  @spec try_assert(atom(), Macro.input()) :: Macro.input()
+  def try_assert(atom, expr = [{:=, _, _}]) do
     quote do
       right = unquote(assertion_alias(atom, expr))
       binding()
@@ -177,6 +182,7 @@ defmodule TestHelper.TestMacro do
   I add the ExUnit.Assertions prefix to the function call on the AST level
   and apply it to the expression as a quoted structure.
   """
+  @spec assertion_alias(atom(), Macro.input()) :: Macro.input()
   def assertion_alias(atom, expr) do
     {{:., [],
       [

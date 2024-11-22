@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Intents.Add;
+
+import "intents/intent.proto";
+import "node_info.proto";
+
+message Request {
+  NodeInfo node_info = 1;
+  Anoma.Protobuf.Intents.Intent intent = 2;
+}
+
+message Response { string result = 1; }
