@@ -113,8 +113,11 @@ defmodule Anoma.Node.Examples.EIndexer do
     hash = "I am a root at height 1"
 
     :mnesia.transaction(fn ->
-      :mnesia.write({updates, :anchor, [1]})
-      :mnesia.write({values, {1, :anchor}, hash})
+      :mnesia.write({updates, ["anoma", :anchor |> Atom.to_string()], [1]})
+
+      :mnesia.write(
+        {values, {1, ["anoma", :anchor |> Atom.to_string()]}, hash}
+      )
     end)
 
     ^hash = Indexer.get(node_id, :root)
@@ -130,8 +133,11 @@ defmodule Anoma.Node.Examples.EIndexer do
     hash = "I am a root at height 2"
 
     :mnesia.transaction(fn ->
-      :mnesia.write({updates, :anchor, [2, 1]})
-      :mnesia.write({values, {2, :anchor}, hash})
+      :mnesia.write({updates, ["anoma", :anchor |> Atom.to_string()], [2, 1]})
+
+      :mnesia.write(
+        {values, {2, ["anoma", :anchor |> Atom.to_string()]}, hash}
+      )
     end)
 
     ^hash = Indexer.get(node_id, :root)
@@ -142,15 +148,26 @@ defmodule Anoma.Node.Examples.EIndexer do
   defp write_new(updates, values, heights, nlfs, coms) do
     :mnesia.transaction(fn ->
       if nlfs do
-        :mnesia.write({updates, :nullifiers, heights})
+        :mnesia.write(
+          {updates, ["anoma", :nullifiers |> Atom.to_string()], heights}
+        )
       end
 
       if coms do
-        :mnesia.write({updates, :commitments, heights})
+        :mnesia.write(
+          {updates, ["anoma", :commitments |> Atom.to_string()], heights}
+        )
       end
 
-      :mnesia.write({values, {hd(heights), :nullifiers}, nlfs})
-      :mnesia.write({values, {hd(heights), :commitments}, coms})
+      :mnesia.write(
+        {values, {hd(heights), ["anoma", :nullifiers |> Atom.to_string()]},
+         nlfs}
+      )
+
+      :mnesia.write(
+        {values, {hd(heights), ["anoma", :commitments |> Atom.to_string()]},
+         coms}
+      )
     end)
   end
 end

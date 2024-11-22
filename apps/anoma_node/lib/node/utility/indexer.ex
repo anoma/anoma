@@ -108,6 +108,7 @@ defmodule Anoma.Node.Utility.Indexer do
   defp read_set(key, id) do
     values = Storage.values_table(id)
     updates = Storage.updates_table(id)
+    key = ["anoma", key |> Atom.to_string()]
 
     {:atomic, set} =
       :mnesia.transaction(fn ->
