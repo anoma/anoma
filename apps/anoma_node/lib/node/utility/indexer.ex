@@ -28,7 +28,7 @@ defmodule Anoma.Node.Utility.Indexer do
 
   @spec get(
           String.t(),
-          :nlfs | :cms | :unrevealed | :resources | :blocks | :root
+          :nlfs | :cms | :unrevealed | :resources | :height | :root
         ) ::
           any()
   def get(node_id, flag) do
@@ -36,7 +36,7 @@ defmodule Anoma.Node.Utility.Indexer do
     GenServer.call(name, flag)
   end
 
-  def handle_call(:blocks, _from, state) do
+  def handle_call(:height, _from, state) do
     table = Storage.blocks_table(state.node_id)
 
     {:atomic, res} =
