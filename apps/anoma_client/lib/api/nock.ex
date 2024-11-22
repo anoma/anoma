@@ -16,6 +16,7 @@ defmodule Anoma.Client.Api.Servers.Nock do
            {pub_inpt, []} <- inputs_to_noun(request.public_inputs),
            {prv_inpt, []} <- inputs_to_noun(request.private_inputs),
            {:ok, result, io} <- Runner.prove(program, pub_inpt ++ prv_inpt),
+           io <- Enum.map(io, &Nock.Jam.jam/1),
            jammed <- Nock.Jam.jam(result) do
         {:ok, jammed, io}
       else
@@ -50,6 +51,7 @@ defmodule Anoma.Client.Api.Servers.Nock do
       with {:ok, program} <- program_to_noun(request.program),
            {inputs, []} <- inputs_to_noun(request.inputs),
            {:ok, result, io} <- Runner.prove(program, inputs),
+           io <- Enum.map(io, &Nock.Jam.jam/1),
            jammed <- Nock.Jam.jam(result) do
         {:ok, jammed, io}
       else

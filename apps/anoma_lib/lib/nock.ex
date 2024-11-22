@@ -486,10 +486,17 @@ defmodule Nock do
   # %puts hint: print an atom during evaluation
   @spec process_hint(Noun.t(), Noun.t(), t()) :: term()
   def process_hint(puts, hint_result, environment)
-      when Noun.is_noun_atom(hint_result) and
-             puts in [0x73747570, "puts"] do
-    string_to_print = Noun.normalize_noun(hint_result)
-    IO.write(environment.stdio, string_to_print)
+      when puts in [0x73747570, "puts"] do
+    # if the output is not stdio, then the hint is jammed.
+    # right now there is no way to reliably turn a noun into a string and read it back
+    # if it has binaries. So this is a temporary workaround.
+    if environment.stdio == :stdio do
+      IO.write(environment.stdio, "#{inspect(hint_result)}\n")
+    else
+      # hint_str = Noun.Format.print(hint_result)
+      hint_str = Nock.Jam.jam(hint_result) |> Base.encode64()
+      IO.write(environment.stdio, hint_str)
+    end
   end
 
   def process_hint(_puts, _hint_result, _environment) do

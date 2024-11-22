@@ -3,7 +3,7 @@ defmodule Anoma.Client.Runner do
   I run the given Nock program with its inputs and return the result.
   """
   @spec prove(Noun.t(), [Noun.t()]) ::
-          {:ok, Noun.t(), [String.t()]} | {:error, :failed_to_prove}
+          {:ok, Noun.t(), [Noun.t()]} | {:error, :failed_to_prove}
   def prove(program, inputs) do
     core =
       (Noun.list_nock_to_erlang(program) ++ [Nock.rm_core()])
@@ -22,6 +22,7 @@ defmodule Anoma.Client.Runner do
     case Nock.nock(core, eval_call, %Nock{stdio: io_sink}) do
       {:ok, noun} ->
         {:ok, result} = close_io_sink(io_sink)
+
         {:ok, noun, result}
 
       :error ->
@@ -67,9 +68,11 @@ defmodule Anoma.Client.Runner do
   @spec capture(list(term())) :: any()
   defp capture(acc \\ []) do
     receive do
-      {:io_request, from, ref, {:put_chars, _, output}} ->
+      {:io_request, from, ref, {:put_chars, _, noun_str}} ->
         send(from, {:io_reply, ref, :ok})
-        capture([output | acc])
+        # noun = Noun.Format.parse_always(noun_str)
+        noun = Base.decode64!(noun_str) |> Nock.Cue.cue!()
+        capture([noun | acc])
 
       {:quit, from} ->
         output = acc |> Enum.reverse()
