@@ -4,6 +4,8 @@ defmodule Anoma.Client.Api.Servers.Nock do
   alias Anoma.Protobuf.Nock.Run
   alias Anoma.Client.Runner
   alias GRPC.Server.Stream
+  alias Anoma.Protobuf.Nock.Success
+  alias Anoma.Protobuf.Nock.Error
 
   use GRPC.Server, service: Anoma.Protobuf.NockService.Service
 
@@ -13,9 +15,9 @@ defmodule Anoma.Client.Api.Servers.Nock do
       with {:ok, program} <- program_to_noun(request.program),
            {pub_inpt, []} <- inputs_to_noun(request.public_inputs),
            {prv_inpt, []} <- inputs_to_noun(request.private_inputs),
-           {:ok, result} <- Runner.prove(program, pub_inpt ++ prv_inpt),
+           {:ok, result, io} <- Runner.prove(program, pub_inpt ++ prv_inpt),
            jammed <- Nock.Jam.jam(result) do
-        {:proof, jammed}
+        {:ok, jammed, io}
       else
         {_, invalid_inputs} when is_list(invalid_inputs) ->
           {:error, "invalid inputs: #{inspect(invalid_inputs)}"}
@@ -30,18 +32,26 @@ defmodule Anoma.Client.Api.Servers.Nock do
           {:error, "failed to evaluate"}
       end
 
+    result =
+      case result do
+        {:ok, jammed, io} ->
+          {:success, %Success{result: jammed, output: io}}
+
+        {:error, reason} ->
+          {:error, %Error{error: "#{reason}"}}
+      end
+
     %Prove.Response{result: result}
   end
 
-  @spec run_nock(Run.Request.t(), Stream.t()) :: Run.Response.t()
-  def run_nock(request, _stream) do
+  @spec run(Run.Request.t(), Stream.t()) :: Run.Response.t()
+  def run(request, _stream) do
     result =
       with {:ok, program} <- program_to_noun(request.program),
-           {pub_inpt, []} <- inputs_to_noun(request.public_inputs),
-           {prv_inpt, []} <- inputs_to_noun(request.private_inputs),
-           {:ok, result} <- Runner.prove(program, pub_inpt ++ prv_inpt),
+           {inputs, []} <- inputs_to_noun(request.inputs),
+           {:ok, result, io} <- Runner.prove(program, inputs),
            jammed <- Nock.Jam.jam(result) do
-        {:proof, jammed}
+        {:ok, jammed, io}
       else
         {_, invalid_inputs} when is_list(invalid_inputs) ->
           {:error, "invalid inputs: #{inspect(invalid_inputs)}"}
@@ -54,6 +64,15 @@ defmodule Anoma.Client.Api.Servers.Nock do
 
         _ ->
           {:error, "failed to evaluate"}
+      end
+
+    result =
+      case result do
+        {:ok, jammed, io} ->
+          {:success, %Success{result: jammed, output: io}}
+
+        {:error, reason} ->
+          {:error, %Error{error: "#{reason}"}}
       end
 
     %Run.Response{result: result}

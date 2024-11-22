@@ -23,6 +23,7 @@ defmodule Nock do
     )
 
     field(:meter_pid, pid() | nil, default: nil)
+    field(:stdio, any(), default: :stdio)
   end
 
   @dialyzer :no_improper_lists
@@ -459,7 +460,7 @@ defmodule Nock do
         when eleven in [11, <<11>>] ->
           # must be computed, but is discarded
           {:ok, hint_result} = nock(subject, hint_formula, environment)
-          process_hint(hint_noun, hint_result)
+          process_hint(hint_noun, hint_result, environment)
           {:ok, real_result} = nock(subject, sub_formula, environment)
           nock([hint_result | real_result], [0 | 3], environment)
 
@@ -483,15 +484,15 @@ defmodule Nock do
   end
 
   # %puts hint: print an atom during evaluation
-  @spec process_hint(Noun.t(), Noun.t()) :: term()
-  def process_hint(puts, hint_result)
+  @spec process_hint(Noun.t(), Noun.t(), t()) :: term()
+  def process_hint(puts, hint_result, environment)
       when Noun.is_noun_atom(hint_result) and
              puts in [0x73747570, "puts"] do
     string_to_print = Noun.normalize_noun(hint_result)
-    IO.puts(string_to_print)
+    IO.write(environment.stdio, string_to_print)
   end
 
-  def process_hint(_, _) do
+  def process_hint(_puts, _hint_result, _environment) do
   end
 
   @spec cons(Noun.t(), Noun.t()) :: Noun.t()

@@ -3,7 +3,7 @@ defmodule Anoma.Client.Runner do
   I run the given Nock program with its inputs and return the result.
   """
   @spec prove(Noun.t(), [Noun.t()]) ::
-          {:ok, Noun.t()} | {:error, :failed_to_prove}
+          {:ok, Noun.t(), [String.t()]} | {:error, :failed_to_prove}
   def prove(program, inputs) do
     core =
       (Noun.list_nock_to_erlang(program) ++ [Nock.rm_core()])
@@ -17,9 +17,12 @@ defmodule Anoma.Client.Runner do
         [9, 2, 10, sample_replace, 0 | 1]
       end
 
-    case Nock.nock(core, eval_call) do
+    io_sink = open_io_sink()
+
+    case Nock.nock(core, eval_call, %Nock{stdio: io_sink}) do
       {:ok, noun} ->
-        {:ok, noun}
+        {:ok, result} = close_io_sink(io_sink)
+        {:ok, noun, result}
 
       :error ->
         {:error, :failed_to_prove}
@@ -39,4 +42,41 @@ defmodule Anoma.Client.Runner do
   def to_improper_list([x]), do: [x]
   def to_improper_list([x, y]), do: [x | y]
   def to_improper_list([h | t]), do: [h | to_improper_list(t)]
+
+  # ----------------------------------------------------------------------------
+  # Small helper process to gather IO data.
+
+  @spec open_io_sink() :: pid()
+  def open_io_sink() do
+    spawn(&capture/0)
+  end
+
+  @spec close_io_sink(pid()) :: {:error, :timeout} | {:ok, term()}
+  def close_io_sink(io) do
+    send(io, {:quit, self()})
+
+    receive do
+      output ->
+        {:ok, output}
+    after
+      10 ->
+        {:error, :timeout}
+    end
+  end
+
+  @spec capture(list(term())) :: any()
+  defp capture(acc \\ []) do
+    receive do
+      {:io_request, from, ref, {:put_chars, _, output}} ->
+        send(from, {:io_reply, ref, :ok})
+        capture([output | acc])
+
+      {:quit, from} ->
+        output = acc |> Enum.reverse()
+        send(from, output)
+
+      _ ->
+        capture(acc)
+    end
+  end
 end

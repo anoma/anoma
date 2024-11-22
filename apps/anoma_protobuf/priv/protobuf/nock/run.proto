@@ -4,6 +4,7 @@ package Anoma.Protobuf.Nock.Run;
 
 import "nock/input.proto";
 import "node_info.proto";
+import "nock/result.proto";
 
 message Request {
   NodeInfo node_info = 1;
@@ -12,12 +13,13 @@ message Request {
     string text_program = 3;
   }
 
-  repeated Anoma.Protobuf.Nock.Input inputs = 4;
+  repeated Input inputs = 4;
 }
+
 
 message Response {
   oneof result {
-    bytes output = 1;
-    string error = 2;
+    Success success = 1;
+    Error error = 2;
   }
 }
