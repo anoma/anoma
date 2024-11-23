@@ -145,7 +145,7 @@ defmodule Noun.Jam do
             # and 0 is not a valid backref offset since it means
             # "the entire noun we are jamming". (it would be 0b111 anyway.)
             # offset 1 would be 0b11011, 2.5x the size
-            # so no cache update. 0s are never backreffed-to
+            # so no cache update. 0s are never back-reffed to
             {<<1::1, 0::1>>, cache, offset + 2}
 
           atom when Noun.is_noun_atom(atom) ->
