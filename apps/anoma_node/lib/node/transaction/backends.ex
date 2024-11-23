@@ -66,7 +66,7 @@ defmodule Anoma.Node.Transaction.Backends do
       {:ok, tx} ->
         execute(node_id, {backend, tx}, id)
 
-      :error ->
+      {:error, _} ->
         error_handle(node_id, id)
     end
   end
