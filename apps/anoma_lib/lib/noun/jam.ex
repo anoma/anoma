@@ -63,6 +63,14 @@ defmodule Noun.Jam do
     end
   end
 
+  defmodule CueError do
+    @moduledoc """
+    I am the exception thrown by cue!/1 when it cannot decode further.
+    """
+
+    defexception [:message]
+  end
+
   ############################################################
   #                          Jam                             #
   ############################################################
@@ -236,8 +244,13 @@ defmodule Noun.Jam do
     {bits, real_size} = unpad_from_binary(bytes)
 
     # we expect to consume real_size bits and have nothing left over.
-    {result, <<>>, ^real_size, _} = cue_bits(bits, real_size)
-    result
+    with {result, <<>>, ^real_size, _} <- cue_bits(bits, real_size) do
+      result
+    else
+      {_, remaining, _, _} ->
+        raise CueError,
+              "cued complete noun with #{inspect(bit_size(remaining))} bits remaining"
+    end
   end
 
   @spec cue_bits(
@@ -257,7 +270,14 @@ defmodule Noun.Jam do
 
       # atom: encoded in a mildly complicated way. 1 tag bit.
       <<rest::size(size - 1)-bitstring, 0::size(1)>> ->
-        cue_atom(rest, size - 1, offset, cache, 1)
+        try do
+          cue_atom(rest, size - 1, offset, cache, 1)
+        rescue
+          _ ->
+            reraise CueError,
+                    "failed to decode atom at offset #{inspect(offset)}",
+                    __STACKTRACE__
+        end
 
       # cell: after the 2 tag bits, just the head, followed by the tail.
       <<rest::size(size - 2)-bitstring, 0::size(1), 1::size(1)>> ->
@@ -281,10 +301,27 @@ defmodule Noun.Jam do
       # an encoded atom, so we ignore the updated cache value.
       <<rest::size(size - 2)-bitstring, 1::size(1), 1::size(1)>> ->
         {backref_key, continuation, new_offset, _unused_new_cache} =
-          cue_atom(rest, size - 2, offset, cache, 2)
+          try do
+            cue_atom(rest, size - 2, offset, cache, 2)
+          rescue
+            _ ->
+              reraise CueError,
+                      "failed to decode backref at offset #{inspect(offset)}",
+                      __STACKTRACE__
+          end
 
-        {Map.fetch!(cache, :binary.decode_unsigned(backref_key, :little)),
-         continuation, new_offset, cache}
+        with {:ok, referenced_noun} <-
+               Map.fetch(cache, :binary.decode_unsigned(backref_key, :little)) do
+          {referenced_noun, continuation, new_offset, cache}
+        else
+          _ ->
+            raise CueError,
+                  "invalid backref at offset #{inspect(offset)}"
+        end
+
+      _ ->
+        raise CueError,
+              "expected an atom or cell at offset: #{inspect(offset)}"
     end
   end
 
