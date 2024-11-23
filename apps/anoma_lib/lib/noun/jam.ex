@@ -44,6 +44,26 @@ defmodule Noun.Jam do
   @type cue_cache() :: %{non_neg_integer() => Noun.t()}
 
   ############################################################
+  #                       Exceptions                         #
+  ############################################################
+
+  defmodule JamError do
+    @moduledoc """
+    I am the exception thrown by jam/1 when it encounters a non-noun
+    which it is incapable of encoding.
+    """
+
+    defexception [:message]
+
+    @impl true
+    def exception(purported_noun) do
+      %JamError{
+        message: "can't encode non-noun term: #{inspect(purported_noun)}"
+      }
+    end
+  end
+
+  ############################################################
   #                          Jam                             #
   ############################################################
 
@@ -144,6 +164,9 @@ defmodule Noun.Jam do
               end
 
             {encoded_atom, maybe_updated_cache, offset + encoded_atom_size}
+
+          _ ->
+            raise JamError, noun
         end
     end
   end
