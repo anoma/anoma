@@ -2,6 +2,23 @@ defmodule Noun.Jam do
   @moduledoc """
   I am the implementation of Nock de/serialization functions, cue and jam.
 
+  Jam is optimized for small output size; cue is optimized for speed.
+  (At least in theory; this implementation is not claiming perfection.)
+
+  Any improvements made here should neither make jam outputs larger nor
+  make cue slower. Additionally, cue compatibility across all existing
+  implementations is a hard requirement.
+
+  This implementation, unlike others, only emits references in jam if
+  they would not make the output larger; existing implementations have
+  a bug in calculating this. However, all existing implementations of
+  cue are compatible with both encoders' output. Correctly calculating
+  this makes outputs significantly smaller on large nouns.
+
+  Because we're going "backwards" in the Erlang runtime system sense,
+  there's going to be some excessive copying. Cueing shouldn't need too
+  much, except for alignment reasons, I think.
+
   ### Public API
 
   I have the following public functionality:
