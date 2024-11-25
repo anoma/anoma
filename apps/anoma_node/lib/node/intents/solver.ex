@@ -169,13 +169,21 @@ defmodule Anoma.Node.Intents.Solver do
   I use the `solve` function to grab the first (maximal) composable subset
   of intents from those given in the state. Then filter out whichever ones
   are present in the result and return the remaining ones.
+
+  Given a proper intent structure, I also submit it to the mempool using
+  an appropriate wrapper.
   """
 
   @spec do_solve(t()) :: t()
   def do_solve(state) do
-    set = state.unsolved |> Enum.to_list() |> solve()
+    unsolved_list = state.unsolved |> Enum.to_list()
+    set = unsolved_list |> solve()
 
     unsolved = MapSet.reject(state.unsolved, &MapSet.member?(set, &1))
+
+    unless Enum.empty?(set) do
+      set |> Enum.reduce(&Intent.compose/2) |> submit(state.node_id)
+    end
 
     %{state | unsolved: unsolved}
   end
@@ -240,5 +248,31 @@ defmodule Anoma.Node.Intents.Solver do
 
     Stream.map(subsets, fn subset -> [x | subset] end)
     |> Stream.concat(subsets)
+  end
+
+  @doc """
+  I provide the submit functionality for the solver.
+
+  Given something solved, I submit it to the Mempool with the provided ID.
+
+  ### Pattern-Matching Variations
+
+  - `submit(%TransparentResource.Transaction{}, node_id)` - I wrap a transaction in trivial
+                                                            core and send it to the Mempool.
+  - `submit(any, node_id)` - I do nothing
+  """
+
+  @spec submit(Intent.t(), String.t()) :: :ok
+  def submit(tx = %Anoma.TransparentResource.Transaction{}, node_id) do
+    tx_noun = tx |> Noun.Nounable.to_noun()
+    tx_candidate = [[1, 0, [1 | tx_noun], 0 | 909], 0 | 707]
+
+    Node.Transaction.Mempool.tx(
+      node_id,
+      {:transparent_resource, tx_candidate}
+    )
+  end
+
+  def submit(_, _) do
   end
 end
