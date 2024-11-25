@@ -6,8 +6,7 @@ defmodule Anoma.Node.Intents.Solver do
 
   I have the following public functionality:
 
-  - `get_solved/0`
-  - `send/1`
+  - `get_unsolved/1`
   """
 
   use TypedStruct
@@ -32,11 +31,11 @@ defmodule Anoma.Node.Intents.Solver do
     I hold the state for the solver process.
 
     ### Fields
-    - `:unsolved`        - The set of unsolved intents.
-    - `:solved`          - The set of solved intents.
+    - `:unsolved` - The set of unsolved intents.
+                    Default: MapSet.new()
+    - `:node_id` - The ID of the Node to which the Solver is connected.
     """
     field(:unsolved, MapSet.t(Intent.t()), default: MapSet.new())
-    field(:solved, MapSet.t(Intent.t()), default: MapSet.new())
     field(:node_id, String.t())
   end
 
@@ -45,9 +44,12 @@ defmodule Anoma.Node.Intents.Solver do
   ############################################################
 
   @doc """
-  I create a new solver process .
+  I am a start_link function of the Solver.
+
+  I expect a keylist containing a node ID as startup argument.
   """
-  @spec start_link([any()]) :: GenServer.on_start()
+
+  @spec start_link([{:node_id, String.t()}]) :: GenServer.on_start()
   def start_link(args) do
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
@@ -58,16 +60,10 @@ defmodule Anoma.Node.Intents.Solver do
   ############################################################
 
   @doc """
-  I return all the solved intents.
-  """
-  @spec get_solved(String.t()) :: [Intent.t()]
-  def get_solved(node_id) do
-    name = Registry.via(node_id, __MODULE__)
-    GenServer.call(name, :get_solved)
-  end
+  I am a function for getting unsolved intents from the solver.
 
-  @doc """
-  I return all the unsolved intents.
+  I dump the state of the solver converting the set of the unsolved intents
+  into a list.
   """
   @spec get_unsolved(String.t()) :: [Intent.t()]
   def get_unsolved(node_id) do
@@ -100,11 +96,6 @@ defmodule Anoma.Node.Intents.Solver do
       }
 
     {:ok, state}
-  end
-
-  @impl true
-  def handle_call(:get_solved, _from, state) do
-    {:reply, handle_get_solved(state), state}
   end
 
   @impl true
@@ -142,14 +133,6 @@ defmodule Anoma.Node.Intents.Solver do
   end
 
   # @doc """
-  # I return a list of all solved intents.
-  # """
-  @spec handle_get_solved(t()) :: [Intent.t()]
-  defp handle_get_solved(state) do
-    Enum.to_list(state.solved)
-  end
-
-  # @doc """
   # I return a list of all unsolved intents.
   # """
   @spec handle_get_unsolved(t()) :: [Intent.t()]
@@ -165,15 +148,12 @@ defmodule Anoma.Node.Intents.Solver do
   defp handle_new_intent(intent, state) do
     Logger.debug("solver received new intent: #{inspect(intent)}")
     unsolved? = intent in state.unsolved
-    solved? = intent in state.solved
 
-    if not unsolved? and not solved? do
+    unless unsolved? do
       new_state = %{state | unsolved: MapSet.put(state.unsolved, intent)}
       do_solve(new_state)
     else
-      Logger.debug(
-        "ignoring intent; unsolved: #{unsolved?}, solved: #{solved?}"
-      )
+      Logger.debug("ignoring intent; unsolved: #{unsolved?}")
 
       state
     end
@@ -183,50 +163,46 @@ defmodule Anoma.Node.Intents.Solver do
   #                           Solver                         #
   ############################################################
 
-  # @doc """
-  # I try and solve the intents currently in my state.
-  # If I can solve some of them, I add them to the solved pool.
-  # """
+  @doc """
+  I am the core function responsible for solving.
+
+  I use the `solve` function to grab the first (maximal) composable subset
+  of intents from those given in the state. Then filter out whichever ones
+  are present in the result and return the remaining ones.
+  """
+
   @spec do_solve(t()) :: t()
   def do_solve(state) do
-    {solved, unsolved} =
-      case solve(state.unsolved) do
-        nil ->
-          {state.solved, state.unsolved}
+    set = state.unsolved |> Enum.to_list() |> solve()
 
-        new_solves ->
-          new_solves = MapSet.union(state.solved, new_solves)
-          new_unsolveds = MapSet.difference(state.unsolved, new_solves)
-          {new_solves, new_unsolveds}
-      end
+    unsolved = MapSet.reject(state.unsolved, &MapSet.member?(set, &1))
 
-    %{state | solved: solved, unsolved: unsolved}
+    %{state | unsolved: unsolved}
   end
 
-  # @doc """
-  # Given a list of intents, I attempt to find a subset of them that can be composed
-  # and verified.
-  # I return a list of all intents that can be solved when composed.
-  #
-  # I assume that the composition of intents is associative and commutative.
-  # """
-  @spec solve([Intent.t()] | MapSet.t(Intent.t())) ::
-          MapSet.t(Intent.t()) | nil
+  @doc """
+  Given a list of intents, I attempt to find a subset of them that can be composed
+  and verified and return it as a set.
+
+  I assume that the composition of intents is associative and commutative.
+  """
+
+  @spec solve([Intent.t()]) ::
+          MapSet.t(Intent.t())
   def solve(intents) do
     intents
-    |> Enum.to_list()
     |> subsets()
     |> Stream.drop_while(&(valid?(&1) != true))
-    |> Stream.take(1)
     |> Enum.to_list()
-    |> Enum.map(&MapSet.new/1)
-    |> List.first()
+    |> List.first([])
+    |> MapSet.new()
   end
 
   @doc """
   I check if a list of intents is valid by composing them and verifying if they satisfy
   the Intent.valid? predicate.
   """
+
   @spec valid?([Intent.t()]) :: true | {:error, any()}
   def valid?([]), do: {:error, :error}
 
@@ -256,7 +232,7 @@ defmodule Anoma.Node.Intents.Solver do
   @doc """
   I generate all possible subsets of a given list of elements as a stream.
   """
-  @spec subsets(Enumerable.t()) :: Enumerable.t()
+  @spec subsets([Intent.t()]) :: Enumerable.t()
   def subsets([]), do: [[]]
 
   def subsets([x | xs]) do
