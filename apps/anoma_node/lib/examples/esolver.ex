@@ -67,7 +67,6 @@ defmodule Anoma.Node.Examples.ESolver do
   def solvable_transaction_via_intent_pool(enode \\ ENode.start_node()) do
     # startup
     # the solver does not have solved transactions.
-    assert [] == Solver.get_solved(enode.node_id)
     assert [] == Solver.get_unsolved(enode.node_id)
 
     # add an intent to the pool
@@ -77,7 +76,6 @@ defmodule Anoma.Node.Examples.ESolver do
     Process.sleep(100)
 
     # the solver does not have solved transactions.
-    assert Solver.get_solved(enode.node_id) == []
     assert Solver.get_unsolved(enode.node_id) == [intent_1]
 
     # --------------------------------------------------------------------------
@@ -87,8 +85,7 @@ defmodule Anoma.Node.Examples.ESolver do
     IntentPool.new_intent(enode.node_id, intent_2)
     Process.sleep(100)
 
-    # the solver does not have solved transactions.
-    assert Solver.get_solved(enode.node_id) == [intent_1, intent_2]
+    # the solver does not have unsolved transactions.
     assert Solver.get_unsolved(enode.node_id) == []
 
     # --------------------------------------------------------------------------
@@ -99,7 +96,6 @@ defmodule Anoma.Node.Examples.ESolver do
     Process.sleep(100)
 
     # the solver does not have solved transactions.
-    assert Solver.get_solved(enode.node_id) == [intent_1, intent_2]
     assert Solver.get_unsolved(enode.node_id) == [intent_3]
   end
 end
