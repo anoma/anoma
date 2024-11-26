@@ -2,6 +2,8 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   use GenServer
   use TypedStruct
 
+  alias Anoma.Protobuf.BlockService
+  alias Anoma.Protobuf.Indexer.Blocks.Get
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
@@ -10,9 +12,9 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.NodeInfo
   alias Anoma.Protobuf.Mempool.AddTransaction
   alias Anoma.Protobuf.MempoolService
+  alias Anoma.Protobuf.NodeInfo
   require Logger
 
   ############################################################
@@ -89,8 +91,15 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, {:list_unspent_resources})
   end
 
+  @spec add_transaction(binary()) :: :ok
   def add_transaction(jammed_nock) do
     GenServer.call(__MODULE__, {:add_transaction, jammed_nock})
+  end
+
+  @spec get_blocks({:before | :after, non_neg_integer()}) ::
+          {:ok, Get.Response.t()}
+  def get_blocks({direction, offset}) do
+    GenServer.call(__MODULE__, {:get_blocks, direction, offset})
   end
 
   ############################################################
@@ -150,6 +159,13 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
     MempoolService.Stub.add(state.channel, request)
     {:reply, :ok, state}
+  end
+
+  def handle_call({:get_blocks, direction, offset}, _from, state) do
+    node_info = %NodeInfo{node_id: state.node_id}
+    request = %Get.Request{node_info: node_info, index: {direction, offset}}
+    blocks = BlockService.Stub.get(state.channel, request)
+    {:reply, blocks, state}
   end
 
   @impl true
