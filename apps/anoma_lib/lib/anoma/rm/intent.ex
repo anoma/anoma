@@ -8,6 +8,9 @@ defprotocol Anoma.RM.Intent do
 
   @spec verify(t()) :: true | {:error, any()}
   def verify(intent)
+
+  @spec nullifiers(t()) :: MapSet.t()
+  def nullifiers(intent)
 end
 
 defimpl Anoma.RM.Intent, for: Anoma.RM.DumbIntent do
@@ -21,5 +24,10 @@ defimpl Anoma.RM.Intent, for: Anoma.RM.DumbIntent do
   @impl true
   def verify(intent = %DumbIntent{}) do
     intent.value == 0
+  end
+
+  @impl true
+  def nullifiers(%DumbIntent{}) do
+    MapSet.new([])
   end
 end
