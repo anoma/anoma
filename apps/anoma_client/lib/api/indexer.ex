@@ -1,4 +1,8 @@
 defmodule Anoma.Client.Api.Servers.Indexer do
+  @moduledoc """
+  I implement the callbacks for the GRPC service `Indexer`.
+  Each function below implements one API call.
+  """
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits

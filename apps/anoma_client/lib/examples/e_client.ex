@@ -19,6 +19,8 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.BlockService
+  alias Anoma.Protobuf.Indexer.Blocks
   alias Anoma.Protobuf.Nock.Input
   alias Anoma.Protobuf.Nock.Prove
   alias Anoma.Protobuf.NockService
@@ -217,6 +219,31 @@ defmodule Anoma.Client.Examples.EClient do
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
 
     assert reply.unspent_resources == ["WbFpHGdmgFYuzI3srU0W"]
+    conn
+  end
+
+  @doc """
+  I return blocks from the indexer.
+  """
+  @spec list_blocks(EConnection.t()) :: EConnection.t()
+  def list_blocks(conn \\ setup()) do
+    # Create multiple blocks by calling the indexer example.
+    # After this call, there should be two blocks present.
+    Anoma.Node.Examples.EIndexer.indexer_reads_after(conn.client.node.node_id)
+
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    # check for all blocks.
+    request = %Blocks.Get.Request{node_info: node_id, index: {:before, 100}}
+    {:ok, response} = BlockService.Stub.get(conn.channel, request)
+    assert Enum.count(response.blocks) == 2
+
+    # check the first block
+    request = %Blocks.Get.Request{node_info: node_id, index: {:before, 1}}
+    {:ok, response} = BlockService.Stub.get(conn.channel, request)
+    assert Enum.count(response.blocks) == 1
+    [block] = response.blocks
+    assert block.height == 0
     conn
   end
 
