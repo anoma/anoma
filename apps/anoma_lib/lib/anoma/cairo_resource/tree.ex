@@ -10,9 +10,9 @@ defmodule Anoma.CairoResource.Tree do
     # The resource merkle tree
     field(:tree, CommitmentTree.t())
     # The merkle root of resources in action
-    field(:root, binary())
+    field(:root, <<_::256>>)
     # The tree leaves: help find the target index
-    field(:leaves, list(binary()))
+    field(:leaves, list(<<_::256>>))
   end
 
   @spec construct(CommitmentTree.Spec.t(), list(binary())) :: t()

@@ -18,9 +18,9 @@ defmodule Anoma.CairoResource.Transaction do
     # TODO: The roots, commitments, and nullifiers can be eliminated. We can
     # obtain them from public inputs. Then we can make the same improvement for
     # transparent transactions. However, they are used in the executor atm.
-    field(:roots, list(binary()), default: [])
-    field(:commitments, list(binary()), default: [])
-    field(:nullifiers, list(binary()), default: [])
+    field(:roots, list(<<_::256>>), default: [])
+    field(:commitments, list(<<_::256>>), default: [])
+    field(:nullifiers, list(<<_::256>>), default: [])
     field(:actions, list(Action.t()), default: [])
 
     # When the tx is not finalized, the delta is the collection of private keys

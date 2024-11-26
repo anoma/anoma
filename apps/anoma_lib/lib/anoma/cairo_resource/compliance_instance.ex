@@ -7,18 +7,18 @@ defmodule Anoma.CairoResource.ComplianceInstance do
 
   typedstruct enforce: true do
     # Input resource nullifier
-    field(:nullifier, binary(), default: <<0::256>>)
+    field(:nullifier, <<_::256>>, default: <<0::256>>)
     # Output resource commitment
-    field(:output_cm, binary(), default: <<0::256>>)
+    field(:output_cm, <<_::256>>, default: <<0::256>>)
     # Merkle tree root of input resouce
-    field(:root, binary(), default: <<0::256>>)
+    field(:root, <<_::256>>, default: <<0::256>>)
     # Resource delta
-    field(:delta_x, binary(), default: <<0::256>>)
-    field(:delta_y, binary(), default: <<0::256>>)
+    field(:delta_x, <<_::256>>, default: <<0::256>>)
+    field(:delta_y, <<_::256>>, default: <<0::256>>)
     # Input Resource logic
-    field(:input_logic, binary(), default: <<0::256>>)
+    field(:input_logic, <<_::256>>, default: <<0::256>>)
     # Output Resource logic
-    field(:output_logic, binary(), default: <<0::256>>)
+    field(:output_logic, <<_::256>>, default: <<0::256>>)
   end
 
   @spec from_public_input(binary()) :: t()
