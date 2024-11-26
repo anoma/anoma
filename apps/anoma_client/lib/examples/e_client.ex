@@ -163,9 +163,19 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_nullifiers(EConnection.t()) :: EConnection.t()
   def list_nullifiers(conn \\ setup()) do
+    # Create some nullifiers using another example
+    Anoma.Node.Examples.EIndexer.indexer_reads_nullifier(
+      conn.client.node.node_id
+    )
+
+    # request the nullifiers from the client
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %Nullifiers.Request{node_info: node_id}
-    {:ok, _reply} = IndexerService.Stub.list_nullifiers(conn.channel, request)
+
+    {:ok, response} =
+      IndexerService.Stub.list_nullifiers(conn.channel, request)
+
+    assert response.nullifiers == ["TkZfWbFpHGfmGAQ="]
 
     conn
   end
@@ -175,12 +185,18 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_unrevealed_commits(EConnection.t()) :: EConnection.t()
   def list_unrevealed_commits(conn \\ setup()) do
+    # Create an unrevealed commit using another example
+    Anoma.Node.Examples.EIndexer.indexer_reads_unrevealed(
+      conn.client.node.node_id
+    )
+
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %UnrevealedCommits.Request{node_info: node_id}
 
-    {:ok, _reply} =
+    {:ok, response} =
       IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
 
+    assert response.commits == ["Q01fWbFpHGdmgFYuzI3srU0W"]
     conn
   end
 
@@ -189,12 +205,18 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_unspent_resources(EConnection.t()) :: EConnection.t()
   def list_unspent_resources(conn \\ setup()) do
+    # Create an unrevealed commit using another example
+    Anoma.Node.Examples.EIndexer.indexer_reads_unrevealed(
+      conn.client.node.node_id
+    )
+
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %UnspentResources.Request{node_info: node_id}
 
-    {:ok, _reply} =
+    {:ok, reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
 
+    assert reply.unspent_resources == ["WbFpHGdmgFYuzI3srU0W"]
     conn
   end
 
