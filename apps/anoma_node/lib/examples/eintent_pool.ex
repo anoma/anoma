@@ -111,6 +111,30 @@ defmodule Anoma.Node.Examples.EIntentPool do
     node_id = enode.node_id
     IntentPool.new_intent(node_id, intent)
 
+    Process.sleep(100)
+
+    # the intent will not be present in the mapset
+    assert IntentPool.intents(node_id) == MapSet.new([])
+
+    enode
+  end
+
+  @doc """
+  I check that adding an intent with commitments already known in the state
+  does not add the intent to the pool.
+  """
+  @spec add_intent_with_submitted_commitments(ENode.t()) :: ENode.t()
+  def add_intent_with_submitted_commitments(enode \\ ENode.start_node()) do
+    intent = Examples.ETransparent.ETransaction.single_swap()
+    cms_set = Intent.commitments(intent)
+
+    new_commitments_event(enode, cms_set)
+
+    node_id = enode.node_id
+    IntentPool.new_intent(node_id, intent)
+
+    Process.sleep(100)
+
     # the intent will not be present in the mapset
     assert IntentPool.intents(node_id) == MapSet.new([])
 
@@ -133,6 +157,30 @@ defmodule Anoma.Node.Examples.EIntentPool do
         %Anoma.Node.Transaction.Backends.TRMEvent{
           nullifiers: nlfs_set,
           commitments: MapSet.new([])
+        }
+      )
+
+    EventBroker.event(event)
+
+    enode
+  end
+
+  @doc """
+  I submit a commitment event to the node.
+  """
+  @spec new_commitments_event(ENode.t(), MapSet.t()) :: ENode.t()
+  def new_commitments_event(
+        enode \\ ENode.start_node(),
+        cms_set \\ MapSet.new()
+      ) do
+    node_id = enode.node_id
+
+    event =
+      Node.Event.new_with_body(
+        node_id,
+        %Anoma.Node.Transaction.Backends.TRMEvent{
+          nullifiers: MapSet.new([]),
+          commitments: cms_set
         }
       )
 
