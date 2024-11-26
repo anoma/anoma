@@ -130,8 +130,9 @@ defmodule Anoma.Node.Examples.EIntentPool do
     event =
       Node.Event.new_with_body(
         node_id,
-        %Anoma.Node.Transaction.Backends.NullifierEvent{
-          nullifiers: nlfs_set
+        %Anoma.Node.Transaction.Backends.TRMEvent{
+          nullifiers: nlfs_set,
+          commitments: MapSet.new([])
         }
       )
 
