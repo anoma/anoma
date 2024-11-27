@@ -35,9 +35,12 @@ defmodule Anoma.Node.Intents.Solver do
     ### Fields
     - `:unsolved` - The set of unsolved intents.
                     Default: MapSet.new()
+    - `:table` - The table name for storing unsolved intents.
+                 Default: __MODULE__.Unsolved
     - `:node_id` - The ID of the Node to which the Solver is connected.
     """
     field(:unsolved, MapSet.t(Intent.t()), default: MapSet.new())
+    field(:table, atom(), default: __MODULE__.Unsolved)
     field(:node_id, String.t())
   end
 
@@ -102,6 +105,7 @@ defmodule Anoma.Node.Intents.Solver do
     state =
       %Solver{
         unsolved: args[:unsolved],
+        table: table,
         node_id: node_id
       }
 
@@ -194,6 +198,10 @@ defmodule Anoma.Node.Intents.Solver do
     unless Enum.empty?(set) do
       set |> Enum.reduce(&Intent.compose/2) |> submit(state.node_id)
     end
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({state.table, "unsolved", unsolved})
+    end)
 
     %{state | unsolved: unsolved}
   end
