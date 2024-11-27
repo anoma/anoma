@@ -290,6 +290,43 @@ defmodule Anoma.Client.Examples.EClient do
   end
 
   @doc """
+  I return nil when trying to obtain the root of an empty index.
+  """
+  @spec get_root_unpopulated_index(EConnection.t()) :: EConnection.t()
+  def get_root_unpopulated_index(conn \\ setup()) do
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    # check for all blocks.
+    request = %Blocks.Root.Request{node_info: node_id}
+
+    {:ok, response} = BlockService.Stub.root(conn.channel, request)
+    assert response.root == <<>>
+
+    conn
+  end
+
+  @doc """
+  I get the root from the index.
+  """
+  @spec get_root_populated_index(EConnection.t()) :: EConnection.t()
+  def get_root_populated_index(conn \\ setup()) do
+    # Ensures that there is a root in the indexer.
+    Anoma.Node.Examples.EIndexer.indexer_reads_anchor(
+      conn.client.node.node_id
+    )
+
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    # check for all blocks.
+    request = %Blocks.Root.Request{node_info: node_id}
+
+    {:ok, response} = BlockService.Stub.root(conn.channel, request)
+    assert response.root == "I am a root at height 1"
+
+    conn
+  end
+
+  @doc """
   I run a plaintext nock program using the client.
   """
   @spec prove_something_text(EConnection.t()) :: Prove.Response.t()

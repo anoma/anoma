@@ -3,6 +3,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Blocks do
   alias Anoma.Protobuf.Indexer.Blocks.Block
   alias Anoma.Protobuf.Indexer.Blocks.Get
   alias Anoma.Protobuf.Indexer.Blocks.Latest
+  alias Anoma.Protobuf.Indexer.Blocks.Root
   alias Anoma.Protobuf.Indexer.Blocks.Transaction
   alias GRPC.Server.Stream
 
@@ -53,6 +54,16 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Blocks do
       end
 
     %Latest.Response{block: block}
+  end
+
+  @doc """
+  I return the root of the indexer.
+  """
+  @spec root(Root.Request.t(), Stream.t()) :: Root.Response.t()
+  def root(request, _stream) do
+    root = Indexer.get(request.node_info.node_id, :root)
+
+    %Root.Response{root: root}
   end
 
   ############################################################
