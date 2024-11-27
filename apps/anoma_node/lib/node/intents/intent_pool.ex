@@ -253,7 +253,7 @@ defmodule Anoma.Node.Intents.IntentPool do
     Map.update!(state, :intents, &MapSet.put(&1, intent))
   end
 
-  defp reject_intents(intents, set) do
+  def reject_intents(intents, set) do
     intents
     |> Enum.filter(
       &MapSet.disjoint?(
