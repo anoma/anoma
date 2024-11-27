@@ -5,6 +5,7 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   alias Anoma.Protobuf.BlockService
   alias Anoma.Protobuf.Indexer.Blocks.Get
   alias Anoma.Protobuf.Indexer.Blocks.Latest
+  alias Anoma.Protobuf.Indexer.Blocks.Root
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
@@ -108,6 +109,11 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, :get_latest_block)
   end
 
+  @spec root() :: {:ok, Root.Response.t()}
+  def root() do
+    GenServer.call(__MODULE__, :get_root)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -183,6 +189,15 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
     latest_block = BlockService.Stub.latest(state.channel, request)
     {:reply, latest_block, state}
+  end
+
+  def handle_call(:get_root, _from, state) do
+    node_info = %NodeInfo{node_id: state.node_id}
+
+    request = %Root.Request{node_info: node_info}
+
+    root = BlockService.Stub.root(state.channel, request)
+    {:reply, root, state}
   end
 
   @impl true

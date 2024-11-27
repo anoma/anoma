@@ -96,7 +96,13 @@ defmodule Anoma.Node.Utility.Indexer do
   end
 
   def handle_call(:root, _from, state) do
-    {:reply, read_set(:anchor, state.node_id), state}
+    case read_set(:anchor, state.node_id) do
+      hash when is_binary(hash) ->
+        {:reply, hash, state}
+
+      _ ->
+        {:reply, nil, state}
+    end
   end
 
   def handle_call(:resources, _from, state) do

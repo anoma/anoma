@@ -5,6 +5,7 @@ defmodule Anoma.Client.Api.Servers.Blocks do
   """
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Protobuf.Indexer.Blocks.Get
+  alias Anoma.Protobuf.Indexer.Blocks.Root
   alias Anoma.Protobuf.Indexer.Blocks.Latest
   alias GRPC.Server.Stream
 
@@ -38,5 +39,14 @@ defmodule Anoma.Client.Api.Servers.Blocks do
   def latest(_request, _stream) do
     {:ok, response} = GRPCProxy.get_latest_block()
     %Latest.Response{block: response.block}
+  end
+
+  @doc """
+  I return the root of the indexer.
+  """
+  @spec root(Root.Request.t(), Stream.t()) :: Root.Response.t()
+  def root(_request, _stream) do
+    {:ok, response} = GRPCProxy.root()
+    %Root.Response{root: response.root}
   end
 end
