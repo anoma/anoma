@@ -14,6 +14,7 @@ import "mempool/add_transaction.proto";
 import "indexer/blocks/get.proto";
 import "indexer/blocks/latest.proto";
 import "indexer/blocks/root.proto";
+import "indexer/blocks/filter.proto";
 
 service NockService {
   rpc Prove(Anoma.Protobuf.Nock.Prove.Request)
@@ -56,4 +57,7 @@ service BlockService {
 
   rpc Root(Anoma.Protobuf.Indexer.Blocks.Root.Request)
       returns (Anoma.Protobuf.Indexer.Blocks.Root.Response) {}
+
+  rpc Filter(Anoma.Protobuf.Indexer.Blocks.Filtered.Request)
+      returns (Anoma.Protobuf.Indexer.Blocks.Filtered.Response) {}
 }

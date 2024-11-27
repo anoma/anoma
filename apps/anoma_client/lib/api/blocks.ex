@@ -4,9 +4,10 @@ defmodule Anoma.Client.Api.Servers.Blocks do
   Each function below implements one API call.
   """
   alias Anoma.Client.Connection.GRPCProxy
+  alias Anoma.Protobuf.Indexer.Blocks.Filtered
   alias Anoma.Protobuf.Indexer.Blocks.Get
-  alias Anoma.Protobuf.Indexer.Blocks.Root
   alias Anoma.Protobuf.Indexer.Blocks.Latest
+  alias Anoma.Protobuf.Indexer.Blocks.Root
   alias GRPC.Server.Stream
 
   use GRPC.Server, service: Anoma.Protobuf.BlockService.Service
@@ -48,5 +49,14 @@ defmodule Anoma.Client.Api.Servers.Blocks do
   def root(_request, _stream) do
     {:ok, response} = GRPCProxy.root()
     %Root.Response{root: response.root}
+  end
+
+  @doc """
+  I return a list of resources as jammed nouns from the indexer matching the given filters.
+  """
+  @spec filter(Filtered.Request.t(), Stream.t()) :: Filtered.Response.t()
+  def filter(request, _stream) do
+    {:ok, response} = GRPCProxy.filter(request.filters)
+    %Filtered.Response{resources: response.resources}
   end
 end

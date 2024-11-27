@@ -327,6 +327,56 @@ defmodule Anoma.Client.Examples.EClient do
   end
 
   @doc """
+  I return the filtered resources when I filter on owner.
+  I return all blocks if no filters are provided.
+  """
+  @spec get_filtered(EConnection.t()) :: EConnection.t()
+  def get_filtered(conn \\ setup()) do
+    # Ensures that there is a root in the indexer.
+    Anoma.Node.Examples.EIndexer.indexer_filters_owner(
+      conn.client.node.node_id
+    )
+
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    # check for all blocks.
+    request = %Blocks.Filtered.Request{node_info: node_id, filters: []}
+
+    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    assert Enum.count(response.resources) == 2
+
+    # filter out where the owner is jeremy
+    # see apps/anoma_node/lib/examples/e_indexer.ex:231 for the example
+    jeremy = "jeremy" |> Noun.pad_trailing(32)
+
+    request = %Blocks.Filtered.Request{
+      node_info: node_id,
+      filters: [%Blocks.Filtered.Filter{filter: {:owner, jeremy}}]
+    }
+
+    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    assert Enum.count(response.resources) == 1
+
+    conn
+  end
+
+  @doc """
+  I return an empty list when I try to filter resources if there are none.
+  """
+  @spec get_filtered_no_resources_exist(EConnection.t()) :: EConnection.t()
+  def get_filtered_no_resources_exist(conn \\ setup()) do
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    # check for all blocks.
+    request = %Blocks.Filtered.Request{node_info: node_id, filters: []}
+
+    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    assert Enum.count(response.resources) == 0
+
+    conn
+  end
+
+  @doc """
   I run a plaintext nock program using the client.
   """
   @spec prove_something_text(EConnection.t()) :: Prove.Response.t()
