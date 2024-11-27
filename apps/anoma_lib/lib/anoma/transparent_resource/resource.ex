@@ -118,7 +118,7 @@ defmodule Anoma.TransparentResource.Resource do
     "CM_" <> binary_resource
   end
 
-  @spec nullifier(t()) :: nullifier()
+  @spec nullifier(Resource.t()) :: nullifier()
   def nullifier(resource = %Resource{}) do
     binary_resource = resource |> to_noun() |> Nock.Jam.jam()
     "NF_" <> binary_resource

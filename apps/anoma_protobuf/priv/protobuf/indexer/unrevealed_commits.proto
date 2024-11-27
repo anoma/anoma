@@ -7,5 +7,5 @@ import "node_info.proto";
 message Request { NodeInfo node_info = 1; }
 
 message Response {
-  repeated string commits = 1; // a list of intents.
+  repeated bytes commits = 1; // a list of intents.
 }
