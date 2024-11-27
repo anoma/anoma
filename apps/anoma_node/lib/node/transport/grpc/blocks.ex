@@ -1,9 +1,9 @@
 defmodule Anoma.Node.Transport.GRPC.Servers.Blocks do
   alias Anoma.Node.Utility.Indexer
-  alias Anoma.Protobuf.Indexer.Blocks.Get
   alias Anoma.Protobuf.Indexer.Blocks.Block
+  alias Anoma.Protobuf.Indexer.Blocks.Get
+  alias Anoma.Protobuf.Indexer.Blocks.Latest
   alias Anoma.Protobuf.Indexer.Blocks.Transaction
-
   alias GRPC.Server.Stream
 
   use GRPC.Server, service: Anoma.Protobuf.BlockService.Service
@@ -36,14 +36,38 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Blocks do
     %Get.Response{blocks: blocks}
   end
 
+  @doc """
+  I return the latest block from the indexer.
+  """
+  @spec get(Latest.Request.t(), Stream.t()) :: Latest.Response.t()
+  def latest(request, _stream) do
+    Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
+
+    # fetch the blocks from the indexer and encode each block and its transactions into the protobuf structs
+    block =
+      Indexer.get(request.node_info.node_id, :latest_block)
+      # get returns a list with 1 block, or nil
+      |> case do
+        nil -> nil
+        [block] -> encode_block(block)
+      end
+
+    %Latest.Response{block: block}
+  end
+
   ############################################################
   #                       Helpers                            #
   ############################################################
 
   # @doc """
   # I encode a block from the indexer into a protobuf Block struct.
+  # If there is no block, I return nil
   # """
   @spec encode_block(any()) :: Block.t()
+  defp encode_block(nil) do
+    nil
+  end
+
   defp encode_block([height, transactions]) do
     transactions = Enum.map(transactions, &encode_transaction/1)
     %Block{transactions: transactions, height: height}
