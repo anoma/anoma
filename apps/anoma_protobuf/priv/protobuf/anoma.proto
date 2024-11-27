@@ -12,6 +12,7 @@ import "indexer/unrevealed_commits.proto";
 import "indexer/unspent_resources.proto";
 import "mempool/add_transaction.proto";
 import "indexer/blocks/get.proto";
+import "indexer/blocks/latest.proto";
 
 service NockService {
   rpc Prove(Anoma.Protobuf.Nock.Prove.Request)
@@ -48,4 +49,7 @@ service MempoolService {
 service BlockService {
   rpc Get(Anoma.Protobuf.Indexer.Blocks.Get.Request)
       returns (Anoma.Protobuf.Indexer.Blocks.Get.Response) {}
+
+  rpc Latest(Anoma.Protobuf.Indexer.Blocks.Latest.Request)
+      returns (Anoma.Protobuf.Indexer.Blocks.Latest.Response) {}
 }

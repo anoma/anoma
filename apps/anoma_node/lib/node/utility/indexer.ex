@@ -47,10 +47,13 @@ defmodule Anoma.Node.Utility.Indexer do
     {:ok, state}
   end
 
-  @spec get(String.t(), index_type) ::
-          any()
+  @spec get(String.t(), index_type) :: any()
   def get(node_id, :latest_block) do
-    get(node_id, {:after, get_height(node_id) - 1})
+    if get_height(node_id) == :absent do
+      nil
+    else
+      get(node_id, {:after, get_height(node_id) - 1})
+    end
   end
 
   def get(node_id, flag) do
@@ -180,7 +183,7 @@ defmodule Anoma.Node.Utility.Indexer do
     set
   end
 
-  @spec get_height(String.t()) :: non_neg_integer()
+  @spec get_height(String.t()) :: non_neg_integer() | :absent
   defp get_height(node_id) do
     table = Storage.blocks_table(node_id)
 

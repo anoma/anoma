@@ -248,6 +248,42 @@ defmodule Anoma.Client.Examples.EClient do
   end
 
   @doc """
+  I return the latest block from the indexer when there are no blocks.
+  """
+  @spec get_latest_block_empty_index(EConnection.t()) :: EConnection.t()
+  def get_latest_block_empty_index(conn \\ setup()) do
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    # check for all blocks.
+    request = %Blocks.Latest.Request{node_info: node_id}
+
+    {:ok, response} = BlockService.Stub.latest(conn.channel, request)
+    assert response.block == nil
+
+    conn
+  end
+
+  @doc """
+  I return the latest block from the indexer when there are two blocks.
+  """
+  @spec get_latest_block_populated_index(EConnection.t()) :: EConnection.t()
+  def get_latest_block_populated_index(conn \\ setup()) do
+    # Create multiple blocks by calling the indexer example.
+    # After this call, there should be two blocks present.
+    Anoma.Node.Examples.EIndexer.indexer_reads_after(conn.client.node.node_id)
+
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    # check for all blocks.
+    request = %Blocks.Latest.Request{node_info: node_id}
+
+    {:ok, response} = BlockService.Stub.latest(conn.channel, request)
+    assert response.block != nil
+
+    conn
+  end
+
+  @doc """
   I run a plaintext nock program using the client.
   """
   @spec prove_something_text(EConnection.t()) :: Prove.Response.t()
