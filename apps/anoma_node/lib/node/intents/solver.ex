@@ -80,20 +80,28 @@ defmodule Anoma.Node.Intents.Solver do
   @impl true
   def init(args) do
     # set default values for the arguments
-    args = Keyword.validate!(args, [:node_id])
+    args =
+      Keyword.validate!(args, [
+        :node_id,
+        unsolved: MapSet.new([]),
+        rocks: false,
+        table: __MODULE__.Unsolved
+      ])
 
     node_id = args[:node_id]
+
+    table =
+      String.to_atom("#{args[:table]}_#{:erlang.phash2(args[:node_id])}")
+
+    rocks_opt = args[:rocks] |> Anoma.Utility.rock_opts()
+    :mnesia.create_table(table, rocks_opt ++ [attributes: [:type, :body]])
 
     # subscribe to all new intent pool messages
     subscribe_to_new_intents(node_id)
 
-    # fetch the unsolved intents from the intent pool
-    unsolved_intents =
-      Enum.to_list(IntentPool.intents(node_id))
-
     state =
       %Solver{
-        unsolved: MapSet.new(unsolved_intents),
+        unsolved: args[:unsolved],
         node_id: node_id
       }
 
@@ -291,5 +299,17 @@ defmodule Anoma.Node.Intents.Solver do
   end
 
   def submit(_, _) do
+  end
+
+  @doc """
+  I am the name of the unsolved table.
+
+  Given a Node ID, I create an appropriately named table for storing
+  unsolved intents.
+  """
+
+  @spec table_name(String.t()) :: atom()
+  def table_name(node_id) do
+    String.to_atom("#{__MODULE__.Unsolved}_#{:erlang.phash2(node_id)}")
   end
 end
