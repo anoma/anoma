@@ -12,7 +12,6 @@ defmodule Anoma.Client.Api.Servers.Mempool do
   def add(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
-    IO.inspect(request, label: "client")
     :ok = GRPCProxy.add_transaction(request.transaction)
 
     %AddTransaction.Response{}
