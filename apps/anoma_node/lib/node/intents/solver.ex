@@ -11,10 +11,12 @@ defmodule Anoma.Node.Intents.Solver do
 
   use TypedStruct
   use GenServer
+  use EventBroker.WithSubscription
 
   alias __MODULE__
   alias Anoma.Node
   alias Node.Intents.IntentPool
+  alias Node.Transaction.Mempool
   alias Node.Registry
   alias Anoma.RM.Intent
   alias EventBroker.Event
@@ -266,11 +268,26 @@ defmodule Anoma.Node.Intents.Solver do
   def submit(tx = %Anoma.TransparentResource.Transaction{}, node_id) do
     tx_noun = tx |> Noun.Nounable.to_noun()
     tx_candidate = [[1, 0, [1 | tx_noun], 0 | 909], 0 | 707]
+    tx_filter = [Node.Event.node_filter(node_id), %Mempool.TxFilter{}]
 
-    Node.Transaction.Mempool.tx(
-      node_id,
-      {:transparent_resource, tx_candidate}
-    )
+    with_subscription [tx_filter] do
+      Mempool.tx(
+        node_id,
+        {:transparent_resource, tx_candidate}
+      )
+
+      receive do
+        %EventBroker.Event{
+          body: %Node.Event{
+            node_id: ^node_id,
+            body: %Mempool.TxEvent{
+              tx: %Mempool.Tx{backend: _, code: ^tx_candidate}
+            }
+          }
+        } ->
+          :ok
+      end
+    end
   end
 
   def submit(_, _) do
