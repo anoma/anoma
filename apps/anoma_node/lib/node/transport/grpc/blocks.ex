@@ -1,6 +1,7 @@
 defmodule Anoma.Node.Transport.GRPC.Servers.Blocks do
   alias Anoma.Node.Utility.Indexer
   alias Anoma.Protobuf.Indexer.Blocks.Block
+  alias Anoma.Protobuf.Indexer.Blocks.Filtered
   alias Anoma.Protobuf.Indexer.Blocks.Get
   alias Anoma.Protobuf.Indexer.Blocks.Latest
   alias Anoma.Protobuf.Indexer.Blocks.Root
@@ -66,9 +67,31 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Blocks do
     %Root.Response{root: root}
   end
 
+  def filter(request, _stream) do
+    # extract the filters from the request
+    # A filter is of the type {:filter, [{:owner, any()} | {:kind, binary()}]}
+    filters =
+      request.filters
+      |> Enum.map(fn %{filter: filter} -> filter end)
+
+    resources =
+      Indexer.get(request.node_info.node_id, {:filter, filters})
+      |> Enum.map(&encode_resource/1)
+
+    %Filtered.Response{resources: resources}
+  end
+
   ############################################################
   #                       Helpers                            #
   ############################################################
+
+  # @doc """
+  # Given a resource (a noun) I jam it into a binary.
+  # """
+  @spec encode_resource(Noun.t()) :: binary()
+  defp encode_resource(resource) do
+    Nock.Jam.jam(resource)
+  end
 
   # @doc """
   # I encode a block from the indexer into a protobuf Block struct.
