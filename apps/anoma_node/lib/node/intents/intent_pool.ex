@@ -53,6 +53,16 @@ defmodule Anoma.Node.Intents.IntentPool do
   @impl true
   def init(args) do
     Logger.debug("starting intent pool with #{inspect(args)}")
+
+    args =
+      args
+      |> Keyword.validate!([
+        :node_id,
+        intents: MapSet.new([]),
+        nlfs_set: MapSet.new([]),
+        cms_set: MapSet.new([])
+      ])
+
     node_id = args[:node_id]
 
     EventBroker.subscribe_me([
@@ -60,7 +70,9 @@ defmodule Anoma.Node.Intents.IntentPool do
       trm_filter()
     ])
 
-    {:ok, %IntentPool{node_id: args[:node_id]}}
+    state = struct(IntentPool, Enum.into(args, %{}))
+
+    {:ok, state}
   end
 
   ############################################################
