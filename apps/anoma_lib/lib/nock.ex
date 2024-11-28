@@ -38,7 +38,6 @@ defmodule Nock do
   @layer_8_context_mug 1_736_366_676
   @layer_4_block_context_mug 2_756_805_836
 
-
   # always the topmost layer
   @layer_rm_context_mug 3_643_335_627
 
@@ -115,7 +114,19 @@ defmodule Nock do
     1_720_910_226 =>
       {"syn", 7, @layer_8_context_mug, &Nock.Jets.syn/1, :enabled, 30},
     3_800_851_664 =>
-      {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30}
+      {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30},
+    3_823_717_687 =>
+      {"delta-add", 7, @layer_rm_context_mug, &Nock.Jets.delta_add/1,
+       :enabled, 50},
+    332_825_089 =>
+      {"delta-sub", 7, @layer_rm_context_mug, &Nock.Jets.delta_sub/1,
+       :enabled, 50},
+    4_289_938_596 =>
+      {"action-delta", 7, @layer_rm_context_mug, &Nock.Jets.action_delta/1,
+       :enabled, 50},
+    4_289_816_935 =>
+      {"make-delta", 7, @layer_rm_context_mug, &Nock.Jets.make_delta/1,
+       :enabled, 50}
   }
 
   @doc """
