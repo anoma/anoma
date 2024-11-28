@@ -377,6 +377,49 @@ defmodule Anoma.Client.Examples.EClient do
   end
 
   @doc """
+  I filter on kind and expect the result to be one block.
+  """
+  @spec get_filtered_with_kind(EConnection.t()) :: EConnection.t()
+  def get_filtered_with_kind(conn \\ setup()) do
+    # Ensures that there are some resources.
+    Anoma.Node.Examples.EIndexer.indexer_filters_owner(
+      conn.client.node.node_id
+    )
+
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    # filter that matches two resources
+    request = %Blocks.Filtered.Request{
+      node_info: node_id,
+      filters: [
+        %Blocks.Filtered.Filter{
+          filter:
+            {:kind,
+             <<75, 124, 243, 90, 86, 252, 71, 45, 101, 75, 20, 255, 12, 66,
+               109, 76, 13, 16, 255, 186, 71, 217, 242, 43, 21, 43, 6, 237,
+               74, 93, 69, 224>>}
+        }
+      ]
+    }
+
+    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    assert Enum.count(response.resources) == 2
+
+    # filter that doesnt match any
+    request = %Blocks.Filtered.Request{
+      node_info: node_id,
+      filters: [
+        %Blocks.Filtered.Filter{filter: {:kind, <<>>}}
+      ]
+    }
+
+    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    assert Enum.count(response.resources) == 0
+
+    conn
+  end
+
+  @doc """
   I run a plaintext nock program using the client.
   """
   @spec prove_something_text(EConnection.t()) :: Prove.Response.t()
