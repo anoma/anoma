@@ -69,4 +69,12 @@ defmodule Anoma.TransparentResource.Delta do
       {:ok, Map.new(maybe_record)}
     end
   end
+
+  @spec to_noun(t()) :: Noun.t()
+  def to_noun(delta) do
+    delta
+    |> Enum.map(fn {binary, integer} ->
+      [binary | Noun.encode_signed(integer)]
+    end)
+  end
 end
