@@ -6,6 +6,7 @@ defmodule Nock.Jets do
   import Noun
   import Bitwise
   alias Anoma.Crypto.Sign
+  alias Anoma.TransparentResource.{Delta, Action}
 
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
           non_neg_integer()
@@ -596,6 +597,60 @@ defmodule Nock.Jets do
   end
 
   defp a_signed_integer(x), do: Noun.atom_binary_to_signed_integer(x)
+
+  @spec delta_add(Noun.t()) :: :error | {:ok, Noun.t()}
+  def delta_add(core) do
+    with {:ok, [a | b]} <- sample(core),
+         {:ok, delta1} <- Delta.from_noun(a),
+         {:ok, delta2} <- Delta.from_noun(b) do
+      res = Delta.add(delta1, delta2) |> Delta.to_noun()
+      {:ok, res}
+    else
+      _ ->
+        :error
+    end
+  end
+
+  @spec delta_sub(Noun.t()) :: :error | {:ok, Noun.t()}
+  def delta_sub(core) do
+    with {:ok, [a | b]} <- sample(core),
+         {:ok, delta1} <- Delta.from_noun(a),
+         {:ok, delta2} <- Delta.from_noun(b) do
+      res = Delta.sub(delta1, delta2) |> Delta.to_noun()
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec action_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  def action_delta(core) do
+    with {:ok, a} <- sample(core),
+         {:ok, action} <- Action.from_noun(a) do
+      res = action |> Action.delta() |> Delta.to_noun()
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec make_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  def make_delta(core) do
+    with {:ok, a} <- sample(core),
+         {:ok, list} <- Noun.list_nock_to_erlang_safe(a),
+         action_list <- list |> Enum.map(&Action.from_noun/1),
+         false <- action_list |> Enum.any?(&(&1 == :error)) do
+      res =
+        action_list
+        |> Enum.map(&Action.delta(elem(&1, 1)))
+        |> Enum.reduce(%{}, &Delta.sub/2)
+        |> Delta.to_noun()
+
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
 
   ############################################################
   #                   Arithmetic Helpers                     #
