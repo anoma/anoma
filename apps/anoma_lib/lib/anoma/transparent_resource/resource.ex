@@ -35,7 +35,7 @@ defmodule Anoma.TransparentResource.Resource do
     # for uniqueness
     field(:nonce, <<_::256>>, default: <<0::256>>)
     # useless field for shielded only.
-    field(:rseed, <<>>, default: <<>>)
+    field(:rseed, binary(), default: <<>>)
   end
 
   @spec to_noun(Resource.t()) :: Noun.t()
