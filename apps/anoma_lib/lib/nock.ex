@@ -28,7 +28,7 @@ defmodule Nock do
 
   @dialyzer :no_improper_lists
 
-  @layers 8
+  @layers 9
 
   @layer_1_context_mug 1_023_856_422
   @layer_4_context_mug 1_869_390_925
