@@ -14,6 +14,6 @@ message Response { repeated bytes resources = 1; }
 message Filter {
   oneof filter {
     bytes owner = 1;
-    bytes before = 2;
+    bytes kind = 2;
   }
 }
