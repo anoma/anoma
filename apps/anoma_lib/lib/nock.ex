@@ -38,6 +38,10 @@ defmodule Nock do
   @layer_8_context_mug 1_736_366_676
   @layer_4_block_context_mug 2_756_805_836
 
+
+  # always the topmost layer
+  @layer_rm_context_mug 3_643_335_627
+
   # hardcoded jet registry
   # valid statuses:
   # - :enabled, jet is fully enabled
