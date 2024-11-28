@@ -25,8 +25,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
     %List.Response{intents: intents}
   end
 
-  @spec add_intent(Add.Request.t(), Stream.t()) ::
-          Add.Response.t()
+  @spec add_intent(Add.Request.t(), Stream.t()) :: Add.Response.t()
   def add_intent(request, _stream) do
     Logger.debug(
       "GRPC #{inspect(__ENV__.function)} request: #{inspect(request)}"

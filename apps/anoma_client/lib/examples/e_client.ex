@@ -8,25 +8,29 @@ defmodule Anoma.Client.Examples.EClient do
   """
   use TypedStruct
 
-  alias Anoma.Client
-  alias Anoma.Client.Examples.EClient
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Protobuf.BlockService
-  alias Anoma.Protobuf.Indexer.Blocks
-  alias Anoma.Protobuf.Indexer.Nullifiers
-  alias Anoma.Protobuf.Indexer.UnrevealedCommits
-  alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.IndexerService
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.List
-  alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.Nock.Input
-  alias Anoma.Protobuf.Nock.Prove
-  alias Anoma.Protobuf.NockService
-  alias Anoma.Protobuf.NodeInfo
-  alias Examples.ETransparent.ETransaction
   alias Noun.Nounable
+  alias Node.Transaction.Mempool
+  alias Examples.ETransparent.ETransaction
+  alias Anoma.Protobuf.NodeInfo
+  alias Anoma.Protobuf.NockService
+  alias Anoma.Protobuf.Nock.Prove
+  alias Anoma.Protobuf.Nock.Input
+  alias Anoma.Protobuf.MempoolService
+  alias Anoma.Protobuf.Mempool.Dump
+  alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.Intents.List
+  alias Anoma.Protobuf.Intents.Intent
+  alias Anoma.Protobuf.Intents.Add
+  alias Anoma.Protobuf.IndexerService
+  alias Anoma.Protobuf.Indexer.UnspentResources
+  alias Anoma.Protobuf.Indexer.UnrevealedCommits
+  alias Anoma.Protobuf.Indexer.Nullifiers
+  alias Anoma.Protobuf.Indexer.Blocks
+  alias Anoma.Protobuf.BlockService
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Examples.ENode
+  alias Anoma.Client.Examples.EClient
+  alias Anoma.Client
 
   import ExUnit.Assertions
 
@@ -421,6 +425,44 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, response} = BlockService.Stub.filter(conn.channel, request)
     assert Enum.count(response.resources) == 0
+
+    conn
+  end
+
+  @doc """
+  I dump all transaction candidates from the mempool.
+
+  The mempool is empty, so I expect an empty list.
+  """
+  @spec dump_mempool_example_empty_mempool(EConnection.t()) :: EConnection.t()
+  def dump_mempool_example_empty_mempool(conn \\ setup()) do
+    # request a dump of all the transactions
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %Dump.Request{node_info: node_id}
+    {:ok, response} = MempoolService.Stub.dump(conn.channel, request)
+
+    # there are no transactions
+    assert Enum.empty?(response.transaction_candidates)
+
+    conn
+  end
+
+  @doc """
+  I dump all transaction candidates from the mempool.
+  """
+  @spec dump_mempool_example(EConnection.t()) :: EConnection.t()
+  def dump_mempool_example(conn \\ setup()) do
+    # add one transaction to the mempool, but dont execute it.
+    code = Anoma.Node.Examples.ETransaction.trivial_transparent_transaction()
+    Mempool.tx(conn.client.node.node_id, code, "id 1")
+
+    # request a dump from the mempool
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %Dump.Request{node_info: node_id}
+    {:ok, response} = MempoolService.Stub.dump(conn.channel, request)
+
+    # assert that there is one candidate in the mempool
+    assert Enum.count(response.transaction_candidates) == 1
 
     conn
   end
