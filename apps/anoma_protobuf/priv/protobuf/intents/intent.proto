@@ -2,4 +2,4 @@ syntax = "proto3";
 
 package Anoma.Protobuf.Intents;
 
-message Intent { int32 value = 1; }
+message Intent { bytes intent = 1; }

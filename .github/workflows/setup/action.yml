@@ -18,6 +18,13 @@ runs:
         shell: bash
         run: sudo apt install -y protobuf-compiler
 
+      - name: install new protobuf
+        shell: bash
+        run: |
+          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v29.0/protoc-29.0-linux-x86_64.zip && \
+          unzip protoc-29.0-linux-x86_64.zip -d $HOME/.local
+          echo "$HOME/.local" >> $GITHUB_PATH
+
       - name: Set up Elixir
         id: beam
         uses: erlef/setup-beam@v1.18.2
