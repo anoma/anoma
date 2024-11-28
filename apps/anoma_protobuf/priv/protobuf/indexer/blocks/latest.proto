@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Indexer.Blocks.Latest;
+
+import "node_info.proto";
+import "indexer/blocks/block.proto";
+
+message Request { NodeInfo node_info = 1; }
+
+message Response { optional Block block = 1; }
