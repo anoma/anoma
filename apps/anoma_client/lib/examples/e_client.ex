@@ -8,23 +8,29 @@ defmodule Anoma.Client.Examples.EClient do
   """
   use TypedStruct
 
-  alias Anoma.Client
-  alias Anoma.Client.Examples.EClient
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Protobuf.Indexer.Nullifiers
-  alias Anoma.Protobuf.Indexer.UnrevealedCommits
-  alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.IndexerService
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.List
-  alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.BlockService
-  alias Anoma.Protobuf.Indexer.Blocks
-  alias Anoma.Protobuf.Nock.Input
-  alias Anoma.Protobuf.Nock.Prove
-  alias Anoma.Protobuf.NockService
+  alias Noun.Nounable
+  alias Node.Transaction.Mempool
+  alias Examples.ETransparent.ETransaction
   alias Anoma.Protobuf.NodeInfo
+  alias Anoma.Protobuf.NockService
+  alias Anoma.Protobuf.Nock.Prove
+  alias Anoma.Protobuf.Nock.Input
+  alias Anoma.Protobuf.MempoolService
+  alias Anoma.Protobuf.Mempool.Dump
+  alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.Intents.List
+  alias Anoma.Protobuf.Intents.Intent
+  alias Anoma.Protobuf.Intents.Add
+  alias Anoma.Protobuf.IndexerService
+  alias Anoma.Protobuf.Indexer.UnspentResources
+  alias Anoma.Protobuf.Indexer.UnrevealedCommits
+  alias Anoma.Protobuf.Indexer.Nullifiers
+  alias Anoma.Protobuf.Indexer.Blocks
+  alias Anoma.Protobuf.BlockService
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Examples.ENode
+  alias Anoma.Client.Examples.EClient
+  alias Anoma.Client
 
   import ExUnit.Assertions
 
@@ -145,8 +151,18 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec add_intent(EConnection.t()) :: EConnection.t()
   def add_intent(conn \\ setup()) do
+    # create an arbitrary intent and jam it
+    intent_jammed =
+      ETransaction.nullify_intent()
+      |> Nounable.to_noun()
+      |> Nock.Jam.jam()
+
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %Add.Request{node_info: node_id, intent: %Intent{value: 1}}
+
+    request = %Add.Request{
+      node_info: node_id,
+      intent: %Intent{intent: intent_jammed}
+    }
 
     {:ok, _reply} = IntentsService.Stub.add_intent(conn.channel, request)
 
@@ -155,7 +171,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, reply} = IntentsService.Stub.list_intents(conn.channel, request)
 
-    assert reply.intents == ["1"]
+    assert reply.intents == [intent_jammed]
 
     conn
   end
@@ -366,6 +382,87 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, response} = BlockService.Stub.filter(conn.channel, request)
     assert Enum.count(response.resources) == 0
+
+    conn
+  end
+
+  @doc """
+  I filter on kind and expect the result to be one block.
+  """
+  @spec get_filtered_with_kind(EConnection.t()) :: EConnection.t()
+  def get_filtered_with_kind(conn \\ setup()) do
+    # Ensures that there are some resources.
+    Anoma.Node.Examples.EIndexer.indexer_filters_owner(
+      conn.client.node.node_id
+    )
+
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    # filter that matches two resources
+    request = %Blocks.Filtered.Request{
+      node_info: node_id,
+      filters: [
+        %Blocks.Filtered.Filter{
+          filter:
+            {:kind,
+             <<75, 124, 243, 90, 86, 252, 71, 45, 101, 75, 20, 255, 12, 66,
+               109, 76, 13, 16, 255, 186, 71, 217, 242, 43, 21, 43, 6, 237,
+               74, 93, 69, 224>>}
+        }
+      ]
+    }
+
+    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    assert Enum.count(response.resources) == 2
+
+    # filter that doesnt match any
+    request = %Blocks.Filtered.Request{
+      node_info: node_id,
+      filters: [
+        %Blocks.Filtered.Filter{filter: {:kind, <<>>}}
+      ]
+    }
+
+    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    assert Enum.count(response.resources) == 0
+
+    conn
+  end
+
+  @doc """
+  I dump all transaction candidates from the mempool.
+
+  The mempool is empty, so I expect an empty list.
+  """
+  @spec dump_mempool_example_empty_mempool(EConnection.t()) :: EConnection.t()
+  def dump_mempool_example_empty_mempool(conn \\ setup()) do
+    # request a dump of all the transactions
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %Dump.Request{node_info: node_id}
+    {:ok, response} = MempoolService.Stub.dump(conn.channel, request)
+
+    # there are no transactions
+    assert Enum.empty?(response.transaction_candidates)
+
+    conn
+  end
+
+  @doc """
+  I dump all transaction candidates from the mempool.
+  """
+  @spec dump_mempool_example(EConnection.t()) :: EConnection.t()
+  def dump_mempool_example(conn \\ setup()) do
+    # add one transaction to the mempool, but dont execute it.
+    code = Anoma.Node.Examples.ETransaction.trivial_transparent_transaction()
+    Mempool.tx(conn.client.node.node_id, code, "id 1")
+
+    # request a dump from the mempool
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %Dump.Request{node_info: node_id}
+    {:ok, response} = MempoolService.Stub.dump(conn.channel, request)
+
+    # assert that there is one candidate in the mempool
+    assert Enum.count(response.transaction_candidates) == 1
 
     conn
   end
