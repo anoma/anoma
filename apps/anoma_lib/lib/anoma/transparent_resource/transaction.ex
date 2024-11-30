@@ -238,4 +238,14 @@ defimpl Anoma.RM.Intent, for: Anoma.TransparentResource.Transaction do
   def verify(tx = %Transaction{}) do
     Transaction.verify(tx)
   end
+
+  @impl true
+  def nullifiers(tx = %Transaction{}) do
+    Transaction.nullifiers(tx)
+  end
+
+  @impl true
+  def commitments(tx = %Transaction{}) do
+    Transaction.commitments(tx)
+  end
 end
