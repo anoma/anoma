@@ -31,9 +31,13 @@ defmodule Anoma.Node.Intents.IntentPool do
     ### Fields
     - `:intents` - The intents in the pool.
     - `:node_id` - The ID of the Node.
+    - `:nlfs_set` - The set of known nullifiers.
+    - `:cms_set` - The set of known commitments.
     """
     field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
     field(:node_id, String.t())
+    field(:nlfs_set, MapSet.t(binary()), default: MapSet.new())
+    field(:cms_set, MapSet.t(binary()), default: MapSet.new())
   end
 
   ############################################################
@@ -53,7 +57,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
     EventBroker.subscribe_me([
       Node.Event.node_filter(node_id),
-      nullifier_filter()
+      trm_filter()
     ])
 
     {:ok, %IntentPool{node_id: args[:node_id]}}
@@ -115,12 +119,12 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   @impl true
   def handle_info(
-        %EventBroker.Event{
-          body: %Node.Event{body: %Backends.NullifierEvent{nullifiers: set}}
+        e = %EventBroker.Event{
+          body: %Node.Event{body: %Backends.TRMEvent{}}
         },
         state
       ) do
-    {:noreply, handle_new_nullifiers(state, set)}
+    {:noreply, handle_new_state(state, e)}
   end
 
   ############################################################
@@ -129,24 +133,19 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   # @doc """
   # I insert a new intent into the local state and return the updated state.
+  # I return the current state if the intent is already present.
+  # I return the current state if any nullifier of the intent is already known.
   # """
   @spec handle_new_intent(any(), t()) ::
           {:ok, :inserted, t()} | {:ok, :already_present, t()}
   defp handle_new_intent(intent, state) do
-    if MapSet.member?(state.intents, intent) do
-      Logger.debug("intent ignored; already present #{inspect(intent)}")
-
-      {:ok, :already_present, state}
+    with :ok <- validate_intent_uniqueness(intent, state),
+         :ok <- validate_nullifier_uniqueness(intent, state.nlfs_set),
+         :ok <- validate_commitment_uniqueness(intent, state.cms_set) do
+      {:ok, :inserted, add_intent!(intent, state)}
     else
-      Logger.debug("new intent added #{inspect(intent)}")
-
-      EventBroker.event(
-        Node.Event.new_with_body(state.node_id, {:intent_added, intent}),
-        Broker
-      )
-
-      state = Map.update!(state, :intents, &MapSet.put(&1, intent))
-      {:ok, :inserted, state}
+      {:error, :already_present} ->
+        {:ok, :already_present, state}
     end
   end
 
@@ -183,29 +182,91 @@ defmodule Anoma.Node.Intents.IntentPool do
     end
   end
 
-  @spec handle_new_nullifiers(t(), MapSet.t(binary())) :: t()
-  defp handle_new_nullifiers(state, nlfs_set) do
-    set_of_txs = state.intents
-
+  @spec handle_new_state(t(), %EventBroker.Event{}) :: t()
+  defp handle_new_state(state, %EventBroker.Event{
+         body: %Node.Event{
+           body: %Backends.TRMEvent{
+             nullifiers: nlfs_set,
+             commitments: cms_set
+           }
+         }
+       }) do
     new_intents =
-      set_of_txs
-      |> Enum.reject(fn tx ->
-        tx
-        |> Anoma.TransparentResource.Transaction.nullifiers()
-        |> Enum.any?(&MapSet.member?(nlfs_set, &1))
-      end)
-      |> MapSet.new()
+      reject_intents(state.intents, MapSet.union(nlfs_set, cms_set))
 
-    %__MODULE__{state | intents: new_intents}
+    new_nlfs_set = MapSet.union(state.nlfs_set, nlfs_set)
+    new_cms_set = MapSet.union(state.cms_set, cms_set)
+
+    %__MODULE__{
+      state
+      | intents: new_intents,
+        nlfs_set: new_nlfs_set,
+        cms_set: new_cms_set
+    }
   end
 
   ############################################################
   #                         Helpers                          #
   ############################################################
 
-  deffilter NullifierFilter do
+  defp validate_intent_uniqueness(intent, state) do
+    if MapSet.member?(state.intents, intent) do
+      Logger.debug("intent ignored; already present #{inspect(intent)}")
+      {:error, :already_present}
+    else
+      :ok
+    end
+  end
+
+  defp validate_nullifier_uniqueness(intent, nlfs_set) do
+    unless MapSet.disjoint?(Intent.nullifiers(intent), nlfs_set) do
+      Logger.debug(
+        "intent ignored; uses already nullified resources #{inspect(intent)}"
+      )
+
+      {:error, :already_present}
+    else
+      :ok
+    end
+  end
+
+  defp validate_commitment_uniqueness(intent, cms_set) do
+    unless MapSet.disjoint?(Intent.commitments(intent), cms_set) do
+      Logger.debug(
+        "intent ignored; uses already created resources #{inspect(intent)}"
+      )
+
+      {:error, :already_present}
+    else
+      :ok
+    end
+  end
+
+  defp add_intent!(intent, state) do
+    Logger.debug("new intent added #{inspect(intent)}")
+
+    EventBroker.event(
+      Node.Event.new_with_body(state.node_id, {:intent_added, intent}),
+      Broker
+    )
+
+    Map.update!(state, :intents, &MapSet.put(&1, intent))
+  end
+
+  def reject_intents(intents, set) do
+    intents
+    |> Enum.filter(
+      &MapSet.disjoint?(
+        set,
+        MapSet.union(Intent.nullifiers(&1), Intent.commitments(&1))
+      )
+    )
+    |> MapSet.new()
+  end
+
+  deffilter TRMFilter do
     %EventBroker.Event{
-      body: %Anoma.Node.Event{body: %Backends.NullifierEvent{}}
+      body: %Anoma.Node.Event{body: %Backends.TRMEvent{}}
     } ->
       true
 
@@ -213,7 +274,7 @@ defmodule Anoma.Node.Intents.IntentPool do
       false
   end
 
-  defp nullifier_filter() do
-    %__MODULE__.NullifierFilter{}
+  defp trm_filter() do
+    %__MODULE__.TRMFilter{}
   end
 end
