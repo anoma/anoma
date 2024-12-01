@@ -35,7 +35,7 @@ defmodule Anoma.TransparentResource.Resource do
     # for uniqueness
     field(:nonce, <<_::256>>, default: <<0::256>>)
     # useless field for shielded only.
-    field(:rseed, <<>>, default: <<>>)
+    field(:rseed, binary(), default: <<>>)
   end
 
   @spec to_noun(Resource.t()) :: Noun.t()
@@ -118,7 +118,7 @@ defmodule Anoma.TransparentResource.Resource do
     "CM_" <> binary_resource
   end
 
-  @spec nullifier(t()) :: nullifier()
+  @spec nullifier(Resource.t()) :: nullifier()
   def nullifier(resource = %Resource{}) do
     binary_resource = resource |> to_noun() |> Nock.Jam.jam()
     "NF_" <> binary_resource
