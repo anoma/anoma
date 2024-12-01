@@ -24,9 +24,14 @@ defmodule Mix.Tasks.Compile.Protoc do
 
       cleanup_targets(target_path)
 
-      run_compiler(compiler_opts)
+      case run_compiler(compiler_opts) do
+        {:ok, :compiled} ->
+          :ok
 
-      :ok
+        {:error, exit_code} ->
+          Mix.shell().error("protoc failed with exit code #{exit_code}")
+          {:error, []}
+      end
     else
       Mix.shell().info("No changes to protobuf files")
       :ok
@@ -36,14 +41,21 @@ defmodule Mix.Tasks.Compile.Protoc do
   # @doc """
   # I run the protoc compiler to generate the output files.
   # """
-  @spec run_compiler(Keyword.t()) :: term()
+  @spec run_compiler(Keyword.t()) :: {:error, integer()} | {:ok, :compiled}
   defp run_compiler(compiler_opts) do
     protoc_bin = protoc_executable()
 
-    System.cmd(protoc_bin, build_arguments(compiler_opts),
-      into: IO.stream(:stdio, :line),
-      stderr_to_stdout: true
-    )
+    {_, exit_code} =
+      System.cmd(protoc_bin, build_arguments(compiler_opts),
+        into: IO.stream(:stdio, :line),
+        stderr_to_stdout: true
+      )
+
+    if exit_code != 0 do
+      {:error, exit_code}
+    else
+      {:ok, :compiled}
+    end
   end
 
   # @doc """
