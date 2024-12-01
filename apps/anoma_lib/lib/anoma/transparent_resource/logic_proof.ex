@@ -68,18 +68,12 @@ defmodule Anoma.TransparentResource.LogicProof do
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
-        resource,
-        [
-          [commits, nulls, self_tag, other_public | terminator],
-          [commits_plain, nullified_plain, other_private | terminator2]
-          | terminator3
-        ]
-        | terminator4
-      ])
-      when terminator in @empty and
-             terminator2 in @empty and
-             terminator3 in @empty and
-             terminator4 in @empty do
+        resource
+        | [
+            [commits, nulls, self_tag | other_public]
+            | [commits_plain, nullified_plain | other_private]
+          ]
+      ]) do
     with {:ok, self_resource} <- Resource.from_noun(resource),
          {:ok, tag} <- determine_self_tag(self_tag),
          {:ok, nullified_plaintexts} <- from_noun_plaintext(nullified_plain),
@@ -118,7 +112,7 @@ defmodule Anoma.TransparentResource.LogicProof do
       {public_inputs, private_inputs} =
         LogicProof.internal_logic_inputs(proof)
 
-      [Resource.to_noun(proof.resource), [public_inputs, private_inputs]]
+      [Resource.to_noun(proof.resource) | [public_inputs | private_inputs]]
     end
   end
 
@@ -136,14 +130,14 @@ defmodule Anoma.TransparentResource.LogicProof do
     public_inputs = [
       MapSet.to_list(proof.commitments),
       MapSet.to_list(proof.nullifiers),
-      self_tag,
-      proof.other_public
+      self_tag
+      | proof.other_public
     ]
 
     private_inputs = [
       Enum.map(proof.committed_plaintexts, &Resource.to_noun/1),
-      Enum.map(proof.nullified_plaintexts, &Resource.to_noun/1),
-      proof.other_private
+      Enum.map(proof.nullified_plaintexts, &Resource.to_noun/1)
+      | proof.other_private
     ]
 
     {public_inputs, private_inputs}
