@@ -110,4 +110,8 @@ defmodule Anoma.TransparentResource.Transaction do
       {:ok, MapSet.new(Enum.map(maybe_actions, fn {:ok, x} -> x end))}
     end
   end
+
+  defp from_noun_actions(noun) when noun in [0, <<>>, []] do
+    {:ok, MapSet.new([])}
+  end
 end
