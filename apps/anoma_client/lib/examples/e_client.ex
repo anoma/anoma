@@ -216,7 +216,11 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
 
-    assert reply.unspent_resources == ["WbFpHGdmgFYuzI3srU0W"]
+    assert reply.unspent_resources == [
+             <<89, 177, 105, 28, 103, 102, 128, 86, 46, 204, 141, 236, 173,
+               77, 22>>
+           ]
+
     conn
   end
 
