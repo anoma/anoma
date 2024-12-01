@@ -152,6 +152,10 @@ defmodule Anoma.TransparentResource.Action do
     end
   end
 
+  defp from_noun_proofs(noun) when noun in [0, <<>>, []] do
+    {:ok, MapSet.new([])}
+  end
+
   @spec proof_from_noun(Noun.t()) :: {:ok, LogicProof.t() | binary()} | :error
   defp proof_from_noun(noun) when is_integer(noun) do
     proof_from_noun(Noun.atom_integer_to_binary(noun))
