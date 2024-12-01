@@ -85,4 +85,8 @@ defmodule Anoma.TransparentResource.Action do
       {:ok, MapSet.new(Enum.map(maybe_proofs, fn {:ok, x} -> x end))}
     end
   end
+
+  defp from_noun_proofs(noun) when noun in [0, <<>>, []] do
+    {:ok, MapSet.new([])}
+  end
 end
