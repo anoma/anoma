@@ -7,6 +7,8 @@ import "nock/prove.proto";
 import "nock/run.proto";
 import "intents/list_intents.proto";
 import "intents/add_intent.proto";
+import "intents/compose.proto";
+import "intents/verify.proto";
 import "indexer/nullifiers.proto";
 import "indexer/unrevealed_commits.proto";
 import "indexer/unspent_resources.proto";
@@ -31,6 +33,12 @@ service IntentsService {
 
   rpc AddIntent(Anoma.Protobuf.Intents.Add.Request)
       returns (Anoma.Protobuf.Intents.Add.Response) {}
+
+  rpc Compose(Anoma.Protobuf.Intents.Compose.Request)
+      returns (Anoma.Protobuf.Intents.Compose.Response) {}
+
+  rpc Verify(Anoma.Protobuf.Intents.Verify.Request)
+      returns (Anoma.Protobuf.Intents.Verify.Response) {}
 }
 
 service IndexerService {

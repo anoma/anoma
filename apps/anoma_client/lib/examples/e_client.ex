@@ -8,29 +8,31 @@ defmodule Anoma.Client.Examples.EClient do
   """
   use TypedStruct
 
-  alias Noun.Nounable
-  alias Node.Transaction.Mempool
-  alias Examples.ETransparent.ETransaction
-  alias Anoma.Protobuf.NodeInfo
-  alias Anoma.Protobuf.NockService
-  alias Anoma.Protobuf.Nock.Prove
-  alias Anoma.Protobuf.Nock.Input
-  alias Anoma.Protobuf.MempoolService
-  alias Anoma.Protobuf.Mempool.Dump
-  alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.Intents.List
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.IndexerService
-  alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.Indexer.UnrevealedCommits
-  alias Anoma.Protobuf.Indexer.Nullifiers
-  alias Anoma.Protobuf.Indexer.Blocks
-  alias Anoma.Protobuf.BlockService
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Client.Examples.EClient
   alias Anoma.Client
+  alias Anoma.Client.Examples.EClient
+  alias Anoma.Node.Examples.ENode
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Protobuf.BlockService
+  alias Anoma.Protobuf.Indexer.Blocks
+  alias Anoma.Protobuf.Indexer.Nullifiers
+  alias Anoma.Protobuf.Indexer.UnrevealedCommits
+  alias Anoma.Protobuf.Indexer.UnspentResources
+  alias Anoma.Protobuf.IndexerService
+  alias Anoma.Protobuf.Intents.Add
+  alias Anoma.Protobuf.Intents.Compose
+  alias Anoma.Protobuf.Intents.Intent
+  alias Anoma.Protobuf.Intents.List
+  alias Anoma.Protobuf.Intents.Verify
+  alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.Mempool.Dump
+  alias Anoma.Protobuf.MempoolService
+  alias Anoma.Protobuf.Nock.Input
+  alias Anoma.Protobuf.Nock.Prove
+  alias Anoma.Protobuf.NockService
+  alias Anoma.Protobuf.NodeInfo
+  alias Anoma.TransparentResource.Transaction
+  alias Examples.ETransparent.ETransaction
+  alias Noun.Nounable
 
   import ExUnit.Assertions
 
@@ -174,6 +176,62 @@ defmodule Anoma.Client.Examples.EClient do
     assert reply.intents == [intent_jammed]
 
     conn
+  end
+
+  def compose_intents(conn \\ setup()) do
+    # create two arbitrary intents
+    jammed_intents =
+      [ETransaction.single_swap(), ETransaction.single_swap()]
+      |> Enum.map(&(Nounable.to_noun(&1) |> Nock.Jam.jam()))
+      |> Enum.map(&%Intent{intent: &1})
+
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    request = %Compose.Request{
+      node_info: node_id,
+      intents: jammed_intents
+    }
+
+    {:ok, reply} =
+      IntentsService.Stub.compose(conn.channel, request)
+
+    # unjam the intent to check if its the same
+    {:ok, composed_intent} =
+      reply.intent.intent
+      |> Nock.Cue.cue!()
+      |> Transaction.from_noun()
+
+    # jam and unjam the single swap to make them equivalent
+    assert Noun.equal(
+             Nounable.to_noun(ETransaction.single_swap()),
+             composed_intent |> Nounable.to_noun()
+           )
+
+    composed_intent
+  end
+
+  def verify_intent(conn \\ setup()) do
+    # create arbitrary intent
+    jammed_intent =
+      ETransaction.single_swap()
+      |> Noun.Nounable.to_noun()
+      |> Nock.Jam.jam()
+
+    # create request for grpc endpoint
+    intent = %Intent{intent: jammed_intent}
+
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    request = %Verify.Request{
+      node_info: node_id,
+      intent: intent
+    }
+
+    {:ok, reply} = IntentsService.Stub.verify(conn.channel, request)
+
+    assert reply.valid
+
+    reply.valid
   end
 
   @doc """
