@@ -382,6 +382,7 @@ defmodule Nock.Jets do
   @spec bex(Noun.t()) :: :error | {:ok, Noun.t()}
   def bex(core) do
     with {:ok, a} when is_noun_atom(a) <- sample(core) do
+      a = an_integer(a)
       {:ok, 2 ** a}
     else
       _ -> :error
@@ -392,6 +393,8 @@ defmodule Nock.Jets do
   def mix(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
+      a = an_integer(a)
+      b = an_integer(b)
       {:ok, bxor(a, b)}
     else
       _ -> :error
@@ -404,7 +407,8 @@ defmodule Nock.Jets do
            sample(core),
          {:ok, block_size} when is_noun_atom(block_size) <-
            Noun.axis(30, core) do
-      {:ok, val <<< (count <<< block_size)}
+      {:ok,
+       an_integer(val) <<< (an_integer(count) <<< an_integer(block_size))}
     else
       _ -> :error
     end
@@ -416,7 +420,8 @@ defmodule Nock.Jets do
            sample(core),
          {:ok, block_size} when is_noun_atom(block_size) <-
            Noun.axis(30, core) do
-      {:ok, val >>> (count <<< block_size)}
+      {:ok,
+       an_integer(val) >>> (an_integer(count) <<< an_integer(block_size))}
     else
       _ -> :error
     end
@@ -430,8 +435,8 @@ defmodule Nock.Jets do
            Noun.axis(30, core) do
       # we get #b1111, if count is 4. Since 1 <<< 4 = #b10000 - 1 = #b1111
       # block_size just a left shift on the count
-      mask = (1 <<< (count <<< block_size)) - 1
-      {:ok, val &&& mask}
+      mask = (1 <<< (an_integer(count) <<< an_integer(block_size))) - 1
+      {:ok, an_integer(val) &&& mask}
     else
       _ -> :error
     end
@@ -478,7 +483,7 @@ defmodule Nock.Jets do
   def shax(core) do
     with {:ok, noun} when is_noun_atom(noun) <- sample(core),
          sample <- Noun.atom_integer_to_binary(noun) do
-      {:ok, :crypto.hash(:sha256, sample) |> Noun.atom_binary_to_integer()}
+      {:ok, :crypto.hash(:sha256, sample) |> an_integer()}
     else
       _ -> :error
     end
