@@ -3,6 +3,9 @@ defmodule Examples.ECairo.EComplianceWitness do
 
   alias Examples.ECairo.EResource
   alias Examples.ECommitmentTree
+  alias Anoma.CairoResource.ProofRecord
+
+  use TestHelper.TestMacro
 
   @spec a_compliance_private_input :: binary()
   def a_compliance_private_input() do
@@ -23,5 +26,22 @@ defmodule Examples.ECairo.EComplianceWitness do
       |> ComplianceWitness.to_json_string()
 
     compliance_private_input
+  end
+
+  @spec an_invalid_compliance_private_input :: binary()
+  def an_invalid_compliance_private_input() do
+    empty_json = ""
+
+    assert {:error, "Runtime error: The cairo program execution failed"} =
+             ProofRecord.generate_compliance_proof(empty_json)
+
+    invalid_compliance_input = """
+    {"eph_root": "0x4"}
+    """
+
+    assert {:error, "Runtime error: The cairo program execution failed"} =
+             ProofRecord.generate_compliance_proof(invalid_compliance_input)
+
+    invalid_compliance_input
   end
 end

@@ -45,4 +45,55 @@ defmodule Examples.ECairo.EResourceLogic do
       "params/trivial_output_resource_logic_witness.json"
     )
   end
+
+  @spec a_resource_logic_invalid_circuit() :: {:error, term()}
+  def a_resource_logic_invalid_circuit() do
+    ret =
+      ProofRecord.generate_cairo_proof(
+        "",
+        ""
+      )
+
+    assert {:error, "Invalid program content"} = ret
+
+    ret
+  end
+
+  @spec a_resource_logic_invalid_input() :: {:error, term()}
+  def a_resource_logic_invalid_input() do
+    circuit_dir =
+      Path.join(
+        :code.priv_dir(:anoma_lib),
+        "params/trivial_resource_logic.json"
+      )
+
+    assert {:ok, circuit} = File.read(circuit_dir)
+
+    assert {:error, "Invalid input JSON"} =
+             ProofRecord.generate_cairo_proof(
+               circuit,
+               "xxx"
+             )
+
+    assert {:error, "Runtime error: The cairo program execution failed"} =
+             ProofRecord.generate_cairo_proof(
+               circuit,
+               ""
+             )
+
+    invalid_input = """
+    {"resource_nf_key": "0x1"}
+    """
+
+    ret =
+      ProofRecord.generate_cairo_proof(
+        circuit,
+        invalid_input
+      )
+
+    assert {:error, "Runtime error: The cairo program execution failed"} ==
+             ret
+
+    ret
+  end
 end
