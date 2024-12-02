@@ -31,6 +31,7 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.NodeInfo
   alias Anoma.TransparentResource.Resource
   alias Examples.ETransparent.ETransaction
+  alias Anoma.Node.Utility.Indexer
   alias Noun.Nounable
 
   import ExUnit.Assertions
@@ -234,16 +235,19 @@ defmodule Anoma.Client.Examples.EClient do
     # Create an unrevealed commit using another example
     EIndexer.indexer_reads_unrevealed(conn.client.node.node_id)
 
+    # expected unspent resources
+    expected_unspent_resources =
+      Indexer.get(conn.client.node.node_id, :resources)
+      |> Enum.map(&Nock.Jam.jam/1)
+
+    # create the request to obtain the unspent resources
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %UnspentResources.Request{node_info: node_id}
 
     {:ok, reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
 
-    assert reply.unspent_resources == [
-             <<89, 177, 105, 28, 103, 102, 128, 86, 46, 204, 141, 236, 173,
-               77, 22>>
-           ]
+    assert reply.unspent_resources == expected_unspent_resources
 
     conn
   end
