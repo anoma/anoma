@@ -193,7 +193,7 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, response} =
       IndexerService.Stub.list_nullifiers(conn.channel, request)
 
-    assert response.nullifiers == ["TkZfWbFpHGfmGAQ="]
+    assert response.nullifiers == [Base.decode64!("TkZfWbFpHGfmGAQ=")]
 
     conn
   end
@@ -214,7 +214,7 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, response} =
       IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
 
-    assert response.commits == ["Q01fWbFpHGdmgFYuzI3srU0W"]
+    assert response.commits == [Base.decode64!("Q01fWbFpHGdmgFYuzI3srU0W")]
     conn
   end
 
@@ -234,7 +234,11 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
 
-    assert reply.unspent_resources == ["WbFpHGdmgFYuzI3srU0W"]
+    assert reply.unspent_resources == [
+             <<89, 177, 105, 28, 103, 102, 128, 86, 46, 204, 141, 236, 173,
+               77, 22>>
+           ]
+
     conn
   end
 
