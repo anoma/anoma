@@ -13,6 +13,7 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Node.Examples.ENode
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
+  alias Anoma.Protobuf.Indexer.Commits
   alias Anoma.Protobuf.Indexer.UnspentResources
   alias Anoma.Protobuf.IndexerService
   alias Anoma.Protobuf.Intents.Add
@@ -207,6 +208,29 @@ defmodule Anoma.Client.Examples.EClient do
     assert response.commits ==
              expected_commits
 
+    conn
+  end
+
+  @doc """
+  I list all commits.
+  """
+  @spec list_all_commits(EConnection.t()) :: EConnection.t()
+  def list_all_commits(conn \\ setup()) do
+    # Create two commit using another example
+    EIndexer.indexer_reads_commitments(conn.client.node.node_id)
+
+    # expected commits
+    expected_commits = conn.client.node.node_id |> Indexer.get(:cms)
+
+    # create the request to obtain the commits
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %Commits.Request{node_info: node_id}
+
+    {:ok, response} =
+      IndexerService.Stub.list_commits(conn.channel, request)
+
+    # assert the right commits are returned
+    assert response.commits |> MapSet.new() == expected_commits
     conn
   end
 

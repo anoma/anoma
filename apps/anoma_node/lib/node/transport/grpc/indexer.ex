@@ -2,6 +2,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
   alias Anoma.Node.Utility.Indexer
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
+  alias Anoma.Protobuf.Indexer.Commits
   alias Anoma.Protobuf.Indexer.UnspentResources
   alias GRPC.Server.Stream
 
@@ -27,6 +28,15 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
     unrevealed = Indexer.get(request.node_info.node_id, :unrevealed)
 
     %UnrevealedCommits.Response{commits: unrevealed}
+  end
+
+  @spec list_commits(Commits.Request.t(), Stream.t()) :: Commits.Response.t()
+  def list_commits(request, _stream) do
+    Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
+
+    unrevealed = Indexer.get(request.node_info.node_id, :cms)
+
+    %Commits.Response{commits: unrevealed}
   end
 
   @spec list_unspent_resources(UnspentResources.Request.t(), Stream.t()) ::

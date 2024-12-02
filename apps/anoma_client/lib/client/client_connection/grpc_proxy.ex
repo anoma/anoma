@@ -4,6 +4,7 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
+  alias Anoma.Protobuf.Indexer.Commits
   alias Anoma.Protobuf.Indexer.UnspentResources
   alias Anoma.Protobuf.IndexerService
   alias Anoma.Protobuf.Intents.Add
@@ -84,6 +85,11 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, {:list_unrevealed_commits})
   end
 
+  @spec list_commits() :: {:ok, Commits.Response.t()}
+  def list_commits() do
+    GenServer.call(__MODULE__, {:list_commits})
+  end
+
   @spec list_unspent_resources() :: {:ok, UnspentResources.Response.t()}
   def list_unspent_resources() do
     GenServer.call(__MODULE__, {:list_unspent_resources})
@@ -126,6 +132,15 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
     commits =
       IndexerService.Stub.list_unrevealed_commits(state.channel, request)
+
+    {:reply, commits, state}
+  end
+
+  def handle_call({:list_commits}, _from, state) do
+    node_info = %NodeInfo{node_id: state.node_id}
+    request = %Commits.Request{node_info: node_info}
+
+    commits = IndexerService.Stub.list_commits(state.channel, request)
 
     {:reply, commits, state}
   end
