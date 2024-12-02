@@ -11,6 +11,11 @@ import "indexer/nullifiers.proto";
 import "indexer/unrevealed_commits.proto";
 import "indexer/unspent_resources.proto";
 import "mempool/add_transaction.proto";
+import "mempool/dump.proto";
+import "indexer/blocks/get.proto";
+import "indexer/blocks/latest.proto";
+import "indexer/blocks/root.proto";
+import "indexer/blocks/filter.proto";
 
 service NockService {
   rpc Prove(Anoma.Protobuf.Nock.Prove.Request)
@@ -42,4 +47,20 @@ service IndexerService {
 service MempoolService {
   rpc Add(Anoma.Protobuf.Mempool.AddTransaction.Request)
       returns (Anoma.Protobuf.Mempool.AddTransaction.Response) {}
+  rpc Dump(Anoma.Protobuf.Mempool.Dump.Request)
+      returns (Anoma.Protobuf.Mempool.Dump.Response) {}
+}
+
+service BlockService {
+  rpc Get(Anoma.Protobuf.Indexer.Blocks.Get.Request)
+      returns (Anoma.Protobuf.Indexer.Blocks.Get.Response) {}
+
+  rpc Latest(Anoma.Protobuf.Indexer.Blocks.Latest.Request)
+      returns (Anoma.Protobuf.Indexer.Blocks.Latest.Response) {}
+
+  rpc Root(Anoma.Protobuf.Indexer.Blocks.Root.Request)
+      returns (Anoma.Protobuf.Indexer.Blocks.Root.Response) {}
+
+  rpc Filter(Anoma.Protobuf.Indexer.Blocks.Filtered.Request)
+      returns (Anoma.Protobuf.Indexer.Blocks.Filtered.Response) {}
 }
