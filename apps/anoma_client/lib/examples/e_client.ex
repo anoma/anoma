@@ -404,32 +404,39 @@ defmodule Anoma.Client.Examples.EClient do
     # Ensures that there are some resources.
     EIndexer.indexer_filters_owner(conn.client.node.node_id)
 
+    # the example above inserted two resources, take one of the nullifier keys
+    resource_kind =
+      EIndexer.jeremy_resource()
+      |> Resource.kind()
+
+    # request all the resources that are owned by the nullifier key above.
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
 
-    # filter that matches two resources
-    request = %Blocks.Filtered.Request{
-      node_info: node_id,
-      filters: [
-        %Blocks.Filtered.Filter{
-          filter:
-            {:kind,
-             <<75, 124, 243, 90, 86, 252, 71, 45, 101, 75, 20, 255, 12, 66,
-               109, 76, 13, 16, 255, 186, 71, 217, 242, 43, 21, 43, 6, 237,
-               74, 93, 69, 224>>}
-        }
-      ]
-    }
+    filters = [
+      %Blocks.Filtered.Filter{filter: {:kind, resource_kind}}
+    ]
+
+    request = %Blocks.Filtered.Request{node_info: node_id, filters: filters}
 
     {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+
+    # Expect two resources
     assert Enum.count(response.resources) == 2
 
-    # filter that doesnt match any
-    request = %Blocks.Filtered.Request{
-      node_info: node_id,
-      filters: [
-        %Blocks.Filtered.Filter{filter: {:kind, <<>>}}
-      ]
-    }
+    conn
+  end
+
+  @spec get_filtered_no_matches(EConnection.t()) :: EConnection.t()
+  def get_filtered_no_matches(conn \\ setup()) do
+    # Ensures that there are some resources.
+    EIndexer.indexer_filters_owner(conn.client.node.node_id)
+
+    # request all the resources that are owned by a non-existant nullifier key
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    filters = [%Blocks.Filtered.Filter{filter: {:kind, <<>>}}]
+
+    request = %Blocks.Filtered.Request{node_info: node_id, filters: filters}
 
     {:ok, response} = BlockService.Stub.filter(conn.channel, request)
     assert Enum.count(response.resources) == 0
