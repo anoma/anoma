@@ -253,21 +253,41 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
+  @doc """
+  I am a function for verifying information regarding the roots stored in a
+  transaction.
+
+  Given a transaction and a node ID, I look at the latest root stored in
+  committed storage and check whether at that time the commitments include
+  those stored in the transaction.
+
+  If so, return true, otherwise, I return the error with appropriate
+  message.
+  """
   @spec verify_tx_root(String.t(), TTransaction.t()) ::
           true | {:error, String.t()}
-  defp verify_tx_root(node_id, trans = %TTransaction{}) do
+  def verify_tx_root(node_id, trans = %TTransaction{}) do
     # TODO improve the error messages
     commitments_exist_in_roots(node_id, trans) or
       {:error, "Nullified resources are not committed at latest root"}
   end
 
+  @doc """
+  I am the storage check.
+
+  Given a transaction as well as sets of commitments and nullifiers, I
+  check whether the transaction and the latter sets share any information.
+
+  If so, I error and return the reason depending on the set first
+  encountered. Otherwise, I return true.
+  """
   @spec storage_check?(
           MapSet.t() | :absent,
           MapSet.t() | :absent,
           TTransaction.t()
         ) ::
           true | {:error, String.t()}
-  defp storage_check?(cms, nlfs, trans) do
+  def storage_check?(cms, nlfs, trans) do
     # TODO improve error messages
     cond do
       any_nullifiers_already_exist?(nlfs, trans) ->
