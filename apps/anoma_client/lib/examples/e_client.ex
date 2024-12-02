@@ -206,17 +206,23 @@ defmodule Anoma.Client.Examples.EClient do
   @spec list_unrevealed_commits(EConnection.t()) :: EConnection.t()
   def list_unrevealed_commits(conn \\ setup()) do
     # Create an unrevealed commit using another example
-    Anoma.Node.Examples.EIndexer.indexer_reads_unrevealed(
-      conn.client.node.node_id
-    )
+    EIndexer.indexer_reads_unrevealed(conn.client.node.node_id)
 
+    # expected commits
+    expected_commits =
+      %Resource{rseed: "random2"}
+      |> Resource.commitment()
+      |> Elixir.List.wrap()
+
+    # create the request to obtain the commits
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %UnrevealedCommits.Request{node_info: node_id}
 
     {:ok, response} =
       IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
 
-    assert response.commits == [Base.decode64!("Q01fWbFpHGdmgFYuzI3srU0W")]
+    # assert the right commits are returned
+    assert response.commits == expected_commits
     conn
   end
 
