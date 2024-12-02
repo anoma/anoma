@@ -44,4 +44,15 @@ defmodule Examples.ECairo.EProofRecord do
 
     input_resource_logic_proof
   end
+
+  @spec a_compliance_proof_with_intents() :: ProofRecord.t()
+  defmemo a_compliance_proof_with_intents do
+    compliance_private_inputs =
+      EComplianceWitness.a_compliance_private_input_for_intents()
+
+    assert {:ok, proof} =
+             ProofRecord.generate_compliance_proof(compliance_private_inputs)
+
+    proof
+  end
 end

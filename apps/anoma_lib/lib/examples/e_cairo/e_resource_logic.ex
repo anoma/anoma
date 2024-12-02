@@ -46,6 +46,20 @@ defmodule Examples.ECairo.EResourceLogic do
     )
   end
 
+  @spec an_input_intent_resource_logic() :: ProofRecord.t()
+  defmemo an_input_intent_resource_logic() do
+    EProofRecord.a_resource_logic(
+      "params/trivial_input_intent_resource_logic_witness.json"
+    )
+  end
+
+  @spec an_output_intent_resource_logic() :: ProofRecord.t()
+  defmemo an_output_intent_resource_logic() do
+    EProofRecord.a_resource_logic(
+      "params/trivial_output_intent_resource_logic_witness.json"
+    )
+  end
+
   @spec a_resource_logic_invalid_circuit() :: {:error, term()}
   def a_resource_logic_invalid_circuit() do
     ret =
