@@ -232,9 +232,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec list_unspent_resources(EConnection.t()) :: EConnection.t()
   def list_unspent_resources(conn \\ setup()) do
     # Create an unrevealed commit using another example
-    Anoma.Node.Examples.EIndexer.indexer_reads_unrevealed(
-      conn.client.node.node_id
-    )
+    EIndexer.indexer_reads_unrevealed(conn.client.node.node_id)
 
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %UnspentResources.Request{node_info: node_id}
@@ -257,7 +255,7 @@ defmodule Anoma.Client.Examples.EClient do
   def list_blocks(conn \\ setup()) do
     # Create multiple blocks by calling the indexer example.
     # After this call, there should be two blocks present.
-    Anoma.Node.Examples.EIndexer.indexer_reads_after(conn.client.node.node_id)
+    EIndexer.indexer_reads_after(conn.client.node.node_id)
 
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
 
@@ -298,7 +296,7 @@ defmodule Anoma.Client.Examples.EClient do
   def get_latest_block_populated_index(conn \\ setup()) do
     # Create multiple blocks by calling the indexer example.
     # After this call, there should be two blocks present.
-    Anoma.Node.Examples.EIndexer.indexer_reads_after(conn.client.node.node_id)
+    EIndexer.indexer_reads_after(conn.client.node.node_id)
 
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
 
@@ -333,9 +331,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec get_root_populated_index(EConnection.t()) :: EConnection.t()
   def get_root_populated_index(conn \\ setup()) do
     # Ensures that there is a root in the indexer.
-    Anoma.Node.Examples.EIndexer.indexer_reads_anchor(
-      conn.client.node.node_id
-    )
+    EIndexer.indexer_reads_anchor(conn.client.node.node_id)
 
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
 
@@ -355,9 +351,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec get_filtered(EConnection.t()) :: EConnection.t()
   def get_filtered(conn \\ setup()) do
     # Ensures that there is a root in the indexer.
-    Anoma.Node.Examples.EIndexer.indexer_filters_owner(
-      conn.client.node.node_id
-    )
+    EIndexer.indexer_filters_owner(conn.client.node.node_id)
 
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
 
@@ -404,9 +398,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec get_filtered_with_kind(EConnection.t()) :: EConnection.t()
   def get_filtered_with_kind(conn \\ setup()) do
     # Ensures that there are some resources.
-    Anoma.Node.Examples.EIndexer.indexer_filters_owner(
-      conn.client.node.node_id
-    )
+    EIndexer.indexer_filters_owner(conn.client.node.node_id)
 
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
 
