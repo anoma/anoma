@@ -21,8 +21,8 @@ defmodule Examples.ETransparent.ELogicProof do
     assert {:ok, _} =
              res
              |> Noun.Nounable.to_noun()
-             |> Nock.Jam.jam()
-             |> Nock.Cue.cue()
+             |> Noun.Jam.jam()
+             |> Noun.Jam.cue()
              |> elem(1)
              |> LogicProof.from_noun()
 

@@ -90,7 +90,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Blocks do
   # """
   @spec encode_resource(Noun.t()) :: binary()
   defp encode_resource(resource) do
-    Nock.Jam.jam(resource)
+    Noun.Jam.jam(resource)
   end
 
   # @doc """
@@ -115,13 +115,13 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Blocks do
     case transaction do
       %{vm_result: {:ok, result}} ->
         %Transaction{
-          code: Nock.Jam.jam(transaction.code),
-          result: {:success, Nock.Jam.jam(result)}
+          code: Noun.Jam.jam(transaction.code),
+          result: {:success, Noun.Jam.jam(result)}
         }
 
       %{vm_result: :vm_error} ->
         %Transaction{
-          code: Nock.Jam.jam(transaction.code),
+          code: Noun.Jam.jam(transaction.code),
           result: {:error, "vm error"}
         }
     end

@@ -71,7 +71,7 @@ defmodule Anoma.Client.Runner do
       {:io_request, from, ref, {:put_chars, _, noun_str}} ->
         send(from, {:io_reply, ref, :ok})
         # noun = Noun.Format.parse_always(noun_str)
-        noun = Base.decode64!(noun_str) |> Nock.Cue.cue!()
+        noun = Base.decode64!(noun_str) |> Noun.Jam.cue!()
         capture([noun | acc])
 
       {:quit, from} ->

@@ -38,7 +38,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
       Indexer.get(request.node_info.node_id, :resources)
       |> Enum.map(fn r ->
         Noun.Nounable.to_noun(r)
-        |> Nock.Jam.jam()
+        |> Noun.Jam.jam()
       end)
 
     %UnspentResources.Response{unspent_resources: resources}

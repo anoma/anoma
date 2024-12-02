@@ -13,7 +13,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
   def add(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
-    tx_noun = request.transaction |> Nock.Cue.cue!()
+    tx_noun = request.transaction |> Noun.Jam.cue!()
 
     Mempool.tx(request.node_info.node_id, {:transparent_resource, tx_noun})
 
@@ -27,7 +27,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
     jammed_transaction_candidates =
       Mempool.tx_dump_txs(request.node_info.node_id)
       |> Enum.map(&Map.get(&1, :code))
-      |> Enum.map(&Nock.Jam.jam/1)
+      |> Enum.map(&Noun.Jam.jam/1)
 
     %Dump.Response{transaction_candidates: jammed_transaction_candidates}
   end

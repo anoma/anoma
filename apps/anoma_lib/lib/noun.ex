@@ -18,6 +18,8 @@ defmodule Noun do
 
   defguard is_noun_cell(term) when is_list(term) and term != []
 
+  defguard is_noun_zero(term) when term == 0 or term == <<>> or term == []
+
   @spec axis(non_neg_integer(), t()) :: {:ok, t()} | :error
   def axis(axis, noun) do
     try do

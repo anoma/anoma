@@ -95,7 +95,7 @@ defmodule Anoma.Node.Examples.EGRPC do
     intent_jammed =
       ETransaction.nullify_intent()
       |> Noun.Nounable.to_noun()
-      |> Nock.Jam.jam()
+      |> Noun.Jam.jam()
 
     request = %Add.Request{
       node_info: node_id,
