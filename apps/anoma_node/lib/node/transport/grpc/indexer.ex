@@ -44,7 +44,6 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
         Noun.Nounable.to_noun(r)
         |> Nock.Jam.jam()
       end)
-      |> Enum.map(&Base.encode64/1)
 
     %UnspentResources.Response{unspent_resources: resources}
   end
