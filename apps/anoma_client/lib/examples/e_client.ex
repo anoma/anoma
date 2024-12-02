@@ -8,29 +8,30 @@ defmodule Anoma.Client.Examples.EClient do
   """
   use TypedStruct
 
-  alias Noun.Nounable
-  alias Node.Transaction.Mempool
-  alias Examples.ETransparent.ETransaction
-  alias Anoma.Protobuf.NodeInfo
-  alias Anoma.Protobuf.NockService
-  alias Anoma.Protobuf.Nock.Prove
-  alias Anoma.Protobuf.Nock.Input
-  alias Anoma.Protobuf.MempoolService
-  alias Anoma.Protobuf.Mempool.Dump
-  alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.Intents.List
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.IndexerService
-  alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.Indexer.UnrevealedCommits
-  alias Anoma.Protobuf.Indexer.Nullifiers
-  alias Anoma.Protobuf.Indexer.Blocks
-  alias Anoma.Protobuf.BlockService
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Client.Examples.EClient
   alias Anoma.Client
+  alias Anoma.Client.Examples.EClient
+  alias Anoma.Node.Examples.EIndexer
+  alias Anoma.Node.Examples.ENode
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Protobuf.BlockService
+  alias Anoma.Protobuf.Indexer.Blocks
+  alias Anoma.Protobuf.Indexer.Nullifiers
+  alias Anoma.Protobuf.Indexer.UnrevealedCommits
+  alias Anoma.Protobuf.Indexer.UnspentResources
+  alias Anoma.Protobuf.IndexerService
+  alias Anoma.Protobuf.Intents.Add
+  alias Anoma.Protobuf.Intents.Intent
+  alias Anoma.Protobuf.Intents.List
+  alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.Mempool.Dump
+  alias Anoma.Protobuf.MempoolService
+  alias Anoma.Protobuf.Nock.Input
+  alias Anoma.Protobuf.Nock.Prove
+  alias Anoma.Protobuf.NockService
+  alias Anoma.Protobuf.NodeInfo
+  alias Anoma.TransparentResource.Resource
+  alias Examples.ETransparent.ETransaction
+  alias Noun.Nounable
 
   import ExUnit.Assertions
 
@@ -181,10 +182,11 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_nullifiers(EConnection.t()) :: EConnection.t()
   def list_nullifiers(conn \\ setup()) do
-    # Create some nullifiers using another example
-    Anoma.Node.Examples.EIndexer.indexer_reads_nullifier(
-      conn.client.node.node_id
-    )
+    # Create a nullifier in the indexer
+    EIndexer.indexer_reads_nullifier(conn.client.node.node_id)
+
+    # expected nullifier
+    expected_nullifier = Resource.nullifier(%Resource{})
 
     # request the nullifiers from the client
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
@@ -193,7 +195,7 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, response} =
       IndexerService.Stub.list_nullifiers(conn.channel, request)
 
-    assert response.nullifiers == [Base.decode64!("TkZfWbFpHGfmGAQ=")]
+    assert response.nullifiers == [expected_nullifier]
 
     conn
   end
