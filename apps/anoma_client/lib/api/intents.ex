@@ -64,6 +64,19 @@ defmodule Anoma.Client.Api.Servers.Intents do
       "GRPC #{inspect(__ENV__.function)} request: #{inspect(request)}"
     )
 
-    %Verify.Response{valid: true}
+    res =
+      request.intent.intent
+      |> Nock.Cue.cue!()
+      |> Transaction.from_noun()
+      |> elem(1)
+      |> Anoma.RM.Intent.verify()
+
+    bool =
+      case res do
+        true -> true
+        _ -> false
+      end
+
+    %Verify.Response{valid: bool}
   end
 end
