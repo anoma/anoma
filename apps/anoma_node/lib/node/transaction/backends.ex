@@ -183,7 +183,16 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec transparent_resource_tx(String.t(), binary(), Noun.t()) ::
           {:ok, any} | :error
   defp transparent_resource_tx(node_id, id, result) do
-    storage_checks = fn tx -> storage_check?(node_id, id, tx) end
+    stored_commitments =
+      Ordering.read(node_id, {id, anoma_keyspace("commitments")})
+
+    stored_nullifiers =
+      Ordering.read(node_id, {id, anoma_keyspace("nullifiers")})
+
+    storage_checks = fn tx ->
+      storage_check?(stored_commitments, stored_nullifiers, tx)
+    end
+
     verify_tx_root = fn tx -> verify_tx_root(node_id, tx) end
 
     verify_options = [
@@ -252,21 +261,19 @@ defmodule Anoma.Node.Transaction.Backends do
       {:error, "Nullified resources are not committed at latest root"}
   end
 
-  @spec storage_check?(String.t(), binary(), TTransaction.t()) ::
+  @spec storage_check?(
+          MapSet.t() | :absent,
+          MapSet.t() | :absent,
+          TTransaction.t()
+        ) ::
           true | {:error, String.t()}
-  defp storage_check?(node_id, id, trans) do
-    stored_commitments =
-      Ordering.read(node_id, {id, anoma_keyspace("commitments")})
-
-    stored_nullifiers =
-      Ordering.read(node_id, {id, anoma_keyspace("nullifiers")})
-
+  defp storage_check?(cms, nlfs, trans) do
     # TODO improve error messages
     cond do
-      any_nullifiers_already_exist?(stored_nullifiers, trans) ->
+      any_nullifiers_already_exist?(nlfs, trans) ->
         {:error, "A submitted nullifier already exists in storage"}
 
-      any_commitments_already_exist?(stored_commitments, trans) ->
+      any_commitments_already_exist?(cms, trans) ->
         {:error, "A submitted commitment already exists in storage"}
 
       true ->
