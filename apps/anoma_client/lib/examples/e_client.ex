@@ -251,7 +251,7 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, response} =
       IndexerService.Stub.list_nullifiers(conn.channel, request)
 
-    assert response.nullifiers == ["TkZfWbFpHGem"]
+    assert response.nullifiers == ["NF_Y\xB1i\x1Cg\xA6"]
 
     conn
   end
@@ -272,7 +272,7 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, response} =
       IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
 
-    assert response.commits == ["Q01fWbFpHGcmoJULcyN7a5MB"]
+    assert response.commits == ["CM_Y\xB1i\x1Cg&\xA0\x95\vs\#{k\x93\x01"]
     conn
   end
 
@@ -292,7 +292,7 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
 
-    assert reply.unspent_resources == ["WbFpHGcmoJULcyN7a5MB"]
+    assert reply.unspent_resources == ["Y\xB1i\x1Cg&\xA0\x95\vs\#{k\x93\x01"]
     conn
   end
 
