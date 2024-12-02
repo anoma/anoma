@@ -10,3 +10,7 @@ runs:
     - name: All files whitespace error check
       shell: bash
       run: git diff-tree --check 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD
+
+    - name: All files noeol check
+      shell: bash
+      run: ! git diff `git hash-object -t tree /dev/null` HEAD | grep -q '^\\ No newline at end of file$'
