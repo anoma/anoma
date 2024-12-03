@@ -37,7 +37,7 @@ defmodule Anoma.Client.Examples.EProve do
 
     {:ok, result, _stdio} = Runner.prove(program, inputs)
 
-    assert result == <<>>
+    assert Noun.equal(result, 0)
 
     {:ok, result}
   end
