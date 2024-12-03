@@ -632,7 +632,7 @@ defmodule Nock.Jets do
   def action_delta(core) do
     with {:ok, a} <- sample(core),
          {:ok, action} <- Action.from_noun(a) do
-      res = action |> Action.delta() |> Noun.Nounable.to_noun()
+      res = action |> Action.delta() |> Delta.to_noun()
       {:ok, res}
     else
       _ -> :error

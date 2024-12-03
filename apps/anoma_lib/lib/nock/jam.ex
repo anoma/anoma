@@ -13,7 +13,7 @@ defmodule Nock.Jam do
 
   @spec jam(Noun.t()) :: Noun.noun_atom()
   def jam(noun) do
-    encode(%__MODULE__{}, noun)
+    encode(%__MODULE__{}, Noun.normalize_noun(noun))
     |> then(fn %__MODULE__{buffer: buf} -> buf end)
     |> Enum.reverse()
     |> Nock.Bits.bit_list_to_integer()
