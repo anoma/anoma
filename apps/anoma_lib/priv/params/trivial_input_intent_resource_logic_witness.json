@@ -1,6 +1,6 @@
 {
     "self_resource": {
-        "logic" : "0x373bb1d37414c2edf111cf2f9f076517da99d38e44cdd716ca2ad00a07731e5",
+        "logic" : "0xf38cb08a12bbf1f4390eab53c5f4849b7b7c3b98190958c1f2b214f638bf37",
         "label" : "0x0",
         "quantity" : "0x1",
         "data" : "0x0",
@@ -10,5 +10,5 @@
         "rseed" : "0x0"
     },
     "resource_nf_key": "0x1",
-    "merkle_path": [{"fst": "0x3b850ba44b98b2769af5c4430c8b112f88f4c81fe4aa811897e8f13abad256b", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}]
+    "merkle_path": [{"fst": "0x5a007688f8da3132a27b9a2ac6295327504e7d8d42c3bb0d48ac287bce43a8f", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}]
   }

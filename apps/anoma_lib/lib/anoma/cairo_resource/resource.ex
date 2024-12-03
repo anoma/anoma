@@ -94,11 +94,11 @@ defmodule Anoma.CairoResource.Resource do
     |> :binary.list_to_bin()
   end
 
-  @spec nullifier(Resource.t()) :: binary()
+  @spec nullifier(Resource.t(), binary()) :: binary()
   @doc """
   The nullifier of the given resource.
   """
-  def nullifier(resource = %Resource{}) do
+  def nullifier(resource = %Resource{}, nk) do
     psi =
       [
         Constants.prf_expand_personalization_felt(),
@@ -110,7 +110,7 @@ defmodule Anoma.CairoResource.Resource do
       |> Cairo.poseidon_many()
       |> :binary.list_to_bin()
 
-    [resource.nk_commitment, resource.nonce, psi, commitment(resource)]
+    [nk, resource.nonce, psi, commitment(resource)]
     |> Enum.map(&:binary.bin_to_list/1)
     |> Cairo.poseidon_many()
     |> :binary.list_to_bin()

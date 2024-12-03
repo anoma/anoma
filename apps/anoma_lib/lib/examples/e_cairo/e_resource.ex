@@ -33,7 +33,7 @@ defmodule Examples.ECairo.EResource do
   @spec a_resource_nullifier() :: binary()
   def a_resource_nullifier do
     resource = a_fixed_resource()
-    anullifier = Resource.nullifier(resource)
+    anullifier = Resource.nullifier(resource, <<1::256>>)
 
     anullifier
   end
@@ -70,7 +70,7 @@ defmodule Examples.ECairo.EResource do
   @spec a_trivial_output_intent_resource() :: Resource.t()
   def a_trivial_output_intent_resource do
     input_intent_resource = a_trivial_input_intent_resource()
-    input_nullifier = Resource.nullifier(input_intent_resource)
+    input_nullifier = Resource.nullifier(input_intent_resource, <<1::256>>)
 
     zero_binary = <<0::256>>
     input_nf_key = <<1::256>>
