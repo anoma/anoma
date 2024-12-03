@@ -56,6 +56,24 @@ defmodule Examples.ECairo.ETransaction do
     shielded_tx
   end
 
+  @spec a_shielded_transaction_with_multiple_compliance_units() ::
+          Transaction.t()
+  def a_shielded_transaction_with_multiple_compliance_units do
+    an_action = EAction.an_action_with_multiple_compliance_units()
+    priv_keys = <<6::256>>
+
+    shielded_tx =
+      %Transaction{
+        actions: [an_action],
+        delta: priv_keys
+      }
+      |> Transaction.finalize()
+
+    assert Anoma.RM.Transaction.verify(shielded_tx)
+
+    shielded_tx
+  end
+
   @spec duplicate_nfs_shielded_transaction() :: Transaction.t()
   def duplicate_nfs_shielded_transaction do
     action = EAction.an_action()
