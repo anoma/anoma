@@ -1,6 +1,6 @@
 # CompileProtoc
 
-**TODO: Add description**
+I am the CompileProtoc application. I contain the compiler task for Protobuf.
 
 ## Installation
 
