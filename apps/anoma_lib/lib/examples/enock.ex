@@ -1091,7 +1091,7 @@ defmodule Examples.ENock do
   end
 
   def delta_sub_arm() do
-    "[8 [9 763 0 15] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 1527 0 15] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1123,7 +1123,7 @@ defmodule Examples.ENock do
   end
 
   def make_delta_arm() do
-    "[8 [9 372 0 15] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 1494 0 15] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
