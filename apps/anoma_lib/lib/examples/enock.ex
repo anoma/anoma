@@ -1091,7 +1091,7 @@ defmodule Examples.ENock do
   end
 
   def delta_sub_arm() do
-    "[8 [9 763 0 15] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 1527 0 15] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1123,7 +1123,7 @@ defmodule Examples.ENock do
   end
 
   def make_delta_arm() do
-    "[8 [9 372 0 15] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 1494 0 15] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1139,6 +1139,68 @@ defmodule Examples.ENock do
 
     {:ok, [[_ | 2]]} =
       actions |> make_delta_call() |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def is_commitment_arm() do
+    "[8 [9 1.526 0 15] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def make_is_commitment_call(atom) do
+    sample = atom
+    [is_commitment_arm(), sample | Nock.logics_core()]
+  end
+
+  def is_commitment_test() do
+    atom_true = "CM_whatever"
+    atom_false = "NF_whatever"
+    atom_weird_still_false = "a"
+
+    {:ok, res1} =
+      atom_true |> make_is_commitment_call() |> Nock.nock([9, 2, 0 | 1])
+
+    {:ok, res2} =
+      atom_false |> make_is_commitment_call() |> Nock.nock([9, 2, 0 | 1])
+
+    {:ok, res3} =
+      atom_weird_still_false
+      |> make_is_commitment_call()
+      |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal(res1, 0)
+    assert Noun.equal(res2, 1)
+    assert Noun.equal(res3, 1)
+  end
+
+  def is_nullifier_arm() do
+    "[8 [9 372 0 15] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def make_is_nullifier_call(atom) do
+    sample = atom
+    [is_nullifier_arm(), sample | Nock.logics_core()]
+  end
+
+  def is_nullifier_test() do
+    atom_true = "NF_whatever"
+    atom_false = "CM_whatever"
+    atom_weird_still_false = "a"
+
+    {:ok, res1} =
+      atom_true |> make_is_nullifier_call() |> Nock.nock([9, 2, 0 | 1])
+
+    {:ok, res2} =
+      atom_false |> make_is_nullifier_call() |> Nock.nock([9, 2, 0 | 1])
+
+    {:ok, res3} =
+      atom_weird_still_false
+      |> make_is_commitment_call()
+      |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal(res1, 0)
+    assert Noun.equal(res2, 1)
+    assert Noun.equal(res3, 1)
   end
 
   ############################################################
