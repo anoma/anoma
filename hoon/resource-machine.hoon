@@ -99,6 +99,14 @@
   |=  =resource
   ^-  nullifier
   (~(cat block 3) 'NF_' (jam resource))
+++  is-commitment  ::  check whether an atom is a commitment
+  |=  a=@
+  ^-  @
+  =('CM_' (~(end block 3) 3 a))
+++  is-nullifier  ::  check whether an atom is a nullifier
+  |=  a=@
+  ^-  @
+  =('NF_' (~(end block 3) 3 a))
 ++  kind
   |=  =resource
   ^-  resource-kind
