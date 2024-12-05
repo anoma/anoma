@@ -13,7 +13,7 @@ defmodule Anoma.Client.Examples.EProve do
       :code.priv_dir(:anoma_client)
       |> Path.join("test_juvix/Squared.nockma")
       |> File.read!()
-      |> Nock.Cue.cue()
+      |> Noun.Jam.cue()
 
     inputs =
       Enum.map(["3"], &Noun.Format.parse_always/1)
@@ -31,13 +31,13 @@ defmodule Anoma.Client.Examples.EProve do
       :code.priv_dir(:anoma_client)
       |> Path.join("test_juvix/Squared.nockma")
       |> File.read!()
-      |> Nock.Cue.cue()
+      |> Noun.Jam.cue()
 
     inputs = []
 
     {:ok, result, _stdio} = Runner.prove(program, inputs)
 
-    assert result == 0
+    assert Noun.equal(result, 0)
 
     {:ok, result}
   end
@@ -48,7 +48,7 @@ defmodule Anoma.Client.Examples.EProve do
     {:ok, program} =
       "BcGCZJgJ7v9BMmQQLewS4uPxRKY="
       |> Base.decode64!()
-      |> Nock.Cue.cue()
+      |> Noun.Jam.cue()
 
     inputs = Enum.map(["3"], &Noun.Format.parse_always/1)
     {:ok, result, _stdio} = Runner.prove(program, inputs)
@@ -64,14 +64,14 @@ defmodule Anoma.Client.Examples.EProve do
       :code.priv_dir(:anoma_client)
       |> Path.join("test_juvix/Tracing.nockma")
       |> File.read!()
-      |> Nock.Cue.cue()
+      |> Noun.Jam.cue()
 
     inputs = []
 
     {:ok, result, stdio} = Runner.prove(program, inputs)
 
-    assert result == 0
-    assert stdio == [1, 4, 2, 4]
+    assert result == <<>>
+    assert stdio == [<<1>>, <<4>>, <<2>>, <<4>>]
 
     {:ok, result, stdio}
   end
@@ -82,7 +82,7 @@ defmodule Anoma.Client.Examples.EProve do
       :code.priv_dir(:anoma_client)
       |> Path.join("test_juvix/Identity.nockma")
       |> File.read!()
-      |> Nock.Cue.cue()
+      |> Noun.Jam.cue()
 
     inputs =
       Enum.map(["3"], &Noun.Format.parse_always/1)
@@ -90,7 +90,7 @@ defmodule Anoma.Client.Examples.EProve do
     {:ok, result, stdio} = Runner.prove(program, inputs)
 
     assert result == 3
-    assert stdio == [6_513_249]
+    assert stdio == ["abc"]
 
     {:ok, result, stdio}
   end
@@ -101,15 +101,23 @@ defmodule Anoma.Client.Examples.EProve do
       :code.priv_dir(:anoma_client)
       |> Path.join("test_juvix/CellHint.nockma")
       |> File.read!()
-      |> Nock.Cue.cue()
+      |> Noun.Jam.cue()
 
     inputs =
       Enum.map(["3"], &Noun.Format.parse_always/1)
 
     {:ok, result, stdio} = Runner.prove(program, inputs)
 
-    assert result == [1, 2 | 0]
-    assert stdio == [1, 0, 0, [1 | 0], 1, [1, 2 | 0]]
+    assert result == [1, 2 | <<>>]
+
+    assert stdio == [
+             <<1>>,
+             <<>>,
+             <<>>,
+             [<<1>> | <<>>],
+             <<1>>,
+             [<<1>>, <<2>> | <<>>]
+           ]
 
     {:ok, result, stdio}
   end

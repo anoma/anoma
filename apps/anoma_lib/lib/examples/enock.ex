@@ -140,7 +140,7 @@ defmodule Examples.ENock do
   def trivial_swap() do
     swap = Examples.ETransparent.ETransaction.swap_from_actions()
     noun = swap |> Noun.Nounable.to_noun()
-    {:ok, cued} = noun |> Nock.Jam.jam() |> Nock.Cue.cue()
+    {:ok, cued} = noun |> Noun.Jam.jam() |> Noun.Jam.cue()
     {:ok, cued_trans} = Transaction.from_noun(cued)
 
     assert Transaction.from_noun(noun) == {:ok, swap}
@@ -1118,7 +1118,7 @@ defmodule Examples.ENock do
   def action_delta_test() do
     action = EAction.trivial_true_commit_action() |> Noun.Nounable.to_noun()
 
-    {:ok, [[_ | 1] | 0]} =
+    {:ok, [[_ | 2]]} =
       action |> action_delta_call() |> Nock.nock([9, 2, 0 | 1])
   end
 
@@ -1653,15 +1653,17 @@ defmodule Examples.ENock do
       )
     )
 
-    assert dec() ==
-             dec() |> Nock.Jam.jam() |> Nock.Cue.cue!()
+    assert Noun.equal(
+             dec(),
+             dec() |> Noun.Jam.jam() |> Noun.Jam.cue!()
+           )
 
     :ok
   end
 
   @spec jam_and_cue(any(), any()) :: any()
   def jam_and_cue(jam_value, cue_value) do
-    assert Noun.equal(jam_value, Nock.Cue.cue!(cue_value))
-    assert cue_value == Nock.Jam.jam(Noun.normalize_noun(jam_value))
+    assert Noun.equal(jam_value, Noun.Jam.cue!(cue_value))
+    assert cue_value == Noun.Jam.jam(Noun.normalize_noun(jam_value))
   end
 end

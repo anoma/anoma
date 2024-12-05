@@ -14,9 +14,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
   def list_nullifiers(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
-    nullifiers =
-      Indexer.get(request.node_info.node_id, :nlfs)
-      |> Enum.map(&Base.encode64/1)
+    nullifiers = Indexer.get(request.node_info.node_id, :nlfs)
 
     %Nullifiers.Response{nullifiers: nullifiers}
   end
@@ -26,9 +24,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
   def list_unrevealed_commits(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
-    unrevealed =
-      Indexer.get(request.node_info.node_id, :unrevealed)
-      |> Enum.map(&Base.encode64/1)
+    unrevealed = Indexer.get(request.node_info.node_id, :unrevealed)
 
     %UnrevealedCommits.Response{commits: unrevealed}
   end
@@ -42,7 +38,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
       Indexer.get(request.node_info.node_id, :resources)
       |> Enum.map(fn r ->
         Noun.Nounable.to_noun(r)
-        |> Nock.Jam.jam()
+        |> Noun.Jam.jam()
       end)
 
     %UnspentResources.Response{unspent_resources: resources}

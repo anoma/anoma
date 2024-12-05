@@ -459,7 +459,7 @@ defmodule Nock.Jets do
 
     case maybe_sample do
       {:ok, sample} ->
-        {:ok, Nock.Jam.jam(sample)}
+        {:ok, Noun.Jam.jam(sample)}
 
       _ ->
         :error
@@ -472,7 +472,7 @@ defmodule Nock.Jets do
 
     case maybe_sample do
       {:ok, sample} when is_noun_atom(sample) ->
-        Nock.Cue.cue(sample)
+        Noun.Jam.cue(sample)
 
       _ ->
         :error
@@ -632,7 +632,7 @@ defmodule Nock.Jets do
   def action_delta(core) do
     with {:ok, a} <- sample(core),
          {:ok, action} <- Action.from_noun(a) do
-      res = action |> Action.delta() |> Noun.Nounable.to_noun()
+      res = action |> Action.delta() |> Delta.to_noun()
       {:ok, res}
     else
       _ -> :error

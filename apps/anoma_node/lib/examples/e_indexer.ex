@@ -209,14 +209,36 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
+  @doc """
+  I am a dummy resource with rseed random1 and nullifier_key jeremy
+  """
+  @spec jeremy_resource() :: Resource.t()
+  def jeremy_resource do
+    %Resource{
+      rseed: "random1",
+      nullifier_key: Noun.pad_trailing("jeremy", 32)
+    }
+  end
+
+  @doc """
+  I am a dummy resource with rseed random2 and nullifier_key michael
+  """
+  @spec michael_resource() :: Resource.t()
+  def michael_resource do
+    %Resource{
+      rseed: "random2",
+      nullifier_key: Noun.pad_trailing("michael", 32)
+    }
+  end
+
   def indexer_filters_owner(node_id \\ Node.example_random_id()) do
     ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
-    res1 = %Resource{rseed: "random1", nullifier_key: "jeremy"}
-    res2 = %Resource{rseed: "random2", nullifier_key: "michael"}
+    res1 = jeremy_resource()
+    res2 = michael_resource()
     list = [res1, res2]
 
     write_new(
@@ -227,13 +249,15 @@ defmodule Anoma.Node.Examples.EIndexer do
       list |> Enum.map(&Resource.commitment/1) |> MapSet.new()
     )
 
-    # nullifier keys are assumed to be 32 bytes long
-    jeremy = "jeremy" |> Noun.pad_trailing(32)
-    michael = "michael" |> Noun.pad_trailing(32)
-
     2 = Indexer.get(node_id, {:filter, []}) |> MapSet.size()
-    1 = Indexer.get(node_id, {:filter, [{:owner, jeremy}]}) |> MapSet.size()
-    1 = Indexer.get(node_id, {:filter, [{:owner, michael}]}) |> MapSet.size()
+
+    1 =
+      Indexer.get(node_id, {:filter, [{:owner, res1.nullifier_key}]})
+      |> MapSet.size()
+
+    1 =
+      Indexer.get(node_id, {:filter, [{:owner, res2.nullifier_key}]})
+      |> MapSet.size()
 
     node_id
   end

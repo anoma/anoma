@@ -18,6 +18,8 @@ defmodule Noun do
 
   defguard is_noun_cell(term) when is_list(term) and term != []
 
+  defguard is_noun_zero(term) when term == 0 or term == <<>> or term == []
+
   @spec axis(non_neg_integer(), t()) :: {:ok, t()} | :error
   def axis(axis, noun) do
     try do
@@ -126,6 +128,18 @@ defmodule Noun do
     [normalize_noun(h) | normalize_noun(t)]
   end
 
+  def abnormalize_noun(atom) when is_noun_atom(atom) do
+    cond do
+      atom == [] -> 0
+      is_binary(atom) -> atom_binary_to_integer(atom)
+      is_integer(atom) -> atom
+    end
+  end
+
+  def abnormalize_noun([h | t]) do
+    [abnormalize_noun(h) | abnormalize_noun(t)]
+  end
+
   @spec to_normalized_noun(Noun.Nounable.t()) :: Noun.t()
   def to_normalized_noun(value) do
     value
@@ -147,7 +161,7 @@ defmodule Noun do
 
   @spec mug(t()) :: non_neg_integer()
   def mug(noun) do
-    :erlang.term_to_binary(noun)
+    :erlang.term_to_binary(abnormalize_noun(noun))
     # seed: %mug
     |> Murmur.hash_x86_32(6_780_269)
   end

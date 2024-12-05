@@ -42,7 +42,7 @@ defmodule Anoma.Client.Api.Servers.Intents do
       # pick out the intents from the protobuf intent struct
       |> Enum.map(&Map.get(&1, :intent))
       # cue the jammed intents into nouns
-      |> Enum.map(&Nock.Cue.cue!(&1))
+      |> Enum.map(&Noun.Jam.cue!(&1))
       # nouns to transactions
       |> Enum.map(&Anoma.TransparentResource.Transaction.from_noun(&1))
       # unpack {:ok, tx} tuples
@@ -53,7 +53,7 @@ defmodule Anoma.Client.Api.Servers.Intents do
       transactions
       |> Enum.reduce(&Transaction.compose/2)
       |> Noun.Nounable.to_noun()
-      |> Nock.Jam.jam()
+      |> Noun.Jam.jam()
 
     %Compose.Response{intent: %Intent{intent: composed}}
   end
@@ -66,7 +66,7 @@ defmodule Anoma.Client.Api.Servers.Intents do
 
     res =
       request.intent.intent
-      |> Nock.Cue.cue!()
+      |> Noun.Jam.cue!()
       |> Transaction.from_noun()
       |> elem(1)
       |> Anoma.RM.Intent.verify()
