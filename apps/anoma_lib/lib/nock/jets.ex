@@ -431,7 +431,7 @@ defmodule Nock.Jets do
       # we get #b1111, if count is 4. Since 1 <<< 4 = #b10000 - 1 = #b1111
       # block_size just a left shift on the count
       mask = (1 <<< (count <<< block_size)) - 1
-      {:ok, val &&& mask}
+      {:ok, an_integer(val) &&& mask}
     else
       _ -> :error
     end
