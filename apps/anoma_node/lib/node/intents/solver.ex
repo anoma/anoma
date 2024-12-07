@@ -19,7 +19,6 @@ defmodule Anoma.Node.Intents.Solver do
   alias Node.Registry
   alias Anoma.RM.Intent
   alias EventBroker.Event
-  alias EventBroker.Filters
 
   require Logger
 
@@ -131,7 +130,9 @@ defmodule Anoma.Node.Intents.Solver do
     case event do
       %Event{
         source_module: IntentPool,
-        body: %Anoma.Node.Event{body: {:intent_added, intent}}
+        body: %Anoma.Node.Event{
+          body: %IntentPool.IntentAddSuccess{intent: intent}
+        }
       } ->
         handle_new_intent(intent, state)
 
@@ -245,7 +246,7 @@ defmodule Anoma.Node.Intents.Solver do
   # """
   @spec subscribe_to_new_intents(String.t()) :: :ok | String.t()
   defp subscribe_to_new_intents(node_id) do
-    filter = %Filters.SourceModule{module: IntentPool}
+    filter = %IntentPool.IntentAddSuccessFilter{}
 
     EventBroker.subscribe_me([
       Node.Event.node_filter(node_id),
