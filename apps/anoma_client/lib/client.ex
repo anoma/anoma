@@ -11,6 +11,8 @@ defmodule Anoma.Client do
   alias Anoma.Client.Runner
   alias Anoma.Protobuf.Intents.Intent
 
+  @client_config_dir "./tmp/clients"
+
   typedstruct do
     field(:type, :grpc | :tcp)
     field(:supervisor, pid())
@@ -37,6 +39,8 @@ defmodule Anoma.Client do
       {:ok, pid} ->
         client_grpc_port = :ranch.get_port(<<"Anoma.Client.Api.Endpoint">>)
 
+        store_client_config_file(client_grpc_port, node_id)
+
         {:ok,
          %__MODULE__{
            type: :grpc,
@@ -50,6 +54,13 @@ defmodule Anoma.Client do
       err ->
         {:error, :unknown_error, err}
     end
+  end
+
+  defp store_client_config_file(grpc_port, node_id) do
+    config = %{grpc_port: grpc_port, node_id: node_id}
+    path = Path.join(@client_config_dir, "config_#{node_id}.json")
+    File.mkdir_p!(@client_config_dir)
+    File.write!(path, Jason.encode!(config))
   end
 
   @doc """
@@ -114,5 +125,25 @@ defmodule Anoma.Client do
   def list_unspent_resources do
     {:ok, result} = GRPCProxy.list_unspent_resources()
     result.unspent_resources
+  end
+
+  @doc """
+  I return the client config that was stored in the most recently created file.
+  """
+  @spec get_last_client_config :: {:ok, map()} | {:error, :no_client_config}
+  def get_last_client_config do
+    with {:ok, files} <- File.ls(@client_config_dir),
+         false <- Enum.empty?(files),
+         last_file <-
+           files
+           |> Enum.map(&Path.join(@client_config_dir, &1))
+           |> Enum.filter(&File.exists?/1)
+           |> Enum.max_by(&File.stat!(&1).mtime, fn -> nil end),
+         {:ok, content} <- File.read(last_file),
+         {:ok, config} <- Jason.decode(content) do
+      {:ok, config}
+    else
+      _ -> {:error, :no_client_config}
+    end
   end
 end
