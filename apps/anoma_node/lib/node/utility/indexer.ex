@@ -3,17 +3,16 @@ defmodule Anoma.Node.Utility.Indexer do
   A trivial indexer querying the node tables.
   """
 
-  alias Anoma.TransparentResource.Resource
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Storage
+  alias Anoma.TransparentResource.Resource
 
   use GenServer
   use TypedStruct
 
-  typedstruct do
-    field(:node_id, String.t())
-    field(:filters, %{atom() => (any(), any() -> MapSet.t())})
-  end
+  ############################################################
+  #                    Types                                 #
+  ############################################################
 
   @type index_type() ::
           :nlfs
@@ -25,6 +24,19 @@ defmodule Anoma.Node.Utility.Indexer do
           | :latest_block
           | {:before | :after, non_neg_integer()}
           | {:filter, [{:owner, any()} | {:kind, binary()}]}
+
+  ############################################################
+  #                    State                                 #
+  ############################################################
+
+  typedstruct do
+    field(:node_id, String.t())
+    field(:filters, %{atom() => (any(), any() -> MapSet.t())})
+  end
+
+  ############################################################
+  #                      Public API                          #
+  ############################################################
 
   def start_link(args) do
     owner_filter = fn res, owner -> res.nullifier_key == owner end
@@ -47,8 +59,14 @@ defmodule Anoma.Node.Utility.Indexer do
     {:ok, state}
   end
 
-  @spec get(String.t(), index_type) ::
-          any()
+  @doc """
+  I get a value from the indexer.
+  I expect a node id and a flag.
+
+  The flag is used to determine which type of value is
+  requested from the indexer. Refer to `index_type` to see which flags.
+  """
+  @spec get(String.t(), index_type) :: any()
   def get(node_id, :latest_block) do
     get(node_id, {:after, get_height(node_id) - 1})
   end
@@ -58,6 +76,11 @@ defmodule Anoma.Node.Utility.Indexer do
     GenServer.call(name, flag)
   end
 
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+
+  # return the current height
   def handle_call(:height, _from, state) do
     {:reply, get_height(state.node_id), state}
   end
@@ -123,6 +146,10 @@ defmodule Anoma.Node.Utility.Indexer do
 
     {:reply, res, state}
   end
+
+  ############################################################
+  #                    Private Helpers                       #
+  ############################################################
 
   @spec res_from_coms(MapSet.t()) :: MapSet.t()
   defp res_from_coms(coms) do
