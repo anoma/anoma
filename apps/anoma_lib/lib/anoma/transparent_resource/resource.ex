@@ -82,6 +82,17 @@ defmodule Anoma.TransparentResource.Resource do
     :error
   end
 
+  @spec from_noun(Noun.t()) :: t()
+  def from_noun!(noun) do
+    case from_noun(noun) do
+      {:ok, resource} ->
+        resource
+
+      _ ->
+        raise ArgumentError, "not a valid resource noun #{inspect(noun)}"
+    end
+  end
+
   @spec noun_to_bool(Noun.t()) :: boolean()
   def noun_to_bool(zero) when zero in [0, <<>>, <<0>>, []] do
     true
