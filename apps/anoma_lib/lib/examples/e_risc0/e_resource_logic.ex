@@ -1,4 +1,4 @@
-defmodule Examples.ECairo.EResourceLogic do
+defmodule Examples.ERisc0.EResourceLogic do
   use Memoize
 
   alias Anoma.RM.Risc0.ProofRecord

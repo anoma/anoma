@@ -148,6 +148,7 @@ fn encrypt(
 
 
 fn main() {
+
     // Read the input resource
     let (resource, 
         resource_nf_key, 
