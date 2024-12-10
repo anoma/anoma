@@ -3,6 +3,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
+  alias Anoma.TransparentResource.Resource
   alias GRPC.Server.Stream
 
   use GRPC.Server, service: Anoma.Protobuf.IndexerService.Service
@@ -35,11 +36,10 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
     resources =
-      Indexer.get(request.node_info.node_id, :resources)
-      |> Enum.map(fn r ->
-        Noun.Nounable.to_noun(r)
-        |> Nock.Jam.jam()
-      end)
+      request.node_info.node_id
+      |> Indexer.unspent_resources()
+      |> Enum.map(&Resource.to_noun/1)
+      |> Enum.map(&Nock.Jam.jam/1)
 
     %UnspentResources.Response{unspent_resources: resources}
   end

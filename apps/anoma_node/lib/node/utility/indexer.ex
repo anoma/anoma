@@ -76,9 +76,32 @@ defmodule Anoma.Node.Utility.Indexer do
     GenServer.call(name, flag)
   end
 
+  @doc """
+  I return a list of all unspent resources.
+  """
+  @spec unspent_resources(String.t()) :: [Resource.t()]
+  def unspent_resources(node_id) do
+    name = Registry.via(node_id, __MODULE__)
+    GenServer.call(name, :unspent_resources)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
+
+  def handle_call(:unspent_resources, _from, state) do
+    resources =
+      state.node_id
+      |> unnulified_coms()
+      # strip the CM_ prefix from the commitment
+      |> Enum.map(fn <<"CM_", rest::binary>> -> rest end)
+      # cue the commits into nouns
+      |> Enum.map(&Nock.Cue.cue!/1)
+      # turn the nouns back into resources
+      |> Enum.map(&Resource.from_noun!/1)
+
+    {:reply, resources, state}
+  end
 
   # return the current height
   def handle_call(:height, _from, state) do

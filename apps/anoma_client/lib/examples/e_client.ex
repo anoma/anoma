@@ -10,6 +10,7 @@ defmodule Anoma.Client.Examples.EClient do
 
   alias Anoma.Client
   alias Anoma.Client.Examples.EClient
+  alias Anoma.Node.Examples.EIndexer
   alias Anoma.Node.Examples.ENode
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
@@ -23,6 +24,7 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.Nock.Prove
   alias Anoma.Protobuf.NockService
   alias Anoma.Protobuf.NodeInfo
+  alias Anoma.TransparentResource.Resource
 
   import ExUnit.Assertions
 
@@ -205,21 +207,33 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_unspent_resources(EConnection.t()) :: EConnection.t()
   def list_unspent_resources(conn \\ setup()) do
-    # Create an unrevealed commit using another example
-    Anoma.Node.Examples.EIndexer.indexer_reads_unrevealed(
-      conn.client.node.node_id
-    )
+    # Call another example to create a resource to be returned.
+    EIndexer.indexer_reads_unrevealed(conn.client.node.node_id)
 
+    # the resource we expect back is the empty resource with rseed "random2"
+    expected_resource = %Resource{rseed: "random2"}
+
+    # create a request to the GRPC endpoint to list all unspent resources.
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %UnspentResources.Request{node_info: node_id}
 
+    # the result should be a list with a single unspent resource.
     {:ok, reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
 
-    assert reply.unspent_resources == [
-             <<89, 177, 105, 28, 103, 102, 128, 86, 46, 204, 141, 236, 173,
-               77, 22>>
-           ]
+    # assert that the unspent resource is equal to the expected resource
+    assert Enum.count(reply.unspent_resources) == 1
+
+    # the returned resource is a jammed noun.
+    # cue-ing this turns it into a noun.
+    # the resulting noun can be turned into a resource.
+    {:ok, returned_resource} =
+      hd(reply.unspent_resources)
+      |> Nock.Cue.cue!()
+      |> Resource.from_noun()
+
+    # assert both resources are the samae
+    assert returned_resource == expected_resource
 
     conn
   end
