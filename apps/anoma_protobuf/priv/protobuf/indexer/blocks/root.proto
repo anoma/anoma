@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Indexer.Blocks.Root;
+
+import "node_info.proto";
+
+message Request { NodeInfo node_info = 1; }
+
+message Response { bytes root = 1; }

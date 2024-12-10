@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Indexer.Blocks.Get;
+
+import "node_info.proto";
+import "indexer/blocks/block.proto";
+
+message Request {
+  NodeInfo node_info = 1;
+  oneof index {
+    uint32 after = 2;
+    uint32 before = 3;
+  }
+}
+
+message Response { repeated Block blocks = 1; }
