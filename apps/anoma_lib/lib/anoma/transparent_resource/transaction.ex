@@ -157,6 +157,9 @@ defmodule Anoma.TransparentResource.Transaction do
          delta: delta,
          delta_proof: delta_proof
        }}
+    else
+      e ->
+        {:error, :transaction_to_noun_failed, e}
     end
   end
 

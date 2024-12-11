@@ -14,11 +14,12 @@ defmodule Anoma.Client.Api.Endpoint do
   """
   use GRPC.Endpoint
 
-  intercept(GRPC.Server.Interceptors.Logger)
+  intercept(GRPC.Server.Interceptors.Logger, level: :info)
   run(Anoma.Client.Api.Servers.Intents)
   run(Anoma.Client.Api.Servers.Indexer)
   run(Anoma.Client.Api.Servers.Nock)
   run(Anoma.Client.Api.Servers.Mempool)
   run(Anoma.Client.Api.Servers.Blocks)
   run(Anoma.Client.Api.ReflectionServer)
+  intercept(Anoma.Client.Api.Servers.ErrorInterceptor)
 end

@@ -1,7 +1,7 @@
 import Config
 
 config :logger,
-  level: :error,
+  level: :debug,
   handle_otp_reports: true,
   handle_sasl_reports: true
 
