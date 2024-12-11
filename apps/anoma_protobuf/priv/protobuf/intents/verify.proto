@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Intents.Verify;
+import "node_info.proto";
+import "intents/intent.proto";
+message Request {
+  NodeInfo node_info = 1;
+  Anoma.Protobuf.Intents.Intent intent = 2;
+}
+
+message Response { bool valid = 1; }

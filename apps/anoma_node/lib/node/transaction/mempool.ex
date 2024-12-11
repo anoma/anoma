@@ -257,14 +257,27 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @doc """
   I am a function to dump transactions.
+  I return a list of transaction ids.
 
   Given a node ID, I give all the transactions as currently stored in the
   corresponding Mempool state.
   """
 
-  @spec tx_dump(String.t()) :: [Mempool.Tx.t()]
+  @spec tx_dump(String.t()) :: [binary()]
   def tx_dump(node_id) do
     GenServer.call(Registry.via(node_id, __MODULE__), :dump)
+  end
+
+  @doc """
+  I am a function to dump transactions.
+  I return the list of transactions.
+
+  Given a node ID, I give all the transactions as currently stored in the
+  corresponding Mempool state.
+  """
+  @spec tx_dump_txs(String.t()) :: [Anoma.Node.Transaction.Mempool.Tx.t()]
+  def tx_dump_txs(node_id) do
+    GenServer.call(Registry.via(node_id, __MODULE__), :dump_transactions)
   end
 
   @doc """
@@ -350,6 +363,10 @@ defmodule Anoma.Node.Transaction.Mempool do
   @impl true
   def handle_call(:dump, _from, state) do
     {:reply, state.transactions |> Map.keys(), state}
+  end
+
+  def handle_call(:dump_transactions, _from, state) do
+    {:reply, state.transactions |> Map.values(), state}
   end
 
   def handle_call(_, _, state) do

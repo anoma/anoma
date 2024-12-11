@@ -16,6 +16,7 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
   alias Anoma.Protobuf.Mempool.AddTransaction
+  alias Anoma.Protobuf.Mempool.Dump
   alias Anoma.Protobuf.MempoolService
   alias Anoma.Protobuf.NodeInfo
   require Logger
@@ -120,11 +121,19 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, {:filter, filters})
   end
 
+  @spec dump_mempool() :: {:ok, Dump.Response.t()}
+  def dump_mempool() do
+    GenServer.call(__MODULE__, :dump_mempool)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
   @impl true
+  # ----------------------------------------------------------------------------
+  # Intentpool
+
   def handle_call({:list_intents}, _from, state) do
     node_info = %NodeInfo{node_id: state.node_id}
     request = %List.Request{node_info: node_info}
@@ -138,6 +147,9 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     result = IntentsService.Stub.add_intent(state.channel, request)
     {:reply, result, state}
   end
+
+  # ----------------------------------------------------------------------------
+  # Indexer
 
   def handle_call({:list_nullifiers}, _from, state) do
     node_info = %NodeInfo{node_id: state.node_id}
@@ -165,18 +177,6 @@ defmodule Anoma.Client.Connection.GRPCProxy do
       IndexerService.Stub.list_unspent_resources(state.channel, request)
 
     {:reply, resources, state}
-  end
-
-  def handle_call({:add_transaction, jammed_nock}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
-
-    request = %AddTransaction.Request{
-      transaction: jammed_nock,
-      node_info: node_info
-    }
-
-    MempoolService.Stub.add(state.channel, request)
-    {:reply, :ok, state}
   end
 
   def handle_call({:get_blocks, direction, offset}, _from, state) do
@@ -213,6 +213,32 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
     resources = BlockService.Stub.filter(state.channel, request)
     {:reply, resources, state}
+  end
+
+  # ----------------------------------------------------------------------------
+  # Mempool
+
+  def handle_call({:add_transaction, jammed_nock}, _from, state) do
+    node_info = %NodeInfo{node_id: state.node_id}
+
+    request = %AddTransaction.Request{
+      transaction: jammed_nock,
+      node_info: node_info
+    }
+
+    MempoolService.Stub.add(state.channel, request)
+    {:reply, :ok, state}
+  end
+
+  def handle_call(:dump_mempool, _from, state) do
+    node_info = %NodeInfo{node_id: state.node_id}
+
+    request = %Dump.Request{
+      node_info: node_info
+    }
+
+    jammed_tx_candidates = MempoolService.Stub.dump(state.channel, request)
+    {:reply, jammed_tx_candidates, state}
   end
 
   @impl true
