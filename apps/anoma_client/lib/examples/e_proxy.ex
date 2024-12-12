@@ -12,6 +12,8 @@ defmodule Anoma.Client.Examples.EProxy do
   alias Anoma.Client.Examples.EClient
   alias Anoma.Protobuf.Intent
   alias Anoma.Protobuf.Intents.Intent
+  alias Examples.ETransparent.ETransaction
+  alias Noun.Nounable
 
   require ExUnit.Assertions
 
@@ -55,8 +57,14 @@ defmodule Anoma.Client.Examples.EProxy do
   """
   @spec add_intent(EClient.t()) :: EClient.t()
   def add_intent(client \\ setup()) do
+    # create an arbitrary intent and jam it
+    intent_jammed =
+      ETransaction.nullify_intent()
+      |> Nounable.to_noun()
+      |> Nock.Jam.jam()
+
     # intent to add
-    intent = %Intent{value: 1}
+    intent = %Intent{intent: intent_jammed}
 
     # call the proxy
     result = GRPCProxy.add_intent(intent)
