@@ -1,0 +1,92 @@
+# Generate Docs
+#
+# I generate the documentation for the project.
+# I compile the documentation and publish it on GitHub pages.
+#
+# I take three parameters:
+# - mix-env: The environment to build the release for.
+# - elixir-version: The version of Elixir to use.
+# - otp-version: The version of OTP to use.
+name: Generate Docs
+on:
+  workflow_call:
+    inputs:
+      mix-env:
+        required: true
+        type: string
+      elixir-version:
+        required: true
+        type: string
+      otp-version:
+        required: true
+        type: string
+jobs:
+  compile-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout the repository
+        uses: actions/checkout@v4
+
+      - name: setup deps and _build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/deps
+            ${{ github.workspace }}/_build
+          key: ${{ runner.os }}-build-${{ inputs.mix-env }}-${{ hashFiles('mix.lock') }}
+
+      - name: setup elixir
+        uses: ./.github/actions/elixir_setup
+        with:
+          elixir-version: ${{ inputs.elixir-version }}
+          otp-version: ${{ inputs.otp-version }}
+
+      - name: install apt packages
+        uses: ./.github/actions/os_setup
+
+      # - name: compile docs
+      #   shell: bash
+      #   run: make docs-release
+      - name: generate docs
+        run: MIX_ENV=${{ inputs.mix-env }} mix docs
+
+  publish-docs:
+    environment:
+      name: github-pages
+    needs: compile-docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout the repository
+        uses: actions/checkout@v4
+
+      - name: setup deps and _build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/deps
+            ${{ github.workspace }}/_build
+          key: ${{ runner.os }}-build-${{ inputs.mix-env }}-${{ hashFiles('mix.lock') }}
+
+      - name: setup elixir
+        uses: ./.github/actions/elixir_setup
+        with:
+          elixir-version: ${{ inputs.elixir-version }}
+          otp-version: ${{ inputs.otp-version }}
+
+      - name: install apt packages
+        uses: ./.github/actions/os_setup
+
+      - name: generate docs
+        run: MIX_ENV=${{ inputs.mix-env }} mix docs
+
+      - name: setup github pages
+        uses: actions/configure-pages@v5
+
+      - name: upload docs to github pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./doc"
+
+      - name: deploy github pages
+        id: deployment
+        uses: actions/deploy-pages@v4

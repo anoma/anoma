@@ -1,0 +1,57 @@
+# Build Release
+#
+# I publish a release on GitHub
+name: Publish Release
+on:
+  workflow_call:
+
+jobs:
+  build_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout the repository
+        uses: actions/checkout@v4
+
+        #---------------------------------------------------------------------------
+        # Create a GitHub release
+
+      - name: ensure that the release does not exist yet
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          export RELEASE=$(gh release list --json name | jq '.[] | select(.name == "${{ github.ref_name }}") | .name') ; \
+          test -z "${RELEASE}" || echo "release ${RELEASE} already exists"
+
+      - name: create the release on github
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release create ${{ github.ref_name }} \
+          --title ${{ github.ref_name }}           \
+          --repo ${{ github.repository }}
+
+      #---------------------------------------------------------------------------
+      # Add the client binary to the release
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Display structure of downloaded files
+        run: ls -la artifacts
+
+      #---------------------------------------------------------------------------
+      # Push artifacts for this release
+
+      - name: publish all release binaries
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.github_token }}
+        run: |
+          for f in artifacts/*; do
+              gh release upload ${{ github.ref_name }} --clobber $f
+          done
