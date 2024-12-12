@@ -52,14 +52,14 @@ defmodule Anoma.Node.Transport.Messages do
     result = ["dump1", "dump2"]
 
     # construct the reply message
-    response = %Dump.Response{dumps: result}
+    response = %Dump.Response{transaction_candidates: result}
 
     {:reply, wrap(response, :mempool_dump_response, local_node_id, ref)}
   end
 
   def proto_to_call(response = %Dump.Response{}, ref, _local_node_id) do
     # construct the reply message
-    result = response.dumps
+    result = response.transaction_candidates
     {:is_reply, {:ok, result}, ref}
   end
 
