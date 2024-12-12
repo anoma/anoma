@@ -23,6 +23,8 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.Nock.Prove
   alias Anoma.Protobuf.NockService
   alias Anoma.Protobuf.NodeInfo
+  alias Examples.ETransparent.ETransaction
+  alias Noun.Nounable
 
   import ExUnit.Assertions
 
@@ -143,8 +145,18 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec add_intent(EConnection.t()) :: EConnection.t()
   def add_intent(conn \\ setup()) do
+    # create an arbitrary intent and jam it
+    intent_jammed =
+      ETransaction.nullify_intent()
+      |> Nounable.to_noun()
+      |> Nock.Jam.jam()
+
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %Add.Request{node_info: node_id, intent: %Intent{value: 1}}
+
+    request = %Add.Request{
+      node_info: node_id,
+      intent: %Intent{intent: intent_jammed}
+    }
 
     {:ok, _reply} = IntentsService.Stub.add_intent(conn.channel, request)
 
@@ -153,7 +165,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, reply} = IntentsService.Stub.list_intents(conn.channel, request)
 
-    assert reply.intents == ["1"]
+    assert reply.intents == [intent_jammed]
 
     conn
   end
