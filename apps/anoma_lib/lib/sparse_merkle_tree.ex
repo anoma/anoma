@@ -181,7 +181,7 @@ defmodule SparseMerkleTree do
   @doc """
   Returns a proof of the presence or absence of the given hash in the tree.
   The proof consists of a list representing the path between the tree root
-  to the leaf node for the data hash. Each path element is the hash of the
+  and the leaf node for the data hash. Each path element is the hash of the
   sibling branch at that node.
   """
   @spec proof(Self.t(), hash()) ::
