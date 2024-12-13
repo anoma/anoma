@@ -3,6 +3,8 @@ defmodule Anoma.CairoResource.Resource do
   I am a shielded resource.
   """
 
+  alias Anoma.CairoResource.Utils
+
   require Logger
 
   alias __MODULE__
@@ -27,6 +29,56 @@ defmodule Anoma.CairoResource.Resource do
     field(:nk_commitment, <<_::256>>, default: <<0::256>>)
     # random seed
     field(:rseed, <<_::256>>, default: <<0::256>>)
+  end
+
+  @spec from_json_object(Jason.OrderedObject.t()) ::
+          {:ok, t()}
+          | {:error, term()}
+  def from_json_object(mp) do
+    with {:ok, logic} <-
+           Utils.parse_json_field_to_binary32(mp, "logic"),
+         {:ok, label} <-
+           Utils.parse_json_field_to_binary32(mp, "label"),
+         {:ok, quantity} <-
+           Utils.parse_json_field_to_binary32(mp, "quantity"),
+         {:ok, data} <-
+           Utils.parse_json_field_to_binary32(mp, "data"),
+         {:ok, eph} <- Utils.parse_json_field_to_boolean(mp, "eph"),
+         {:ok, nonce} <-
+           Utils.parse_json_field_to_binary32(mp, "nonce"),
+         {:ok, nk_commitment} <-
+           Utils.parse_json_field_to_binary32(mp, "nk_commitment"),
+         {:ok, rseed} <-
+           Utils.parse_json_field_to_binary32(mp, "rseed") do
+      %Resource{
+        logic: logic,
+        label: label,
+        quantity: quantity,
+        data: data,
+        eph: eph,
+        nonce: nonce,
+        nk_commitment: nk_commitment,
+        rseed: rseed
+      }
+    else
+      {:error, msg} -> {:error, "Error parsing resource JSON: #{msg}"}
+    end
+  end
+
+  @spec to_json_object(t()) :: Jason.OrderedObject.t()
+  def to_json_object(resource) do
+    %Jason.OrderedObject{
+      values: [
+        {"logic", Utils.binary_to_hex(resource.logic)},
+        {"label", Utils.binary_to_hex(resource.label)},
+        {"quantity", Utils.binary_to_hex(resource.quantity)},
+        {"data", Utils.binary_to_hex(resource.data)},
+        {"eph", resource.eph},
+        {"nonce", Utils.binary_to_hex(resource.nonce)},
+        {"nk_commitment", Utils.binary_to_hex(resource.nk_commitment)},
+        {"rseed", Utils.binary_to_hex(resource.rseed)}
+      ]
+    }
   end
 
   @doc "Randomizes the rseed of a resource."
