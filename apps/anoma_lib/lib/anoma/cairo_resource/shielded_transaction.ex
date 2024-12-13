@@ -13,8 +13,8 @@ defmodule Anoma.CairoResource.Transaction do
   alias Anoma.CairoResource.ComplianceInstance
   alias Anoma.CairoResource.ProofRecord
   alias Anoma.CairoResource.Resource
-  alias Anoma.CairoResource.Workflow
   alias Anoma.CairoResource.Utils
+  alias Anoma.CairoResource.Workflow
   alias Anoma.Node.DummyStorage, as: Storage
 
   typedstruct enforce: true do

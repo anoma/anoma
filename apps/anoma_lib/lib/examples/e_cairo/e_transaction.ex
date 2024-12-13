@@ -74,6 +74,60 @@ defmodule Examples.ECairo.ETransaction do
     shielded_tx
   end
 
+  @spec a_shielded_transaction_from_compliance_units() ::
+          Transaction.t()
+  def a_shielded_transaction_from_compliance_units do
+    compliance1_inputs =
+      File.read!(
+        Path.join(
+          :code.priv_dir(:anoma_lib),
+          "params/compliance1_inputs.json"
+        )
+      )
+
+    compliance2_inputs =
+      File.read!(
+        Path.join(
+          :code.priv_dir(:anoma_lib),
+          "params/compliance2_inputs.json"
+        )
+      )
+
+    resource_logic =
+      File.read!(
+        Path.join(
+          :code.priv_dir(:anoma_lib),
+          "params/trivial_resource_logic.json"
+        )
+      )
+
+    witness =
+      File.read!(
+        Path.join(:code.priv_dir(:anoma_lib), "params/default_witness.json")
+      )
+
+    compliance_units = [compliance1_inputs, compliance2_inputs]
+    input_logics = [resource_logic, resource_logic]
+    input_witnesses = [witness, witness]
+    output_logics = [resource_logic, resource_logic]
+    output_witnesses = [witness, witness]
+
+    {:ok, pre_tx} =
+      Transaction.create_from_compliance_units(
+        compliance_units,
+        input_logics,
+        input_witnesses,
+        output_logics,
+        output_witnesses
+      )
+
+    shielded_tx = Transaction.finalize(pre_tx)
+
+    assert Anoma.RM.Transaction.verify(shielded_tx)
+
+    shielded_tx
+  end
+
   @spec a_shielded_transaction_composition() :: Transaction.t()
   def a_shielded_transaction_composition do
     priv_keys = <<3::256>>
