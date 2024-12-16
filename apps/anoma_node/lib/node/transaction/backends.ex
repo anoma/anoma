@@ -430,7 +430,7 @@ defmodule Anoma.Node.Transaction.Backends do
             {CTransaction.cm_tree(),
              MapSet.new([Anoma.Constants.default_cairo_rm_root()])}
 
-          val ->
+          {:ok, val} ->
             {val, MapSet.new()}
         end
 
@@ -491,7 +491,7 @@ defmodule Anoma.Node.Transaction.Backends do
     stored_roots =
       case Ordering.read(node_id, {id, anoma_keyspace("cairo_roots")}) do
         :absent -> MapSet.new([Anoma.Constants.default_cairo_rm_root()])
-        val -> val
+        {:ok, val} -> val
       end
 
     Enum.all?(transaction.roots, &MapSet.member?(stored_roots, &1)) or
