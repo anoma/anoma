@@ -19,6 +19,7 @@ defmodule Anoma.Node.Transaction.Backends do
   alias Anoma.TransparentResource.Transaction, as: TTransaction
   alias Anoma.TransparentResource.Resource, as: TResource
   alias CommitmentTree.Spec
+  alias Anoma.CairoResource.Transaction, as: CTransaction
 
   import Nock
   require Noun
@@ -31,6 +32,7 @@ defmodule Anoma.Node.Transaction.Backends do
           | {:debug_read_term, pid}
           | :debug_bloblike
           | :transparent_resource
+          | :cairo_resource
 
   @type transaction() :: {backend(), Noun.t() | binary()}
 
@@ -178,6 +180,10 @@ defmodule Anoma.Node.Transaction.Backends do
 
   defp backend_logic(:transparent_resource, node_id, id, vm_res) do
     transparent_resource_tx(node_id, id, vm_res)
+  end
+
+  defp backend_logic(:cairo_resource, node_id, id, vm_res) do
+    cairo_resource_tx(node_id, id, vm_res)
   end
 
   @spec transparent_resource_tx(String.t(), binary(), Noun.t()) ::
@@ -408,6 +414,88 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec empty_write(backend(), String.t(), binary()) :: :ok
   defp empty_write(_backend, node_id, id) do
     Ordering.write(node_id, {id, []})
+  end
+
+  @spec cairo_resource_tx(String.t(), binary(), Noun.t()) ::
+          :ok | :error
+  defp cairo_resource_tx(node_id, id, result) do
+    with {:ok, tx} <- CTransaction.from_noun(result),
+         true <- Anoma.RM.Transaction.verify(tx),
+         true <- root_existence_check(tx, node_id, id),
+         # No need to check the commitment existence
+         true <- nullifier_existence_check(tx, node_id, id) do
+      {ct, append_roots} =
+        case Ordering.read(node_id, {id, anoma_keyspace("cairo_ct")}) do
+          :absent ->
+            {CTransaction.cm_tree(),
+             MapSet.new([Anoma.Constants.default_cairo_rm_root()])}
+
+          val ->
+            {val, MapSet.new()}
+        end
+
+      {ct_new, anchor} =
+        CommitmentTree.add(ct, tx.commitments)
+
+      Ordering.add(
+        node_id,
+        {id,
+         %{
+           append: [
+             {anoma_keyspace("cairo_nullifiers"), MapSet.new(tx.nullifiers)},
+             {anoma_keyspace("cairo_roots"), MapSet.put(append_roots, anchor)}
+           ],
+           write: [{anoma_keyspace("cairo_ct"), ct_new}]
+         }}
+      )
+
+      nullifier_event(tx.nullifiers, node_id)
+
+      {:ok, tx}
+    else
+      e ->
+        unless e == :error do
+          Logging.log_event(
+            node_id,
+            :error,
+            "Transaction verification failed. Reason: #{inspect(e)}"
+          )
+        end
+
+        :error
+    end
+  end
+
+  @spec nullifier_existence_check(CTransaction.t(), String.t(), binary()) ::
+          true | {:error, String.t()}
+  def nullifier_existence_check(transaction, node_id, id) do
+    with {:ok, stored_nullifiers} <-
+           Ordering.read(node_id, {id, anoma_keyspace("cairo_nullifiers")}) do
+      if Enum.any?(
+           transaction.nullifiers,
+           &MapSet.member?(stored_nullifiers, &1)
+         ) do
+        {:error, "A submitted nullifier already exists in storage"}
+      else
+        true
+      end
+    else
+      # stored_nullifiers is empty
+      _ -> true
+    end
+  end
+
+  @spec root_existence_check(CTransaction.t(), String.t(), binary()) ::
+          true | {:error, String.t()}
+  def root_existence_check(transaction, node_id, id) do
+    stored_roots =
+      case Ordering.read(node_id, {id, anoma_keyspace("cairo_roots")}) do
+        :absent -> MapSet.new([Anoma.Constants.default_cairo_rm_root()])
+        val -> val
+      end
+
+    Enum.all?(transaction.roots, &MapSet.member?(stored_roots, &1)) or
+      {:error, "A submitted root dose not exist in storage"}
   end
 
   ############################################################

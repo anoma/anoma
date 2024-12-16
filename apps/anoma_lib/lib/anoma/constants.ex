@@ -25,4 +25,15 @@ defmodule Anoma.Constants do
       <<0, 243, 140, 176, 138, 18, 187, 241, 244, 57, 14, 171, 83, 197, 244,
         132, 155, 123, 124, 59, 152, 25, 9, 88, 193, 242, 178, 20, 246, 56,
         191, 55>>
+
+  @doc """
+  The default merkle root in cairo RM is used when the root set is empty and can
+  also serve as the root of ephemeral resources.
+  """
+  @spec default_cairo_rm_root() :: binary()
+  def default_cairo_rm_root,
+    do:
+      <<6, 124, 174, 248, 163, 2, 209, 70, 232, 31, 51, 44, 37, 217, 113, 131,
+        226, 238, 232, 60, 152, 133, 78, 133, 107, 15, 250, 211, 118, 207, 54,
+        121>>
 end

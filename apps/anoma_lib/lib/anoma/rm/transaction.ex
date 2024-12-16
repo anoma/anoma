@@ -14,7 +14,7 @@ defprotocol Anoma.RM.Transaction do
   @spec compose(t(), t()) :: t()
   def compose(tx1, tx2)
 
-  @spec verify(t()) :: boolean()
+  @spec verify(t()) :: true | {:error, String.t()}
   def verify(transaction)
 
   @spec storage_commitments(t()) :: list(binary())
@@ -28,12 +28,6 @@ defprotocol Anoma.RM.Transaction do
 
   @spec nullifiers(t()) :: list(binary())
   def nullifiers(transaction)
-
-  @spec cm_tree(t(), term()) :: CommitmentTree.t()
-  def cm_tree(transaction, storage)
-
-  @spec resource_existence_check(t(), pid()) :: boolean()
-  def resource_existence_check(transaction, storage)
 end
 
 defmodule Anoma.RM.Trans do
