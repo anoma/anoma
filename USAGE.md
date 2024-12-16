@@ -1,6 +1,6 @@
 # How this works
 
-There are three parties in this setup: the anoma node, the anoma client, and a third party client.
+There are three parties in this setup: the Anoma node, the Anoma client, and a third party client.
 The Anoma client serves the purpose of taking in requests from the third party client and relaying them
 to an arbitrary Anoma node.
 
