@@ -173,14 +173,13 @@ defmodule Examples.ECommitmentTree do
   """
   @spec memory_backed_ct_with_trivial_cairo_tx(term()) ::
           {CommitmentTree.t(), binary()}
-  def memory_backed_ct_with_trivial_cairo_tx(spec \\ cairo_poseidon_spec()) do
+  def memory_backed_ct_with_trivial_cairo_tx(
+        cms,
+        spec \\ cairo_poseidon_spec()
+      ) do
     tree = memory_backed_ct(spec)
 
-    output_resource_cm =
-      ECairo.EResource.a_fixed_output_resource()
-      |> Anoma.CairoResource.Resource.commitment()
-
-    {tree, anchor} = CommitmentTree.add(tree, [output_resource_cm])
+    {tree, anchor} = CommitmentTree.add(tree, cms)
 
     {tree, anchor}
   end
