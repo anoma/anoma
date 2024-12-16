@@ -41,7 +41,7 @@ The philosophy for what is stored in Mnesia should be: "Is this something the us
 
 ## Actor Storage
 
-Actor storage on the other hand are for things we don't wish the user to be able to query. Thus implementaiton details about the execution should be omitted from user visible storage, and would be better served stored on the Actor.
+Actor storage on the other hand are for things we don't wish the user to be able to query. Thus implementation details about the execution should be omitted from user visible storage, and would be better served stored on the Actor.
 
 A good example of this is the old ordering logic.
 
