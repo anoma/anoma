@@ -261,7 +261,8 @@ defmodule Anoma.Node.Transaction.Backends do
     action_nullifiers = TTransaction.nullifiers(trans)
 
     if latest_root_time > 0 do
-      root_coms = Storage.read(node_id, {latest_root_time, :commitments})
+      {:ok, root_coms} =
+        Storage.read(node_id, {latest_root_time, :commitments})
 
       for <<"NF_", rest::binary>> <- action_nullifiers,
           reduce: MapSet.new([]) do
