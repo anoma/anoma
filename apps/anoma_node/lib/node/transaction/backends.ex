@@ -147,8 +147,8 @@ defmodule Anoma.Node.Transaction.Backends do
 
   @spec storage_check?(String.t(), binary(), TTransaction.t()) :: boolean()
   defp storage_check?(node_id, id, trans) do
-    stored_commitments = Ordering.read(node_id, {id, :commitments})
-    stored_nullifiers = Ordering.read(node_id, {id, :nullifiers})
+    {:ok, stored_commitments} = Ordering.read(node_id, {id, :commitments})
+    {:ok, stored_nullifiers} = Ordering.read(node_id, {id, :nullifiers})
 
     not any_nullifiers_already_exist?(stored_nullifiers, trans) &&
       not any_commitments_already_exist?(stored_commitments, trans)
