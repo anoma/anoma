@@ -1,4 +1,11 @@
 defmodule Nock.Jets.Mugs do
+  @moduledoc """
+  I am the Mugs module for the Nock Jet system.
+
+  I have all the information for the mugs of any jetted arm in the Anoma
+  standard library.
+  """
+
   alias Nock.Jets
 
   @layer_1_context_mug Jets.calculate_mug_of_layer(1)

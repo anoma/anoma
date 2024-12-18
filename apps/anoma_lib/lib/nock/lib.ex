@@ -1,4 +1,12 @@
 defmodule Nock.Lib do
+  @moduledoc """
+  I am the Nock Library module.
+
+  I contain the information relating to the Anoma standard library. In
+  particular, I store the ammount of layers that the library has as well as
+  the Nock strings corresponding to them.
+  """
+
   @layers 9
 
   @doc """
