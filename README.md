@@ -1,5 +1,5 @@
 # Anoma
-
+5 star for anoma
 This is an implementation of the Anoma protocol, whose specs can be
 found [here](https://specs.anoma.net/latest).
 
