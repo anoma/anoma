@@ -17,7 +17,8 @@ defmodule Examples.ECairo.EResourceLogic do
 
     instance = res.public_inputs |> LogicInstance.from_public_input()
 
-    plaintext = LogicInstance.decrypt(instance.cipher, <<1::256>>)
+    assert {:ok, plaintext} =
+             LogicInstance.decrypt(instance.cipher, <<1::256>>)
 
     a_resource = EResource.a_fixed_resource()
 
