@@ -1,5 +1,5 @@
 defmodule Examples.ECairo.ETransaction do
-  alias Anoma.CairoResource.Transaction
+  alias Anoma.CairoResource.{LogicInstance, Transaction}
   alias Examples.ECairo.EAction
 
   use TestHelper.TestMacro
@@ -197,5 +197,20 @@ defmodule Examples.ECairo.ETransaction do
              Anoma.RM.Transaction.verify(invalid_shielded_tx)
 
     invalid_shielded_tx
+  end
+
+  @spec shielded_transaction_cipher_texts() :: [
+          %{cipher: list(), tag: binary()}
+        ]
+  def shielded_transaction_cipher_texts(decryption_key \\ <<1::256>>) do
+    cipher_texts =
+      a_shielded_transaction_with_multiple_actions()
+      |> Transaction.get_cipher_texts()
+
+    for %{tag: _, cipher: c} <- cipher_texts do
+      assert {:ok, _} = LogicInstance.decrypt(c, decryption_key)
+    end
+
+    cipher_texts
   end
 end

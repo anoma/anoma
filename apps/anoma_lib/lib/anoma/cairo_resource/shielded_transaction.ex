@@ -9,12 +9,16 @@ defmodule Anoma.CairoResource.Transaction do
 
   alias __MODULE__
   use TypedStruct
-  alias Anoma.CairoResource.Action
-  alias Anoma.CairoResource.ComplianceInstance
-  alias Anoma.CairoResource.ProofRecord
-  alias Anoma.CairoResource.Resource
-  alias Anoma.CairoResource.Utils
-  alias Anoma.CairoResource.Workflow
+
+  alias Anoma.CairoResource.{
+    Action,
+    ComplianceInstance,
+    ProofRecord,
+    Resource,
+    LogicInstance,
+    Utils,
+    Workflow
+  }
 
   typedstruct enforce: true do
     # TODO: The roots, commitments, and nullifiers can be eliminated. We can
@@ -362,5 +366,23 @@ defmodule Anoma.CairoResource.Transaction do
       CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
       nil
     )
+  end
+
+  @doc """
+  Retrieves the cipher texts from the given transaction.
+
+  ## Parameters
+    - tx: A `Transaction` struct containing the transaction data.
+
+  ## Returns
+    - A list of tuples where each tuple contains a binary tag(commitment) and a cipher text(a list of binary).
+  """
+  @spec get_cipher_texts(Transaction.t()) ::
+          list(%{tag: binary(), cipher: list(binary())})
+  def get_cipher_texts(tx) do
+    tx.actions
+    |> Enum.flat_map(& &1.logic_proofs)
+    |> Enum.map(&LogicInstance.from_public_input(&1.public_inputs))
+    |> Enum.map(&%{tag: &1.tag, cipher: &1.cipher})
   end
 end
