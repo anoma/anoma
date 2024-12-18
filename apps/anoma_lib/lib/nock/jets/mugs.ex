@@ -1,14 +1,16 @@
 defmodule Nock.Jets.Mugs do
-  @layer_1_context_mug Nock.Jets.calculate_mug_of_layer(1)
-  @layer_4_context_mug 1_869_390_925
-  @layer_5_context_mug 4_018_337_361
-  @layer_6_context_mug 3_932_234_981
-  @layer_7_context_mug 4_202_542_228
-  @layer_8_context_mug 1_736_366_676
-  @layer_4_block_context_mug 2_756_805_836
+  alias Nock.Jets
+
+  @layer_1_context_mug Jets.calculate_mug_of_layer(1)
+  @layer_4_context_mug Jets.calculate_mug_of_layer(4)
+  @layer_5_context_mug Jets.calculate_mug_of_layer(5)
+  @layer_6_context_mug Jets.calculate_mug_of_layer(6)
+  @layer_7_context_mug Jets.calculate_mug_of_layer(7)
+  @layer_8_context_mug Jets.calculate_mug_of_layer(8)
+  @layer_4_block_context_mug Jets.calculate_mug_of_param_layer(10, 4)
 
   # always the topmost layer
-  @layer_rm_context_mug 2_116_148_812
+  @layer_rm_context_mug Jets.calculate_mug_of_layer(9)
 
   # hardcoded jet registry
   # valid statuses:
@@ -16,84 +18,84 @@ defmodule Nock.Jets.Mugs do
   # - :disabled, jet is fully disabled
   # - :check, check that jet and naive produce the same result
   @jet_registry %{
-    3_739_349_216 =>
+    Jets.calculate_mug_of_core(342, 1) =>
       {"dec", 7, @layer_1_context_mug, &Nock.Jets.dec/1, :enabled, 10},
-    3_819_277_753 =>
+    Jets.calculate_mug_of_core(20, 1) =>
       {"add", 7, @layer_1_context_mug, &Nock.Jets.add/1, :enabled, 10},
-    2_374_874_615 =>
+    Jets.calculate_mug_of_core(47, 1) =>
       {"sub", 7, @layer_1_context_mug, &Nock.Jets.sub/1, :enabled, 10},
-    1_130_480_894 =>
+    Jets.calculate_mug_of_core(343, 1) =>
       {"lth", 7, @layer_1_context_mug, &Nock.Jets.lth/1, :enabled, 10},
-    2_271_972_775 =>
+    Jets.calculate_mug_of_core(84, 1) =>
       {"lte", 7, @layer_1_context_mug, &Nock.Jets.lte/1, :enabled, 10},
-    3_066_075_584 =>
+    Jets.calculate_mug_of_core(43, 1) =>
       {"gth", 7, @layer_1_context_mug, &Nock.Jets.gth/1, :enabled, 10},
-    2_449_621_320 =>
+    Jets.calculate_mug_of_core(22, 1) =>
       {"gte", 7, @layer_1_context_mug, &Nock.Jets.gte/1, :enabled, 10},
-    2_208_363_748 =>
+    Jets.calculate_mug_of_core(4, 1) =>
       {"mul", 7, @layer_1_context_mug, &Nock.Jets.mul/1, :enabled, 10},
-    91_135_323 =>
+    Jets.calculate_mug_of_core(170, 1) =>
       {"div", 7, @layer_1_context_mug, &Nock.Jets.div/1, :enabled, 10},
-    567_449_323 =>
+    Jets.calculate_mug_of_core(46, 1) =>
       {"mod", 7, @layer_1_context_mug, &Nock.Jets.mod/1, :enabled, 10},
-    1_531_543_893 =>
+    Jets.calculate_mug_of_core(4, 6) =>
       {"verify", 7, @layer_6_context_mug, &Nock.Jets.verify/1, :enabled, 100},
-    3_991_451_804 =>
+    Jets.calculate_mug_of_core(10, 6) =>
       {"sign", 7, @layer_6_context_mug, &Nock.Jets.sign/1, :enabled, 100},
-    3_656_885_839 =>
+    Jets.calculate_mug_of_core(22, 6) =>
       {"verify-detatched", 7, @layer_6_context_mug,
        &Nock.Jets.verify_detatched/1, :enabled, 100},
-    1_699_002_748 =>
+    Jets.calculate_mug_of_core(23, 6) =>
       {"sign-detatched", 7, @layer_6_context_mug, &Nock.Jets.sign_detatched/1,
        :enabled, 100},
-    1_585_653_763 =>
+    Jets.calculate_mug_of_core(4, 4) =>
       {"bex", 7, @layer_4_context_mug, &Nock.Jets.bex/1, :enabled, 20},
-    1_023_807_257 =>
+    Jets.calculate_mug_of_core(4, 5) =>
       {"mix", 7, @layer_5_context_mug, &Nock.Jets.mix/1, :enabled, 20},
-    2_968_763_525 =>
+    Jets.calculate_mug_of_core(22, 5) =>
       {"jam", 7, @layer_5_context_mug, &Nock.Jets.jam/1, :enabled, 50},
-    3_271_615_052 =>
+    Jets.calculate_mug_of_core(94, 5) =>
       {"cue", 7, @layer_5_context_mug, &Nock.Jets.cue/1, :enabled, 50},
-    1_423_749_879 =>
+    Jets.calculate_mug_of_core(22, 7) =>
       {"shax", 7, @layer_7_context_mug, &Nock.Jets.shax/1, :enabled, 100},
-    1_761_078_299 =>
+    Jets.calculate_mug_of_param_core(190, 10, 4) =>
       {"met", 14, @layer_4_block_context_mug, &Nock.Jets.met/1, :enabled, 20},
-    3_976_423_375 =>
+    Jets.calculate_mug_of_param_core(367, 10, 4) =>
       {"end", 14, @layer_4_block_context_mug, &Nock.Jets.nend/1, :enabled, 20},
-    3_534_989_962 =>
+    Jets.calculate_mug_of_param_core(90, 10, 4) =>
       {"lsh", 14, @layer_4_block_context_mug, &Nock.Jets.lsh/1, :enabled, 20},
-    3_410_895_654 =>
+    Jets.calculate_mug_of_param_core(767, 10, 4) =>
       {"rsh", 14, @layer_4_block_context_mug, &Nock.Jets.rsh/1, :enabled, 20},
-    724_462_226 =>
+    Jets.calculate_mug_of_core(1515, 8) =>
       {"abs", 7, @layer_8_context_mug, &Nock.Jets.abs/1, :enabled, 30},
-    2_668_782_675 =>
+    Jets.calculate_mug_of_core(759, 8) =>
       {"dif", 7, @layer_8_context_mug, &Nock.Jets.dif/1, :enabled, 30},
-    1_814_685_155 =>
+    Jets.calculate_mug_of_core(22, 8) =>
       {"dul", 7, @layer_8_context_mug, &Nock.Jets.dul/1, :enabled, 30},
-    2_357_319_448 =>
+    Jets.calculate_mug_of_core(190, 8) =>
       {"fra", 7, @layer_8_context_mug, &Nock.Jets.fra/1, :enabled, 30},
-    2_272_237_948 =>
+    Jets.calculate_mug_of_core(46, 8) =>
       {"pro", 7, @layer_8_context_mug, &Nock.Jets.pro/1, :enabled, 30},
-    2_517_398_177 =>
+    Jets.calculate_mug_of_core(1514, 8) =>
       {"rem", 7, @layer_8_context_mug, &Nock.Jets.rem/1, :enabled, 30},
-    2_325_836_748 =>
+    Jets.calculate_mug_of_core(4, 8) =>
       {"sum", 7, @layer_8_context_mug, &Nock.Jets.sum/1, :enabled, 30},
-    244_446_486 =>
+    Jets.calculate_mug_of_core(10, 8) =>
       {"sun", 7, @layer_8_context_mug, &Nock.Jets.sun/1, :enabled, 30},
-    1_720_910_226 =>
+    Jets.calculate_mug_of_core(188, 8) =>
       {"syn", 7, @layer_8_context_mug, &Nock.Jets.syn/1, :enabled, 30},
-    3_800_851_664 =>
+    Jets.calculate_mug_of_core(191, 8) =>
       {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30},
-    3_823_717_687 =>
+    Jets.calculate_mug_of_core(92, 9) =>
       {"delta-add", 7, @layer_rm_context_mug, &Nock.Jets.delta_add/1,
        :enabled, 50},
-    332_825_089 =>
+    Jets.calculate_mug_of_core(1527, 9) =>
       {"delta-sub", 7, @layer_rm_context_mug, &Nock.Jets.delta_sub/1,
        :enabled, 50},
-    4_289_938_596 =>
+    Jets.calculate_mug_of_core(4, 9) =>
       {"action-delta", 7, @layer_rm_context_mug, &Nock.Jets.action_delta/1,
        :enabled, 50},
-    4_289_816_935 =>
+    Jets.calculate_mug_of_core(1494, 9) =>
       {"make-delta", 7, @layer_rm_context_mug, &Nock.Jets.make_delta/1,
        :enabled, 50}
   }
