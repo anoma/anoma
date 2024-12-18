@@ -94,7 +94,7 @@ defmodule Anoma.Client.Connection.TCP do
   end
 
   # @doc """
-  # I reply to a message that was sent previoulsy.
+  # I reply to a message that was sent previously.
   # """
   def handle_cast({:reply_to, ref, message}, state) do
     case Map.pop(state.callers, ref) do
