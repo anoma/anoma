@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Compile.Protoc do
     target_path = compiler_opts[:elixir_out]
 
     if forced? or source_updated?(source_path, target_path) do
-      Mix.shell().info("Compling protobuf files")
+      Mix.shell().info("Compiling protobuf files")
 
       cleanup_targets(target_path)
 
