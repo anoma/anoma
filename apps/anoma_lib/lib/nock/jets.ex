@@ -70,7 +70,7 @@ defmodule Nock.Jets do
   def calculate_mug_of_layer(layer) do
     context_axis = layer_offset(layer)
 
-    with {:ok, context} <- Noun.axis(context_axis, Nock.rm_core()) do
+    with {:ok, context} <- Noun.axis(context_axis, Nock.Lib.rm_core()) do
       mug(context)
     end
   end
@@ -124,7 +124,7 @@ defmodule Nock.Jets do
         ) ::
           :error | {:ok, Noun.t()}
   def calculate_core_param(core_index, gate_index, parent_layer) do
-    nock4k(Nock.rm_core(), [
+    nock4k(Nock.Lib.rm_core(), [
       7,
       [
         9,
@@ -140,7 +140,7 @@ defmodule Nock.Jets do
   @spec calculate_core(non_neg_integer(), non_neg_integer()) ::
           :error | {:ok, Noun.t()}
   def calculate_core(index_in_core, layer) do
-    nock4k(Nock.rm_core(), [
+    nock4k(Nock.Lib.rm_core(), [
       8,
       [
         9,
@@ -153,7 +153,7 @@ defmodule Nock.Jets do
 
   @spec layer_offset(non_neg_integer) :: non_neg_integer
   defp layer_offset(layers) do
-    Noun.index_to_offset(Nock.stdlib_layers() - layers + 1)
+    Noun.index_to_offset(Nock.Lib.stdlib_layers() - layers + 1)
   end
 
   # when this is called, we've already jet-matched axis 7.

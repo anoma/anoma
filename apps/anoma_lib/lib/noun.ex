@@ -306,9 +306,9 @@ defmodule Noun do
 
   def condensed_print(cell = [h | t]) do
     cond do
-      cell == Nock.stdlib_core() -> "<stdlib>"
-      cell == Nock.rm_core() -> "<rm>"
-      cell == Nock.logics_core() -> "<logics>"
+      cell == Nock.Lib.stdlib_core() -> "<stdlib>"
+      cell == Nock.Lib.rm_core() -> "<rm>"
+      cell == Nock.Lib.logics_core() -> "<logics>"
       true -> "[" <> condensed_print(h) <> " " <> condensed_print(t) <> "]"
     end
   end
