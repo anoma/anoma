@@ -17,7 +17,7 @@ defmodule Nock.Jets.Mugs do
   @layer_4_block_context_mug Jets.calculate_mug_of_param_layer(10, 4)
 
   # always the topmost layer
-  @layer_rm_context_mug Jets.calculate_mug_of_layer(9)
+  @layer_rm_context_mug Jets.calculate_mug_of_layer(Nock.Lib.stdlib_layers())
 
   # hardcoded jet registry
   # valid statuses:
@@ -93,16 +93,16 @@ defmodule Nock.Jets.Mugs do
       {"syn", 7, @layer_8_context_mug, &Nock.Jets.syn/1, :enabled, 30},
     Jets.calculate_mug_of_core(191, 8) =>
       {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30},
-    Jets.calculate_mug_of_core(92, 9) =>
+    Jets.calculate_mug_of_core(92, Nock.Lib.stdlib_layers()) =>
       {"delta-add", 7, @layer_rm_context_mug, &Nock.Jets.delta_add/1,
        :enabled, 50},
-    Jets.calculate_mug_of_core(1527, 9) =>
+    Jets.calculate_mug_of_core(1527, Nock.Lib.stdlib_layers()) =>
       {"delta-sub", 7, @layer_rm_context_mug, &Nock.Jets.delta_sub/1,
        :enabled, 50},
-    Jets.calculate_mug_of_core(4, 9) =>
+    Jets.calculate_mug_of_core(4, Nock.Lib.stdlib_layers()) =>
       {"action-delta", 7, @layer_rm_context_mug, &Nock.Jets.action_delta/1,
        :enabled, 50},
-    Jets.calculate_mug_of_core(1494, 9) =>
+    Jets.calculate_mug_of_core(1494, Nock.Lib.stdlib_layers()) =>
       {"make-delta", 7, @layer_rm_context_mug, &Nock.Jets.make_delta/1,
        :enabled, 50}
   }
