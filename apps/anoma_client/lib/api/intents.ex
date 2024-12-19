@@ -78,5 +78,12 @@ defmodule Anoma.Client.Api.Servers.Intents do
       end
 
     %Verify.Response{valid: bool}
+  rescue
+    _ in Noun.Jam.CueError ->
+      Logger.debug(
+        "GRPC #{inspect(__ENV__.function)}: #{inspect(request)} - CueError"
+      )
+
+      %Verify.Response{valid: false}
   end
 end

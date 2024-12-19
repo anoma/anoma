@@ -237,6 +237,19 @@ defmodule Anoma.Client.Examples.EClient do
     reply.valid
   end
 
+  @spec verify_intent_with_invalid_intent(EConnection.t()) :: EConnection.t()
+  def verify_intent_with_invalid_intent(conn \\ setup()) do
+    intent = %Intent{intent: "invalid"}
+
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    request = %Verify.Request{node_info: node_id, intent: intent}
+    {:ok, reply} = IntentsService.Stub.verify(conn.channel, request)
+
+    refute reply.valid
+
+    conn
+  end
+
   @doc """
   I list all nullifiers.
   """
