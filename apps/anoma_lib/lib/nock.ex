@@ -38,6 +38,9 @@ defmodule Nock do
   @layer_8_context_mug 1_736_366_676
   @layer_4_block_context_mug 2_756_805_836
 
+  # always the topmost layer
+  @layer_rm_context_mug 3_643_335_627
+
   # hardcoded jet registry
   # valid statuses:
   # - :enabled, jet is fully enabled
@@ -111,7 +114,19 @@ defmodule Nock do
     1_720_910_226 =>
       {"syn", 7, @layer_8_context_mug, &Nock.Jets.syn/1, :enabled, 30},
     3_800_851_664 =>
-      {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30}
+      {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30},
+    3_823_717_687 =>
+      {"delta-add", 7, @layer_rm_context_mug, &Nock.Jets.delta_add/1,
+       :enabled, 50},
+    332_825_089 =>
+      {"delta-sub", 7, @layer_rm_context_mug, &Nock.Jets.delta_sub/1,
+       :enabled, 50},
+    4_289_938_596 =>
+      {"action-delta", 7, @layer_rm_context_mug, &Nock.Jets.action_delta/1,
+       :enabled, 50},
+    4_289_816_935 =>
+      {"make-delta", 7, @layer_rm_context_mug, &Nock.Jets.make_delta/1,
+       :enabled, 50}
   }
 
   @doc """
@@ -2851,7 +2866,7 @@ defmodule Nock do
   end
 
   rm_string = """
-  [ [8 [1 0 0 0 0] [1 0 0] 0 1]
+  [ [7 [8 [1 0 0 0 0] [1 8 [1 30.160.793.233.665.617.219.451.904.865] 0 0] 0 1] 11 [1.953.718.630 1 30.160.793.233.665.617.219.451.904.865 [0 7] 0] 0 1]
   [ [1 0]
     [ [ 8
         [1 0 0 0]
@@ -2898,8 +2913,8 @@ defmodule Nock do
     1
   ]
   [8 [1 0] [1 1 478.793.196.187.462.788.804.451] 0 1]
-  [ [8 [1 0 0] [1 0 0] 0 1]
-    [ [8 [1 0] [1 0 0] 0 1]
+  [ [7 [8 [1 0 0] [1 8 [1 1.851.907.519.744.077.227.364] 0 0] 0 1] 11 [1.953.718.630 1 1.851.907.519.744.077.227.364 [0 7] 0] 0 1]
+    [ [7 [8 [1 0] [1 8 [1 460.217.181.910.180.775.551.341] 0 0] 0 1] 11 [1.953.718.630 1 460.217.181.910.180.775.551.341 [0 7] 0] 0 1]
       [ [8 [1 0 [[1 0] 0 0] 1 1 [0 0] 0 0 1.701.536.102] [1 [0 12] 0 26] 0 1]
         [ 8
           [1 [0 [[1 0] 0 0] 1 1 [0 0] 0 0 1.701.536.102] [0 0 0 0] 0 0 0]
@@ -3030,9 +3045,10 @@ defmodule Nock do
       0
       1
     ]
-    8
-    [1 0 0]
-    [1 0 0]
+    7
+    [8 [1 0 0] [1 8 [1 1.816.244.077.244.883.690.852] 0 0] 0 1]
+    11
+    [1.953.718.630 1 1.816.244.077.244.883.690.852 [0 7] 0]
     0
     1
   ]

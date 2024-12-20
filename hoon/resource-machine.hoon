@@ -110,11 +110,15 @@
   |=  *
   %compliance
 ++  delta-add
+  ~/  %delta-add
   |=  [d1=delta d2=delta]
+  =+  c=%delta-add
   ^-  delta
   !!
 ++  delta-sub
+  ~/  %delta-sub
   |=  [d1=delta d2=delta]
+  =+  c=%delta-sub
   ^-  delta
   !!
 ++  resource-delta
@@ -122,11 +126,15 @@
   ^-  delta
   ~[[(kind resource) (sun quantity.resource)]]
 ++  action-delta
+  ~/  %action-delta
   |=  =action
+  =+  c=%action-delta
   ^-  delta
   !!
 ++  make-delta  ::  make delta from actions (to make a transaction)
+  ~/  %make-delta
   |=  actions=(list action)
+  =+  c=%make-delta
   ^-  delta
   !!
 ++  prove-delta  ::  prove delta, trivially
