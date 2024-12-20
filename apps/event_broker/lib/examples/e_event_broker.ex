@@ -422,4 +422,95 @@ defmodule Examples.EEventBroker do
     assert "[Nock] do not export filtering functions" ==
              EventBroker.subscribe_me([%{__struct__: Nock}])
   end
+
+  @doc """
+  I am a function that tests the unsubscription mechanism when a subscriber goes offline.
+
+  I create two processes to subscribe to a chain, and then kill them one by one.
+
+  I check that the filters remain in the registry after the first subscriber is killed,
+  and that they are removed after the second subscriber is killed.
+  """
+
+  @spec kill_subscriber() :: boolean()
+  def kill_subscriber do
+    # assert that the registry is now empty
+    assert [[]] ==
+             :sys.get_state(EventBroker.Registry).registered_filters
+             |> Map.keys()
+
+    # get the pid of the shell to wait for processes to be ready
+    this = self()
+    # spawn a first subscriber
+    first =
+      spawn(fn ->
+        Process.register(self(), :first)
+
+        :ok =
+          EventBroker.subscribe_me([
+            trivial_filter_spec()
+          ])
+
+        send(this, :first)
+
+        rcv = fn rcv ->
+          receive do
+            %Event{} -> :ok
+          end
+
+          rcv.(rcv)
+        end
+
+        rcv.(rcv)
+      end)
+
+    second =
+      spawn(fn ->
+        Process.register(self(), :second)
+
+        :ok =
+          EventBroker.subscribe_me([
+            trivial_filter_spec()
+          ])
+
+        send(this, :second)
+
+        rcv = fn rcv ->
+          receive do
+            %Event{} -> :ok
+          end
+
+          rcv.(rcv)
+        end
+
+        rcv.(rcv)
+      end)
+
+    receive do
+      :first -> :ok
+    end
+
+    receive do
+      :second -> :ok
+    end
+
+    assert [first, second] ==
+             Map.keys(
+               :sys.get_state(EventBroker.Registry).registered_subscribers
+             )
+
+    # kill the first subscriber
+    Process.exit(first, :kill)
+    Process.sleep(100)
+
+    assert [[], [%EventBroker.Filters.Trivial{}]] ==
+             Map.keys(:sys.get_state(EventBroker.Registry).registered_filters)
+
+    # kill the first subscriber
+    Process.exit(second, :kill)
+    Process.sleep(100)
+
+    assert [[]] ==
+             Map.keys(:sys.get_state(EventBroker.Registry).registered_filters)
+  end
 end
