@@ -23,6 +23,7 @@ defmodule Nock do
     )
 
     field(:meter_pid, pid() | nil, default: nil)
+    field(:gas_limit, non_neg_integer() | nil, default: nil)
     field(:stdio, any(), default: :stdio)
   end
 
@@ -310,7 +311,13 @@ defmodule Nock do
   @spec metered_nock(Noun.t(), Noun.t(), t()) ::
           {:ok, Noun.t(), non_neg_integer()} | {:error, non_neg_integer()}
   def metered_nock(subject, formula, environment) do
-    meter = Task.async(Nock, :gas_meter, [])
+    meter =
+      if environment.gas_limit do
+        Task.async(Nock, :gas_limit, [environment.gas_limit, self(), 0])
+      else
+        Task.async(Nock, :gas_meter, [0])
+      end
+
     result = nock(subject, formula, %{environment | meter_pid: meter.pid})
     send(meter.pid, :done)
     gas_cost = Task.await(meter)
@@ -334,6 +341,21 @@ defmodule Nock do
     receive do
       {:gas, n} ->
         gas_meter(n + gas)
+
+      :done ->
+        gas
+    end
+  end
+
+  def gas_limit(limit, pid, gas) do
+    receive do
+      {:gas, n} ->
+        if n + gas > limit do
+          Process.exit(pid, :kill)
+          gas
+        else
+          gas_meter(n + gas)
+        end
 
       :done ->
         gas
