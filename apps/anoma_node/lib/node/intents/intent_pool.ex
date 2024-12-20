@@ -33,11 +33,13 @@ defmodule Anoma.Node.Intents.IntentPool do
     - `:node_id` - The ID of the Node.
     - `:nlfs_set` - The set of known nullifiers.
     - `:cms_set` - The set of known commitments.
+    - `:table` - The table name for storing intents.
     """
     field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
     field(:node_id, String.t())
     field(:nlfs_set, MapSet.t(binary()), default: MapSet.new())
     field(:cms_set, MapSet.t(binary()), default: MapSet.new())
+    field(:table, atom())
   end
 
   ############################################################
@@ -53,6 +55,24 @@ defmodule Anoma.Node.Intents.IntentPool do
   @impl true
   def init(args) do
     Logger.debug("starting intent pool with #{inspect(args)}")
+
+    args =
+      args
+      |> Keyword.validate!([
+        :node_id,
+        intents: MapSet.new([]),
+        nlfs_set: MapSet.new([]),
+        cms_set: MapSet.new([]),
+        rocks: false,
+        table: __MODULE__.Intents
+      ])
+
+    table =
+      String.to_atom("#{args[:table]}_#{:erlang.phash2(args[:node_id])}")
+
+    rocks_opt = args[:rocks] |> Anoma.Utility.rock_opts()
+    :mnesia.create_table(table, rocks_opt ++ [attributes: [:type, :body]])
+
     node_id = args[:node_id]
 
     EventBroker.subscribe_me([
@@ -60,7 +80,20 @@ defmodule Anoma.Node.Intents.IntentPool do
       trm_filter()
     ])
 
-    {:ok, %IntentPool{node_id: args[:node_id]}}
+    intents =
+      reject_intents(
+        args[:intents],
+        MapSet.union(args[:nlfs_set], args[:cms_set])
+      )
+
+    {:ok,
+     %IntentPool{
+       node_id: node_id,
+       intents: intents,
+       nlfs_set: args[:nlfs_set],
+       cms_set: args[:cms_set],
+       table: table
+     }}
   end
 
   ############################################################
@@ -142,6 +175,18 @@ defmodule Anoma.Node.Intents.IntentPool do
     with :ok <- validate_intent_uniqueness(intent, state),
          :ok <- validate_nullifier_uniqueness(intent, state.nlfs_set),
          :ok <- validate_commitment_uniqueness(intent, state.cms_set) do
+      table = state.table
+
+      :mnesia.transaction(fn ->
+        res =
+          case :mnesia.read(table, "intents") do
+            [] -> MapSet.new()
+            [{^table, "intents", res}] -> res
+          end
+
+        :mnesia.write({table, "intents", MapSet.put(res, intent)})
+      end)
+
       {:ok, :inserted, add_intent!(intent, state)}
     else
       {:error, :already_present} ->
@@ -276,5 +321,16 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   defp trm_filter() do
     %__MODULE__.TRMFilter{}
+  end
+
+  @doc """
+  I am the name of the unsolved table.
+  Given a Node ID, I create an appropriately named table for storing
+  unsolved intents.
+  """
+
+  @spec table_name(String.t()) :: atom()
+  def table_name(node_id) do
+    String.to_atom("#{__MODULE__.Intents}_#{:erlang.phash2(node_id)}")
   end
 end
