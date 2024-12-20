@@ -340,14 +340,12 @@ defmodule Anoma.Node.Examples.ETransaction do
     assert {:ok, base_swap |> Transaction.nullifiers()} ==
              Storage.read(node_id, {1, ["anoma", "nullifiers"]})
 
-    assert {:ok, base_swap |> Transaction.commitments()} ==
-             Storage.read(node_id, {1, ["anoma", "commitments"]})
+    cms = base_swap |> Transaction.commitments()
 
-    {tree, anchor} =
-      Examples.ECommitmentTree.memory_backed_ct_with_trivial_swap()
+    assert {:ok, cms} == Storage.read(node_id, {1, ["anoma", "commitments"]})
 
-    assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "ct"]})
-    assert {:ok, anchor} == Storage.read(node_id, {1, ["anoma", "anchor"]})
+    assert {:ok, Backends.value(cms)} ==
+             Storage.read(node_id, {1, ["anoma", "anchor"]})
 
     EventBroker.unsubscribe_me([])
 
