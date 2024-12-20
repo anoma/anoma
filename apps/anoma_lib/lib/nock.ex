@@ -452,7 +452,12 @@ defmodule Nock do
         when ten in [10, <<10>>] ->
           {:ok, replacement} = nock(subject, replacement_formula, environment)
           {:ok, sub_result} = nock(subject, sub_formula, environment)
-          Noun.replace(axis, replacement, sub_result)
+
+          Noun.replace(
+            Noun.atom_binary_to_integer(axis),
+            replacement,
+            sub_result
+          )
 
         # 11: hint (spec macro)
         # *[a 11 [b c] d]     *[[*[a c] *[a d]] 0 3]
