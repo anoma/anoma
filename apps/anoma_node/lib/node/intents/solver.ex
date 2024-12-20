@@ -181,7 +181,7 @@ defmodule Anoma.Node.Intents.Solver do
     unsolved_list = state.unsolved |> Enum.to_list()
     set = unsolved_list |> solve()
 
-    unsolved = MapSet.reject(state.unsolved, &MapSet.member?(set, &1))
+    unsolved = MapSet.filter(state.unsolved, &unsolved_reject(set, &1))
 
     unless Enum.empty?(set) do
       set |> Enum.reduce(&Intent.compose/2) |> submit(state.node_id)
@@ -291,5 +291,14 @@ defmodule Anoma.Node.Intents.Solver do
   end
 
   def submit(_, _) do
+  end
+
+  @spec unsolved_reject(MapSet.t(Intent.t()), Intent.t()) :: bool()
+  defp unsolved_reject(solved, intent) do
+    not MapSet.member?(solved, intent) and
+      MapSet.disjoint?(
+        solved,
+        MapSet.union(Intent.nullifiers(intent), Intent.commitments(intent))
+      )
   end
 end
