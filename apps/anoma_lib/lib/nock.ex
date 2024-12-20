@@ -424,7 +424,7 @@ defmodule Nock do
           {:ok, result_1} = nock(subject, formula_1, environment)
           {:ok, result_2} = nock(subject, formula_2, environment)
 
-          if Noun.equal(result_1, result_2) do
+          if Noun.equal?(result_1, result_2) do
             {:ok, 0}
           else
             {:ok, 1}
