@@ -28,7 +28,6 @@ defmodule Mix.Tasks.Compile.Protoc do
 
       :ok
     else
-      Mix.shell().info("No changes to protobuf files")
       :ok
     end
   end
