@@ -340,6 +340,9 @@ defmodule Anoma.Node.Examples.ETransaction do
     assert {:ok, base_swap |> Transaction.nullifiers()} ==
              Storage.read(node_id, {1, ["anoma", "nullifiers"]})
 
+    assert {:ok, base_swap |> Transaction.commitments()} ==
+             Storage.read(node_id, {1, ["anoma", "commitments"]})
+
     cms = base_swap |> Transaction.commitments()
 
     assert {:ok, cms} == Storage.read(node_id, {1, ["anoma", "commitments"]})
