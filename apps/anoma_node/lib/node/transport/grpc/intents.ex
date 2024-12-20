@@ -19,7 +19,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
       |> Enum.map(fn i ->
         i
         |> Noun.Nounable.to_noun()
-        |> Nock.Jam.jam()
+        |> Noun.Jam.jam()
       end)
 
     %List.Response{intents: intents}
@@ -36,7 +36,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
     #  cue it and create a transaction
     {:ok, intent} =
       request.intent.intent
-      |> Nock.Cue.cue!()
+      |> Noun.Jam.cue!()
       |> Anoma.TransparentResource.Transaction.from_noun()
 
     IntentPool.new_intent(request.node_info.node_id, intent)

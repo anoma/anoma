@@ -536,7 +536,7 @@ defmodule Nock do
       IO.write(environment.stdio, "#{inspect(hint_result)}\n")
     else
       # hint_str = Noun.Format.print(hint_result)
-      hint_str = Nock.Jam.jam(hint_result) |> Base.encode64()
+      hint_str = Noun.Jam.jam(hint_result) |> Base.encode64()
       IO.write(environment.stdio, hint_str)
     end
   end

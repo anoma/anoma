@@ -154,7 +154,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   @spec cue_when_atom(Noun.t()) :: :error | {:ok, Noun.t()}
   defp cue_when_atom(tx_code) when Noun.is_noun_atom(tx_code) do
-    Nock.Cue.cue(tx_code)
+    Noun.Jam.cue(tx_code)
   end
 
   defp cue_when_atom(tx_code) do
@@ -352,7 +352,9 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec ephemeral?(Noun.noun_atom()) :: boolean()
   defp ephemeral?(jammed_transaction) do
     nock_boolean =
-      Nock.Cue.cue(jammed_transaction)
+      Noun.Jam.cue(jammed_transaction)
+      |> elem(1)
+      |> Noun.list_nock_to_erlang_safe()
       |> elem(1)
       |> List.pop_at(2)
       |> elem(0)

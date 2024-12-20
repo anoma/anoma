@@ -88,7 +88,7 @@ defmodule Anoma.Client do
     intent_jammed =
       intent
       |> Noun.Nounable.to_noun()
-      |> Nock.Jam.jam()
+      |> Noun.Jam.jam()
 
     intent = %Intent{intent: intent_jammed}
     {:ok, result} = GRPCProxy.add_intent(intent)

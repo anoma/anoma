@@ -61,7 +61,7 @@ defmodule Anoma.Client.Examples.EProxy do
     intent_jammed =
       ETransaction.nullify_intent()
       |> Nounable.to_noun()
-      |> Nock.Jam.jam()
+      |> Noun.Jam.jam()
 
     # intent to add
     intent = %Intent{intent: intent_jammed}
