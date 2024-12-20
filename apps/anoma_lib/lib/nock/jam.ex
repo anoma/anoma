@@ -16,7 +16,7 @@ defmodule Nock.Jam do
     encode(%__MODULE__{}, noun)
     |> then(fn %__MODULE__{buffer: buf} -> buf end)
     |> Enum.reverse()
-    |> Nock.Bits.bit_list_to_integer()
+    |> Noun.Bits.bit_list_to_integer()
     |> Noun.atom_integer_to_binary()
   end
 
@@ -49,8 +49,8 @@ defmodule Nock.Jam do
   def handle_back(env, position, noun) when Noun.is_noun_atom(noun) do
     # Ensure we can do arithmetic on it!
     noun = Noun.atom_binary_to_integer(noun)
-    position_length = Nock.Bits.num_bits(position, 0)
-    atom_length = Nock.Bits.num_bits(noun, 0)
+    position_length = Noun.Bits.num_bits(position, 0)
+    atom_length = Noun.Bits.num_bits(noun, 0)
 
     if atom_length <= position_length do
       write(env, noun)
@@ -66,7 +66,7 @@ defmodule Nock.Jam do
 
     env
     |> write_to_env([0])
-    |> write_length(Nock.Bits.num_bits(atom, 0))
+    |> write_length(Noun.Bits.num_bits(atom, 0))
     |> write_atom(atom)
   end
 
@@ -81,7 +81,7 @@ defmodule Nock.Jam do
 
   @spec write_length(t(), non_neg_integer()) :: t()
   def write_length(env, len_atom) do
-    bit_width_of_len = Nock.Bits.num_bits(len_atom, 0)
+    bit_width_of_len = Noun.Bits.num_bits(len_atom, 0)
     # We are writing [0,…ₙ₋₁,0,1] to the buffer
     # We are encoding the length of the length of the atom that we are
     # going to write
@@ -94,7 +94,7 @@ defmodule Nock.Jam do
       # Our encoding is the LSB, buuuut since we have to write in
       # reverse, and cut off the first
       len_atom
-      |> Nock.Bits.integer_to_bits()
+      |> Noun.Bits.integer_to_bits()
       |> Enum.reverse()
       |> tl()
       |> then(&write_to_env(env, &1))
@@ -103,14 +103,14 @@ defmodule Nock.Jam do
 
   @spec write_atom(t(), Noun.noun_atom()) :: t()
   def write_atom(env, atom) do
-    write_to_env(env, atom |> Nock.Bits.integer_to_bits() |> Enum.reverse())
+    write_to_env(env, atom |> Noun.Bits.integer_to_bits() |> Enum.reverse())
   end
 
   @spec write_back_ref(t(), non_neg_integer()) :: t()
   def write_back_ref(env, position) do
     env
     |> write_to_env([1, 1])
-    |> write_length(Nock.Bits.num_bits(position, 0))
+    |> write_length(Noun.Bits.num_bits(position, 0))
     |> write_atom(position)
   end
 
