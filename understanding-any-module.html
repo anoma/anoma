@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.28.0">
+    <meta name="project" content="Anoma v0.29.0">
 
 
-    <title>Understanding any code in Anoma — Anoma v0.28.0</title>
+    <title>Understanding any code in Anoma — Anoma v0.29.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-E5C3E840.js"></script>
+    <script src="dist/sidebar_items-B6C10190.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.28.0
+          v0.29.0
         </div>
       </div>
     </div>
@@ -138,7 +138,7 @@ GUIDES
   </a>
   <span class="text">Index</span>
 </h2>
-<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a></li></ol><h2 id="figuring-out-what-a-module-does" class="section-heading">
+<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a></li><li><a href="jam.html">Jam</a></li></ol><h2 id="figuring-out-what-a-module-does" class="section-heading">
   <a href="#figuring-out-what-a-module-does" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -148,7 +148,7 @@ GUIDES
 instance.</p><pre><code class="makeup elixir" translate="no"><span class="kn">require</span><span class="w"> </span><span class="nc">IEx.Helpers</span><span class="w">
 </span><span class="kn">import</span><span class="w"> </span><span class="nc">IEx.Helpers</span><span class="w">
 </span><span class="c1"># the above two lines are not requried for the REPL!</span><span class="w">
-</span><span class="n">h</span><span class="p" data-group-id="3403604240-1">(</span><span class="nc">Anoma.Node.Transaction.Backends</span><span class="p" data-group-id="3403604240-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="w">
+</span><span class="n">h</span><span class="p" data-group-id="4656990871-1">(</span><span class="nc">Anoma.Node.Transaction.Backends</span><span class="p" data-group-id="4656990871-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="w">
                         </span><span class="nc">Anoma.Node.Transaction.Backends</span><span class="w">
 
 </span><span class="nc">Backend</span><span class="w"> </span><span class="n">module</span><span class="o">.</span><span class="w"> </span><span class="nc">Support</span><span class="w"> </span><span class="ss">:kv</span><span class="p">,</span><span class="w"> </span><span class="ss">:ro</span><span class="p">,</span><span class="w"> </span><span class="ss">:rm</span><span class="p">,</span><span class="w"> </span><span class="ss">:cairo</span><span class="w"> </span><span class="n">execution</span><span class="o">.</span><span class="w">
@@ -162,7 +162,7 @@ this can be found here:</p><ul><li><code class="inline">anoma/apps/anoma_lib/lib
 </span><span class="kn">require</span><span class="w"> </span><span class="nc">ExUnit.Assertions</span><span class="w">
 </span><span class="kn">import</span><span class="w"> </span><span class="nc">ExUnit.Assertions</span><span class="w">
 
-</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Examples.ECrypto</span></code></pre><pre><code class="makeup output" translate="no"><span class="nc">Examples.ECrypto</span></code></pre><p>Once this is had, we can simply run any example trivially!</p><pre><code class="makeup elixir" translate="no"><span class="n">one_two</span><span class="p" data-group-id="1780260160-1">(</span><span class="p" data-group-id="1780260160-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="7159111493-1">[</span><span class="p" data-group-id="7159111493-2">&lt;&lt;</span><span class="mi">1</span><span class="p" data-group-id="7159111493-2">&gt;&gt;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="7159111493-3">&lt;&lt;</span><span class="mi">2</span><span class="p" data-group-id="7159111493-3">&gt;&gt;</span><span class="p" data-group-id="7159111493-1">]</span></code></pre><p>Further since the data is live, we can use tools like <code class="inline">:observer</code> to
+</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Examples.ECrypto</span></code></pre><pre><code class="makeup output" translate="no"><span class="nc">Examples.ECrypto</span></code></pre><p>Once this is had, we can simply run any example trivially!</p><pre><code class="makeup elixir" translate="no"><span class="n">one_two</span><span class="p" data-group-id="1836750847-1">(</span><span class="p" data-group-id="1836750847-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="2183356343-1">[</span><span class="p" data-group-id="2183356343-2">&lt;&lt;</span><span class="mi">1</span><span class="p" data-group-id="2183356343-2">&gt;&gt;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p" data-group-id="2183356343-3">&lt;&lt;</span><span class="mi">2</span><span class="p" data-group-id="2183356343-3">&gt;&gt;</span><span class="p" data-group-id="2183356343-1">]</span></code></pre><p>Further since the data is live, we can use tools like <code class="inline">:observer</code> to
 view the processes, and see general state dumping commands.</p>
 </div>
 
@@ -196,11 +196,11 @@ Writing Documents
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.29.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.29.0">Hex Preview</a>
 
-              (<a href="https://preview.hex.pm/preview/anoma/0.28.0/show/documentation/contributing/understanding-any-module.livemd">current file</a>)
+              (<a href="https://preview.hex.pm/preview/anoma/0.29.0/show/documentation/contributing/understanding-any-module.livemd">current file</a>)
 
           </span>
 

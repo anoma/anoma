@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.28.0">
+    <meta name="project" content="Anoma v0.29.0">
 
 
-    <title>Anoma.Node.Event.DefEvent — Anoma v0.28.0</title>
+    <title>Anoma.Node.Event.DefEvent — Anoma v0.29.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-E5C3E840.js"></script>
+    <script src="dist/sidebar_items-B6C10190.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.28.0
+          v0.29.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Event.DefEvent</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.29.0)</small>
 
   </h1>
 
@@ -202,7 +202,7 @@ an associated filter.</p><h3 id="defevent/3-parameters" class="section-heading">
   </a>
   <span class="text">Options</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="o">*</span><span class="w"> </span><span class="err">`</span><span class="ss">:enforce</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">When</span><span class="w"> </span><span class="n">set</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="no">true</span><span class="w"> </span><span class="p" data-group-id="1698170587-1">(</span><span class="n">default</span><span class="p" data-group-id="1698170587-1">)</span><span class="p">,</span><span class="w"> </span><span class="n">fields</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">struct</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">enforced</span><span class="o">.</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="o">*</span><span class="w"> </span><span class="err">`</span><span class="ss">:enforce</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">When</span><span class="w"> </span><span class="n">set</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="no">true</span><span class="w"> </span><span class="p" data-group-id="7999516046-1">(</span><span class="n">default</span><span class="p" data-group-id="7999516046-1">)</span><span class="p">,</span><span class="w"> </span><span class="n">fields</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">struct</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">enforced</span><span class="o">.</span><span class="w">
 </span><span class="o">*</span><span class="w"> </span><span class="err">`</span><span class="ss">:filter</span><span class="err">`</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">The</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">created</span><span class="p">,</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">desired</span><span class="o">.</span><span class="w"> </span><span class="nc">If</span><span class="w">
   </span><span class="err">`</span><span class="no">nil</span><span class="err">`</span><span class="p">,</span><span class="w"> </span><span class="n">no</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">created</span><span class="o">.</span></code></pre><h3 id="defevent/3-example" class="section-heading">
   <a href="#defevent/3-example" class="hover-link">
@@ -210,13 +210,13 @@ an associated filter.</p><h3 id="defevent/3-parameters" class="section-heading">
   </a>
   <span class="text">Example</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="n">defevent</span><span class="w"> </span><span class="nc">CompleteEvent</span><span class="p">,</span><span class="w"> </span><span class="ss">filter</span><span class="p">:</span><span class="w"> </span><span class="nc">CompleteFilter</span><span class="w"> </span><span class="k" data-group-id="4216125250-1">do</span><span class="w">
-  </span><span class="n">field</span><span class="p" data-group-id="4216125250-2">(</span><span class="ss">:tx_id</span><span class="p">,</span><span class="w"> </span><span class="n">integer</span><span class="p" data-group-id="4216125250-3">(</span><span class="p" data-group-id="4216125250-3">)</span><span class="p" data-group-id="4216125250-2">)</span><span class="w">
-  </span><span class="n">field</span><span class="p" data-group-id="4216125250-4">(</span><span class="ss">:tx_result</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4216125250-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">any</span><span class="p" data-group-id="4216125250-6">(</span><span class="p" data-group-id="4216125250-6">)</span><span class="p" data-group-id="4216125250-5">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:error</span><span class="p" data-group-id="4216125250-4">)</span><span class="w">
-</span><span class="k" data-group-id="4216125250-1">end</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="n">defevent</span><span class="w"> </span><span class="nc">CompleteEvent</span><span class="p">,</span><span class="w"> </span><span class="ss">enforce</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w"> </span><span class="ss">filter</span><span class="p">:</span><span class="w"> </span><span class="nc">CompleteFilter</span><span class="w"> </span><span class="k" data-group-id="8512825905-1">do</span><span class="w">
-  </span><span class="n">field</span><span class="p" data-group-id="8512825905-2">(</span><span class="ss">:tx_id</span><span class="p">,</span><span class="w"> </span><span class="n">integer</span><span class="p" data-group-id="8512825905-3">(</span><span class="p" data-group-id="8512825905-3">)</span><span class="p" data-group-id="8512825905-2">)</span><span class="w">
-  </span><span class="n">field</span><span class="p" data-group-id="8512825905-4">(</span><span class="ss">:tx_result</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8512825905-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">any</span><span class="p" data-group-id="8512825905-6">(</span><span class="p" data-group-id="8512825905-6">)</span><span class="p" data-group-id="8512825905-5">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:error</span><span class="p" data-group-id="8512825905-4">)</span><span class="w">
-</span><span class="k" data-group-id="8512825905-1">end</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="n">defevent</span><span class="w"> </span><span class="nc">CompleteEvent</span><span class="p">,</span><span class="w"> </span><span class="ss">filter</span><span class="p">:</span><span class="w"> </span><span class="nc">CompleteFilter</span><span class="w"> </span><span class="k" data-group-id="5626373961-1">do</span><span class="w">
+  </span><span class="n">field</span><span class="p" data-group-id="5626373961-2">(</span><span class="ss">:tx_id</span><span class="p">,</span><span class="w"> </span><span class="n">integer</span><span class="p" data-group-id="5626373961-3">(</span><span class="p" data-group-id="5626373961-3">)</span><span class="p" data-group-id="5626373961-2">)</span><span class="w">
+  </span><span class="n">field</span><span class="p" data-group-id="5626373961-4">(</span><span class="ss">:tx_result</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5626373961-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">any</span><span class="p" data-group-id="5626373961-6">(</span><span class="p" data-group-id="5626373961-6">)</span><span class="p" data-group-id="5626373961-5">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:error</span><span class="p" data-group-id="5626373961-4">)</span><span class="w">
+</span><span class="k" data-group-id="5626373961-1">end</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="n">defevent</span><span class="w"> </span><span class="nc">CompleteEvent</span><span class="p">,</span><span class="w"> </span><span class="ss">enforce</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w"> </span><span class="ss">filter</span><span class="p">:</span><span class="w"> </span><span class="nc">CompleteFilter</span><span class="w"> </span><span class="k" data-group-id="3804058847-1">do</span><span class="w">
+  </span><span class="n">field</span><span class="p" data-group-id="3804058847-2">(</span><span class="ss">:tx_id</span><span class="p">,</span><span class="w"> </span><span class="n">integer</span><span class="p" data-group-id="3804058847-3">(</span><span class="p" data-group-id="3804058847-3">)</span><span class="p" data-group-id="3804058847-2">)</span><span class="w">
+  </span><span class="n">field</span><span class="p" data-group-id="3804058847-4">(</span><span class="ss">:tx_result</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3804058847-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">any</span><span class="p" data-group-id="3804058847-6">(</span><span class="p" data-group-id="3804058847-6">)</span><span class="p" data-group-id="3804058847-5">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="ss">:error</span><span class="p" data-group-id="3804058847-4">)</span><span class="w">
+</span><span class="k" data-group-id="3804058847-1">end</span></code></pre>
   </section>
 </section>
 
@@ -227,9 +227,9 @@ an associated filter.</p><h3 id="defevent/3-parameters" class="section-heading">
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.29.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.29.0">Hex Preview</a>
 
           </span>
 

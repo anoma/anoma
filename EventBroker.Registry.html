@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.28.0">
+    <meta name="project" content="Anoma v0.29.0">
 
 
-    <title>EventBroker.Registry — Anoma v0.28.0</title>
+    <title>EventBroker.Registry — Anoma v0.29.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-E5C3E840.js"></script>
+    <script src="dist/sidebar_items-B6C10190.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.28.0
+          v0.29.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">EventBroker.Registry</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.29.0)</small>
 
   </h1>
 
@@ -153,6 +153,17 @@ keeping track of relations between them.</p>
         <a href="#t:registered_filters/0" data-no-tooltip translate="no">registered_filters()</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:registered_subscribers/0" data-no-tooltip translate="no">registered_subscribers()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the type of the registered subscribers. I map a subscriber pid to all
+their filter specs.</p></div>
 
     </div>
 
@@ -237,6 +248,32 @@ PID.</p></div>
 
   </section>
 </section>
+<section class="detail" id="t:registered_subscribers/0">
+
+  <div class="detail-header">
+    <a href="#t:registered_subscribers/0" class="detail-link" data-no-tooltip title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">registered_subscribers()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> registered_subscribers() :: %{
+  required(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()) =&gt; [<a href="EventBroker.html#t:filter_spec_list/0">EventBroker.filter_spec_list</a>()]
+}</pre>
+
+      </div>
+
+<p>I am the type of the registered subscribers. I map a subscriber pid to all
+their filter specs.</p>
+  </section>
+</section>
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
@@ -255,6 +292,7 @@ PID.</p></div>
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %EventBroker.Registry{
   registered_filters: <a href="#t:registered_filters/0">registered_filters</a>(),
+  registered_subscribers: <a href="#t:registered_subscribers/0">registered_subscribers</a>(),
   supervisor: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()
 }</pre>
 
@@ -268,7 +306,7 @@ PID.</p></div>
 </h3>
 <ul><li><code class="inline">:supervisor</code> - The name of the dynamic supervisor launched on start.</li><li><code class="inline">:registered_filters</code> - The map whose keys are a filter-spec dependency
 list and whose values are PID's of filter
-agents corresponding to said lists.
+agents corresponding to said lists.</li><li><code class="inline">:registered_subscribers</code> - The map whose keys are a subscriber PID mapped onto their filter specs.
 Default: %{}</li></ul>
   </section>
 </section>
@@ -352,9 +390,9 @@ PID.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.29.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.29.0">Hex Preview</a>
 
           </span>
 

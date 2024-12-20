@@ -1,0 +1,625 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Jam Format
+
+## Index
+1. [Toc](./toc.livemd)
+2. [Contributing](./contributing.livemd)
+   1. [Understanding Any Module](./contributing/understanding-any-module.livemd)
+   2. [Style Guide](./contributing/style-guide.livemd)
+   3. [Writing Documents](./contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./contributing/examples-over-testing.livemd)
+   5. [Git](./contributing/git.livemd)
+   6. [Iex](./contributing/iex.livemd)
+   7. [Mnesia Vs Actor State](./contributing/mnesia-vs-actor-state.livemd)
+   8. [Observer](./contributing/observer.livemd)
+   9. [Testing](./contributing/testing.livemd)
+      1. [Running Tests](./contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./contributing/testing/writing-tests.livemd)
+3. [Visualization](./visualization.livemd)
+   1. [Actors](./visualization/actors.livemd)
+4. [Hoon](./hoon.livemd)
+   1. [Calling](./hoon/calling.livemd)
+   2. [Dumping](./hoon/dumping.livemd)
+   3. [Setting Up](./hoon/setting-up.livemd)
+5. [Analysis](./analysis.livemd)
+6. [Jam](./jam.livemd)
+
+## Jam and Cue: Serialization for Nouns
+
+Any noun can be serialized to an atom using the jam format. Because any atom can be expressed as a binary, this also serializes any noun to binary.
+
+This is implemented in the `Noun.Jam` module. For example:
+
+```elixir
+jammed_stdlib = Noun.Jam.jam(Nock.stdlib_core())
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+<<21, 126, 65, 176, 56, 45, 14, 130, 21, 4, 11, 146, 129, 162, 55, 241, 131, 100, 200, 32, 90, 216,
+  9, 227, 137, 12, 130, 141, 79, 131, 100, 200, 32, 90, 216, 9, 235, 137, 12, 187, 132, 96, 97, 151,
+  16, 45, 8, 22, 36, 3, ...>>
+```
+
+```elixir
+Noun.Jam.cue!(jammed_stdlib) == Nock.stdlib_core() |> Noun.normalize_noun()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+true
+```
+
+This is intercompatible with the `++jam` and `++cue` arms in Hoon's standard library, with the caveat that `Noun.Jam.jam/1` is a better implementation with smaller output sizes (but all known cue implementations can decode these improved outputs).
+
+Because this format is not specified anywhere else, we specify it herein. The below specification uses inefficient, inaccurate code for better clarity about the format; the actual implementations in `Noun.Jam` operate directly on bitstrings.
+
+## Jam Produces Atoms
+
+The output of jam, and input to cue, is actually an atom, i.e., nonnegative integer, rather than bits or bytes directly. We interpret these atoms in base 2 throughout, and I'll use the `0b` prefix to indicate this.
+
+There are some important properties of atoms as nonnegative integers worth keeping in mind:
+
+* Atoms cannot have leading zero bits.
+* Unless it is specifically the atom `0b0`, the most significant bit of an atom is therefore always a `1`.
+* We treat the atom `0b0` as having zero length, and therefore no bits.
+* Atoms do not always have a number of bits divisible by 8.
+
+How do we represent atoms as terms in our `Noun` implementation? There are three ways:
+
+* as integers, e.g. `10`
+* as binaries (specifically binaries, not bitstrings), e.g. `<<10>>`
+* `[]` is an accepted encoding of zero
+
+For compatibility with Hoon compiler outputs, when represented as binaries, they are encoded in little-endian byte order:
+
+```elixir
+256 |> Noun.atom_integer_to_binary()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+<<0, 1>>
+```
+
+This is ultimately to preserve compatibility with strings as emitted by the Hoon compiler. Note that the infinite number of implicit leading 0 bytes in front of every atom also makes them compatible with null-terminated C strings with no additional allocation.
+
+```elixir
+"abcd" |> Noun.atom_binary_to_integer() |> inspect(base: :hex)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"0x64636261"
+```
+
+```elixir
+0x64636261 |> Noun.atom_integer_to_binary()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"abcd"
+```
+
+## Preliminary Byte and Bit Preparation
+
+The jam format has no concept of bytes. Instead, the jammed output is a bitstring, starting from the least significant _bit_ of the binary number, and continuing to its most significant bit. Bits within a byte are in the order most significant to least, always:
+
+```elixir
+<<1::1, 0::7>> == <<128>>
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+true
+```
+
+So we have to reverse the aforementioned _byte_ order transformation first, putting all bits into most-significant-first order:
+
+```elixir
+<<4, 3, 2, 1>>
+|> Noun.atom_integer_to_binary()
+|> Nock.Bits.byte_order_little_to_big()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+<<1, 2, 3, 4>>
+```
+
+After which we must trim any leading zeros, going from a binary (with bit size divisible by 8) to a bitstring:
+
+```elixir
+defmodule JamSpecExample do
+  def real_size(<<>>) do
+    0
+  end
+
+  def real_size(bits = <<1::1, _::bitstring>>) do
+    bit_size(bits)
+  end
+
+  def real_size(<<0::1, rest::bitstring>>) do
+    real_size(rest)
+  end
+
+  def unpad_from_binary(bytes) do
+    padded_size = bit_size(bytes)
+    real_size = real_size(bytes)
+
+    <<0::size(padded_size - real_size), bits::size(real_size)-bitstring>> =
+      bytes
+
+    {bits, real_size}
+  end
+end
+
+[
+  JamSpecExample.unpad_from_binary(<<255>>),
+  JamSpecExample.unpad_from_binary(<<1>>),
+  JamSpecExample.unpad_from_binary(<<>>),
+  JamSpecExample.unpad_from_binary(<<1, 0>>)
+]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[{<<255>>, 8}, {<<1::size(1)>>, 1}, {"", 0}, {<<128, 0::size(1)>>, 9}]
+```
+
+Note that bitstrings always print with the uneven portion at the end, i.e., for nine `1` bits:
+
+```elixir
+<<1::1, 255>>
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+<<255, 1::size(1)>>
+```
+
+This is just notational (and reflects memory alignment of the whole binary).
+
+```elixir
+<<1::1, 255>> == <<255, 1::1>>
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+true
+```
+
+```elixir
+defmodule PrintBits do
+  def print_bits(bitstring) do
+    case bitstring do
+      <<>> ->
+        ""
+
+      <<0::1, rest::bitstring>> ->
+        "0" <> print_bits(rest)
+
+      <<1::1, rest::bitstring>> ->
+        "1" <> print_bits(rest)
+    end
+  end
+end
+
+PrintBits.print_bits(<<1::1, 0::2, 1::1, 255::9>>)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"1001011111111"
+```
+
+With this preparation out of the way, we can proceed to the jam format specification.
+
+## Jam Format Specification
+
+A _jammed noun_ is an atom (nonnegative integer), interpreted as a sequence of bits, starting from the least significant bit and ending with the most significant bit. The atom zero is considered a sequence of 0 bits; every other atom is a sequence of the number of bits it takes to represent that integer, i.e., leading zeros are not considered.
+
+Below we present the decoder as operating on a sequence of bits, not an integer. This is not representative of how we actually implement it, which can be seen in the module `Noun.Jam`. These sequences will be shown with the "first" bit on the left, for ease of reading left-to-right, though ordinarily least significant bits are on the right.
+
+```elixir
+Kino.Kroki.new(
+  """
+  packetdiag {
+    colwidth = 16;
+    node_height = 36;
+
+    0: Tag; 1: Tag?;
+    2-15: ...;
+  }
+  """,
+  "packetdiag"
+)
+```
+
+There are three possible things we might need to decode:
+
+* an atom,
+* a cell, or
+* a backreference.
+
+They are indicated by tag bits as follows:
+
+* `0` indicates an atom, only using a single tag bit.
+* `0` followed by `1` is the atom zero, specifically; all other atoms use a more complex encoding detailed later.
+* `1` followed by `0` indicates a cell.
+* `1` followed by `1` indicates a backreference.
+
+A cell is the simplest to decode: simply decode starting after the tag bits to get the head, then do it again after this to get the tail. For example, the cell `[0 0]` is (keeping in mind that the sequence `0`, `1` encodes the atom zero) is encoded as follows:
+
+```elixir
+Kino.Kroki.new(
+  """
+  packetdiag {
+    colwidth = 6;
+    node_height = 36;
+
+    0: 1; 1: 0;
+    2-3: 0 1;
+    4-5: 0 1;
+    6-7: Cell; 8-9: Head; 10-11: Tail;
+  }
+  """,
+  "packetdiag"
+)
+```
+
+Remember that we are showing the least significant bit first, i.e., this is actually the atom `0b101001`:
+
+```elixir
+0b101001
+|> Noun.atom_integer_to_binary()
+|> Noun.Jam.cue!()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+["" | ""]
+```
+
+An atom has a more complex encoding.
+
+After consuming the initial `0` tag bit, we first count zeroes; this unary encoding encodes the length of the length of the atom. If we encounter a `1` right away, i.e., count no zeroes, we stop; as mentioned above, this is the encoding of the atom zero.
+
+A single `1` bit terminates the unary count; the number of `0` bits we saw (again, the initial `0` tag bit is not one of them, it's a tag) is $L_L$, the number of bits in the length.
+
+We next consume one fewer bit than $L_L$ to get the length, however, because having already dealt with the case of the atom zero, all lengths are greater than zero, meaning the most significant bit of the length is always 1; we can omit this bit freely. Note that this is an actual binary representation of the length; the least significant bit remains least significant. For example, if the length were 6, or `0b110`, the bits would be `0b101000`: three zeroes indicating the length of the length is 3, a `1` to terminate, and `0b10` as `0b110` with the leading 1 removed.
+
+Finally, once we have the length $L$ of the actual atom, we consume $L$ bits to get the atom; as before, least-significant remains least-significant.
+
+For an example, the diagram below shows the atom 10 (`0b1010`)'s encoding (not including the 0 bit tagging it as an atom):
+
+```elixir
+Kino.Kroki.new(
+  """
+  packetdiag {
+    colwidth = 10;
+    node_height = 36;
+
+    0: 0; 1: 0; 2: 0; 3: 1;
+    4: 0; 5: 0;
+    6: 0; 7: 1; 8: 0; 9: 1;
+    10-13: length of length (3);
+    14-15: length: 0b100;
+    16-19: 0b1010;
+    20-29: 0b1010001000;
+  }
+  """,
+  "packetdiag"
+)
+```
+
+And, appending one `0` bit at the end for the atom tag, we see this is the correct encoding:
+
+```elixir
+0b10100010000
+|> Noun.atom_integer_to_binary()
+|> Noun.Jam.cue!()
+|> inspect(binaries: :as_binary)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"<<10>>"
+```
+
+This leaves only backreferences. Backreferences are in fact just nonnegative integers, encoded exactly as atoms are, but tagged with `11` instead of `0`. It is their interpretation which differs: they are bit-level offsets into the entire jammed noun, indicating that the noun here is identical to an already-decoded subnoun starting at that offset.
+
+The use of backreferences enables the jam format to deduplicate large common subnouns. For example, the cell of two standard libraries is not much larger than the standard library alone:
+
+```elixir
+Nock.stdlib_core()
+|> Noun.Jam.jam()
+|> byte_size()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+8853
+```
+
+```elixir
+[Nock.stdlib_core() | Nock.stdlib_core()]
+|> Noun.Jam.jam()
+|> byte_size()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+8855
+```
+
+It is an error to make a backreference to anything besides a subnoun that has already been fully decoded. In the implementation, when fully decoding an atom or cell, we insert it into a cache, and retrieve backreferenced values from there. Note that the tail of a cell can backreference the head, or subnouns of the head.
+
+As a silly example, here is a diagram of the cell `[0 0]` using a backreference for the second `0`. Note that this is not what the jam implementation emits; all backreferences are larger than the jammed encoding for zero, `0b10`, and jam minimizes output size. It's still valid and decodable by cue, though.
+
+```elixir
+Kino.Kroki.new(
+  """
+  packetdiag {
+    colwidth = 12;
+    node_height = 36;
+
+    0: 1; 1: 0;
+      2: 0; 3: 1;
+      4: 1; 5: 1;
+        6: 0; 7: 0; 8: 1;
+        9: 0;
+        10: 0; 11: 1;
+    12-13: cell;
+    14-15: zero;
+    16-17: backref;
+    18-23: encoding of 2
+  }
+  """,
+  "packetdiag"
+)
+```
+
+Trying this out, we see that it works:
+
+```elixir
+0b100100111001
+|> Noun.atom_integer_to_binary()
+|> Noun.Jam.cue!()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+["" | ""]
+```
+
+Though not using the backreference is much smaller.
+
+```elixir
+0b101001
+|> Noun.atom_integer_to_binary()
+|> Noun.Jam.cue!()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+["" | ""]
+```
+
+The jam encoder inserts the backreference instead of the direct encoding when the backreference's size in bits is not larger than the direct encoding's. This does require computing them both, though we can skip it at offset 0 (the whole jammed noun) which is never legal to backreference, or when the noun is the atom zero (2 bits for `0b10` is much shorter than the shortest "valid" backreference, `0b110011` to offset 1 (in reality, offset 1 can never be valid either...))
+
+If they are of equal length, the backreference is preferred, to make decoding slightly faster later (fetching from cache rather than actually decoding, though this still costs one atom decode it's one bit shorter than the hypothetical atom of the exact same length).
+
+## Implementation Notes
+
+If the bits actually came in this order, it would be fairly easy to read them from left to right using ordinary pattern matching:
+
+```elixir
+bits = <<0::1, 1::1>>
+
+case bits do
+  <<0::1, _rest::bitstring>> ->
+    "atom"
+  <<1::1, 0::1, _rest::bitstring>> ->
+    "cell"
+  <<1::1, 1::1, _rest::bitstring>> ->
+    "backref"
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"atom"
+```
+
+But they actually come in the opposite order, and this sort of pattern matching doesn't work in the other direction:
+
+```elixir
+bits = <<1::1, 0::1>>
+
+case bits do
+  # this compile error is intentional!
+  <<_rest::bitstring, 0::1>> ->
+    "atom"
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+error: a binary field without size is only allowed at the end of a binary pattern, at the right side of binary concatenation and never allowed in binary generators. The following examples are invalid:
+
+    rest <> "foo"
+    <<rest::binary, "foo">>
+
+They are invalid because there is a bits/bitstring component not at the end. However, the "reverse" would work:
+
+    "foo" <> rest
+    <<"foo", rest::binary>>
+
+
+└─ documentation/jam.livemd#cell:xfontmomxtqmzi4j:5
+
+```
+
+However, we earlier removed all leading zeroes from the input binary—we have a bitstring of exactly the correct length. If we explicitly provide this length, we can pattern match bits off the least-significant end.
+
+```elixir
+bits = <<1::1, 0::1>>
+size = bit_size(bits)
+
+case bits do
+  <<_rest::size(size - 1)-bitstring, 0::1>> ->
+    "atom"
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"atom"
+```
+
+We can also pattern match the integers out when decoding atoms (or backrefs), once we know their length.
+
+```elixir
+# after decoding length.
+# the extra 1 bit on front represents the remaining bitstream
+bits = <<1::1, 10::4>>
+atom_length = 4
+size = bit_size(bits)
+
+<<rest::size(size - atom_length)-bitstring, atom::size(atom_length)-integer>> = bits
+%{
+  atom: atom,
+  rest: rest
+}
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{atom: 10, rest: <<1::size(1)>>}
+```
+
+We keep track of size and offset when decoding for this purpose, and for making backrefs possible.
+
+## Why is our jam better?
+
+I mentioned our jam implementation is "better"; why is this? The noun `[[0 0] 1 [0 0] 0]` can serve as an example:
+
+```elixir
+jammed = Noun.Jam.jam([[0 | 0], 1, [0 | 0] | 0])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+<<165, 113, 169>>
+```
+
+`++jam` and implementations copying it will produce larger output:
+
+```elixir
+longer_jammed = <<165, 113, 147, 2>>
+Noun.Jam.cue!(longer_jammed)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[["" | ""], <<1>>, ["" | ""] | ""]
+```
+
+Let's look at the bits to see what is going on.
+
+```elixir
+jammed
+|> Noun.atom_binary_to_integer()
+|> inspect(base: :binary)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"0b101010010111000110100101"
+```
+
+```elixir
+longer_jammed
+|> Noun.atom_binary_to_integer()
+|> inspect(base: :binary)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"0b10100100110111000110100101"
+```
+
+This example is only 2 bits more expensive, though it adds up on real-world nouns, e.g. 8853 bytes for the Anoma stdlib as of this writing (as opposed to 10157 bytes, saving 1.3 kilobytes, or around 13%).
+
+Let's look at the longer output first, reading right to left (if I prefix with 0b, it means I'm putting less-significant bits on the right instead, because this part is interpreted as a binary number):
+
+`0b10100100110111000110100101`
+
+* `10` cell tag
+  * `10` cell tag (offset 2)
+    * `01` atom zero
+    * `01` atom zero
+  * `10` cell tag
+    * `0` atom tag
+      * `01` length of length (1)
+      * `[no bits]` length (prepend the leading 1 to the empty string, length is 0b1, i.e. 1)
+      * `0b1` atom value (1)
+    * `10` cell tag
+      * `11` backref tag
+        * `001` length of length (2)
+        * `0b0` length (prepend leading 1, 0b10, 2)
+        * `0b10` atom value (2), so repeat the subnoun from offset 2
+      * `01` atom zero
+
+And the shorter output:
+
+`0b101010010111000110100101`
+
+* `10` cell tag
+  * `10` cell tag
+    * `01` atom zero
+    * `01` atom zero
+  * `10` cell tag
+    * `0` atom tag
+      * `01` length of length (1)
+      * `[no bits]` length (prepend the leading 1 to the empty string, length is 0b1, i.e. 1)
+      * `0b1` atom value (1)
+    * `10` cell tag
+      * `10` cell tag
+        * `01` atom zero
+        * `01` atom zero
+      * `01` atom zero
+
+The "better" implementation saved bits by not emitting the backref. The cell `[0 0]` costs 6 bits to emit directly, but the backref to offset 2 (the cheapest possible backref!) costs 8 bits!
+
+The issue is, apparently, not counting actual bit costs when deciding whether to backreference, but rather always backreferencing cells and only counting atom size, not size of the entire encoding and tag bits.
+
+All decoders can handle all valid outputs, so there's no incompatibility introduced with smaller outputs.

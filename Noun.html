@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.28.0">
+    <meta name="project" content="Anoma v0.29.0">
 
 
-    <title>Noun — Anoma v0.28.0</title>
+    <title>Noun — Anoma v0.29.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-E5C3E840.js"></script>
+    <script src="dist/sidebar_items-B6C10190.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.28.0
+          v0.29.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Noun</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.29.0)</small>
 
   </h1>
 
@@ -175,6 +175,14 @@ GUIDES
   <h2>
     <a href="#functions">Functions</a>
   </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#abnormalize_noun/1" data-no-tooltip translate="no">abnormalize_noun(atom)</a>
+
+      </div>
+
+    </div>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -248,7 +256,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#equal/2" data-no-tooltip translate="no">equal(noun_1, noun_2)</a>
+        <a href="#equal?/2" data-no-tooltip translate="no">equal?(noun_1, noun_2)</a>
 
       </div>
 
@@ -275,6 +283,14 @@ GUIDES
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#is_noun_cell/1" data-no-tooltip translate="no">is_noun_cell(term)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#is_noun_zero/1" data-no-tooltip translate="no">is_noun_zero(term)</a>
 
       </div>
 
@@ -442,6 +458,23 @@ Otheriwse :error</p></div>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="abnormalize_noun/1">
+
+  <div class="detail-header">
+    <a href="#abnormalize_noun/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">abnormalize_noun(atom)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="atom_binary_to_integer/1">
 
   <div class="detail-header">
@@ -626,14 +659,14 @@ Otheriwse :error</p></div>
 <p>I convert the signed integer to a noun using the <a href="https://protobuf.dev/programming-guides/encoding/#signed-ints">ZigZag</a> encoding.</p>
   </section>
 </section>
-<section class="detail" id="equal/2">
+<section class="detail" id="equal?/2">
 
   <div class="detail-header">
-    <a href="#equal/2" class="detail-link" data-no-tooltip title="Link to this function">
+    <a href="#equal?/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">equal(noun_1, noun_2)</h1>
+    <h1 class="signature" translate="no">equal?(noun_1, noun_2)</h1>
 
 
   </div>
@@ -642,7 +675,7 @@ Otheriwse :error</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> equal(<a href="#t:t/0">t</a>(), <a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> equal?(<a href="#t:t/0">t</a>(), <a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 
@@ -699,6 +732,25 @@ Otheriwse :error</p></div>
       <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">is_noun_cell(term)</h1>
+
+
+      <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="is_noun_zero/1">
+
+  <div class="detail-header">
+    <a href="#is_noun_zero/1" class="detail-link" data-no-tooltip title="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this macro</span>
+    </a>
+    <h1 class="signature" translate="no">is_noun_zero(term)</h1>
 
 
       <span class="note">(macro)</span>
@@ -912,9 +964,9 @@ Otheriwse :error</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.29.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.29.0">Hex Preview</a>
 
           </span>
 

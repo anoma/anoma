@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.28.0">
+    <meta name="project" content="Anoma v0.29.0">
 
 
-    <title>Anoma.Node.Examples.EIntentPool — Anoma v0.28.0</title>
+    <title>Anoma.Node.Examples.EIntentPool — Anoma v0.29.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-E5C3E840.js"></script>
+    <script src="dist/sidebar_items-B6C10190.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.28.0
+          v0.29.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Examples.EIntentPool</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.29.0)</small>
 
   </h1>
 
@@ -169,11 +169,61 @@ used in a trivial swap transaction.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#add_intent_with_known_nullifiers/1" data-no-tooltip translate="no">add_intent_with_known_nullifiers(enode \\ ENode.start_node())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I check that adding an intent with nullifiers already known in the nlfs_set
+does not add the intent to the pool.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_intent_with_submitted_commitments/1" data-no-tooltip translate="no">add_intent_with_submitted_commitments(enode \\ ENode.start_node())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I check that adding an intent with commitments already known in the state
+does not add the intent to the pool.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#intents_are_written/1" data-no-tooltip translate="no">intents_are_written(enode \\ ENode.start_node())</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#list_intents/1" data-no-tooltip translate="no">list_intents(enode \\ ENode.start_node())</a>
 
       </div>
 
         <div class="summary-synopsis"><p>I check that the intent pool returns an empty map of intents when its started.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new_commitments_event/2" data-no-tooltip translate="no">new_commitments_event(enode \\ ENode.start_node(), cms_set \\ MapSet.new())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I submit a commitment event to the node.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new_nullifiers_event/2" data-no-tooltip translate="no">new_nullifiers_event(enode \\ ENode.start_node(), nlfs_set \\ MapSet.new())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I submit a nullifier event to the node.</p></div>
 
     </div>
 
@@ -263,6 +313,79 @@ swap.</p></div>
 used in a trivial swap transaction.</p>
   </section>
 </section>
+<section class="detail" id="add_intent_with_known_nullifiers/1">
+
+    <span id="add_intent_with_known_nullifiers/0"></span>
+
+  <div class="detail-header">
+    <a href="#add_intent_with_known_nullifiers/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add_intent_with_known_nullifiers(enode \\ ENode.start_node())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_intent_with_known_nullifiers(<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()) ::
+  <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()</pre>
+
+      </div>
+
+<p>I check that adding an intent with nullifiers already known in the nlfs_set
+does not add the intent to the pool.</p>
+  </section>
+</section>
+<section class="detail" id="add_intent_with_submitted_commitments/1">
+
+    <span id="add_intent_with_submitted_commitments/0"></span>
+
+  <div class="detail-header">
+    <a href="#add_intent_with_submitted_commitments/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add_intent_with_submitted_commitments(enode \\ ENode.start_node())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_intent_with_submitted_commitments(<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()) ::
+  <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()</pre>
+
+      </div>
+
+<p>I check that adding an intent with commitments already known in the state
+does not add the intent to the pool.</p>
+  </section>
+</section>
+<section class="detail" id="intents_are_written/1">
+
+    <span id="intents_are_written/0"></span>
+
+  <div class="detail-header">
+    <a href="#intents_are_written/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">intents_are_written(enode \\ ENode.start_node())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="list_intents/1">
 
     <span id="list_intents/0"></span>
@@ -286,6 +409,62 @@ used in a trivial swap transaction.</p>
       </div>
 
 <p>I check that the intent pool returns an empty map of intents when its started.</p>
+  </section>
+</section>
+<section class="detail" id="new_commitments_event/2">
+
+    <span id="new_commitments_event/0"></span>
+
+    <span id="new_commitments_event/1"></span>
+
+  <div class="detail-header">
+    <a href="#new_commitments_event/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">new_commitments_event(enode \\ ENode.start_node(), cms_set \\ MapSet.new())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new_commitments_event(<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>(), <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>()) ::
+  <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()</pre>
+
+      </div>
+
+<p>I submit a commitment event to the node.</p>
+  </section>
+</section>
+<section class="detail" id="new_nullifiers_event/2">
+
+    <span id="new_nullifiers_event/0"></span>
+
+    <span id="new_nullifiers_event/1"></span>
+
+  <div class="detail-header">
+    <a href="#new_nullifiers_event/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">new_nullifiers_event(enode \\ ENode.start_node(), nlfs_set \\ MapSet.new())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new_nullifiers_event(<a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>(), <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>()) ::
+  <a href="Anoma.Node.Examples.ENode.html#t:t/0">Anoma.Node.Examples.ENode.t</a>()</pre>
+
+      </div>
+
+<p>I submit a nullifier event to the node.</p>
   </section>
 </section>
 <section class="detail" id="remove_intent/1">
@@ -349,9 +528,9 @@ intent pool, hence removing the specified intent from the pool.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.29.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.29.0">Hex Preview</a>
 
           </span>
 

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.29.0">
+
+
+    <title>Jam Format — Anoma v0.29.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-B6C10190.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.29.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>Jam Format</span>
+  </h1>
+
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a></li><li><a href="jam.html">Jam</a></li></ol><h2 id="jam-and-cue-serialization-for-nouns" class="section-heading">
+  <a href="#jam-and-cue-serialization-for-nouns" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Jam and Cue: Serialization for Nouns</span>
+</h2>
+<p>Any noun can be serialized to an atom using the jam format. Because any atom can be expressed as a binary, this also serializes any noun to binary.</p><p>This is implemented in the <a href="Noun.Jam.html"><code class="inline">Noun.Jam</code></a> module. For example:</p><pre><code class="makeup elixir" translate="no"><span class="n">jammed_stdlib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Noun.Jam</span><span class="o">.</span><span class="n">jam</span><span class="p" data-group-id="4268829945-1">(</span><span class="nc">Nock</span><span class="o">.</span><span class="n">stdlib_core</span><span class="p" data-group-id="4268829945-2">(</span><span class="p" data-group-id="4268829945-2">)</span><span class="p" data-group-id="4268829945-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="6756084094-1">&lt;&lt;</span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">126</span><span class="p">,</span><span class="w"> </span><span class="mi">65</span><span class="p">,</span><span class="w"> </span><span class="mi">176</span><span class="p">,</span><span class="w"> </span><span class="mi">56</span><span class="p">,</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="mi">130</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">146</span><span class="p">,</span><span class="w"> </span><span class="mi">129</span><span class="p">,</span><span class="w"> </span><span class="mi">162</span><span class="p">,</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span><span class="w"> </span><span class="mi">241</span><span class="p">,</span><span class="w"> </span><span class="mi">131</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span><span class="w"> </span><span class="mi">216</span><span class="p">,</span><span class="w">
+  </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">227</span><span class="p">,</span><span class="w"> </span><span class="mi">137</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">130</span><span class="p">,</span><span class="w"> </span><span class="mi">141</span><span class="p">,</span><span class="w"> </span><span class="mi">79</span><span class="p">,</span><span class="w"> </span><span class="mi">131</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span><span class="w"> </span><span class="mi">216</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">235</span><span class="p">,</span><span class="w"> </span><span class="mi">137</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">187</span><span class="p">,</span><span class="w"> </span><span class="mi">132</span><span class="p">,</span><span class="w"> </span><span class="mi">96</span><span class="p">,</span><span class="w"> </span><span class="mi">97</span><span class="p">,</span><span class="w"> </span><span class="mi">151</span><span class="p">,</span><span class="w">
+  </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">36</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="6756084094-1">&gt;&gt;</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="nc">Noun.Jam</span><span class="o">.</span><span class="n">cue!</span><span class="p" data-group-id="7861327662-1">(</span><span class="n">jammed_stdlib</span><span class="p" data-group-id="7861327662-1">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nc">Nock</span><span class="o">.</span><span class="n">stdlib_core</span><span class="p" data-group-id="7861327662-2">(</span><span class="p" data-group-id="7861327662-2">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">normalize_noun</span><span class="p" data-group-id="7861327662-3">(</span><span class="p" data-group-id="7861327662-3">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="no">true</span></code></pre><p>This is intercompatible with the <code class="inline">++jam</code> and <code class="inline">++cue</code> arms in Hoon's standard library, with the caveat that <a href="Noun.Jam.html#jam/1"><code class="inline">Noun.Jam.jam/1</code></a> is a better implementation with smaller output sizes (but all known cue implementations can decode these improved outputs).</p><p>Because this format is not specified anywhere else, we specify it herein. The below specification uses inefficient, inaccurate code for better clarity about the format; the actual implementations in <a href="Noun.Jam.html"><code class="inline">Noun.Jam</code></a> operate directly on bitstrings.</p><h2 id="jam-produces-atoms" class="section-heading">
+  <a href="#jam-produces-atoms" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Jam Produces Atoms</span>
+</h2>
+<p>The output of jam, and input to cue, is actually an atom, i.e., nonnegative integer, rather than bits or bytes directly. We interpret these atoms in base 2 throughout, and I'll use the <code class="inline">0b</code> prefix to indicate this.</p><p>There are some important properties of atoms as nonnegative integers worth keeping in mind:</p><ul><li>Atoms cannot have leading zero bits.</li><li>Unless it is specifically the atom <code class="inline">0b0</code>, the most significant bit of an atom is therefore always a <code class="inline">1</code>.</li><li>We treat the atom <code class="inline">0b0</code> as having zero length, and therefore no bits.</li><li>Atoms do not always have a number of bits divisible by 8.</li></ul><p>How do we represent atoms as terms in our <a href="Noun.html"><code class="inline">Noun</code></a> implementation? There are three ways:</p><ul><li>as integers, e.g. <code class="inline">10</code></li><li>as binaries (specifically binaries, not bitstrings), e.g. <code class="inline">&lt;&lt;10&gt;&gt;</code></li><li><code class="inline">[]</code> is an accepted encoding of zero</li></ul><p>For compatibility with Hoon compiler outputs, when represented as binaries, they are encoded in little-endian byte order:</p><pre><code class="makeup elixir" translate="no"><span class="mi">256</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">atom_integer_to_binary</span><span class="p" data-group-id="3447242044-1">(</span><span class="p" data-group-id="3447242044-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="8376086979-1">&lt;&lt;</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="8376086979-1">&gt;&gt;</span></code></pre><p>This is ultimately to preserve compatibility with strings as emitted by the Hoon compiler. Note that the infinite number of implicit leading 0 bytes in front of every atom also makes them compatible with null-terminated C strings with no additional allocation.</p><pre><code class="makeup elixir" translate="no"><span class="s">&quot;abcd&quot;</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">atom_binary_to_integer</span><span class="p" data-group-id="7580312932-1">(</span><span class="p" data-group-id="7580312932-1">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">inspect</span><span class="p" data-group-id="7580312932-2">(</span><span class="ss">base</span><span class="p">:</span><span class="w"> </span><span class="ss">:hex</span><span class="p" data-group-id="7580312932-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="s">&quot;0x64636261&quot;</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="mh">0x64636261</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">atom_integer_to_binary</span><span class="p" data-group-id="8824281512-1">(</span><span class="p" data-group-id="8824281512-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="s">&quot;abcd&quot;</span></code></pre><h2 id="preliminary-byte-and-bit-preparation" class="section-heading">
+  <a href="#preliminary-byte-and-bit-preparation" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Preliminary Byte and Bit Preparation</span>
+</h2>
+<p>The jam format has no concept of bytes. Instead, the jammed output is a bitstring, starting from the least significant <em>bit</em> of the binary number, and continuing to its most significant bit. Bits within a byte are in the order most significant to least, always:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="4670004339-1">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">::</span><span class="mi">7</span><span class="p" data-group-id="4670004339-1">&gt;&gt;</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="p" data-group-id="4670004339-2">&lt;&lt;</span><span class="mi">128</span><span class="p" data-group-id="4670004339-2">&gt;&gt;</span></code></pre><pre><code class="makeup output" translate="no"><span class="no">true</span></code></pre><p>So we have to reverse the aforementioned <em>byte</em> order transformation first, putting all bits into most-significant-first order:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3735237952-1">&lt;&lt;</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3735237952-1">&gt;&gt;</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">atom_integer_to_binary</span><span class="p" data-group-id="3735237952-2">(</span><span class="p" data-group-id="3735237952-2">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Nock.Bits</span><span class="o">.</span><span class="n">byte_order_little_to_big</span><span class="p" data-group-id="3735237952-3">(</span><span class="p" data-group-id="3735237952-3">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="2510717538-1">&lt;&lt;</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p" data-group-id="2510717538-1">&gt;&gt;</span></code></pre><p>After which we must trim any leading zeros, going from a binary (with bit size divisible by 8) to a bitstring:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">JamSpecExample</span><span class="w"> </span><span class="k" data-group-id="1028445195-1">do</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">real_size</span><span class="p" data-group-id="1028445195-2">(</span><span class="p" data-group-id="1028445195-3">&lt;&lt;</span><span class="p" data-group-id="1028445195-3">&gt;&gt;</span><span class="p" data-group-id="1028445195-2">)</span><span class="w"> </span><span class="k" data-group-id="1028445195-4">do</span><span class="w">
+    </span><span class="mi">0</span><span class="w">
+  </span><span class="k" data-group-id="1028445195-4">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">real_size</span><span class="p" data-group-id="1028445195-5">(</span><span class="n">bits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="1028445195-6">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="bp">_</span><span class="o">::</span><span class="n">bitstring</span><span class="p" data-group-id="1028445195-6">&gt;&gt;</span><span class="p" data-group-id="1028445195-5">)</span><span class="w"> </span><span class="k" data-group-id="1028445195-7">do</span><span class="w">
+    </span><span class="n">bit_size</span><span class="p" data-group-id="1028445195-8">(</span><span class="n">bits</span><span class="p" data-group-id="1028445195-8">)</span><span class="w">
+  </span><span class="k" data-group-id="1028445195-7">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">real_size</span><span class="p" data-group-id="1028445195-9">(</span><span class="p" data-group-id="1028445195-10">&lt;&lt;</span><span class="mi">0</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">rest</span><span class="o">::</span><span class="n">bitstring</span><span class="p" data-group-id="1028445195-10">&gt;&gt;</span><span class="p" data-group-id="1028445195-9">)</span><span class="w"> </span><span class="k" data-group-id="1028445195-11">do</span><span class="w">
+    </span><span class="n">real_size</span><span class="p" data-group-id="1028445195-12">(</span><span class="n">rest</span><span class="p" data-group-id="1028445195-12">)</span><span class="w">
+  </span><span class="k" data-group-id="1028445195-11">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">unpad_from_binary</span><span class="p" data-group-id="1028445195-13">(</span><span class="n">bytes</span><span class="p" data-group-id="1028445195-13">)</span><span class="w"> </span><span class="k" data-group-id="1028445195-14">do</span><span class="w">
+    </span><span class="n">padded_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bit_size</span><span class="p" data-group-id="1028445195-15">(</span><span class="n">bytes</span><span class="p" data-group-id="1028445195-15">)</span><span class="w">
+    </span><span class="n">real_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">real_size</span><span class="p" data-group-id="1028445195-16">(</span><span class="n">bytes</span><span class="p" data-group-id="1028445195-16">)</span><span class="w">
+
+    </span><span class="p" data-group-id="1028445195-17">&lt;&lt;</span><span class="mi">0</span><span class="o">::</span><span class="n">size</span><span class="p" data-group-id="1028445195-18">(</span><span class="n">padded_size</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">real_size</span><span class="p" data-group-id="1028445195-18">)</span><span class="p">,</span><span class="w"> </span><span class="n">bits</span><span class="o">::</span><span class="n">size</span><span class="p" data-group-id="1028445195-19">(</span><span class="n">real_size</span><span class="p" data-group-id="1028445195-19">)</span><span class="o">-</span><span class="n">bitstring</span><span class="p" data-group-id="1028445195-17">&gt;&gt;</span><span class="w"> </span><span class="o">=</span><span class="w">
+      </span><span class="n">bytes</span><span class="w">
+
+    </span><span class="p" data-group-id="1028445195-20">{</span><span class="n">bits</span><span class="p">,</span><span class="w"> </span><span class="n">real_size</span><span class="p" data-group-id="1028445195-20">}</span><span class="w">
+  </span><span class="k" data-group-id="1028445195-14">end</span><span class="w">
+</span><span class="k" data-group-id="1028445195-1">end</span><span class="w">
+
+</span><span class="p" data-group-id="1028445195-21">[</span><span class="w">
+  </span><span class="nc">JamSpecExample</span><span class="o">.</span><span class="n">unpad_from_binary</span><span class="p" data-group-id="1028445195-22">(</span><span class="p" data-group-id="1028445195-23">&lt;&lt;</span><span class="mi">255</span><span class="p" data-group-id="1028445195-23">&gt;&gt;</span><span class="p" data-group-id="1028445195-22">)</span><span class="p">,</span><span class="w">
+  </span><span class="nc">JamSpecExample</span><span class="o">.</span><span class="n">unpad_from_binary</span><span class="p" data-group-id="1028445195-24">(</span><span class="p" data-group-id="1028445195-25">&lt;&lt;</span><span class="mi">1</span><span class="p" data-group-id="1028445195-25">&gt;&gt;</span><span class="p" data-group-id="1028445195-24">)</span><span class="p">,</span><span class="w">
+  </span><span class="nc">JamSpecExample</span><span class="o">.</span><span class="n">unpad_from_binary</span><span class="p" data-group-id="1028445195-26">(</span><span class="p" data-group-id="1028445195-27">&lt;&lt;</span><span class="p" data-group-id="1028445195-27">&gt;&gt;</span><span class="p" data-group-id="1028445195-26">)</span><span class="p">,</span><span class="w">
+  </span><span class="nc">JamSpecExample</span><span class="o">.</span><span class="n">unpad_from_binary</span><span class="p" data-group-id="1028445195-28">(</span><span class="p" data-group-id="1028445195-29">&lt;&lt;</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="1028445195-29">&gt;&gt;</span><span class="p" data-group-id="1028445195-28">)</span><span class="w">
+</span><span class="p" data-group-id="1028445195-21">]</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="2215763689-1">[</span><span class="p" data-group-id="2215763689-2">{</span><span class="p" data-group-id="2215763689-3">&lt;&lt;</span><span class="mi">255</span><span class="p" data-group-id="2215763689-3">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p" data-group-id="2215763689-2">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2215763689-4">{</span><span class="p" data-group-id="2215763689-5">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="n">size</span><span class="p" data-group-id="2215763689-6">(</span><span class="mi">1</span><span class="p" data-group-id="2215763689-6">)</span><span class="p" data-group-id="2215763689-5">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="2215763689-4">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2215763689-7">{</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="2215763689-7">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2215763689-8">{</span><span class="p" data-group-id="2215763689-9">&lt;&lt;</span><span class="mi">128</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">::</span><span class="n">size</span><span class="p" data-group-id="2215763689-10">(</span><span class="mi">1</span><span class="p" data-group-id="2215763689-10">)</span><span class="p" data-group-id="2215763689-9">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p" data-group-id="2215763689-8">}</span><span class="p" data-group-id="2215763689-1">]</span></code></pre><p>Note that bitstrings always print with the uneven portion at the end, i.e., for nine <code class="inline">1</code> bits:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3501063123-1">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">255</span><span class="p" data-group-id="3501063123-1">&gt;&gt;</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="7721957257-1">&lt;&lt;</span><span class="mi">255</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">::</span><span class="n">size</span><span class="p" data-group-id="7721957257-2">(</span><span class="mi">1</span><span class="p" data-group-id="7721957257-2">)</span><span class="p" data-group-id="7721957257-1">&gt;&gt;</span></code></pre><p>This is just notational (and reflects memory alignment of the whole binary).</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3086933905-1">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">255</span><span class="p" data-group-id="3086933905-1">&gt;&gt;</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="p" data-group-id="3086933905-2">&lt;&lt;</span><span class="mi">255</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p" data-group-id="3086933905-2">&gt;&gt;</span></code></pre><pre><code class="makeup output" translate="no"><span class="no">true</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">PrintBits</span><span class="w"> </span><span class="k" data-group-id="9784551081-1">do</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">print_bits</span><span class="p" data-group-id="9784551081-2">(</span><span class="n">bitstring</span><span class="p" data-group-id="9784551081-2">)</span><span class="w"> </span><span class="k" data-group-id="9784551081-3">do</span><span class="w">
+    </span><span class="k">case</span><span class="w"> </span><span class="n">bitstring</span><span class="w"> </span><span class="k" data-group-id="9784551081-4">do</span><span class="w">
+      </span><span class="p" data-group-id="9784551081-5">&lt;&lt;</span><span class="p" data-group-id="9784551081-5">&gt;&gt;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="s">&quot;&quot;</span><span class="w">
+
+      </span><span class="p" data-group-id="9784551081-6">&lt;&lt;</span><span class="mi">0</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">rest</span><span class="o">::</span><span class="n">bitstring</span><span class="p" data-group-id="9784551081-6">&gt;&gt;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="s">&quot;0&quot;</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">print_bits</span><span class="p" data-group-id="9784551081-7">(</span><span class="n">rest</span><span class="p" data-group-id="9784551081-7">)</span><span class="w">
+
+      </span><span class="p" data-group-id="9784551081-8">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">rest</span><span class="o">::</span><span class="n">bitstring</span><span class="p" data-group-id="9784551081-8">&gt;&gt;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="s">&quot;1&quot;</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">print_bits</span><span class="p" data-group-id="9784551081-9">(</span><span class="n">rest</span><span class="p" data-group-id="9784551081-9">)</span><span class="w">
+    </span><span class="k" data-group-id="9784551081-4">end</span><span class="w">
+  </span><span class="k" data-group-id="9784551081-3">end</span><span class="w">
+</span><span class="k" data-group-id="9784551081-1">end</span><span class="w">
+
+</span><span class="nc">PrintBits</span><span class="o">.</span><span class="n">print_bits</span><span class="p" data-group-id="9784551081-10">(</span><span class="p" data-group-id="9784551081-11">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">::</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">255</span><span class="o">::</span><span class="mi">9</span><span class="p" data-group-id="9784551081-11">&gt;&gt;</span><span class="p" data-group-id="9784551081-10">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="s">&quot;1001011111111&quot;</span></code></pre><p>With this preparation out of the way, we can proceed to the jam format specification.</p><h2 id="jam-format-specification" class="section-heading">
+  <a href="#jam-format-specification" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Jam Format Specification</span>
+</h2>
+<p>A <em>jammed noun</em> is an atom (nonnegative integer), interpreted as a sequence of bits, starting from the least significant bit and ending with the most significant bit. The atom zero is considered a sequence of 0 bits; every other atom is a sequence of the number of bits it takes to represent that integer, i.e., leading zeros are not considered.</p><p>Below we present the decoder as operating on a sequence of bits, not an integer. This is not representative of how we actually implement it, which can be seen in the module <a href="Noun.Jam.html"><code class="inline">Noun.Jam</code></a>. These sequences will be shown with the &quot;first&quot; bit on the left, for ease of reading left-to-right, though ordinarily least significant bits are on the right.</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Kroki</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="3821881864-1">(</span><span class="w">
+  </span><span class="s">&quot;&quot;&quot;
+  packetdiag {
+    colwidth = 16;
+    node_height = 36;
+
+    0: Tag; 1: Tag?;
+    2-15: ...;
+  }
+  &quot;&quot;&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;packetdiag&quot;</span><span class="w">
+</span><span class="p" data-group-id="3821881864-1">)</span></code></pre><p>There are three possible things we might need to decode:</p><ul><li>an atom,</li><li>a cell, or</li><li>a backreference.</li></ul><p>They are indicated by tag bits as follows:</p><ul><li><code class="inline">0</code> indicates an atom, only using a single tag bit.</li><li><code class="inline">0</code> followed by <code class="inline">1</code> is the atom zero, specifically; all other atoms use a more complex encoding detailed later.</li><li><code class="inline">1</code> followed by <code class="inline">0</code> indicates a cell.</li><li><code class="inline">1</code> followed by <code class="inline">1</code> indicates a backreference.</li></ul><p>A cell is the simplest to decode: simply decode starting after the tag bits to get the head, then do it again after this to get the tail. For example, the cell <code class="inline">[0 0]</code> is (keeping in mind that the sequence <code class="inline">0</code>, <code class="inline">1</code> encodes the atom zero) is encoded as follows:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Kroki</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="4095037483-1">(</span><span class="w">
+  </span><span class="s">&quot;&quot;&quot;
+  packetdiag {
+    colwidth = 6;
+    node_height = 36;
+
+    0: 1; 1: 0;
+    2-3: 0 1;
+    4-5: 0 1;
+    6-7: Cell; 8-9: Head; 10-11: Tail;
+  }
+  &quot;&quot;&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;packetdiag&quot;</span><span class="w">
+</span><span class="p" data-group-id="4095037483-1">)</span></code></pre><p>Remember that we are showing the least significant bit first, i.e., this is actually the atom <code class="inline">0b101001</code>:</p><pre><code class="makeup elixir" translate="no"><span class="mb">0b101001</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">atom_integer_to_binary</span><span class="p" data-group-id="2774188961-1">(</span><span class="p" data-group-id="2774188961-1">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun.Jam</span><span class="o">.</span><span class="n">cue!</span><span class="p" data-group-id="2774188961-2">(</span><span class="p" data-group-id="2774188961-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="3328841349-1">[</span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p" data-group-id="3328841349-1">]</span></code></pre><p>An atom has a more complex encoding.</p><p>After consuming the initial <code class="inline">0</code> tag bit, we first count zeroes; this unary encoding encodes the length of the length of the atom. If we encounter a <code class="inline">1</code> right away, i.e., count no zeroes, we stop; as mentioned above, this is the encoding of the atom zero.</p><p>A single <code class="inline">1</code> bit terminates the unary count; the number of <code class="inline">0</code> bits we saw (again, the initial <code class="inline">0</code> tag bit is not one of them, it's a tag) is $L_L$, the number of bits in the length.</p><p>We next consume one fewer bit than $L_L$ to get the length, however, because having already dealt with the case of the atom zero, all lengths are greater than zero, meaning the most significant bit of the length is always 1; we can omit this bit freely. Note that this is an actual binary representation of the length; the least significant bit remains least significant. For example, if the length were 6, or <code class="inline">0b110</code>, the bits would be <code class="inline">0b101000</code>: three zeroes indicating the length of the length is 3, a <code class="inline">1</code> to terminate, and <code class="inline">0b10</code> as <code class="inline">0b110</code> with the leading 1 removed.</p><p>Finally, once we have the length $L$ of the actual atom, we consume $L$ bits to get the atom; as before, least-significant remains least-significant.</p><p>For an example, the diagram below shows the atom 10 (<code class="inline">0b1010</code>)'s encoding (not including the 0 bit tagging it as an atom):</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Kroki</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="6203191408-1">(</span><span class="w">
+  </span><span class="s">&quot;&quot;&quot;
+  packetdiag {
+    colwidth = 10;
+    node_height = 36;
+
+    0: 0; 1: 0; 2: 0; 3: 1;
+    4: 0; 5: 0;
+    6: 0; 7: 1; 8: 0; 9: 1;
+    10-13: length of length (3);
+    14-15: length: 0b100;
+    16-19: 0b1010;
+    20-29: 0b1010001000;
+  }
+  &quot;&quot;&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;packetdiag&quot;</span><span class="w">
+</span><span class="p" data-group-id="6203191408-1">)</span></code></pre><p>And, appending one <code class="inline">0</code> bit at the end for the atom tag, we see this is the correct encoding:</p><pre><code class="makeup elixir" translate="no"><span class="mb">0b10100010000</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">atom_integer_to_binary</span><span class="p" data-group-id="6548071830-1">(</span><span class="p" data-group-id="6548071830-1">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun.Jam</span><span class="o">.</span><span class="n">cue!</span><span class="p" data-group-id="6548071830-2">(</span><span class="p" data-group-id="6548071830-2">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="n">inspect</span><span class="p" data-group-id="6548071830-3">(</span><span class="ss">binaries</span><span class="p">:</span><span class="w"> </span><span class="ss">:as_binary</span><span class="p" data-group-id="6548071830-3">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="s">&quot;&lt;&lt;10&gt;&gt;&quot;</span></code></pre><p>This leaves only backreferences. Backreferences are in fact just nonnegative integers, encoded exactly as atoms are, but tagged with <code class="inline">11</code> instead of <code class="inline">0</code>. It is their interpretation which differs: they are bit-level offsets into the entire jammed noun, indicating that the noun here is identical to an already-decoded subnoun starting at that offset.</p><p>The use of backreferences enables the jam format to deduplicate large common subnouns. For example, the cell of two standard libraries is not much larger than the standard library alone:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Nock</span><span class="o">.</span><span class="n">stdlib_core</span><span class="p" data-group-id="5961268249-1">(</span><span class="p" data-group-id="5961268249-1">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun.Jam</span><span class="o">.</span><span class="n">jam</span><span class="p" data-group-id="5961268249-2">(</span><span class="p" data-group-id="5961268249-2">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="n">byte_size</span><span class="p" data-group-id="5961268249-3">(</span><span class="p" data-group-id="5961268249-3">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="mi">8853</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="0566380149-1">[</span><span class="nc">Nock</span><span class="o">.</span><span class="n">stdlib_core</span><span class="p" data-group-id="0566380149-2">(</span><span class="p" data-group-id="0566380149-2">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Nock</span><span class="o">.</span><span class="n">stdlib_core</span><span class="p" data-group-id="0566380149-3">(</span><span class="p" data-group-id="0566380149-3">)</span><span class="p" data-group-id="0566380149-1">]</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun.Jam</span><span class="o">.</span><span class="n">jam</span><span class="p" data-group-id="0566380149-4">(</span><span class="p" data-group-id="0566380149-4">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="n">byte_size</span><span class="p" data-group-id="0566380149-5">(</span><span class="p" data-group-id="0566380149-5">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="mi">8855</span></code></pre><p>It is an error to make a backreference to anything besides a subnoun that has already been fully decoded. In the implementation, when fully decoding an atom or cell, we insert it into a cache, and retrieve backreferenced values from there. Note that the tail of a cell can backreference the head, or subnouns of the head.</p><p>As a silly example, here is a diagram of the cell <code class="inline">[0 0]</code> using a backreference for the second <code class="inline">0</code>. Note that this is not what the jam implementation emits; all backreferences are larger than the jammed encoding for zero, <code class="inline">0b10</code>, and jam minimizes output size. It's still valid and decodable by cue, though.</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Kroki</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="3055627994-1">(</span><span class="w">
+  </span><span class="s">&quot;&quot;&quot;
+  packetdiag {
+    colwidth = 12;
+    node_height = 36;
+
+    0: 1; 1: 0;
+      2: 0; 3: 1;
+      4: 1; 5: 1;
+        6: 0; 7: 0; 8: 1;
+        9: 0;
+        10: 0; 11: 1;
+    12-13: cell;
+    14-15: zero;
+    16-17: backref;
+    18-23: encoding of 2
+  }
+  &quot;&quot;&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;packetdiag&quot;</span><span class="w">
+</span><span class="p" data-group-id="3055627994-1">)</span></code></pre><p>Trying this out, we see that it works:</p><pre><code class="makeup elixir" translate="no"><span class="mb">0b100100111001</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">atom_integer_to_binary</span><span class="p" data-group-id="5869541838-1">(</span><span class="p" data-group-id="5869541838-1">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun.Jam</span><span class="o">.</span><span class="n">cue!</span><span class="p" data-group-id="5869541838-2">(</span><span class="p" data-group-id="5869541838-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="0501408295-1">[</span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p" data-group-id="0501408295-1">]</span></code></pre><p>Though not using the backreference is much smaller.</p><pre><code class="makeup elixir" translate="no"><span class="mb">0b101001</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">atom_integer_to_binary</span><span class="p" data-group-id="0640814017-1">(</span><span class="p" data-group-id="0640814017-1">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun.Jam</span><span class="o">.</span><span class="n">cue!</span><span class="p" data-group-id="0640814017-2">(</span><span class="p" data-group-id="0640814017-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="2486535595-1">[</span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p" data-group-id="2486535595-1">]</span></code></pre><p>The jam encoder inserts the backreference instead of the direct encoding when the backreference's size in bits is not larger than the direct encoding's. This does require computing them both, though we can skip it at offset 0 (the whole jammed noun) which is never legal to backreference, or when the noun is the atom zero (2 bits for <code class="inline">0b10</code> is much shorter than the shortest &quot;valid&quot; backreference, <code class="inline">0b110011</code> to offset 1 (in reality, offset 1 can never be valid either...))</p><p>If they are of equal length, the backreference is preferred, to make decoding slightly faster later (fetching from cache rather than actually decoding, though this still costs one atom decode it's one bit shorter than the hypothetical atom of the exact same length).</p><h2 id="implementation-notes" class="section-heading">
+  <a href="#implementation-notes" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Implementation Notes</span>
+</h2>
+<p>If the bits actually came in this order, it would be fairly easy to read them from left to right using ordinary pattern matching:</p><pre><code class="makeup elixir" translate="no"><span class="n">bits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="3329075859-1">&lt;&lt;</span><span class="mi">0</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p" data-group-id="3329075859-1">&gt;&gt;</span><span class="w">
+
+</span><span class="k">case</span><span class="w"> </span><span class="n">bits</span><span class="w"> </span><span class="k" data-group-id="3329075859-2">do</span><span class="w">
+  </span><span class="p" data-group-id="3329075859-3">&lt;&lt;</span><span class="mi">0</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c">_rest</span><span class="o">::</span><span class="n">bitstring</span><span class="p" data-group-id="3329075859-3">&gt;&gt;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="s">&quot;atom&quot;</span><span class="w">
+  </span><span class="p" data-group-id="3329075859-4">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c">_rest</span><span class="o">::</span><span class="n">bitstring</span><span class="p" data-group-id="3329075859-4">&gt;&gt;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="s">&quot;cell&quot;</span><span class="w">
+  </span><span class="p" data-group-id="3329075859-5">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c">_rest</span><span class="o">::</span><span class="n">bitstring</span><span class="p" data-group-id="3329075859-5">&gt;&gt;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="s">&quot;backref&quot;</span><span class="w">
+</span><span class="k" data-group-id="3329075859-2">end</span></code></pre><pre><code class="makeup output" translate="no"><span class="s">&quot;atom&quot;</span></code></pre><p>But they actually come in the opposite order, and this sort of pattern matching doesn't work in the other direction:</p><pre><code class="makeup elixir" translate="no"><span class="n">bits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="2762603217-1">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">::</span><span class="mi">1</span><span class="p" data-group-id="2762603217-1">&gt;&gt;</span><span class="w">
+
+</span><span class="k">case</span><span class="w"> </span><span class="n">bits</span><span class="w"> </span><span class="k" data-group-id="2762603217-2">do</span><span class="w">
+  </span><span class="c1"># this compile error is intentional!</span><span class="w">
+  </span><span class="p" data-group-id="2762603217-3">&lt;&lt;</span><span class="c">_rest</span><span class="o">::</span><span class="n">bitstring</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">::</span><span class="mi">1</span><span class="p" data-group-id="2762603217-3">&gt;&gt;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="s">&quot;atom&quot;</span><span class="w">
+</span><span class="k" data-group-id="2762603217-2">end</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">error</span><span class="p">:</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">binary</span><span class="w"> </span><span class="n">field</span><span class="w"> </span><span class="n">without</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">only</span><span class="w"> </span><span class="n">allowed</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">binary</span><span class="w"> </span><span class="n">pattern</span><span class="p">,</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="n">side</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">binary</span><span class="w"> </span><span class="n">concatenation</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">never</span><span class="w"> </span><span class="n">allowed</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">binary</span><span class="w"> </span><span class="n">generators</span><span class="o">.</span><span class="w"> </span><span class="nc">The</span><span class="w"> </span><span class="n">following</span><span class="w"> </span><span class="n">examples</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="ss">invalid</span><span class="p">:</span><span class="w">
+
+    </span><span class="n">rest</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s">&quot;foo&quot;</span><span class="w">
+    </span><span class="p" data-group-id="8228492439-1">&lt;&lt;</span><span class="n">rest</span><span class="o">::</span><span class="n">binary</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;foo&quot;</span><span class="p" data-group-id="8228492439-1">&gt;&gt;</span><span class="w">
+
+</span><span class="nc">They</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">invalid</span><span class="w"> </span><span class="n">because</span><span class="w"> </span><span class="n">there</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">bits</span><span class="o">/</span><span class="n">bitstring</span><span class="w"> </span><span class="n">component</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">end</span><span class="o">.</span><span class="w"> </span><span class="nc">However</span><span class="p">,</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="s">&quot;reverse&quot;</span><span class="w"> </span><span class="n">would</span><span class="w"> </span><span class="ss">work</span><span class="p">:</span><span class="w">
+
+    </span><span class="s">&quot;foo&quot;</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">rest</span><span class="w">
+    </span><span class="p" data-group-id="8228492439-2">&lt;&lt;</span><span class="s">&quot;foo&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rest</span><span class="o">::</span><span class="n">binary</span><span class="p" data-group-id="8228492439-2">&gt;&gt;</span><span class="w">
+
+
+</span><span class="err">└</span><span class="err">─</span><span class="w"> </span><span class="n">documentation</span><span class="o">/</span><span class="n">jam</span><span class="o">.</span><span class="n">livemd</span><span class="c1">#cell:xfontmomxtqmzi4j:5</span><span class="w">
+</span></code></pre><p>However, we earlier removed all leading zeroes from the input binary—we have a bitstring of exactly the correct length. If we explicitly provide this length, we can pattern match bits off the least-significant end.</p><pre><code class="makeup elixir" translate="no"><span class="n">bits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="3609642232-1">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">::</span><span class="mi">1</span><span class="p" data-group-id="3609642232-1">&gt;&gt;</span><span class="w">
+</span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bit_size</span><span class="p" data-group-id="3609642232-2">(</span><span class="n">bits</span><span class="p" data-group-id="3609642232-2">)</span><span class="w">
+
+</span><span class="k">case</span><span class="w"> </span><span class="n">bits</span><span class="w"> </span><span class="k" data-group-id="3609642232-3">do</span><span class="w">
+  </span><span class="p" data-group-id="3609642232-4">&lt;&lt;</span><span class="c">_rest</span><span class="o">::</span><span class="n">size</span><span class="p" data-group-id="3609642232-5">(</span><span class="n">size</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3609642232-5">)</span><span class="o">-</span><span class="n">bitstring</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">::</span><span class="mi">1</span><span class="p" data-group-id="3609642232-4">&gt;&gt;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="s">&quot;atom&quot;</span><span class="w">
+</span><span class="k" data-group-id="3609642232-3">end</span></code></pre><pre><code class="makeup output" translate="no"><span class="s">&quot;atom&quot;</span></code></pre><p>We can also pattern match the integers out when decoding atoms (or backrefs), once we know their length.</p><pre><code class="makeup elixir" translate="no"><span class="c1"># after decoding length.</span><span class="w">
+</span><span class="c1"># the extra 1 bit on front represents the remaining bitstream</span><span class="w">
+</span><span class="n">bits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="7246515854-1">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="o">::</span><span class="mi">4</span><span class="p" data-group-id="7246515854-1">&gt;&gt;</span><span class="w">
+</span><span class="n">atom_length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="w">
+</span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bit_size</span><span class="p" data-group-id="7246515854-2">(</span><span class="n">bits</span><span class="p" data-group-id="7246515854-2">)</span><span class="w">
+
+</span><span class="p" data-group-id="7246515854-3">&lt;&lt;</span><span class="n">rest</span><span class="o">::</span><span class="n">size</span><span class="p" data-group-id="7246515854-4">(</span><span class="n">size</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">atom_length</span><span class="p" data-group-id="7246515854-4">)</span><span class="o">-</span><span class="n">bitstring</span><span class="p">,</span><span class="w"> </span><span class="n">atom</span><span class="o">::</span><span class="n">size</span><span class="p" data-group-id="7246515854-5">(</span><span class="n">atom_length</span><span class="p" data-group-id="7246515854-5">)</span><span class="o">-</span><span class="n">integer</span><span class="p" data-group-id="7246515854-3">&gt;&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bits</span><span class="w">
+</span><span class="p" data-group-id="7246515854-6">%{</span><span class="w">
+  </span><span class="ss">atom</span><span class="p">:</span><span class="w"> </span><span class="n">atom</span><span class="p">,</span><span class="w">
+  </span><span class="ss">rest</span><span class="p">:</span><span class="w"> </span><span class="n">rest</span><span class="w">
+</span><span class="p" data-group-id="7246515854-6">}</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="2405165174-1">%{</span><span class="ss">atom</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="ss">rest</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2405165174-2">&lt;&lt;</span><span class="mi">1</span><span class="o">::</span><span class="n">size</span><span class="p" data-group-id="2405165174-3">(</span><span class="mi">1</span><span class="p" data-group-id="2405165174-3">)</span><span class="p" data-group-id="2405165174-2">&gt;&gt;</span><span class="p" data-group-id="2405165174-1">}</span></code></pre><p>We keep track of size and offset when decoding for this purpose, and for making backrefs possible.</p><h2 id="why-is-our-jam-better" class="section-heading">
+  <a href="#why-is-our-jam-better" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Why is our jam better?</span>
+</h2>
+<p>I mentioned our jam implementation is &quot;better&quot;; why is this? The noun <code class="inline">[[0 0] 1 [0 0] 0]</code> can serve as an example:</p><pre><code class="makeup elixir" translate="no"><span class="n">jammed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Noun.Jam</span><span class="o">.</span><span class="n">jam</span><span class="p" data-group-id="9098081679-1">(</span><span class="p" data-group-id="9098081679-2">[</span><span class="p" data-group-id="9098081679-3">[</span><span class="mi">0</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="9098081679-3">]</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9098081679-4">[</span><span class="mi">0</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="9098081679-4">]</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="9098081679-2">]</span><span class="p" data-group-id="9098081679-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="7699849238-1">&lt;&lt;</span><span class="mi">165</span><span class="p">,</span><span class="w"> </span><span class="mi">113</span><span class="p">,</span><span class="w"> </span><span class="mi">169</span><span class="p" data-group-id="7699849238-1">&gt;&gt;</span></code></pre><p><code class="inline">++jam</code> and implementations copying it will produce larger output:</p><pre><code class="makeup elixir" translate="no"><span class="n">longer_jammed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="9749340567-1">&lt;&lt;</span><span class="mi">165</span><span class="p">,</span><span class="w"> </span><span class="mi">113</span><span class="p">,</span><span class="w"> </span><span class="mi">147</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p" data-group-id="9749340567-1">&gt;&gt;</span><span class="w">
+</span><span class="nc">Noun.Jam</span><span class="o">.</span><span class="n">cue!</span><span class="p" data-group-id="9749340567-2">(</span><span class="n">longer_jammed</span><span class="p" data-group-id="9749340567-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="7744714718-1">[</span><span class="p" data-group-id="7744714718-2">[</span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p" data-group-id="7744714718-2">]</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7744714718-3">&lt;&lt;</span><span class="mi">1</span><span class="p" data-group-id="7744714718-3">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7744714718-4">[</span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p" data-group-id="7744714718-4">]</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p" data-group-id="7744714718-1">]</span></code></pre><p>Let's look at the bits to see what is going on.</p><pre><code class="makeup elixir" translate="no"><span class="n">jammed</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">atom_binary_to_integer</span><span class="p" data-group-id="7498473281-1">(</span><span class="p" data-group-id="7498473281-1">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="n">inspect</span><span class="p" data-group-id="7498473281-2">(</span><span class="ss">base</span><span class="p">:</span><span class="w"> </span><span class="ss">:binary</span><span class="p" data-group-id="7498473281-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="s">&quot;0b101010010111000110100101&quot;</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="n">longer_jammed</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Noun</span><span class="o">.</span><span class="n">atom_binary_to_integer</span><span class="p" data-group-id="4864371773-1">(</span><span class="p" data-group-id="4864371773-1">)</span><span class="w">
+</span><span class="o">|&gt;</span><span class="w"> </span><span class="n">inspect</span><span class="p" data-group-id="4864371773-2">(</span><span class="ss">base</span><span class="p">:</span><span class="w"> </span><span class="ss">:binary</span><span class="p" data-group-id="4864371773-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="s">&quot;0b10100100110111000110100101&quot;</span></code></pre><p>This example is only 2 bits more expensive, though it adds up on real-world nouns, e.g. 8853 bytes for the Anoma stdlib as of this writing (as opposed to 10157 bytes, saving 1.3 kilobytes, or around 13%).</p><p>Let's look at the longer output first, reading right to left (if I prefix with 0b, it means I'm putting less-significant bits on the right instead, because this part is interpreted as a binary number):</p><p><code class="inline">0b10100100110111000110100101</code></p><ul><li><code class="inline">10</code> cell tag<ul><li><code class="inline">10</code> cell tag (offset 2)<ul><li><code class="inline">01</code> atom zero</li><li><code class="inline">01</code> atom zero</li></ul></li><li><code class="inline">10</code> cell tag<ul><li><code class="inline">0</code> atom tag<ul><li><code class="inline">01</code> length of length (1)</li><li><code class="inline">[no bits]</code> length (prepend the leading 1 to the empty string, length is 0b1, i.e. 1)</li><li><code class="inline">0b1</code> atom value (1)</li></ul></li><li><code class="inline">10</code> cell tag<ul><li><code class="inline">11</code> backref tag<ul><li><code class="inline">001</code> length of length (2)</li><li><code class="inline">0b0</code> length (prepend leading 1, 0b10, 2)</li><li><code class="inline">0b10</code> atom value (2), so repeat the subnoun from offset 2</li></ul></li><li><code class="inline">01</code> atom zero</li></ul></li></ul></li></ul></li></ul><p>And the shorter output:</p><p><code class="inline">0b101010010111000110100101</code></p><ul><li><code class="inline">10</code> cell tag<ul><li><code class="inline">10</code> cell tag<ul><li><code class="inline">01</code> atom zero</li><li><code class="inline">01</code> atom zero</li></ul></li><li><code class="inline">10</code> cell tag<ul><li><code class="inline">0</code> atom tag<ul><li><code class="inline">01</code> length of length (1)</li><li><code class="inline">[no bits]</code> length (prepend the leading 1 to the empty string, length is 0b1, i.e. 1)</li><li><code class="inline">0b1</code> atom value (1)</li></ul></li><li><code class="inline">10</code> cell tag<ul><li><code class="inline">10</code> cell tag<ul><li><code class="inline">01</code> atom zero</li><li><code class="inline">01</code> atom zero</li></ul></li><li><code class="inline">01</code> atom zero</li></ul></li></ul></li></ul></li></ul><p>The &quot;better&quot; implementation saved bits by not emitting the backref. The cell <code class="inline">[0 0]</code> costs 6 bits to emit directly, but the backref to offset 2 (the cheapest possible backref!) costs 8 bits!</p><p>The issue is, apparently, not counting actual bit costs when deciding whether to backreference, but rather always backreferencing cells and only counting atom size, not size of the entire encoding and tag bits.</p><p>All decoders can handle all valid outputs, so there's no incompatibility introduced with smaller outputs.</p>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="contributing.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Contributing
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="toc.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+TOC
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.29.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.29.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.29.0/show/documentation/jam.livemd">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

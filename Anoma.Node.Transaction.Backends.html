@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.28.0">
+    <meta name="project" content="Anoma v0.29.0">
 
 
-    <title>Anoma.Node.Transaction.Backends — Anoma v0.28.0</title>
+    <title>Anoma.Node.Transaction.Backends — Anoma v0.29.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-E5C3E840.js"></script>
+    <script src="dist/sidebar_items-B6C10190.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.28.0
+          v0.29.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Transaction.Backends</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.29.0)</small>
 
   </h1>
 
@@ -178,6 +178,17 @@ the following debug executions: read-only, key-value store, and blob store execu
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#add/2" data-no-tooltip translate="no">add(acc, cm)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the commitment accumulator add function for the transparent resource
+machine.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#blob_store/3" data-no-tooltip translate="no">blob_store(node_id, id, result)</a>
 
       </div>
@@ -201,6 +212,39 @@ to apply <code class="inline">cue/1</code> in order to unpack the transaction co
         <a href="#store_value/3" data-no-tooltip translate="no">store_value(node_id, id, result)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#value/1" data-no-tooltip translate="no">value(acc)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the commitment accumulator value function for the transparent
+resource machine.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#verify/3" data-no-tooltip translate="no">verify(cm, w, val)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the commitment accumulator verify function for the transparent
+resource machine.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#witness/2" data-no-tooltip translate="no">witness(acc, cm)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the commitment accumulator witness function for the transparent
+resource machine.</p></div>
 
     </div>
 
@@ -279,6 +323,30 @@ to apply <code class="inline">cue/1</code> in order to unpack the transaction co
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="add/2">
+
+  <div class="detail-header">
+    <a href="#add/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add(acc, cm)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add(<a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>()</pre>
+
+      </div>
+
+<p>I am the commitment accumulator add function for the transparent resource
+machine.</p><p>Given the commitment set, I add a commitment to it.</p>
+  </section>
+</section>
 <section class="detail" id="blob_store/3">
 
   <div class="detail-header">
@@ -355,6 +423,82 @@ which is transmitted as a Nullifier Event.</li></ul>
 
   </section>
 </section>
+<section class="detail" id="value/1">
+
+  <div class="detail-header">
+    <a href="#value/1" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">value(acc)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> value(<a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+
+      </div>
+
+<p>I am the commitment accumulator value function for the transparent
+resource machine.</p><p>Given the commitment set, I turn it to binary and then hash it using
+sha-256.</p>
+  </section>
+</section>
+<section class="detail" id="verify/3">
+
+  <div class="detail-header">
+    <a href="#verify/3" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">verify(cm, w, val)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> verify(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: bool()</pre>
+
+      </div>
+
+<p>I am the commitment accumulator verify function for the transparent
+resource machine.</p><p>Given the commitment, a witness (i.e. a set) and a commitment value, I
+output true iff the witness's value is the same as the provided value and
+the commitment is indeed in the set.</p>
+  </section>
+</section>
+<section class="detail" id="witness/2">
+
+  <div class="detail-header">
+    <a href="#witness/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">witness(acc, cm)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> witness(<a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/0">MapSet.t</a>() | nil</pre>
+
+      </div>
+
+<p>I am the commitment accumulator witness function for the transparent
+resource machine.</p><p>Given the commitment set and a commitment, I return the original set if
+the commitment is a member of the former. Otherwise, I return nil</p>
+  </section>
+</section>
 
     </div>
   </section>
@@ -363,9 +507,9 @@ which is transmitted as a Nullifier Event.</li></ul>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.29.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.29.0">Hex Preview</a>
 
           </span>
 

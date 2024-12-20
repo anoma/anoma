@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.34.2">
-    <meta name="project" content="Anoma v0.28.0">
+    <meta name="project" content="Anoma v0.29.0">
 
 
-    <title>Anoma.Node.Intents.Solver — Anoma v0.28.0</title>
+    <title>Anoma.Node.Intents.Solver — Anoma v0.29.0</title>
     <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-E5C3E840.js"></script>
+    <script src="dist/sidebar_items-B6C10190.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-YIPIRHGU.js"></script>
 
@@ -50,7 +50,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.28.0
+          v0.29.0
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ GUIDES
   <h1>
 
     <span translate="no">Anoma.Node.Intents.Solver</span> 
-    <small class="app-vsn" translate="no">(Anoma v0.28.0)</small>
+    <small class="app-vsn" translate="no">(Anoma v0.29.0)</small>
 
   </h1>
 
@@ -135,7 +135,7 @@ GUIDES
   </a>
   <span class="text">Public API</span>
 </h3>
-<p>I have the following public functionality:</p><ul><li><code class="inline">get_solved/0</code></li><li><code class="inline">send/1</code></li></ul>
+<p>I have the following public functionality:</p><ul><li><a href="#get_unsolved/1"><code class="inline">get_unsolved/1</code></a></li></ul>
     </section>
 
 </div>
@@ -184,15 +184,7 @@ GUIDES
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_solved/1" data-no-tooltip translate="no">get_solved(node_id)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I return all the solved intents.</p></div>
+        <div class="summary-synopsis"><p>I am the core function responsible for solving.</p></div>
 
     </div>
 
@@ -202,7 +194,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>I return all the unsolved intents.</p></div>
+        <div class="summary-synopsis"><p>I am a function for getting unsolved intents from the solver.</p></div>
 
     </div>
 
@@ -212,6 +204,9 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>Given a list of intents, I attempt to find a subset of them that can be composed
+and verified and return it as a set.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -220,7 +215,17 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>I create a new solver process .</p></div>
+        <div class="summary-synopsis"><p>I am a start_link function of the Solver.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#submit/2" data-no-tooltip translate="no">submit(tx, node_id)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I provide the submit functionality for the solver.</p></div>
 
     </div>
 
@@ -276,7 +281,6 @@ the Intent.valid? predicate.</p></div>
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Intents.Solver{
   node_id: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil,
-  solved: <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.RM.Intent.html#t:t/0">Anoma.RM.Intent.t</a>()),
   unsolved: <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.RM.Intent.html#t:t/0">Anoma.RM.Intent.t</a>())
 }</pre>
 
@@ -288,7 +292,7 @@ the Intent.valid? predicate.</p></div>
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:unsolved</code>        - The set of unsolved intents.</li><li><code class="inline">:solved</code>          - The set of solved intents.</li></ul>
+<ul><li><code class="inline">:unsolved</code> - The set of unsolved intents.<pre><code class="makeup elixir" translate="no"><span class="w">          </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">MapSet</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="7953766122-1">(</span><span class="p" data-group-id="7953766122-1">)</span></code></pre></li><li><code class="inline">:node_id</code> - The ID of the Node to which the Solver is connected.</li></ul>
   </section>
 </section>
 
@@ -340,30 +344,10 @@ the Intent.valid? predicate.</p></div>
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="get_solved/1">
-
-  <div class="detail-header">
-    <a href="#get_solved/1" class="detail-link" data-no-tooltip title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">get_solved(node_id)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get_solved(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: [<a href="Anoma.RM.Intent.html#t:t/0">Anoma.RM.Intent.t</a>()]</pre>
-
-      </div>
-
-<p>I return all the solved intents.</p>
+<p>I am the core function responsible for solving.</p><p>I use the <code class="inline">solve</code> function to grab the first (maximal) composable subset
+of intents from those given in the state. Then filter out whichever ones
+are present in the result and return the remaining ones.</p><p>Given a proper intent structure, I also submit it to the mempool using
+an appropriate wrapper.</p>
   </section>
 </section>
 <section class="detail" id="get_unsolved/1">
@@ -386,7 +370,8 @@ the Intent.valid? predicate.</p></div>
 
       </div>
 
-<p>I return all the unsolved intents.</p>
+<p>I am a function for getting unsolved intents from the solver.</p><p>I dump the state of the solver converting the set of the unsolved intents
+into a list.</p>
   </section>
 </section>
 <section class="detail" id="solve/1">
@@ -405,12 +390,12 @@ the Intent.valid? predicate.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> solve([<a href="Anoma.RM.Intent.html#t:t/0">Anoma.RM.Intent.t</a>()] | <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.RM.Intent.html#t:t/0">Anoma.RM.Intent.t</a>())) ::
-  <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.RM.Intent.html#t:t/0">Anoma.RM.Intent.t</a>()) | nil</pre>
+          <pre translate="no"><span class="attribute">@spec</span> solve([<a href="Anoma.RM.Intent.html#t:t/0">Anoma.RM.Intent.t</a>()]) :: <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.RM.Intent.html#t:t/0">Anoma.RM.Intent.t</a>())</pre>
 
       </div>
 
-
+<p>Given a list of intents, I attempt to find a subset of them that can be composed
+and verified and return it as a set.</p><p>I assume that the composition of intents is associative and commutative.</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -429,11 +414,40 @@ the Intent.valid? predicate.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start_link([<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> start_link([{:node_id, <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}]) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
 
       </div>
 
-<p>I create a new solver process .</p>
+<p>I am a start_link function of the Solver.</p><p>I expect a keylist containing a node ID as startup argument.</p>
+  </section>
+</section>
+<section class="detail" id="submit/2">
+
+  <div class="detail-header">
+    <a href="#submit/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">submit(tx, node_id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> submit(<a href="Anoma.RM.Intent.html#t:t/0">Anoma.RM.Intent.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: :ok</pre>
+
+      </div>
+
+<p>I provide the submit functionality for the solver.</p><p>Given something solved, I submit it to the Mempool with the provided ID.</p><h3 id="submit/2-pattern-matching-variations" class="section-heading">
+  <a href="#submit/2-pattern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Matching Variations</span>
+</h3>
+<ul><li><code class="inline">submit(%TransparentResource.Transaction{}, node_id)</code> - I wrap a transaction in trivial<pre><code class="makeup elixir" translate="no"><span class="w">                                                    </span><span class="n">core</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">send</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Mempool</span><span class="o">.</span></code></pre></li><li><code class="inline">submit(any, node_id)</code> - I do nothing</li></ul>
   </section>
 </section>
 <section class="detail" id="subsets/1">
@@ -452,7 +466,7 @@ the Intent.valid? predicate.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> subsets(<a href="https://hexdocs.pm/elixir/Enumerable.html#t:t/0">Enumerable.t</a>()) :: <a href="https://hexdocs.pm/elixir/Enumerable.html#t:t/0">Enumerable.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> subsets([<a href="Anoma.RM.Intent.html#t:t/0">Anoma.RM.Intent.t</a>()]) :: <a href="https://hexdocs.pm/elixir/Enumerable.html#t:t/0">Enumerable.t</a>()</pre>
 
       </div>
 
@@ -491,9 +505,9 @@ the Intent.valid? predicate.</p>
       <p>
 
           <span class="line">
-            <a href="https://hex.pm/packages/anoma/0.28.0" class="footer-hex-package">Hex Package</a>
+            <a href="https://hex.pm/packages/anoma/0.29.0" class="footer-hex-package">Hex Package</a>
 
-            <a href="https://preview.hex.pm/preview/anoma/0.28.0">Hex Preview</a>
+            <a href="https://preview.hex.pm/preview/anoma/0.29.0">Hex Preview</a>
 
           </span>
 
