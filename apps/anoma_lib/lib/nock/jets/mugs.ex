@@ -93,6 +93,8 @@ defmodule Nock.Jets.Mugs do
       {"syn", 7, @layer_8_context_mug, &Nock.Jets.syn/1, :enabled, 30},
     Jets.calculate_mug_of_core(191, 8) =>
       {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30},
+    Jets.calculate_mug_of_core(1492, Nock.Lib.stdlib_layers()) =>
+      {"kind", 7, @layer_rm_context_mug, &Nock.Jets.kind/1, :enabled, 100},
     Jets.calculate_mug_of_core(92, Nock.Lib.stdlib_layers()) =>
       {"delta-add", 7, @layer_rm_context_mug, &Nock.Jets.delta_add/1,
        :enabled, 50},
