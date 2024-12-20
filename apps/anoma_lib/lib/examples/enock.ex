@@ -1239,6 +1239,32 @@ defmodule Examples.ENock do
     core
   end
 
+  def kind_arm() do
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 1492 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def kind_call(resource) do
+    sample = resource
+    [kind_arm(), sample | Nock.Lib.logics_core()]
+  end
+
+  def kind_test() do
+    resource = Examples.ETransparent.EResource.trivial_true_resource()
+
+    {:ok, kind} =
+      resource
+      |> Anoma.TransparentResource.Resource.to_noun()
+      |> kind_call
+      |> Nock.nock([9, 2, 0 | 1])
+
+    assert resource
+           |> Anoma.TransparentResource.Resource.kind()
+           |> Noun.equal?(kind)
+  end
+
   def delta_add_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
