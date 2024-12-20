@@ -196,15 +196,10 @@ defmodule Anoma.Node.Transaction.Backends do
 
     with {:ok, tx} <- TransparentResource.Transaction.from_noun(result),
          true <- TransparentResource.Transaction.verify(tx, verify_options) do
-      map =
-        for action <- tx.actions,
-            reduce: %{commitments: MapSet.new(), nullifiers: MapSet.new()} do
-          %{commitments: cms, nullifiers: nlfs} ->
-            %{
-              commitments: MapSet.union(cms, action.commitments),
-              nullifiers: MapSet.union(nlfs, action.nullifiers)
-            }
-        end
+      map = %{
+        commitments: TTransaction.commitments(tx),
+        nullifiers: TTransaction.nullifiers(tx)
+      }
 
       Ordering.add(
         node_id,
