@@ -69,6 +69,8 @@ defmodule Anoma.Node.Transaction.Backends do
     transaction candidate to the Intent Pool.
 
     ### Fields
+
+    - `:commitments`        - The set of commitments.
     - `:nullifiers`         - The set of nullifiers.
     - `:commitments`        - The set of commitments.
     """
