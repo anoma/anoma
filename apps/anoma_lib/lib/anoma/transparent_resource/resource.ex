@@ -47,8 +47,8 @@ defmodule Anoma.TransparentResource.Resource do
       resource.quantity,
       resource.data,
       resource.nullifier_key,
-      resource.nonce,
-      resource.rseed
+      resource.nonce
+      | resource.rseed
     ]
   end
 
@@ -60,10 +60,9 @@ defmodule Anoma.TransparentResource.Resource do
         quantity,
         data,
         nullifier_key,
-        nonce,
-        rseed | terminator
-      ])
-      when terminator in [0, <<>>, <<0>>, []] do
+        nonce
+        | rseed
+      ]) do
     # we make sure the types are respected
     {:ok,
      %Resource{

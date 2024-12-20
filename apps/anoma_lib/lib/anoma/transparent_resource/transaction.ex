@@ -146,8 +146,7 @@ defmodule Anoma.TransparentResource.Transaction do
 
   # We any here, as it's giving a weird error
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([roots, actions, delta, delta_proof | terminator])
-      when terminator in [0, <<>>, <<0>>, []] do
+  def from_noun([roots, actions, delta | delta_proof]) do
     with {:ok, actions} <- from_noun_actions(actions),
          {:ok, delta} <- Delta.from_noun(delta) do
       {:ok,
@@ -171,9 +170,9 @@ defmodule Anoma.TransparentResource.Transaction do
         MapSet.to_list(trans.roots),
         Enum.map(trans.actions, &Noun.Nounable.to_noun/1),
         Map.to_list(trans.delta)
-        |> Enum.map(fn {x, y} -> [x, Noun.encode_signed(y)] end),
+        |> Enum.map(fn {x, y} -> [x, Noun.encode_signed(y)] end)
         # Consider better provinance value
-        trans.delta_proof
+        | trans.delta_proof
       ]
     end
   end

@@ -99,8 +99,7 @@ defmodule Anoma.TransparentResource.Action do
   end
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([commits, nulls, proofs, app_data | terminator])
-      when terminator in [0, <<>>, <<0>>, []] do
+  def from_noun([commits, nulls, proofs | app_data]) do
     with {:ok, proofs} <- from_noun_proofs(proofs) do
       {:ok,
        %Action{
@@ -130,8 +129,8 @@ defmodule Anoma.TransparentResource.Action do
       [
         MapSet.to_list(trans.commitments),
         MapSet.to_list(trans.nullifiers),
-        Enum.map(trans.proofs, &Noun.Nounable.to_noun/1),
-        trans.app_data
+        Enum.map(trans.proofs, &Noun.Nounable.to_noun/1)
+        | trans.app_data
       ]
     end
   end
