@@ -69,7 +69,7 @@ defmodule Nock.Jets do
   def calculate_mug_of_layer(layer) do
     context_axis = Integer.pow(2, Nock.stdlib_layers() - layer + 1) - 1
 
-    with {:ok, context} <- Noun.axis(context_axis, Nock.stdlib_core()) do
+    with {:ok, context} <- Noun.axis(context_axis, Nock.rm_core()) do
       mug(context)
     end
   end
@@ -128,7 +128,7 @@ defmodule Nock.Jets do
       [
         9,
         core_index,
-        0 | Noun.index_to_offset(Nock.stdlib_layers() - parent_layer + 3)
+        0 | Noun.index_to_offset(Nock.stdlib_layers() - parent_layer + 2)
       ],
       9,
       gate_index,
@@ -141,15 +141,14 @@ defmodule Nock.Jets do
   defp calculate_core(index_in_core, parent_layer) do
     Nock.nock(Nock.logics_core(), [
       8,
-      # We drive `layers - parent + 3`, from how layers get pushed.
-      # Each layer pushes the previous one down by one. the + 3 is for:
+      # We drive `layers - parent + 2`, from how layers get pushed.
+      # Each layer pushes the previous one down by one. the + 2 is for:
       # 0. layer 0 (I believe, Ι may be incorrect on this)
-      # 1. the rm_core
-      # 2. the logics_core
+      # 1. the logics_core
       [
         9,
         index_in_core,
-        0 | Noun.index_to_offset(Nock.stdlib_layers() - parent_layer + 3)
+        0 | Noun.index_to_offset(Nock.stdlib_layers() - parent_layer + 2)
       ],
       0 | 2
     ])
