@@ -4,7 +4,8 @@ defmodule Nock.Bits do
   @spec num_bits(Noun.noun_atom(), non_neg_integer()) ::
           non_neg_integer()
   def num_bits(n, block_size) when is_binary(n) do
-    n |> Noun.atom_binary_to_integer() |> num_bits(block_size)
+    size = block_size |> Noun.atom_binary_to_integer()
+    n |> Noun.atom_binary_to_integer() |> num_bits(size)
   end
 
   def num_bits(n, block_size) when n >= 0 do
