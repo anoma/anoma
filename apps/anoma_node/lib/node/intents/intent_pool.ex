@@ -20,6 +20,47 @@ defmodule Anoma.Node.Intents.IntentPool do
   use TypedStruct
   use GenServer
 
+  typedstruct enforce: true, module: IntentAddSuccess do
+    @typedoc """
+    I am an event specifying that an intent has been submitted succesfully.
+
+    ### Fields
+    - `:intent` - The intent added.
+    """
+    field(:intent, Intent.t())
+  end
+
+  typedstruct enforce: true, module: IntentAddError do
+    @typedoc """
+    I am an event specifying that an intent submission has failed alongside
+    with a reason.
+
+    ### Fields
+    - `:intent` - The intent submitted.
+    - `:reason` - The reason why it was rejected from the pool.
+    """
+    field(:intent, Intent.t())
+    field(:reason, String.t())
+  end
+
+  deffilter IntentAddSuccessFilter do
+    %EventBroker.Event{
+      body: %Node.Event{body: %IntentPool.IntentAddSuccess{}}
+    } ->
+      true
+
+    _ ->
+      false
+  end
+
+  deffilter IntentAddErrorFilter do
+    %EventBroker.Event{body: %Node.Event{body: %IntentPool.IntentAddError{}}} ->
+      true
+
+    _ ->
+      false
+  end
+
   ############################################################
   #                           State                          #
   ############################################################
@@ -170,7 +211,10 @@ defmodule Anoma.Node.Intents.IntentPool do
   # I return the current state if any nullifier of the intent is already known.
   # """
   @spec handle_new_intent(any(), t()) ::
-          {:ok, :inserted, t()} | {:ok, :already_present, t()}
+          {:ok, :inserted, t()}
+          | {:ok,
+             :already_present | :nullifiers_present | :commitments_present,
+             t()}
   defp handle_new_intent(intent, state) do
     with :ok <- validate_intent_uniqueness(intent, state),
          :ok <- validate_nullifier_uniqueness(intent, state.nlfs_set),
@@ -189,8 +233,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
       {:ok, :inserted, add_intent!(intent, state)}
     else
-      {:error, :already_present} ->
-        {:ok, :already_present, state}
+      {:error, reason} -> handle_error(intent, reason, state)
     end
   end
 
@@ -269,7 +312,7 @@ defmodule Anoma.Node.Intents.IntentPool do
         "intent ignored; uses already nullified resources #{inspect(intent)}"
       )
 
-      {:error, :already_present}
+      {:error, :nullifiers_present}
     else
       :ok
     end
@@ -281,7 +324,7 @@ defmodule Anoma.Node.Intents.IntentPool do
         "intent ignored; uses already created resources #{inspect(intent)}"
       )
 
-      {:error, :already_present}
+      {:error, :commitments_present}
     else
       :ok
     end
@@ -291,11 +334,25 @@ defmodule Anoma.Node.Intents.IntentPool do
     Logger.debug("new intent added #{inspect(intent)}")
 
     EventBroker.event(
-      Node.Event.new_with_body(state.node_id, {:intent_added, intent}),
+      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddSuccess{
+        intent: intent
+      }),
       Broker
     )
 
     Map.update!(state, :intents, &MapSet.put(&1, intent))
+  end
+
+  defp handle_error(intent, reason, state) do
+    EventBroker.event(
+      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddError{
+        intent: intent,
+        reason: reason
+      }),
+      Broker
+    )
+
+    {:ok, reason, state}
   end
 
   def reject_intents(intents, set) do
