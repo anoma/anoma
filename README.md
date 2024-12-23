@@ -30,33 +30,44 @@ Development can be followed in multiple ways:
    - This is good for viewing new issues and work coming in, but the
      other views are typically a better way to view this
 
-## Dependencies
+## Running pre-built binaries
+### Release Dependencies
+To run a working Anoma Node the following dependencies are required:
 
-To have a working Anoma Node the following dependencies are required:
+1. Mac OS X Development Environment:
+    * Install Apple Command Line Developer Tools: `xcode-select --install`
+    * Install [MacPorts](https://www.macports.org/install.php) (or equivalent package manager)
+2. Install [ncurses](https://ports.macports.org/port/ncurses/) (Mac OS X only)
+3. Install OpenSSL:
+    * Mac OS X and Linux: use package manager
+    * Windows: not required
+### Running
+Download the [Anoma release](https://github.com/anoma/anoma/releases) for your platform, extract it, and run `bin/anoma`.
+## Compilation from sources
+### Build Dependencies
 
-1. `cmake`
-2. `Erlang` version OTP 27 or higher
-3. `Elixir` version 1.17.0 or higher
-4. `zig`
-5. `rust` version of 1.76.0 or newer
-  - rustup is an easy way to satisfy this.
-6. `protobuf`
-  - Along with `mix escript.install hex protobuf`
+To compile a working Anoma Node the following dependencies are required:
 
-### OSX
+1. Mac OS X Development Environment:
+    * Install Apple Command Line Developer Tools: `xcode-select --install`
+    * Install [MacPorts](https://www.macports.org/install.php) (or equivalent package manager)
+2. Windows Development Environment:
+    * Install [Build Tools for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Workload: Visual C++ build tools)
+    * Install [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
+3. Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (Windows and Linux only)
+4. Install CMake:
+    * Linux and Mac OS X: use package manager
+    * Windows: not required
+5. Install [Sodium](https://doc.libsodium.org/installation#pre-built-libraries) (Windows only)
+    * Ensure that the `LIB` and `INCLUDE` environment variables point to this installation
+6. Install [Protocol Buffers](https://grpc.io/docs/protoc-installation/)
+7. Install [Elixir](https://elixir-lang.org/install.html) (version 1.17.0 or higher) and with it:
+     * Install [Hex package manager](https://hexdocs.pm/mix/1.13/Mix.Tasks.Local.Hex.html)
+     * Install [Rebar3](https://hexdocs.pm/mix/1.14/Mix.Tasks.Local.Rebar.html)
+     * Install protobuf-elixir: `mix escript.install hex protobuf`
+8. Install [Rust](https://www.rust-lang.org/tools/install) (version 1.76.0 or newer)
 
-```sh
-brew install cmake
-brew install elixir
-brew install zig
-brew install protbuf
-```
-
-### Linux
-
-All the dependencies can be grabbed from your distro's package manager.
-
-## Installation
+### Compiling and Running
 
 To install the dependencies as well as Anoma run:
 
@@ -77,6 +88,17 @@ See the Contributing section for how to get the best use of the
 interactive shell.
 
 Further see the Known issues section if you encounter an issue.
+
+
+## Docker images
+To work with Docker images, do the following:
+1. Install [Docker](https://docs.docker.com/engine/install/), this is necessary for both building and running Docker images
+2. Build the Anoma image from the repository root: `docker build -t <IMAGE> .`
+    * `<IMAGE>` is your chosen image name
+4. Run the Anoma image: `docker run -it --network host <IMAGE> <SUBCOMMAND>`
+    * `<IMAGE>` is the name of Anoma Docker image to be run
+    * `<SUBCOMMAND>`is interpreted by the Anoma binary
+    * `--network host` will enable connections from the host
 
 ## Contributing
 

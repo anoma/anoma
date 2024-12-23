@@ -8,7 +8,6 @@ defmodule Anoma.Node.Transport.GRPC.Server do
   alias Anoma.Protobuf.IntentPool.AddIntent
   alias Anoma.Protobuf.IntentPool.ListIntents
   alias Anoma.Protobuf.Intents
-  alias Anoma.Protobuf.Prove
 
   use GRPC.Server, service: Intents.Service
 
@@ -26,7 +25,7 @@ defmodule Anoma.Node.Transport.GRPC.Server do
     {:ok, local_node_id} = Registry.local_node_id()
 
     intents =
-      Anoma.Node.Transaction.IntentPool.intents(local_node_id)
+      Anoma.Node.Intents.IntentPool.intents(local_node_id)
       |> Enum.map(&inspect(&1.value))
 
     %ListIntents.Response{intents: intents}
@@ -41,7 +40,7 @@ defmodule Anoma.Node.Transport.GRPC.Server do
 
     new_intent = %DumbIntent{value: request.intent.value}
     {:ok, local_node_id} = Registry.local_node_id()
-    Anoma.Node.Transaction.IntentPool.new_intent(local_node_id, new_intent)
+    Anoma.Node.Intents.IntentPool.new_intent(local_node_id, new_intent)
 
     %AddIntent.Response{result: "intent added"}
   end
@@ -64,11 +63,5 @@ defmodule Anoma.Node.Transport.GRPC.Server do
     %UnspentResources.Response{
       unspent_resources: ["unspent resource 1", "unspent resource 2"]
     }
-  end
-
-  @spec prove(Prove.Request.t(), Stream.t()) ::
-          Prove.Response.t()
-  def prove(request, _stream) do
-    %Prove.Response{result: "here's your proof for #{request.intent}"}
   end
 end

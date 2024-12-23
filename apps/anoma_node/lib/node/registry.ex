@@ -72,7 +72,7 @@ defmodule Anoma.Node.Registry do
     |> Enum.filter(
       &(&1 in [
           Anoma.Node.Transaction.Mempool,
-          Anoma.Node.Transaction.IntentPool,
+          Anoma.Node.Intents.IntentPool,
           Client
         ])
     )

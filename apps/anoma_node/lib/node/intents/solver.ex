@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transaction.Solver do
+defmodule Anoma.Node.Intents.Solver do
   @moduledoc """
   I am a strawman intent solver for testing purposes.
 
@@ -14,8 +14,9 @@ defmodule Anoma.Node.Transaction.Solver do
   use GenServer
 
   alias __MODULE__
-  alias Anoma.Node.Transaction.IntentPool
-  alias Anoma.Node.Registry
+  alias Anoma.Node
+  alias Node.Intents.IntentPool
+  alias Node.Registry
   alias Anoma.RM.Intent
   alias EventBroker.Event
   alias EventBroker.Filters
@@ -82,17 +83,19 @@ defmodule Anoma.Node.Transaction.Solver do
     # set default values for the arguments
     args = Keyword.validate!(args, [:node_id])
 
+    node_id = args[:node_id]
+
     # subscribe to all new intent pool messages
-    subscribe_to_new_intents()
+    subscribe_to_new_intents(node_id)
 
     # fetch the unsolved intents from the intent pool
     unsolved_intents =
-      Enum.to_list(IntentPool.intents(args[:node_id]))
+      Enum.to_list(IntentPool.intents(node_id))
 
     state =
       %Solver{
         unsolved: MapSet.new(unsolved_intents),
-        node_id: args[:node_id]
+        node_id: node_id
       }
 
     {:ok, state}
@@ -125,7 +128,10 @@ defmodule Anoma.Node.Transaction.Solver do
   @spec handle_event(Event.t(), t()) :: t()
   defp handle_event(%Event{} = event, state) do
     case event do
-      %Event{source_module: IntentPool, body: {:intent_added, intent}} ->
+      %Event{
+        source_module: IntentPool,
+        body: %Anoma.Node.Event{body: {:intent_added, intent}}
+      } ->
         handle_new_intent(intent, state)
 
       _ ->
@@ -235,10 +241,14 @@ defmodule Anoma.Node.Transaction.Solver do
   # @doc """
   # I subscribe this process to the intent pool events.
   # """
-  @spec subscribe_to_new_intents() :: :ok | String.t()
-  defp subscribe_to_new_intents() do
+  @spec subscribe_to_new_intents(String.t()) :: :ok | String.t()
+  defp subscribe_to_new_intents(node_id) do
     filter = %Filters.SourceModule{module: IntentPool}
-    EventBroker.subscribe_me([filter])
+
+    EventBroker.subscribe_me([
+      Node.Event.node_filter(node_id),
+      filter
+    ])
   end
 
   @doc """

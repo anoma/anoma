@@ -8,9 +8,8 @@ defmodule Anoma.Client.Examples.EProxy do
   """
   use TypedStruct
 
-  alias __MODULE__
-  alias Anoma.Node.Examples.ENode
   alias Anoma.Client.Connection.GRPCProxy
+  alias Anoma.Client.Examples.EClient
   alias Anoma.Protobuf.Intent
 
   require ExUnit.Assertions
@@ -21,108 +20,96 @@ defmodule Anoma.Client.Examples.EProxy do
   #                    State                                 #
   ############################################################
 
-  typedstruct do
-    @typedoc """
+  ############################################################
+  #                    Helpers                               #
+  ############################################################
 
-    ### Fields
-    - `:pid`     - The process id of the GRPC proxy.
-    """
-    field(:pid, pid())
+  def setup() do
+    EClient.create_example_client()
   end
 
+  ############################################################
+  #                    Examples                              #
+  ############################################################
+
   @doc """
-  I test the GRPC proxy to proxy requests to an existing Anoma node.
+  I ask the node to return its list of intents via the proxy.
   """
-  @spec start_proxy_for(ENode.t() | nil) :: %EProxy{} | {:error, term()}
-  def start_proxy_for(enode \\ nil) do
-    # if no node was given, this ran in a unit test.
-    # we kill all nodes since we can only have a local node for this test.
-    enode =
-      if enode == nil do
-        ENode.kill_all_nodes()
-        ENode.start_node(grpc_port: 0)
-      else
-        enode
-      end
+  @spec list_intents(EClient.t()) :: {EClient.t(), any()}
+  def list_intents(client \\ setup()) do
+    expected_intents = []
 
-    proxy_args = [port: enode.grpc_port, host: "localhost"]
+    # call the proxy
+    {:ok, response} = GRPCProxy.list_intents()
 
-    case GRPCProxy.start_link(proxy_args) do
-      {:ok, pid} ->
-        %EProxy{pid: pid}
+    # assert the result is what was expected
+    assert response.intents == expected_intents
 
-      {:error, {:already_started, pid}} ->
-        %EProxy{pid: pid}
-
-      err ->
-        {:error, err}
-    end
+    {client, response.intents}
   end
 
   @doc """
   I ask the node to return its list of intents via the proxy.
   """
-  @spec list_intents(EProxy.t()) ::
-          {:ok, Anoma.Protobuf.IntentPool.ListIntents.Response.t()}
-  def list_intents(%EProxy{} \\ start_proxy_for()) do
-    result = GRPCProxy.list_intents()
-    assert Kernel.match?({:ok, %{intents: []}}, result)
-    result
-  end
-
-  @doc """
-  I ask the node to return its list of intents via the proxy.
-  """
-  @spec add_intent(EProxy.t()) ::
-          {:ok, Anoma.Protobuf.IntentPool.AddIntent.Response.t()}
-  def add_intent(%EProxy{} \\ start_proxy_for()) do
+  @spec add_intent(EClient.t()) :: EClient.t()
+  def add_intent(client \\ setup()) do
+    # intent to add
     intent = %Intent{value: 1}
+
+    # call the proxy
     result = GRPCProxy.add_intent(intent)
+
+    # assert the call succeeded
     assert Kernel.match?({:ok, %{result: "intent added"}}, result)
-    result
+
+    client
   end
 
   @doc """
   I ask the node to return its list of intents via the proxy.
   """
-  @spec list_nullifiers(EProxy.t()) ::
-          {:ok, Anoma.Protobuf.Indexer.Nullifiers.Response.t()}
-  def list_nullifiers(%EProxy{} \\ start_proxy_for()) do
-    result = GRPCProxy.list_nullifiers()
-    assert Kernel.match?({:ok, %{nullifiers: ["null", "ifier"]}}, result)
-    result
+  @spec list_nullifiers(EClient.t()) :: {EClient.t(), [any()]}
+  def list_nullifiers(client \\ setup()) do
+    expected_nullifiers = ["null", "ifier"]
+
+    # call the proxy
+    {:ok, response} = GRPCProxy.list_nullifiers()
+
+    # assert the result is what was expected
+    assert expected_nullifiers == response.nullifiers
+
+    {client, response.nullifiers}
   end
 
   @doc """
   I ask the node to return its list of intents via the proxy.
   """
-  @spec list_unrevealed_commits(EProxy.t()) ::
-          {:ok, Anoma.Protobuf.Indexer.UnrevealedCommits.Response.t()}
-  def list_unrevealed_commits(%EProxy{} \\ start_proxy_for()) do
-    result = GRPCProxy.list_unrevealed_commits()
-    assert Kernel.match?({:ok, %{commits: ["commit1", "commit2"]}}, result)
-    result
+  @spec list_unrevealed_commits(EClient.t()) :: {EClient.t(), [any()]}
+  def list_unrevealed_commits(client \\ setup()) do
+    expected_commits = ["commit1", "commit2"]
+
+    # call the proxy and assert the result is what was expected
+    {:ok, response} = GRPCProxy.list_unrevealed_commits()
+
+    # assert the result is what was expected
+    assert response.commits == expected_commits
+
+    {client, response.commits}
   end
 
   @doc """
   I ask the node to return its list of intents via the proxy.
   """
-  @spec list_unspent_resources(EProxy.t()) ::
-          {:ok, Anoma.Protobuf.Indexer.UnspentResources.Response.t()}
-  def list_unspent_resources(%EProxy{} \\ start_proxy_for()) do
-    result = GRPCProxy.list_unspent_resources()
+  @spec list_unspent_resources(EClient.t()) :: {EClient.t(), [any()]}
+  def list_unspent_resources(client \\ setup()) do
+    expected_resources = ["unspent resource 1", "unspent resource 2"]
 
-    assert Kernel.match?(
-             {:ok,
-              %{
-                unspent_resources: [
-                  "unspent resource 1",
-                  "unspent resource 2"
-                ]
-              }},
-             result
-           )
+    # call the proxy
+    {:ok, result} = GRPCProxy.list_unspent_resources()
 
-    result
+    # assert the result is what was expected
+    assert expected_resources == result.unspent_resources
+
+    {client, result.unspent_resources}
   end
 end

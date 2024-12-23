@@ -258,7 +258,7 @@
   (~(met block 0) a)
 --
 ::  layer 5: under construction (axes may change)
-~%  %four  +  ~
+~%  %five  +  ~
 |%
 ::  bitwise xor
 ++  mix                                                 ::  binary xor
@@ -575,7 +575,10 @@
   (shax (mix sal (shax ruz)))
 ++  og
   ~/  %og
-  |_  a=@
+  ^|  |_  a=@
+  ++  split
+    ^-  [_og _og]
+    [.(a (shas %split-l a)) .(a (shas %split-r a))]
   ++  raw  :: Random bit generation
     ~/  %raw
     |=  b=@  ^-  @
@@ -590,6 +593,21 @@
     ?:  (lth b 256)
       [[b (end [0 b] d)] ~]
     [[256 d] $(c d, b (sub b 256))]
+  ++  rad  :: Random number generation in range
+    |=  b=@  ^-  @
+    =,  shim
+    ~_  leaf+"rad-zero"
+    ?<  =(0 b)
+    =+  c=(raw (met 0 b))
+    ?:((lth c b) c $(a +(a)))
+  ++  raws  ::  Random bit generation with continuation
+    |=  b=@
+    =+  r=(raw b)
+    [r +>.$(a (shas %og-s (mix a r)))]
+  ++  rads  :: Random number generation in range with continuation
+    |=  b=@
+    =+  r=(rad b)
+    [r +>.$(a (shas %og-s (mix a r)))]
   --
 --
 ::  layer 8: signed arithmetic

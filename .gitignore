@@ -43,3 +43,5 @@ Mnesia*/
 
 # Certificate files
 *.pem
+.elixir_ls
+apps/anoma_client/anoma_client

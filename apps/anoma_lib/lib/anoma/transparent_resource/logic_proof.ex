@@ -40,7 +40,7 @@ defmodule Anoma.TransparentResource.LogicProof do
 
     args = [public_inputs | private_inputs]
 
-    result = Nock.nock(proof.resource.logic, [9, 2, 10, [6 | args], 0 | 1])
+    result = Nock.nock(proof.resource.logic, [9, 2, 10, [6, 1 | args], 0 | 1])
 
     case result do
       {:ok, zero} when zero in [0, <<>>, <<0>>, []] -> true
@@ -49,6 +49,21 @@ defmodule Anoma.TransparentResource.LogicProof do
   end
 
   @empty [0, <<>>, <<0>>, []]
+
+  @spec verify_resource_corresponds_to_tag(t()) :: boolean()
+  def verify_resource_corresponds_to_tag(%LogicProof{
+        resource: resource,
+        self_tag: {:committed, commitment}
+      }) do
+    Resource.commitment(resource) == commitment
+  end
+
+  def verify_resource_corresponds_to_tag(%LogicProof{
+        resource: resource,
+        self_tag: {:nullified, nullifier}
+      }) do
+    Resource.nullifier(resource) == nullifier
+  end
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
@@ -103,7 +118,7 @@ defmodule Anoma.TransparentResource.LogicProof do
     # format in from_noun
     self_tag =
       case proof.self_tag do
-        {:comitted, comm} -> comm
+        {:committed, comm} -> comm
         {:nullified, null} -> null
       end
 

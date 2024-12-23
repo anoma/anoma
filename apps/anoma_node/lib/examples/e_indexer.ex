@@ -1,19 +1,84 @@
 defmodule Anoma.Node.Examples.EIndexer do
-  alias Anoma.Node.Examples.{ETransaction}
-  alias Anoma.Node.Transaction.Storage
-  alias Anoma.Node.Utility.Indexer
+  alias Anoma.Node
+  alias Node.Examples.{ETransaction, ENode}
+  alias Node.Transaction.{Storage, Mempool}
+  alias Node.Utility.Indexer
   alias Anoma.TransparentResource.Resource
 
-  def indexer_reads_height(node_id \\ "londo_mollari") do
+  def indexer_reads_height(node_id \\ Node.example_random_id()) do
     ETransaction.inc_counter_submit_after_read(node_id)
     Indexer.start_link(node_id: node_id)
-    1 = Indexer.get(node_id, :blocks)
+    1 = Indexer.get(node_id, :height)
 
     node_id
   end
 
-  def indexer_reads_nullifier(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
+  def indexer_reads_before(node_id \\ Node.example_random_id()) do
+    ETransaction.inc_counter_submit_after_zero(node_id)
+    Indexer.start_link(node_id: node_id)
+    {back, zero} = ETransaction.zero("key")
+
+    [
+      [
+        0,
+        [
+          %Mempool.Tx{
+            code: ^zero,
+            backend: ^back,
+            vm_result: {:ok, [["key" | 0] | 0]},
+            tx_result: {:ok, [["key" | 0]]}
+          }
+        ]
+      ]
+    ] = Indexer.get(node_id, {:before, 1})
+
+    [] = Indexer.get(node_id, {:before, 0})
+  end
+
+  def indexer_reads_after(node_id \\ Node.example_random_id()) do
+    ETransaction.inc_counter_submit_after_zero(node_id)
+    Indexer.start_link(node_id: node_id)
+    {back, inc} = ETransaction.inc("key")
+
+    [
+      [
+        1,
+        [
+          %Mempool.Tx{
+            code: ^inc,
+            backend: ^back,
+            vm_result: {:ok, [["key" | 1] | 0]},
+            tx_result: {:ok, [["key" | 1]]}
+          }
+        ]
+      ]
+    ] = Indexer.get(node_id, {:after, 0})
+
+    [] = Indexer.get(node_id, {:after, 1})
+  end
+
+  def indexer_reads_latest(node_id \\ Node.example_random_id()) do
+    ETransaction.inc_counter_submit_after_zero(node_id)
+    Indexer.start_link(node_id: node_id)
+    {back, inc} = ETransaction.inc("key")
+
+    [
+      [
+        1,
+        [
+          %Mempool.Tx{
+            code: ^inc,
+            backend: ^back,
+            vm_result: {:ok, [["key" | 1] | 0]},
+            tx_result: {:ok, [["key" | 1]]}
+          }
+        ]
+      ]
+    ] = Indexer.get(node_id, :latest_block)
+  end
+
+  def indexer_reads_nullifier(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
@@ -28,8 +93,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
-  def indexer_reads_nullifiers(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
+  def indexer_reads_nullifiers(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
@@ -51,8 +116,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
-  def indexer_reads_commitments(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
+  def indexer_reads_commitments(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
@@ -74,8 +139,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
-  def indexer_does_not_read_revealed(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
+  def indexer_does_not_read_revealed(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
@@ -94,8 +159,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     node_id
   end
 
-  def indexer_reads_unrevealed(node_id \\ "londo_mollari") do
-    ETransaction.restart_storage(node_id)
+  def indexer_reads_unrevealed(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
     Indexer.start_link(node_id: node_id)
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
@@ -115,6 +180,34 @@ defmodule Anoma.Node.Examples.EIndexer do
 
     newset = MapSet.new([com2])
     ^newset = Indexer.get(node_id, :unrevealed)
+
+    node_id
+  end
+
+  def indexer_filters_owner(node_id \\ Node.example_random_id()) do
+    ENode.start_node(node_id: node_id)
+    Indexer.start_link(node_id: node_id)
+    updates = Storage.updates_table(node_id)
+    values = Storage.values_table(node_id)
+
+    res1 = %Resource{rseed: "random1", nullifier_key: "jeremy"}
+    res2 = %Resource{rseed: "random2", nullifier_key: "michael"}
+    list = [res1, res2]
+
+    write_new(
+      updates,
+      values,
+      [1],
+      nil,
+      list |> Enum.map(&Resource.commitment/1) |> MapSet.new()
+    )
+
+    jeremy = Noun.atom_binary_to_integer("jeremy")
+    michael = Noun.atom_binary_to_integer("michael")
+
+    2 = Indexer.get(node_id, {:filter, []}) |> MapSet.size()
+    1 = Indexer.get(node_id, {:filter, [{:owner, jeremy}]}) |> MapSet.size()
+    1 = Indexer.get(node_id, {:filter, [{:owner, michael}]}) |> MapSet.size()
 
     node_id
   end

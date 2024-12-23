@@ -187,7 +187,7 @@ defmodule Anoma.Node.Examples.ERegistry do
     engines =
       [
         Anoma.Node.Transaction.Mempool,
-        Anoma.Node.Transaction.IntentPool
+        Anoma.Node.Intents.IntentPool
       ]
       |> Enum.sort()
 

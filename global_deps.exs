@@ -1,6 +1,5 @@
 # keep me alphabetized; non-runtime dependencies at the bottom.
 [
-  {:burrito, "~> 1.1.0"},
   {:cairo,
    git: "https://github.com/anoma/aarm-cairo",
    ref: "dd2ed877e8d7c326a4a88dcf86ae32cd0183f3ae"},
@@ -22,6 +21,7 @@
   {:toml, "~> 0.7"},
   {:typed_struct, "~> 0.3.0"},
   # non-runtime dependencies below
+  {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
   {:dialyxir, "~> 1.3", only: [:dev], runtime: false},
   {:ex_doc, "~> 0.31", only: [:dev], runtime: false}
 ]

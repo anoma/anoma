@@ -459,7 +459,7 @@ defmodule Examples.ENock do
   @spec raw_arm() :: Noun.t()
   def raw_arm() do
     arm =
-      "[8 [8 [9 47 0 63] 9 2 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 47 0 63] 9 23 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
@@ -483,6 +483,117 @@ defmodule Examples.ENock do
     {:ok, 9} = call
 
     call
+  end
+
+  @doc """
+  I represent the raws gate call as a 2-argument gate.
+
+  Can be gotten by defining
+
+  =lraw   =>  logics  |=   [a=@ b=@]  (~(raws og a) b)
+  """
+
+  @spec raws_arm() :: Noun.t()
+  def raws_arm() do
+    arm =
+      "[8 [8 [9 47 0 63] 9 4 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0, 0]
+
+    [arm, sample | Nock.logics_core()]
+  end
+
+  @doc """
+  I am function calling the raws gate of the og door with specified
+  seed and bitwidth.
+  """
+
+  @spec raws_call(Noun.t(), Noun.t()) :: {:ok, Noun.t()}
+  def raws_call(seed, width) do
+    Nock.nock(raws_arm(), [9, 2, 10, [6, 1 | [seed | width]], 0 | 1])
+  end
+
+  @spec raws_test() :: :ok
+  def raws_test() do
+    {:ok, res} = raws_call(27, 4)
+    rand = hd(res)
+    ^rand = 9
+
+    :ok
+  end
+
+  @doc """
+  I represent the rad gate call as a 2-argument gate.
+
+  Can be gotten by defining
+
+  =lrad   =>  logics  |=   [a=@ b=@]  (~(rad og a) b)
+  """
+
+  @spec rad_arm() :: Noun.t()
+  def rad_arm() do
+    arm =
+      "[8 [8 [9 47 0 63] 9 20 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0, 0]
+
+    [arm, sample | Nock.logics_core()]
+  end
+
+  @doc """
+  I am function calling the rad gate of the og door with specified
+  seed and range
+  """
+
+  @spec rad_call(any(), non_neg_integer()) :: {:ok, Noun.t()}
+  def rad_call(seed, range) do
+    Nock.nock(rad_arm(), [9, 2, 10, [6, 1 | [seed | range]], 0 | 1])
+  end
+
+  @spec rad_tests() :: {:ok, Noun.t()}
+  def rad_tests() do
+    {:ok, 4} = rad_call(5, 11)
+    {:ok, 2} = rad_call(10, 20)
+    {:ok, 260} = rad_call(10, 2000)
+    {:ok, 1285} = rad_call(628, 2000)
+  end
+
+  @doc """
+  I represent the rads gate call as a 2-argument gate.
+
+  Can be gotten by defining
+
+  =lrad   =>  logics  |=   [a=@ b=@]  (~(rads og a) b)
+  """
+
+  @spec rads_arm() :: Noun.t()
+  def rads_arm() do
+    arm =
+      "[8 [8 [9 47 0 63] 9 22 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0, 0]
+
+    [arm, sample | Nock.logics_core()]
+  end
+
+  @doc """
+  I am function calling the rads gate of the og door with specified
+  seed and range
+  """
+
+  def rads_call(seed, range) do
+    Nock.nock(rads_arm(), [9, 2, 10, [6, 1 | [seed | range]], 0 | 1])
+  end
+
+  @spec rads_tests() :: :ok
+  def rads_tests() do
+    {:ok, cell} = rads_call(5, 11)
+    rand = hd(cell)
+    ^rand = 4
+    :ok
   end
 
   ############################################################

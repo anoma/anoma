@@ -4,14 +4,25 @@ defmodule Anoma.Node.Utility.Consensus do
   """
 
   alias __MODULE__
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Registry
+  alias Anoma.Node
+  alias Node.Transaction.Mempool
+  alias Node.Registry
 
+  use EventBroker.DefFilter
+  use GenServer
   use TypedStruct
 
   typedstruct do
     field(:interval, non_neg_integer(), default: 5000)
     field(:node_id, String.t())
+  end
+
+  deffilter BlockFilter do
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
+      true
+
+    _ ->
+      false
   end
 
   def start_link(args) do
@@ -24,8 +35,10 @@ defmodule Anoma.Node.Utility.Consensus do
   def init(args) do
     Process.set_label(__MODULE__)
     args = Keyword.validate!(args, [:interval, :node_id])
+    node_id = args[:node_id]
 
     EventBroker.subscribe_me([
+      Node.Event.node_filter(node_id),
       block_filter()
     ])
 
@@ -40,7 +53,7 @@ defmodule Anoma.Node.Utility.Consensus do
       end
     end)
 
-    start(args[:node_id])
+    start(node_id)
 
     state = struct(__MODULE__, Enum.into(args, %{}))
     {:ok, state}
@@ -78,8 +91,10 @@ defmodule Anoma.Node.Utility.Consensus do
   def wait_for_block(consensus) do
     receive do
       %EventBroker.Event{
-        body: %Mempool.BlockEvent{
-          order: ^consensus
+        body: %Node.Event{
+          body: %Mempool.BlockEvent{
+            order: ^consensus
+          }
         }
       } ->
         :ok
@@ -87,6 +102,6 @@ defmodule Anoma.Node.Utility.Consensus do
   end
 
   def block_filter() do
-    %Consensus.BlockFilter{}
+    %__MODULE__.BlockFilter{}
   end
 end
