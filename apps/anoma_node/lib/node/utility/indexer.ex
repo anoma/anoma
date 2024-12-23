@@ -129,7 +129,7 @@ defmodule Anoma.Node.Utility.Indexer do
     coms
     |> get_jam_info(:commitments)
     |> Stream.map(fn x ->
-      {:ok, res} = Nock.Cue.cue(x)
+      {:ok, res} = Noun.Jam.cue(x)
       res
     end)
     |> MapSet.new()
