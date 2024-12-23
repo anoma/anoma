@@ -52,7 +52,7 @@ This document is best viewed from within liveview, as the charts do not render o
 * `next` - a branch that has a superset of features that will be
   included in the next release
 
-* `maint` - a maintnance branch that will be updated if bugs are found
+* `maint` - a maintenance branch that will be updated if bugs are found
 
 * `integreation branch` - a topic that merges a bunch of other topics
 
