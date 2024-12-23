@@ -417,10 +417,14 @@ defmodule Anoma.Node.Transaction.Backends do
          true <- root_existence_check(tx, node_id, id),
          # No need to check the commitment existence
          true <- nullifier_existence_check(tx, node_id, id) do
-      ct =
-        case Ordering.read(node_id, {id, :ct}) do
-          :absent -> CTransaction.cm_tree()
-          val -> val
+      {ct, append_roots} =
+        case Ordering.read(node_id, {id, anoma_keyspace("cairo_ct")}) do
+          :absent ->
+            {CTransaction.cm_tree(),
+             MapSet.new([Anoma.Constants.default_cairo_rm_root()])}
+
+          val ->
+            {val, MapSet.new()}
         end
 
       {ct_new, anchor} =
@@ -431,11 +435,10 @@ defmodule Anoma.Node.Transaction.Backends do
         {id,
          %{
            append: [
-             {:nullifiers, MapSet.new(tx.nullifiers)},
-             {:commitments, MapSet.new(tx.commitments)},
-             {:roots, MapSet.new([anchor])}
+             {anoma_keyspace("cairo_nullifiers"), MapSet.new(tx.nullifiers)},
+             {anoma_keyspace("cairo_roots"), MapSet.put(append_roots, anchor)}
            ],
-           write: [{:anchor, anchor}, {:ct, ct_new}]
+           write: [{anoma_keyspace("cairo_ct"), ct_new}]
          }}
       )
 
@@ -460,7 +463,7 @@ defmodule Anoma.Node.Transaction.Backends do
           true | {:error, String.t()}
   def nullifier_existence_check(transaction, node_id, id) do
     with {:ok, stored_nullifiers} <-
-           Ordering.read(node_id, {id, :nullifiers}) do
+           Ordering.read(node_id, {id, anoma_keyspace("cairo_nullifiers")}) do
       if Enum.any?(
            transaction.nullifiers,
            &MapSet.member?(stored_nullifiers, &1)
@@ -470,6 +473,7 @@ defmodule Anoma.Node.Transaction.Backends do
         true
       end
     else
+      # stored_nullifiers is empty
       _ -> true
     end
   end
@@ -477,14 +481,14 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec root_existence_check(CTransaction.t(), String.t(), binary()) ::
           true | {:error, String.t()}
   def root_existence_check(transaction, node_id, id) do
-    with {:ok, stored_roots} <-
-           Ordering.read(node_id, {id, :roots}),
-         true <-
-           Enum.all?(transaction.roots, &MapSet.member?(stored_roots, &1)) do
-      true
-    else
-      _ -> {:error, "A submitted root dose not exist in storage"}
-    end
+    stored_roots =
+      case Ordering.read(node_id, {id, anoma_keyspace("cairo_roots")}) do
+        :absent -> MapSet.new([Anoma.Constants.default_cairo_rm_root()])
+        val -> val
+      end
+
+    Enum.all?(transaction.roots, &MapSet.member?(stored_roots, &1)) or
+      {:error, "A submitted root dose not exist in storage"}
   end
 
   ############################################################
