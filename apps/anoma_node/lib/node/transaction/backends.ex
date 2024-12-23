@@ -80,6 +80,21 @@ defmodule Anoma.Node.Transaction.Backends do
     field(:nullifiers, MapSet.t(binary()))
   end
 
+  typedstruct enforce: true, module: SRMEvent do
+    @typedoc """
+    I hold the content of the The Shielded Resource Machine Event, which
+    communicates a set of nullifiers/commitments defined by the actions of the
+    transaction candidate to the Intent Pool.
+
+    ### Fields
+
+    - `:commitments`        - The set of commitments.
+    - `:nullifiers`         - The set of nullifiers.
+    """
+    field(:commitments, MapSet.t(binary()))
+    field(:nullifiers, MapSet.t(binary()))
+  end
+
   deffilter CompleteFilter do
     %EventBroker.Event{body: %Node.Event{body: %CompleteEvent{}}} ->
       true
@@ -442,7 +457,11 @@ defmodule Anoma.Node.Transaction.Backends do
          }}
       )
 
-      # TODO: emit a proper event here sth like transparent_rm_event in transparent cases.
+      cairo_rm_event(
+        MapSet.new(tx.commitments),
+        MapSet.new(tx.nullifiers),
+        node_id
+      )
 
       {:ok, tx}
     else
@@ -530,6 +549,21 @@ defmodule Anoma.Node.Transaction.Backends do
   defp transparent_rm_event(cms, nlfs, node_id) do
     event =
       Node.Event.new_with_body(node_id, %__MODULE__.TRMEvent{
+        commitments: cms,
+        nullifiers: nlfs
+      })
+
+    EventBroker.event(event)
+  end
+
+  @spec cairo_rm_event(
+          MapSet.t(binary()),
+          MapSet.t(binary()),
+          String.t()
+        ) :: :ok
+  defp cairo_rm_event(cms, nlfs, node_id) do
+    event =
+      Node.Event.new_with_body(node_id, %__MODULE__.SRMEvent{
         commitments: cms,
         nullifiers: nlfs
       })
