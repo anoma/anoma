@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.29.0">
+
+
+    <title>Mnesia Vs Actor State — Anoma v0.29.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-B6C10190.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.29.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>Mnesia Vs Actor State</span>
+  </h1>
+
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a></li><li><a href="jam.html">Jam</a></li></ol><h2 id="where-should-state-be-stored" class="section-heading">
+  <a href="#where-should-state-be-stored" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Where should state be stored</span>
+</h2>
+<p>One interesting thing about our system is that in the user data section of our documentation we talk about how Anoma's state is stored in <a href="https://en.wikipedia.org/wiki/RocksDB">RocksDB</a> tables on disc. And that we have some kind of <code class="inline">dump</code> format that goes along with the tables.</p><p>The <code class="inline">dump</code> format stores 2 kinds of information:</p><ol><li>Actor State</li><li><a href="https://en.wikipedia.org/wiki/Mnesia">Mnesia</a> State</li></ol><p>As discussed in the user data documentation, loading a <code class="inline">dump</code> file overwrites the DB. However what we did not cover is what the differences are between <a href="https://en.wikipedia.org/wiki/Mnesia">Mnesia</a> storage and Actor storage.</p><h2 id="mnesia-storage" class="section-heading">
+  <a href="#mnesia-storage" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Mnesia Storage</span>
+</h2>
+<p>The philosophy for what is stored in Mnesia should be: &quot;Is this something the user should be able to query and write code over&quot;. Since Anoma is a distributed operating system project, many of the answers should be yes. The user should be able to make full fledged progrmas on Anoma and extend the system.</p><h2 id="actor-storage" class="section-heading">
+  <a href="#actor-storage" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Actor Storage</span>
+</h2>
+<p>Actor storage on the other hand are for things we don't wish the user to be able to query. Thus implementaiton details about the execution should be omitted from user visible storage, and would be better served stored on the Actor.</p><p>A good example of this is the old ordering logic.</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="n">typedstruct</span><span class="w"> </span><span class="k" data-group-id="1787618299-1">do</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="1787618299-2">(</span><span class="ss">:table</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="1787618299-3">(</span><span class="p" data-group-id="1787618299-3">)</span><span class="p" data-group-id="1787618299-2">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="1787618299-4">(</span><span class="ss">:next_order</span><span class="p">,</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="1787618299-5">(</span><span class="p" data-group-id="1787618299-5">)</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="1787618299-4">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="1787618299-6">(</span><span class="ss">:hash_to_order</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1787618299-7">%{</span><span class="n">key</span><span class="p" data-group-id="1787618299-8">(</span><span class="p" data-group-id="1787618299-8">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="1787618299-9">(</span><span class="p" data-group-id="1787618299-9">)</span><span class="p" data-group-id="1787618299-7">}</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1787618299-10">%{</span><span class="p" data-group-id="1787618299-10">}</span><span class="p" data-group-id="1787618299-6">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="1787618299-11">(</span><span class="ss">:logger</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="1787618299-12">(</span><span class="p" data-group-id="1787618299-12">)</span><span class="p">,</span><span class="w"> </span><span class="ss">enforce</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p" data-group-id="1787618299-11">)</span><span class="w">
+  </span><span class="k" data-group-id="1787618299-1">end</span></code></pre><p>In this example, we store things like specific order information, the live router addresses for storage and for the logger. None of this is relevant to the users and are just coincidental with how we wrote the system.</p>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="iex.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+IEx
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="observer.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Observer
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.29.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.29.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.29.0/show/documentation/contributing/mnesia-vs-actor-state.livemd">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

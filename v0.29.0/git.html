@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Anoma v0.29.0">
+
+
+    <title>Git — Anoma v0.29.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-B6C10190.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.29.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Anoma</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>Git</span>
+  </h1>
+
+    <div class="livebook-badge-container">
+      <a href="#" class="livebook-badge">
+        <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+      </a>
+    </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a></li><li><a href="jam.html">Jam</a></li></ol><h2 id="git" class="section-heading">
+  <a href="#git" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Git</span>
+</h2>
+<p>Git is a decent version control(VC) system, however there are ways to
+make the VC process a lot smoother.</p><p>This document is best viewed from within liveview, as the charts do not render on github currently.</p><h2 id="terminology" class="section-heading">
+  <a href="#terminology" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Terminology</span>
+</h2>
+<ul><li><p><code class="inline">topic</code> - this is any branch that serves to fix some problem in the
+codebase</p></li><li><p><code class="inline">feature</code> - some new concept to the codebase. Many topics can serve
+to fulfill one feature.</p></li><li><p><code class="inline">release</code> - A release of the code. This is a git <code class="inline">tag</code> on <code class="inline">main</code>
+that signifies a new version of the software. This typically bumps
+base to the latest release as well</p></li><li><p><code class="inline">base</code> - the base branch one should base work off of</p></li><li><p><code class="inline">main</code> - sometimes called <code class="inline">master</code>, is the branch that prepares for
+a release.</p></li><li><p><code class="inline">next</code> - a branch that has a superset of features that will be
+included in the next release</p></li><li><p><code class="inline">maint</code> - a maintnance branch that will be updated if bugs are found</p></li><li><p><code class="inline">integreation branch</code> - a topic that merges a bunch of other topics</p></li></ul><h2 id="naming-conventions" class="section-heading">
+  <a href="#naming-conventions" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Naming conventions</span>
+</h2>
+<p>Name your topic like <code class="inline">name/feature</code> to avoid clashing with other
+people's topics.</p><p>There are some standard branches that do not follow this pattern but
+those are described in the <code class="inline">Terminology</code> section of this document</p><h2 id="general-principles" class="section-heading">
+  <a href="#general-principles" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">General Principles</span>
+</h2>
+<p>These are some general principles which should help maintainers easily
+integrate your code, and have your work help out other devs on the
+codebase.</p><!-- livebook:{"branch_parent_index":4} --><h2 id="do-not-include-unrelated-changes-into-your-commits" class="section-heading">
+  <a href="#do-not-include-unrelated-changes-into-your-commits" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Do not include unrelated changes into your commits</span>
+</h2>
+<ul><li><p>For example, if you see some unrelated bug in the same file as your
+own, don't fix it in your general commit, make a new topic based on
+when the bug was introduced and merge that into your topic if it
+impacts your topic.</p></li><li><p>This makes reviewing much easier as the reviewer can read your
+commit message and see changes only related to that included</p></li></ul><!-- livebook:{"branch_parent_index":4} --><h2 id="make-topics-early-and-often" class="section-heading">
+  <a href="#make-topics-early-and-often" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Make topics early and often!</span>
+</h2>
+<p>This allows your work to be incrementally integrated into a
+release. If you put all your work into one topic, bug fixes and all,
+then the following will occur</p><ol><li><p>The changes will not be reviewed properly</p><ul><li>On big projects with tight deadlines, sometimes some feature
+<em>X</em> is wanted. However if <em>X</em> is a single topic with a messy
+history, the only options are either to scrap the feature or
+accept it as is poor code in all.</li><li>If this was properly split up parts of <em>X</em> could be merged
+now, with the more controversial features being held up in
+<em>next</em>, without having to sacrifice the quality of the
+codebase.</li></ul></li><li><p>Other team members can not share similar work</p><ul><li><p>Often a lot of different tasks, may find the same
+deficiencies in the codebase.</p></li><li><p>For a real example, let's take the following commit and topic</p><pre><code class="example">802ab9e * anoma/mariari/nock-testing-file Move the helper functions
+73bfd7d * v0.3.0
+ 2 files changed, 44 insertions(+), 34 deletions(-)
+lib/test_helper/nock.ex | 43 +++++++++++++++++++++++++++++++++++++++++++
+test/nock_test.exs      | 35 +----------------------------------</code></pre><p>Here we find that we <code class="inline">mariari</code> moved some testing functions from
+<code class="inline">test/</code> to <code class="inline">lib/</code>, as elixir tests don't share code in the best
+way. This allows other files in <code class="inline">test/</code> to reuse the same
+functions that were previously found in <code class="inline">test/nock_test.exs</code>.  In
+fact there are multiple topics that ended up using this. Both the
+executor topic and worker topic</p><ul><li><code class="inline">8de0c7e anoma/mariari/worker</code><ul><li><code class="inline">1d6bc99 anoma/mariari/executor</code></li></ul></li></ul><p>both needed this. Since the worker relies upon the executor,
+they both don't merge in this topic separately, but if they
+were separate they would want to share this change.</p></li></ul></li></ol><ul><li>If these changes were orchestrated by different people, then
+they would have made this change twice! Meaning that in the git
+history the work has been done in different commits! This means
+that when it comes time to merge in work, there will be a
+conflict between these two. Rather than being able to reuse
+other's work and save other devs time, this will come up when
+reviewers read the code, with unrelated changes, or when the
+maintainers try to merge things together and find annoying
+conflicts</li></ul><ol><li>Work can not be incrementally included</li><li>Others might just do the work before you</li></ol><ul><li>If one is too slow on finishing their topic and making it one big
+commit, then someone else might redo the same work and put it up
+for review, but instead of them reusing your code, they wrote it
+from scratch, wasting both your time and their time.</li></ul><!-- livebook:{"branch_parent_index":4} --><h2 id="base-topics-on-base" class="section-heading">
+  <a href="#base-topics-on-base" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Base topics on base</span>
+</h2>
+<p>Basing code on <code class="inline">main</code> has the following errors:</p><ol><li>Code merged in main before a release may turn out to have issues</li><li>Git merges and conflict resolutions lead to spurious base points</li><li>Other topics can not reuse your code</li><li>Useless temporal history is had</li></ol><p>Basing on someone's topic that you require and will merge in anyways
+is fine.</p><!-- livebook:{"break_markdown":true} --><h3 id="code-merged-in-main-before-a-release-may-turn-out-to-have-issues" class="section-heading">
+  <a href="#code-merged-in-main-before-a-release-may-turn-out-to-have-issues" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Code merged in main before a release may turn out to have issues</span>
+</h3>
+<p>Imagine main has the following history</p><pre><code class="mermaid">%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'base'}} }%%
+gitGraph TB:
+commit id: &quot;73bfd7d&quot; tag: &quot;v0.3.0&quot;
+branch Topic-Y
+commit id: &quot;4381bd3&quot;
+checkout base
+merge Topic-Y id: &quot;52b44a6&quot;</code></pre><p>and your code hapens to be base on 52b44a6, then the history will look something like:</p><pre><code class="mermaid">%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'my-cool-feature'}} }%%
+gitGraph TB:
+commit id: &quot;73bfd7d&quot; tag: &quot;v0.3.0&quot;
+branch Topic-Y
+commit id: &quot;4381bd3&quot;
+checkout my-cool-feature
+merge Topic-Y id: &quot;52b44a6: main merge feature-y&quot;
+commit id: &quot;7dabf44&quot;</code></pre><p>Later before a release, we find out that <em>Topic-Y</em> has issues, and any
+code that is based on <em>Topic-Y</em> will have to sit this release
+out. Normally to check for this, the protocol is quite simple we just:</p><ol><li>Do not include any topics that are based on <em>Topic-Y</em> or merges
+<em>Topic-Y</em> into the release</li><li>Pull any topic based on <em>Topic-Y</em> from <code class="inline">main</code></li></ol><p>becomes muddied, as if one's topic was based on <code class="inline">main</code> after <em>Topic-Y</em>
+is in, then it's unclear if that topic is unaffected.</p><p>Thus <em>my-cool-feature</em> may be cut from the release, even if it was
+perfectly fine and did not rely on <em>Topic-Y</em>.</p><!-- livebook:{"break_markdown":true} --><h3 id="git-merges-and-conflict-resolutions-lead-to-spurious-base-points" class="section-heading">
+  <a href="#git-merges-and-conflict-resolutions-lead-to-spurious-base-points" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Git merges and conflict resolutions lead to spurious base points</span>
+</h3>
+<p>Further, if we have two topics <em>my-feature-x</em> and <em>my-feature-y</em> based
+on <code class="inline">main</code>, then the history would look something like this</p><pre><code class="mermaid">%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'base'}} }%%
+gitGraph TB:
+commit id: &quot;73bfd7d&quot; tag: &quot;v0.3.0&quot;
+branch main
+branch ray/mnesia-attach
+commit id: &quot;97bef7&quot;
+checkout main
+merge ray/mnesia-attach id: &quot;13b3e4a&quot;
+
+
+checkout base
+branch proper-topic
+commit id: &quot;8087564: add a new feature&quot;
+
+checkout main
+branch topic-x
+commit id: &quot;bc4b2a1: new cool feature&quot;
+
+checkout main
+merge proper-topic id: &quot;2dd991a&quot;
+
+checkout main
+branch topic-y
+commit id: &quot;546a8f9: add feature: conflicts X!&quot;
+
+checkout main
+merge topic-x id: &quot;90d91e7&quot;
+merge topic-y id: &quot;0438922&quot;</code></pre><p>In a textual form this looks like:</p><pre><code class="makeup elixir" translate="no"><span class="mi">0438922</span><span class="w"> </span><span class="o">*</span><span class="w">   </span><span class="n">main</span><span class="w"> </span><span class="nc">Merge</span><span class="w"> </span><span class="n">branch</span><span class="w"> </span><span class="sc">&#39;topic-y&#39;</span><span class="w">
+        </span><span class="o">|</span><span class="err">\</span><span class="w">
+</span><span class="mi">546</span><span class="n">a8f9</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">topic</span><span class="o">-</span><span class="n">y</span><span class="w"> </span><span class="nc">Added</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">feature</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">conflcits</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="nc">X</span><span class="o">!</span><span class="w">
+</span><span class="mi">90</span><span class="n">d91e7</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">|</span><span class="w">   </span><span class="nc">Merge</span><span class="w"> </span><span class="n">branch</span><span class="w"> </span><span class="sc">&#39;topic-x&#39;</span><span class="w">
+        </span><span class="o">|</span><span class="err">\</span><span class="w"> </span><span class="err">\</span><span class="w">
+        </span><span class="o">|</span><span class="w"> </span><span class="o">|</span><span class="o">/</span><span class="w">
+        </span><span class="o">|</span><span class="o">/</span><span class="o">|</span><span class="w">
+</span><span class="n">bc4b2a1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">topic</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="nc">Added</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">cool</span><span class="w"> </span><span class="n">feature</span><span class="w">
+</span><span class="mi">2</span><span class="n">dd991a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">|</span><span class="w">   </span><span class="nc">Merge</span><span class="w"> </span><span class="n">branch</span><span class="w"> </span><span class="sc">&#39;proper-topic&#39;</span><span class="w">
+        </span><span class="o">|</span><span class="err">\</span><span class="w"> </span><span class="err">\</span><span class="w">
+        </span><span class="o">|</span><span class="w"> </span><span class="o">|</span><span class="o">/</span><span class="w">
+        </span><span class="o">|</span><span class="o">/</span><span class="o">|</span><span class="w">
+</span><span class="mi">8087564</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">proper</span><span class="o">-</span><span class="n">topic</span><span class="w"> </span><span class="nc">Add</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="n">feature</span><span class="w">
+</span><span class="mi">13</span><span class="n">b3e4a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">|</span><span class="w">   </span><span class="nc">Merge</span><span class="w"> </span><span class="n">branch</span><span class="w"> </span><span class="sc">&#39;ray/mnesia-attach&#39;</span><span class="w">
+        </span><span class="o">|</span><span class="err">\</span><span class="w"> </span><span class="err">\</span><span class="w">
+        </span><span class="o">|</span><span class="w"> </span><span class="o">|</span><span class="o">/</span><span class="w">
+        </span><span class="o">|</span><span class="o">/</span><span class="o">|</span><span class="w">
+</span><span class="mi">97</span><span class="n">b6ef7</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">ray</span><span class="o">/</span><span class="n">mnesia</span><span class="o">-</span><span class="n">attach</span><span class="w"> </span><span class="ss">mnesia</span><span class="p">:</span><span class="w">
+        </span><span class="o">|</span><span class="o">/</span><span class="w">
+</span><span class="mi">73</span><span class="n">bfd7d</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v0</span><span class="o">.</span><span class="mf">3.0</span><span class="w"> </span><span class="n">base</span><span class="w">
+</span></code></pre><p>When <em>topic-x</em> and <em>topic-y</em> have a conflict, the shared base of their base is</p><pre><code class="makeup bash" translate="no"><span class="">4 taichi@Gensokyo:~/Documents/Work/Repo/anoma-all git:main: % git merge-base topic-x topic-y
+</span><span class="">13b3e4a215ea6222a1b1092ad242d3fa31e7040b
+</span></code></pre><p>which is <code class="inline">13b3e4a * | Merge branch 'ray/mnesia-attach'</code> and not
+<code class="inline">73bfd7d * v0.3.0 anoma/base</code>, meaning that when a conflict is shown
+in the merge <code class="inline">0438922</code>, then the diff from a 3 way diff will show the
+mnesia changes, potentially making it unclear to others way the
+potentially issues may be.</p><!-- livebook:{"break_markdown":true} --><h3 id="other-topics-can-not-reuse-your-code" class="section-heading">
+  <a href="#other-topics-can-not-reuse-your-code" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Other topics can not reuse your code</span>
+</h3>
+<p>It is a bad idea to base code on <code class="inline">main</code>, as <code class="inline">main</code> contains random
+merged topics before a release. This makes it so other topics who wish
+to use yours also has to merge all the random topics on <code class="inline">main</code>.</p><p>This is easy to see with the following example:</p><pre><code class="mermaid">%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'simple-config'}} }%%
+gitGraph TB:
+commit id: &quot;73bfd7d: base&quot; tag: &quot;v0.3.0&quot;
+branch major-changes
+commit id: &quot;97bef7: structural changes&quot;
+checkout simple-config
+merge major-changes id: &quot;5b16844: merge into main&quot;
+commit id: &quot;f098de0: general config&quot;</code></pre><p>Here we have a topic <code class="inline">major-changes</code> that makes all sorts of changes,
+and since we based our code off main, these are all included in
+simple-config-change.</p><p>However imagine we wish to overhaul the configuration a bit</p><pre><code class="mermaid">%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'configuration-upgrade'}} }%%
+gitGraph TB:
+commit id: &quot;73bfd7d: base&quot; tag: &quot;v0.3.0&quot;
+commit id: &quot;f098de0: Basic config changes&quot;</code></pre><p>Now if we wish to merge in <code class="inline">simple-config-change</code> we have</p><pre><code class="mermaid">%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'configuration-upgrade'}} }%%
+gitGraph TB:
+commit id: &quot;73bfd7d: base&quot; tag: &quot;v0.3.0&quot;
+
+branch simple-config
+checkout configuration-upgrade
+branch major-changes
+commit id: &quot;97bef7: structural changes&quot;
+
+checkout configuration-upgrade
+commit id: &quot;f098de0: Basic config changes&quot;
+
+checkout simple-config
+merge major-changes id: &quot;5b16844: merge into main&quot;
+commit id: &quot;f098de0: general config&quot;
+
+checkout configuration-upgrade
+merge simple-config id: &quot;f6230df&quot;</code></pre><p>Besides having a spurious main merged into our topic now, we are
+forced to deal with <code class="inline">major-changes</code> causing various conflicts with
+your topic, making this merge untenable.</p><p>Meaning that this code has to be recreated in <code class="inline">configuration-upgrade</code>
+instead of reusing <code class="inline">simple-config-change</code>, fixing the problem in 2
+places, and having a conflict when it comes time for a release.</p><!-- livebook:{"break_markdown":true} --><h3 id="useless-temporal-history-is-had" class="section-heading">
+  <a href="#useless-temporal-history-is-had" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Useless temporal history is had</span>
+</h3>
+<p>As we can see in the previous examples, when we base off of <code class="inline">main</code>, we
+end up in a scenario, where the date in which someone is branching is
+baked into the code. As maintainers we don't care about when the code
+was made, just the fact that it was. Thus this is a bit of history
+that simply adds noise</p><!-- livebook:{"branch_parent_index":4} --><h2 id="merge-other-people-s-topics-into-yours" class="section-heading">
+  <a href="#merge-other-people-s-topics-into-yours" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Merge other people's topics into yours</span>
+</h2>
+<p>If you need some work that is already merged into <code class="inline">next</code> or <code class="inline">main</code>,
+simply merge that topic into yours! Since the bases are well situated,
+you will only deal with reasonable conflicts that you should have
+context for.</p><!-- livebook:{"branch_parent_index":4} --><h2 id="base-bug-fixes-on-the-commit-that-introduced-the-bug" class="section-heading">
+  <a href="#base-bug-fixes-on-the-commit-that-introduced-the-bug" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Base bug fixes on the commit that introduced the bug</span>
+</h2>
+<p>Basing a bug fix on when the bug is introduced is superior than basing
+it on the latest release, as this means that it can be merged into any
+<code class="inline">maint</code> branches we may have.</p><p>For example:</p><pre><code class="makeup elixir" translate="no"><span class="mi">73</span><span class="n">bfd7d</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v0</span><span class="o">.</span><span class="mf">3.0</span><span class="w"> </span><span class="nc">Anoma</span><span class="w"> </span><span class="mf">0.3</span><span class="o">.</span><span class="mi">0</span><span class="w">
+</span><span class="n">...</span><span class="w">
+</span><span class="mi">10</span><span class="n">f8636</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v0</span><span class="o">.</span><span class="mf">2.0</span><span class="w"> </span><span class="nc">Anoma</span><span class="w"> </span><span class="mf">0.2</span><span class="o">.</span><span class="mi">0</span><span class="w">
+</span><span class="n">...</span><span class="w">
+</span><span class="mi">34</span><span class="n">fcd78</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v0</span><span class="o">.</span><span class="mf">1.0</span><span class="w"> </span><span class="nc">Release</span><span class="w"> </span><span class="n">v0</span><span class="o">.</span><span class="mf">1.0</span></code></pre><p>if a bug was found in a topic between <code class="inline">v0.1.0</code> and <code class="inline">v0.2.0</code>, and we
+based it on when the bug was found we can merge it on <code class="inline">v0.2.0</code> and
+have <code class="inline">v0.2.1</code> release from there. And have a <code class="inline">v0.3.1</code> release as well.</p><pre><code class="makeup elixir" translate="no"><span class="mi">2373834</span><span class="w"> </span><span class="o">*</span><span class="w">   </span><span class="n">v0</span><span class="o">.</span><span class="mf">2.1</span><span class="w"> </span><span class="nc">Merge</span><span class="w"> </span><span class="n">branch</span><span class="w"> </span><span class="sc">&#39;bug-fix&#39;</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="nc">HEAD</span><span class="w">
+        </span><span class="o">|</span><span class="err">\</span><span class="w">
+</span><span class="n">da24431</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">bug</span><span class="o">-</span><span class="n">fix</span><span class="w"> </span><span class="n">fix</span><span class="w"> </span><span class="n">bug</span><span class="w">
+</span><span class="mi">10</span><span class="n">f8636</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">v0</span><span class="o">.</span><span class="mf">2.0</span><span class="w"> </span><span class="nc">Anoma</span><span class="w"> </span><span class="mf">0.2</span><span class="o">.</span><span class="mi">0</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="mi">19</span><span class="n">c6f03</span><span class="w"> </span><span class="o">*</span><span class="w">   </span><span class="n">v0</span><span class="o">.</span><span class="mf">3.1</span><span class="w"> </span><span class="nc">Merge</span><span class="w"> </span><span class="n">branch</span><span class="w"> </span><span class="sc">&#39;bug-fix&#39;</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="nc">HEAD</span><span class="w">
+        </span><span class="o">|</span><span class="err">\</span><span class="w">
+</span><span class="n">da24431</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">bug</span><span class="o">-</span><span class="n">fix</span><span class="w"> </span><span class="n">fix</span><span class="w"> </span><span class="n">bug</span><span class="w">
+</span><span class="mi">73</span><span class="n">bfd7d</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">v0</span><span class="o">.</span><span class="mf">3.0</span><span class="w"> </span><span class="nc">Anoma</span><span class="w"> </span><span class="mf">0.3</span><span class="o">.</span><span class="mi">0</span></code></pre><p>notice how we can merge this in with no conflicts!</p>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="examples-over-testing.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Examples over Testing
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="iex.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+IEx
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+          <span class="line">
+            <a href="https://hex.pm/packages/anoma/0.29.0" class="footer-hex-package">Hex Package</a>
+
+            <a href="https://preview.hex.pm/preview/anoma/0.29.0">Hex Preview</a>
+
+              (<a href="https://preview.hex.pm/preview/anoma/0.29.0/show/documentation/contributing/git.livemd">current file</a>)
+
+          </span>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Anoma.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

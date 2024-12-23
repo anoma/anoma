@@ -1,0 +1,223 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Running Tests
+
+## Index
+1. [Toc](./../../toc.livemd)
+2. [Contributing](./../../contributing.livemd)
+   1. [Understanding Any Module](./../../contributing/understanding-any-module.livemd)
+   2. [Style Guide](./../../contributing/style-guide.livemd)
+   3. [Writing Documents](./../../contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./../../contributing/examples-over-testing.livemd)
+   5. [Git](./../../contributing/git.livemd)
+   6. [Iex](./../../contributing/iex.livemd)
+   7. [Mnesia Vs Actor State](./../../contributing/mnesia-vs-actor-state.livemd)
+   8. [Observer](./../../contributing/observer.livemd)
+   9. [Testing](./../../contributing/testing.livemd)
+      1. [Running Tests](./../../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../../contributing/testing/writing-tests.livemd)
+3. [Visualization](./../../visualization.livemd)
+   1. [Actors](./../../visualization/actors.livemd)
+4. [Hoon](./../../hoon.livemd)
+   1. [Calling](./../../hoon/calling.livemd)
+   2. [Dumping](./../../hoon/dumping.livemd)
+   3. [Setting Up](./../../hoon/setting-up.livemd)
+5. [Analysis](./../../analysis.livemd)
+6. [Jam](./../../jam.livemd)
+
+## Intent
+
+This document is aimed at allowing any developer to run tests in a more ergonomic way than simply running:
+
+```shell
+% mix test
+```
+
+Namely, this document covers running tests inside `IEX` and being able to do so on demand.
+
+## Setting up IEX
+
+To Run tests within IEx. One simply calls `&Mix.Tasks.Test.run/1` within their IEX session.
+
+However attempting to do this by default will result in the following error:
+
+```shell
+ iex --sname mariari --cookie mariari -S mix
+```
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+Mix.Tasks.Test.run([])
+```
+
+````
+** (Mix.Error) "mix test" is running in the "dev" environment. If you are running tests from within another command, you can either:
+
+  1. set MIX_ENV explicitly:
+
+      MIX_ENV=test mix test.another
+
+  2. set the :preferred_envs for "def cli" in your mix.exs:
+
+      def cli do
+        [preferred_envs: ["test.another": :test]]
+      end
+
+    (mix 1.15.5) lib/mix.ex:577: Mix.raise/2
+    (mix 1.15.5) lib/mix/tasks/test.ex:486: Mix.Tasks.Test.do_run/3
+    #cell:nsl6gqly4w45ei6b:1: (file)
+    ```
+````
+
+<!-- livebook:{"break_markdown":true} -->
+
+The error text hints at a suggestion on how to solve the problem.
+
+```shell
+MIX_ENV=iex iex --sname mariari --cookie mariari -S mix
+```
+
+I recommend using the `iex` environment over the `test` environment that is shwon in the error, as in the `Anoma` project, we set the `test` environment to have `Config.config/2` to have the following settings:
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+config :logger,
+  level: :error
+```
+
+Which means that some logging details you may care about may not be reported to you by default.
+
+Now that we have the environment setup if we try running this again we get:
+
+```elixir
+Mix.Tasks.Test.run([])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+Finished in 0.00 seconds (0.00s async, 0.00s sync)
+0 failures
+
+Randomized with seed 670138
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+Running the command has a few effects:
+
+1. It behaves the same as `mix test` running every single test in the project.
+2. It loads in the test modules, meaning we now have access to all modules in `AnomaTest`.
+3. `ExUnit` is now started up, meaning we can run tests with `ExUnit.run/0` now.
+
+For larger projects `1.` may be prohibitive as tests may take quite a while to run!
+
+## Running Individual Modules For the First Time
+
+To run an individual module, one simply needs to invoke the `ExUnit` framework themselves.
+
+A good example of this at play is the following example:
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+iex(mariari@YU-NO)1> ExUnit.start
+:ok
+iex(mariari@YU-NO)2> c "test/node/mempool_test.exs"
+[AnomaTest.Node.Mempool]
+iex(mariari@YU-NO)3> ExUnit.run
+
+14:46:45.846 [error] Worker failed! :error
+
+14:46:45.849 [error] Worker failed! :error
+.....
+Finished in 0.3 seconds (0.3s async, 0.00s sync)
+5 tests, 0 failures
+
+Randomized with seed 670138
+%{total: 5, failures: 0, excluded: 0, skipped: 0}
+```
+
+We can see here that I've started up ExUnit with `ExUnit.start/0`, then I've manually compiled the module I wanted to run `c ...` and then I ran `ExUnit.run/0`.
+
+The side effect of running tests this way is that only `AnomaTest.Node.Mempool` is in scope. The other tests are not.
+
+<!-- livebook:{"break_markdown":true} -->
+
+The behavior of `ExUnit.run/0` is quite configurable, see `ExUnit.configure/1` for a lot of options on filtering what tests are run.
+
+## ReRunning Tests
+
+One may be surprised at the first time they try to rerun tests, as they will run into the following anomaly:
+
+```elixir
+Mix.Tasks.Test.run([])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+Finished in 0.00 seconds (0.00s async, 0.00s sync)
+0 failures
+
+Randomized with seed 670138
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+No tests were run again! This can be rather annoying as we often make changes to code and wish to see if they break certain tests!
+
+A way around this is by recompiling the given module then running again
+
+```iex
+iex 7> r AnomaTest.Node.Mempool
+warning: redefining module AnomaTest.Node.Mempool (current version defined in memory)
+  test/node/mempool_test.exs:1: AnomaTest.Node.Mempool (module)
+
+{:reloaded, [AnomaTest.Node.Mempool]}
+iex(mariari@YU-NO)8> Mix.Tasks.Test.run([])
+
+14:58:09.255 [error] Worker failed! :error
+
+14:58:09.256 [error] Worker failed! :error
+.....
+Finished in 0.3 seconds (0.3s async, 0.00s sync)
+5 tests, 0 failures
+```
+
+## Running individual tests
+
+Since most (if not all!) tests are composed from examples. One can simply run the examples directly!
+
+<!-- livebook:{"break_markdown":true} -->
+
+If we take `AnomaTest.LiveBook.Example` as our exmaple, then we can run the individual tests like the following.
+
+<!-- livebook:{"break_markdown":true} -->
+
+Test names are odd in that they are not simple atoms, they are typically the word `test` then the string name given to the test. Hence `test "first"` became `AnomaTest.LiveBook.Example."test first"/1`.
+
+To run the group, we need to prepend the group name as well.
+
+## Conclusion
+
+Running tests in Elixir is nice and somewhat simple!
+
+We have covered how to:
+
+1. Run tests within `IEX`
+2. re-running tests in `IEX`
+3. running individual tests fully
+4. Running individual tests partially

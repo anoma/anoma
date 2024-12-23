@@ -1,0 +1,102 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Setting up Hoon
+
+## Index
+1. [Toc](./../toc.livemd)
+2. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Style Guide](./../contributing/style-guide.livemd)
+   3. [Writing Documents](./../contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./../contributing/examples-over-testing.livemd)
+   5. [Git](./../contributing/git.livemd)
+   6. [Iex](./../contributing/iex.livemd)
+   7. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   8. [Observer](./../contributing/observer.livemd)
+   9. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+3. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+4. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+5. [Analysis](./../analysis.livemd)
+6. [Jam](./../jam.livemd)
+
+## Getting a Good Hoon environment
+
+A good starting point is to read [Hoon's docs on environment](https://developers.urbit.org/guides/core/environment)
+
+It's good to follow it until the section "Mount a desk"
+
+From here we can setup the environment quite nicely
+
+<!-- livebook:{"break_markdown":true} -->
+
+```hoon
+|merge %anoma our %base
+|mount %anoma
+```
+
+From here we want to remove all the uneeded files, get it to the following state:
+
+<!-- livebook:{"break_markdown":true} -->
+
+```bash
+8 taichi@Gensokyo:~/Documents/Workspace/Hoon/zod git:master:? % tree anoma
+anoma
+├── mar
+│   ├── hoon.hoon
+│   ├── mime.hoon
+│   ├── noun.hoon
+│   ├── txt-diff.hoon
+│   └── txt.hoon
+└── sys.kelvin
+
+2 directories, 6 files
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+with `sys.kelvin` having only `[%zuse 412]`
+
+Now that we have our minimal state, we can symlink in the files in
+https://github.com/anoma/anoma/tree/base/hoon
+
+into `lib`. It should now look something like this
+
+```bash
+9 taichi@Gensokyo:~/Documents/Workspace/Hoon/zod git:master:? % tree anoma
+anoma
+├── lib
+│   ├── anoma.hoon -> .../hoon/anoma.hoon
+│   ├── logics.hoon -> .../hoon/logics.hoon
+│   ├── resource-machine.hoon -> .../hoon/resource-machine.hoon
+│   └── tests.hoon -> .../hoon/tests.hoon
+├── mar
+│   ├── hoon.hoon
+│   ├── mime.hoon
+│   ├── noun.hoon
+│   ├── txt-diff.hoon
+│   └── txt.hoon
+└── sys.kelvin
+
+3 directories, 10 files
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+Now we can mount our anoma code into hoon
+
+```hoon
+> |commit %anoma
+>=
+> =anoma -build-file /=anoma=/lib/anoma/hoon
+> =resource-machine -build-file /=anoma=/lib/resource-machine/hoon
+> =logics -build-file /=anoma=/lib/logics/hoon
+> =tests -build-file /=anoma=/lib/tests/hoon
+```
+
+From here, the hoon environment is ready to be used and it should work just as Anoma uses Nock.

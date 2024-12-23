@@ -1,0 +1,95 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Understanding any code in Anoma
+
+## Index
+1. [Toc](./../toc.livemd)
+2. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Style Guide](./../contributing/style-guide.livemd)
+   3. [Writing Documents](./../contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./../contributing/examples-over-testing.livemd)
+   5. [Git](./../contributing/git.livemd)
+   6. [Iex](./../contributing/iex.livemd)
+   7. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   8. [Observer](./../contributing/observer.livemd)
+   9. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+3. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+4. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+5. [Analysis](./../analysis.livemd)
+6. [Jam](./../jam.livemd)
+
+## Figuring out what a module does
+
+Α good start is by calling `h` on the module from within one's IEX
+instance.
+
+```elixir
+require IEx.Helpers
+import IEx.Helpers
+# the above two lines are not requried for the REPL!
+h(Anoma.Node.Transaction.Backends)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+                        Anoma.Node.Transaction.Backends
+
+Backend module. Support :kv, :ro, :rm, :cairo execution.
+
+```
+
+However, this typically doesn't show off how one uses said
+module. Thankfully, the codebase is setup in such a way that one can
+always interactively play with any given module.
+
+This is done by simply checking out the examples folder, and finding the
+module you wish to learn to learn about.
+
+For example, let us learn about the nock. In the codebase currently
+this can be found here:
+
+* `anoma/apps/anoma_lib/lib/examples/enock.ex`,
+
+note that even if this gets out of date, you should be able to do this with any file!
+
+From here every example shows off how the API works, code can be ran line by line, by simply running all the aliases and importing the module itself.
+
+```elixir
+# output redacted for length
+import Examples.ENock
+
+require ExUnit.Assertions
+import ExUnit.Assertions
+
+alias Examples.ECrypto
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Examples.ECrypto
+```
+
+Once this is had, we can simply run any example trivially!
+
+```elixir
+one_two()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[<<1>> | <<2>>]
+```
+
+Further since the data is live, we can use tools like `:observer` to
+view the processes, and see general state dumping commands.
