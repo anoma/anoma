@@ -190,8 +190,16 @@ defmodule Anoma.Node.Examples.EIndexer do
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
-    res1 = %Resource{rseed: "random1", nullifier_key: "jeremy"}
-    res2 = %Resource{rseed: "random2", nullifier_key: "michael"}
+    res1 = %Resource{
+      nonce: :crypto.hash(:sha256, "random1"),
+      nullifier_key: "jeremy"
+    }
+
+    res2 = %Resource{
+      nonce: :crypto.hash(:sha256, "random2"),
+      nullifier_key: "michael"
+    }
+
     list = [res1, res2]
 
     write_new(
