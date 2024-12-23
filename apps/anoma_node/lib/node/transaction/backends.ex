@@ -18,7 +18,6 @@ defmodule Anoma.Node.Transaction.Backends do
   alias Anoma.TransparentResource
   alias Anoma.TransparentResource.Transaction, as: TTransaction
   alias Anoma.TransparentResource.Resource, as: TResource
-  alias CommitmentTree.Spec
 
   import Nock
   require Noun
@@ -63,15 +62,19 @@ defmodule Anoma.Node.Transaction.Backends do
     field(:tx_result, {:ok, any()} | :error)
   end
 
-  typedstruct enforce: true, module: NullifierEvent do
+  typedstruct enforce: true, module: TRMEvent do
     @typedoc """
-    I hold the content of the Nullifier Event, which communicates a set of
-    nullifiers defined by the actions of the transaction candidate to the
-    Intent Pool.
+    I hold the content of the The Resource Machine Event, which
+    communicates a set of nullifiers/commitments defined by the actions of the
+    transaction candidate to the Intent Pool.
 
     ### Fields
+
+    - `:commitments`        - The set of commitments.
     - `:nullifiers`         - The set of nullifiers.
+    - `:commitments`        - The set of commitments.
     """
+    field(:commitments, MapSet.t(binary()))
     field(:nullifiers, MapSet.t(binary()))
   end
 
@@ -151,7 +154,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   @spec cue_when_atom(Noun.t()) :: :error | {:ok, Noun.t()}
   defp cue_when_atom(tx_code) when Noun.is_noun_atom(tx_code) do
-    Nock.Cue.cue(tx_code)
+    Noun.Jam.cue(tx_code)
   end
 
   defp cue_when_atom(tx_code) do
@@ -203,15 +206,6 @@ defmodule Anoma.Node.Transaction.Backends do
             }
         end
 
-      ct =
-        case Ordering.read(node_id, {id, anoma_keyspace("ct")}) do
-          :absent -> CommitmentTree.new(Spec.cm_tree_spec(), nil)
-          val -> val
-        end
-
-      {ct_new, anchor} =
-        CommitmentTree.add(ct, map.commitments |> MapSet.to_list())
-
       Ordering.add(
         node_id,
         {id,
@@ -220,14 +214,11 @@ defmodule Anoma.Node.Transaction.Backends do
              {anoma_keyspace("nullifiers"), map.nullifiers},
              {anoma_keyspace("commitments"), map.commitments}
            ],
-           write: [
-             {anoma_keyspace("anchor"), anchor},
-             {anoma_keyspace("ct"), ct_new}
-           ]
+           write: [{anoma_keyspace("anchor"), value(map.commitments)}]
          }}
       )
 
-      nullifier_event(map.nullifiers, node_id)
+      transparent_rm_event(map.commitments, map.nullifiers, node_id)
 
       {:ok, tx}
     else
@@ -361,7 +352,9 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec ephemeral?(Noun.noun_atom()) :: boolean()
   defp ephemeral?(jammed_transaction) do
     nock_boolean =
-      Nock.Cue.cue(jammed_transaction)
+      Noun.Jam.cue(jammed_transaction)
+      |> elem(1)
+      |> Noun.list_nock_to_erlang_safe()
       |> elem(1)
       |> List.pop_at(2)
       |> elem(0)
@@ -420,44 +413,98 @@ defmodule Anoma.Node.Transaction.Backends do
           String.t(),
           backend()
         ) :: :ok
-  defp complete_event(id, result, node_id, backend) do
+  defp complete_event(id, result, node_id, _backend) do
     event =
       Node.Event.new_with_body(node_id, %__MODULE__.CompleteEvent{
         tx_id: id,
         tx_result: result
       })
 
-    event(backend, event)
+    EventBroker.event(event)
   end
 
   @spec result_event(String.t(), any(), String.t(), backend()) :: :ok
-  defp result_event(id, result, node_id, backend) do
+  defp result_event(id, result, node_id, _backend) do
     event =
       Node.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
         tx_id: id,
         vm_result: result
       })
 
-    event(backend, event)
+    EventBroker.event(event)
   end
 
-  @spec nullifier_event(MapSet.t(binary()), String.t()) :: :ok
-  defp nullifier_event(set, node_id) do
+  @spec transparent_rm_event(
+          MapSet.t(binary()),
+          MapSet.t(binary()),
+          String.t()
+        ) :: :ok
+  defp transparent_rm_event(cms, nlfs, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.NullifierEvent{
-        nullifiers: set
+      Node.Event.new_with_body(node_id, %__MODULE__.TRMEvent{
+        commitments: cms,
+        nullifiers: nlfs
       })
 
     EventBroker.event(event)
   end
 
+  @doc """
+  I am the commitment accumulator add function for the transparent resource
+  machine.
+
+  Given the commitment set, I add a commitment to it.
+  """
+
+  @spec add(MapSet.t(), binary()) :: MapSet.t()
+  def add(acc, cm) do
+    MapSet.put(acc, cm)
+  end
+
+  @doc """
+  I am the commitment accumulator witness function for the transparent
+  resource machine.
+
+  Given the commitment set and a commitment, I return the original set if
+  the commitment is a member of the former. Otherwise, I return nil
+  """
+
+  @spec witness(MapSet.t(), binary()) :: MapSet.t() | nil
+  def witness(acc, cm) do
+    if MapSet.member?(acc, cm) do
+      acc
+    end
+  end
+
+  @doc """
+  I am the commitment accumulator value function for the transparent
+  resource machine.
+
+  Given the commitment set, I turn it to binary and then hash it using
+  sha-256.
+  """
+
+  @spec value(MapSet.t()) :: binary()
+  def value(acc) do
+    :crypto.hash(:sha256, :erlang.term_to_binary(acc))
+  end
+
+  @doc """
+  I am the commitment accumulator verify function for the transparent
+  resource machine.
+
+  Given the commitment, a witness (i.e. a set) and a commitment value, I
+  output true iff the witness's value is the same as the provided value and
+  the commitment is indeed in the set.
+  """
+
+  @spec verify(binary(), MapSet.t(), binary()) :: bool()
+  def verify(cm, w, val) do
+    val == value(w) and MapSet.member?(w, cm)
+  end
+
   @spec anoma_keyspace(String.t()) :: list(String.t())
   defp anoma_keyspace(key) do
     ["anoma", key]
-  end
-
-  @spec event(backend(), EventBroker.Event.t()) :: :ok
-  defp event(_backend, event) do
-    EventBroker.event(event)
   end
 end

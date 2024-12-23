@@ -10,6 +10,7 @@ defmodule Anoma.Client do
   alias Anoma.Client.ConnectionSupervisor
   alias Anoma.Client.Runner
   alias Anoma.Protobuf.Intents.Intent
+  alias Anoma.TransparentResource.Transaction
 
   typedstruct do
     field(:type, :grpc | :tcp)
@@ -82,9 +83,14 @@ defmodule Anoma.Client do
   @doc """
   I return the list of intents in the node I'm connected to.
   """
-  @spec add_intent(integer()) :: any()
+  @spec add_intent(Transaction.t()) :: any()
   def add_intent(intent) do
-    intent = %Intent{value: intent}
+    intent_jammed =
+      intent
+      |> Noun.Nounable.to_noun()
+      |> Noun.Jam.jam()
+
+    intent = %Intent{intent: intent_jammed}
     {:ok, result} = GRPCProxy.add_intent(intent)
     result.result
   end

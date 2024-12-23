@@ -1,0 +1,151 @@
+{
+    "input": {
+        "label": "0x0",
+        "quantity": "0x1",
+        "data": "0x0",
+        "eph": true,
+        "nonce": "0x0",
+        "rseed": "0x0"
+    },
+    "output": {
+        "label": "0x0",
+        "quantity": "0x1",
+        "data": "0x0",
+        "eph": true,
+        "nk_commitment": "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
+        "rseed": "0x0"
+    },
+    "input_nf_key": "0x1",
+    "merkle_path": [
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        },
+        {
+            "fst": "0x0",
+            "snd": false
+        }
+    ],
+    "rcv": "0x3",
+    "eph_root": "0x515CD2FF4D9FEDA3BC502D4EAD697E2CA46298D645383DEE2E3E7BC91DC77B0"
+}

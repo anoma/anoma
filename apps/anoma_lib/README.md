@@ -1,6 +1,9 @@
 # AnomaLib
 
-**TODO: Add description**
+I am the Anoma Library. I provide the core functionality for the non-Engine
+part of Anoma. In particular, I instantiate the API for Resource Machine
+implementations and various utilities surrounding the overarching Anoma
+code and Nock VM.
 
 ## Installation
 

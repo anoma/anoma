@@ -61,6 +61,7 @@ To compile a working Anoma Node the following dependencies are required:
 5. Install [Sodium](https://doc.libsodium.org/installation#pre-built-libraries) (Windows only)
     * Ensure that the `LIB` and `INCLUDE` environment variables point to this installation
 6. Install [Protocol Buffers](https://grpc.io/docs/protoc-installation/)
+    * Note: the default protobuf in aptitude is very outdated. Be sure to install it manually.
 7. Install [Elixir](https://elixir-lang.org/install.html) (version 1.17.0 or higher) and with it:
      * Install [Hex package manager](https://hexdocs.pm/mix/1.13/Mix.Tasks.Local.Hex.html)
      * Install [Rebar3](https://hexdocs.pm/mix/1.14/Mix.Tasks.Local.Rebar.html)

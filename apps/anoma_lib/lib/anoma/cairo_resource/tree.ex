@@ -10,9 +10,9 @@ defmodule Anoma.CairoResource.Tree do
     # The resource merkle tree
     field(:tree, CommitmentTree.t())
     # The merkle root of resources in action
-    field(:root, binary())
+    field(:root, <<_::256>>)
     # The tree leaves: help find the target index
-    field(:leaves, list(binary()))
+    field(:leaves, list(<<_::256>>))
   end
 
   @spec construct(CommitmentTree.Spec.t(), list(binary())) :: t()
@@ -52,6 +52,21 @@ defmodule Anoma.CairoResource.Tree do
           )
 
         path
+    end
+  end
+
+  @spec set_path(binary(), list()) :: :error | {:ok, binary()}
+  def set_path(json, path, path_name \\ "merkle_path") do
+    with {:ok, decoded_json} <-
+           Jason.decode(json, objects: :ordered_objects),
+         path_json_ob =
+           path
+           |> Enum.map(fn {f, s} ->
+             Jason.OrderedObject.new([{"fst", f}, {"snd", s}])
+           end) do
+      put_in(decoded_json[path_name], path_json_ob) |> Jason.encode()
+    else
+      _ -> :error
     end
   end
 end

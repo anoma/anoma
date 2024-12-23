@@ -47,8 +47,8 @@ defmodule Anoma.TransparentResource.Resource do
       resource.quantity,
       resource.data,
       resource.nullifier_key,
-      resource.nonce,
-      resource.rseed
+      resource.nonce
+      | resource.rseed
     ]
   end
 
@@ -60,10 +60,9 @@ defmodule Anoma.TransparentResource.Resource do
         quantity,
         data,
         nullifier_key,
-        nonce,
-        rseed | terminator
-      ])
-      when terminator in [0, <<>>, <<0>>, []] do
+        nonce
+        | rseed
+      ]) do
     # we make sure the types are respected
     {:ok,
      %Resource{
@@ -80,6 +79,17 @@ defmodule Anoma.TransparentResource.Resource do
 
   def from_noun(_) do
     :error
+  end
+
+  @spec from_noun(Noun.t()) :: t()
+  def from_noun!(noun) do
+    case from_noun(noun) do
+      {:ok, resource} ->
+        resource
+
+      _ ->
+        raise ArgumentError, "not a valid resource noun #{inspect(noun)}"
+    end
   end
 
   @spec noun_to_bool(Noun.t()) :: boolean()
@@ -103,7 +113,7 @@ defmodule Anoma.TransparentResource.Resource do
 
   @spec kind(t()) :: binary()
   def kind(%Resource{label: label, logic: logic}) do
-    kind = label <> Noun.atom_integer_to_binary(Nock.Jam.jam(logic))
+    kind = label <> Noun.atom_integer_to_binary(Noun.Jam.jam(logic))
     :crypto.hash(:sha256, kind)
   end
 
@@ -114,13 +124,13 @@ defmodule Anoma.TransparentResource.Resource do
 
   @spec commitment(t()) :: commitment()
   def commitment(resource = %Resource{}) do
-    binary_resource = resource |> to_noun() |> Nock.Jam.jam()
+    binary_resource = resource |> to_noun() |> Noun.Jam.jam()
     "CM_" <> binary_resource
   end
 
   @spec nullifier(t()) :: nullifier()
   def nullifier(resource = %Resource{}) do
-    binary_resource = resource |> to_noun() |> Nock.Jam.jam()
+    binary_resource = resource |> to_noun() |> Noun.Jam.jam()
     "NF_" <> binary_resource
   end
 

@@ -3,6 +3,8 @@ defmodule Anoma.CairoResource.Resource do
   I am a shielded resource.
   """
 
+  alias Anoma.CairoResource.Utils
+
   require Logger
 
   alias __MODULE__
@@ -12,21 +14,71 @@ defmodule Anoma.CairoResource.Resource do
 
   typedstruct enforce: true do
     # resource logic
-    field(:logic, binary(), default: <<0::256>>)
+    field(:logic, <<_::256>>, default: <<0::256>>)
     # fungibility label
-    field(:label, binary(), default: <<0::256>>)
+    field(:label, <<_::256>>, default: <<0::256>>)
     # quantity
-    field(:quantity, binary(), default: <<0::256>>)
+    field(:quantity, <<_::256>>, default: <<0::256>>)
     # arbitrary data
-    field(:data, binary(), default: <<0::256>>)
+    field(:data, <<_::256>>, default: <<0::256>>)
     # ephemerality flag
     field(:eph, bool(), default: false)
     # resource nonce
-    field(:nonce, binary(), default: <<0::256>>)
+    field(:nonce, <<_::256>>, default: <<0::256>>)
     # commitment to nullifier key
-    field(:nk_commitment, binary(), default: <<0::256>>)
+    field(:nk_commitment, <<_::256>>, default: <<0::256>>)
     # random seed
-    field(:rseed, binary(), default: <<0::256>>)
+    field(:rseed, <<_::256>>, default: <<0::256>>)
+  end
+
+  @spec from_json_object(Jason.OrderedObject.t()) ::
+          {:ok, t()}
+          | {:error, term()}
+  def from_json_object(mp) do
+    with {:ok, logic} <-
+           Utils.parse_json_field_to_binary32(mp, "logic"),
+         {:ok, label} <-
+           Utils.parse_json_field_to_binary32(mp, "label"),
+         {:ok, quantity} <-
+           Utils.parse_json_field_to_binary32(mp, "quantity"),
+         {:ok, data} <-
+           Utils.parse_json_field_to_binary32(mp, "data"),
+         {:ok, eph} <- Utils.parse_json_field_to_boolean(mp, "eph"),
+         {:ok, nonce} <-
+           Utils.parse_json_field_to_binary32(mp, "nonce"),
+         {:ok, nk_commitment} <-
+           Utils.parse_json_field_to_binary32(mp, "nk_commitment"),
+         {:ok, rseed} <-
+           Utils.parse_json_field_to_binary32(mp, "rseed") do
+      %Resource{
+        logic: logic,
+        label: label,
+        quantity: quantity,
+        data: data,
+        eph: eph,
+        nonce: nonce,
+        nk_commitment: nk_commitment,
+        rseed: rseed
+      }
+    else
+      {:error, msg} -> {:error, "Error parsing resource JSON: #{msg}"}
+    end
+  end
+
+  @spec to_json_object(t()) :: Jason.OrderedObject.t()
+  def to_json_object(resource) do
+    %Jason.OrderedObject{
+      values: [
+        {"logic", Utils.binary_to_hex(resource.logic)},
+        {"label", Utils.binary_to_hex(resource.label)},
+        {"quantity", Utils.binary_to_hex(resource.quantity)},
+        {"data", Utils.binary_to_hex(resource.data)},
+        {"eph", resource.eph},
+        {"nonce", Utils.binary_to_hex(resource.nonce)},
+        {"nk_commitment", Utils.binary_to_hex(resource.nk_commitment)},
+        {"rseed", Utils.binary_to_hex(resource.rseed)}
+      ]
+    }
   end
 
   @doc "Randomizes the rseed of a resource."
@@ -94,11 +146,11 @@ defmodule Anoma.CairoResource.Resource do
     |> :binary.list_to_bin()
   end
 
-  @spec nullifier(Resource.t()) :: binary()
+  @spec nullifier(Resource.t(), binary()) :: binary()
   @doc """
   The nullifier of the given resource.
   """
-  def nullifier(resource = %Resource{}) do
+  def nullifier(resource = %Resource{}, nk) do
     psi =
       [
         Constants.prf_expand_personalization_felt(),
@@ -110,7 +162,7 @@ defmodule Anoma.CairoResource.Resource do
       |> Cairo.poseidon_many()
       |> :binary.list_to_bin()
 
-    [resource.nk_commitment, resource.nonce, psi, commitment(resource)]
+    [nk, resource.nonce, psi, commitment(resource)]
     |> Enum.map(&:binary.bin_to_list/1)
     |> Cairo.poseidon_many()
     |> :binary.list_to_bin()

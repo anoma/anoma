@@ -11,5 +11,6 @@ defmodule EventbrokerTest.EventBroker do
     EEventBroker.add_filter_on_top()
     EEventBroker.complex_filter_message()
     EEventBroker.non_filters_fail()
+    # EEventBroker.kill_subscriber()
   end
 end

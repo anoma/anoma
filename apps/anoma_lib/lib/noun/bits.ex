@@ -1,10 +1,11 @@
-defmodule Nock.Bits do
+defmodule Noun.Bits do
   import Bitwise
 
   @spec num_bits(Noun.noun_atom(), non_neg_integer()) ::
           non_neg_integer()
   def num_bits(n, block_size) when is_binary(n) do
-    n |> Noun.atom_binary_to_integer() |> num_bits(block_size)
+    size = block_size |> Noun.atom_binary_to_integer()
+    n |> Noun.atom_binary_to_integer() |> num_bits(size)
   end
 
   def num_bits(n, block_size) when n >= 0 do
@@ -35,5 +36,29 @@ defmodule Nock.Bits do
 
   defp byte_to_bits(byte) do
     Enum.map(0..7, fn shift -> byte >>> shift &&& 1 end)
+  end
+
+  @doc """
+  I take in little endian encoded bytes and switch the encoding to big
+  endian.
+  """
+
+  @spec byte_order_little_to_big(binary()) :: binary()
+  def byte_order_little_to_big(bytes) do
+    bytes
+    |> :binary.decode_unsigned(:little)
+    |> :binary.encode_unsigned()
+  end
+
+  @doc """
+  I take in big endian encoded bytes and switch the encoding to little
+  endian.
+  """
+
+  @spec byte_order_big_to_little(binary()) :: binary()
+  def byte_order_big_to_little(bytes) do
+    bytes
+    |> :binary.decode_unsigned()
+    |> :binary.encode_unsigned(:little)
   end
 end

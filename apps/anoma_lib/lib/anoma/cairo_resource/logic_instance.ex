@@ -7,13 +7,13 @@ defmodule Anoma.CairoResource.LogicInstance do
 
   typedstruct enforce: true do
     # nullifier of input resource or commitment of output resource
-    field(:tag, binary(), default: <<0::256>>)
+    field(:tag, <<_::256>>, default: <<0::256>>)
     # The merkle root of resources in current action(execution context)
-    field(:root, binary(), default: <<0::256>>)
+    field(:root, <<_::256>>, default: <<0::256>>)
     # Ciphertext
-    field(:cipher, list(binary()), default: [])
+    field(:cipher, list(<<_::256>>), default: [])
     # Custom public inputs
-    field(:app_data, list(binary()), default: [])
+    field(:app_data, list(<<_::256>>), default: [])
   end
 
   @spec from_public_input(binary()) :: t()
