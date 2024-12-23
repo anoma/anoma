@@ -49,7 +49,7 @@ defmodule Examples.ECairo.EComplianceWitness do
   def a_compliance_private_input_for_intents() do
     input_nf_key = <<1::256>>
     rcv = <<3::256>>
-    eph_root = Cairo.random_felt() |> :binary.list_to_bin()
+    eph_root = Anoma.Constants.default_cairo_rm_root()
     {_ct, merkle_proof, _anchor} = ECommitmentTree.a_merkle_proof()
 
     compliance_private_input =
