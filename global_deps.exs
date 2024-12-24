@@ -5,7 +5,7 @@
    ref: "a5a2778a4ad9b2ff40cea471ac777089149b9fda"},
   {:enacl,
    git: "https://github.com/anoma/enacl/",
-   ref: "23173637c495b85d56f205e4721cfe5afdef92e9"},
+   ref: "4266bb9e179901c505914e5ae95fe81fa035d9b4"},
   {:kino, git: "https://github.com/livebook-dev/kino", override: true},
   # until the next Kino release
   {:grpc_reflection, "~> 0.1.0"},
