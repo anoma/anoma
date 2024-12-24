@@ -23,6 +23,7 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.Nock.Prove
   alias Anoma.Protobuf.NockService
   alias Anoma.Protobuf.NodeInfo
+  alias Anoma.Node.Examples.EIndexer
   alias Examples.ETransparent.ETransaction
   alias Noun.Nounable
 
@@ -175,9 +176,17 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_nullifiers(EConnection.t()) :: EConnection.t()
   def list_nullifiers(conn \\ setup()) do
+    # Create some nullifiers using another example
+    EIndexer.indexer_reads_nullifier(conn.client.node.node_id)
+
+    # request the nullifiers from the client
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %Nullifiers.Request{node_info: node_id}
-    {:ok, _reply} = IndexerService.Stub.list_nullifiers(conn.channel, request)
+
+    {:ok, response} =
+      IndexerService.Stub.list_nullifiers(conn.channel, request)
+
+    assert response.nullifiers == [Base.decode64!("TkZfWbFpHGem")]
 
     conn
   end
@@ -187,11 +196,20 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_unrevealed_commits(EConnection.t()) :: EConnection.t()
   def list_unrevealed_commits(conn \\ setup()) do
+    # Create an unrevealed commit using another example
+    EIndexer.indexer_reads_unrevealed(conn.client.node.node_id)
+
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %UnrevealedCommits.Request{node_info: node_id}
 
-    {:ok, _reply} =
+    {:ok, response} =
       IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
+
+    assert response.commits == [
+             Base.decode64!(
+               "Q01fWbFpHGcGQIDw26exq+1uh4FWk1dVWKA4S6f4ZFD41XiHbQMHA2RIUAE="
+             )
+           ]
 
     conn
   end
@@ -201,11 +219,20 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_unspent_resources(EConnection.t()) :: EConnection.t()
   def list_unspent_resources(conn \\ setup()) do
+    # Create an unrevealed commit using another example
+    EIndexer.indexer_reads_unrevealed(conn.client.node.node_id)
+
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %UnspentResources.Request{node_info: node_id}
 
-    {:ok, _reply} =
+    {:ok, reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
+
+    assert reply.unspent_resources == [
+             <<89, 177, 105, 28, 103, 6, 64, 128, 240, 219, 167, 177, 171,
+               237, 110, 135, 129, 86, 147, 87, 85, 88, 160, 56, 75, 167, 248,
+               100, 80, 248, 213, 120, 135, 109, 3, 7, 3, 100, 72, 80, 1>>
+           ]
 
     conn
   end

@@ -1,4 +1,5 @@
 defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
+  alias Anoma.Node.Utility.Indexer
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
@@ -10,21 +11,36 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
 
   @spec list_nullifiers(Nullifiers.Request.t(), Stream.t()) ::
           Nullifiers.Response.t()
-  def list_nullifiers(_request, _stream) do
-    %Nullifiers.Response{nullifiers: ["null", "ifier"]}
+  def list_nullifiers(request, _stream) do
+    Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
+
+    nullifiers = Indexer.get(request.node_info.node_id, :nlfs)
+
+    %Nullifiers.Response{nullifiers: nullifiers}
   end
 
   @spec list_unrevealed_commits(UnrevealedCommits.Request.t(), Stream.t()) ::
           UnrevealedCommits.Response.t()
-  def list_unrevealed_commits(_request, _stream) do
-    %UnrevealedCommits.Response{commits: ["commit1", "commit2"]}
+  def list_unrevealed_commits(request, _stream) do
+    Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
+
+    unrevealed = Indexer.get(request.node_info.node_id, :unrevealed)
+
+    %UnrevealedCommits.Response{commits: unrevealed}
   end
 
   @spec list_unspent_resources(UnspentResources.Request.t(), Stream.t()) ::
           UnspentResources.Response.t()
-  def list_unspent_resources(_request, _stream) do
-    %UnspentResources.Response{
-      unspent_resources: ["unspent resource 1", "unspent resource 2"]
-    }
+  def list_unspent_resources(request, _stream) do
+    Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
+
+    resources =
+      Indexer.get(request.node_info.node_id, :resources)
+      |> Enum.map(fn r ->
+        Noun.Nounable.to_noun(r)
+        |> Noun.Jam.jam()
+      end)
+
+    %UnspentResources.Response{unspent_resources: resources}
   end
 end
