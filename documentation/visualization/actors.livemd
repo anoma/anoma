@@ -11,7 +11,7 @@
    4. [Examples Over Testing](./../contributing/examples-over-testing.livemd)
    5. [Git](./../contributing/git.livemd)
    6. [Iex](./../contributing/iex.livemd)
-   7. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   7. [Mnesia vs. Actor State](./../contributing/mnesia-vs-actor-state.livemd)
    8. [Observer](./../contributing/observer.livemd)
    9. [Testing](./../contributing/testing.livemd)
       1. [Running Tests](./../contributing/testing/running-tests.livemd)
@@ -56,11 +56,11 @@ classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
 ## Mempool
 
 A good view of visualizing Anoma can be seen through running the
-mempool, as it orchastrates the other actors in Anoma to act
+mempool, as it orchestrates the other actors in Anoma to act
 
 <!-- livebook:{"break_markdown":true} -->
 
-First we will create a transaction and see how that changes the base supervision tree before executing
+First, we will create a transaction and see how that changes the base supervision tree before executing
 
 ```elixir
 alias Anoma.Node.Ordering
@@ -81,7 +81,7 @@ pid_zero = Mempool.tx(node.mempool, {:kv, zero}).pid
 #PID<0.438.0>
 ```
 
-The previous evaluations PID can be seen in the diagram below!
+The previous evaluated PID can be seen in the diagram below!
 
 ```elixir
 {_, [pid1, pid2]} = Process.info(Process.whereis(:anoma), :links)
