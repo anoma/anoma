@@ -99,8 +99,14 @@ defmodule Anoma.Node.Examples.EIndexer do
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
-    nlf1 = %Resource{rseed: "random1"} |> Resource.nullifier()
-    nlf2 = %Resource{rseed: "random2"} |> Resource.nullifier()
+    nlf1 =
+      %Resource{nonce: :crypto.hash(:sha256, "random1")}
+      |> Resource.nullifier()
+
+    nlf2 =
+      %Resource{nonce: :crypto.hash(:sha256, "random2")}
+      |> Resource.nullifier()
+
     set = MapSet.new([nlf1, nlf2])
 
     write_new(updates, values, [1], set, nil)
@@ -116,8 +122,14 @@ defmodule Anoma.Node.Examples.EIndexer do
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
-    resource1 = %Resource{rseed: "random1"} |> Resource.nullifier()
-    resource2 = %Resource{rseed: "random2"} |> Resource.nullifier()
+    resource1 =
+      %Resource{nonce: :crypto.hash(:sha256, "random1")}
+      |> Resource.nullifier()
+
+    resource2 =
+      %Resource{nonce: :crypto.hash(:sha256, "random2")}
+      |> Resource.nullifier()
+
     set = MapSet.new([resource1, resource2])
 
     write_new(updates, values, [1], nil, set)
@@ -133,7 +145,7 @@ defmodule Anoma.Node.Examples.EIndexer do
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
-    resource = %Resource{rseed: "random1"}
+    resource = %Resource{nonce: :crypto.hash(:sha256, "random1")}
     nul1 = resource |> Resource.nullifier()
     com1 = resource |> Resource.commitment()
     nulfs = MapSet.new([nul1])
@@ -153,10 +165,14 @@ defmodule Anoma.Node.Examples.EIndexer do
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
-    resource = %Resource{rseed: "random1"}
+    resource = %Resource{nonce: :crypto.hash(:sha256, "random1")}
     nul1 = resource |> Resource.nullifier()
     com1 = resource |> Resource.commitment()
-    com2 = %Resource{rseed: "random2"} |> Resource.commitment()
+
+    com2 =
+      %Resource{nonce: :crypto.hash(:sha256, "random2")}
+      |> Resource.commitment()
+
     nulfs = MapSet.new([nul1])
     coms = MapSet.new([com1, com2])
 
