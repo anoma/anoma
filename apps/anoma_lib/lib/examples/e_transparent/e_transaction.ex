@@ -71,7 +71,7 @@ defmodule Examples.ETransparent.ETransaction do
     # the delta should be negative let's say we can jam and cue this
     noun = res |> Noun.Nounable.to_noun()
 
-    assert noun |> Nock.Jam.jam() |> Nock.Cue.cue()
+    assert noun |> Noun.Jam.jam() |> Noun.Jam.cue()
     assert Transaction.from_noun(noun) == {:ok, res}
 
     res

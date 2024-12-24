@@ -99,6 +99,14 @@
   |=  =resource
   ^-  nullifier
   (~(cat block 3) 'NF_' (jam resource))
+++  is-commitment  ::  check whether an atom is a commitment
+  |=  a=@
+  ^-  @
+  =('CM_' (~(end block 3) 3 a))
+++  is-nullifier  ::  check whether an atom is a nullifier
+  |=  a=@
+  ^-  @
+  =('NF_' (~(end block 3) 3 a))
 ++  kind
   |=  =resource
   ^-  resource-kind
@@ -110,11 +118,15 @@
   |=  *
   %compliance
 ++  delta-add
+  ~/  %delta-add
   |=  [d1=delta d2=delta]
+  =+  c=%delta-add
   ^-  delta
   !!
 ++  delta-sub
+  ~/  %delta-sub
   |=  [d1=delta d2=delta]
+  =+  c=%delta-sub
   ^-  delta
   !!
 ++  resource-delta
@@ -122,11 +134,15 @@
   ^-  delta
   ~[[(kind resource) (sun quantity.resource)]]
 ++  action-delta
+  ~/  %action-delta
   |=  =action
+  =+  c=%action-delta
   ^-  delta
   !!
 ++  make-delta  ::  make delta from actions (to make a transaction)
+  ~/  %make-delta
   |=  actions=(list action)
+  =+  c=%make-delta
   ^-  delta
   !!
 ++  prove-delta  ::  prove delta, trivially

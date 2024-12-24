@@ -23,12 +23,13 @@ defmodule Nock do
     )
 
     field(:meter_pid, pid() | nil, default: nil)
+    field(:gas_limit, non_neg_integer() | nil, default: nil)
     field(:stdio, any(), default: :stdio)
   end
 
   @dialyzer :no_improper_lists
 
-  @layers 8
+  @layers 9
 
   @layer_1_context_mug 1_023_856_422
   @layer_4_context_mug 1_869_390_925
@@ -37,6 +38,9 @@ defmodule Nock do
   @layer_7_context_mug 4_202_542_228
   @layer_8_context_mug 1_736_366_676
   @layer_4_block_context_mug 2_756_805_836
+
+  # always the topmost layer
+  @layer_rm_context_mug 2_116_148_812
 
   # hardcoded jet registry
   # valid statuses:
@@ -111,7 +115,19 @@ defmodule Nock do
     1_720_910_226 =>
       {"syn", 7, @layer_8_context_mug, &Nock.Jets.syn/1, :enabled, 30},
     3_800_851_664 =>
-      {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30}
+      {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30},
+    3_823_717_687 =>
+      {"delta-add", 7, @layer_rm_context_mug, &Nock.Jets.delta_add/1,
+       :enabled, 50},
+    332_825_089 =>
+      {"delta-sub", 7, @layer_rm_context_mug, &Nock.Jets.delta_sub/1,
+       :enabled, 50},
+    4_289_938_596 =>
+      {"action-delta", 7, @layer_rm_context_mug, &Nock.Jets.action_delta/1,
+       :enabled, 50},
+    4_289_816_935 =>
+      {"make-delta", 7, @layer_rm_context_mug, &Nock.Jets.make_delta/1,
+       :enabled, 50}
   }
 
   @doc """
@@ -295,7 +311,13 @@ defmodule Nock do
   @spec metered_nock(Noun.t(), Noun.t(), t()) ::
           {:ok, Noun.t(), non_neg_integer()} | {:error, non_neg_integer()}
   def metered_nock(subject, formula, environment) do
-    meter = Task.async(Nock, :gas_meter, [])
+    meter =
+      if environment.gas_limit do
+        Task.async(Nock, :gas_limit, [environment.gas_limit, self(), 0])
+      else
+        Task.async(Nock, :gas_meter, [0])
+      end
+
     result = nock(subject, formula, %{environment | meter_pid: meter.pid})
     send(meter.pid, :done)
     gas_cost = Task.await(meter)
@@ -319,6 +341,21 @@ defmodule Nock do
     receive do
       {:gas, n} ->
         gas_meter(n + gas)
+
+      :done ->
+        gas
+    end
+  end
+
+  def gas_limit(limit, pid, gas) do
+    receive do
+      {:gas, n} ->
+        if n + gas > limit do
+          Process.exit(pid, :kill)
+          gas
+        else
+          gas_meter(n + gas)
+        end
 
       :done ->
         gas
@@ -409,7 +446,7 @@ defmodule Nock do
           {:ok, result_1} = nock(subject, formula_1, environment)
           {:ok, result_2} = nock(subject, formula_2, environment)
 
-          if Noun.equal(result_1, result_2) do
+          if Noun.equal?(result_1, result_2) do
             {:ok, 0}
           else
             {:ok, 1}
@@ -452,7 +489,12 @@ defmodule Nock do
         when ten in [10, <<10>>] ->
           {:ok, replacement} = nock(subject, replacement_formula, environment)
           {:ok, sub_result} = nock(subject, sub_formula, environment)
-          Noun.replace(axis, replacement, sub_result)
+
+          Noun.replace(
+            Noun.atom_binary_to_integer(axis),
+            replacement,
+            sub_result
+          )
 
         # 11: hint (spec macro)
         # *[a 11 [b c] d]     *[[*[a c] *[a d]] 0 3]
@@ -494,7 +536,7 @@ defmodule Nock do
       IO.write(environment.stdio, "#{inspect(hint_result)}\n")
     else
       # hint_str = Noun.Format.print(hint_result)
-      hint_str = Nock.Jam.jam(hint_result) |> Base.encode64()
+      hint_str = Noun.Jam.jam(hint_result) |> Base.encode64()
       IO.write(environment.stdio, hint_str)
     end
   end
@@ -2846,7 +2888,7 @@ defmodule Nock do
   end
 
   rm_string = """
-  [ [8 [1 0 0 0 0] [1 0 0] 0 1]
+  [ [7 [8 [1 0 0 0 0] [1 8 [1 30.160.793.233.665.617.219.451.904.865] 0 0] 0 1] 11 [1.953.718.630 1 30.160.793.233.665.617.219.451.904.865 [0 7] 0] 0 1]
   [ [1 0]
     [ [ 8
         [1 0 0 0]
@@ -2893,8 +2935,8 @@ defmodule Nock do
     1
   ]
   [8 [1 0] [1 1 478.793.196.187.462.788.804.451] 0 1]
-  [ [8 [1 0 0] [1 0 0] 0 1]
-    [ [8 [1 0] [1 0 0] 0 1]
+  [ [7 [8 [1 0 0] [1 8 [1 1.851.907.519.744.077.227.364] 0 0] 0 1] 11 [1.953.718.630 1 1.851.907.519.744.077.227.364 [0 7] 0] 0 1]
+    [ [8 [1 0] [1 5 [1 6.243.918] 8 [8 [9 10 0 255] 9 367 10 [6 7 [0 3] 1 3] 0 2] 9 2 10 [6 [7 [0 3] 1 3] 0 14] 0 2] 0 1]
       [ [8 [1 0 [[1 0] 0 0] 1 1 [0 0] 0 0 1.701.536.102] [1 [0 12] 0 26] 0 1]
         [ 8
           [1 [0 [[1 0] 0 0] 1 1 [0 0] 0 0 1.701.536.102] [0 0 0 0] 0 0 0]
@@ -2927,6 +2969,7 @@ defmodule Nock do
         0
         1
       ]
+      [7 [8 [1 0] [1 8 [1 460.217.181.910.180.775.551.341] 0 0] 0 1] 11 [1.953.718.630 1 460.217.181.910.180.775.551.341 [0 7] 0] 0 1]
       8
       [1 0 0 0 0]
       [ 1
@@ -3025,9 +3068,11 @@ defmodule Nock do
       0
       1
     ]
-    8
-    [1 0 0]
-    [1 0 0]
+    [8 [1 0] [1 5 [1 6.245.699] 8 [8 [9 10 0 255] 9 367 10 [6 7 [0 3] 1 3] 0 2] 9 2 10 [6 [7 [0 3] 1 3] 0 14] 0 2] 0 1]
+    7
+    [8 [1 0 0] [1 8 [1 1.816.244.077.244.883.690.852] 0 0] 0 1]
+    11
+    [1.953.718.630 1 1.816.244.077.244.883.690.852 [0 7] 0]
     0
     1
   ]
@@ -3036,7 +3081,7 @@ defmodule Nock do
     [ 1
       8
       [ [8 [7 [0 7] 8 [9 47 0 255] 9 2 10 [6 7 [0 3] 9 86 0 1] 0 2] 9 2 10 [6 0 28] 0 2]
-        [8 [7 [0 7] 8 [9 47 0 255] 9 2 10 [6 7 [0 3] 9 747 0 1] 0 2] 9 2 10 [6 0 58] 0 2]
+        [8 [7 [0 7] 8 [9 47 0 255] 9 2 10 [6 7 [0 3] 9 1.495 0 1] 0 2] 9 2 10 [6 0 58] 0 2]
         [8 [7 [0 7] 9 766 0 1] 9 2 10 [6 0 118] 0 2]
         6
         [5 [0 55] 1 418.565.088.612]

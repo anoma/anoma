@@ -146,8 +146,7 @@ defmodule Anoma.TransparentResource.Transaction do
 
   # We any here, as it's giving a weird error
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([roots, actions, delta, delta_proof | terminator])
-      when terminator in [0, <<>>, <<0>>, []] do
+  def from_noun([roots, actions, delta | delta_proof]) do
     with {:ok, actions} <- from_noun_actions(actions),
          {:ok, delta} <- Delta.from_noun(delta) do
       {:ok,
@@ -171,9 +170,9 @@ defmodule Anoma.TransparentResource.Transaction do
         MapSet.to_list(trans.roots),
         Enum.map(trans.actions, &Noun.Nounable.to_noun/1),
         Map.to_list(trans.delta)
-        |> Enum.map(fn {x, y} -> [x, Noun.encode_signed(y)] end),
+        |> Enum.map(fn {x, y} -> [x | Noun.encode_signed(y)] end)
         # Consider better provinance value
-        trans.delta_proof
+        | trans.delta_proof
       ]
     end
   end
@@ -188,6 +187,10 @@ defmodule Anoma.TransparentResource.Transaction do
     else
       {:ok, MapSet.new(Enum.map(maybe_actions, fn {:ok, x} -> x end))}
     end
+  end
+
+  defp from_noun_actions(noun) when noun in [0, <<>>, []] do
+    {:ok, MapSet.new([])}
   end
 
   ##############################################################################
@@ -237,5 +240,15 @@ defimpl Anoma.RM.Intent, for: Anoma.TransparentResource.Transaction do
   @impl true
   def verify(tx = %Transaction{}) do
     Transaction.verify(tx)
+  end
+
+  @impl true
+  def nullifiers(tx = %Transaction{}) do
+    Transaction.nullifiers(tx)
+  end
+
+  @impl true
+  def commitments(tx = %Transaction{}) do
+    Transaction.commitments(tx)
   end
 end

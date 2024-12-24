@@ -1,6 +1,7 @@
 # Anoma.Protobuf
 
-**TODO: Add description**
+I am the Anoma Protobuf application. I contain the Protobuf definitions and
+generate the Elixir representation of the Protobuf files.
 
 ## Installation
 

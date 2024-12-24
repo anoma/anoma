@@ -15,6 +15,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
   alias Anoma.Protobuf.NodeInfo
+  alias Examples.ETransparent.ETransaction
 
   import ExUnit.Assertions
 
@@ -90,9 +91,15 @@ defmodule Anoma.Node.Examples.EGRPC do
   def add_intent(%EGRPC{} = client \\ connect_to_node()) do
     node_id = %NodeInfo{node_id: client.node.node_id}
 
+    # create an arbitrary intent and jam it
+    intent_jammed =
+      ETransaction.nullify_intent()
+      |> Noun.Nounable.to_noun()
+      |> Noun.Jam.jam()
+
     request = %Add.Request{
       node_info: node_id,
-      intent: %Intent{value: 1}
+      intent: %Intent{intent: intent_jammed}
     }
 
     {:ok, _reply} = IntentsService.Stub.add_intent(client.channel, request)
@@ -102,7 +109,7 @@ defmodule Anoma.Node.Examples.EGRPC do
 
     {:ok, reply} = IntentsService.Stub.list_intents(client.channel, request)
 
-    assert reply.intents == ["1"]
+    assert reply.intents == [intent_jammed]
   end
 
   @doc """

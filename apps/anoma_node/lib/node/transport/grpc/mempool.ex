@@ -12,7 +12,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
   def add(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
-    tx_noun = request.transaction |> Nock.Cue.cue!()
+    tx_noun = request.transaction |> Noun.Jam.cue!()
 
     Mempool.tx(request.node_info.node_id, {:transparent_resource, tx_noun})
 

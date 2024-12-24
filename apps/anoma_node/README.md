@@ -1,6 +1,8 @@
 # AnomaNode
 
-**TODO: Add description**
+I am the Anoma Node application. I provide the main functionality of the
+Anoma protocol. In particular, I instantiate all the Engine functionaly and
+state-change processing of Anoma.
 
 ## Installation
 

@@ -56,7 +56,7 @@ defmodule Anoma.TransparentResource.Delta do
     maybe_record =
       Noun.list_nock_to_erlang(noun)
       |> Enum.map(fn
-        [x, y | terminator] when terminator in [0, <<>>, <<0>>, []] ->
+        [x | y] ->
           {x, Noun.atom_binary_to_signed_integer(y)}
 
         _ ->
@@ -68,5 +68,13 @@ defmodule Anoma.TransparentResource.Delta do
     else
       {:ok, Map.new(maybe_record)}
     end
+  end
+
+  @spec to_noun(t()) :: Noun.t()
+  def to_noun(delta) do
+    delta
+    |> Enum.map(fn {binary, integer} ->
+      [binary | Noun.encode_signed(integer)]
+    end)
   end
 end

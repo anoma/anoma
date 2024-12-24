@@ -19,6 +19,12 @@ defmodule EventBroker.Registry do
 
   @type registered_filters :: %{EventBroker.filter_spec_list() => pid()}
 
+  @typedoc """
+  I am the type of the registered subscribers. I map a subscriber pid to all
+  their filter specs.
+  """
+  @type registered_subscribers :: %{pid() => [EventBroker.filter_spec_list()]}
+
   typedstruct enforce: true do
     @typedoc """
     I am the type of the Registry.
@@ -31,11 +37,13 @@ defmodule EventBroker.Registry do
     - `:registered_filters` - The map whose keys are a filter-spec dependency
     list and whose values are PID's of filter
     agents corresponding to said lists.
+    - `:registered_subscribers` - The map whose keys are a subscriber PID mapped onto their filter specs.
     Default: %{}
     """
 
     field(:supervisor, atom())
     field(:registered_filters, registered_filters, default: %{})
+    field(:registered_subscribers, registered_subscribers, default: %{})
   end
 
   @spec start_link(list()) :: GenServer.on_start()
@@ -94,6 +102,21 @@ defmodule EventBroker.Registry do
           %{state | registered_filters: new_registered_filters}
         end
 
+      # keep a mapping between subscribing pids and which filterlists they subscribed to
+      # this is used to unsubscribe them when they go down.
+      registered_subscribers =
+        Map.update(
+          state.registered_subscribers,
+          pid,
+          [filter_spec_list],
+          &[&1 | filter_spec_list]
+        )
+
+      new_state =
+        Map.put(new_state, :registered_subscribers, registered_subscribers)
+
+      Process.monitor(pid)
+
       GenServer.call(
         Map.get(new_state.registered_filters, filter_spec_list),
         {:subscribe, pid}
@@ -119,6 +142,25 @@ defmodule EventBroker.Registry do
 
   @impl true
   def handle_cast(_msg, state) do
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
+    # obtain the list of filter lists the pid subscribed to
+    # for each of these lists, unsubscribe them
+    filter_spec_list_list = Map.get(state.registered_subscribers, pid, [])
+
+    state =
+      Enum.reduce(filter_spec_list_list, state, fn filter_spec_list, state ->
+        # unsubscribe to this filter_spec_list
+        new_registered_filters =
+          do_unsubscribe(pid, filter_spec_list, state.registered_filters)
+
+        %{state | registered_filters: new_registered_filters}
+      end)
+      |> Map.update(:registered_subscribers, %{}, &Map.delete(&1, pid))
+
     {:noreply, state}
   end
 
@@ -173,18 +215,28 @@ defmodule EventBroker.Registry do
   defp do_unsubscribe(pid, filter_spec_list, registered_filters) do
     filter_pid = Map.get(registered_filters, filter_spec_list)
 
-    case GenServer.call(filter_pid, {:unsubscribe, pid}) do
-      :ok ->
+    case filter_pid do
+      nil ->
         registered_filters
 
-      :reap ->
-        new_registered_filters =
-          Map.delete(registered_filters, filter_spec_list)
+      filter_pid ->
+        case GenServer.call(filter_pid, {:unsubscribe, pid}) do
+          :ok ->
+            registered_filters
 
-        parent_spec_list =
-          Enum.take(filter_spec_list, length(filter_spec_list) - 1)
+          :reap ->
+            new_registered_filters =
+              Map.delete(registered_filters, filter_spec_list)
 
-        do_unsubscribe(filter_pid, parent_spec_list, new_registered_filters)
+            parent_spec_list =
+              Enum.take(filter_spec_list, length(filter_spec_list) - 1)
+
+            do_unsubscribe(
+              filter_pid,
+              parent_spec_list,
+              new_registered_filters
+            )
+        end
     end
   end
 end

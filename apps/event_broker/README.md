@@ -1,6 +1,7 @@
 # EventBroker
 
-**TODO: Add description**
+I am the EventBroker application. I contain an implemenentation of a
+general PubSub system using the notion of filters.
 
 ## Installation
 

@@ -6,6 +6,8 @@ defmodule Examples.ENock do
 
   alias Examples.ECrypto
   alias Anoma.TransparentResource.Transaction
+  alias Examples.ETransparent.EAction
+  alias Anoma.TransparentResource.Delta
   import Noun
 
   ####################################################################
@@ -138,7 +140,7 @@ defmodule Examples.ENock do
   def trivial_swap() do
     swap = Examples.ETransparent.ETransaction.swap_from_actions()
     noun = swap |> Noun.Nounable.to_noun()
-    {:ok, cued} = noun |> Nock.Jam.jam() |> Nock.Cue.cue()
+    {:ok, cued} = noun |> Noun.Jam.jam() |> Noun.Jam.cue()
     {:ok, cued_trans} = Transaction.from_noun(cued)
 
     assert Transaction.from_noun(noun) == {:ok, swap}
@@ -188,11 +190,15 @@ defmodule Examples.ENock do
     sample = 999
     core = [dec_arm(), sample | Nock.logics_core()]
 
-    assert Nock.nock(core, [9, 2, 0 | 1]) == {:ok, 998}
+    assert Nock.nock(core, [9, 2, 0 | 1]) |> elem(1) |> Noun.equal?(998)
 
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 22], 0 | 1]) == {:ok, 21}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 22], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(21)
 
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | <<22>>], 0 | 1]) == {:ok, 21},
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | <<22>>], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(21),
            "dec works on internally binary atoms"
 
     core
@@ -268,8 +274,9 @@ defmodule Examples.ENock do
     valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
     invalid_args = [ECrypto.blood_msg() | ECrypto.londo().external.sign]
 
-    assert {:ok, ECrypto.blood_l_signed()} ==
-             Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(ECrypto.blood_l_signed())
 
     assert :error ==
              Nock.nock(core, [9, 2, 10, [6, 1 | invalid_args], 0 | 1]),
@@ -302,11 +309,13 @@ defmodule Examples.ENock do
     valid_args = [ECrypto.blood_l_signed() | ECrypto.londo().external.sign]
     invalid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
 
-    assert {:ok, [0 | ECrypto.blood_msg()]} ==
-             Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?([0 | ECrypto.blood_msg()])
 
-    assert {:ok, 0} ==
-             Nock.nock(core, [9, 2, 10, [6, 1 | invalid_args], 0 | 1]),
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | invalid_args], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0),
            "Can't verify with someone's private key"
 
     core
@@ -335,8 +344,9 @@ defmodule Examples.ENock do
 
     valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
 
-    assert {:ok, ECrypto.blood_l_signed_detached()} ==
-             Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(ECrypto.blood_l_signed_detached())
 
     assert :error == Nock.nock(core, [9, 2, 10, [6, 1, <<3>> | 5], 0 | 1])
     assert :error == Nock.nock(core, [9, 2, 10, [6, 1, <<3>> | <<5>>], 0 | 1])
@@ -377,19 +387,27 @@ defmodule Examples.ENock do
 
     all_invalid = [<<3>>, <<4>> | <<55>>]
 
-    assert {:ok, 0} == Nock.nock(core, [9, 2, 10, [6, 1 | valid], 0 | 1])
-    assert {:ok, 1} == Nock.nock(core, [9, 2, 10, [6, 1 | wrong_msg], 0 | 1])
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | valid], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
 
-    assert {:ok, 1} ==
-             Nock.nock(core, [9, 2, 10, [6, 1 | invalid_key], 0 | 1]),
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | wrong_msg], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1)
+
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | invalid_key], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1),
            "private key deosn't verify"
 
-    assert {:ok, 1} ==
-             Nock.nock(core, [9, 2, 10, [6, 1 | invalid_size], 0 | 1]),
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | invalid_size], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1),
            "Gracefully fail on invalidly sized messages"
 
-    assert {:ok, 1} ==
-             Nock.nock(core, [9, 2, 10, [6, 1 | all_invalid], 0 | 1]),
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | all_invalid], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1),
            "Everything being wrong, doesn't excuse a crash"
 
     core
@@ -415,11 +433,17 @@ defmodule Examples.ENock do
     sample = 888
     core = [bex_arm(), sample | Nock.logics_core()]
 
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 2], 0 | 1]) == {:ok, 4}
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 5], 0 | 1]) == {:ok, 32}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 2], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(4)
 
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 28], 0 | 1]) ==
-             {:ok, 268_435_456}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 5], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(32)
+
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 28], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(268_435_456)
 
     core
   end
@@ -445,8 +469,13 @@ defmodule Examples.ENock do
     sample = [0 | 0]
     core = [mix_arm(), sample | Nock.logics_core()]
 
-    assert {:ok, 6} == Nock.nock(core, [9, 2, 10, [6, 1, 3 | 5], 0 | 1])
-    assert {:ok, 0} == Nock.nock(core, [9, 2, 10, [6, 1, 11 | 11], 0 | 1])
+    assert Nock.nock(core, [9, 2, 10, [6, 1, 3 | 5], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(6)
+
+    assert Nock.nock(core, [9, 2, 10, [6, 1, 11 | 11], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
 
     core
   end
@@ -495,13 +524,17 @@ defmodule Examples.ENock do
     sample = 0
     core = [shax_arm(), sample | Nock.logics_core()]
 
-    assert {:ok,
-            38_772_261_170_797_515_502_142_737_251_560_910_253_885_555_854_579_348_417_967_781_179_871_348_437_219} ==
-             Nock.nock(core, [9, 2, 0 | 1])
+    assert Nock.nock(core, [9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(
+             38_772_261_170_797_515_502_142_737_251_560_910_253_885_555_854_579_348_417_967_781_179_871_348_437_219
+           )
 
-    assert {:ok,
-            55_140_411_965_103_990_925_642_572_973_048_070_470_495_109_172_463_110_593_783_713_869_232_563_762_634} ==
-             Nock.nock(core, [9, 2, 10, [6, 1 | 7], 0 | 1])
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 7], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(
+             55_140_411_965_103_990_925_642_572_973_048_070_470_495_109_172_463_110_593_783_713_869_232_563_762_634
+           )
 
     core
   end
@@ -542,7 +575,7 @@ defmodule Examples.ENock do
   @spec raw_27_4() :: {:ok, Noun.t()}
   def raw_27_4() do
     call = raw_call(27, 4)
-    {:ok, 9} = call
+    assert call |> elem(1) |> Noun.equal?(9)
 
     call
   end
@@ -580,7 +613,7 @@ defmodule Examples.ENock do
   def raws_test() do
     {:ok, res} = raws_call(27, 4)
     rand = hd(res)
-    ^rand = 9
+    assert Noun.equal?(rand, 9)
 
     :ok
   end
@@ -616,10 +649,12 @@ defmodule Examples.ENock do
 
   @spec rad_tests() :: {:ok, Noun.t()}
   def rad_tests() do
-    {:ok, 4} = rad_call(5, 11)
-    {:ok, 2} = rad_call(10, 20)
-    {:ok, 260} = rad_call(10, 2000)
-    {:ok, 1285} = rad_call(628, 2000)
+    assert rad_call(5, 11) |> elem(1) |> Noun.equal?(4)
+    assert rad_call(10, 20) |> elem(1) |> Noun.equal?(2)
+    assert rad_call(10, 2000) |> elem(1) |> Noun.equal?(260)
+    assert rad_call(628, 2000) |> elem(1) |> Noun.equal?(1285)
+
+    rad_call(628, 2000)
   end
 
   @doc """
@@ -656,7 +691,7 @@ defmodule Examples.ENock do
   def rads_tests() do
     {:ok, cell} = rads_call(5, 11)
     rand = hd(cell)
-    ^rand = 4
+    assert Noun.equal?(rand, 4)
     :ok
   end
 
@@ -676,13 +711,19 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # abs(--0) == 0
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1]) == {:ok, 0}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
 
     # abs(-2) == 2
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1]) == {:ok, 2}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(2)
 
     # abs(--2) == 2
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1]) == {:ok, 2}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(2)
 
     core
   end
@@ -711,10 +752,14 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # --3 - -2 == --5
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [6 | 3]], 0 | 1]) == {:ok, 10}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [6 | 3]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(10)
 
     # -3 - --2 == -5
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 4]], 0 | 1]) == {:ok, 9}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 4]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(9)
 
     core
   end
@@ -743,14 +788,19 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # dul(-1, --5) == 9
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 10]], 0 | 1]) == {:ok, 9}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 10]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(9)
 
     # dul(-11, -61) == 110
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 121]], 0 | 1]) ==
-             {:ok, 110}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 121]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(110)
 
     # dul(--5, 3) == 2
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [10 | 3]], 0 | 1]) == {:ok, 2}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [10 | 3]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(2)
 
     core
   end
@@ -779,16 +829,24 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # -1 / -1 == --1
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 1]], 0 | 1]) == {:ok, 2}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 1]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(2)
 
     # -11 / --2 == -5
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 4]], 0 | 1]) == {:ok, 9}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 4]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(9)
 
     # --0 / --1 == --0
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [0 | 1]], 0 | 1]) == {:ok, 0}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [0 | 1]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
 
     # --5 / -2 == -2
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [10 | 3]], 0 | 1]) == {:ok, 3}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [10 | 3]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(3)
 
     core
   end
@@ -817,10 +875,14 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # new(%.n, 2) == -2
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 2]], 0 | 1]) == {:ok, 3}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 2]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(3)
 
     # new(%.y, 2) == --2
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [0 | 2]], 0 | 1]) == {:ok, 4}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [0 | 2]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(4)
 
     core
   end
@@ -849,10 +911,14 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # old(-2) == [%.n, 2]
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1]) == {:ok, [1 | 2]}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?([1 | 2])
 
     # old(--2) == [%.y, 2]
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1]) == {:ok, [0 | 2]}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?([0 | 2])
 
     core
   end
@@ -881,10 +947,14 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # -3 * --3 == -9
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 6]], 0 | 1]) == {:ok, 17}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 6]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(17)
 
     # -3 * -3 == --9
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 5]], 0 | 1]) == {:ok, 18}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 5]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(18)
 
     core
   end
@@ -913,16 +983,24 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # -17 % -3 == -2
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [33 | 5]], 0 | 1]) == {:ok, 3}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [33 | 5]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(3)
 
     # --17 % -3 == --2
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [34 | 5]], 0 | 1]) == {:ok, 4}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [34 | 5]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(4)
 
     # -17 % --3 == -2
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [33 | 6]], 0 | 1]) == {:ok, 3}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [33 | 6]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(3)
 
     # --17 % --3 == --2
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [34 | 6]], 0 | 1]) == {:ok, 4}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [34 | 6]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(4)
 
     core
   end
@@ -951,10 +1029,14 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # -11 + --2 == -9
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 4]], 0 | 1]) == {:ok, 17}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 4]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(17)
 
     # --2 % --2 == --4
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 4]], 0 | 1]) == {:ok, 8}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 4]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(8)
 
     core
   end
@@ -971,7 +1053,9 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # sun(90) == 180
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 90], 0 | 1]) == {:ok, 180}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 90], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(180)
 
     core
   end
@@ -988,13 +1072,19 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # syn(--0) == %.y
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1]) == {:ok, 0}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
 
     # syn(-2) == %.n
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1]) == {:ok, 1}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1)
 
     # syn(--2) == %.y
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1]) == {:ok, 0}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 4], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
 
     core
   end
@@ -1023,16 +1113,24 @@ defmodule Examples.ENock do
     core = [arm, sample | Nock.logics_core()]
 
     # cmp(-2, --1) == -1
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [3 | 2]], 0 | 1]) == {:ok, 1}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [3 | 2]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1)
 
     # cmp(--2, --1) == --1
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 2]], 0 | 1]) == {:ok, 2}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 2]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(2)
 
     # cmp(--2, --2) == --0
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 4]], 0 | 1]) == {:ok, 0}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 4]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
 
     # cmp(--2, --5) == -1
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 10]], 0 | 1]) == {:ok, 1}
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | [4 | 10]], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1)
 
     core
   end
@@ -1064,11 +1162,152 @@ defmodule Examples.ENock do
     for i <- 0..max_test_val, j <- 0..max_test_val do
       expected = if i <= j, do: 0, else: 1
 
-      assert Nock.nock(core, [9, 2, 10, [6, 1 | [i | j]], 0 | 1]) ==
-               {:ok, expected}
+      assert Nock.nock(core, [9, 2, 10, [6, 1 | [i | j]], 0 | 1])
+             |> elem(1)
+             |> Noun.equal?(expected)
     end
 
     core
+  end
+
+  def delta_add_arm() do
+    "[8 [9 92 0 15] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def delta_add_call(delta1, delta2) do
+    sample = [delta1 | delta2]
+    [delta_add_arm(), sample | Nock.logics_core()]
+  end
+
+  def delta_add_test() do
+    delta = EAction.trivial_true_commit_delta() |> Delta.to_noun()
+
+    {:ok, [[_ | del]]} =
+      delta_add_call(delta, delta) |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal?(del, 4)
+  end
+
+  def delta_sub_arm() do
+    "[8 [9 1527 0 15] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def delta_sub_call(delta1, delta2) do
+    sample = [delta1 | delta2]
+    [delta_sub_arm(), sample | Nock.logics_core()]
+  end
+
+  def delta_sub_test() do
+    delta = EAction.trivial_true_commit_delta() |> Delta.to_noun()
+
+    assert delta_sub_call(delta, delta)
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?([])
+  end
+
+  def action_delta_arm() do
+    "[8 [9 4 0 15] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def action_delta_call(action) do
+    sample = action
+    [action_delta_arm(), sample | Nock.logics_core()]
+  end
+
+  def action_delta_test() do
+    action = EAction.trivial_true_commit_action() |> Noun.Nounable.to_noun()
+
+    {:ok, [[_ | del]]} =
+      action |> action_delta_call() |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal?(del, 2)
+  end
+
+  def make_delta_arm() do
+    "[8 [9 1494 0 15] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def make_delta_call(actions) do
+    sample = actions
+    [make_delta_arm(), sample | Nock.logics_core()]
+  end
+
+  def make_delta_test() do
+    actions = [
+      EAction.trivial_true_commit_action() |> Noun.Nounable.to_noun()
+    ]
+
+    {:ok, [[_ | del]]} =
+      actions |> make_delta_call() |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal?(del, 2)
+  end
+
+  def is_commitment_arm() do
+    "[8 [9 1.526 0 15] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def make_is_commitment_call(atom) do
+    sample = atom
+    [is_commitment_arm(), sample | Nock.logics_core()]
+  end
+
+  def is_commitment_test() do
+    atom_true = "CM_whatever"
+    atom_false = "NF_whatever"
+    atom_weird_still_false = "a"
+
+    {:ok, res1} =
+      atom_true |> make_is_commitment_call() |> Nock.nock([9, 2, 0 | 1])
+
+    {:ok, res2} =
+      atom_false |> make_is_commitment_call() |> Nock.nock([9, 2, 0 | 1])
+
+    {:ok, res3} =
+      atom_weird_still_false
+      |> make_is_commitment_call()
+      |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal?(res1, 0)
+    assert Noun.equal?(res2, 1)
+    assert Noun.equal?(res3, 1)
+  end
+
+  def is_nullifier_arm() do
+    "[8 [9 372 0 15] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def make_is_nullifier_call(atom) do
+    sample = atom
+    [is_nullifier_arm(), sample | Nock.logics_core()]
+  end
+
+  def is_nullifier_test() do
+    atom_true = "NF_whatever"
+    atom_false = "CM_whatever"
+    atom_weird_still_false = "a"
+
+    {:ok, res1} =
+      atom_true |> make_is_nullifier_call() |> Nock.nock([9, 2, 0 | 1])
+
+    {:ok, res2} =
+      atom_false |> make_is_nullifier_call() |> Nock.nock([9, 2, 0 | 1])
+
+    {:ok, res3} =
+      atom_weird_still_false
+      |> make_is_commitment_call()
+      |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal?(res1, 0)
+    assert Noun.equal?(res2, 1)
+    assert Noun.equal?(res3, 1)
   end
 
   ############################################################
@@ -1133,8 +1372,15 @@ defmodule Examples.ENock do
   @spec met0() :: Noun.t()
   def met0() do
     met = met(0)
-    assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 5}
-    assert Nock.nock(met, [9, 2, 10, [6, 1 | <<28>>], 0 | 1]) == {:ok, 5}
+
+    assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(5)
+
+    assert Nock.nock(met, [9, 2, 10, [6, 1 | <<28>>], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(5)
+
     met
   end
 
@@ -1148,8 +1394,15 @@ defmodule Examples.ENock do
   @spec met1() :: Noun.t()
   def met1() do
     met = met(1)
-    assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 3}
-    assert Nock.nock(met, [9, 2, 10, [6, 1 | <<28>>], 0 | 1]) == {:ok, 3}
+
+    assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(3)
+
+    assert Nock.nock(met, [9, 2, 10, [6, 1 | <<28>>], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(3)
+
     met
   end
 
@@ -1163,8 +1416,15 @@ defmodule Examples.ENock do
   @spec met2() :: Noun.t()
   def met2() do
     met = met(2)
-    assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 2}
-    assert Nock.nock(met, [9, 2, 10, [6, 1 | <<28>>], 0 | 1]) == {:ok, 2}
+
+    assert Nock.nock(met, [9, 2, 10, [6, 1 | 28], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(2)
+
+    assert Nock.nock(met, [9, 2, 10, [6, 1 | <<28>>], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(2)
+
     met
   end
 
@@ -1178,7 +1438,11 @@ defmodule Examples.ENock do
   @spec uend0() :: Noun.t()
   def uend0() do
     uend = uend(0)
-    assert {:ok, 16} == Nock.nock(uend, [9, 2, 10, [6, 1, 5 | 80], 0 | 1])
+
+    assert Nock.nock(uend, [9, 2, 10, [6, 1, 5 | 80], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(16)
+
     uend
   end
 
@@ -1193,8 +1457,15 @@ defmodule Examples.ENock do
   @spec uend1() :: Noun.t()
   def uend1() do
     uend = uend(1)
-    assert {:ok, 16} == Nock.nock(uend, [9, 2, 10, [6, 1, 3 | 80], 0 | 1])
-    assert {:ok, 80} == Nock.nock(uend, [9, 2, 10, [6, 1, 4 | 80], 0 | 1])
+
+    assert Nock.nock(uend, [9, 2, 10, [6, 1, 3 | 80], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(16)
+
+    assert Nock.nock(uend, [9, 2, 10, [6, 1, 4 | 80], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(80)
+
     uend
   end
 
@@ -1208,7 +1479,11 @@ defmodule Examples.ENock do
   @spec lsh0() :: Noun.t()
   def lsh0() do
     lsh = lsh(0)
-    assert {:ok, 24} == Nock.nock(lsh, [9, 2, 10, [6, 1, 2 | 6], 0 | 1])
+
+    assert Nock.nock(lsh, [9, 2, 10, [6, 1, 2 | 6], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(24)
+
     lsh
   end
 
@@ -1222,7 +1497,11 @@ defmodule Examples.ENock do
   @spec lsh1() :: Noun.t()
   def lsh1() do
     lsh = lsh(1)
-    assert {:ok, 96} == Nock.nock(lsh, [9, 2, 10, [6, 1, 2 | 6], 0 | 1])
+
+    assert Nock.nock(lsh, [9, 2, 10, [6, 1, 2 | 6], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(96)
+
     lsh
   end
 
@@ -1236,7 +1515,11 @@ defmodule Examples.ENock do
   @spec lsh2() :: Noun.t()
   def lsh2() do
     lsh = lsh(2)
-    assert {:ok, 1536} == Nock.nock(lsh, [9, 2, 10, [6, 1, 2 | 6], 0 | 1])
+
+    assert Nock.nock(lsh, [9, 2, 10, [6, 1, 2 | 6], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1536)
+
     lsh
   end
 
@@ -1250,7 +1533,11 @@ defmodule Examples.ENock do
   @spec rsh0() :: Noun.t()
   def rsh0() do
     rsh = rsh(0)
-    assert {:ok, 10} == Nock.nock(rsh, [9, 2, 10, [6, 1, 2 | 40], 0 | 1])
+
+    assert Nock.nock(rsh, [9, 2, 10, [6, 1, 2 | 40], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(10)
+
     rsh
   end
 
@@ -1264,7 +1551,11 @@ defmodule Examples.ENock do
   @spec rsh1() :: Noun.t()
   def rsh1() do
     rsh = rsh(1)
-    assert {:ok, 2} == Nock.nock(rsh, [9, 2, 10, [6, 1, 2 | 40], 0 | 1])
+
+    assert Nock.nock(rsh, [9, 2, 10, [6, 1, 2 | 40], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(2)
+
     rsh
   end
 
@@ -1278,7 +1569,11 @@ defmodule Examples.ENock do
   @spec rsh2() :: Noun.t()
   def rsh2() do
     rsh = rsh(2)
-    assert {:ok, 2} == Nock.nock(rsh, [9, 2, 10, [6, 1, 1 | 40], 0 | 1])
+
+    assert Nock.nock(rsh, [9, 2, 10, [6, 1, 1 | 40], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(2)
+
     rsh
   end
 
@@ -1339,7 +1634,7 @@ defmodule Examples.ENock do
     {:ok, og_with_27} = og_call(27)
 
     {:ok, res1} = raws_call(27, 10)
-    {:ok, ^res1} = raws_with_core_call(og_with_27, 10)
+    assert raws_with_core_call(og_with_27, 10) |> elem(1) |> Noun.equal?(res1)
   end
 
   @doc """
@@ -1373,7 +1668,7 @@ defmodule Examples.ENock do
     {:ok, [rbits2 | _core2]} = raws_with_core_call(rng2, 23)
 
     # check the bits do not collide
-    assert rbits1 != rbits2
+    refute Noun.equal?(rbits1, rbits2)
   end
 
   ####################################################################
@@ -1419,7 +1714,9 @@ defmodule Examples.ENock do
     sample = 1
     core = [factorial_arm(), sample | Nock.logics_core()]
 
-    assert Nock.nock(core, [9, 2, 10, [6, 1 | 7], 0 | 1]) == {:ok, 13},
+    assert Nock.nock(core, [9, 2, 10, [6, 1 | 7], 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(13),
            "calling into the standard library works well"
 
     core
@@ -1583,15 +1880,17 @@ defmodule Examples.ENock do
       )
     )
 
-    assert dec() ==
-             dec() |> Nock.Jam.jam() |> Nock.Cue.cue!()
+    assert Noun.equal?(
+             dec(),
+             dec() |> Noun.Jam.jam() |> Noun.Jam.cue!()
+           )
 
     :ok
   end
 
   @spec jam_and_cue(any(), any()) :: any()
   def jam_and_cue(jam_value, cue_value) do
-    assert Noun.equal(jam_value, Nock.Cue.cue!(cue_value))
-    assert cue_value == Nock.Jam.jam(Noun.normalize_noun(jam_value))
+    assert Noun.equal?(jam_value, Noun.Jam.cue!(cue_value))
+    assert cue_value == Noun.Jam.jam(Noun.normalize_noun(jam_value))
   end
 end

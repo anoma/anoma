@@ -16,8 +16,8 @@ defmodule Anoma.Client.Api.Servers.Nock do
            {pub_inpt, []} <- inputs_to_noun(request.public_inputs),
            {prv_inpt, []} <- inputs_to_noun(request.private_inputs),
            {:ok, result, io} <- Runner.prove(program, pub_inpt ++ prv_inpt),
-           io <- Enum.map(io, &Nock.Jam.jam/1),
-           jammed <- Nock.Jam.jam(result) do
+           io <- Enum.map(io, &Noun.Jam.jam/1),
+           jammed <- Noun.Jam.jam(result) do
         {:ok, jammed, io}
       else
         {_, invalid_inputs} when is_list(invalid_inputs) ->
@@ -51,8 +51,8 @@ defmodule Anoma.Client.Api.Servers.Nock do
       with {:ok, program} <- program_to_noun(request.program),
            {inputs, []} <- inputs_to_noun(request.inputs),
            {:ok, result, io} <- Runner.prove(program, inputs),
-           io <- Enum.map(io, &Nock.Jam.jam/1),
-           jammed <- Nock.Jam.jam(result) do
+           io <- Enum.map(io, &Noun.Jam.jam/1),
+           jammed <- Noun.Jam.jam(result) do
         {:ok, jammed, io}
       else
         {_, invalid_inputs} when is_list(invalid_inputs) ->
@@ -102,7 +102,7 @@ defmodule Anoma.Client.Api.Servers.Nock do
   end
 
   defp program_to_noun({:jammed_program, program}) do
-    case Nock.Cue.cue(program) do
+    case Noun.Jam.cue(program) do
       {:ok, noun} ->
         {:ok, noun}
 
@@ -140,7 +140,7 @@ defmodule Anoma.Client.Api.Servers.Nock do
   @spec input_to_noun(Input.t()) ::
           {:ok, Noun.t()} | {:error, :invalid_input, any()}
   defp input_to_noun(%{input: {:jammed, input}}) do
-    case Nock.Cue.cue(input) do
+    case Noun.Jam.cue(input) do
       {:ok, noun} ->
         {:ok, noun}
 

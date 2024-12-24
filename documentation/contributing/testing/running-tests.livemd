@@ -23,6 +23,7 @@
    2. [Dumping](./../../hoon/dumping.livemd)
    3. [Setting Up](./../../hoon/setting-up.livemd)
 5. [Analysis](./../../analysis.livemd)
+6. [Jam](./../../jam.livemd)
 
 ## Intent
 
@@ -36,7 +37,7 @@ Namely, this document covers running tests inside `IEX` and being able to do so 
 
 ## Setting up IEX
 
-To Run tests within IEx. One simply calls `Mix.Tasks.Test.run/1` within their IEX session.
+To Run tests within IEx. One simply calls `&Mix.Tasks.Test.run/1` within their IEX session.
 
 However attempting to do this by default will result in the following error:
 
