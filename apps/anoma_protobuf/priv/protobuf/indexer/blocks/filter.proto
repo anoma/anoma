@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Indexer.Blocks.Filtered;
+
+import "node_info.proto";
+
+message Request {
+  NodeInfo node_info = 1;
+  repeated Filter filters = 2;
+}
+
+message Response { repeated bytes resources = 1; }
+
+message Filter {
+  oneof filter {
+    bytes owner = 1;
+    bytes kind = 2;
+  }
+}
