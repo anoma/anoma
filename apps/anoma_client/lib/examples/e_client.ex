@@ -24,7 +24,9 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.NockService
   alias Anoma.Protobuf.NodeInfo
   alias Anoma.Node.Examples.EIndexer
+  alias Anoma.Node.Utility.Indexer
   alias Examples.ETransparent.ETransaction
+  alias Anoma.TransparentResource.Resource
   alias Noun.Nounable
 
   import ExUnit.Assertions
@@ -176,8 +178,11 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_nullifiers(EConnection.t()) :: EConnection.t()
   def list_nullifiers(conn \\ setup()) do
-    # Create some nullifiers using another example
+    # Create a nullifier in the indexer
     EIndexer.indexer_reads_nullifier(conn.client.node.node_id)
+
+    # expected nullifier
+    expected_nullifier = Resource.nullifier(%Resource{})
 
     # request the nullifiers from the client
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
@@ -186,7 +191,7 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, response} =
       IndexerService.Stub.list_nullifiers(conn.channel, request)
 
-    assert response.nullifiers == [Base.decode64!("TkZfWbFpHGem")]
+    assert response.nullifiers == [expected_nullifier]
 
     conn
   end
@@ -199,17 +204,20 @@ defmodule Anoma.Client.Examples.EClient do
     # Create an unrevealed commit using another example
     EIndexer.indexer_reads_unrevealed(conn.client.node.node_id)
 
+    # expected commits
+    expected_commits =
+      conn.client.node.node_id |> Indexer.get(:unrevealed) |> Enum.to_list()
+
+    # create the request to obtain the commits
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %UnrevealedCommits.Request{node_info: node_id}
 
     {:ok, response} =
       IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
 
-    assert response.commits == [
-             Base.decode64!(
-               "Q01fWbFpHGcGQIDw26exq+1uh4FWk1dVWKA4S6f4ZFD41XiHbQMHA2RIUAE="
-             )
-           ]
+    # assert the right commits are returned
+    assert response.commits ==
+             expected_commits
 
     conn
   end
@@ -222,17 +230,19 @@ defmodule Anoma.Client.Examples.EClient do
     # Create an unrevealed commit using another example
     EIndexer.indexer_reads_unrevealed(conn.client.node.node_id)
 
+    # expected unspent resources
+    expected_unspent_resources =
+      Indexer.get(conn.client.node.node_id, :resources)
+      |> Enum.map(&Noun.Jam.jam/1)
+
+    # create the request to obtain the unspent resources
     node_id = %NodeInfo{node_id: conn.client.node.node_id}
     request = %UnspentResources.Request{node_info: node_id}
 
     {:ok, reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
 
-    assert reply.unspent_resources == [
-             <<89, 177, 105, 28, 103, 6, 64, 128, 240, 219, 167, 177, 171,
-               237, 110, 135, 129, 86, 147, 87, 85, 88, 160, 56, 75, 167, 248,
-               100, 80, 248, 213, 120, 135, 109, 3, 7, 3, 100, 72, 80, 1>>
-           ]
+    assert reply.unspent_resources == expected_unspent_resources
 
     conn
   end
