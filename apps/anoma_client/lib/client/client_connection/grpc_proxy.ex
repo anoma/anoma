@@ -18,6 +18,7 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   alias Anoma.Protobuf.IntentsService
   alias Anoma.Protobuf.Mempool.AddTransaction
   alias Anoma.Protobuf.MempoolService
+  alias Anoma.Protobuf.Mempool.Dump
   alias Anoma.Protobuf.NodeInfo
   require Logger
 
@@ -126,6 +127,11 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, {:filter, filters})
   end
 
+  @spec dump_mempool() :: {:ok, Dump.Response.t()}
+  def dump_mempool() do
+    GenServer.call(__MODULE__, :dump_mempool)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -228,6 +234,17 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
     resources = BlockService.Stub.filter(state.channel, request)
     {:reply, resources, state}
+  end
+
+  def handle_call(:dump_mempool, _from, state) do
+    node_info = %NodeInfo{node_id: state.node_id}
+
+    request = %Dump.Request{
+      node_info: node_info
+    }
+
+    jammed_tx_candidates = MempoolService.Stub.dump(state.channel, request)
+    {:reply, jammed_tx_candidates, state}
   end
 
   @impl true
