@@ -9,6 +9,7 @@ import "intents/list_intents.proto";
 import "intents/add_intent.proto";
 import "indexer/nullifiers.proto";
 import "indexer/unrevealed_commits.proto";
+import "indexer/commits.proto";
 import "indexer/unspent_resources.proto";
 import "mempool/add_transaction.proto";
 
@@ -34,6 +35,9 @@ service IndexerService {
 
   rpc ListUnrevealedCommits(Anoma.Protobuf.Indexer.UnrevealedCommits.Request)
       returns (Anoma.Protobuf.Indexer.UnrevealedCommits.Response) {}
+
+  rpc ListCommits(Anoma.Protobuf.Indexer.Commits.Request)
+      returns (Anoma.Protobuf.Indexer.Commits.Response) {}
 
   rpc ListUnspentResources(Anoma.Protobuf.Indexer.UnspentResources.Request)
       returns (Anoma.Protobuf.Indexer.UnspentResources.Response) {}

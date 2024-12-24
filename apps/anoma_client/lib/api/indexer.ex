@@ -2,6 +2,7 @@ defmodule Anoma.Client.Api.Servers.Indexer do
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
+  alias Anoma.Protobuf.Indexer.Commits
   alias Anoma.Protobuf.Indexer.UnspentResources
   alias GRPC.Server.Stream
 
@@ -18,6 +19,12 @@ defmodule Anoma.Client.Api.Servers.Indexer do
           UnrevealedCommits.Response.t()
   def list_unrevealed_commits(_request, _stream) do
     {:ok, commits} = GRPCProxy.list_unrevealed_commits()
+    commits
+  end
+
+  @spec list_commits(Commits.Request.t(), Stream.t()) :: Commits.Response.t()
+  def list_commits(_request, _stream) do
+    {:ok, commits} = GRPCProxy.list_commits()
     commits
   end
 
