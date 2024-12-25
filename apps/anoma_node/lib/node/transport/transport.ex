@@ -45,7 +45,7 @@ defmodule Anoma.Node.Transport do
   @spec start_tcp_client(String.t(), {hostname, port_number}) ::
           {:ok, pid, port_number} | {:error, term}
   def start_tcp_client(node_id, {host, port}) do
-    # attempt to conenct to the remote node
+    # attempt to connect to the remote node
     socket_opts = [
       :binary,
       active: false,
