@@ -1,7 +1,7 @@
 # AnomaNode
 
 I am the Anoma Node application. I provide the main functionality of the
-Anoma protocol. In particular, I instantiate all the Engine functionaly and
+Anoma protocol. In particular, I instantiate all the Engine functionally and
 state-change processing of Anoma.
 
 ## Installation
