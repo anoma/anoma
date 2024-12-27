@@ -602,6 +602,15 @@ defmodule Nock.Jets do
     end
   end
 
+  @spec nmug(Noun.t()) :: :error | {:ok, Noun.t()}
+  def nmug(core) do
+    with {:ok, a} <- sample(core) do
+      {:ok, Noun.mug(a)}
+    else
+      _ -> :error
+    end
+  end
+
   defp a_signed_integer(x), do: Noun.atom_binary_to_signed_integer(x)
 
   @spec kind(Noun.t()) :: :error | {:ok, Noun.t()}
