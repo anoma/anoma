@@ -46,7 +46,7 @@ defmodule Anoma.Client.Examples.EProve do
   def prove_squared_small() do
     # jammed base64 encoded square function that takes in one parameter
     {:ok, program} =
-      "BcGCZJgJ7v9BMmQQLewS4uPxRKY="
+      square_endpoint_call()
       |> Base.decode64!()
       |> Noun.Jam.cue()
 
@@ -120,5 +120,15 @@ defmodule Anoma.Client.Examples.EProve do
            ]
 
     {:ok, result, stdio}
+  end
+
+  @spec square_endpoint_call() :: binary()
+  defp square_endpoint_call() do
+    layer_depth = (Nock.Lib.stdlib_layers() + 2) |> Noun.index_to_offset()
+
+    "[[8 [9 4 0 #{layer_depth}] 9 2 10 [6 [0 14] 0 14] 0 2] 0 0]"
+    |> Noun.Format.parse_always()
+    |> Noun.Jam.jam()
+    |> Base.encode64()
   end
 end
