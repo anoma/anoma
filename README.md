@@ -53,7 +53,6 @@ To compile a working Anoma Node the following dependencies are required:
     * Install [MacPorts](https://www.macports.org/install.php) (or equivalent package manager)
 2. Windows Development Environment:
     * Install [Build Tools for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Workload: Visual C++ build tools)
-    * Install [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
 3. Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (Windows and Linux only)
 4. Install CMake:
     * Linux and Mac OS X: use package manager
