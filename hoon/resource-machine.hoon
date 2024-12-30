@@ -52,13 +52,13 @@
     commitments=~
     nullifiers=~
     proofs=~
-    app-data=**
+    app-data=~
   ==
   $:
     commitments=(list commitment)  ::  commitment set
     nullifiers=(list nullifier)    ::  nullifier set
     proofs=(list proof)            ::  proof set
-    app-data=*                     ::  arbitrary data
+    app-data=(set [@ [* ?]])       ::  hash-addressed data with storage criteria
   ==
 +$  cm-root  @                     ::  commitment set root
 +$  resource-kind  @
