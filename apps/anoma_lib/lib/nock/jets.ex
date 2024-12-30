@@ -613,6 +613,38 @@ defmodule Nock.Jets do
 
   defp a_signed_integer(x), do: Noun.atom_binary_to_signed_integer(x)
 
+  @spec dor(Noun.t()) :: :error | {:ok, Noun.t()}
+  def dor(core) do
+    with {:ok, [a | b]} <- sample(core) do
+      res = Noun.Order.dor(a, b) |> Noun.bool_to_noun()
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec gor(Noun.t()) :: :error | {:ok, Noun.t()}
+  def gor(core) do
+    with {:ok, [a | b]} <- sample(core) do
+      res = Noun.Order.gor(a, b) |> Noun.bool_to_noun()
+
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec mor(Noun.t()) :: :error | {:ok, Noun.t()}
+  def mor(core) do
+    with {:ok, [a | b]} <- sample(core) do
+      res = Noun.Order.mor(a, b) |> Noun.bool_to_noun()
+
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
   @spec kind(Noun.t()) :: :error | {:ok, Noun.t()}
   def kind(core) do
     with {:ok, a} when is_noun_cell(a) <- sample(core),
