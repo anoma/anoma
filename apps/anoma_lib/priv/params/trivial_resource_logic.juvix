@@ -5,6 +5,10 @@ import Stdlib.Cairo.Ec as Ec;
 import Stdlib.Cairo.Poseidon open;
 import Stdlib.Cairo.Pedersen open;
 
+-- PRF_EXPAND_PERSONALIZATION_FELT is from cairo_prover/src/lib.rs/PRF_EXPAND_PERSONALIZATION_FELT
+PRF_EXPAND_PERSONALIZATION_FELT : Field :=
+  89564067232354163924078705540990330212;
+
 type Resource :=
   mkResource@{
     logic : Field;
@@ -53,6 +57,54 @@ check_merkle (current_root : Field) : Pair Field Bool -> Field
 check_merkle_path (cur : Field) : List (Pair Field Bool) -> Field
   | [] := cur
   | (p :: ps) := check_merkle_path (check_merkle cur p) ps;
+
+resource_commitment (resource : Resource) : Field :=
+  let
+    psi :=
+      poseidonHashList
+        [
+          PRF_EXPAND_PERSONALIZATION_FELT;
+          0;
+          Resource.rseed resource;
+          Resource.nonce resource;
+        ];
+    rcm :=
+      poseidonHashList
+        [
+          PRF_EXPAND_PERSONALIZATION_FELT;
+          1;
+          Resource.rseed resource;
+          Resource.nonce resource;
+        ];
+    eph_field : Field :=
+      if
+        | Resource.eph resource := 1
+        | else := 0;
+  in poseidonHashList
+    [
+      Resource.logic resource;
+      Resource.label resource;
+      Resource.data resource;
+      Resource.npk resource;
+      Resource.nonce resource;
+      psi;
+      Resource.quantity resource;
+      eph_field;
+      rcm;
+    ];
+
+resource_nullifier
+  (nf_key : Field) (resource : Resource) (cm : Field) : Field :=
+  let
+    psi :=
+      poseidonHashList
+        [
+          PRF_EXPAND_PERSONALIZATION_FELT;
+          0;
+          Resource.rseed resource;
+          Resource.nonce resource;
+        ];
+  in poseidonHashList [nf_key; Resource.nonce resource; psi; cm];
 
 type EncryptionResult :=
   mkEncryptionResult@{
@@ -175,73 +227,33 @@ main
   : LogicResult :=
 
   -- Check the self_resource resource commitment:
+  -- TODO: add a explicit is_input_or_output flag to the resource
   let
-    generated_npk : Field := poseidonHash2 resource_nf_key 0;
-
     is_output_resource :=
       case merkle_path of
         -- merkle_path can not be empty
         | nil := true
         | (_, is_left) :: t := is_left;
 
-    -- Actual npk
-    actual_npk :=
+    -- Generate the commitment of self_resource resource
+    resource_cm := resource_commitment self_resource;
+
+    -- Generate the nullifier of self_resource resource
+    resource_nullifier :=
+      resource_nullifier resource_nf_key self_resource resource_cm;
+
+    self_resource_id :=
       if
-        | is_output_resource := Resource.npk self_resource
-        | else := generated_npk;
+        | is_output_resource := resource_cm
+        | else := resource_nullifier;
 
-    -- check outside of circuit: assert resource_npk == (Resource.npk self_resource)
+    root := check_merkle_path self_resource_id merkle_path;
 
-    -- PRF_EXPAND_PERSONALIZATION_FELT is from cairo_prover/src/lib.rs/PRF_EXPAND_PERSONALIZATION_FELT
-    PRF_EXPAND_PERSONALIZATION_FELT := 89564067232354163924078705540990330212;
-    resource_psi :=
-      poseidonHashList
-        [
-          PRF_EXPAND_PERSONALIZATION_FELT;
-          0;
-          Resource.rseed self_resource;
-          Resource.nonce self_resource;
-        ];
-    resource_rcm :=
-      poseidonHashList
-        [
-          PRF_EXPAND_PERSONALIZATION_FELT;
-          1;
-          Resource.rseed self_resource;
-          Resource.nonce self_resource;
-        ];
-
+    -- Encryption
     resource_eph_field : Field :=
       if
         | Resource.eph self_resource := 1
         | else := 0;
-    resource_cm :=
-      poseidonHashList
-        [
-          Resource.logic self_resource;
-          Resource.label self_resource;
-          Resource.data self_resource;
-          actual_npk;
-          Resource.nonce self_resource;
-          resource_psi;
-          Resource.quantity self_resource;
-          resource_eph_field;
-          resource_rcm;
-        ];
-
-    -- Generate the nullifier of self_resource resource
-    resource_nullifier_ :=
-      poseidonHashList
-        [resource_nf_key; Resource.nonce self_resource; resource_psi; resource_cm];
-
-    self_resource_id_ :=
-      if
-        | is_output_resource := resource_cm
-        | else := resource_nullifier_;
-
-    root_ := check_merkle_path self_resource_id_ merkle_path;
-
-    -- Encryption
     messages :=
       [
         Resource.logic self_resource;
@@ -259,8 +271,8 @@ main
     cihper := encryption messages Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
   -- cihper_ := encryption [Resource.logic self_resource; Resource.label self_resource; Resource.quantity self_resource; Resource.data self_resource; Resource.eph self_resource; Resource.nonce self_resource; Resource.npk self_resource; Resource.rseed self_resource; 0; 0 ] Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
   in mkResult@{
-       self_resource_id := self_resource_id_;
-       root := root_;
+       self_resource_id := self_resource_id;
+       root := root;
        cipher_text_elem0 := EncryptionResult.cipher_text_elem0 cihper;
        cipher_text_elem1 := EncryptionResult.cipher_text_elem1 cihper;
        cipher_text_elem2 := EncryptionResult.cipher_text_elem2 cihper;

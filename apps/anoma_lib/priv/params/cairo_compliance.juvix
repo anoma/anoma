@@ -5,6 +5,10 @@ import Stdlib.Cairo.Ec as Ec;
 import Stdlib.Cairo.Poseidon open;
 import Stdlib.Cairo.Pedersen open;
 
+-- PRF_EXPAND_PERSONALIZATION_FELT is from cairo_prover/src/lib.rs/PRF_EXPAND_PERSONALIZATION_FELT
+PRF_EXPAND_PERSONALIZATION_FELT : Field :=
+  89564067232354163924078705540990330212;
+
 type Resource :=
   mkResource@{
     logic : Field;
@@ -35,8 +39,6 @@ type ComplianceResult :=
     output_logic : Field;
   };
 
-bool (x : Field) : Bool := x * (x - 1) == 0;
-
 check_merkle (current_root : Field) : Pair Field Bool -> Field
   | (node, is_left) :=
     let
@@ -52,6 +54,69 @@ check_merkle_path (cur : Field) : List (Pair Field Bool) -> Field
   | [] := cur
   | (p :: ps) := check_merkle_path (check_merkle cur p) ps;
 
+resource_commitment (resource : Resource) : Field :=
+  let
+    psi :=
+      poseidonHashList
+        [
+          PRF_EXPAND_PERSONALIZATION_FELT;
+          0;
+          Resource.rseed resource;
+          Resource.nonce resource;
+        ];
+    rcm :=
+      poseidonHashList
+        [
+          PRF_EXPAND_PERSONALIZATION_FELT;
+          1;
+          Resource.rseed resource;
+          Resource.nonce resource;
+        ];
+    eph_field : Field :=
+      if
+        | Resource.eph resource := 1
+        | else := 0;
+  in poseidonHashList
+    [
+      Resource.logic resource;
+      Resource.label resource;
+      Resource.data resource;
+      Resource.npk resource;
+      Resource.nonce resource;
+      psi;
+      Resource.quantity resource;
+      eph_field;
+      rcm;
+    ];
+
+resource_nullifier
+  (nf_key : Field) (resource : Resource) (cm : Field) : Field :=
+  let
+    psi :=
+      poseidonHashList
+        [
+          PRF_EXPAND_PERSONALIZATION_FELT;
+          0;
+          Resource.rseed resource;
+          Resource.nonce resource;
+        ];
+    input_npk : Field := poseidonHash2 nf_key 0;
+  in assert (Resource.npk resource == input_npk)
+    >-> poseidonHashList [nf_key; Resource.nonce resource; psi; cm];
+
+delta_commitment
+  (input : Resource) (output : Resource) (rcv : Field) : Ec.Point :=
+  let
+    blind_base := Ec.mkPoint Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y;
+    input_kind :=
+      pedersenHashToCurve (Resource.logic input) (Resource.label input);
+    output_kind :=
+      pedersenHashToCurve (Resource.logic output) (Resource.label output);
+    d1 := Ec.mul (Resource.quantity input) input_kind;
+    d2 := Ec.mul (Resource.quantity output) output_kind;
+    d3 := Ec.mul rcv blind_base;
+  in Ec.add (Ec.sub d1 d2) d3;
+
 main
   (input output : Resource)
   (input_nf_key : Field)
@@ -62,113 +127,35 @@ main
 
   -- Check the input resource commitment:
   let
-    input_npk : Field := poseidonHash2 input_nf_key 0;
-
-    -- check outside of circuit: assert input_npk == (Resource.npk input)
-
-    -- PRF_EXPAND_PERSONALIZATION_FELT is from cairo_prover/src/lib.rs/PRF_EXPAND_PERSONALIZATION_FELT
-    PRF_EXPAND_PERSONALIZATION_FELT := 89564067232354163924078705540990330212;
-    input_psi :=
-      poseidonHashList
-        [
-          PRF_EXPAND_PERSONALIZATION_FELT;
-          0;
-          Resource.rseed input;
-          Resource.nonce input;
-        ];
-    input_rcm :=
-      poseidonHashList
-        [
-          PRF_EXPAND_PERSONALIZATION_FELT;
-          1;
-          Resource.rseed input;
-          Resource.nonce input;
-        ];
-
-    input_eph_field : Field :=
-      if
-        | Resource.eph input := 1
-        | else := 0;
-    input_cm :=
-      poseidonHashList
-        [
-          Resource.logic input;
-          Resource.label input;
-          Resource.data input;
-          input_npk;
-          Resource.nonce input;
-          input_psi;
-          Resource.quantity input;
-          input_eph_field;
-          input_rcm;
-        ];
+    -- Generate the commitment of input resource
+    input_cm := resource_commitment input;
 
     -- Generate the nullifier of input resource
-    input_nullifier_ :=
-      poseidonHashList
-        [input_nf_key; Resource.nonce input; input_psi; input_cm];
+    input_nullifier := resource_nullifier input_nf_key input input_cm;
 
-    -- Check the output resource commitment
-    output_psi :=
-      poseidonHashList
-        [
-          PRF_EXPAND_PERSONALIZATION_FELT;
-          0;
-          Resource.rseed output;
-          input_nullifier_;
-        ];
-    output_rcm :=
-      poseidonHashList
-        [
-          PRF_EXPAND_PERSONALIZATION_FELT;
-          1;
-          Resource.rseed output;
-          input_nullifier_;
-        ];
-    output_eph_field : Field :=
-      if
-        | Resource.eph output := 1
-        | else := 0;
-    output_cm_ :=
-      poseidonHashList
-        [
-          Resource.logic output;
-          Resource.label output;
-          Resource.data output;
-          Resource.npk output;
-          input_nullifier_;
-          output_psi;
-          Resource.quantity output;
-          output_eph_field;
-          output_rcm;
-        ];
+    -- Generate the commitment of output resource
+    output_cm := resource_commitment output;
 
-    root_ :=
+    -- Check the Merkle path
+    root :=
       if
         | Resource.eph input := eph_root
         | else := check_merkle_path input_cm merkle_path;
 
     -- Compute the delta commitment
-    blind_base := Ec.mkPoint Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y;
-    input_kind :=
-      pedersenHashToCurve (Resource.logic input) (Resource.label input);
-    output_kind :=
-      pedersenHashToCurve (Resource.logic output) (Resource.label output);
-    d1 := Ec.mul (Resource.quantity input) input_kind;
-    d2 := Ec.mul (Resource.quantity output) output_kind;
-    d3 := Ec.mul rcv blind_base;
-    delta := Ec.add (Ec.sub d1 d2) d3;
+    delta := delta_commitment input output rcv;
+
   in mkResult@{
        -- The nullifier of input resource
-       input_nullifier := input_nullifier_;
+       input_nullifier := input_nullifier;
        -- The commitment to the output resource
-       output_cm := output_cm_;
+       output_cm := output_cm;
        -- The root of the resource commitment Merkle tree
-       root := root_;
+       root := root;
        -- Resource delta is used to reason about total quantities of different kinds of resources
        delta_x := Ec.Point.x delta;
        delta_y := Ec.Point.y delta;
-       -- TODO: add resource logic commitments
+       -- TODO: compute resource logic commitments instead of using the input/output logic fields
        -- input_logic_commitment:
        -- output_logic_commitment:
        input_logic := Resource.logic input;
