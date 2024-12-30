@@ -132,3 +132,75 @@ defimpl Nounable, for: Tuple do
   def from_noun_internal([]), do: [0]
   def from_noun_internal(x), do: [x]
 end
+
+defimpl Nounable, for: Set do
+  import Noun
+
+  @doc """
+  Given a set, I convert it to a Nock set, i.e. a mug-balanced tree.
+  """
+  @spec to_noun(MapSet.t()) :: Noun.t()
+  def to_noun(set) do
+    with [hd | tail] <- set |> Enum.to_list() do
+      for elem <- tail, reduce: [hd, 0 | 0] do
+        acc -> noun_set_put(acc, elem)
+      end
+    else
+      _ -> 0
+    end
+  end
+
+  def noun_set_put(zero, elem) when is_noun_zero(zero) do
+    [elem, 0 | 0]
+  end
+
+  def noun_set_put([node | [left | right]], elem) do
+    if Noun.Order.gor(elem, node) do
+      c = [node_c | [left_c | right_c]] = noun_set_put(left, elem)
+
+      if Noun.Order.mor(node, node_c) do
+        [node, c | right]
+      else
+        [node_c, left_c, node, right_c | right]
+      end
+    else
+      c = [node_c | [left_c | right_c]] = noun_set_put(right, elem)
+
+      if Noun.Order.mor(node, node_c) do
+        [node, left | c]
+      else
+        [node_c, [node, left | left_c] | right_c]
+      end
+    end
+  end
+
+  @behaviour Kind
+  @doc """
+  I convert the given Noun of set type in to a set of nouns.
+  """
+  @spec from_noun(Noun.t()) :: {:ok, MapSet.t()} | :error
+  def from_noun(tree) do
+    with {:ok, list} <- parse_tree_nodes(tree, []) do
+      {:ok, list |> MapSet.new()}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec parse_tree_nodes(Noun.t(), list(Noun.t())) ::
+          {:ok, list(Noun.t())} | :error
+  defp parse_tree_nodes([node | [left | right]], acc) do
+    with {:ok, left_acc} <- parse_tree_nodes(left, []),
+         {:ok, right_acc} <- parse_tree_nodes(right, []) do
+      full_acc = acc ++ left_acc ++ right_acc
+
+      {:ok, [node | full_acc]}
+    else
+      _ -> :error
+    end
+  end
+
+  defp parse_tree_nodes(_zero, acc) do
+    {:ok, acc}
+  end
+end
