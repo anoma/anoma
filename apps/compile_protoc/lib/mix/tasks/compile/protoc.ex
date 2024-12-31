@@ -22,6 +22,7 @@ defmodule Mix.Tasks.Compile.Protoc do
     if forced? or source_updated?(source_path, target_path) do
       Mix.shell().info("Compling protobuf files")
 
+      ensure_dir_exists(target_path)
       cleanup_targets(target_path)
 
       case run_compiler(compiler_opts) do
@@ -167,5 +168,9 @@ defmodule Mix.Tasks.Compile.Protoc do
 
   defp list_files(pattern) do
     Path.wildcard(pattern)
+  end
+
+  defp ensure_dir_exists(path) do
+    File.mkdir_p!(path)
   end
 end
