@@ -52,41 +52,6 @@ defimpl Nounable, for: Integer do
     do: raise(ArgumentError, message: "The value #{inspect(x)} is negative")
 end
 
-defimpl Nounable, for: Map do
-  # use nock map once it exists
-  def to_noun(map) do
-    for {k, v} <- map do
-      [Nounable.to_noun(k) | Nounable.to_noun(v)]
-    end ++ 0
-  end
-
-  # ditto here
-  @behaviour Kind
-  @doc """
-  I convert the given Noun into a map of nouns.
-
-  I do not recursively convert the structures in the list.
-  """
-
-  @spec from_noun(Noun.t()) :: {:ok, %{Noun.t() => Noun.t()}} | :error
-  def from_noun(noun) do
-    with {:ok, value} <- from_noun_int(noun) do
-      {:ok, Map.new(value)}
-    end
-  end
-
-  defp from_noun_int(0), do: {:ok, []}
-  defp from_noun_int([]), do: {:ok, []}
-
-  defp from_noun_int([[k | v] | t]) do
-    with {:ok, ts} <- from_noun_int(t) do
-      {:ok, [{k, v} | ts]}
-    end
-  end
-
-  defp from_noun_int(_), do: :error
-end
-
 defimpl Nounable, for: BitString do
   def to_noun(binary), do: binary
 end
@@ -202,5 +167,31 @@ defimpl Nounable, for: Set do
 
   defp parse_tree_nodes(_zero, acc) do
     {:ok, acc}
+  end
+end
+
+defimpl Nounable, for: Map do
+  # use nock map once it exists
+  def to_noun(map) do
+    for {k, v} <- map do
+      [Nounable.to_noun(k) | Nounable.to_noun(v)]
+    end
+    |> MapSet.new()
+    |> Nounable.Set.to_noun()
+  end
+
+  # ditto here
+  @behaviour Kind
+  @doc """
+  I convert the given Noun into a map of nouns.
+
+  I do not recursively convert the structures in the list.
+  """
+
+  @spec from_noun(Noun.t()) :: {:ok, %{Noun.t() => Noun.t()}} | :error
+  def from_noun(noun) do
+    with {:ok, value} <- Nounable.Set.from_noun(noun) do
+      {:ok, Map.new(value, fn [x | y] -> {x, y} end)}
+    end
   end
 end
