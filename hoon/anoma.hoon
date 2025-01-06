@@ -1064,4 +1064,301 @@
   ?~(a 0 +((add $(a l.a) $(a r.a))))
   --
 --
+::  layer 11: maps
+~%  %eleven  +  ~
+|%
+++  need
+  ~/  %need
+  |*  a=(unit)
+  ?~  a  ~>(%mean.'need' !!)
+  u.a
+++  some
+  |*  a=*
+  [~ u=a]
+++  fall
+  |*  [a=(unit) b=*]
+  ?~(a b u.a)
+++  by
+  ~/  %by
+  =|  a=(tree (pair))  ::  (map)
+  =*  node  ?>(?=(^ a) n.a)
+  |@
+  ++  all
+  ~/  %all
+  |*  b=$-(* ?)
+  |-  ^-  ?
+  ?~  a
+    &
+  ?&((b q.n.a) $(a l.a) $(a r.a))
+  ++  any
+  ~/  %any
+  |*  b=$-(* ?)
+  |-  ^-  ?
+  ?~  a
+    |
+  ?|((b q.n.a) $(a l.a) $(a r.a))
+  ++  apt
+  =<  $
+  ~/  %apt
+  =|  [l=(unit) r=(unit)]
+  |.  ^-  ?
+  ?~  a   &
+  ?&  ?~(l & &((gor p.n.a u.l) !=(p.n.a u.l)))
+      ?~(r & &((gor u.r p.n.a) !=(u.r p.n.a)))
+      ?~  l.a   &
+      &((mor p.n.a p.n.l.a) !=(p.n.a p.n.l.a) $(a l.a, l `p.n.a))
+      ?~  r.a   &
+      &((mor p.n.a p.n.r.a) !=(p.n.a p.n.r.a) $(a r.a, r `p.n.a))
+  ==
+  ++  bif
+  ~/  %bif
+  |*  [b=* c=*]
+  ^+  [l=a r=a]
+  =<  +
+  |-  ^+  a
+  ?~  a
+    [[b c] ~ ~]
+  ?:  =(b p.n.a)
+    ?:  =(c q.n.a)
+      a
+    a(n [b c])
+  ?:  (gor b p.n.a)
+    =+  d=$(a l.a)
+    ?>  ?=(^ d)
+    d(r a(l r.d))
+  =+  d=$(a r.a)
+  ?>  ?=(^ d)
+  d(l a(r l.d))
+  ++  del
+  ~/  %del
+  |*  b=*
+  |-  ^+  a
+  ?~  a
+    ~
+  ?.  =(b p.n.a)
+    ?:  (gor b p.n.a)
+      a(l $(a l.a))
+    a(r $(a r.a))
+  |-  ^-  [$?(~ _a)]
+  ?~  l.a  r.a
+  ?~  r.a  l.a
+  ?:  (mor p.n.l.a p.n.r.a)
+    l.a(r $(l.a r.l.a))
+  r.a(l $(r.a l.r.a))
+  ++  dif
+  ~/  %dif
+  =+  b=a
+  |@
+  ++  $
+    |-  ^+  a
+    ?~  b
+      a
+    =+  c=(bif p.n.b q.n.b)
+    ?>  ?=(^ c)
+    =+  d=$(a l.c, b l.b)
+    =+  e=$(a r.c, b r.b)
+    |-  ^-  [$?(~ _a)]
+    ?~  d  e
+    ?~  e  d
+    ?:  (mor p.n.d p.n.e)
+      d(r $(d r.d))
+    e(l $(e l.e))
+  --
+  ++  dig
+  |=  b=*
+  =+  c=1
+  |-  ^-  (unit @)
+  ?~  a  ~
+  ?:  =(b p.n.a)  [~ u=(peg c 2)]
+  ?:  (gor b p.n.a)
+    $(a l.a, c (peg c 6))
+  $(a r.a, c (peg c 7))
+  ++  gas
+  ~/  %gas
+  |*  b=(list [p=* q=*])
+  =>  .(b `(list _?>(?=(^ a) n.a))`b)
+  |-  ^+  a
+  ?~  b
+    a
+  $(b t.b, a (put p.i.b q.i.b))
+  ++  get
+  ~/  %get
+  |*  b=*
+  =>  .(b `_?>(?=(^ a) p.n.a)`b)
+  |-  ^-  (unit _?>(?=(^ a) q.n.a))
+  ?~  a
+    ~
+  ?:  =(b p.n.a)
+    (some q.n.a)
+  ?:  (gor b p.n.a)
+    $(a l.a)
+  $(a r.a)
+  ++  got
+  |*  b=*
+  (need (get b))
+  ++  gut
+  |*  [b=* c=*]
+  (fall (get b) c)
+  ++  has
+  ~/  %has
+  |*  b=*
+  !=(~ (get b))
+  ++  int
+  ~/  %int
+  =+  b=a
+  |@
+  ++  $
+    |-  ^+  a
+    ?~  b
+      ~
+    ?~  a
+      ~
+    ?:  (mor p.n.a p.n.b)
+      ?:  =(p.n.b p.n.a)
+        b(l $(a l.a, b l.b), r $(a r.a, b r.b))
+      ?:  (gor p.n.b p.n.a)
+        %-  uni(a $(a l.a, r.b ~))  $(b r.b)
+      %-  uni(a $(a r.a, l.b ~))  $(b l.b)
+    ?:  =(p.n.a p.n.b)
+      b(l $(b l.b, a l.a), r $(b r.b, a r.a))
+    ?:  (gor p.n.a p.n.b)
+      %-  uni(a $(b l.b, r.a ~))  $(a r.a)
+    %-  uni(a $(b r.b, l.a ~))  $(a l.a)
+  --
+  ++  jab
+  ~/  %jab
+  |*  [key=_?>(?=(^ a) p.n.a) fun=$-(_?>(?=(^ a) q.n.a) _?>(?=(^ a) q.n.a))]
+  ^+  a
+  ::
+  ?~  a  !!
+  ::
+  ?:  =(key p.n.a)
+    a(q.n (fun q.n.a))
+  ::
+  ?:  (gor key p.n.a)
+    a(l $(a l.a))
+  ::
+  a(r $(a r.a))
+  ++  key
+  =<  $
+  ~/  %key
+  =+  b=`(set _?>(?=(^ a) p.n.a))`~
+  |.  ^+  b
+  ?~  a   b
+  $(a r.a, b $(a l.a, b (~(put in b) p.n.a)))
+  ++  mar
+  |*  [b=* c=(unit *)]
+  ?~  c
+    (del b)
+  (put b u.c)
+  ++  put
+  ~/  %put
+  |*  [b=* c=*]
+  |-  ^+  a
+  ?~  a
+    [[b c] ~ ~]
+  ?:  =(b p.n.a)
+    ?:  =(c q.n.a)
+      a
+    a(n [b c])
+  ?:  (gor b p.n.a)
+    =+  d=$(a l.a)
+    ?>  ?=(^ d)
+    ?:  (mor p.n.a p.n.d)
+      a(l d)
+    d(r a(l r.d))
+  =+  d=$(a r.a)
+  ?>  ?=(^ d)
+  ?:  (mor p.n.a p.n.d)
+    a(r d)
+  d(l a(r l.d))
+  ++  rep
+  ~/  %rep
+  |*  b=_=>(~ |=([* *] +<+))
+  |-
+  ?~  a  +<+.b
+  $(a r.a, +<+.b $(a l.a, +<+.b (b n.a +<+.b)))
+  ++  rib
+  |*  [b=* c=gate]
+  |-  ^+  [b a]
+  ?~  a  [b ~]
+  =+  d=(c n.a b)
+  =.  n.a  +.d
+  =+  e=$(a l.a, b -.d)
+  =+  f=$(a r.a, b -.e)
+  [-.f a(l +.e, r +.f)]
+  ++  run
+  ~/  %run
+  |*  b=gate
+  |-
+  ?~  a  a
+  [n=[p=p.n.a q=(b q.n.a)] l=$(a l.a) r=$(a r.a)]
+  ++  tap
+  =<  $
+  ~/  %tap
+  =+  b=`(list _?>(?=(^ a) n.a))`~
+  |.  ^+  b
+  ?~  a
+    b
+  $(a r.a, b [n.a $(a l.a)])
+  ++  uni
+  ~/  %uni
+  =+  b=a
+  |@
+  ++  $
+    |-  ^+  a
+    ?~  b
+      a
+    ?~  a
+      b
+    ?:  =(p.n.b p.n.a)
+      b(l $(a l.a, b l.b), r $(a r.a, b r.b))
+    ?:  (mor p.n.a p.n.b)
+      ?:  (gor p.n.b p.n.a)
+        $(l.a $(a l.a, r.b ~), b r.b)
+      $(r.a $(a r.a, l.b ~), b l.b)
+    ?:  (gor p.n.a p.n.b)
+      $(l.b $(b l.b, r.a ~), a r.a)
+    $(r.b $(b r.b, l.a ~), a l.a)
+  --
+  ++  uno
+  =+  b=a
+  |@
+  ++  $
+    |=  meg=$-([_p:node _q:node _q:node] _q:node)
+    |-  ^+  a
+    ?~  b
+      a
+    ?~  a
+      b
+    ?:  =(p.n.b p.n.a)
+      :+  [p.n.a (meg p.n.a q.n.a q.n.b)]
+        $(b l.b, a l.a)
+      $(b r.b, a r.a)
+    ?:  (mor p.n.a p.n.b)
+      ?:  (gor p.n.b p.n.a)
+        $(l.a $(a l.a, r.b ~), b r.b)
+      $(r.a $(a r.a, l.b ~), b l.b)
+    ?:  (gor p.n.a p.n.b)
+      $(l.b $(b l.b, r.a ~), a r.a)
+    $(r.b $(b r.b, l.a ~), a l.a)
+  --
+  ++  urn
+  ~/  %urn
+  |*  b=$-([* *] *)
+  |-
+  ?~  a  ~
+  a(n n.a(q (b p.n.a q.n.a)), l $(a l.a), r $(a r.a))
+  ++  wyt
+  =<  $
+  ~%  %wyt  +  ~
+  |.  ^-  @
+  ?~(a 0 +((add $(a l.a) $(a r.a))))
+  ++  val
+  =+  b=`(list _?>(?=(^ a) q.n.a))`~
+  |-  ^+  b
+  ?~  a   b
+  $(a r.a, b [q.n.a $(a l.a)])
+  --
+--
 ==
