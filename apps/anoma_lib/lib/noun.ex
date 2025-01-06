@@ -354,4 +354,16 @@ defmodule Noun do
       _e -> :error
     end
   end
+
+  @doc """
+  I convert an Elixir boolean to a Nock one.
+  """
+  @spec bool_to_noun(bool) :: 1 | 0
+  def bool_to_noun(bool) do
+    if bool do
+      0
+    else
+      1
+    end
+  end
 end

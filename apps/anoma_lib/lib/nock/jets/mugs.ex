@@ -14,6 +14,7 @@ defmodule Nock.Jets.Mugs do
   @layer_6_context_mug Jets.calculate_mug_of_layer(6)
   @layer_7_context_mug Jets.calculate_mug_of_layer(7)
   @layer_8_context_mug Jets.calculate_mug_of_layer(8)
+  @layer_9_context_mug Jets.calculate_mug_of_layer(9)
   @layer_4_block_context_mug Jets.calculate_mug_of_param_layer(10, 4)
 
   # always the topmost layer
@@ -93,6 +94,14 @@ defmodule Nock.Jets.Mugs do
       {"syn", 7, @layer_8_context_mug, &Nock.Jets.syn/1, :enabled, 30},
     Jets.calculate_mug_of_core(191, 8) =>
       {"cmp", 7, @layer_8_context_mug, &Nock.Jets.cmp/1, :enabled, 30},
+    Jets.calculate_mug_of_core(189, 9) =>
+      {"mug", 7, @layer_9_context_mug, &Nock.Jets.nmug/1, :enabled, 50},
+    Jets.calculate_mug_of_core(765, 9) =>
+      {"dor", 7, @layer_9_context_mug, &Nock.Jets.dor/1, :enabled, 30},
+    Jets.calculate_mug_of_core(190, 9) =>
+      {"gor", 7, @layer_9_context_mug, &Nock.Jets.gor/1, :enabled, 30},
+    Jets.calculate_mug_of_core(10, 9) =>
+      {"mor", 7, @layer_9_context_mug, &Nock.Jets.mor/1, :enabled, 30},
     Jets.calculate_mug_of_core(1492, Nock.Lib.stdlib_layers()) =>
       {"kind", 7, @layer_rm_context_mug, &Nock.Jets.kind/1, :enabled, 100},
     Jets.calculate_mug_of_core(92, Nock.Lib.stdlib_layers()) =>

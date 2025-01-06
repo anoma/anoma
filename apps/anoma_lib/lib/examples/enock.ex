@@ -1203,6 +1203,204 @@ defmodule Examples.ENock do
   end
 
   @doc """
+  I represent the mug gate call.
+
+  Can be obtained by defining
+
+  =lmug =>  logics  |=   a=*  (mug a)
+
+  and computing
+
+  .*  lmug  [0 2]
+  """
+  @spec mug_arm() :: Noun.t()
+  def mug_arm() do
+    layer_depth = example_layer_depth(9)
+
+    "[8 [9 189 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  @doc """
+  I am the full mug gate with specified sample and logics context.
+  """
+  @spec mug_call(Noun.t()) :: Noun.t()
+  def mug_call(noun) do
+    sample = noun
+    [mug_arm(), sample | Nock.Lib.logics_core()]
+  end
+
+  @spec mug_test() :: bool()
+  def mug_test() do
+    assert 10000
+           |> mug_call()
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(795_713_195)
+
+    assert 10001
+           |> mug_call()
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(420_521_697)
+
+    assert 1
+           |> mug_call()
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1_901_865_568)
+
+    assert [1, 2, 3, 4, 5 | 0]
+           |> mug_call()
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1_565_443_491)
+  end
+
+  @doc """
+  I represent the dor gate call.
+
+  Can be obtained by defining
+
+  =ldor =>  logics  |=   [a=* b=*]  (dor a b)
+
+  and computing
+
+  .*  ldor  [0 2]
+  """
+  @spec dor_arm() :: Noun.t()
+  def dor_arm() do
+    layer_depth = example_layer_depth(9)
+
+    "[8 [9 765 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  @doc """
+  I am the full dor gate with specified sample and logics context.
+  """
+  @spec dor_call(Noun.t(), Noun.t()) :: Noun.t()
+  def dor_call(a, b) do
+    sample = [a | b]
+    [dor_arm(), sample | Nock.Lib.logics_core()]
+  end
+
+  @spec dor_test() :: bool()
+  def dor_test() do
+    assert dor_call(1, 2)
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
+
+    assert dor_call(2, 1)
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1)
+
+    assert dor_call([1, 2, 3], [1, 2, 4])
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
+
+    assert dor_call([1, 2, 4], [1, 2, 3])
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1)
+  end
+
+  @doc """
+  I represent the gor gate call.
+
+  Can be obtained by defining
+
+  =lgor =>  logics  |=   [a=* b=*]  (gor a b)
+
+  and computing
+
+  .*  lgor  [0 2]
+  """
+  @spec gor_arm() :: Noun.t()
+  def gor_arm() do
+    layer_depth = example_layer_depth(9)
+
+    "[8 [9 190 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  @doc """
+  I am the full gor gate with specified sample and logics context.
+  """
+  @spec gor_call(Noun.t(), Noun.t()) :: Noun.t()
+  def gor_call(a, b) do
+    sample = [a | b]
+    [gor_arm(), sample | Nock.Lib.logics_core()]
+  end
+
+  @spec gor_test() :: bool()
+  def gor_test() do
+    assert gor_call(100, 99)
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
+
+    assert gor_call(99, 100)
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1)
+
+    assert gor_call("foo", "bar")
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1)
+  end
+
+  @doc """
+  I represent the mor gate call.
+
+  Can be obtained by defining
+
+  =lmor =>  logics  |=   [a=* b=*]  (mor a b)
+
+  and computing
+
+  .*  lmor  [0 2]
+  """
+  @spec mor_arm() :: Noun.t()
+  def mor_arm() do
+    layer_depth = example_layer_depth(9)
+
+    "[8 [9 10 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  @doc """
+  I am the full mor gate with specified sample and logics context.
+  """
+  @spec mor_call(Noun.t(), Noun.t()) :: Noun.t()
+  def mor_call(a, b) do
+    sample = [a | b]
+    [mor_arm(), sample | Nock.Lib.logics_core()]
+  end
+
+  @spec mor_test() :: bool()
+  def mor_test() do
+    assert mor_call("g", "f")
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(0)
+
+    assert mor_call("a", "z")
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1)
+
+    assert mor_call(43326, 41106)
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1)
+  end
+
+  @doc """
   I represent the lte gate call as a 2-argument gate.
 
   Can be obtained by defining
