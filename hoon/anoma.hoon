@@ -853,6 +853,10 @@
   |$  [item]
   $|  (tree item)
   |=(a=(tree) ?:(=(~ a) & ~(apt in a)))
+++  silt
+  |*  a=(list)
+  =+  b=*(tree _?>(?=(^ a) i.a))
+  (~(gas in b) a)
 ++  in
   =|  a=(tree)
   |@
@@ -1043,6 +1047,15 @@
     ?:  (gor n.a n.b)
       $(l.b $(b l.b, r.a ~), a r.a)
     $(r.b $(b r.b, l.a ~), a l.a)
+  --
+  ++  duni
+  ~/  %duni
+  =+  b=a
+  |@
+  ++  $
+    ?~  (~(int in a) b)
+      (~(uni in a) b)
+    !!
   --
   ++  wyt
   =<  $
