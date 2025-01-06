@@ -6,6 +6,7 @@ defmodule Noun do
   """
 
   require Integer
+  import Bitwise
 
   @type noun_atom() :: non_neg_integer() | binary() | []
   @type noun_cell() :: nonempty_improper_list(t(), t())
@@ -160,10 +161,36 @@ defmodule Noun do
   end
 
   @spec mug(t()) :: non_neg_integer()
-  def mug(noun) do
-    :erlang.term_to_binary(abnormalize_noun(noun))
-    # seed: %mug
-    |> Murmur.hash_x86_32(6_780_269)
+  def mug(atom) when is_noun_atom(atom) do
+    mum(0xCAFEBABE, 0x7FFF, atom)
+  end
+
+  def mug(cell = [hd | tl]) when is_noun_cell(cell) do
+    front = mug(hd) |> Noun.atom_integer_to_binary(4)
+    back = mug(tl) |> Noun.atom_integer_to_binary()
+    key = front <> back
+    mum(0xDEADBEEF, 0xFFFE, key)
+  end
+
+  def mum(seed, fal, key) do
+    key = Noun.atom_integer_to_binary(key)
+    seed = Noun.atom_binary_to_integer(seed)
+    mum_rec(0, seed, fal, key)
+  end
+
+  def mum_rec(i, seed, fal, key) do
+    if i == 8 do
+      fal
+    else
+      haz = Murmur.hash_x86_32(key, seed)
+      ham = haz >>> 31 |> bxor(haz &&& (1 <<< 31) - 1)
+
+      unless ham == 0 do
+        ham
+      else
+        mum_rec(i + 1, seed + 1, fal, key)
+      end
+    end
   end
 
   @spec list_nock_to_erlang(0) :: []
