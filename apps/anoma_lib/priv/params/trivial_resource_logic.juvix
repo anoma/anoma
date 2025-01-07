@@ -17,7 +17,7 @@ type Resource :=
     data : Field;
     eph : Bool;
     nonce : Field;
-    npk : Field;
+    nk_commitment : Field;
     rseed : Field;
   };
 
@@ -85,7 +85,7 @@ resource_commitment (resource : Resource) : Field :=
       Resource.logic resource;
       Resource.label resource;
       Resource.data resource;
-      Resource.npk resource;
+      Resource.nk_commitment resource;
       Resource.nonce resource;
       psi;
       Resource.quantity resource;
@@ -262,14 +262,14 @@ main
         Resource.data self_resource;
         resource_eph_field;
         Resource.nonce self_resource;
-        Resource.npk self_resource;
+        Resource.nk_commitment self_resource;
         Resource.rseed self_resource;
         0;
         0;
       ];
 
     cihper := encryption messages Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
-  -- cihper_ := encryption [Resource.logic self_resource; Resource.label self_resource; Resource.quantity self_resource; Resource.data self_resource; Resource.eph self_resource; Resource.nonce self_resource; Resource.npk self_resource; Resource.rseed self_resource; 0; 0 ] Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
+  -- cihper_ := encryption [Resource.logic self_resource; Resource.label self_resource; Resource.quantity self_resource; Resource.data self_resource; Resource.eph self_resource; Resource.nonce self_resource; Resource.nk_commitment self_resource; Resource.rseed self_resource; 0; 0 ] Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
   in mkResult@{
        self_resource_id := self_resource_id;
        root := root;

@@ -17,7 +17,7 @@ type Resource :=
     data : Field;
     eph : Bool;
     nonce : Field;
-    npk : Field;
+    nk_commitment : Field;
     rseed : Field;
   };
 
@@ -81,7 +81,7 @@ resource_commitment (resource : Resource) : Field :=
       Resource.logic resource;
       Resource.label resource;
       Resource.data resource;
-      Resource.npk resource;
+      Resource.nk_commitment resource;
       Resource.nonce resource;
       psi;
       Resource.quantity resource;
@@ -100,8 +100,8 @@ resource_nullifier
           Resource.rseed resource;
           Resource.nonce resource;
         ];
-    input_npk : Field := poseidonHash2 nf_key 0;
-  in assert (Resource.npk resource == input_npk)
+    input_nk_commitment : Field := poseidonHash2 nf_key 0;
+  in assert (Resource.nk_commitment resource == input_nk_commitment)
     >-> poseidonHashList [nf_key; Resource.nonce resource; psi; cm];
 
 delta_commitment

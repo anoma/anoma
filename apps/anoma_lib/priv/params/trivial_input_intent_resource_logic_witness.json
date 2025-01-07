@@ -6,7 +6,7 @@
         "data" : "0x0",
         "eph" : true,
         "nonce" : "0x0",
-        "npk" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
+        "nk_commitment" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
         "rseed" : "0x0"
     },
     "resource_nf_key": "0x1",
