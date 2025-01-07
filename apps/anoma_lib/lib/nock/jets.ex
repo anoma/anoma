@@ -6,7 +6,7 @@ defmodule Nock.Jets do
   import Noun
   import Bitwise
   alias Anoma.Crypto.Sign
-  alias Anoma.TransparentResource.{Delta, Action}
+  alias Anoma.TransparentResource.{Delta, Action, Resource}
 
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
           non_neg_integer()
@@ -68,9 +68,9 @@ defmodule Nock.Jets do
   """
   @spec calculate_mug_of_layer(non_neg_integer()) :: non_neg_integer()
   def calculate_mug_of_layer(layer) do
-    context_axis = Integer.pow(2, Nock.stdlib_layers() - layer + 1) - 1
+    context_axis = layer_offset(layer)
 
-    with {:ok, context} <- Noun.axis(context_axis, Nock.rm_core()) do
+    with {:ok, context} <- Noun.axis(context_axis, Nock.Lib.rm_core()) do
       mug(context)
     end
   end
@@ -124,12 +124,12 @@ defmodule Nock.Jets do
         ) ::
           :error | {:ok, Noun.t()}
   def calculate_core_param(core_index, gate_index, parent_layer) do
-    Nock.nock(Nock.logics_core(), [
+    nock4k(Nock.Lib.rm_core(), [
       7,
       [
         9,
         core_index,
-        0 | Noun.index_to_offset(Nock.stdlib_layers() - parent_layer + 2)
+        0 | layer_offset(parent_layer)
       ],
       9,
       gate_index,
@@ -139,20 +139,21 @@ defmodule Nock.Jets do
 
   @spec calculate_core(non_neg_integer(), non_neg_integer()) ::
           :error | {:ok, Noun.t()}
-  defp calculate_core(index_in_core, parent_layer) do
-    Nock.nock(Nock.logics_core(), [
+  def calculate_core(index_in_core, layer) do
+    nock4k(Nock.Lib.rm_core(), [
       8,
-      # We drive `layers - parent + 2`, from how layers get pushed.
-      # Each layer pushes the previous one down by one. the + 2 is for:
-      # 0. layer 0 (I believe, Ι may be incorrect on this)
-      # 1. the logics_core
       [
         9,
         index_in_core,
-        0 | Noun.index_to_offset(Nock.stdlib_layers() - parent_layer + 2)
+        0 | layer_offset(layer)
       ],
       0 | 2
     ])
+  end
+
+  @spec layer_offset(non_neg_integer) :: non_neg_integer
+  defp layer_offset(layers) do
+    Noun.index_to_offset(Nock.Lib.stdlib_layers() - layers + 1)
   end
 
   # when this is called, we've already jet-matched axis 7.
@@ -483,7 +484,7 @@ defmodule Nock.Jets do
   def shax(core) do
     with {:ok, noun} when is_noun_atom(noun) <- sample(core),
          sample <- Noun.atom_integer_to_binary(noun) do
-      {:ok, :crypto.hash(:sha256, sample) |> an_integer()}
+      {:ok, :crypto.hash(:sha256, sample)}
     else
       _ -> :error
     end
@@ -603,6 +604,18 @@ defmodule Nock.Jets do
 
   defp a_signed_integer(x), do: Noun.atom_binary_to_signed_integer(x)
 
+  @spec kind(Noun.t()) :: :error | {:ok, Noun.t()}
+  def kind(core) do
+    with {:ok, a} when is_noun_cell(a) <- sample(core),
+         {:ok, resource} <- Resource.from_noun(a) do
+      res = Resource.kind(resource)
+      {:ok, res}
+    else
+      _ ->
+        :error
+    end
+  end
+
   @spec delta_add(Noun.t()) :: :error | {:ok, Noun.t()}
   def delta_add(core) do
     with {:ok, [a | b]} <- sample(core),
@@ -668,4 +681,132 @@ defmodule Nock.Jets do
   defp compare(x, y) when x == y, do: 0
   defp compare(x, y) when x < y, do: -1
   defp compare(x, y) when x > y, do: 1
+
+  ############################################################
+  #                         Nock4K                           #
+  ############################################################
+
+  @spec nock4k(Noun.t(), Noun.t(), Nock.t()) :: {:ok, Noun.t()} | :error
+  defp nock4k(subject, formula, environment \\ %Nock{}) do
+    if environment.meter_pid != nil do
+      send(environment.meter_pid, {:gas, 1})
+    end
+
+    try do
+      case formula do
+        [formula_1 = [_ | _] | formula_2] ->
+          {:ok, result_1} = nock4k(subject, formula_1, environment)
+          {:ok, result_2} = nock4k(subject, formula_2, environment)
+          {:ok, [result_1 | result_2]}
+
+        [zero | axis] when zero in [0, <<>>, []] and is_integer(axis) ->
+          Noun.axis(axis, subject)
+
+        [zero | axis] when zero in [0, <<>>, []] and is_binary(axis) ->
+          Noun.axis(Noun.atom_binary_to_integer(axis), subject)
+
+        [zero | axis] when zero in [0, <<>>, []] and axis == [] ->
+          :error
+
+        [one | constant] when one in [1, <<1>>] ->
+          {:ok, constant}
+
+        [two, subject_formula | formula_formula] when two in [2, <<2>>] ->
+          {:ok, new_subject} = nock4k(subject, subject_formula, environment)
+          {:ok, new_formula} = nock4k(subject, formula_formula, environment)
+          nock4k(new_subject, new_formula, environment)
+
+        [three | sub_formula] when three in [3, <<3>>] ->
+          {:ok, sub_result} = nock4k(subject, sub_formula, environment)
+
+          if Noun.is_noun_cell(sub_result) do
+            {:ok, 0}
+          else
+            {:ok, 1}
+          end
+
+        [four | sub_formula] when four in [4, <<4>>] ->
+          {:ok, sub_result} = nock4k(subject, sub_formula, environment)
+
+          cond do
+            sub_result == [] ->
+              {:ok, 1}
+
+            is_integer(sub_result) ->
+              {:ok, sub_result + 1}
+
+            is_binary(sub_result) ->
+              {:ok, Noun.atom_binary_to_integer(sub_result) + 1}
+
+            true ->
+              :error
+          end
+
+        [five, formula_1 | formula_2] when five in [5, <<5>>] ->
+          {:ok, result_1} = nock4k(subject, formula_1, environment)
+          {:ok, result_2} = nock4k(subject, formula_2, environment)
+
+          if Noun.equal?(result_1, result_2) do
+            {:ok, 0}
+          else
+            {:ok, 1}
+          end
+
+        [six, cond | branches = [_true_branch | _false_branch]]
+        when six in [6, <<6>>] ->
+          {:ok, cond_plus_two} =
+            nock4k(subject, [4 | [4 | cond]], environment)
+
+          {:ok, crash_guard} =
+            nock4k([2 | 3], [0 | cond_plus_two], environment)
+
+          {:ok, branch_formula} =
+            nock4k(branches, [0 | crash_guard], environment)
+
+          nock4k(subject, branch_formula, environment)
+
+        [seven, subject_formula | sub_formula] when seven in [7, <<7>>] ->
+          {:ok, new_subject} = nock4k(subject, subject_formula, environment)
+          nock4k(new_subject, sub_formula, environment)
+
+        [eight, push_formula | sub_formula] when eight in [8, <<8>>] ->
+          {:ok, pushed_noun} = nock4k(subject, push_formula, environment)
+          new_subject = [pushed_noun | subject]
+          nock4k(new_subject, sub_formula, environment)
+
+        [nine, axis | sub_formula] when nine in [9, <<9>>] ->
+          {:ok, sub_result} = nock4k(subject, sub_formula, environment)
+          nock4k(sub_result, [2 | [[0 | 1] | [0 | axis]]], environment)
+
+        [ten, [axis | replacement_formula] | sub_formula]
+        when ten in [10, <<10>>] ->
+          {:ok, replacement} =
+            nock4k(subject, replacement_formula, environment)
+
+          {:ok, sub_result} = nock4k(subject, sub_formula, environment)
+
+          Noun.replace(
+            Noun.atom_binary_to_integer(axis),
+            replacement,
+            sub_result
+          )
+
+        [eleven, [hint_noun | hint_formula] | sub_formula]
+        when eleven in [11, <<11>>] ->
+          {:ok, hint_result} = nock4k(subject, hint_formula, environment)
+          Nock.process_hint(hint_noun, hint_result, environment)
+          {:ok, real_result} = nock4k(subject, sub_formula, environment)
+          nock4k([hint_result | real_result], [0 | 3], environment)
+
+        [eleven, hint_noun | sub_formula] when eleven in [11, <<11>>] ->
+          Nock.process_hint(hint_noun)
+          nock4k(subject, sub_formula, environment)
+
+        _ ->
+          :error
+      end
+    rescue
+      _ in MatchError -> :error
+    end
+  end
 end

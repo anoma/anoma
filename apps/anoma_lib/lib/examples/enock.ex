@@ -44,7 +44,7 @@ defmodule Examples.ENock do
   def counter_logic() do
     [
       counter_arm(),
-      0 | Nock.logics_core()
+      0 | Nock.Lib.logics_core()
     ]
   end
 
@@ -175,6 +175,10 @@ defmodule Examples.ENock do
   ##    Requires special testing to ensure they behave properly.    ##
   ####################################################################
 
+  @spec example_layer_depth(non_neg_integer) :: non_neg_integer
+  defp example_layer_depth(layer),
+    do: (Nock.Lib.stdlib_layers() - layer + 4) |> Noun.index_to_offset()
+
   @doc """
   The decrement arm in the tests core.
 
@@ -182,13 +186,16 @@ defmodule Examples.ENock do
   """
   @spec dec_arm() :: Noun.t()
   def dec_arm() do
-    "[8 [9 342 0 4.095] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    layer_depth = example_layer_depth(1)
+
+    "[8 [9 342 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
   end
 
   @spec dec() :: Noun.t()
   def dec() do
     sample = 999
-    core = [dec_arm(), sample | Nock.logics_core()]
+    core = [dec_arm(), sample | Nock.Lib.logics_core()]
 
     assert Nock.nock(core, [9, 2, 0 | 1]) |> elem(1) |> Noun.equal?(998)
 
@@ -216,13 +223,16 @@ defmodule Examples.ENock do
 
   @spec cue_arm() :: Noun.t()
   def cue_arm() do
-    "[8 [9 94 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    layer_depth = example_layer_depth(5)
+
+    "[8 [9 94 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
   end
 
   @spec cue() :: Noun.t()
   def cue() do
     sample = 999
-    core = [cue_arm(), sample | Nock.logics_core()]
+    core = [cue_arm(), sample | Nock.Lib.logics_core()]
 
     core
   end
@@ -239,13 +249,16 @@ defmodule Examples.ENock do
 
   @spec jam_arm() :: Noun.t()
   def jam_arm() do
-    "[8 [9 22 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    layer_depth = example_layer_depth(5)
+
+    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
   end
 
   @spec jam() :: Noun.t()
   def jam() do
     sample = 999
-    core = [jam_arm(), sample | Nock.logics_core()]
+    core = [jam_arm(), sample | Nock.Lib.logics_core()]
 
     core
   end
@@ -262,14 +275,16 @@ defmodule Examples.ENock do
 
   @spec sign_arm() :: Noun.t()
   def sign_arm() do
-    "[8 [9 10 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(6)
+
+    "[8 [9 10 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec sign() :: Noun.t()
   def sign() do
     sample = [999 | 888]
-    core = [sign_arm(), sample | Nock.logics_core()]
+    core = [sign_arm(), sample | Nock.Lib.logics_core()]
 
     valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
     invalid_args = [ECrypto.blood_msg() | ECrypto.londo().external.sign]
@@ -297,14 +312,16 @@ defmodule Examples.ENock do
 
   @spec verify_arm() :: Noun.t()
   def verify_arm() do
-    "[8 [9 4 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(6)
+
+    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec verify() :: Noun.t()
   def verify() do
     sample = [999 | 888]
-    core = [verify_arm(), sample | Nock.logics_core()]
+    core = [verify_arm(), sample | Nock.Lib.logics_core()]
 
     valid_args = [ECrypto.blood_l_signed() | ECrypto.londo().external.sign]
     invalid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
@@ -333,14 +350,16 @@ defmodule Examples.ENock do
 
   @spec sign_detatched_arm() :: Noun.t()
   def sign_detatched_arm() do
-    "[8 [9 23 0 127] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(6)
+
+    "[8 [9 23 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec sign_detatched() :: Noun.t()
   def sign_detatched() do
     sample = [999 | 888]
-    core = [sign_detatched_arm(), sample | Nock.logics_core()]
+    core = [sign_detatched_arm(), sample | Nock.Lib.logics_core()]
 
     valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
 
@@ -366,14 +385,16 @@ defmodule Examples.ENock do
 
   @spec verify_detatched_arm() :: Noun.t()
   def verify_detatched_arm() do
-    "[8 [9 22 0 127] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+    layer_depth = example_layer_depth(6)
+
+    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec verify_detatched() :: Noun.t()
   def verify_detatched() do
     sample = [999 | 888]
-    core = [verify_detatched_arm(), sample | Nock.logics_core()]
+    core = [verify_detatched_arm(), sample | Nock.Lib.logics_core()]
 
     sign = ECrypto.blood_l_signed_detached()
     valid = [sign, ECrypto.blood_msg() | ECrypto.londo().external.sign]
@@ -425,13 +446,16 @@ defmodule Examples.ENock do
 
   @spec bex_arm() :: Noun.t()
   def bex_arm() do
-    "[8 [9 4 0 511] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    layer_depth = example_layer_depth(4)
+
+    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
   end
 
   @spec bex() :: Noun.t()
   def bex() do
     sample = 888
-    core = [bex_arm(), sample | Nock.logics_core()]
+    core = [bex_arm(), sample | Nock.Lib.logics_core()]
 
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 2], 0 | 1])
            |> elem(1)
@@ -460,14 +484,16 @@ defmodule Examples.ENock do
 
   @spec mix_arm() :: Noun.t()
   def mix_arm() do
-    "[8 [9 4 0 255] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(5)
+
+    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec mix() :: Noun.t()
   def mix() do
     sample = [0 | 0]
-    core = [mix_arm(), sample | Nock.logics_core()]
+    core = [mix_arm(), sample | Nock.Lib.logics_core()]
 
     assert Nock.nock(core, [9, 2, 10, [6, 1, 3 | 5], 0 | 1])
            |> elem(1)
@@ -492,14 +518,17 @@ defmodule Examples.ENock do
 
   @spec mat_arm() :: Noun.t()
   def mat_arm() do
-    "[8 [9 43 0 255] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    layer_depth = example_layer_depth(5)
+
+    "[8 [9 43 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
   end
 
   # Please make some assertions ☹
   @spec mat() :: Noun.t()
   def mat() do
     sample = 0
-    core = [mat_arm(), sample | Nock.logics_core()]
+    core = [mat_arm(), sample | Nock.Lib.logics_core()]
 
     core
   end
@@ -516,13 +545,16 @@ defmodule Examples.ENock do
 
   @spec shax_arm() :: Noun.t()
   def shax_arm() do
-    "[8 [9 22 0 63] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    layer_depth = example_layer_depth(7)
+
+    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
   end
 
   @spec shax() :: Noun.t()
   def shax() do
     sample = 0
-    core = [shax_arm(), sample | Nock.logics_core()]
+    core = [shax_arm(), sample | Nock.Lib.logics_core()]
 
     assert Nock.nock(core, [9, 2, 0 | 1])
            |> elem(1)
@@ -553,13 +585,15 @@ defmodule Examples.ENock do
 
   @spec raw_arm() :: Noun.t()
   def raw_arm() do
+    layer_depth = example_layer_depth(7)
+
     arm =
-      "[8 [8 [9 47 0 63] 9 23 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 47 0 #{layer_depth}] 9 23 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
 
-    [arm, sample | Nock.logics_core()]
+    [arm, sample | Nock.Lib.logics_core()]
   end
 
   @doc """
@@ -590,13 +624,15 @@ defmodule Examples.ENock do
 
   @spec raws_arm() :: Noun.t()
   def raws_arm() do
+    layer_depth = example_layer_depth(7)
+
     arm =
-      "[8 [8 [9 47 0 63] 9 4 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 47 0 #{layer_depth}] 9 4 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
 
-    [arm, sample | Nock.logics_core()]
+    [arm, sample | Nock.Lib.logics_core()]
   end
 
   @doc """
@@ -628,13 +664,15 @@ defmodule Examples.ENock do
 
   @spec rad_arm() :: Noun.t()
   def rad_arm() do
+    layer_depth = example_layer_depth(7)
+
     arm =
-      "[8 [8 [9 47 0 63] 9 20 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 47 0 #{layer_depth}] 9 20 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
 
-    [arm, sample | Nock.logics_core()]
+    [arm, sample | Nock.Lib.logics_core()]
   end
 
   @doc """
@@ -667,13 +705,15 @@ defmodule Examples.ENock do
 
   @spec rads_arm() :: Noun.t()
   def rads_arm() do
+    layer_depth = example_layer_depth(7)
+
     arm =
-      "[8 [8 [9 47 0 63] 9 22 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 47 0 #{layer_depth}] 9 22 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
 
-    [arm, sample | Nock.logics_core()]
+    [arm, sample | Nock.Lib.logics_core()]
   end
 
   @doc """
@@ -701,14 +741,17 @@ defmodule Examples.ENock do
 
   @spec abs_arm() :: Noun.t()
   def abs_arm() do
-    "[8 [9 1.515 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 1.515 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
   end
 
   @spec abs() :: Noun.t()
   def abs() do
     arm = abs_arm()
     sample = 888
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # abs(--0) == 0
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1])
@@ -741,7 +784,9 @@ defmodule Examples.ENock do
   """
   @spec dif_arm() :: Noun.t()
   def dif_arm() do
-    "[8 [9 759 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 759 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -749,7 +794,7 @@ defmodule Examples.ENock do
   def dif() do
     arm = dif_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # --3 - -2 == --5
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [6 | 3]], 0 | 1])
@@ -777,7 +822,9 @@ defmodule Examples.ENock do
   """
   @spec dul_arm() :: Noun.t()
   def dul_arm() do
-    "[8 [9 22 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -785,7 +832,7 @@ defmodule Examples.ENock do
   def dul() do
     arm = dul_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # dul(-1, --5) == 9
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 10]], 0 | 1])
@@ -818,7 +865,9 @@ defmodule Examples.ENock do
   """
   @spec fra_arm() :: Noun.t()
   def fra_arm() do
-    "[8 [9 190 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 190 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -826,7 +875,7 @@ defmodule Examples.ENock do
   def fra() do
     arm = fra_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # -1 / -1 == --1
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 1]], 0 | 1])
@@ -864,7 +913,9 @@ defmodule Examples.ENock do
   """
   @spec new_arm() :: Noun.t()
   def new_arm() do
-    "[8 [9 758 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 758 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -872,7 +923,7 @@ defmodule Examples.ENock do
   def new() do
     arm = new_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # new(%.n, 2) == -2
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 2]], 0 | 1])
@@ -900,7 +951,9 @@ defmodule Examples.ENock do
   """
   @spec old_arm() :: Noun.t()
   def old_arm() do
-    "[8 [9 756 0 31] 9 2 10 [6 0 14] 0 2]"
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 756 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -908,7 +961,7 @@ defmodule Examples.ENock do
   def old() do
     arm = old_arm()
     sample = 888
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # old(-2) == [%.n, 2]
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1])
@@ -936,7 +989,9 @@ defmodule Examples.ENock do
   """
   @spec pro_arm() :: Noun.t()
   def pro_arm() do
-    "[8 [9 46 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 46 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -944,7 +999,7 @@ defmodule Examples.ENock do
   def pro() do
     arm = pro_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # -3 * --3 == -9
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 6]], 0 | 1])
@@ -972,7 +1027,9 @@ defmodule Examples.ENock do
   """
   @spec rem_arm() :: Noun.t()
   def rem_arm() do
-    "[8 [9 6.058 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 6.058 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -980,7 +1037,7 @@ defmodule Examples.ENock do
   def rem() do
     arm = rem_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # -17 % -3 == -2
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [33 | 5]], 0 | 1])
@@ -1018,7 +1075,9 @@ defmodule Examples.ENock do
   """
   @spec sum_arm() :: Noun.t()
   def sum_arm() do
-    "[8 [9 4 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1026,7 +1085,7 @@ defmodule Examples.ENock do
   def sum() do
     arm = sum_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # -11 + --2 == -9
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 4]], 0 | 1])
@@ -1043,14 +1102,17 @@ defmodule Examples.ENock do
 
   @spec sun_arm() :: Noun.t()
   def sun_arm() do
-    "[8 [9 10 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 10 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
   end
 
   @spec sun() :: Noun.t()
   def sun() do
     arm = sun_arm()
     sample = 888
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # sun(90) == 180
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 90], 0 | 1])
@@ -1062,14 +1124,17 @@ defmodule Examples.ENock do
 
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
-    "[8 [9 188 0 31] 9 2 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 188 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
   end
 
   @spec syn() :: Noun.t()
   def syn() do
     arm = syn_arm()
     sample = 888
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # syn(--0) == %.y
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1])
@@ -1102,7 +1167,9 @@ defmodule Examples.ENock do
   """
   @spec cmp_arm() :: Noun.t()
   def cmp_arm() do
-    "[8 [9 191 0 31] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(8)
+
+    "[8 [9 191 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1110,7 +1177,7 @@ defmodule Examples.ENock do
   def cmp() do
     arm = cmp_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.logics_core()]
+    core = [arm, sample | Nock.Lib.logics_core()]
 
     # cmp(-2, --1) == -1
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [3 | 2]], 0 | 1])
@@ -1148,14 +1215,16 @@ defmodule Examples.ENock do
   """
   @spec lte_arm() :: Noun.t()
   def lte_arm() do
-    "[8 [9 84 0 4.095] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = example_layer_depth(1)
+
+    "[8 [9 84 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec lte() :: Noun.t()
   def lte() do
     sample = [888 | 999]
-    core = [lte_arm(), sample | Nock.logics_core()]
+    core = [lte_arm(), sample | Nock.Lib.logics_core()]
 
     max_test_val = 4
 
@@ -1170,14 +1239,42 @@ defmodule Examples.ENock do
     core
   end
 
+  def kind_arm() do
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 1492 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def kind_call(resource) do
+    sample = resource
+    [kind_arm(), sample | Nock.Lib.logics_core()]
+  end
+
+  def kind_test() do
+    resource = Examples.ETransparent.EResource.trivial_true_resource()
+
+    {:ok, kind} =
+      resource
+      |> Anoma.TransparentResource.Resource.to_noun()
+      |> kind_call
+      |> Nock.nock([9, 2, 0 | 1])
+
+    assert resource
+           |> Anoma.TransparentResource.Resource.kind()
+           |> Noun.equal?(kind)
+  end
+
   def delta_add_arm() do
-    "[8 [9 92 0 15] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 92 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def delta_add_call(delta1, delta2) do
     sample = [delta1 | delta2]
-    [delta_add_arm(), sample | Nock.logics_core()]
+    [delta_add_arm(), sample | Nock.Lib.logics_core()]
   end
 
   def delta_add_test() do
@@ -1190,13 +1287,15 @@ defmodule Examples.ENock do
   end
 
   def delta_sub_arm() do
-    "[8 [9 1527 0 15] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 1527 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def delta_sub_call(delta1, delta2) do
     sample = [delta1 | delta2]
-    [delta_sub_arm(), sample | Nock.logics_core()]
+    [delta_sub_arm(), sample | Nock.Lib.logics_core()]
   end
 
   def delta_sub_test() do
@@ -1209,13 +1308,15 @@ defmodule Examples.ENock do
   end
 
   def action_delta_arm() do
-    "[8 [9 4 0 15] 9 2 10 [6 0 14] 0 2]"
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def action_delta_call(action) do
     sample = action
-    [action_delta_arm(), sample | Nock.logics_core()]
+    [action_delta_arm(), sample | Nock.Lib.logics_core()]
   end
 
   def action_delta_test() do
@@ -1228,13 +1329,15 @@ defmodule Examples.ENock do
   end
 
   def make_delta_arm() do
-    "[8 [9 1494 0 15] 9 2 10 [6 0 14] 0 2]"
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 1494 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def make_delta_call(actions) do
     sample = actions
-    [make_delta_arm(), sample | Nock.logics_core()]
+    [make_delta_arm(), sample | Nock.Lib.logics_core()]
   end
 
   def make_delta_test() do
@@ -1249,13 +1352,15 @@ defmodule Examples.ENock do
   end
 
   def is_commitment_arm() do
-    "[8 [9 1.526 0 15] 9 2 10 [6 0 14] 0 2]"
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 1.526 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def make_is_commitment_call(atom) do
     sample = atom
-    [is_commitment_arm(), sample | Nock.logics_core()]
+    [is_commitment_arm(), sample | Nock.Lib.logics_core()]
   end
 
   def is_commitment_test() do
@@ -1280,13 +1385,15 @@ defmodule Examples.ENock do
   end
 
   def is_nullifier_arm() do
-    "[8 [9 372 0 15] 9 2 10 [6 0 14] 0 2]"
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 372 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def make_is_nullifier_call(atom) do
     sample = atom
-    [is_nullifier_arm(), sample | Nock.logics_core()]
+    [is_nullifier_arm(), sample | Nock.Lib.logics_core()]
   end
 
   def is_nullifier_test() do
@@ -1592,9 +1699,14 @@ defmodule Examples.ENock do
   """
   @spec og_arm() :: Noun.t()
   def og_arm() do
-    arm = "[8 [9 47 0 63] 10 [6 0 14] 0 2]" |> Noun.Format.parse_always()
+    layer_depth = example_layer_depth(7)
+
+    arm =
+      "[8 [9 47 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      |> Noun.Format.parse_always()
+
     sample = 0
-    [arm, sample | Nock.logics_core()]
+    [arm, sample | Nock.Lib.logics_core()]
   end
 
   @spec og_call(non_neg_integer()) :: :error | {:ok, Noun.t()}
@@ -1620,7 +1732,7 @@ defmodule Examples.ENock do
 
     sample = [0, 0]
 
-    [arm, sample | Nock.logics_core()]
+    [arm, sample | Nock.Lib.logics_core()]
   end
 
   @spec raws_with_core_call(non_neg_integer(), non_neg_integer()) ::
@@ -1650,7 +1762,7 @@ defmodule Examples.ENock do
   def split_arm() do
     arm = "[7 [0 6] 9 21 0 1]" |> Noun.Format.parse_always()
     sample = 0
-    [arm, sample | Nock.logics_core()]
+    [arm, sample | Nock.Lib.logics_core()]
   end
 
   @spec split_call(Noun.t()) :: :error | {:ok, Noun.t()}
@@ -1685,6 +1797,7 @@ defmodule Examples.ENock do
 
   @spec factorial_arm() :: Noun.t()
   def factorial_arm() do
+    layer_depth = (Nock.Lib.stdlib_layers() + 5) |> Noun.index_to_offset()
     "
     [ 8
       [1 1 0]
@@ -1696,9 +1809,9 @@ defmodule Examples.ENock do
         9
         2
         10
-        [30 8 [9 342 0 16.383] 9 2 10 [6 0 62] 0 2]
+        [30 8 [9 342 0 #{layer_depth}] 9 2 10 [6 0 62] 0 2]
         10
-        [6 [8 [9 20 0 16.383] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+        [6 [8 [9 20 0 #{layer_depth}] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
         0
         1
       ]
@@ -1712,7 +1825,7 @@ defmodule Examples.ENock do
   @spec factorial() :: Noun.t()
   def factorial() do
     sample = 1
-    core = [factorial_arm(), sample | Nock.logics_core()]
+    core = [factorial_arm(), sample | Nock.Lib.logics_core()]
 
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 7], 0 | 1])
            |> elem(1)
@@ -1738,14 +1851,15 @@ defmodule Examples.ENock do
     # finally check how the door inputs its block-size by evaluating
     # =>  logics  !=(~(gate block val))
     # with different values
+    layer_depth = example_layer_depth(4)
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 511] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
+        "[8 [8 [9 10 0 #{layer_depth}] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
       )
 
     sample = [999 | 888]
-    [arm, sample | Nock.logics_core()]
+    [arm, sample | Nock.Lib.logics_core()]
   end
 
   @spec block_calling_mono(Noun.t(), Noun.t()) :: Noun.t()
@@ -1760,21 +1874,22 @@ defmodule Examples.ENock do
     # finally check how the door inputs its block-size by evaluating
     # =>  logics  !=(~(gate block val))
     # with different values
+    layer_depth = example_layer_depth(4)
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 511] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
+        "[8 [8 [9 10 0 #{layer_depth}] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
       )
 
     sample = 999
-    [arm, sample | Nock.logics_core()]
+    [arm, sample | Nock.Lib.logics_core()]
   end
 
   @spec increment_counter_val(Noun.t()) :: Noun.t()
   def increment_counter_val(val) do
     arm = [[1 | val], 4, 12, [1 | 0], [0 | 6], 1, val | 0]
     sample = 0
-    [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.logics_core()]
+    [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.Lib.logics_core()]
   end
 
   # [%ctr 0]
@@ -1782,7 +1897,7 @@ defmodule Examples.ENock do
   def zero_counter(val) do
     arm = [1, val | 0]
     sample = 0
-    [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.logics_core()]
+    [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.Lib.logics_core()]
   end
 
   ####################################################################

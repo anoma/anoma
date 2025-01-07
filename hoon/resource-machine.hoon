@@ -61,8 +61,7 @@
     app-data=*                     ::  arbitrary data
   ==
 +$  cm-root  @                     ::  commitment set root
-+$  resource-kind
-  [label=@t logic=resource-logic]
++$  resource-kind  @
 +$  delta-element
   [k=resource-kind v=@s]
 +$  delta  (list delta-element)    ::  delta (opaque)
@@ -108,9 +107,10 @@
   ^-  @
   =('NF_' (~(end block 3) 3 a))
 ++  kind
+  ~/  %kind
   |=  =resource
   ^-  resource-kind
-  [label.resource logic.resource]
+  (shax (jam [label.resource logic.resource]))
 ++  prove-logic  ::  prove a resource logic given all inputs
   |=  =logic-proof
   (jam logic-proof)
