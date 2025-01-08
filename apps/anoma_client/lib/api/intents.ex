@@ -1,12 +1,12 @@
 defmodule Anoma.Client.Api.Servers.Intents do
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Protobuf.Intents.Add
+  alias Anoma.Protobuf.Intents.List
+  alias GRPC.Server.Stream
   alias Anoma.Protobuf.Intents.Compose
   alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.Intents.Verify
   alias Anoma.TransparentResource.Transaction
-  alias GRPC.Server.Stream
 
   require Logger
 

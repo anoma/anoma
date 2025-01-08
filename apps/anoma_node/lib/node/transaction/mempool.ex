@@ -257,13 +257,12 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @doc """
   I am a function to dump transactions.
-  I return a list of transaction ids.
 
   Given a node ID, I give all the transactions as currently stored in the
   corresponding Mempool state.
   """
 
-  @spec tx_dump(String.t()) :: [binary()]
+  @spec tx_dump(String.t()) :: [Mempool.Tx.t()]
   def tx_dump(node_id) do
     GenServer.call(Registry.via(node_id, __MODULE__), :dump)
   end

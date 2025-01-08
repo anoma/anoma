@@ -20,6 +20,47 @@ defmodule Anoma.Node.Intents.IntentPool do
   use TypedStruct
   use GenServer
 
+  typedstruct enforce: true, module: IntentAddSuccess do
+    @typedoc """
+    I am an event specifying that an intent has been submitted succesfully.
+
+    ### Fields
+    - `:intent` - The intent added.
+    """
+    field(:intent, Intent.t())
+  end
+
+  typedstruct enforce: true, module: IntentAddError do
+    @typedoc """
+    I am an event specifying that an intent submission has failed alongside
+    with a reason.
+
+    ### Fields
+    - `:intent` - The intent submitted.
+    - `:reason` - The reason why it was rejected from the pool.
+    """
+    field(:intent, Intent.t())
+    field(:reason, String.t())
+  end
+
+  deffilter IntentAddSuccessFilter do
+    %EventBroker.Event{
+      body: %Node.Event{body: %IntentPool.IntentAddSuccess{}}
+    } ->
+      true
+
+    _ ->
+      false
+  end
+
+  deffilter IntentAddErrorFilter do
+    %EventBroker.Event{body: %Node.Event{body: %IntentPool.IntentAddError{}}} ->
+      true
+
+    _ ->
+      false
+  end
+
   ############################################################
   #                           State                          #
   ############################################################
@@ -33,11 +74,13 @@ defmodule Anoma.Node.Intents.IntentPool do
     - `:node_id` - The ID of the Node.
     - `:nlfs_set` - The set of known nullifiers.
     - `:cms_set` - The set of known commitments.
+    - `:table` - The table name for storing intents.
     """
     field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
     field(:node_id, String.t())
     field(:nlfs_set, MapSet.t(binary()), default: MapSet.new())
     field(:cms_set, MapSet.t(binary()), default: MapSet.new())
+    field(:table, atom())
   end
 
   ############################################################
@@ -53,6 +96,24 @@ defmodule Anoma.Node.Intents.IntentPool do
   @impl true
   def init(args) do
     Logger.debug("starting intent pool with #{inspect(args)}")
+
+    args =
+      args
+      |> Keyword.validate!([
+        :node_id,
+        intents: MapSet.new([]),
+        nlfs_set: MapSet.new([]),
+        cms_set: MapSet.new([]),
+        rocks: false,
+        table: __MODULE__.Intents
+      ])
+
+    table =
+      String.to_atom("#{args[:table]}_#{:erlang.phash2(args[:node_id])}")
+
+    rocks_opt = args[:rocks] |> Anoma.Utility.rock_opts()
+    :mnesia.create_table(table, rocks_opt ++ [attributes: [:type, :body]])
+
     node_id = args[:node_id]
 
     EventBroker.subscribe_me([
@@ -60,7 +121,20 @@ defmodule Anoma.Node.Intents.IntentPool do
       trm_filter()
     ])
 
-    {:ok, %IntentPool{node_id: args[:node_id]}}
+    intents =
+      reject_intents(
+        args[:intents],
+        MapSet.union(args[:nlfs_set], args[:cms_set])
+      )
+
+    {:ok,
+     %IntentPool{
+       node_id: node_id,
+       intents: intents,
+       nlfs_set: args[:nlfs_set],
+       cms_set: args[:cms_set],
+       table: table
+     }}
   end
 
   ############################################################
@@ -137,15 +211,29 @@ defmodule Anoma.Node.Intents.IntentPool do
   # I return the current state if any nullifier of the intent is already known.
   # """
   @spec handle_new_intent(any(), t()) ::
-          {:ok, :inserted, t()} | {:ok, :already_present, t()}
+          {:ok, :inserted, t()}
+          | {:ok,
+             :already_present | :nullifiers_present | :commitments_present,
+             t()}
   defp handle_new_intent(intent, state) do
     with :ok <- validate_intent_uniqueness(intent, state),
          :ok <- validate_nullifier_uniqueness(intent, state.nlfs_set),
          :ok <- validate_commitment_uniqueness(intent, state.cms_set) do
+      table = state.table
+
+      :mnesia.transaction(fn ->
+        res =
+          case :mnesia.read(table, "intents") do
+            [] -> MapSet.new()
+            [{^table, "intents", res}] -> res
+          end
+
+        :mnesia.write({table, "intents", MapSet.put(res, intent)})
+      end)
+
       {:ok, :inserted, add_intent!(intent, state)}
     else
-      {:error, :already_present} ->
-        {:ok, :already_present, state}
+      {:error, reason} -> handle_error(intent, reason, state)
     end
   end
 
@@ -224,7 +312,7 @@ defmodule Anoma.Node.Intents.IntentPool do
         "intent ignored; uses already nullified resources #{inspect(intent)}"
       )
 
-      {:error, :already_present}
+      {:error, :nullifiers_present}
     else
       :ok
     end
@@ -236,7 +324,7 @@ defmodule Anoma.Node.Intents.IntentPool do
         "intent ignored; uses already created resources #{inspect(intent)}"
       )
 
-      {:error, :already_present}
+      {:error, :commitments_present}
     else
       :ok
     end
@@ -246,11 +334,25 @@ defmodule Anoma.Node.Intents.IntentPool do
     Logger.debug("new intent added #{inspect(intent)}")
 
     EventBroker.event(
-      Node.Event.new_with_body(state.node_id, {:intent_added, intent}),
+      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddSuccess{
+        intent: intent
+      }),
       Broker
     )
 
     Map.update!(state, :intents, &MapSet.put(&1, intent))
+  end
+
+  defp handle_error(intent, reason, state) do
+    EventBroker.event(
+      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddError{
+        intent: intent,
+        reason: reason
+      }),
+      Broker
+    )
+
+    {:ok, reason, state}
   end
 
   def reject_intents(intents, set) do
@@ -276,5 +378,16 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   defp trm_filter() do
     %__MODULE__.TRMFilter{}
+  end
+
+  @doc """
+  I am the name of the unsolved table.
+  Given a Node ID, I create an appropriately named table for storing
+  unsolved intents.
+  """
+
+  @spec table_name(String.t()) :: atom()
+  def table_name(node_id) do
+    String.to_atom("#{__MODULE__.Intents}_#{:erlang.phash2(node_id)}")
   end
 end

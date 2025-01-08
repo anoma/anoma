@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Indexer.Commits;
+
+import "node_info.proto";
+
+message Request { NodeInfo node_info = 1; }
+
+message Response {
+  repeated bytes commits = 1; // a list of intents.
+}

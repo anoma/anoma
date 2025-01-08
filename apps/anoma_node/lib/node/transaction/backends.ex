@@ -64,14 +64,15 @@ defmodule Anoma.Node.Transaction.Backends do
 
   typedstruct enforce: true, module: TRMEvent do
     @typedoc """
-    I hold the content of the Nullifier Event, which communicates a set of
-    nullifiers defined by the actions of the transaction candidate to the
-    Intent Pool.
+    I hold the content of the The Resource Machine Event, which
+    communicates a set of nullifiers/commitments defined by the actions of the
+    transaction candidate to the Intent Pool.
 
     ### Fields
 
     - `:commitments`        - The set of commitments.
     - `:nullifiers`         - The set of nullifiers.
+    - `:commitments`        - The set of commitments.
     """
     field(:commitments, MapSet.t(binary()))
     field(:nullifiers, MapSet.t(binary()))
@@ -304,14 +305,13 @@ defmodule Anoma.Node.Transaction.Backends do
     latest_root_time =
       for root <- trans.roots, reduce: 0 do
         time ->
-          with {:atomic, [{_, height_list, ^root}]} <-
+          with {:atomic, [{_, {height, _}, ^root}]} <-
                  :mnesia.transaction(fn ->
                    :mnesia.match_object(
-                     {Storage.updates_table(node_id), root, :_}
+                     {Storage.values_table(node_id),
+                      {:_, anoma_keyspace("anchor")}, root}
                    )
                  end) do
-            height = hd(height_list)
-
             if height > time do
               height
             else
@@ -325,7 +325,7 @@ defmodule Anoma.Node.Transaction.Backends do
     action_nullifiers = TTransaction.nullifiers(trans)
 
     if latest_root_time > 0 do
-      root_coms =
+      {:ok, root_coms} =
         Storage.read(
           node_id,
           {latest_root_time, anoma_keyspace("commitments")}
@@ -412,25 +412,25 @@ defmodule Anoma.Node.Transaction.Backends do
           String.t(),
           backend()
         ) :: :ok
-  defp complete_event(id, result, node_id, backend) do
+  defp complete_event(id, result, node_id, _backend) do
     event =
       Node.Event.new_with_body(node_id, %__MODULE__.CompleteEvent{
         tx_id: id,
         tx_result: result
       })
 
-    event(backend, event)
+    EventBroker.event(event)
   end
 
   @spec result_event(String.t(), any(), String.t(), backend()) :: :ok
-  defp result_event(id, result, node_id, backend) do
+  defp result_event(id, result, node_id, _backend) do
     event =
       Node.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
         tx_id: id,
         vm_result: result
       })
 
-    event(backend, event)
+    EventBroker.event(event)
   end
 
   @spec transparent_rm_event(
@@ -505,10 +505,5 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec anoma_keyspace(String.t()) :: list(String.t())
   defp anoma_keyspace(key) do
     ["anoma", key]
-  end
-
-  @spec event(backend(), EventBroker.Event.t()) :: :ok
-  defp event(_backend, event) do
-    EventBroker.event(event)
   end
 end

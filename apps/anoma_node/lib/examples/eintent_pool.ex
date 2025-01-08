@@ -141,6 +141,17 @@ defmodule Anoma.Node.Examples.EIntentPool do
     enode
   end
 
+  def intents_are_written(enode \\ ENode.start_node()) do
+    add_intent_transaction_nullifier(enode)
+
+    table = IntentPool.table_name(enode.node_id)
+
+    pool = IntentPool.intents(enode.node_id)
+
+    assert {:atomic, [{^table, "intents", ^pool}]} =
+             :mnesia.transaction(fn -> :mnesia.read(table, "intents") end)
+  end
+
   @doc """
   I submit a nullifier event to the node.
   """

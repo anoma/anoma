@@ -1,6 +1,7 @@
 # Client
 
-**TODO: Add description**
+I am the Anoma Client application. I provide the front-end for interacting
+with the Anoma Node.
 
 ## Installation
 

@@ -86,8 +86,8 @@ defmodule Noun do
     end
   end
 
-  @spec equal(t(), t()) :: boolean()
-  def equal(noun_1, noun_2)
+  @spec equal?(t(), t()) :: boolean()
+  def equal?(noun_1, noun_2)
       when is_noun_atom(noun_1) and is_noun_atom(noun_2) do
     normalized_noun_1 = normalize_noun(noun_1)
     normalized_noun_2 = normalize_noun(noun_2)
@@ -95,15 +95,15 @@ defmodule Noun do
     normalized_noun_1 == normalized_noun_2
   end
 
-  def equal(noun_1, noun_2)
+  def equal?(noun_1, noun_2)
       when is_noun_cell(noun_1) and is_noun_cell(noun_2) do
     [h1 | t1] = noun_1
     [h2 | t2] = noun_2
 
-    equal(h1, h2) && equal(t1, t2)
+    equal?(h1, h2) and equal?(t1, t2)
   end
 
-  def equal(_a, _b) do
+  def equal?(_a, _b) do
     false
   end
 
@@ -306,9 +306,9 @@ defmodule Noun do
 
   def condensed_print(cell = [h | t]) do
     cond do
-      cell == Nock.stdlib_core() -> "<stdlib>"
-      cell == Nock.rm_core() -> "<rm>"
-      cell == Nock.logics_core() -> "<logics>"
+      cell == Nock.Lib.stdlib_core() -> "<stdlib>"
+      cell == Nock.Lib.rm_core() -> "<rm>"
+      cell == Nock.Lib.logics_core() -> "<logics>"
       true -> "[" <> condensed_print(h) <> " " <> condensed_print(t) <> "]"
     end
   end

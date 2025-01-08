@@ -1,4 +1,4 @@
-defmodule Nock.Bits do
+defmodule Noun.Bits do
   import Bitwise
 
   @spec num_bits(Noun.noun_atom(), non_neg_integer()) ::

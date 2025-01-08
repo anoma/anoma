@@ -14,13 +14,13 @@ defmodule Anoma.CairoResource.ComplianceWitness do
     # Input resource merkle path
     field(:merkel_proof, CommitmentTree.Proof.t())
     # Nullifier key of the input resource
-    field(:input_nf_key, binary(), default: <<0::256>>)
+    field(:input_nf_key, <<_::256>>, default: <<0::256>>)
     # Ephemeral root
-    field(:eph_root, binary(), default: <<0::256>>)
+    field(:eph_root, <<_::256>>, default: <<0::256>>)
     # Output resource
     field(:output_resource, Resource.t())
     # Random value in delta proof(binding signature)
-    field(:rcv, binary(), default: <<0::256>>)
+    field(:rcv, <<_::256>>, default: <<0::256>>)
   end
 
   @doc "Generate the compliance witness json"

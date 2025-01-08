@@ -1,8 +1,8 @@
 defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
-  alias Anoma.Node.Transaction.Mempool
   alias Anoma.Protobuf.Mempool.AddTransaction
-  alias Anoma.Protobuf.Mempool.Dump
   alias GRPC.Server.Stream
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Protobuf.Mempool.Dump
 
   use GRPC.Server, service: Anoma.Protobuf.MempoolService.Service
 

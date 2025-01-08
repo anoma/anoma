@@ -7,10 +7,9 @@ import "nock/prove.proto";
 import "nock/run.proto";
 import "intents/list_intents.proto";
 import "intents/add_intent.proto";
-import "intents/compose.proto";
-import "intents/verify.proto";
 import "indexer/nullifiers.proto";
 import "indexer/unrevealed_commits.proto";
+import "indexer/commits.proto";
 import "indexer/unspent_resources.proto";
 import "mempool/add_transaction.proto";
 import "mempool/dump.proto";
@@ -18,6 +17,8 @@ import "indexer/blocks/get.proto";
 import "indexer/blocks/latest.proto";
 import "indexer/blocks/root.proto";
 import "indexer/blocks/filter.proto";
+import "intents/compose.proto";
+import "intents/verify.proto";
 
 service NockService {
   rpc Prove(Anoma.Protobuf.Nock.Prove.Request)
@@ -47,6 +48,9 @@ service IndexerService {
 
   rpc ListUnrevealedCommits(Anoma.Protobuf.Indexer.UnrevealedCommits.Request)
       returns (Anoma.Protobuf.Indexer.UnrevealedCommits.Response) {}
+
+  rpc ListCommits(Anoma.Protobuf.Indexer.Commits.Request)
+      returns (Anoma.Protobuf.Indexer.Commits.Response) {}
 
   rpc ListUnspentResources(Anoma.Protobuf.Indexer.UnspentResources.Request)
       returns (Anoma.Protobuf.Indexer.UnspentResources.Response) {}

@@ -32,7 +32,7 @@ defmodule Anoma.MixProject do
         elixir_out: "apps/anoma_protobuf/lib/anoma/protobuf",
         proto_files: ["apps/anoma_protobuf/priv/protobuf"],
         extra_opts:
-          "one_file_per_module=true,gen_descriptors=true,plugins=grpc"
+          "one_file_per_module=true,gen_descriptors=true,plugins=grpc,include_docs=true"
       ]
     ]
   end
@@ -69,7 +69,9 @@ defmodule Anoma.MixProject do
       extra_section: "GUIDES",
       groups_for_extras: group_for_extras(),
       groups_for_modules: group_for_modules(),
-      before_closing_body_tag: &docs_before_closing_body_tag/1
+      before_closing_body_tag: &docs_before_closing_body_tag/1,
+      skip_undefined_reference_warnings_on:
+        &(not String.match?(&1, ~r/^Protobuf\.Wire.*/))
     ]
   end
 

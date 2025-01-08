@@ -35,7 +35,7 @@ defmodule Anoma.TransparentResource.Resource do
     # for uniqueness
     field(:nonce, <<_::256>>, default: <<0::256>>)
     # useless field for shielded only.
-    field(:rseed, binary(), default: <<>>)
+    field(:rseed, <<>>, default: <<>>)
   end
 
   @spec to_noun(Resource.t()) :: Noun.t()
@@ -81,6 +81,17 @@ defmodule Anoma.TransparentResource.Resource do
     :error
   end
 
+  @spec from_noun(Noun.t()) :: t()
+  def from_noun!(noun) do
+    case from_noun(noun) do
+      {:ok, resource} ->
+        resource
+
+      _ ->
+        raise ArgumentError, "not a valid resource noun #{inspect(noun)}"
+    end
+  end
+
   @spec noun_to_bool(Noun.t()) :: boolean()
   def noun_to_bool(zero) when zero in [0, <<>>, <<0>>, []] do
     true
@@ -102,7 +113,7 @@ defmodule Anoma.TransparentResource.Resource do
 
   @spec kind(t()) :: binary()
   def kind(%Resource{label: label, logic: logic}) do
-    kind = label <> Noun.atom_integer_to_binary(Noun.Jam.jam(logic))
+    kind = [label | logic] |> Noun.Jam.jam()
     :crypto.hash(:sha256, kind)
   end
 
@@ -117,7 +128,7 @@ defmodule Anoma.TransparentResource.Resource do
     "CM_" <> binary_resource
   end
 
-  @spec nullifier(Resource.t()) :: nullifier()
+  @spec nullifier(t()) :: nullifier()
   def nullifier(resource = %Resource{}) do
     binary_resource = resource |> to_noun() |> Noun.Jam.jam()
     "NF_" <> binary_resource

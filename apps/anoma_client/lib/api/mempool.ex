@@ -1,8 +1,8 @@
 defmodule Anoma.Client.Api.Servers.Mempool do
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Protobuf.Mempool.AddTransaction
-  alias Anoma.Protobuf.Mempool.Dump
   alias GRPC.Server.Stream
+  alias Anoma.Protobuf.Mempool.Dump
 
   use GRPC.Server, service: Anoma.Protobuf.MempoolService.Service
 
