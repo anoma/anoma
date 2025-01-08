@@ -28,6 +28,7 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.NodeInfo
   alias Anoma.Node.Examples.EIndexer
   alias Anoma.Node.Utility.Indexer
+  alias Anoma.TransparentResource.Resource
   alias Examples.ETransparent.ETransaction
   alias Anoma.TransparentResource.Resource
   alias Noun.Nounable
@@ -438,11 +439,7 @@ defmodule Anoma.Client.Examples.EClient do
       node_info: node_id,
       filters: [
         %Blocks.Filtered.Filter{
-          filter:
-            {:kind,
-             <<75, 124, 243, 90, 86, 252, 71, 45, 101, 75, 20, 255, 12, 66,
-               109, 76, 13, 16, 255, 186, 71, 217, 242, 43, 21, 43, 6, 237,
-               74, 93, 69, 224>>}
+          filter: {:kind, %Resource{} |> Resource.kind()}
         }
       ]
     }
