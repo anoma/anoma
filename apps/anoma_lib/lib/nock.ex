@@ -269,7 +269,11 @@ defmodule Nock do
       when twelve in [12, <<12>>] do
     with {:ok, _type_result} <- nock(subject, type_formula, env),
          {:ok, sub_result} <- nock(subject, sub_formula, env) do
-      env.scry_function.(sub_result)
+      try do
+        env.scry_function.(sub_result)
+      rescue
+        _ -> :error
+      end
     else
       _ -> :error
     end
