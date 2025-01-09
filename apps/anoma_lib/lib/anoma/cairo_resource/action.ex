@@ -80,34 +80,20 @@ defmodule Anoma.CairoResource.Action do
              "compliance result"
            ),
          true <- verify_compliance_hash(action.compliance_proofs) do
-      # Decode logic_instances from resource logics
-      logic_instances =
-        action.logic_proofs
-        |> Enum.map(fn {_tag, proof_record} ->
-          proof_record.public_inputs
-          |> LogicInstance.from_public_input()
-        end)
-
-      # Decode complaince_instance from compliance_proofs
-      complaince_instance =
+      # Decode complaince_instances from compliance_proofs
+      complaince_instances =
         action.compliance_proofs
         |> Enum.map(fn proof_record ->
           proof_record.public_inputs
           |> ComplianceInstance.from_public_input()
         end)
 
-      # Get self ids from logic_instances
-      self_ids = MapSet.new(logic_instances, & &1.tag)
-
       # Get cms and nfs from compliance_proofs
       resource_tree_leaves =
-        complaince_instance
+        complaince_instances
         |> Enum.flat_map(fn instance ->
           [instance.nullifier, instance.output_cm]
         end)
-
-      # check self resource are all involved
-      all_resource_valid = self_ids == resource_tree_leaves |> MapSet.new()
 
       # Compute the expected resource tree
       rt =
@@ -116,15 +102,43 @@ defmodule Anoma.CairoResource.Action do
           resource_tree_leaves
         )
 
-      # check roots
-      all_roots_valid =
-        for instance <- logic_instances,
-            reduce: true do
-          acc ->
-            acc && rt.root == instance.root
-        end
+      # check correspondence between logic_proofs and compliance_proofs
+      Enum.reduce_while(complaince_instances, true, fn complaince_instance,
+                                                       _acc ->
+        # check all the resource logic proofs are included
+        res =
+          with {:ok, input_proof} <-
+                 Map.fetch(action.logic_proofs, complaince_instance.nullifier),
+               {:ok, output_proof} <-
+                 Map.fetch(action.logic_proofs, complaince_instance.output_cm) do
+            is_input_logic_valid =
+              complaince_instance.input_logic ==
+                input_proof
+                |> ProofRecord.get_cairo_program_hash()
 
-      all_resource_valid && all_roots_valid
+            is_output_logic_valid =
+              complaince_instance.output_logic ==
+                output_proof
+                |> ProofRecord.get_cairo_program_hash()
+
+            is_root_valid =
+              rt.root == input_proof.public_inputs |> LogicInstance.get_root() &&
+                rt.root ==
+                  output_proof.public_inputs |> LogicInstance.get_root()
+
+            is_input_logic_valid && is_output_logic_valid && is_root_valid
+          else
+            _ -> false
+          end
+
+        case res do
+          true ->
+            {:cont, true}
+
+          false ->
+            {:halt, false}
+        end
+      end)
     else
       _ -> false
     end

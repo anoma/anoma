@@ -13,7 +13,6 @@ defmodule Anoma.CairoResource.Transaction do
   alias Anoma.CairoResource.{
     Action,
     ComplianceInstance,
-    ProofRecord,
     Resource,
     LogicInstance,
     Utils,
@@ -108,19 +107,18 @@ defmodule Anoma.CairoResource.Transaction do
     # can apply the same improvement to the transparent Transaction.
     @impl true
     def verify(transaction = %Transaction{}) do
-      with true <- verify_proofs(transaction),
+      with true <- verify_actions(transaction),
            true <- verify_duplicate_nfs(transaction),
            compliance_instances = decode_compliance_instances(transaction),
-           true <- verify_delta(transaction, compliance_instances),
-           true <- verify_resource_logic(transaction, compliance_instances) do
+           true <- verify_delta(transaction, compliance_instances) do
         true
       else
         reason -> reason
       end
     end
 
-    @spec verify_proofs(Transaction.t()) :: true | {:error, String.t()}
-    defp verify_proofs(tx) do
+    @spec verify_actions(Transaction.t()) :: true | {:error, String.t()}
+    defp verify_actions(tx) do
       failed =
         Enum.reject(tx.actions, &Action.verify/1)
 
@@ -154,31 +152,6 @@ defmodule Anoma.CairoResource.Transaction do
            ) do
         true -> true
         _ -> {:error, "Delta proof verification failure"}
-      end
-    end
-
-    @spec verify_resource_logic(Transaction.t(), list(binary())) ::
-            true | {:error, String.t()}
-    defp verify_resource_logic(tx, compliance_instances) do
-      # Collect resource logics from compliance proofs
-      resource_logics_from_compliance =
-        compliance_instances
-        |> Enum.reduce([], &[&1.output_logic | [&1.input_logic | &2]])
-        |> Enum.reverse()
-
-      # Compute the program hash of resource logic proofs
-      resource_logic_from_program =
-        tx.actions
-        |> Enum.flat_map(fn action ->
-          action.logic_proofs
-          |> Map.values()
-          |> Enum.map(&ProofRecord.get_cairo_program_hash/1)
-        end)
-
-      if resource_logics_from_compliance == resource_logic_from_program do
-        true
-      else
-        {:error, "Resource logic check failure"}
       end
     end
 

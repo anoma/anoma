@@ -107,8 +107,8 @@ defmodule Examples.ECairo.EAction do
       Action.new(
         [
           input_resource_logic_proof_1,
-          output_resource_logic_proof_1,
           input_resource_logic_proof_2,
+          output_resource_logic_proof_1,
           output_resource_logic_proof_2
         ],
         [compliance_unit_1, compliance_unit_2]

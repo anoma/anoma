@@ -330,12 +330,10 @@ defmodule Anoma.CairoResource.Workflow do
         compliance_proofs
       ) do
     Action.new(
-      Enum.zip_with(
+      Enum.concat(
         input_logic_proofs,
-        output_logic_proofs,
-        &[&1, &2]
-      )
-      |> Enum.concat(),
+        output_logic_proofs
+      ),
       compliance_proofs
     )
   end
