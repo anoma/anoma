@@ -109,8 +109,7 @@ defmodule Anoma.CairoResource.Transaction do
     def verify(transaction = %Transaction{}) do
       with true <- verify_actions(transaction),
            true <- verify_duplicate_nfs(transaction),
-           compliance_instances = decode_compliance_instances(transaction),
-           true <- verify_delta(transaction, compliance_instances) do
+           true <- verify_delta(transaction) do
         true
       else
         reason -> reason
@@ -126,21 +125,11 @@ defmodule Anoma.CairoResource.Transaction do
         {:error, "Compliance proofs or logic proofs verification failure"}
     end
 
-    defp decode_compliance_instances(tx) do
-      tx.actions
-      |> Enum.flat_map(fn action ->
-        action.compliance_proofs
-        |> Enum.map(fn proof_record ->
-          ComplianceInstance.from_public_input(proof_record.public_inputs)
-        end)
-      end)
-    end
-
-    @spec verify_delta(Transaction.t(), list(binary())) ::
+    @spec verify_delta(Transaction.t()) ::
             true | {:error, String.t()}
-    defp verify_delta(tx, compliance_instances) do
+    defp verify_delta(tx) do
       # Collect binding public keys
-      binding_pub_keys = get_binding_pub_keys(compliance_instances)
+      binding_pub_keys = get_binding_pub_keys(tx)
 
       # Collect binding signature msgs
       binding_messages = Transaction.get_binding_messages(tx)
@@ -165,9 +154,16 @@ defmodule Anoma.CairoResource.Transaction do
       end
     end
 
-    @spec get_binding_pub_keys(list(binary())) :: list(byte())
-    defp get_binding_pub_keys(compliance_instances) do
-      compliance_instances
+    @spec get_binding_pub_keys(Transaction.t()) :: list(byte())
+    defp get_binding_pub_keys(tx) do
+      tx.actions
+      |> Enum.flat_map(fn action ->
+        action.compliance_proofs
+        |> Enum.map(fn proof_record ->
+          proof_record.public_inputs
+          |> ComplianceInstance.from_public_input()
+        end)
+      end)
       |> Enum.reduce(
         [],
         &[:binary.bin_to_list(&1.delta_x <> &1.delta_y) | &2]
