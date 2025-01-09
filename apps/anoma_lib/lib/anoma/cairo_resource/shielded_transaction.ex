@@ -171,6 +171,7 @@ defmodule Anoma.CairoResource.Transaction do
         tx.actions
         |> Enum.flat_map(fn action ->
           action.logic_proofs
+          |> Map.values()
           |> Enum.map(&ProofRecord.get_cairo_program_hash/1)
         end)
 
@@ -382,7 +383,10 @@ defmodule Anoma.CairoResource.Transaction do
   def get_cipher_texts(tx) do
     tx.actions
     |> Enum.flat_map(& &1.logic_proofs)
-    |> Enum.map(&LogicInstance.from_public_input(&1.public_inputs))
+    |> Enum.map(fn {_tag, proof_record} ->
+      proof_record.public_inputs
+      |> LogicInstance.from_public_input()
+    end)
     |> Enum.map(&%{tag: &1.tag, cipher: &1.cipher})
   end
 end
