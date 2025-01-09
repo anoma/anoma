@@ -146,6 +146,11 @@ defmodule Anoma.Node.Transaction.Mempool do
                         transactions and values the corresponding
                         transaction data. See `Tx.t()`
                         Default: %{}
+    - `:id_order` - A list of ids of submitted transaction candidates.
+                    Should be in exact correspondence with the keys of
+                    the :transactions field. Keeps track of the exact
+                    order in which new candidates get added to the pool.
+                    Default: []
     - `:round` - The round of the next block to be created.
                  Default: 0
     """
@@ -156,6 +161,8 @@ defmodule Anoma.Node.Transaction.Mempool do
       %{binary() => Mempool.Tx.t()},
       default: %{}
     )
+
+    field(:id_order, list(binary), default: [])
 
     field(:round, non_neg_integer(), default: 0)
   end
@@ -406,7 +413,8 @@ defmodule Anoma.Node.Transaction.Mempool do
 
     %Mempool{
       state
-      | transactions: Map.put(state.transactions, tx_id, value)
+      | transactions: Map.put(state.transactions, tx_id, value),
+        id_order: [tx_id | state.id_order]
     }
   end
 
@@ -442,7 +450,12 @@ defmodule Anoma.Node.Transaction.Mempool do
 
     block_event(Enum.map(execution_list, &elem(&1, 1)), round, node_id)
 
-    %Mempool{state | transactions: map, round: round + 1}
+    %Mempool{
+      state
+      | transactions: map,
+        id_order: Enum.filter(state.id_order, fn x -> x in Map.keys(map) end),
+        round: round + 1
+    }
   end
 
   ############################################################
