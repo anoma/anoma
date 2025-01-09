@@ -1893,4 +1893,25 @@ defmodule Examples.ENock do
     assert Noun.equal?(jam_value, Noun.Jam.cue!(cue_value))
     assert cue_value == Noun.Jam.jam(Noun.normalize_noun(jam_value))
   end
+
+  ####################################################################
+  ##                          Scry Crash                            ##
+  ####################################################################
+
+  @spec nock_scry_crash() :: Noun.t()
+  def nock_scry_crash() do
+    code = [12, [1 | 0] | [1 | 0]]
+
+    :error =
+      Nock.nock(0, code, %Nock{
+        scry_function: fn _ -> raise("this is your last scry") end
+      })
+
+    {:ok, 123} =
+      Nock.nock(0, code, %Nock{
+        scry_function: fn _ -> {:ok, 123} end
+      })
+
+    code
+  end
 end
