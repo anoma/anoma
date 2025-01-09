@@ -79,7 +79,7 @@ defmodule Anoma.Node.Utility.Consensus do
 
   def execute(node_id, interval) do
     {consensus, _} =
-      Mempool.tx_dump(node_id) |> Enum.reverse() |> Enum.split(10)
+      Mempool.tx_dump(node_id) |> Enum.split(10)
 
     Mempool.execute(node_id, consensus)
 

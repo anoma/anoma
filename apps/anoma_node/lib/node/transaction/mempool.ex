@@ -266,7 +266,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   I am a function to dump transactions.
 
   Given a node ID, I give all the transactions as currently stored in the
-  corresponding Mempool state.
+  corresponding Mempool state in the order in which they were submitted.
   """
 
   @spec tx_dump(String.t()) :: [Mempool.Tx.t()]
@@ -356,7 +356,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @impl true
   def handle_call(:dump, _from, state) do
-    {:reply, state.transactions |> Map.keys(), state}
+    {:reply, state.id_order |> Enum.reverse(), state}
   end
 
   def handle_call(_, _, state) do
