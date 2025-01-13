@@ -162,7 +162,7 @@ defmodule Nock do
       when twelve in [12, <<12>>] do
     with {:ok, _type_result} <- nock(subject, type_formula, env),
          {:ok, sub_result} <- nock(subject, sub_formula, env) do
-      read_with_id(sub_result, env)
+      env.scry_function.(sub_result)
     else
       _ -> :error
     end
@@ -172,21 +172,6 @@ defmodule Nock do
   @spec nock(Noun.t(), Noun.t(), t()) :: {:ok, Noun.t()} | :error
   def nock(subject, formula, environment) do
     naive_nock(subject, formula, environment)
-  end
-
-  @spec read_with_id(Noun.t(), t()) :: {:ok, Noun.t()} | :error
-  def read_with_id(id_key_list, env) do
-    if id_key_list do
-      with [id, key] <- id_key_list |> Noun.list_nock_to_erlang(),
-           {:ok, value} <-
-             env.scry_function.({id, key}) do
-        {:ok, value}
-      else
-        _ -> :error
-      end
-    else
-      :error
-    end
   end
 
   @spec scry_forbidden(Noun.t()) :: :error | {:ok, Noun.t()}
