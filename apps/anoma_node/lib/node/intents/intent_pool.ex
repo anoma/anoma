@@ -270,7 +270,7 @@ defmodule Anoma.Node.Intents.IntentPool do
     end
   end
 
-  @spec handle_new_state(t(), %EventBroker.Event{}) :: t()
+  @spec handle_new_state(t(), EventBroker.Event.t()) :: t()
   defp handle_new_state(state, %EventBroker.Event{
          body: %Node.Event{
            body: %Backends.TRMEvent{
