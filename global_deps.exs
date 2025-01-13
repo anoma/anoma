@@ -24,6 +24,6 @@
   {:lexical_credo, "~> 0.1.0", only: [:dev, :test]},
   # non-runtime dependencies below
   {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-  {:dialyxir, "~> 1.3", only: [:dev], runtime: false},
+  {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
   {:ex_doc, "~> 0.31", only: [:dev], runtime: false}
 ]
