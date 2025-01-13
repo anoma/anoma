@@ -29,7 +29,7 @@ defmodule CommitmentTree.Spec do
       key_size: key_size,
       hash: hash,
       key_zero: <<0::size(key_size)>>,
-      splay_suff_prod: Enum.map((depth - 1)..1, fn i -> splay ** i end)
+      splay_suff_prod: Enum.map((depth - 1)..1//-1, fn i -> splay ** i end)
     }
   end
 
