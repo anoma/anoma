@@ -359,14 +359,12 @@ defmodule Anoma.Node.Transaction.Backends do
     latest_root_time =
       for root <- trans.roots, reduce: 0 do
         time ->
-          with {:atomic, [{_, height_list, ^root}]} <-
+          with {:atomic, [{_, {height, _}, ^root}]} <-
                  :mnesia.transaction(fn ->
                    :mnesia.match_object(
-                     {Storage.updates_table(node_id), root, :_}
+                     {Storage.values_table(node_id), {:_, :anchor}, root}
                    )
                  end) do
-            height = hd(height_list)
-
             if height > time do
               height
             else
@@ -380,7 +378,7 @@ defmodule Anoma.Node.Transaction.Backends do
     action_nullifiers = TTransaction.nullifiers(trans)
 
     if latest_root_time > 0 do
-      root_coms =
+      {:ok, root_coms} =
         Storage.read(
           node_id,
           {latest_root_time, anoma_keyspace("commitments")}
