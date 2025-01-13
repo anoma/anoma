@@ -1203,6 +1203,61 @@ defmodule Examples.ENock do
   end
 
   @doc """
+  I represent the mug gate call.
+
+  Can be obtained by defining
+
+  =lmug =>  logics  |=   a=*  (mug a)
+
+  and computing
+
+  .*  lmug  [0 2]
+  """
+  @spec mug_arm() :: Noun.t()
+  def mug_arm() do
+    layer_depth = example_layer_depth(9)
+
+    "[8 [9 189 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  @doc """
+  I am the full mug gate with specified sample and logics context.
+  """
+  @spec mug_call(Noun.t()) :: Noun.t()
+  def mug_call(noun) do
+    sample = noun
+    [mug_arm(), sample | Nock.Lib.logics_core()]
+  end
+
+  @spec mug_test() :: bool()
+  def mug_test() do
+    assert 10000
+           |> mug_call()
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(795_713_195)
+
+    assert 10001
+           |> mug_call()
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(420_521_697)
+
+    assert 1
+           |> mug_call()
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1_901_865_568)
+
+    assert [1, 2, 3, 4, 5 | 0]
+           |> mug_call()
+           |> Nock.nock([9, 2, 0 | 1])
+           |> elem(1)
+           |> Noun.equal?(1_565_443_491)
+  end
+
+  @doc """
   I represent the lte gate call as a 2-argument gate.
 
   Can be obtained by defining
