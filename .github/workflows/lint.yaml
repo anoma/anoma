@@ -1,0 +1,80 @@
+# Lint
+#
+# I lint the codebase.
+#
+# I take three parameters:
+# - mix-env: The environment to build the release for.
+# - elixir-version: The version of Elixir to use.
+# - otp-version: The version of OTP to use.
+#
+# Linting means the following.
+# - Check if the code if formatted
+# - Check if the code has trailing whitespaces
+# - Check if the code has any issues reported by credo
+# - Check if the code has any issues reported by dialyzer
+name: Lint
+on:
+  workflow_call:
+    inputs:
+      mix-env:
+        required: true
+        type: string
+      elixir-version:
+        required: true
+        type: string
+      otp-version:
+        required: true
+        type: string
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout the repository
+        uses: actions/checkout@v4
+
+      - name: setup deps and _build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/deps
+            ${{ github.workspace }}/_build
+          key: ${{ runner.os }}-build-${{ inputs.mix-env }}-${{ hashFiles('mix.lock') }}
+
+      - name: setup plt cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/plts
+          key: ${{ runner.os }}-plt-${{ inputs.mix-env }}-${{ hashFiles('**/*.ex') }}
+
+      - name: setup elixir
+        uses: ./.github/actions/elixir_setup
+        with:
+          elixir-version: ${{ inputs.elixir-version }}
+          otp-version: ${{ inputs.otp-version }}
+
+      - name: install apt packages
+        uses: ./.github/actions/os_setup
+
+      # strict credo may fail
+      - name: mix credo
+        shell: bash
+        continue-on-error: true
+        run: MIX_ENV=${{inputs.mix-env}} mix credo --strict
+
+      # non strict credo should be blocking
+      - name: mix credo
+        shell: bash
+        continue-on-error: false
+        run: MIX_ENV=${{inputs.mix-env}} mix credo
+
+      - name: mix format
+        shell: bash
+        run: MIX_ENV=${{inputs.mix-env}} mix format --check-formatted
+
+      - name: mix dialyzer
+        shell: bash
+        run: MIX_ENV=${{inputs.mix-env}} mix dialyzer --format github
+
+      - name: trailing whitespaces
+        shell: bash
+        run: git diff-tree --check 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD

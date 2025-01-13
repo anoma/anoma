@@ -1,0 +1,88 @@
+# Release
+#
+# This is the pipeline that will run for every release.
+# A release is a tag that starts with a "v" followed by a version number.
+# In brief, pushing a tag will run this pipeline.
+#
+# The pipeline does the following.
+# 0. Try to merge this release with next.
+# 1. Compile the source code for all environments (dev, test, prod)
+# 2. Run the linter on the source code.
+# 3. Run the entire test suite
+# 4. Compile the documentation
+# 5. Make a release on GitHub
+
+name: Release
+run-name: Release `${{ github.ref_name }}`
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  compile:
+    strategy:
+      matrix:
+        mix_env: [dev, test, prod]
+    uses: ./.github/workflows/compile.yaml
+    with:
+      mix-env: ${{ matrix.mix_env }}
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  lint:
+    needs: compile
+    uses: ./.github/workflows/lint.yaml
+    with:
+      mix-env: "dev"
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  test:
+    needs: compile
+    uses: ./.github/workflows/test.yaml
+    with:
+      mix-env: "test"
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  docs:
+    needs: compile
+    permissions:
+      contents: write
+      id-token: write
+      pages: write
+    uses: ./.github/workflows/docs.yaml
+    with:
+      mix-env: "dev"
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  make_release:
+    needs: [compile, lint, test, docs]
+    strategy:
+      matrix:
+        beam_versions:
+          - otp: "27.1"
+            elixir: "1.17"
+          # - otp: "26.2.5.5"
+          #   elixir: "1.17"
+    permissions:
+      contents: write
+      id-token: write
+      pages: write
+    uses: ./.github/workflows/build_release.yaml
+    with:
+      mix-env: "prod"
+      elixir-version: "${{ matrix.beam_versions.elixir }}"
+      otp-version: "${{ matrix.beam_versions.otp }}"
+      release_name: ${{ github.ref_name }}
+
+  publish_release:
+    needs: [make_release]
+    permissions:
+      contents: write
+      id-token: write
+      pages: write
+    uses: ./.github/workflows/publish_release.yaml

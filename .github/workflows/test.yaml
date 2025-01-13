@@ -1,0 +1,49 @@
+# Test
+#
+# I run the testsuite on the code base.
+# If any tests fail, I fail.
+#
+# I take three parameters:
+# - mix-env: The environment to build the release for.
+# - elixir-version: The version of Elixir to use.
+# - otp-version: The version of OTP to use.
+name: Test
+on:
+  workflow_call:
+    inputs:
+      mix-env:
+        required: true
+        type: string
+      elixir-version:
+        required: true
+        type: string
+      otp-version:
+        required: true
+        type: string
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout the repository
+        uses: actions/checkout@v4
+
+      - name: setup deps and _build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/deps
+            ${{ github.workspace }}/_build
+          key: ${{ runner.os }}-build-${{ inputs.mix-env }}-${{ hashFiles('mix.lock') }}
+
+      - name: setup elixir
+        uses: ./.github/actions/elixir_setup
+        with:
+          elixir-version: ${{ inputs.elixir-version }}
+          otp-version: ${{ inputs.otp-version }}
+
+      - name: install apt packages
+        uses: ./.github/actions/os_setup
+
+      - name: mix test
+        shell: bash
+        run: MIX_ENV=${{inputs.mix-env}} mix test

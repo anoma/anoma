@@ -1,0 +1,35 @@
+# Push
+#
+# This is the pipeline that will run for every pushed commit, except for main and next.
+#
+# The pipeline does the following.
+# 1. Compile the source code for all environments (dev, test, prod)
+# 2. Run the linter on the source code.
+
+name: Push
+run-name: Push on `${{ github.ref_name }}`
+on:
+  push:
+    branches-ignore:
+      - 'main'
+      - 'next'
+      - 'base'
+
+jobs:
+  compile:
+    strategy:
+      matrix:
+        target: [dev, test, prod]
+    uses: ./.github/workflows/compile.yaml
+    with:
+      mix-env: ${{ matrix.target }}
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  lint:
+    needs: compile
+    uses: ./.github/workflows/lint.yaml
+    with:
+      mix-env: "dev"
+      elixir-version: "1.17"
+      otp-version: "27.1"

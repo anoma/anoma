@@ -1,0 +1,47 @@
+# Pull Request
+#
+# This is the pipeline that will run for every pull request that is created against the base branch.
+#
+# The pipeline does the following.
+# 0. Try to merge this release with next.
+# 1. Compile the source code for all environments (dev, test, prod)
+# 2. Run the linter on the source code.
+# 3. Run the entire test suite
+
+name: Pull Request
+run-name: Pull request `${{ github.head_ref }}` into `${{ github.base_ref }}`
+on:
+  pull_request:
+    branches: ["base"]
+
+jobs:
+  try_merge:
+    uses: ./.github/workflows/try_merge.yaml
+    with:
+      merge_with: "main"
+
+  compile:
+    strategy:
+      matrix:
+        target: [dev, test, prod]
+    uses: ./.github/workflows/compile.yaml
+    with:
+      mix-env: ${{ matrix.target }}
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  lint:
+    needs: compile
+    uses: ./.github/workflows/lint.yaml
+    with:
+      mix-env: "dev"
+      elixir-version: "1.17"
+      otp-version: "27.1"
+
+  test:
+    needs: compile
+    uses: ./.github/workflows/test.yaml
+    with:
+      mix-env: "test"
+      elixir-version: "1.17"
+      otp-version: "27.1"

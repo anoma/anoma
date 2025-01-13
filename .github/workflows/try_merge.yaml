@@ -1,0 +1,39 @@
+# Try Merge
+#
+# I will try to merge the current branch onto the target branch.
+# If the merge fails, I error.
+#
+# I take one parameter:
+# - merge_with: The branch to merge the current branch with.
+
+name: Try Merge
+on:
+  workflow_call:
+    inputs:
+      merge_with:
+        required: true
+        type: string
+jobs:
+  try-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout the repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fetch all branches
+
+      # get the current commit hash and store in the environment under `$SHA`
+      - name: get the current commit hash
+        id: commit_hash
+        shell: bash
+        run: echo "SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+      # checkout the target branch
+      - name: checkout the target branch
+        shell: bash
+        run: git checkout ${{ inputs.merge_with }}
+
+      # try and merge the commit into the target branch
+      - name: merge the commit into the checked out branch
+        shell: bash
+        run: git -c user.name="Dummy User" -c user.email="example@example.com" merge $SHA

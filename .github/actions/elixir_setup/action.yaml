@@ -1,0 +1,30 @@
+# Install Elixir
+#
+# I install the Elixir and OTP versions specified in the inputs.
+#
+# I take two parameters:
+# - elixir-version: The version of Elixir to install.
+# - otp-version: The version of OTP to install.
+
+name: Install Elixir
+description: Install Elixir
+inputs:
+  elixir-version:
+    description: "elixir version"
+    required: true
+  otp-version:
+    description: "otp version"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    # setup the beam
+    - name: configure beam
+      uses: erlef/setup-beam@v1
+      with:
+        otp-version: ${{ inputs.otp-version }}
+        elixir-version: ${{ inputs.elixir-version }}
+    # install protobuf package
+    - name: Install Protobuf Elixir dependencies
+      shell: bash
+      run: mix escript.install hex protobuf --force
