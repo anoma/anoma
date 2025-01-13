@@ -15,7 +15,6 @@ defmodule Anoma.CairoResource.Transaction do
   alias Anoma.CairoResource.Resource
   alias Anoma.CairoResource.Utils
   alias Anoma.CairoResource.Workflow
-  alias Anoma.Node.DummyStorage, as: Storage
 
   typedstruct enforce: true do
     # TODO: The roots, commitments, and nullifiers can be eliminated. We can
@@ -31,7 +30,7 @@ defmodule Anoma.CairoResource.Transaction do
     field(:delta, binary(), default: <<>>)
   end
 
-  @spec from_noun(Noun.t()) :: {:ok, t()}
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
         roots,
         commitments,
@@ -112,17 +111,17 @@ defmodule Anoma.CairoResource.Transaction do
            true <- verify_resource_logic(transaction, compliance_instances) do
         true
       else
-        _ -> false
+        reason -> reason
       end
     end
 
+    @spec verify_proofs(Transaction.t()) :: true | {:error, String.t()}
     defp verify_proofs(tx) do
-      tx.actions
-      |> Enum.all?(fn action ->
-        res = Action.verify(action)
-        Logger.debug("action result: #{inspect(res)}")
-        res
-      end)
+      failed =
+        Enum.reject(tx.actions, &Action.verify/1)
+
+      Enum.empty?(failed) or
+        {:error, "Compliance proofs or logic proofs verification failure"}
     end
 
     defp decode_compliance_instances(tx) do
@@ -135,6 +134,8 @@ defmodule Anoma.CairoResource.Transaction do
       end)
     end
 
+    @spec verify_delta(Transaction.t(), list(binary())) ::
+            true | {:error, String.t()}
     defp verify_delta(tx, compliance_instances) do
       # Collect binding public keys
       binding_pub_keys = get_binding_pub_keys(compliance_instances)
@@ -148,11 +149,12 @@ defmodule Anoma.CairoResource.Transaction do
              tx.delta |> :binary.bin_to_list()
            ) do
         true -> true
-        false -> false
-        {:error, _} -> false
+        _ -> {:error, "Delta proof verification failure"}
       end
     end
 
+    @spec verify_resource_logic(Transaction.t(), list(binary())) ::
+            true | {:error, String.t()}
     defp verify_resource_logic(tx, compliance_instances) do
       # Collect resource logics from compliance proofs
       resource_logics_from_compliance =
@@ -168,28 +170,20 @@ defmodule Anoma.CairoResource.Transaction do
           |> Enum.map(&ProofRecord.get_cairo_program_hash/1)
         end)
 
-      resource_logics_from_compliance == resource_logic_from_program
+      if resource_logics_from_compliance == resource_logic_from_program do
+        true
+      else
+        {:error, "Resource logic check failure"}
+      end
     end
 
-    @spec verify_duplicate_nfs(Anoma.RM.Transaction.t()) :: boolean()
+    @spec verify_duplicate_nfs(Transaction.t()) ::
+            true | {:error, String.t()}
     defp verify_duplicate_nfs(tx) do
-      Enum.uniq(tx.nullifiers) == tx.nullifiers
-    end
-
-    @impl true
-    def cm_tree(_tx, _storage) do
-      CommitmentTree.new(
-        CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
-        nil
-      )
-    end
-
-    @impl true
-    def resource_existence_check(transaction, storage) do
-      for root <- transaction.roots, reduce: true do
-        acc ->
-          root_key = ["rm", "commitment_root", root]
-          acc && Storage.get(storage, root_key) == {:ok, true}
+      if Enum.uniq(tx.nullifiers) == tx.nullifiers do
+        true
+      else
+        {:error, "Duplicate nullifiers error"}
       end
     end
 
@@ -360,5 +354,13 @@ defmodule Anoma.CairoResource.Transaction do
     else
       {:error, x} -> {:error, x}
     end
+  end
+
+  @spec cm_tree() :: CommitmentTree.t()
+  def cm_tree() do
+    CommitmentTree.new(
+      CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
+      nil
+    )
   end
 end

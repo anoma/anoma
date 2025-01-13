@@ -637,7 +637,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec recieve_round_event(String.t(), non_neg_integer()) :: :ok | :error_tx
-  defp recieve_round_event(node_id, round) do
+  def recieve_round_event(node_id, round) do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
