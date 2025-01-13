@@ -212,12 +212,31 @@ defmodule Anoma.Node.Transaction.Backends do
          true <- TransparentResource.Transaction.verify(tx, verify_options) do
       map =
         for action <- tx.actions,
-            reduce: %{commitments: MapSet.new(), nullifiers: MapSet.new()} do
-          %{commitments: cms, nullifiers: nlfs} ->
+            reduce: %{
+              commitments: MapSet.new(),
+              nullifiers: MapSet.new(),
+              blobs: []
+            } do
+          %{commitments: cms, nullifiers: nlfs, blobs: blobs} ->
             %{
               commitments: MapSet.union(cms, action.commitments),
-              nullifiers: MapSet.union(nlfs, action.nullifiers)
+              nullifiers: MapSet.union(nlfs, action.nullifiers),
+              blobs:
+                for {key, {value, bool}} <- action.app_data, reduce: blobs do
+                  acc ->
+                    if Noun.equal?(bool, 0) do
+                      [{key, value} | acc]
+                    else
+                      acc
+                    end
+                end
             }
+        end
+
+      writes =
+        for {key, value} <- map.blobs,
+            reduce: [{anoma_keyspace("anchor"), value(map.commitments)}] do
+          acc -> [{["anoma", "blob", key], value} | acc]
         end
 
       Ordering.add(
@@ -228,7 +247,7 @@ defmodule Anoma.Node.Transaction.Backends do
              {anoma_keyspace("nullifiers"), map.nullifiers},
              {anoma_keyspace("commitments"), map.commitments}
            ],
-           write: [{anoma_keyspace("anchor"), value(map.commitments)}]
+           write: writes
          }}
       )
 
