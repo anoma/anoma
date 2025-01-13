@@ -15,7 +15,9 @@ defmodule Nock.Jets.Mugs do
   @layer_7_context_mug Jets.calculate_mug_of_layer(7)
   @layer_8_context_mug Jets.calculate_mug_of_layer(8)
   @layer_9_context_mug Jets.calculate_mug_of_layer(9)
+  @layer_10_context_mug Jets.calculate_mug_of_layer(10)
   @layer_4_block_context_mug Jets.calculate_mug_of_param_layer(10, 4)
+  @layer_10_in_context_mug Jets.calculate_mug_of_param_layer(21, 10)
 
   # always the topmost layer
   @layer_rm_context_mug Jets.calculate_mug_of_layer(Nock.Lib.stdlib_layers())
@@ -102,6 +104,20 @@ defmodule Nock.Jets.Mugs do
       {"gor", 7, @layer_9_context_mug, &Nock.Jets.gor/1, :enabled, 30},
     Jets.calculate_mug_of_core(10, 9) =>
       {"mor", 7, @layer_9_context_mug, &Nock.Jets.mor/1, :enabled, 30},
+    Jets.calculate_mug_of_core(22, 10) =>
+      {"silt", 7, @layer_10_context_mug, &Nock.Jets.silt/1, :enabled, 30},
+    Jets.calculate_mug_of_param_core(84, 21, 10) =>
+      {"put", 7, @layer_10_in_context_mug, &Nock.Jets.put/1, :enabled, 30},
+    Jets.calculate_mug_of_param_core(174, 21, 10) =>
+      {"uni", 7, @layer_10_in_context_mug, &Nock.Jets.uni/1, :enabled, 30},
+    Jets.calculate_mug_of_param_core(85, 21, 10) =>
+      {"int", 7, @layer_10_in_context_mug, &Nock.Jets.int/1, :enabled, 30},
+    Jets.calculate_mug_of_param_core(175, 21, 10) =>
+      {"dif", 7, @layer_10_in_context_mug, &Nock.Jets.sdif/1, :enabled, 30},
+    Jets.calculate_mug_of_param_core(763, 21, 10) =>
+      {"duni", 7, @layer_10_in_context_mug, &Nock.Jets.duni/1, :enabled, 30},
+    Jets.calculate_mug_of_param_core(762, 21, 10) =>
+      {"has", 7, @layer_10_in_context_mug, &Nock.Jets.has/1, :enabled, 30},
     Jets.calculate_mug_of_core(1492, Nock.Lib.stdlib_layers()) =>
       {"kind", 7, @layer_rm_context_mug, &Nock.Jets.kind/1, :enabled, 100},
     Jets.calculate_mug_of_core(92, Nock.Lib.stdlib_layers()) =>

@@ -1437,6 +1437,367 @@ defmodule Examples.ENock do
     core
   end
 
+  @doc """
+  I represent the mor gate call.
+
+  Can be obtained by defining
+
+  =lsilt =>  logics  |=   a=(list)  (silt a)
+
+  and computing
+
+  .*  lsilt  [0 2]
+  """
+  @spec silt_arm() :: Noun.t()
+  def silt_arm() do
+    layer_depth = example_layer_depth(10)
+
+    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def silt_call(list) do
+    sample = list
+    [silt_arm(), sample | Nock.Lib.logics_core()]
+  end
+
+  def silt_test() do
+    list = [1, 2, 33, 2]
+
+    {:ok, set} =
+      list
+      |> Noun.Nounable.List.to_noun()
+      |> silt_call
+      |> Nock.nock([9, 2, 0 | 1])
+
+    assert list
+           |> MapSet.new()
+           |> Noun.Nounable.Set.to_noun()
+           |> Noun.equal?(set)
+  end
+
+  @doc """
+  The gate representing an in core creation with a specified set.
+
+  Can be gotten by defining
+
+  =l   =>  logics  |=  a=(set)  ~(. in a)
+
+  and getting it's arm with [0 2]
+  """
+  @spec in_arm() :: Noun.t()
+  def in_arm() do
+    layer_depth = example_layer_depth(10)
+
+    arm =
+      "[8 [9 21 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = 0
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec in_call(Noun.t()) :: :error | {:ok, Noun.t()}
+  def in_call(set) do
+    Nock.nock(in_arm(), [9, 2, 10, [6, 1 | set], 0 | 1])
+  end
+
+  @doc """
+  I represent a put gate with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [a=_in b=*]  (put:in b)
+
+  and grabbing the arm with [0 2]
+  """
+  @spec put_with_core() :: Noun.t()
+  def put_with_core() do
+    arm =
+      "[8 [7 [0 12] 9 84 0 1] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0, 0]
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec put_with_core_call(Noun.t(), Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def put_with_core_call(core, elem) do
+    Nock.nock(put_with_core(), [9, 2, 10, [6, 1 | [core | elem]], 0 | 1])
+  end
+
+  def put_test() do
+    set_elixir = [[1 | 2], [2 | 4], [2 | 3]] |> MapSet.new()
+    noun_set = set_elixir |> Noun.Nounable.Set.to_noun()
+
+    elem1 = [2 | 4]
+    elem2 = [1 | 5]
+
+    noun_set_new =
+      set_elixir |> MapSet.put(elem2) |> Noun.Nounable.Set.to_noun()
+
+    {:ok, in_core} = noun_set |> in_call()
+
+    assert in_core
+           |> put_with_core_call(elem1)
+           |> elem(1)
+           |> Noun.equal?(noun_set)
+
+    assert in_core
+           |> put_with_core_call(elem2)
+           |> elem(1)
+           |> Noun.equal?(noun_set_new)
+  end
+
+  @doc """
+  I represent a wyt gate with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  a=_in  wyt:a
+
+  and grabbing the arm with [0 2]
+  """
+  @spec wyt_with_core() :: Noun.t()
+  def wyt_with_core() do
+    arm =
+      "[7 [0 6] 9 92 0 1]"
+      |> Noun.Format.parse_always()
+
+    sample = 0
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec wyt_with_core_call(Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def wyt_with_core_call(core) do
+    Nock.nock(wyt_with_core(), [9, 2, 10, [6, 1 | core], 0 | 1])
+  end
+
+  def wyt_test() do
+    set = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    {:ok, in_core} = in_call(set)
+
+    assert in_core |> wyt_with_core_call() |> elem(1) |> Noun.equal?(4)
+  end
+
+  @doc """
+  I represent an int gate with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [a=_in b=(set)]  (int:a b)
+
+  and grabbing the arm with [0 2]
+  """
+  @spec int_with_core() :: Noun.t()
+  def int_with_core() do
+    arm =
+      "[8 [7 [0 12] 9 85 0 1] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0 | 0]
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec int_with_core_call(Noun.t(), Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def int_with_core_call(core, set) do
+    Nock.nock(int_with_core(), [9, 2, 10, [6, 1 | [core | set]], 0 | 1])
+  end
+
+  def int_test() do
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    {:ok, in_core} = in_call(set1)
+
+    set_res =
+      MapSet.new([1, 2, 3, 4])
+      |> MapSet.intersection(MapSet.new([3, 4, 5, 6]))
+      |> Noun.Nounable.Set.to_noun()
+
+    assert in_core
+           |> int_with_core_call(set2)
+           |> elem(1)
+           |> Noun.equal?(set_res)
+  end
+
+  @doc """
+  I represent a dif gate with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [a=_in b=(set)]  (dif:a b)
+
+  and grabbing the arm with [0 2]
+  """
+  @spec dif_with_core() :: Noun.t()
+  def dif_with_core() do
+    arm =
+      "[8 [7 [0 12] 9 175 0 1] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0 | 0]
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec dif_with_core_call(Noun.t(), Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def dif_with_core_call(core, set) do
+    Nock.nock(dif_with_core(), [9, 2, 10, [6, 1 | [core | set]], 0 | 1])
+  end
+
+  def dif_test() do
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    {:ok, in_core} = in_call(set1)
+
+    set_res =
+      MapSet.new([1, 2, 3, 4])
+      |> MapSet.difference(MapSet.new([3, 4, 5, 6]))
+      |> Noun.Nounable.Set.to_noun()
+
+    assert in_core
+           |> dif_with_core_call(set2)
+           |> elem(1)
+           |> Noun.equal?(set_res)
+  end
+
+  @doc """
+  I represent a has gate with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [a=_in b=(set)]  (has:a b)
+
+  and grabbing the arm with [0 2]
+  """
+  @spec has_with_core() :: Noun.t()
+  def has_with_core() do
+    arm =
+      "[8 [7 [0 12] 9 762 0 1] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0 | 0]
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec has_with_core_call(Noun.t(), Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def has_with_core_call(core, elem) do
+    Nock.nock(has_with_core(), [9, 2, 10, [6, 1 | [core | elem]], 0 | 1])
+  end
+
+  def has_test() do
+    set = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    elem1 = 1
+    elem2 = 5
+    {:ok, in_core} = in_call(set)
+
+    assert in_core |> has_with_core_call(elem1) |> elem(1) |> Noun.equal?(0)
+    assert in_core |> has_with_core_call(elem2) |> elem(1) |> Noun.equal?(1)
+  end
+
+  @doc """
+  I represent a uni gate with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [a=_in b=(set)]  (uni:a b)
+
+  and grabbing the arm with [0 2]
+  """
+  @spec uni_with_core() :: Noun.t()
+  def uni_with_core() do
+    arm =
+      "[8 [7 [0 12] 9 174 0 1] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0 | 0]
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec uni_with_core_call(Noun.t(), Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def uni_with_core_call(core, set) do
+    Nock.nock(uni_with_core(), [9, 2, 10, [6, 1 | [core | set]], 0 | 1])
+  end
+
+  def uni_test() do
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    {:ok, in_core} = in_call(set1)
+
+    set_res =
+      MapSet.new([1, 2, 3, 4])
+      |> MapSet.union(MapSet.new([3, 4, 5, 6]))
+      |> Noun.Nounable.Set.to_noun()
+
+    assert in_core
+           |> uni_with_core_call(set2)
+           |> elem(1)
+           |> Noun.equal?(set_res)
+  end
+
+  @doc """
+  I represent a duni gate with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [a=_in b=(set)]  (duni:a b)
+
+  and grabbing the arm with [0 2]
+  """
+  @spec duni_with_core() :: Noun.t()
+  def duni_with_core() do
+    arm =
+      "[8 [7 [0 12] 9 763 0 1] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0 | 0]
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec duni_with_core_call(Noun.t(), Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def duni_with_core_call(core, set) do
+    Nock.nock(duni_with_core(), [9, 2, 10, [6, 1 | [core | set]], 0 | 1])
+  end
+
+  def duni_test() do
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set3 = [5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    {:ok, in_core} = in_call(set1)
+
+    set_res =
+      MapSet.new([1, 2, 3, 4])
+      |> MapSet.union(MapSet.new([5, 6]))
+      |> Noun.Nounable.Set.to_noun()
+
+    assert in_core |> duni_with_core_call(set2) == :error
+
+    assert in_core
+           |> duni_with_core_call(set3)
+           |> elem(1)
+           |> Noun.equal?(set_res)
+  end
+
   def kind_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
