@@ -1798,6 +1798,109 @@ defmodule Examples.ENock do
            |> Noun.equal?(set_res)
   end
 
+  @doc """
+  The gate representing a by core creation with a specified set.
+
+  Can be gotten by defining
+
+  =l   =>  logics  |=  a=(set)  ~(. by a)
+
+  and getting it's arm with [0 2]
+  """
+  @spec by_arm() :: Noun.t()
+  def by_arm() do
+    layer_depth = example_layer_depth(11)
+
+    arm =
+      "[8 [9 21 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = 0
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec by_call(Noun.t()) :: :error | {:ok, Noun.t()}
+  def by_call(set) do
+    Nock.nock(by_arm(), [9, 2, 10, [6, 1 | set], 0 | 1])
+  end
+
+  @doc """
+  I represent a put gate with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [a=_by b=(pair)]  (put:a b)
+
+  and grabbing the arm with [0 2]
+  """
+  @spec mput_with_core() :: Noun.t()
+  def mput_with_core() do
+    arm =
+      "[8 [7 [0 12] 9 340 0 1] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0 | 0]
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec mput_with_core_call(Noun.t(), Noun.t(), Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def mput_with_core_call(core, key, val) do
+    Nock.nock(mput_with_core(), [9, 2, 10, [6, 1 | [core, key | val]], 0 | 1])
+  end
+
+  def mput_test() do
+    map = %{"a" => 1} |> Noun.Nounable.Map.to_noun()
+    {:ok, by_core} = by_call(map)
+
+    map_res =
+      %{"a" => 1} |> Map.put("a", 3) |> Noun.Nounable.Map.to_noun()
+
+    assert by_core
+           |> mput_with_core_call("a", 3)
+           |> elem(1)
+           |> Noun.equal?(map_res)
+  end
+
+  @doc """
+  I represent a got gate with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  [a=_by b=*]  (got:a b)
+
+  and grabbing the arm with [0 2]
+  """
+  @spec got_with_core() :: Noun.t()
+  def got_with_core() do
+    arm =
+      "[8 [7 [0 12] 9 701 0 1] 9 2 10 [6 0 29] 0 2]"
+      |> Noun.Format.parse_always()
+
+    sample = [0 | 0]
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec got_with_core_call(Noun.t(), Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def got_with_core_call(core, key) do
+    Nock.nock(got_with_core(), [9, 2, 10, [6, 1 | [core | key]], 0 | 1])
+  end
+
+  def got_test() do
+    map = %{"a" => 1} |> Noun.Nounable.Map.to_noun()
+    {:ok, by_core} = by_call(map)
+
+    assert by_core
+           |> got_with_core_call("a")
+           |> elem(1)
+           |> Noun.equal?(1)
+  end
+
   def kind_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 

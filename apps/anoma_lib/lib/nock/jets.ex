@@ -726,6 +726,29 @@ defmodule Nock.Jets do
     end
   end
 
+  @spec mput(Noun.t()) :: :error | {:ok, Noun.t()}
+  def mput(core) do
+    with {:ok, [key | value]} <- sample(core),
+         {:ok, door_map} <- Noun.axis(30, core),
+         {:ok, map} <- Noun.Nounable.Map.from_noun(door_map) do
+      {:ok, map |> Map.put(key, value) |> Noun.Nounable.Map.to_noun()}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec got(Noun.t()) :: :error | {:ok, Noun.t()}
+  def got(core) do
+    with {:ok, key} <- sample(core),
+         {:ok, door_map} <- Noun.axis(30, core),
+         {:ok, map} <- Noun.Nounable.Map.from_noun(door_map),
+         res <- Map.get(map, key) do
+      {:ok, Noun.Nounable.Map.to_noun(res)}
+    else
+      _ -> :error
+    end
+  end
+
   @spec kind(Noun.t()) :: :error | {:ok, Noun.t()}
   def kind(core) do
     with {:ok, a} when is_noun_cell(a) <- sample(core),
