@@ -6,7 +6,7 @@ defmodule Nock.Jets do
   import Noun
   import Bitwise
   alias Anoma.Crypto.Sign
-  alias Anoma.TransparentResource.{Delta, Action}
+  alias Anoma.TransparentResource.{Delta, Action, Resource}
 
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
           non_neg_integer()
@@ -484,7 +484,7 @@ defmodule Nock.Jets do
   def shax(core) do
     with {:ok, noun} when is_noun_atom(noun) <- sample(core),
          sample <- Noun.atom_integer_to_binary(noun) do
-      {:ok, :crypto.hash(:sha256, sample) |> an_integer()}
+      {:ok, :crypto.hash(:sha256, sample)}
     else
       _ -> :error
     end
@@ -603,6 +603,18 @@ defmodule Nock.Jets do
   end
 
   defp a_signed_integer(x), do: Noun.atom_binary_to_signed_integer(x)
+
+  @spec kind(Noun.t()) :: :error | {:ok, Noun.t()}
+  def kind(core) do
+    with {:ok, a} when is_noun_cell(a) <- sample(core),
+         {:ok, resource} <- Resource.from_noun(a) do
+      res = Resource.kind(resource)
+      {:ok, res}
+    else
+      _ ->
+        :error
+    end
+  end
 
   @spec delta_add(Noun.t()) :: :error | {:ok, Noun.t()}
   def delta_add(core) do
