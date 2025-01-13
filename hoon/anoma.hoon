@@ -476,6 +476,11 @@
              $(a c, b (cut c [1 1] b))
     ++  inv  |=(b=@ (sub (dec out) (sit b)))
     ++  out  (bex (bex a))
+    ++  rol  |=  [b=bloq c=@ d=@]  ^-  @
+         =+  e=(sit d)
+         =+  f=(bex (sub a b))
+         =+  g=(mod c f)
+         (sit (con (lsh [b g] e) (rsh [b (sub f g)] e)))
     --
   --
 ++  shay  ::  SHA-256 with length
@@ -683,5 +688,148 @@
   ?:  (gth a b)
     -1
   --1
+--
+::  layer 9: mug
+~%  %nine  +  ~
+|%
+++  dor
+  ~/  %dor
+  |=  [a=* b=*]
+  ^-  ?
+  ?:  =(a b)  &
+  ?.  ?=(@ a)
+    ?:  ?=(@ b)  |
+    ?:  =(-.a -.b)
+      $(a +.a, b +.b)
+    $(a -.a, b -.b)
+  ?.  ?=(@ b)  &
+  (lth a b)
+++  gor
+  ~/  %gor
+  |=  [a=* b=*]
+  ^-  ?
+  =+  [c=(mug a) d=(mug b)]
+  ?:  =(c d)
+    (dor a b)
+  (lth c d)
+++  reap
+  ~/  %reap
+  |*  [a=@ b=*]
+  |-  ^-  (list _b)
+  ?~  a  ~
+  [b $(a (dec a))]
+++  slag
+  ~/  %slag
+  |*  [a=@ b=(list)]
+  |-  ^+  b
+  ?:  =(0 a)  b
+  ?~  b  ~
+  $(b t.b, a (dec a))
+++  snag
+  ~/  %snag
+  |*  [a=@ b=(list)]
+  |-  ^+  ?>(?=(^ b) i.b)
+  ?~  b
+    ~_  leaf+"snag-fail"
+    !!
+  ?:  =(0 a)  i.b
+  $(b t.b, a (dec a))
+++  homo
+  |*  a=(list)
+  ^+  =<  $
+    |@  ++  $  ?:(*? ~ [i=(snag 0 a) t=$])
+    --
+  a
+++  weld
+  ~/  %weld
+  |*  [a=(list) b=(list)]
+  =>  .(a ^.(homo a), b ^.(homo b))
+  |-  ^+  b
+  ?~  a  b
+  [i.a $(a t.a)]
+++  muk   ::  standard murmur3
+  ~%  %muk  ..muk  ~
+  =,  shim
+  =+  ~(. fe 5)
+  |=  [syd=@ len=@ key=@]
+  =.  syd      (end 5 syd)
+  =/  pad      (sub len (met 3 key))
+  =/  data     (weld (rip 3 key) (reap pad 0))
+  =/  nblocks  (div len 4)  ::  intentionally off-by-one
+  =/  h1  syd
+  =+  [c1=0xcc9e.2d51 c2=0x1b87.3593]
+  =/  blocks  (rip 5 key)
+  =/  i  nblocks
+  =.  h1  =/  hi  h1  |-
+    ?:  =(0 i)  hi
+    =/  k1  (snag (sub nblocks i) blocks)  ::  negative array index
+    =.  k1  (sit (mul k1 c1))
+    =.  k1  (rol 0 15 k1)
+    =.  k1  (sit (mul k1 c2))
+    =.  hi  (mix hi k1)
+    =.  hi  (rol 0 13 hi)
+    =.  hi  (sum (sit (mul hi 5)) 0xe654.6b64)
+    $(i (dec i))
+  =/  tail  (slag (mul 4 nblocks) data)
+  =/  k1    0
+  =/  tlen  (dis len 3)
+  =.  h1
+    ?+  tlen  h1  ::  fallthrough switch
+      %3  =.  k1  (mix k1 (lsh [0 16] (snag 2 tail)))
+          =.  k1  (mix k1 (lsh [0 8] (snag 1 tail)))
+          =.  k1  (mix k1 (snag 0 tail))
+          =.  k1  (sit (mul k1 c1))
+          =.  k1  (rol 0 15 k1)
+          =.  k1  (sit (mul k1 c2))
+          (mix h1 k1)
+      %2  =.  k1  (mix k1 (lsh [0 8] (snag 1 tail)))
+          =.  k1  (mix k1 (snag 0 tail))
+          =.  k1  (sit (mul k1 c1))
+          =.  k1  (rol 0 15 k1)
+          =.  k1  (sit (mul k1 c2))
+          (mix h1 k1)
+      %1  =.  k1  (mix k1 (snag 0 tail))
+          =.  k1  (sit (mul k1 c1))
+          =.  k1  (rol 0 15 k1)
+          =.  k1  (sit (mul k1 c2))
+          (mix h1 k1)
+    ==
+  =.  h1  (mix h1 len)
+  |^  (fmix32 h1)
+  ++  fmix32
+    |=  h=@
+    =.  h  (mix h (rsh [0 16] h))
+    =.  h  (sit (mul h 0x85eb.ca6b))
+    =.  h  (mix h (rsh [0 13] h))
+    =.  h  (sit (mul h 0xc2b2.ae35))
+    =.  h  (mix h (rsh [0 16] h))
+    h
+  --
+++  mug
+  ~/  %mug
+  |=  a=*
+  |^  ?@  a  (mum 0xcafe.babe 0x7fff a)
+      =/  b  (~(cat block 5) $(a -.a) $(a +.a))
+      (mum 0xdead.beef 0xfffe b)
+  ::
+  ++  mum
+    |=  [syd=@uxF fal=@F key=@]
+    =,  shim
+    =/  wyd  (met 3 key)
+    =|  i=@ud
+    |-  ^-  @F
+    ?:  =(8 i)  fal
+    =/  haz=@F  (muk syd wyd key)
+    =/  ham=@F  (mix (rsh [0 31] haz) (end [0 31] haz))
+    ?.(=(0 ham) ham $(i +(i), syd +(syd)))
+  --
+++  mor
+  ~/  %mor
+  |=  [a=* b=*]
+  ^-  ?
+  =+  [c=(mug (mug a)) d=(mug (mug b))]
+  ?:  =(c d)
+    (dor a b)
+  (lth c d)
 --
 ==
