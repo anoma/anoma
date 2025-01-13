@@ -476,17 +476,26 @@ defmodule Anoma.Node.Transaction.Backends do
       {ct_new, anchor} =
         CommitmentTree.add(ct, tx.commitments)
 
+      ciphertexts = tx |> CTransaction.get_cipher_texts() |> MapSet.new()
+
       Ordering.add(
         node_id,
         {id,
          %{
            append: [
              {anoma_keyspace("cairo_nullifiers"), MapSet.new(tx.nullifiers)},
-             {anoma_keyspace("cairo_roots"), MapSet.put(append_roots, anchor)}
+             {anoma_keyspace("cairo_roots"),
+              MapSet.put(append_roots, anchor)},
+             {anoma_keyspace("cairo_ciphertexts"), ciphertexts}
            ],
            write: [{anoma_keyspace("cairo_ct"), ct_new}]
          }}
       )
+
+      # Get ciphertext from tx
+      _ciphertext = CTransaction.get_cipher_texts(tx)
+
+      # TODO: Store ciphertext
 
       cairo_rm_event(
         MapSet.new(tx.commitments),

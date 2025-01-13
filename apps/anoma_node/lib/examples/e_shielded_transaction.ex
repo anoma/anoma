@@ -35,11 +35,20 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
         output_resource_cm
       ])
 
+    set_of_ciphertexts =
+      Examples.ECairo.ETransaction.a_shielded_transaction()
+      |> Anoma.CairoResource.Transaction.get_cipher_texts()
+      |> MapSet.new()
+
     assert {:ok,
             MapSet.new([Anoma.Constants.default_cairo_rm_root(), anchor])} ==
              Storage.read(node_id, {1, ["anoma", "cairo_roots"]})
 
     assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "cairo_ct"]})
+
+    assert {:ok, set_of_ciphertexts} ==
+             Storage.read(node_id, {1, ["anoma", "cairo_ciphertexts"]})
+
     EventBroker.unsubscribe_me([])
 
     node_id
@@ -50,6 +59,11 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
     ETransaction.start_tx_module(node_id)
 
     tx_w_backend = complex_cairo_transaction()
+
+    set_of_ciphertexts =
+      Examples.ECairo.ETransaction.a_shielded_transaction_with_multiple_actions()
+      |> Anoma.CairoResource.Transaction.get_cipher_texts()
+      |> MapSet.new()
 
     EventBroker.subscribe_me([])
 
@@ -67,6 +81,9 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     assert {:ok, MapSet.new([input_nullifier_1, input_nullifier_2])} ==
              Storage.read(node_id, {1, ["anoma", "cairo_nullifiers"]})
+
+    assert {:ok, set_of_ciphertexts} ==
+             Storage.read(node_id, {1, ["anoma", "cairo_ciphertexts"]})
 
     output_cm_1 =
       ESResource.a_fixed_output_resource()
@@ -100,11 +117,21 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     tx_w_backend_1 = trivial_cairo_transaction()
 
+    set_of_ciphertexts1 =
+      Examples.ECairo.ETransaction.a_shielded_transaction()
+      |> Anoma.CairoResource.Transaction.get_cipher_texts()
+      |> MapSet.new()
+
     EventBroker.subscribe_me([])
 
     Mempool.tx(node_id, tx_w_backend_1, "id 1")
 
     tx_w_backend_2 = trivial_cairo_intent_transaction()
+
+    set_of_ciphertexts2 =
+      Examples.ECairo.ETransaction.a_shielded_transaction_with_intents()
+      |> Anoma.CairoResource.Transaction.get_cipher_texts()
+      |> MapSet.new()
 
     Mempool.tx(node_id, tx_w_backend_2, "id 2")
     Mempool.execute(node_id, Mempool.tx_dump(node_id))
@@ -149,6 +176,13 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
              Storage.read(node_id, {2, ["anoma", "cairo_roots"]})
 
     assert {:ok, tree} == Storage.read(node_id, {2, ["anoma", "cairo_ct"]})
+
+    set_of_ciphertexts =
+      MapSet.union(set_of_ciphertexts1, set_of_ciphertexts2)
+
+    assert {:ok, set_of_ciphertexts} ==
+             Storage.read(node_id, {2, ["anoma", "cairo_ciphertexts"]})
+
     EventBroker.unsubscribe_me([])
 
     node_id
