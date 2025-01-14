@@ -17,6 +17,9 @@ defmodule Anoma.MixProject do
         plt_local_path: "plts/anoma.plt",
         plt_core_path: "plts/core.plt",
         flags: [
+          # Check for functions whose specs include types the function
+          # can never return.
+          "-Wextra_return",
           # Turn off the warning for improper lists, because we use
           # bare cons frequently and deliberately.
           "-Wno_improper_lists"
