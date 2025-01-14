@@ -24,3 +24,6 @@ anoma_protobuf-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Generated protobuf modules
+lib/*

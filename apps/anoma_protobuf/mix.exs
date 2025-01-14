@@ -21,7 +21,7 @@ defmodule Anoma.Protobuf.MixProject do
       # these options are required for running `mix deps.compile` in the umbrella.
       # make changes here and in ../../mix.exs.
       protoc_options: [
-        elixir_out: "lib/anoma/protobuf",
+        elixir_out: "lib",
         proto_files: ["priv/protobuf"],
         extra_opts:
           "one_file_per_module=true,gen_descriptors=true,plugins=grpc"
