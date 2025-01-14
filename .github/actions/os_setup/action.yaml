@@ -1,0 +1,18 @@
+# OS Setup
+#
+# I install the necessary packages at the OS level.
+name: OS Setup
+description: OS Setup
+runs:
+  using: "composite"
+  steps:
+    - name: install apt packages
+      shell: bash
+      run: sudo apt-get install -y libsodium-dev protobuf-compiler
+
+    - name: install new protobuf
+      shell: bash
+      run: |
+        curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v29.0/protoc-29.0-linux-x86_64.zip && \
+        unzip protoc-29.0-linux-x86_64.zip -d $HOME/.local
+        echo "$HOME/.local" >> $GITHUB_PATH

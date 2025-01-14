@@ -167,4 +167,20 @@ defmodule Examples.ECommitmentTree do
 
     {ct, merkle_proof, anchor}
   end
+
+  @doc """
+  A commitment tree with commits from Examples.ERM.EShielded.ETransaction.a_shielded_transaction/0
+  """
+  @spec memory_backed_ct_with_trivial_cairo_tx(term()) ::
+          {CommitmentTree.t(), binary()}
+  def memory_backed_ct_with_trivial_cairo_tx(
+        cms,
+        spec \\ cairo_poseidon_spec()
+      ) do
+    tree = memory_backed_ct(spec)
+
+    {tree, anchor} = CommitmentTree.add(tree, cms)
+
+    {tree, anchor}
+  end
 end

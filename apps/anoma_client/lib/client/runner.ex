@@ -6,7 +6,7 @@ defmodule Anoma.Client.Runner do
           {:ok, Noun.t(), [Noun.t()]} | {:error, :failed_to_prove}
   def prove(program, inputs) do
     core =
-      (Noun.list_nock_to_erlang(program) ++ [Nock.rm_core()])
+      (Noun.list_nock_to_erlang(program) ++ [Nock.Lib.rm_core()])
       |> to_improper_list()
 
     eval_call =

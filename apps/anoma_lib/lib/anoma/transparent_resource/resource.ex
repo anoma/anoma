@@ -113,7 +113,7 @@ defmodule Anoma.TransparentResource.Resource do
 
   @spec kind(t()) :: binary()
   def kind(%Resource{label: label, logic: logic}) do
-    kind = label <> Noun.atom_integer_to_binary(Noun.Jam.jam(logic))
+    kind = [label | logic] |> Noun.Jam.jam()
     :crypto.hash(:sha256, kind)
   end
 

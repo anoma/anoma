@@ -476,6 +476,11 @@
              $(a c, b (cut c [1 1] b))
     ++  inv  |=(b=@ (sub (dec out) (sit b)))
     ++  out  (bex (bex a))
+    ++  rol  |=  [b=bloq c=@ d=@]  ^-  @
+         =+  e=(sit d)
+         =+  f=(bex (sub a b))
+         =+  g=(mod c f)
+         (sit (con (lsh [b g] e) (rsh [b (sub f g)] e)))
     --
   --
 ++  shay  ::  SHA-256 with length
@@ -683,5 +688,677 @@
   ?:  (gth a b)
     -1
   --1
+--
+::  layer 9: mug
+~%  %nine  +  ~
+|%
+++  dor
+  ~/  %dor
+  |=  [a=* b=*]
+  ^-  ?
+  ?:  =(a b)  &
+  ?.  ?=(@ a)
+    ?:  ?=(@ b)  |
+    ?:  =(-.a -.b)
+      $(a +.a, b +.b)
+    $(a -.a, b -.b)
+  ?.  ?=(@ b)  &
+  (lth a b)
+++  gor
+  ~/  %gor
+  |=  [a=* b=*]
+  ^-  ?
+  =+  [c=(mug a) d=(mug b)]
+  ?:  =(c d)
+    (dor a b)
+  (lth c d)
+++  reap
+  ~/  %reap
+  |*  [a=@ b=*]
+  |-  ^-  (list _b)
+  ?~  a  ~
+  [b $(a (dec a))]
+++  slag
+  ~/  %slag
+  |*  [a=@ b=(list)]
+  |-  ^+  b
+  ?:  =(0 a)  b
+  ?~  b  ~
+  $(b t.b, a (dec a))
+++  snag
+  ~/  %snag
+  |*  [a=@ b=(list)]
+  |-  ^+  ?>(?=(^ b) i.b)
+  ?~  b
+    ~_  leaf+"snag-fail"
+    !!
+  ?:  =(0 a)  i.b
+  $(b t.b, a (dec a))
+++  homo
+  |*  a=(list)
+  ^+  =<  $
+    |@  ++  $  ?:(*? ~ [i=(snag 0 a) t=$])
+    --
+  a
+++  weld
+  ~/  %weld
+  |*  [a=(list) b=(list)]
+  =>  .(a ^.(homo a), b ^.(homo b))
+  |-  ^+  b
+  ?~  a  b
+  [i.a $(a t.a)]
+++  muk   ::  standard murmur3
+  ~%  %muk  ..muk  ~
+  =,  shim
+  =+  ~(. fe 5)
+  |=  [syd=@ len=@ key=@]
+  =.  syd      (end 5 syd)
+  =/  pad      (sub len (met 3 key))
+  =/  data     (weld (rip 3 key) (reap pad 0))
+  =/  nblocks  (div len 4)  ::  intentionally off-by-one
+  =/  h1  syd
+  =+  [c1=0xcc9e.2d51 c2=0x1b87.3593]
+  =/  blocks  (rip 5 key)
+  =/  i  nblocks
+  =.  h1  =/  hi  h1  |-
+    ?:  =(0 i)  hi
+    =/  k1  (snag (sub nblocks i) blocks)  ::  negative array index
+    =.  k1  (sit (mul k1 c1))
+    =.  k1  (rol 0 15 k1)
+    =.  k1  (sit (mul k1 c2))
+    =.  hi  (mix hi k1)
+    =.  hi  (rol 0 13 hi)
+    =.  hi  (sum (sit (mul hi 5)) 0xe654.6b64)
+    $(i (dec i))
+  =/  tail  (slag (mul 4 nblocks) data)
+  =/  k1    0
+  =/  tlen  (dis len 3)
+  =.  h1
+    ?+  tlen  h1  ::  fallthrough switch
+      %3  =.  k1  (mix k1 (lsh [0 16] (snag 2 tail)))
+          =.  k1  (mix k1 (lsh [0 8] (snag 1 tail)))
+          =.  k1  (mix k1 (snag 0 tail))
+          =.  k1  (sit (mul k1 c1))
+          =.  k1  (rol 0 15 k1)
+          =.  k1  (sit (mul k1 c2))
+          (mix h1 k1)
+      %2  =.  k1  (mix k1 (lsh [0 8] (snag 1 tail)))
+          =.  k1  (mix k1 (snag 0 tail))
+          =.  k1  (sit (mul k1 c1))
+          =.  k1  (rol 0 15 k1)
+          =.  k1  (sit (mul k1 c2))
+          (mix h1 k1)
+      %1  =.  k1  (mix k1 (snag 0 tail))
+          =.  k1  (sit (mul k1 c1))
+          =.  k1  (rol 0 15 k1)
+          =.  k1  (sit (mul k1 c2))
+          (mix h1 k1)
+    ==
+  =.  h1  (mix h1 len)
+  |^  (fmix32 h1)
+  ++  fmix32
+    |=  h=@
+    =.  h  (mix h (rsh [0 16] h))
+    =.  h  (sit (mul h 0x85eb.ca6b))
+    =.  h  (mix h (rsh [0 13] h))
+    =.  h  (sit (mul h 0xc2b2.ae35))
+    =.  h  (mix h (rsh [0 16] h))
+    h
+  --
+++  mug
+  ~/  %mug
+  |=  a=*
+  |^  ?@  a  (mum 0xcafe.babe 0x7fff a)
+      =/  b  (~(cat block 5) $(a -.a) $(a +.a))
+      (mum 0xdead.beef 0xfffe b)
+  ::
+  ++  mum
+    |=  [syd=@uxF fal=@F key=@]
+    =,  shim
+    =/  wyd  (met 3 key)
+    =|  i=@ud
+    |-  ^-  @F
+    ?:  =(8 i)  fal
+    =/  haz=@F  (muk syd wyd key)
+    =/  ham=@F  (mix (rsh [0 31] haz) (end [0 31] haz))
+    ?.(=(0 ham) ham $(i +(i), syd +(syd)))
+  --
+++  mor
+  ~/  %mor
+  |=  [a=* b=*]
+  ^-  ?
+  =+  [c=(mug (mug a)) d=(mug (mug b))]
+  ?:  =(c d)
+    (dor a b)
+  (lth c d)
+--
+::  layer 10: sets
+~%  %ten  +  ~
+|%
+++  tree
+  |$  [node]
+  $@(~ [n=node l=(tree node) r=(tree node)])
+++  peg
+  ~/  %peg
+  |=  [a=@ b=@]
+  ?<  =(0 a)
+  ^-  @
+  ?-  b
+    %1  a
+    %2  (mul a 2)
+    %3  +((mul a 2))
+    *   (add (mod b 2) (mul $(b (div b 2)) 2))
+  ==
+++  set
+  |$  [item]
+  $|  (tree item)
+  |=(a=(tree) ?:(=(~ a) & ~(apt in a)))
+++  silt
+  |*  a=(list)
+  =+  b=*(tree _?>(?=(^ a) i.a))
+  (~(gas in b) a)
+++  in
+  =|  a=(tree)
+  |@
+  ++  all
+  ~/  %all
+  |*  b=$-(* ?)
+  |-  ^-  ?
+  ?~  a
+    &
+  ?&((b n.a) $(a l.a) $(a r.a))
+  ++  any
+  ~/  %any
+  |*  b=$-(* ?)
+  |-  ^-  ?
+  ?~  a
+    |
+  ?|((b n.a) $(a l.a) $(a r.a))
+  ++  apt
+  =<  $
+  ~/  %apt
+  =|  [l=(unit) r=(unit)]
+  |.  ^-  ?
+  ?~  a   &
+  ?&  ?~(l & (gor n.a u.l))
+      ?~(r & (gor u.r n.a))
+      ?~(l.a & ?&((mor n.a n.l.a) $(a l.a, l `n.a)))
+      ?~(r.a & ?&((mor n.a n.r.a) $(a r.a, r `n.a)))
+  ==
+  ++  bif
+  ~/  %bif
+  |*  b=*
+  ^+  [l=a r=a]
+  =<  +
+  |-  ^+  a
+  ?~  a
+    [b ~ ~]
+  ?:  =(b n.a)
+    a
+  ?:  (gor b n.a)
+    =+  c=$(a l.a)
+    ?>  ?=(^ c)
+    c(r a(l r.c))
+  =+  c=$(a r.a)
+  ?>  ?=(^ c)
+  c(l a(r l.c))
+  ++  del
+  ~/  %del
+  |*  b=*
+  |-  ^+  a
+  ?~  a
+    ~
+  ?.  =(b n.a)
+    ?:  (gor b n.a)
+      a(l $(a l.a))
+    a(r $(a r.a))
+  |-  ^-  [$?(~ _a)]
+  ?~  l.a  r.a
+  ?~  r.a  l.a
+  ?:  (mor n.l.a n.r.a)
+    l.a(r $(l.a r.l.a))
+  r.a(l $(r.a l.r.a))
+  ++  dif
+  ~/  %dif
+  =+  b=a
+  |@
+  ++  $
+    |-  ^+  a
+    ?~  b
+      a
+    =+  c=(bif n.b)
+    ?>  ?=(^ c)
+    =+  d=$(a l.c, b l.b)
+    =+  e=$(a r.c, b r.b)
+    |-  ^-  [$?(~ _a)]
+    ?~  d  e
+    ?~  e  d
+    ?:  (mor n.d n.e)
+      d(r $(d r.d))
+    e(l $(e l.e))
+  --
+  ++  dig
+  |=  b=*
+  =+  c=1
+  |-  ^-  (unit @)
+  ?~  a  ~
+  ?:  =(b n.a)  [~ u=(peg c 2)]
+  ?:  (gor b n.a)
+    $(a l.a, c (peg c 6))
+  $(a r.a, c (peg c 7))
+  ++  put
+  ~/  %put
+  |*  b=*
+  |-  ^+  a
+  ?~  a
+    [b ~ ~]
+  ?:  =(b n.a)
+    a
+  ?:  (gor b n.a)
+    =+  c=$(a l.a)
+    ?>  ?=(^ c)
+    ?:  (mor n.a n.c)
+      a(l c)
+    c(r a(l r.c))
+  =+  c=$(a r.a)
+  ?>  ?=(^ c)
+  ?:  (mor n.a n.c)
+    a(r c)
+  c(l a(r l.c))
+  ++  gas
+  ~/  %gas
+  |=  b=(list _?>(?=(^ a) n.a))
+  |-  ^+  a
+  ?~  b
+    a
+  $(b t.b, a (put i.b))
+  ++  has
+  ~/  %has
+  |*  b=*
+  ^-  ?
+  %.  [~ b]
+  |=  b=(unit _?>(?=(^ a) n.a))
+  =>  .(b ?>(?=(^ b) u.b))
+  |-  ^-  ?
+  ?~  a
+    |
+  ?:  =(b n.a)
+    &
+  ?:  (gor b n.a)
+    $(a l.a)
+  $(a r.a)
+  ++  int
+  ~/  %int
+  =+  b=a
+  |@
+  ++  $
+    |-  ^+  a
+    ?~  b
+      ~
+    ?~  a
+      ~
+    ?.  (mor n.a n.b)
+      $(a b, b a)
+    ?:  =(n.b n.a)
+      a(l $(a l.a, b l.b), r $(a r.a, b r.b))
+    ?:  (gor n.b n.a)
+      %-  uni(a $(a l.a, r.b ~))  $(b r.b)
+    %-  uni(a $(a r.a, l.b ~))  $(b l.b)
+  --
+  ++  rep
+  ~/  %rep
+  |*  b=_=>(~ |=([* *] +<+))
+  |-
+  ?~  a  +<+.b
+  $(a r.a, +<+.b $(a l.a, +<+.b (b n.a +<+.b)))
+  ++  run
+  ~/  %run
+  |*  b=gate
+  =+  c=`(set _?>(?=(^ a) (b n.a)))`~
+  |-  ?~  a  c
+  =.  c  (~(put in c) (b n.a))
+  =.  c  $(a l.a, c c)
+  $(a r.a, c c)
+  ++  tap
+  =<  $
+  ~/  %tap
+  =+  b=`(list _?>(?=(^ a) n.a))`~
+  |.  ^+  b
+  ?~  a
+    b
+  $(a r.a, b [n.a $(a l.a)])
+  ++  uni
+  ~/  %uni
+  =+  b=a
+  |@
+  ++  $
+    ?:  =(a b)  a
+    |-  ^+  a
+    ?~  b
+      a
+    ?~  a
+      b
+    ?:  =(n.b n.a)
+      b(l $(a l.a, b l.b), r $(a r.a, b r.b))
+    ?:  (mor n.a n.b)
+      ?:  (gor n.b n.a)
+        $(l.a $(a l.a, r.b ~), b r.b)
+      $(r.a $(a r.a, l.b ~), b l.b)
+    ?:  (gor n.a n.b)
+      $(l.b $(b l.b, r.a ~), a r.a)
+    $(r.b $(b r.b, l.a ~), a l.a)
+  --
+  ++  duni
+  ~/  %duni
+  =+  b=a
+  |@
+  ++  $
+    ?~  (~(int in a) b)
+      (~(uni in a) b)
+    !!
+  --
+  ++  wyt
+  =<  $
+  ~%  %wyt  +  ~
+  |.  ^-  @
+  ?~(a 0 +((add $(a l.a) $(a r.a))))
+  --
+--
+::  layer 11: maps
+~%  %eleven  +  ~
+|%
+++  need
+  ~/  %need
+  |*  a=(unit)
+  ?~  a  ~>(%mean.'need' !!)
+  u.a
+++  some
+  |*  a=*
+  [~ u=a]
+++  fall
+  |*  [a=(unit) b=*]
+  ?~(a b u.a)
+++  by
+  ~/  %by
+  =|  a=(tree (pair))  ::  (map)
+  =*  node  ?>(?=(^ a) n.a)
+  |@
+  ++  all
+  ~/  %all
+  |*  b=$-(* ?)
+  |-  ^-  ?
+  ?~  a
+    &
+  ?&((b q.n.a) $(a l.a) $(a r.a))
+  ++  any
+  ~/  %any
+  |*  b=$-(* ?)
+  |-  ^-  ?
+  ?~  a
+    |
+  ?|((b q.n.a) $(a l.a) $(a r.a))
+  ++  apt
+  =<  $
+  ~/  %apt
+  =|  [l=(unit) r=(unit)]
+  |.  ^-  ?
+  ?~  a   &
+  ?&  ?~(l & &((gor p.n.a u.l) !=(p.n.a u.l)))
+      ?~(r & &((gor u.r p.n.a) !=(u.r p.n.a)))
+      ?~  l.a   &
+      &((mor p.n.a p.n.l.a) !=(p.n.a p.n.l.a) $(a l.a, l `p.n.a))
+      ?~  r.a   &
+      &((mor p.n.a p.n.r.a) !=(p.n.a p.n.r.a) $(a r.a, r `p.n.a))
+  ==
+  ++  bif
+  ~/  %bif
+  |*  [b=* c=*]
+  ^+  [l=a r=a]
+  =<  +
+  |-  ^+  a
+  ?~  a
+    [[b c] ~ ~]
+  ?:  =(b p.n.a)
+    ?:  =(c q.n.a)
+      a
+    a(n [b c])
+  ?:  (gor b p.n.a)
+    =+  d=$(a l.a)
+    ?>  ?=(^ d)
+    d(r a(l r.d))
+  =+  d=$(a r.a)
+  ?>  ?=(^ d)
+  d(l a(r l.d))
+  ++  del
+  ~/  %del
+  |*  b=*
+  |-  ^+  a
+  ?~  a
+    ~
+  ?.  =(b p.n.a)
+    ?:  (gor b p.n.a)
+      a(l $(a l.a))
+    a(r $(a r.a))
+  |-  ^-  [$?(~ _a)]
+  ?~  l.a  r.a
+  ?~  r.a  l.a
+  ?:  (mor p.n.l.a p.n.r.a)
+    l.a(r $(l.a r.l.a))
+  r.a(l $(r.a l.r.a))
+  ++  dif
+  ~/  %dif
+  =+  b=a
+  |@
+  ++  $
+    |-  ^+  a
+    ?~  b
+      a
+    =+  c=(bif p.n.b q.n.b)
+    ?>  ?=(^ c)
+    =+  d=$(a l.c, b l.b)
+    =+  e=$(a r.c, b r.b)
+    |-  ^-  [$?(~ _a)]
+    ?~  d  e
+    ?~  e  d
+    ?:  (mor p.n.d p.n.e)
+      d(r $(d r.d))
+    e(l $(e l.e))
+  --
+  ++  dig
+  |=  b=*
+  =+  c=1
+  |-  ^-  (unit @)
+  ?~  a  ~
+  ?:  =(b p.n.a)  [~ u=(peg c 2)]
+  ?:  (gor b p.n.a)
+    $(a l.a, c (peg c 6))
+  $(a r.a, c (peg c 7))
+  ++  gas
+  ~/  %gas
+  |*  b=(list [p=* q=*])
+  =>  .(b `(list _?>(?=(^ a) n.a))`b)
+  |-  ^+  a
+  ?~  b
+    a
+  $(b t.b, a (put p.i.b q.i.b))
+  ++  get
+  ~/  %get
+  |*  b=*
+  =>  .(b `_?>(?=(^ a) p.n.a)`b)
+  |-  ^-  (unit _?>(?=(^ a) q.n.a))
+  ?~  a
+    ~
+  ?:  =(b p.n.a)
+    (some q.n.a)
+  ?:  (gor b p.n.a)
+    $(a l.a)
+  $(a r.a)
+  ++  got
+  |*  b=*
+  (need (get b))
+  ++  gut
+  |*  [b=* c=*]
+  (fall (get b) c)
+  ++  has
+  ~/  %has
+  |*  b=*
+  !=(~ (get b))
+  ++  int
+  ~/  %int
+  =+  b=a
+  |@
+  ++  $
+    |-  ^+  a
+    ?~  b
+      ~
+    ?~  a
+      ~
+    ?:  (mor p.n.a p.n.b)
+      ?:  =(p.n.b p.n.a)
+        b(l $(a l.a, b l.b), r $(a r.a, b r.b))
+      ?:  (gor p.n.b p.n.a)
+        %-  uni(a $(a l.a, r.b ~))  $(b r.b)
+      %-  uni(a $(a r.a, l.b ~))  $(b l.b)
+    ?:  =(p.n.a p.n.b)
+      b(l $(b l.b, a l.a), r $(b r.b, a r.a))
+    ?:  (gor p.n.a p.n.b)
+      %-  uni(a $(b l.b, r.a ~))  $(a r.a)
+    %-  uni(a $(b r.b, l.a ~))  $(a l.a)
+  --
+  ++  jab
+  ~/  %jab
+  |*  [key=_?>(?=(^ a) p.n.a) fun=$-(_?>(?=(^ a) q.n.a) _?>(?=(^ a) q.n.a))]
+  ^+  a
+  ::
+  ?~  a  !!
+  ::
+  ?:  =(key p.n.a)
+    a(q.n (fun q.n.a))
+  ::
+  ?:  (gor key p.n.a)
+    a(l $(a l.a))
+  ::
+  a(r $(a r.a))
+  ++  key
+  =<  $
+  ~/  %key
+  =+  b=`(set _?>(?=(^ a) p.n.a))`~
+  |.  ^+  b
+  ?~  a   b
+  $(a r.a, b $(a l.a, b (~(put in b) p.n.a)))
+  ++  mar
+  |*  [b=* c=(unit *)]
+  ?~  c
+    (del b)
+  (put b u.c)
+  ++  put
+  ~/  %put
+  |*  [b=* c=*]
+  |-  ^+  a
+  ?~  a
+    [[b c] ~ ~]
+  ?:  =(b p.n.a)
+    ?:  =(c q.n.a)
+      a
+    a(n [b c])
+  ?:  (gor b p.n.a)
+    =+  d=$(a l.a)
+    ?>  ?=(^ d)
+    ?:  (mor p.n.a p.n.d)
+      a(l d)
+    d(r a(l r.d))
+  =+  d=$(a r.a)
+  ?>  ?=(^ d)
+  ?:  (mor p.n.a p.n.d)
+    a(r d)
+  d(l a(r l.d))
+  ++  rep
+  ~/  %rep
+  |*  b=_=>(~ |=([* *] +<+))
+  |-
+  ?~  a  +<+.b
+  $(a r.a, +<+.b $(a l.a, +<+.b (b n.a +<+.b)))
+  ++  rib
+  |*  [b=* c=gate]
+  |-  ^+  [b a]
+  ?~  a  [b ~]
+  =+  d=(c n.a b)
+  =.  n.a  +.d
+  =+  e=$(a l.a, b -.d)
+  =+  f=$(a r.a, b -.e)
+  [-.f a(l +.e, r +.f)]
+  ++  run
+  ~/  %run
+  |*  b=gate
+  |-
+  ?~  a  a
+  [n=[p=p.n.a q=(b q.n.a)] l=$(a l.a) r=$(a r.a)]
+  ++  tap
+  =<  $
+  ~/  %tap
+  =+  b=`(list _?>(?=(^ a) n.a))`~
+  |.  ^+  b
+  ?~  a
+    b
+  $(a r.a, b [n.a $(a l.a)])
+  ++  uni
+  ~/  %uni
+  =+  b=a
+  |@
+  ++  $
+    |-  ^+  a
+    ?~  b
+      a
+    ?~  a
+      b
+    ?:  =(p.n.b p.n.a)
+      b(l $(a l.a, b l.b), r $(a r.a, b r.b))
+    ?:  (mor p.n.a p.n.b)
+      ?:  (gor p.n.b p.n.a)
+        $(l.a $(a l.a, r.b ~), b r.b)
+      $(r.a $(a r.a, l.b ~), b l.b)
+    ?:  (gor p.n.a p.n.b)
+      $(l.b $(b l.b, r.a ~), a r.a)
+    $(r.b $(b r.b, l.a ~), a l.a)
+  --
+  ++  uno
+  =+  b=a
+  |@
+  ++  $
+    |=  meg=$-([_p:node _q:node _q:node] _q:node)
+    |-  ^+  a
+    ?~  b
+      a
+    ?~  a
+      b
+    ?:  =(p.n.b p.n.a)
+      :+  [p.n.a (meg p.n.a q.n.a q.n.b)]
+        $(b l.b, a l.a)
+      $(b r.b, a r.a)
+    ?:  (mor p.n.a p.n.b)
+      ?:  (gor p.n.b p.n.a)
+        $(l.a $(a l.a, r.b ~), b r.b)
+      $(r.a $(a r.a, l.b ~), b l.b)
+    ?:  (gor p.n.a p.n.b)
+      $(l.b $(b l.b, r.a ~), a r.a)
+    $(r.b $(b r.b, l.a ~), a l.a)
+  --
+  ++  urn
+  ~/  %urn
+  |*  b=$-([* *] *)
+  |-
+  ?~  a  ~
+  a(n n.a(q (b p.n.a q.n.a)), l $(a l.a), r $(a r.a))
+  ++  wyt
+  =<  $
+  ~%  %wyt  +  ~
+  |.  ^-  @
+  ?~(a 0 +((add $(a l.a) $(a r.a))))
+  ++  val
+  =+  b=`(list _?>(?=(^ a) q.n.a))`~
+  |-  ^+  b
+  ?~  a   b
+  $(a r.a, b [q.n.a $(a l.a)])
+  --
 --
 ==

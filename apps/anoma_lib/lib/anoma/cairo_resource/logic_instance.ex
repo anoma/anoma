@@ -62,11 +62,19 @@ defmodule Anoma.CairoResource.LogicInstance do
     }
   end
 
-  @spec decrypt(list(binary()), binary()) :: list(binary())
-  def decrypt(cihper, sk) do
-    cihper
-    |> Enum.map(&:binary.bin_to_list/1)
-    |> Cairo.decrypt(:binary.bin_to_list(sk))
-    |> Enum.map(&:binary.list_to_bin/1)
+  @spec decrypt(list(binary()), binary()) ::
+          {:ok, list(binary())} | {:error, term()}
+  def decrypt(cipher, sk) do
+    sk_bin_list = :binary.bin_to_list(sk)
+
+    case cipher
+         |> Enum.map(&:binary.bin_to_list/1)
+         |> Cairo.decrypt(sk_bin_list) do
+      {:error, reason} ->
+        {:error, reason}
+
+      plain_text ->
+        {:ok, plain_text |> Enum.map(&:binary.list_to_bin/1)}
+    end
   end
 end

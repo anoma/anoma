@@ -10,7 +10,7 @@ defmodule Anoma.TransparentResource.Action do
     field(:commitments, MapSet.t(binary()), default: MapSet.new())
     field(:nullifiers, MapSet.t(binary()), default: MapSet.new())
     field(:proofs, MapSet.t(LogicProof.t()), default: MapSet.new())
-    field(:app_data, binary(), default: <<>>)
+    field(:app_data, %{binary() => {any(), bool()}}, default: %{})
   end
 
   @spec precis(t()) :: %{nullified: Delta.t(), committed: Delta.t()}
@@ -100,7 +100,8 @@ defmodule Anoma.TransparentResource.Action do
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([commits, nulls, proofs | app_data]) do
-    with {:ok, proofs} <- from_noun_proofs(proofs) do
+    with {:ok, proofs} <- from_noun_proofs(proofs),
+         {:ok, app_data_map} <- Noun.Nounable.Set.from_noun(app_data) do
       {:ok,
        %Action{
          commitments:
@@ -114,7 +115,10 @@ defmodule Anoma.TransparentResource.Action do
              &Noun.atom_integer_to_binary/1
            ),
          proofs: proofs,
-         app_data: Noun.atom_integer_to_binary(app_data)
+         app_data:
+           for [key | [value | bool]] <- app_data_map, reduce: %{} do
+             acc -> Map.put(acc, key, {value, bool})
+           end
        }}
     end
   end
@@ -130,7 +134,7 @@ defmodule Anoma.TransparentResource.Action do
         MapSet.to_list(trans.commitments),
         MapSet.to_list(trans.nullifiers),
         Enum.map(trans.proofs, &Noun.Nounable.to_noun/1)
-        | trans.app_data
+        | Noun.Nounable.Set.to_noun(trans.app_data)
       ]
     end
   end

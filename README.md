@@ -46,35 +46,52 @@ Download the [Anoma release](https://github.com/anoma/anoma/releases) for your p
 ## Compilation from sources
 ### Build Dependencies
 
-To compile a working Anoma Node the following dependencies are required:
+Dependencies needed regardless of platform.
+ - Elixir: consult the installation instructions [here]()
+ - Rust: consult the installation instructions [here](https://www.rust-lang.org/tools/install).
+ - Protobuf: consult the installation instructions [here](https://grpc.io/docs/protoc-installation/)
+ - Elixir plugin for protobufs `protoc-gen-elixir`
+   ```shell
+   mix escript.install hex protobuf
+   ```
 
-1. Mac OS X Development Environment:
-    * Install Apple Command Line Developer Tools: `xcode-select --install`
-    * Install [MacPorts](https://www.macports.org/install.php) (or equivalent package manager)
-2. Windows Development Environment:
-    * Install [Build Tools for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Workload: Visual C++ build tools)
-    * Install [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
-3. Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (Windows and Linux only)
-4. Install CMake:
-    * Linux and Mac OS X: use package manager
-    * Windows: not required
-5. Install [Sodium](https://doc.libsodium.org/installation#pre-built-libraries) (Windows only)
-    * Ensure that the `LIB` and `INCLUDE` environment variables point to this installation
-6. Install [Protocol Buffers](https://grpc.io/docs/protoc-installation/)
-    * Note: the default protobuf in aptitude is very outdated. Be sure to install it manually.
-7. Install [Elixir](https://elixir-lang.org/install.html) (version 1.17.0 or higher) and with it:
-     * Install [Hex package manager](https://hexdocs.pm/mix/1.13/Mix.Tasks.Local.Hex.html)
-     * Install [Rebar3](https://hexdocs.pm/mix/1.14/Mix.Tasks.Local.Rebar.html)
-     * Install protobuf-elixir: `mix escript.install hex protobuf`
-8. Install [Rust](https://www.rust-lang.org/tools/install) (version 1.76.0 or newer)
+----
+#### MacOS
+Ensure Apple Command Line Developer Tools are installed.
 
+```shell
+xcode-select --install
+```
+
+Using `brew`, install the following dependencies.
+
+```shell
+brew install elixir cmake protobuf git
+```
+
+---
+#### Ubuntu/Debian
+
+Dependencies that you might not have installed.
+
+```shell
+apt install cmake
+```
+
+---
+#### Windows
+
+ - Install [Build Tools for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Workload: Visual C++ build tools)
+ - Install [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
+
+
+---
 ### Compiling and Running
 
 To install the dependencies as well as Anoma run:
 
 ```bash
 mix deps.get
-mix escript.install hex protobuf
 mix compile
 ```
 

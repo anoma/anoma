@@ -8,6 +8,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node.Examples.ENode
   require ExUnit.Assertions
   import ExUnit.Assertions
+  import ExUnit.CaptureLog
 
   ############################################################
   #                          Storage                         #
@@ -363,12 +364,19 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     EventBroker.subscribe_me([])
 
-    Mempool.tx(node_id, code, "id 2")
-    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+    log =
+      capture_log(fn ->
+        Mempool.tx(node_id, code, "id 2")
+        Mempool.execute(node_id, Mempool.tx_dump(node_id))
+        recieve_logger_failure(node_id, "nullifier already")
+      end)
 
-    recieve_logger_failure(node_id, "nullifier already")
+    # Occasionally, the log might be empty because `Anoma.Node.Logging`
+    # hasn't finished writing the log entries yet.
+    assert log =~ "nullifier already" || log == ""
 
     EventBroker.unsubscribe_me([])
+
     node_id
   end
 
@@ -378,10 +386,16 @@ defmodule Anoma.Node.Examples.ETransaction do
     code = trivial_transparent_transaction_no_eph()
     EventBroker.subscribe_me([])
 
-    Mempool.tx(node_id, code, "id 1")
-    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+    log =
+      capture_log(fn ->
+        Mempool.tx(node_id, code, "id 1")
+        Mempool.execute(node_id, Mempool.tx_dump(node_id))
+        recieve_logger_failure(node_id, "not committed")
+      end)
 
-    recieve_logger_failure(node_id, "not committed")
+    # Occasionally, the log might be empty because `Anoma.Node.Logging`
+    # hasn't finished writing the log entries yet.
+    assert log =~ "not committed" || log == ""
 
     node_id
   end
@@ -623,7 +637,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec recieve_round_event(String.t(), non_neg_integer()) :: :ok | :error_tx
-  defp recieve_round_event(node_id, round) do
+  def recieve_round_event(node_id, round) do
     receive do
       %EventBroker.Event{
         body: %Node.Event{

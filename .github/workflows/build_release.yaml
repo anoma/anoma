@@ -1,0 +1,68 @@
+# Build Release
+#
+# I build a release of the project on GitHub.
+#
+# I take three parameters:
+# - mix-env: The environment to build the release for.
+# - elixir-version: The version of Elixir to use.
+# - otp-version: The version of OTP to use.
+name: Build Release
+on:
+  workflow_call:
+    inputs:
+      mix-env:
+        required: true
+        type: string
+      elixir-version:
+        required: true
+        type: string
+      otp-version:
+        required: true
+        type: string
+      release_name:
+        required: true
+        type: string
+jobs:
+  build_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout the repository
+        uses: actions/checkout@v4
+
+      - name: setup deps and _build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/deps
+            ${{ github.workspace }}/_build
+          key: ${{ runner.os }}-build-${{ inputs.mix-env }}-${{ hashFiles('mix.lock') }}
+
+      - name: setup elixir
+        uses: ./.github/actions/elixir_setup
+        with:
+          elixir-version: ${{ inputs.elixir-version }}
+          otp-version: ${{ inputs.otp-version }}
+
+      - name: install apt packages
+        uses: ./.github/actions/os_setup
+
+      #---------------------------------------------------------------------------
+      # Create binaries
+      #
+      # This part of the action generates all the binaries that are necessary
+      # for a release.
+      # If these need to be compiled for different elixir versions, the matrix
+      # should be put in the on_release.yml file.
+
+      - name: create the client binary
+        continue-on-error: false
+        shell: bash
+        run: |
+          MIX_ENV=prod mix do --app anoma_client escript.build
+          mv "apps/anoma_client/anoma_client" "apps/anoma_client/anoma_client-elixir-${{ inputs.elixir-version }}-otp-${{ inputs.otp-version }}"
+
+      - name: create artifact of the client binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: anoma_client-elixir-${{ inputs.elixir-version }}-otp-${{ inputs.otp-version }}
+          path: "apps/anoma_client/anoma_client-elixir-${{ inputs.elixir-version }}-otp-${{ inputs.otp-version }}"

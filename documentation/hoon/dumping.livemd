@@ -323,7 +323,7 @@ Let us look at the fibonacci example in Elixir
 
 <!-- livebook:{"break_markdown":true} -->
 
-Here we have some just plain old nock string representing the function, and we append the context to it via normal Elixir. We do this to save space, as we really don't want to dump the entire `Nock.logics_core/0` for every simple function.
+Here we have some just plain old nock string representing the function, and we append the context to it via normal Elixir. We do this to save space, as we really don't want to dump the entire `Nock.Lib.logics_core/0` for every simple function.
 
 On the Hoon side we just run this to get the proper new logic
 

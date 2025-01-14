@@ -1,4 +1,4 @@
-ExUnit.start()
+ExUnit.start(exclude: [:zk])
 
 # the ets table for created nodes is used by all test modules that use
 # an example node.

@@ -1,14 +1,14 @@
 {
     "self_resource": {
-        "logic" : "0xf38cb08a12bbf1f4390eab53c5f4849b7b7c3b98190958c1f2b214f638bf37",
+        "logic" : "0x190b872fb979300555afbdab15fee956aeb133771dc1e290f75a8d7a2eedbe5",
         "label" : "0x0",
         "quantity" : "0x1",
         "data" : "0x0",
         "eph" : true,
-        "nonce" : "0x6fb4ccbcff2c7e712ccce66dc7dfc1d8ecafd26362112a53d589c84386dd96f",
-        "npk" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
+        "nonce" : "0x7169270b9d6cedb2dca1757090e63be7b434683d46a2ef90421e9aaaa605ad8",
+        "nk_commitment" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
         "rseed" : "0x0"
     },
     "resource_nf_key": "0x1",
-    "merkle_path": [{"fst": "0x6fb4ccbcff2c7e712ccce66dc7dfc1d8ecafd26362112a53d589c84386dd96f", "snd": true}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}]
+    "merkle_path": [{"fst": "0x7169270b9d6cedb2dca1757090e63be7b434683d46a2ef90421e9aaaa605ad8", "snd": true}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}]
   }
