@@ -64,6 +64,9 @@ defmodule Anoma.TransparentResource.Action do
       failed_proofs =
         action.proofs
         |> Enum.map(fn proof = %LogicProof{} ->
+          # unless proof.nullifiers |> Enum.empty?() do
+          #   require IEx; IEx.pry()
+          # end
           cond do
             not LogicProof.verify_resource_corresponds_to_tag(proof) ->
               "Logic Proof failed, the resource's commitment\nullifier:\n" <>

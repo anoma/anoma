@@ -7,6 +7,8 @@ defmodule Anoma.TransparentResource.Transaction do
   alias Anoma.TransparentResource.Delta
   alias __MODULE__
 
+  require Logger
+
   typedstruct enforce: true do
     field(:roots, MapSet.t(binary()), default: MapSet.new())
     field(:actions, MapSet.t(Action.t()), default: MapSet.new())
@@ -39,12 +41,18 @@ defmodule Anoma.TransparentResource.Transaction do
       )
 
     with true <- verify_tx_roots(tx, args[:root_closure]),
+         Logger.debug("1"),
          true <-
            verify_tx_storage_checks(tx, args[:double_insertion_closure]),
+         Logger.debug("2"),
          true <- verify_tx_action_distinctness(tx),
+         Logger.debug("3"),
          true <- verify_tx_action_compliance(tx),
+         Logger.debug("4"),
          true <- verify_tx_action_delta_sum(tx),
+         Logger.debug("5"),
          true <- verify_tx_has_zero_delta(tx),
+         Logger.debug("6"),
          true <- verify_tx_action_logics(tx) do
       true
     else

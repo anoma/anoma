@@ -21,6 +21,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   import Nock
   require Noun
+  require Logger
   require Node.Event
   use EventBroker.DefFilter
   use TypedStruct
@@ -117,8 +118,10 @@ defmodule Anoma.Node.Transaction.Backends do
              node_id: String.t(),
              back: backend()
   def execute(node_id, {backend, tx_code}, id) do
+    Logger.debug("execute")
     env = %Nock{scry_function: fn a -> Ordering.read(node_id, a) end}
     vm_result = vm_execute(tx_code, env, id)
+    Logger.debug("vm_result #{inspect(vm_result)}")
     result_event(id, vm_result, node_id, backend)
 
     res =
@@ -143,9 +146,13 @@ defmodule Anoma.Node.Transaction.Backends do
           {:ok, Noun.t()} | :vm_error
   defp vm_execute(tx_code, env, id) do
     with {:ok, code} <- cue_when_atom(tx_code),
+          Logger.debug("1"),
          {:ok, [_ | stage_2_tx]} <- nock(code, [9, 2, 0 | 1], env),
+          Logger.debug("2"),
          {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
-         {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
+          Logger.debug("3"),
+         {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env),
+          Logger.debug("4") do
       {:ok, result}
     else
       _e -> :vm_error
@@ -186,6 +193,7 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec transparent_resource_tx(String.t(), binary(), Noun.t()) ::
           {:ok, any} | :error
   defp transparent_resource_tx(node_id, id, result) do
+    Logger.debug("transparent_resource_tx")
     storage_checks = fn tx -> storage_check?(node_id, id, tx) end
     verify_tx_root = fn tx -> verify_tx_root(node_id, tx) end
 
@@ -196,6 +204,8 @@ defmodule Anoma.Node.Transaction.Backends do
 
     with {:ok, tx} <- TransparentResource.Transaction.from_noun(result),
          true <- TransparentResource.Transaction.verify(tx, verify_options) do
+      Logger.debug("I'm valid")
+
       map =
         for action <- tx.actions,
             reduce: %{commitments: MapSet.new(), nullifiers: MapSet.new()} do
@@ -205,6 +215,8 @@ defmodule Anoma.Node.Transaction.Backends do
               nullifiers: MapSet.union(nlfs, action.nullifiers)
             }
         end
+
+      Logger.debug("I'm really valid")
 
       Ordering.add(
         node_id,
@@ -323,6 +335,8 @@ defmodule Anoma.Node.Transaction.Backends do
       end
 
     action_nullifiers = TTransaction.nullifiers(trans)
+    Logger.debug("#{inspect(latest_root_time)}")
+    Logger.debug("#{inspect(trans.roots)}")
 
     if latest_root_time > 0 do
       {:ok, root_coms} =
@@ -330,6 +344,8 @@ defmodule Anoma.Node.Transaction.Backends do
           node_id,
           {latest_root_time, anoma_keyspace("commitments")}
         )
+
+      Logger.debug("after root_coms read")
 
       for <<"NF_", rest::binary>> <- action_nullifiers,
           reduce: MapSet.new([]) do
