@@ -41,8 +41,6 @@ defmodule Anoma.Node.Examples.EConsensus do
 
     {:ok, _} = Consensus.start_link(node_id: node_id, interval: 500)
 
-    Mempool.tx(node_id, ETransaction.zero(), "id 1")
-
     assert_receive(
       %EventBroker.Event{
         body: %Node.Event{
@@ -66,6 +64,8 @@ defmodule Anoma.Node.Examples.EConsensus do
       },
       5000
     )
+
+    Mempool.tx(node_id, ETransaction.zero(), "id 1")
 
     assert_receive(
       %EventBroker.Event{
