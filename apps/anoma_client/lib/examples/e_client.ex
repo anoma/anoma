@@ -117,6 +117,19 @@ defmodule Anoma.Client.Examples.EClient do
   end
 
   @doc """
+  I check that the last client config is readable.
+  """
+  @spec get_last_client_config() :: {:ok, map()} | {:error, :no_client_config}
+  def get_last_client_config() do
+    kill_existing_client()
+
+    create_example_client()
+
+    assert {:ok, %{"grpc_port" => _, "node_id" => _}} =
+             Client.get_last_client_config()
+  end
+
+  @doc """
   I create the setup necessary to run each example below without arguments.
   """
   @spec setup() :: EConnection.t()
