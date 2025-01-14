@@ -17,9 +17,24 @@ defmodule Anoma.MixProject do
         plt_local_path: "plts/anoma.plt",
         plt_core_path: "plts/core.plt",
         flags: [
+          # Checks for functions which can only return via an exception.
+          "-Werror_handling",
+          # Check for functions whose specs include types the function
+          # can never return.
+          "-Wextra_return",
+          # Check for functions which return values not included in
+          # their spec.
+          "-Wmissing_return",
           # Turn off the warning for improper lists, because we use
           # bare cons frequently and deliberately.
-          "-Wno_improper_lists"
+          "-Wno_improper_lists",
+          # Checks for underspecified functions, i.e. functions whose
+          # specifications are strictly more permissive than their
+          # success typing.
+          "-Wunderspecs",
+          # Checks for some unmatched return values, i.e., an
+          # exhaustiveness check on structured returns.
+          "-Wunmatched_returns"
         ],
         plt_add_apps: [:mix, :ex_unit]
       ],
