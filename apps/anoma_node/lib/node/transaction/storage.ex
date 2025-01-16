@@ -48,7 +48,8 @@ defmodule Anoma.Node.Transaction.Storage do
   """
 
   alias Anoma.Node
-  alias Node.Registry
+  alias Anoma.Node.Tables
+  alias Anoma.Node.Registry
 
   use EventBroker.DefFilter
   use GenServer
@@ -165,21 +166,23 @@ defmodule Anoma.Node.Transaction.Storage do
   def init(args) do
     Process.set_label(__MODULE__)
 
-    keylist =
+    args =
       args
       |> Keyword.validate!([
         :node_id,
-        uncommitted_height: 0,
-        rocks: false
+        uncommitted_height: 0
       ])
 
-    node_id = keylist[:node_id]
+    # initialize the tables in the mnesia backend
+    case Tables.initialize_tables_for_node(args[:node_id]) do
+      {:ok, _} ->
+        state = struct(__MODULE__, Enum.into(args, %{}))
 
-    init_tables(node_id, args[:rocks])
+        {:ok, state}
 
-    state = struct(__MODULE__, Enum.into(args, %{}))
-
-    {:ok, state}
+      {:error, :failed_to_initialize_tables} ->
+        {:stop, :failed_to_initialize_tables}
+    end
   end
 
   ############################################################
@@ -360,7 +363,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
   @spec blocks_table(String.t()) :: atom()
   def blocks_table(node_id) do
-    String.to_atom("#{__MODULE__.Blocks}_#{:erlang.phash2(node_id)}")
+    Tables.table_blocks(node_id)
   end
 
   @doc """
@@ -371,7 +374,7 @@ defmodule Anoma.Node.Transaction.Storage do
   """
   @spec values_table(String.t()) :: atom()
   def values_table(node_id) do
-    String.to_atom("#{__MODULE__.Values}_#{:erlang.phash2(node_id)}")
+    Tables.table_values(node_id)
   end
 
   @doc """
@@ -382,7 +385,7 @@ defmodule Anoma.Node.Transaction.Storage do
   """
   @spec updates_table(String.t()) :: atom()
   def updates_table(node_id) do
-    String.to_atom("#{__MODULE__.Updates}_#{:erlang.phash2(node_id)}")
+    Tables.table_updates(node_id)
   end
 
   ############################################################
@@ -522,34 +525,6 @@ defmodule Anoma.Node.Transaction.Storage do
 
       {:reply, :ok, new_state}
     end
-  end
-
-  ############################################################
-  #                           Helpers                        #
-  ############################################################
-
-  ############################################################
-  #                        Initialization                    #
-  ############################################################
-
-  @spec init_tables(String.t(), bool()) :: any()
-  defp init_tables(node_id, rocks) do
-    rocks_opt = Anoma.Utility.rock_opts(rocks)
-
-    :mnesia.create_table(
-      values_table(node_id),
-      rocks_opt ++ [attributes: [:key, :value]]
-    )
-
-    :mnesia.create_table(
-      updates_table(node_id),
-      rocks_opt ++ [attributes: [:key, :value]]
-    )
-
-    :mnesia.create_table(
-      blocks_table(node_id),
-      rocks_opt ++ [attributes: [:round, :block]]
-    )
   end
 
   ############################################################
