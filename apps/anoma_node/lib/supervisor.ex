@@ -11,6 +11,8 @@ defmodule Anoma.Supervisor do
 
   use Supervisor
 
+  alias Anoma.Node.Tables
+
   @spec start_link(any()) :: Supervisor.on_start()
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
@@ -19,6 +21,8 @@ defmodule Anoma.Supervisor do
   @impl true
   def init(_args) do
     Process.set_label(__MODULE__)
+
+    :ok = Anoma.Node.Tables.initialize_storage()
 
     children = [
       {Elixir.Registry, keys: :unique, name: Anoma.Node.Registry},
@@ -46,9 +50,33 @@ defmodule Anoma.Supervisor do
         tx_args: [mempool: [], ordering: [], storage: []]
       ])
 
+    node_id = args[:node_id]
+    {:ok, _} = initialize_storage(node_id)
+
     DynamicSupervisor.start_child(
       Anoma.Node.NodeSupervisor,
       {Anoma.Node.Supervisor, args}
     )
+  end
+
+  ############################################################
+  #                  Private Helpers                         #
+  ############################################################
+
+  @spec initialize_storage(String.t()) ::
+          {:ok, :existing_node | :new_node}
+          | {:error, :failed_to_initialize_storage}
+  defp initialize_storage(node_id) do
+    # check if the node has existing tables, and initialize them if need be.
+    case Tables.initialize_tables_for_node(node_id) do
+      {:ok, :created} ->
+        {:ok, :new_node}
+
+      {:ok, :existing} ->
+        {:ok, :existing_node}
+
+      {:error, _e} ->
+        {:error, :failed_to_initialize_storage}
+    end
   end
 end

@@ -1,5 +1,6 @@
 defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node
+  alias Anoma.Node.Tables
   alias Node.Transaction.{Storage, Ordering, Mempool, Backends}
   alias Anoma.TransparentResource.Transaction
 
@@ -622,8 +623,8 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     :mnesia.unsubscribe({:table, blocks_table, :simple})
 
-    [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
-    [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
+    [] = :mnesia.dirty_all_keys(Tables.table_values(node_id))
+    [] = :mnesia.dirty_all_keys(Tables.table_updates(node_id))
     node_id
   end
 
@@ -631,8 +632,8 @@ defmodule Anoma.Node.Examples.ETransaction do
   def bluff_txs_write_nothing(node_id \\ Node.example_random_id()) do
     bluf_transaction_errors(node_id)
 
-    [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
-    [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
+    [] = :mnesia.dirty_all_keys(Tables.table_values(node_id))
+    [] = :mnesia.dirty_all_keys(Tables.table_updates(node_id))
     node_id
   end
 
