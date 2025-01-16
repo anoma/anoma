@@ -11,7 +11,7 @@
   {:grpc_reflection, "~> 0.1.0"},
   {:kino_kroki, "~> 0.1.0"},
   {:memoize, "~> 1.4.3"},
-  {:mnesia_rocksdb, git: "https://github.com/mariari/mnesia_rocksdb"},
+  {:mnesia_rocksdb, git: "https://github.com/aeternity/mnesia_rocksdb"},
   {:msgpack, "~> 0.8.1"},
   {:murmur, "~> 2.0"},
   {:optimus, "~> 0.2"},
