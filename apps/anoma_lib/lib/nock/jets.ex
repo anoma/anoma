@@ -68,10 +68,18 @@ defmodule Nock.Jets do
   """
   @spec calculate_mug_of_layer(non_neg_integer()) :: non_neg_integer()
   def calculate_mug_of_layer(layer) do
+    layer |> calculate_layer() |> Noun.mug()
+  end
+
+  @doc """
+  I get the layer based on its number.
+  """
+  @spec calculate_layer(non_neg_integer()) :: Noun.t()
+  def calculate_layer(layer) do
     context_axis = layer_offset(layer)
 
     with {:ok, context} <- Noun.axis(context_axis, Nock.Lib.rm_core()) do
-      mug(context)
+      context
     end
   end
 
@@ -107,13 +115,19 @@ defmodule Nock.Jets do
 
       > Nock.Jets.calculate_mug_of_param_layer(10, 4)
       11284470320276584209
-
-  For our standard library, so far only layer 4 is parameterized
   """
   def calculate_mug_of_param_layer(core_index, parent_layer) do
+    core_index |> calculate_param_layer(parent_layer) |> Noun.mug()
+  end
+
+  @doc """
+  I find the door cores, i.e. parametrized layers.
+  """
+  @spec calculate_param_layer(non_neg_integer(), non_neg_integer) :: Noun.t()
+  def calculate_param_layer(core_index, parent_layer) do
     with {:ok, core} <- calculate_core_param(core_index, 4, parent_layer),
          {:ok, parent} <- Noun.axis(14, core) do
-      Noun.mug(parent)
+      parent
     end
   end
 
