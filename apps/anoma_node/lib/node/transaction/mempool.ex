@@ -485,11 +485,15 @@ defmodule Anoma.Node.Transaction.Mempool do
           {[Mempool.Tx.t()], %{binary() => Mempool.Tx.t()}}
   defp process_execution(state, execution_list) do
     for {tx_res, id} <- execution_list, reduce: {[], state.transactions} do
-      {lst, ex_state} ->
+      {lst, ex_state = %{^id => _}} ->
         {tx_struct, map} =
           Map.get_and_update!(ex_state, id, fn _ -> :pop end)
 
         {[Map.put(tx_struct, :tx_result, tx_res) | lst], map}
+
+      {lst, ex_state} ->
+        Logger.warning("transaction in execution event not found in mempool")
+        {lst, ex_state}
     end
   end
 end
