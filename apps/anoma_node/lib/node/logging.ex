@@ -246,6 +246,10 @@ defmodule Anoma.Node.Logging do
     state
   end
 
+  # @doc """
+  # A TxEvent is fired whenever a transaction is added to the mempool.
+  # The event contains the transaction id and its value.
+  # """
   @spec handle_tx_event(EventBroker.Event.t(), t()) :: t()
   defp handle_tx_event(
          %EventBroker.Event{
@@ -266,6 +270,11 @@ defmodule Anoma.Node.Logging do
     state
   end
 
+  # @doc """
+  # When a list of transactions is executed by the mempool, there is a partial
+  # order on these transactions.
+  # This will trigger a consensus event.
+  # """
   @spec handle_consensus_event(EventBroker.Event.t(), t()) :: t()
   defp handle_consensus_event(
          %EventBroker.Event{
@@ -286,6 +295,10 @@ defmodule Anoma.Node.Logging do
     state
   end
 
+  # @doc """
+  # A block event is fired when a list of transactions in a consensus have all
+  # completed.
+  # """
   @spec handle_block_event(EventBroker.Event.t(), t()) :: t()
   defp handle_block_event(
          %EventBroker.Event{
