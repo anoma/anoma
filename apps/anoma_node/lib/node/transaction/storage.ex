@@ -57,8 +57,18 @@ defmodule Anoma.Node.Transaction.Storage do
   require Node.Event
 
   ############################################################
-  #                         State                            #
+  #                       Types                              #
   ############################################################
+
+  @typedoc """
+  Type of the arguments the storage genserver expects
+  """
+  @type args_t ::
+          [
+            node_id: String.t(),
+            uncommitted_height: non_neg_integer()
+          ]
+          | [node_id: String.t()]
 
   @typedoc """
   I am the type of the key to be stored.
@@ -74,8 +84,10 @@ defmodule Anoma.Node.Transaction.Storage do
   I am a type of writing options.
   """
   @type write_opts() :: :append | :write | :add
-  @typep startup_options() ::
-           {:node_id, String.t()} | {:uncommitted_height, non_neg_integer()}
+
+  ############################################################
+  #                         State                            #
+  ############################################################
 
   typedstruct enforce: true do
     @typedoc """
@@ -143,9 +155,9 @@ defmodule Anoma.Node.Transaction.Storage do
   """
 
   @spec start_link() :: GenServer.on_start()
-  @spec start_link(list(startup_options())) :: GenServer.on_start()
+  @spec start_link(args_t) :: GenServer.on_start()
   def start_link(args \\ []) do
-    args = Keyword.validate!(args, [:node_id, :uncommitted_height, :rocks])
+    args = Keyword.validate!(args, [:node_id, :uncommitted_height])
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
