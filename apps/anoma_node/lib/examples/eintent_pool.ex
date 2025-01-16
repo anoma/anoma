@@ -5,6 +5,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
 
   require ExUnit.Assertions
   import ExUnit.Assertions
+  import ExUnit.CaptureLog
 
   alias Anoma.Node.Intents.IntentPool
   alias Anoma.RM.DumbIntent
@@ -128,12 +129,15 @@ defmodule Anoma.Node.Examples.EIntentPool do
     intent = Examples.ETransparent.ETransaction.single_swap()
     cms_set = Intent.commitments(intent)
 
-    new_commitments_event(enode, cms_set)
-
     node_id = enode.node_id
-    IntentPool.new_intent(node_id, intent)
 
-    Process.sleep(100)
+    assert capture_log(fn ->
+             new_commitments_event(enode, cms_set)
+
+             IntentPool.new_intent(node_id, intent)
+
+             Process.sleep(100)
+           end) =~ "not committed"
 
     # the intent will not be present in the mapset
     assert IntentPool.intents(node_id) == MapSet.new([])
