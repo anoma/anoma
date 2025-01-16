@@ -97,6 +97,11 @@ defmodule Anoma.Node.Logging do
     %EventBroker.Event{body: %Node.Event{body: %Mempool.ConsensusEvent{}}} ->
       true
 
+    _ ->
+      false
+  end
+
+  deffilter BlocksFilter do
     %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
       true
 
@@ -149,6 +154,11 @@ defmodule Anoma.Node.Logging do
       logging_filter()
     ])
 
+    EventBroker.subscribe_me([
+      Node.Event.node_filter(node_id),
+      blocks_filter()
+    ])
+
     {:ok, %__MODULE__{node_id: node_id}}
   end
 
@@ -165,6 +175,11 @@ defmodule Anoma.Node.Logging do
   @spec logging_filter() :: LoggingFilter.t()
   def logging_filter() do
     %__MODULE__.LoggingFilter{}
+  end
+
+  @spec blocks_filter() :: BlocksFilter.t()
+  def blocks_filter() do
+    %__MODULE__.BlocksFilter{}
   end
 
   ############################################################
