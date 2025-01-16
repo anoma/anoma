@@ -415,7 +415,7 @@ defmodule Anoma.Node.Examples.ETransaction do
     blocks_table = Storage.blocks_table(node_id)
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 0, _}, _}},
+      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
       5000
     )
 
@@ -423,11 +423,11 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     {:atomic, block} =
       :mnesia.transaction(fn ->
-        :mnesia.read({Storage.blocks_table(node_id), 0})
+        :mnesia.read({Storage.blocks_table(node_id), 1})
       end)
 
     [
-      {^blocks_table, 0,
+      {^blocks_table, 1,
        [
          %Mempool.Tx{
            code: ^zero,
@@ -456,17 +456,17 @@ defmodule Anoma.Node.Examples.ETransaction do
     Mempool.execute(node_id, dump)
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 0, _}, _}},
+      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
       5000
     )
 
     :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     {:atomic, block} =
-      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 0}) end)
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
 
     [
-      {^blocks_table, 0,
+      {^blocks_table, 1,
        [
          %Mempool.Tx{
            code: ^zero,
@@ -497,17 +497,17 @@ defmodule Anoma.Node.Examples.ETransaction do
     Mempool.execute(node_id, ["id 2"])
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
+      {:mnesia_table_event, {:write, {^blocks_table, 2, _}, _}},
       5000
     )
 
     :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     {:atomic, block} =
-      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 2}) end)
 
     [
-      {^blocks_table, 1,
+      {^blocks_table, 2,
        [
          %Mempool.Tx{
            code: ^inc,
@@ -535,17 +535,17 @@ defmodule Anoma.Node.Examples.ETransaction do
     Mempool.execute(node_id, ["id 2", "id 3"])
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
+      {:mnesia_table_event, {:write, {^blocks_table, 2, _}, _}},
       5000
     )
 
     :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     {:atomic, block} =
-      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 2}) end)
 
     [
-      {^blocks_table, 1,
+      {^blocks_table, 2,
        [
          %Mempool.Tx{
            code: ^zero,
@@ -581,17 +581,17 @@ defmodule Anoma.Node.Examples.ETransaction do
     Mempool.execute(node_id, ["id 1"])
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 0, _}, _}},
+      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
       5000
     )
 
     :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     {:atomic, block} =
-      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 0}) end)
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
 
     [
-      {^blocks_table, 0,
+      {^blocks_table, 1,
        [
          %Mempool.Tx{
            code: [0 | 0],
@@ -617,7 +617,7 @@ defmodule Anoma.Node.Examples.ETransaction do
     Mempool.execute(node_id, ["id 1"])
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 0, _}, _}},
+      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
       5000
     )
 
