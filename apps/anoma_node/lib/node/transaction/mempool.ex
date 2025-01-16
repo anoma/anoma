@@ -238,7 +238,7 @@ defmodule Anoma.Node.Transaction.Mempool do
         :node_id,
         transactions: [],
         consensus: [],
-        round: 0
+        round: 1
       ])
 
     node_id = args[:node_id]
