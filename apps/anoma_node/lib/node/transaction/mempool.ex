@@ -400,9 +400,9 @@ defmodule Anoma.Node.Transaction.Mempool do
     value = %Tx{backend: backend, code: code}
     node_id = state.node_id
 
-    tx_event(tx_id, value, node_id)
-
     Executor.launch(node_id, tx, tx_id)
+
+    tx_event(tx_id, value, node_id)
 
     %Mempool{
       state
