@@ -224,8 +224,6 @@ Given an option `:option` we list it as ``` - `:option` - ``` followed by a shor
 * ```
   ### Options
 
-  - `:use_rocksdb` - See `t:Anoma.Node.configuration/0` for more
-  information.
   - `:supervisor` - This flag determine if we use a supervisor and if
   so what options. See `t:Supervisor.option/0 ` for supervisor options.
   - `:testing` - This flag notes if we are testing the node. This gets
@@ -262,8 +260,6 @@ Given an option `:option` we list it as ``` - `:option` - ``` followed by a shor
 
   ### Options
 
-  - `:use_rocksdb` - See `t:Anoma.Node.configuration/0` for more
-  information.
   - `:supervisor` - This flag determine if we use a supervisor and if
   so what options. See `t:Supervisor.option/0 ` for supervisor options.
   - `:testing` - This flag notes if we are testing the node. This gets
@@ -273,8 +269,7 @@ Given an option `:option` we list it as ``` - `:option` - ``` followed by a shor
     this has on the node.
   """
   @type launch_option ::
-          {:use_rocksdb, boolean()}
-          | {:supervisor, [Supervisor.option()]}
+          {:supervisor, [Supervisor.option()]}
           | {:testing, boolean()}
 ```
 
