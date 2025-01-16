@@ -64,6 +64,7 @@ defmodule Anoma.Supervisor do
         {:error, :failed_to_start_node, :failed_to_initialize_storage}
     end
   end
+
   @doc """
   Given a node id, I stop that node completely.
   """
