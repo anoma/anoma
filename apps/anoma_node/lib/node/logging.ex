@@ -299,7 +299,7 @@ defmodule Anoma.Node.Logging do
 
       current_pending = match(:consensus, table)
       :mnesia.write({table, :consensus, tl(current_pending)})
-      :mnesia.write({table, :round, round})
+      :mnesia.write({table, :round, round + 1})
     end)
 
     log_fun({:info, "Block succesfully committed. Round: #{inspect(round)}"})
