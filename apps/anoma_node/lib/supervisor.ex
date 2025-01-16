@@ -12,6 +12,11 @@ defmodule Anoma.Supervisor do
   use Supervisor
 
   alias Anoma.Node.Tables
+  alias Anoma.Node
+
+  ############################################################
+  #                       Supervisor Implementation          #
+  ############################################################
 
   @spec start_link(any()) :: Supervisor.on_start()
   def start_link(args) do
@@ -32,24 +37,16 @@ defmodule Anoma.Supervisor do
     Supervisor.init(children, strategy: :one_for_all)
   end
 
+  ############################################################
+  #                       Public                             #
+  ############################################################
+
   @doc """
   I start a new node with the given `node_id`.
   """
-  @spec start_node(
-          list(
-            {:node_id, String.t()}
-            | {:grpc_port, non_neg_integer()}
-            | {:tx_args, any()}
-          )
-        ) :: DynamicSupervisor.on_start_child()
+  @spec start_node(Node.Supervisor.args_t()) ::
+          DynamicSupervisor.on_start_child()
   def start_node(args) do
-    args =
-      Keyword.validate!(args, [
-        :node_id,
-        :grpc_port,
-        tx_args: [mempool: [], ordering: [], storage: []]
-      ])
-
     node_id = args[:node_id]
     {:ok, _} = initialize_storage(node_id)
 
