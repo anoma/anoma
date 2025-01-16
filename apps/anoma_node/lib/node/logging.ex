@@ -338,7 +338,10 @@ defmodule Anoma.Node.Logging do
 
     case res do
       :ok ->
-        Anoma.Supervisor.start_node(node_id: node_id, tx_args: replay_args)
+        Anoma.Supervisor.start_node(
+          node_id: node_id,
+          transaction: replay_args
+        )
 
       :error ->
         base_args =
@@ -348,7 +351,7 @@ defmodule Anoma.Node.Logging do
             &Keyword.drop(&1, [:transactions, :consensus])
           )
 
-        Anoma.Supervisor.start_node(node_id: node_id, tx_args: base_args)
+        Anoma.Supervisor.start_node(node_id: node_id, transaction: base_args)
     end
   end
 
@@ -369,7 +372,10 @@ defmodule Anoma.Node.Logging do
       EventBroker.subscribe_me([])
 
       {:ok, _pid} =
-        Anoma.Supervisor.start_node(node_id: mock_id, tx_args: replay_args)
+        Anoma.Supervisor.start_node(
+          node_id: mock_id,
+          transaction: replay_args
+        )
 
       final_consensus = List.last(replay_args[:mempool][:consensus])
 
