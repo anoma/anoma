@@ -5,6 +5,7 @@ defmodule Anoma.Node.Transaction.Supervisor do
 
   use Supervisor
 
+  alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Ordering
 
@@ -35,6 +36,7 @@ defmodule Anoma.Node.Transaction.Supervisor do
     Process.set_label(__MODULE__)
 
     children = [
+      {Task.Supervisor, name: Registry.via(args[:node_id], TxSupervisor)},
       {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]},
       {Anoma.Node.Transaction.Ordering,
        [node_id: args[:node_id]] ++ Keyword.get(args, :ordering, [])},
