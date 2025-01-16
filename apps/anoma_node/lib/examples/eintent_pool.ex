@@ -11,6 +11,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   alias Anoma.RM.Intent
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node
+  alias Anoma.Node.Tables
 
   require Node.Event
 
@@ -144,7 +145,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   def intents_are_written(enode \\ ENode.start_node()) do
     add_intent_transaction_nullifier(enode)
 
-    table = IntentPool.table_name(enode.node_id)
+    table = Tables.table_intents(enode.node_id)
 
     pool = IntentPool.intents(enode.node_id)
 
