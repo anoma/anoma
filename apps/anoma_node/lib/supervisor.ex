@@ -11,8 +11,9 @@ defmodule Anoma.Supervisor do
 
   use Supervisor
 
-  alias Anoma.Node.Tables
   alias Anoma.Node
+  alias Anoma.Node.Replay.State
+  alias Anoma.Node.Tables
 
   ############################################################
   #                       Supervisor Implementation          #
@@ -48,12 +49,29 @@ defmodule Anoma.Supervisor do
           DynamicSupervisor.on_start_child()
   def start_node(args) do
     node_id = args[:node_id]
-    {:ok, _} = initialize_storage(node_id)
 
-    DynamicSupervisor.start_child(
-      Anoma.Node.NodeSupervisor,
-      {Anoma.Node.Supervisor, args}
-    )
+    with {:ok, init_args} <- State.startup_arguments_or_default(node_id),
+         {:ok, _} <- initialize_storage(node_id) do
+      # put the arguments in the given arguments
+      args = Keyword.put_new(args, :transaction, init_args)
+
+      DynamicSupervisor.start_child(
+        Anoma.Node.NodeSupervisor,
+        {Anoma.Node.Supervisor, args}
+      )
+    else
+      {:error, :failed_to_initialize_storage} ->
+        {:error, :failed_to_start_node, :failed_to_initialize_storage}
+    end
+  end
+  @doc """
+  Given a node id, I stop that node completely.
+  """
+  @spec stop_node(String.t()) :: :ok
+  def stop_node(node_id) do
+    Anoma.Node.Registry.via(node_id, Anoma.Node.Supervisor)
+
+    Supervisor.stop(Anoma.Node.Registry.via(node_id, Anoma.Node.Supervisor))
   end
 
   ############################################################
