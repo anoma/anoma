@@ -248,6 +248,11 @@ defmodule Anoma.Node.Transaction.Mempool do
       filter_for_mempool()
     ])
 
+    EventBroker.subscribe_me([
+      Node.Event.node_filter(node_id),
+      filter_for_mempool_execution_events()
+    ])
+
     for {id, tx_w_backend} <- args[:transactions] do
       tx(args[:node_id], tx_w_backend, id)
     end
@@ -352,6 +357,10 @@ defmodule Anoma.Node.Transaction.Mempool do
   @spec filter_for_mempool() :: Backends.ForMempoolFilter.t()
   def filter_for_mempool() do
     %Backends.ForMempoolFilter{}
+  end
+
+  def filter_for_mempool_execution_events() do
+    %Backends.ForMempoolExecutionFilter{}
   end
 
   ############################################################
