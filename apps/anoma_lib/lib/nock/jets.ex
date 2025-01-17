@@ -800,8 +800,8 @@ defmodule Nock.Jets do
   @spec make_delta(Noun.t()) :: :error | {:ok, Noun.t()}
   def make_delta(core) do
     with {:ok, a} <- sample(core),
-         {:ok, list} <- Noun.list_nock_to_erlang_safe(a),
-         action_list <- list |> Enum.map(&Action.from_noun/1),
+         {:ok, set} <- Noun.Nounable.MapSet.from_noun(a),
+         action_list <- set |> Enum.map(&Action.from_noun/1),
          false <- action_list |> Enum.any?(&(&1 == :error)) do
       res =
         action_list

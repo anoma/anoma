@@ -4,10 +4,11 @@ defmodule Examples.ENock do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Examples.ECrypto
-  alias Anoma.TransparentResource.Transaction
-  alias Examples.ETransparent.EAction
+  alias Anoma.TransparentResource.Action
   alias Anoma.TransparentResource.Delta
+  alias Anoma.TransparentResource.Transaction
+  alias Examples.ECrypto
+  alias Examples.ETransparent.EAction
   import Noun
 
   ####################################################################
@@ -1942,10 +1943,12 @@ defmodule Examples.ENock do
   def delta_add_test() do
     delta = EAction.trivial_true_commit_delta() |> Delta.to_noun()
 
-    {:ok, [[_ | del]]} =
+    {:ok, map} =
       delta_add_call(delta, delta) |> Nock.nock([9, 2, 0 | 1])
 
-    assert Noun.equal?(del, 4)
+    {:ok, delta} = map |> Delta.from_noun()
+    delta_original = EAction.trivial_true_commit_delta()
+    assert delta == Delta.add(delta_original, delta_original)
   end
 
   def delta_sub_arm() do
@@ -1984,10 +1987,13 @@ defmodule Examples.ENock do
   def action_delta_test() do
     action = EAction.trivial_true_commit_action() |> Noun.Nounable.to_noun()
 
-    {:ok, [[_ | del]]} =
+    {:ok, map} =
       action |> action_delta_call() |> Nock.nock([9, 2, 0 | 1])
 
-    assert Noun.equal?(del, 2)
+    {:ok, delta} = map |> Delta.from_noun()
+    delta_original = EAction.trivial_true_commit_action() |> Action.delta()
+
+    assert delta == delta_original
   end
 
   def make_delta_arm() do
@@ -2003,14 +2009,15 @@ defmodule Examples.ENock do
   end
 
   def make_delta_test() do
-    actions = [
-      EAction.trivial_true_commit_action() |> Noun.Nounable.to_noun()
-    ]
+    actions =
+      MapSet.new([EAction.trivial_true_commit_action()])
+      |> Noun.Nounable.to_noun()
 
-    {:ok, [[_ | del]]} =
+    {:ok, map} =
       actions |> make_delta_call() |> Nock.nock([9, 2, 0 | 1])
 
-    assert Noun.equal?(del, 2)
+    {:ok, delta} = map |> Delta.from_noun()
+    assert delta == EAction.trivial_true_commit_action() |> Action.delta()
   end
 
   def is_commitment_arm() do
