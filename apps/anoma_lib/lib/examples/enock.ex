@@ -1472,7 +1472,7 @@ defmodule Examples.ENock do
 
     assert list
            |> MapSet.new()
-           |> Noun.Nounable.Set.to_noun()
+           |> Noun.Nounable.to_noun()
            |> Noun.equal?(set)
   end
 
@@ -1531,13 +1531,13 @@ defmodule Examples.ENock do
 
   def put_test() do
     set_elixir = [[1 | 2], [2 | 4], [2 | 3]] |> MapSet.new()
-    noun_set = set_elixir |> Noun.Nounable.Set.to_noun()
+    noun_set = set_elixir |> Noun.Nounable.to_noun()
 
     elem1 = [2 | 4]
     elem2 = [1 | 5]
 
     noun_set_new =
-      set_elixir |> MapSet.put(elem2) |> Noun.Nounable.Set.to_noun()
+      set_elixir |> MapSet.put(elem2) |> Noun.Nounable.to_noun()
 
     {:ok, in_core} = noun_set |> in_call()
 
@@ -1580,7 +1580,7 @@ defmodule Examples.ENock do
   end
 
   def wyt_test() do
-    set = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
     {:ok, in_core} = in_call(set)
 
     assert in_core |> wyt_with_core_call() |> elem(1) |> Noun.equal?(4)
@@ -1614,14 +1614,14 @@ defmodule Examples.ENock do
   end
 
   def int_test() do
-    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
-    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.to_noun()
     {:ok, in_core} = in_call(set1)
 
     set_res =
       MapSet.new([1, 2, 3, 4])
       |> MapSet.intersection(MapSet.new([3, 4, 5, 6]))
-      |> Noun.Nounable.Set.to_noun()
+      |> Noun.Nounable.to_noun()
 
     assert in_core
            |> int_with_core_call(set2)
@@ -1657,14 +1657,14 @@ defmodule Examples.ENock do
   end
 
   def dif_test() do
-    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
-    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.to_noun()
     {:ok, in_core} = in_call(set1)
 
     set_res =
       MapSet.new([1, 2, 3, 4])
       |> MapSet.difference(MapSet.new([3, 4, 5, 6]))
-      |> Noun.Nounable.Set.to_noun()
+      |> Noun.Nounable.to_noun()
 
     assert in_core
            |> dif_with_core_call(set2)
@@ -1700,7 +1700,7 @@ defmodule Examples.ENock do
   end
 
   def has_test() do
-    set = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
     elem1 = 1
     elem2 = 5
     {:ok, in_core} = in_call(set)
@@ -1737,14 +1737,14 @@ defmodule Examples.ENock do
   end
 
   def uni_test() do
-    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
-    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.to_noun()
     {:ok, in_core} = in_call(set1)
 
     set_res =
       MapSet.new([1, 2, 3, 4])
       |> MapSet.union(MapSet.new([3, 4, 5, 6]))
-      |> Noun.Nounable.Set.to_noun()
+      |> Noun.Nounable.to_noun()
 
     assert in_core
            |> uni_with_core_call(set2)
@@ -1780,15 +1780,15 @@ defmodule Examples.ENock do
   end
 
   def duni_test() do
-    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
-    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
-    set3 = [5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.to_noun()
+    set3 = [5, 6] |> MapSet.new() |> Noun.Nounable.to_noun()
     {:ok, in_core} = in_call(set1)
 
     set_res =
       MapSet.new([1, 2, 3, 4])
       |> MapSet.union(MapSet.new([5, 6]))
-      |> Noun.Nounable.Set.to_noun()
+      |> Noun.Nounable.to_noun()
 
     assert in_core |> duni_with_core_call(set2) == :error
 

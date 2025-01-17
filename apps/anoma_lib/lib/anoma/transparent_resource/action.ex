@@ -101,7 +101,7 @@ defmodule Anoma.TransparentResource.Action do
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([commits, nulls, proofs | app_data]) do
     with {:ok, proofs} <- from_noun_proofs(proofs),
-         {:ok, app_data_map} <- Noun.Nounable.Set.from_noun(app_data) do
+         {:ok, app_data_map} <- Noun.Nounable.MapSet.from_noun(app_data) do
       {:ok,
        %Action{
          commitments:
@@ -134,7 +134,7 @@ defmodule Anoma.TransparentResource.Action do
         MapSet.to_list(trans.commitments),
         MapSet.to_list(trans.nullifiers),
         Enum.map(trans.proofs, &Noun.Nounable.to_noun/1)
-        | Noun.Nounable.Set.to_noun(trans.app_data)
+        | Noun.Nounable.to_noun(trans.app_data)
       ]
     end
   end
