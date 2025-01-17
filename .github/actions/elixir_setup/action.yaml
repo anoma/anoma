@@ -27,4 +27,4 @@ runs:
     # install protobuf package
     - name: Install Protobuf Elixir dependencies
       shell: bash
-      run: mix escript.install hex protobuf --force
+      run: mix escript.install hex protobuf 0.11.0 --force
