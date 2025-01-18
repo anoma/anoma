@@ -176,7 +176,7 @@ defmodule Anoma.Node.Transport.TCP.Connection do
 
   # I encode the message into byts and push them onto the socket.
   # """
-  @spec handle_tcp_out(Envelope.t(), port()) :: :ok
+  @spec handle_tcp_out(Envelope.t(), port()) :: :ok | {:error, term()}
   defp handle_tcp_out(message, socket) do
     Logger.debug("tcp out :: #{inspect(self())} :: #{inspect(message)}")
     bytes = encode(message)

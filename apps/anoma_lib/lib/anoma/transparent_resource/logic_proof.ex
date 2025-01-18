@@ -164,7 +164,7 @@ defmodule Anoma.TransparentResource.LogicProof do
     :error
   end
 
-  @spec from_noun_plaintext(Noun.t()) :: {:ok, MapSet.t(Resource.t())}
+  @spec from_noun_plaintext(Noun.t()) :: {:ok, MapSet.t(Resource.t())} | :error
   defp from_noun_plaintext(noun) when noun in @empty do
     {:ok, MapSet.new([])}
   end

@@ -15,7 +15,7 @@ defmodule Examples.EEventBroker do
   """
 
   @spec start_broker() ::
-          :already_started | :error | {:ok, %{broker: pid(), registry: pid()}}
+          :already_started | :error | {:ok, pid()}
   def start_broker do
     on_start =
       with {:ok, sup_pid} <- Supervisor.start_link() do

@@ -92,7 +92,7 @@ defmodule Mix.Tasks.Compile.Protoc do
   # @doc """
   # I find the protoc executable in the current system, or raise if its not found.
   # """
-  @spec protoc_executable() :: String.t()
+  @spec protoc_executable() :: String.t() | nil
   defp protoc_executable() do
     System.find_executable("protoc") ||
       raise "`protoc` not found in system path"

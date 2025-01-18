@@ -72,6 +72,8 @@ defmodule Nock.Jets do
 
     with {:ok, context} <- Noun.axis(context_axis, Nock.Lib.rm_core()) do
       mug(context)
+    else
+      _ -> raise "unexpected core structure"
     end
   end
 
@@ -95,6 +97,8 @@ defmodule Nock.Jets do
     with {:ok, val} <-
            calculate_core_param(core_index, index_in_core, parent_layer) do
       Noun.mug(hd(val))
+    else
+      _ -> raise "unexpected core structure"
     end
   end
 
@@ -114,6 +118,8 @@ defmodule Nock.Jets do
     with {:ok, core} <- calculate_core_param(core_index, 4, parent_layer),
          {:ok, parent} <- Noun.axis(14, core) do
       Noun.mug(parent)
+    else
+      _ -> raise "unexpected core structure"
     end
   end
 
@@ -322,7 +328,7 @@ defmodule Nock.Jets do
     end
   end
 
-  @spec verify(Noun.t()) :: :error | {:ok, binary()}
+  @spec verify(Noun.t()) :: :error | {:ok, Noun.t()}
   def verify(core) do
     maybe_sample = sample(core)
 
@@ -469,14 +475,11 @@ defmodule Nock.Jets do
 
   @spec cue(Noun.t()) :: :error | {:ok, Noun.t()}
   def cue(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, sample} when is_noun_atom(sample) ->
-        Noun.Jam.cue(sample)
-
-      _ ->
-        :error
+    with {:ok, sample} <- sample(core),
+         {:ok, noun} when is_noun_atom(noun) <- Noun.Jam.cue(sample) do
+      {:ok, noun}
+    else
+      _ -> :error
     end
   end
 

@@ -34,8 +34,9 @@ defmodule Mix.Tasks.FormatProtoc do
   # @doc """
   # I find the clang-format executable in the current system, or raise if its not found.
   # """
-  @spec clang_format_executable() :: String.t()
+  @spec clang_format_executable() :: String.t() | nil
   defp clang_format_executable() do
-    System.find_executable("clang-format")
+    System.find_executable("clang-format") ||
+      raise "`protoc` not found in system path"
   end
 end

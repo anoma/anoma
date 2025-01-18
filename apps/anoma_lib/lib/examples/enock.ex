@@ -603,7 +603,11 @@ defmodule Examples.ENock do
 
   @spec raw_call(Noun.t(), Noun.t()) :: {:ok, Noun.t()}
   def raw_call(seed, width) do
-    Nock.nock(raw_arm(), [9, 2, 10, [6, 1 | [seed | width]], 0 | 1])
+    {:ok, _} =
+      Nock.nock(
+        raw_arm(),
+        [9, 2, 10, [6, 1 | [seed | width]], 0 | 1]
+      )
   end
 
   @spec raw_27_4() :: {:ok, Noun.t()}
@@ -642,7 +646,11 @@ defmodule Examples.ENock do
 
   @spec raws_call(Noun.t(), Noun.t()) :: {:ok, Noun.t()}
   def raws_call(seed, width) do
-    Nock.nock(raws_arm(), [9, 2, 10, [6, 1 | [seed | width]], 0 | 1])
+    {:ok, _} =
+      Nock.nock(
+        raws_arm(),
+        [9, 2, 10, [6, 1 | [seed | width]], 0 | 1]
+      )
   end
 
   @spec raws_test() :: :ok
@@ -682,7 +690,11 @@ defmodule Examples.ENock do
 
   @spec rad_call(any(), non_neg_integer()) :: {:ok, Noun.t()}
   def rad_call(seed, range) do
-    Nock.nock(rad_arm(), [9, 2, 10, [6, 1 | [seed | range]], 0 | 1])
+    {:ok, _} =
+      Nock.nock(
+        rad_arm(),
+        [9, 2, 10, [6, 1 | [seed | range]], 0 | 1]
+      )
   end
 
   @spec rad_tests() :: {:ok, Noun.t()}

@@ -32,18 +32,18 @@ defmodule Examples.ECairo.EProofRecord do
         "params/trivial_resource_logic.json"
       )
 
-    assert {:ok, circuit} = File.read(circuit_dir)
-    assert {:ok, witness} = File.read(witness_dir)
+    {:ok, circuit} = File.read(circuit_dir)
+    {:ok, witness} = File.read(witness_dir)
 
     updated_witness =
       if path do
-        assert {:ok, updated_witness} = Tree.set_path(witness, path)
+        {:ok, updated_witness} = Tree.set_path(witness, path)
         updated_witness
       else
         witness
       end
 
-    assert {:ok, input_resource_logic_proof} =
+    {:ok, input_resource_logic_proof} =
              ProofRecord.generate_cairo_proof(
                circuit,
                updated_witness

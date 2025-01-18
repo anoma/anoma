@@ -183,7 +183,7 @@ defmodule Noun do
       fal
     else
       haz = Murmur.hash_x86_32(key, seed)
-      ham = haz >>> 31 |> bxor(haz &&& (1 <<< 31) - 1)
+      ham = (haz >>> 31) |> bxor(haz &&& (1 <<< 31) - 1)
 
       unless ham == 0 do
         ham
@@ -306,11 +306,11 @@ defmodule Noun do
   I convert the signed integer to a noun using the [ZigZag](https://protobuf.dev/programming-guides/encoding/#signed-ints) encoding.
   """
   @spec encode_signed(integer()) :: non_neg_integer()
-  def encode_signed(x) when x >= 0 do
+  def encode_signed(x) when is_integer(x) and x >= 0 do
     x * 2
   end
 
-  def encode_signed(x) when x < 0 do
+  def encode_signed(x) when is_integer(x) and x < 0 do
     -x * 2 - 1
   end
 

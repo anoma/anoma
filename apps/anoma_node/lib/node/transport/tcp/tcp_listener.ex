@@ -291,7 +291,7 @@ defmodule Anoma.Node.Transport.TCP.Listener do
   # If anything goes wrong, I return an error.
   # """
   @spec create_new_connection(:inet.socket(), String.t()) ::
-          {:ok, pid()} | {:error, any()}
+          DynamicSupervisor.on_start_child()
   defp create_new_connection(socket, node_id) do
     supervisor = Registry.whereis(node_id, :tcp_supervisor)
 
