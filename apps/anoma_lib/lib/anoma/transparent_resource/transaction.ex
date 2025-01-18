@@ -177,7 +177,7 @@ defmodule Anoma.TransparentResource.Transaction do
     end
   end
 
-  @spec from_noun_actions(Noun.t()) :: {:ok, MapSet.t(Action.t())}
+  @spec from_noun_actions(Noun.t()) :: {:ok, MapSet.t(Action.t())} | :error
   defp from_noun_actions(noun) when is_list(noun) do
     maybe_actions =
       Enum.map(Noun.list_nock_to_erlang(noun), &Action.from_noun/1)

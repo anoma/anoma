@@ -44,7 +44,7 @@ defmodule Anoma.CairoResource.Workflow do
   end
 
   @spec update_nk_commitment(Jason.OrderedObject.t(), binary()) ::
-          Jason.OrderedObject.t()
+          Jason.OrderedObject.t() | Keyword.t()
   defp update_nk_commitment(json, nf_key) do
     if Utils.json_object_has_nonempty_key(json, "nk_commitment") do
       json
@@ -59,7 +59,7 @@ defmodule Anoma.CairoResource.Workflow do
   end
 
   @spec update_nonce(Jason.OrderedObject.t(), binary()) ::
-          Jason.OrderedObject.t()
+          Jason.OrderedObject.t() | Keyword.t()
   defp update_nonce(json, input_nullifier) do
     if Utils.json_object_has_nonempty_key(json, "nonce") do
       json
@@ -198,7 +198,7 @@ defmodule Anoma.CairoResource.Workflow do
           binary(),
           list(Jason.OrderedObject.t())
         ) ::
-          Jason.OrderedObject.t()
+          Jason.OrderedObject.t() | Keyword.t()
   defp update_witness_json(witness_json, resource, nf_key, merkle_path) do
     witness1 =
       if Utils.json_object_has_empty_key(witness_json, "self_resource") do

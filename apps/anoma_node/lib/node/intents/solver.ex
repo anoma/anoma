@@ -265,7 +265,7 @@ defmodule Anoma.Node.Intents.Solver do
   - `submit(any, node_id)` - I do nothing
   """
 
-  @spec submit(Intent.t(), String.t()) :: :ok
+  @spec submit(Intent.t(), String.t()) :: :ok | nil
   def submit(tx = %Anoma.TransparentResource.Transaction{}, node_id) do
     tx_noun = tx |> Noun.Nounable.to_noun()
     tx_candidate = [[1, 0, [1 | tx_noun], 0 | 909], 0 | 707]

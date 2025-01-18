@@ -47,7 +47,7 @@ defmodule Anoma.TransparentResource.Action do
     Delta.sub(committed_delta, nullified_delta)
   end
 
-  @spec verify_correspondence(t()) :: true | {:error, String.t()}
+  @spec verify_correspondence(t()) :: bool() | {:error, String.t()}
   def verify_correspondence(action = %Action{}) do
     # Bail out early, if there are more committed and nullified
     # resources than there are actual resource proofs
@@ -139,7 +139,7 @@ defmodule Anoma.TransparentResource.Action do
     end
   end
 
-  @spec from_noun_proofs(Noun.t()) :: {:ok, MapSet.t(LogicProof.t())}
+  @spec from_noun_proofs(Noun.t()) :: {:ok, MapSet.t(LogicProof.t())} | :error
   defp from_noun_proofs(noun) when is_list(noun) do
     maybe_proofs =
       Enum.map(Noun.list_nock_to_erlang(noun), &proof_from_noun/1)

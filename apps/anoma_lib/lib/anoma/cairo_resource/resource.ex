@@ -32,7 +32,7 @@ defmodule Anoma.CairoResource.Resource do
   end
 
   @spec from_json_object(Jason.OrderedObject.t()) ::
-          {:ok, t()}
+          t()
           | {:error, term()}
   def from_json_object(mp) do
     with {:ok, logic} <-

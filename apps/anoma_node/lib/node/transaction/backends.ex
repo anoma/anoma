@@ -183,7 +183,7 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
-  @spec cue_when_atom(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec cue_when_atom(Noun.t()) :: {:ok, Noun.t()} | {:error, Exception.t()}
   defp cue_when_atom(tx_code) when Noun.is_noun_atom(tx_code) do
     Noun.Jam.cue(tx_code)
   end
@@ -456,7 +456,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   @spec cairo_resource_tx(String.t(), binary(), Noun.t()) ::
-          :ok | :error
+          {:ok, CTransaction.t()} | :error
   defp cairo_resource_tx(node_id, id, result) do
     with {:ok, tx} <- CTransaction.from_noun(result),
          true <- Anoma.RM.Transaction.verify(tx),

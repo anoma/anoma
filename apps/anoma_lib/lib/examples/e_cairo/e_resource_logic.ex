@@ -106,9 +106,6 @@ defmodule Examples.ECairo.EResourceLogic do
         invalid_input
       )
 
-    assert {:error, "Runtime error: The cairo program execution failed"} ==
-             ret
-
-    ret
+    {:error, "Runtime error: The cairo program execution failed"} = ret
   end
 end

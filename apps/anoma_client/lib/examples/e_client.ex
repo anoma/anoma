@@ -71,7 +71,9 @@ defmodule Anoma.Client.Examples.EClient do
   I create a new node in the system, and ensure that that is the only node that is running
   by killing all other nodes.
   """
-  @spec create_single_example_node() :: ENode.t()
+  @spec create_single_example_node() ::
+          ENode.t()
+          | {:error, :failed_to_start_node}
   def create_single_example_node() do
     ENode.kill_all_nodes()
     ENode.start_node(grpc_port: 0)
@@ -105,7 +107,7 @@ defmodule Anoma.Client.Examples.EClient do
   @doc """
   I create an example stub to a given clients GRPC endpoint.
   """
-  @spec create_example_connection(t()) :: EConnection.t()
+  @spec create_example_connection(t()) :: EConnection.t() | {:error, term()}
   def create_example_connection(eclient \\ create_example_client()) do
     case GRPC.Stub.connect("localhost:#{eclient.client.grpc_port}") do
       {:ok, channel} ->
@@ -119,7 +121,7 @@ defmodule Anoma.Client.Examples.EClient do
   @doc """
   I create the setup necessary to run each example below without arguments.
   """
-  @spec setup() :: EConnection.t()
+  @spec setup() :: EConnection.t() | {:error, term()}
   def setup() do
     create_example_connection()
   end
@@ -372,15 +374,13 @@ defmodule Anoma.Client.Examples.EClient do
   @spec noun_program_tracing() :: Noun.t()
   def noun_program_tracing() do
     jammed_program_tracing()
-    |> Noun.Jam.cue()
-    |> elem(1)
+    |> Noun.Jam.cue!()
   end
 
-  @spec text_program_tracing() :: String.t()
+  @spec text_program_tracing() :: Noun.t()
   def text_program_tracing() do
     jammed_program_tracing()
-    |> Noun.Jam.cue()
-    |> elem(1)
+    |> Noun.Jam.cue!()
   end
 
   @spec jammed_program_juvix_squared() :: binary()
@@ -393,8 +393,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec noun_program_juvix_squared() :: Noun.t()
   def noun_program_juvix_squared() do
     jammed_program_juvix_squared()
-    |> Noun.Jam.cue()
-    |> elem(1)
+    |> Noun.Jam.cue!()
   end
 
   @spec text_program_example() :: binary()

@@ -78,7 +78,7 @@ defmodule Anoma.Node.Transport do
   Given a remote node id, I start a proxy engine that represents that remote node.
   """
   @spec start_engine_proxy(String.t(), String.t(), atom()) ::
-          {:ok, pid} | {:error, term}
+          DynamicSupervisor.on_start_child()
   def start_engine_proxy(node_id, remote_node_id, type) do
     supervisor = Anoma.Node.Registry.whereis(node_id, :proxy_supervisor)
     args = [node_id: node_id, remote_node_id: remote_node_id, type: type]

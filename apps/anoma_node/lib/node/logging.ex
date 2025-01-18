@@ -489,7 +489,7 @@ defmodule Anoma.Node.Logging do
   #                           Helpers                        #
   ############################################################
 
-  @spec init_table(atom(), bool()) :: {:atomic, :ok}
+  @spec init_table(atom(), bool()) :: {:atomic, :ok} | {:aborted, term()}
   defp init_table(table, rocks) do
     :mnesia.delete_table(table)
     rocks_opt = Anoma.Utility.rock_opts(rocks)

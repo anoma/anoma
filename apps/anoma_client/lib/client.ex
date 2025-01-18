@@ -65,7 +65,7 @@ defmodule Anoma.Client do
   I run a Nock program with its inputs, and return the result.
   """
   @spec run_nock(Noun.t(), [Noun.t()]) ::
-          {:ok, Noun.t()} | {:error, any()}
+          {:ok, Noun.t(), [Noun.t()]} | {:error, any()}
   def run_nock(program, inputs) do
     Runner.prove(program, inputs)
   end

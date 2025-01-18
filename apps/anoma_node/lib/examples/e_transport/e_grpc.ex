@@ -68,7 +68,7 @@ defmodule Anoma.Node.Examples.EGRPC do
 
     assert Kernel.match?(%EGRPC{}, result)
 
-    result
+    %EGRPC{} = result
   end
 
   @doc """
