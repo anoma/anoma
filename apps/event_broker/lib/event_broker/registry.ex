@@ -2,9 +2,25 @@ defmodule EventBroker.Registry do
   @moduledoc """
   I am the Registry for the PubSub system.
 
-  I am the central registry of all the topic subscriptions and filters. I
-  am responsible for spawning filter agents, (un)subscribing to them, and
-  keeping track of relations between them.
+  I am the central registry of all the topic subscriptions and filters. I am
+  responsible for spawning filter agents, (un)subscribing to them, and keeping
+  track of relations between them.
+
+  ## Subscriptions
+
+  When a process with pid `p` subscribes to a filter spec `[f, g]`, a  "filter
+  agent" will be spawned for both `f` and `g`.
+
+  A filter agent is a process that receives events, and only forwards the events
+  that match its filter.
+
+  If a filter spec list is subscribed to for which any prefix already has an
+  existing filter agent, these are not spawned. The existing filter agents will
+  be used instead.
+
+  ## Registered Filters
+
+  When a process subscribes to a filter spec list,
   """
 
   alias __MODULE__
@@ -77,6 +93,7 @@ defmodule EventBroker.Registry do
   def handle_call({:subscribe, pid, filter_spec_list}, _from, state) do
     registered = state.registered_filters
 
+    # a filter is valid if it a module that exports a `&filter/2` function.
     invalid_filters =
       filter_spec_list
       |> Enum.flat_map(fn spec ->
@@ -92,6 +109,9 @@ defmodule EventBroker.Registry do
       end)
 
     if Enum.empty?(invalid_filters) do
+      # create a new filter agent for all non-existing filter specs. e.g., if
+      # the filter spec list is [a b c], create an agent for a, b, and c. if a,
+      # b already existed, only create c.
       new_state =
         if Map.has_key?(registered, filter_spec_list) do
           state
@@ -115,8 +135,11 @@ defmodule EventBroker.Registry do
       new_state =
         Map.put(new_state, :registered_subscribers, registered_subscribers)
 
+      # monitor the subscribing process to get notified when it goes down.
       Process.monitor(pid)
 
+      # subscribe the subscribing process to messages of the last filter in the
+      # filter spec list its filter agent.
       GenServer.call(
         Map.get(new_state.registered_filters, filter_spec_list),
         {:subscribe, pid}
@@ -124,6 +147,7 @@ defmodule EventBroker.Registry do
 
       {:reply, :ok, new_state}
     else
+      # if there was an invalid filter in the filter spec list, the subscription cannot be made.
       {:reply,
        "#{inspect(invalid_filters)} do not export filtering functions", state}
     end
@@ -188,8 +212,7 @@ defmodule EventBroker.Registry do
     # {["a", "b"], state} iterating over "c"
     # {["a", "b", "c"], state + ["a", "b", "c"] iterating over "d"
 
-    for f <- remaining_to_spawn,
-        reduce: {existing_prefix, registered} do
+    for f <- remaining_to_spawn, reduce: {existing_prefix, registered} do
       {parent_spec_list, old_state} ->
         parent_pid = Map.get(old_state, parent_spec_list)
         new_spec_list = parent_spec_list ++ [f]
