@@ -200,19 +200,8 @@ defmodule Anoma.Node.Examples.EEvent do
   @doc """
   I wait for a specific event.
   """
-  def wait_for_transaction_event(enode \\ ENode.start_node(), event \\ nil) do
-    # subscribe to transaction events
-    EventBroker.subscribe_me([])
-
-    # if no event was given, create and send one now.
-    event =
-      if event == nil do
-        {_node, event} = send_transaction_event(enode)
-        event
-      else
-        event
-      end
-
+  @spec wait_for_event(EventBroker.Event.t()) :: :ok
+  def wait_for_event(event) do
     # the event will be fired from another module,
     # so the source_mdoule attribute has to be ignored.
     expected_body = event.body
@@ -222,114 +211,8 @@ defmodule Anoma.Node.Examples.EEvent do
                      source_module: _
                    },
                    5000
-  end
 
-  @doc """
-  I wait for a specific consensus event.
-  """
-  def wait_for_consensus_event(enode \\ ENode.start_node(), event \\ nil) do
-    # subscribe to transaction events
-    EventBroker.subscribe_me([])
-
-    # if no event was given, create and send one now.
-    event =
-      if event == nil do
-        {_node, event} = send_consensus_event(enode)
-        event
-      else
-        event
-      end
-
-    # the event will be fired from another module,
-    # so the source_mdoule attribute has to be ignored.
-    expected_body = event.body
-
-    assert_receive %EventBroker.Event{
-                     body: ^expected_body,
-                     source_module: _
-                   },
-                   5000
-  end
-
-  @doc """
-  I wait for a specific order event.
-  """
-  def wait_for_order_event(enode \\ ENode.start_node(), event \\ nil) do
-    # subscribe to all events
-    EventBroker.subscribe_me([])
-
-    # if no event was given, create and send one now.
-    event =
-      if event == nil do
-        {_node, event} = send_order_event(enode)
-        event
-      else
-        event
-      end
-
-    # the event will be fired from another module,
-    # so the source_mdoule attribute has to be ignored.
-    expected_body = event.body
-
-    assert_receive %EventBroker.Event{
-                     body: ^expected_body,
-                     source_module: _
-                   },
-                   5000
-  end
-
-  @doc """
-  I wait for a specific execution event.
-  """
-  def wait_for_execution_event(enode \\ ENode.start_node(), event \\ nil) do
-    # subscribe to all events
-    EventBroker.subscribe_me([])
-
-    # if no event was given, create and send one now.
-    event =
-      if event == nil do
-        {_node, event} = send_execution_event(enode)
-        event
-      else
-        event
-      end
-
-    # the event will be fired from another module,
-    # so the source_mdoule attribute has to be ignored.
-    expected_body = event.body
-
-    assert_receive %EventBroker.Event{
-                     body: ^expected_body,
-                     source_module: _
-                   },
-                   5000
-  end
-
-  @doc """
-  I wait for a specific block event.
-  """
-  def wait_for_block_event(enode \\ ENode.start_node(), event \\ nil) do
-    # subscribe to all events
-    EventBroker.subscribe_me([])
-
-    # if no event was given, create and send one now.
-    event =
-      if event == nil do
-        {_node, event} = send_block_event(enode)
-        event
-      else
-        event
-      end
-
-    # the event will be fired from another module,
-    # so the source_mdoule attribute has to be ignored.
-    expected_body = event.body
-
-    assert_receive %EventBroker.Event{
-                     body: ^expected_body,
-                     source_module: _
-                   },
-                   5000
+    :ok
   end
 
   ############################################################
