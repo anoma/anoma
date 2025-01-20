@@ -127,7 +127,7 @@ defmodule Anoma.Node.Examples.Mempool do
 
     # check that the event has been fired
     event = EEvent.transaction_event(enode, transaction)
-    EEvent.wait_for_transaction_event(enode, event)
+    EEvent.wait_for_event(event)
 
     {enode, transaction}
   end
@@ -160,7 +160,7 @@ defmodule Anoma.Node.Examples.Mempool do
     # check that the event has been fired for each transaction
     for transaction <- transactions do
       event = EEvent.transaction_event(enode, transaction)
-      EEvent.wait_for_transaction_event(enode, event)
+      EEvent.wait_for_event(event)
     end
 
     {enode, transactions}
@@ -250,21 +250,21 @@ defmodule Anoma.Node.Examples.Mempool do
 
     # wait for the consensus event
     consensus_event = EEvent.consensus_event(enode, [transaction.id])
-    EEvent.wait_for_consensus_event(enode, consensus_event)
+    EEvent.wait_for_event(consensus_event)
 
     # wait for the order event
     order_event = EEvent.order_event(enode, transaction.id)
-    EEvent.wait_for_order_event(enode, order_event)
+    EEvent.wait_for_event(order_event)
 
     # wait for the execution event
     execution_event = EEvent.execution_event(enode, transaction)
 
     # todo: these should be one function wait_for_event..
-    EEvent.wait_for_execution_event(enode, execution_event)
+    EEvent.wait_for_event(execution_event)
 
     # wait for the block event
     block_event = EEvent.block_event(enode, transaction, round)
-    EEvent.wait_for_block_event(enode, block_event)
+    EEvent.wait_for_event(block_event)
 
     # wait for the mnesia table to be written fully
     wait_for_consensus_write(enode, transaction)
