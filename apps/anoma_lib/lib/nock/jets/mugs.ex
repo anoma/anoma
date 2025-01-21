@@ -119,9 +119,9 @@ defmodule Nock.Jets.Mugs do
       {"duni", 7, @layer_10_in_context_mug, &Nock.Jets.duni/1, :enabled, 30},
     Jets.calculate_mug_of_param_core(762, 21, 10) =>
       {"has", 7, @layer_10_in_context_mug, &Nock.Jets.has/1, :enabled, 30},
-    Jets.calculate_mug_of_param_core(340, 21, 11) =>
+    Jets.calculate_mug_of_param_core(340, 93, 11) =>
       {"put", 7, @layer_11_in_context_mug, &Nock.Jets.mput/1, :enabled, 30},
-    Jets.calculate_mug_of_param_core(701, 21, 11) =>
+    Jets.calculate_mug_of_param_core(701, 93, 11) =>
       {"got", 7, @layer_11_in_context_mug, &Nock.Jets.got/1, :enabled, 30},
     Jets.calculate_mug_of_core(1492, Nock.Lib.stdlib_layers()) =>
       {"kind", 7, @layer_rm_context_mug, &Nock.Jets.kind/1, :enabled, 100},
