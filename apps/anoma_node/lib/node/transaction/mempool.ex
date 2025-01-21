@@ -39,7 +39,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   use TypedStruct
 
   ############################################################
-  #                         State                            #
+  #                       Types                              #
   ############################################################
 
   @typedoc """
@@ -51,11 +51,22 @@ defmodule Anoma.Node.Transaction.Mempool do
   I am the type of the transaction result.
   """
   @type tx_result :: {:ok, any()} | :error | :in_progress
-  @typep startup_options() ::
-           {:node_id, String.t()}
-           | {:transactions, list({binary, {Backends.backend(), Noun.t()}})}
-           | {:consensus, list(list(binary))}
-           | {:round, non_neg_integer()}
+
+  @typedoc """
+  Type of the arguments the mempool genserver expects
+  """
+  @type args_t ::
+          [
+            node_id: String.t(),
+            transactions: [{binary, {Backends.backend(), Noun.t()}}],
+            consensus: [[binary()]],
+            round: non_neg_integer()
+          ]
+          | [node_id: String.t()]
+
+  ############################################################
+  #                         State                            #
+  ############################################################
 
   typedstruct module: Tx do
     @typedoc """
@@ -195,7 +206,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   arguments.
   """
 
-  @spec start_link([startup_options()]) :: GenServer.on_start()
+  @spec start_link(args_t()) :: GenServer.on_start()
   def start_link(args \\ []) do
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
@@ -217,7 +228,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   Afterwards, I initialize the Mempool with round and node ID specified.
   """
 
-  @spec init([startup_options()]) :: {:ok, Mempool.t()}
+  @spec init([args_t()]) :: {:ok, Mempool.t()}
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -227,7 +238,7 @@ defmodule Anoma.Node.Transaction.Mempool do
         :node_id,
         transactions: [],
         consensus: [],
-        round: 0
+        round: 1
       ])
 
     node_id = args[:node_id]
