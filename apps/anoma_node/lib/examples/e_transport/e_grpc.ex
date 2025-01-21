@@ -6,10 +6,6 @@ defmodule Anoma.Node.Examples.EGRPC do
 
   alias Anoma.Node.Examples.EGRPC
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Protobuf.Indexer.Nullifiers
-  alias Anoma.Protobuf.Indexer.UnrevealedCommits
-  alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.IndexerService
   alias Anoma.Protobuf.Intents.Add
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
@@ -110,42 +106,5 @@ defmodule Anoma.Node.Examples.EGRPC do
     {:ok, reply} = IntentsService.Stub.list_intents(client.channel, request)
 
     assert reply.intents == [intent_jammed]
-  end
-
-  @doc """
-  I list all nullifiers.
-  """
-  @spec list_nullifiers(EGRPC.t()) :: term()
-  def list_nullifiers(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %NodeInfo{node_id: client.node.node_id}
-
-    request = %Nullifiers.Request{node_info: node_id}
-
-    {:ok, _reply} =
-      IndexerService.Stub.list_nullifiers(client.channel, request)
-  end
-
-  @doc """
-  I list all unrevealed commits.
-  """
-  @spec list_unrevealed_commits(EGRPC.t()) :: term()
-  def list_unrevealed_commits(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %NodeInfo{node_id: client.node.node_id}
-    request = %UnrevealedCommits.Request{node_info: node_id}
-
-    {:ok, _reply} =
-      IndexerService.Stub.list_unrevealed_commits(client.channel, request)
-  end
-
-  @doc """
-  I list all unspent resources.
-  """
-  @spec list_unspent_resources(EGRPC.t()) :: term()
-  def list_unspent_resources(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %NodeInfo{node_id: client.node.node_id}
-    request = %UnspentResources.Request{node_info: node_id}
-
-    {:ok, _reply} =
-      IndexerService.Stub.list_unspent_resources(client.channel, request)
   end
 end

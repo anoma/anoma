@@ -171,46 +171,6 @@ defmodule Anoma.Client.Examples.EClient do
   end
 
   @doc """
-  I list all nullifiers.
-  """
-  @spec list_nullifiers(EConnection.t()) :: EConnection.t()
-  def list_nullifiers(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %Nullifiers.Request{node_info: node_id}
-    {:ok, _reply} = IndexerService.Stub.list_nullifiers(conn.channel, request)
-
-    conn
-  end
-
-  @doc """
-  I list all unrevealed commits.
-  """
-  @spec list_unrevealed_commits(EConnection.t()) :: EConnection.t()
-  def list_unrevealed_commits(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %UnrevealedCommits.Request{node_info: node_id}
-
-    {:ok, _reply} =
-      IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
-
-    conn
-  end
-
-  @doc """
-  I list all unspent resources.
-  """
-  @spec list_unspent_resources(EConnection.t()) :: EConnection.t()
-  def list_unspent_resources(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %UnspentResources.Request{node_info: node_id}
-
-    {:ok, _reply} =
-      IndexerService.Stub.list_unspent_resources(conn.channel, request)
-
-    conn
-  end
-
-  @doc """
   I run a plaintext nock program using the client.
   """
   @spec prove_something_text(EConnection.t()) :: Prove.Response.t()
