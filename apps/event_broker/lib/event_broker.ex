@@ -87,6 +87,24 @@ defmodule EventBroker do
   ############################################################
 
   @doc """
+  I return the filter specs for the current process.
+  I return a list of filterspeclists.
+  """
+  @spec my_subscriptions() :: [filter_spec_list]
+  def my_subscriptions() do
+    subscriptions(self())
+  end
+
+  @doc """
+  I return the filter specs for the given process id.
+  I return a list of filterspeclists.
+  """
+  @spec subscriptions(pid()) :: [filter_spec_list]
+  def subscriptions(pid) do
+    GenServer.call(EventBroker.Registry, {:subscriptions, pid})
+  end
+
+  @doc """
   I am the Event Broker event function.
 
   I process any incoming events by sending them to all of Broker subscribers
