@@ -2,7 +2,6 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
   alias Anoma.Node.Intents.IntentPool
   alias Anoma.Protobuf.Intents.Add
   alias Anoma.Protobuf.Intents.List
-  alias Anoma.RM.DumbIntent
   alias GRPC.Server.Stream
 
   use GRPC.Server, service: Anoma.Protobuf.IntentsService.Service
@@ -17,7 +16,11 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
 
     intents =
       IntentPool.intents(request.node_info.node_id)
-      |> Enum.map(&inspect(&1.value))
+      |> Enum.map(fn i ->
+        i
+        |> Noun.Nounable.to_noun()
+        |> Nock.Jam.jam()
+      end)
 
     %List.Response{intents: intents}
   end
@@ -29,8 +32,14 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
       "GRPC #{inspect(__ENV__.function)} request: #{inspect(request)}"
     )
 
-    new_intent = %DumbIntent{value: request.intent.value}
-    IntentPool.new_intent(request.node_info.node_id, new_intent)
+    # the input is a jammed intent.
+    #  cue it and create a transaction
+    {:ok, intent} =
+      request.intent.intent
+      |> Nock.Cue.cue!()
+      |> Anoma.TransparentResource.Transaction.from_noun()
+
+    IntentPool.new_intent(request.node_info.node_id, intent)
 
     %Add.Response{result: "intent added"}
   end
