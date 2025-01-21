@@ -129,7 +129,7 @@ defmodule EventBroker.Registry do
           state.registered_subscribers,
           pid,
           [filter_spec_list],
-          &[&1 | filter_spec_list]
+          &[filter_spec_list | &1]
         )
 
       new_state =
@@ -157,7 +157,32 @@ defmodule EventBroker.Registry do
     new_registered_filters =
       do_unsubscribe(pid, filter_spec_list, state.registered_filters)
 
-    {:reply, :ok, %{state | registered_filters: new_registered_filters}}
+    # remove the subscription from registered_subscribers
+    state =
+      state
+      |> Map.put(:registered_filters, new_registered_filters)
+      |> Map.update!(:registered_subscribers, fn ss ->
+        Map.update!(
+          ss,
+          pid,
+          &Enum.reject(&1, fn f -> f == filter_spec_list end)
+        )
+      end)
+
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:subscriptions, pid}, _from, state) do
+    subscriptions =
+      case state do
+        %{registered_subscribers: %{^pid => filter_spec_lists}} ->
+          filter_spec_lists
+
+        _ ->
+          []
+      end
+
+    {:reply, subscriptions, state}
   end
 
   def handle_call(_msg, _from, state) do
