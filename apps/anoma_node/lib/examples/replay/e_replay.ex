@@ -56,9 +56,9 @@ defmodule Anoma.Node.Examples.EReplay do
     execute_fn = fn _, _, _ -> raise "An error during computation" end
 
     with_mock Backends, execute: execute_fn do
-      EventBroker.subscribe_me([])
-
-      assert {:error, :replay_failed} == Replay.replay_for(enode.node_id)
+      with_subscription [[]] do
+        assert {:error, :replay_failed} == Replay.replay_for(enode.node_id)
+      end
     end
 
     enode
