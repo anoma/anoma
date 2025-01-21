@@ -11,6 +11,8 @@ defmodule Anoma.Node.Examples.Mempool do
 
   import ExUnit.Assertions
 
+  use EventBroker.WithSubscription
+
   # -----------------------------------------------------------
   # Adding transactions
 
@@ -116,20 +118,20 @@ defmodule Anoma.Node.Examples.Mempool do
 
   def execute_transaction(enode, transaction) do
     # subscribe to events here to be sure the tx events are caught
-    EventBroker.subscribe_me([])
+    with_subscription [[]] do
+      # add the transaction to the mempool
+      {_enode, _transaction} = add_transaction(enode, transaction)
 
-    # add the transaction to the mempool
-    {_enode, _transaction} = add_transaction(enode, transaction)
+      # adding a transaction to the mempool has two observable effects.
+      # - a transaction event should be fired
+      # - there should be a new transaction task running in the dynanamic observer.
 
-    # adding a transaction to the mempool has two observable effects.
-    # - a transaction event should be fired
-    # - there should be a new transaction task running in the dynanamic observer.
+      # check that the event has been fired
+      event = EEvent.transaction_event(enode, transaction)
+      EEvent.wait_for_event(event)
 
-    # check that the event has been fired
-    event = EEvent.transaction_event(enode, transaction)
-    EEvent.wait_for_event(event)
-
-    {enode, transaction}
+      {enode, transaction}
+    end
   end
 
   @doc """
@@ -148,22 +150,22 @@ defmodule Anoma.Node.Examples.Mempool do
 
   def execute_multiple_transactions(enode, transactions) do
     # subscribe to events here to be sure the tx events are caught
-    EventBroker.subscribe_me([])
+    with_subscription [[]] do
+      # add the transaction to the mempool
+      {enode, transactions} = add_multiple_transactions(enode, transactions)
 
-    # add the transaction to the mempool
-    {enode, transactions} = add_multiple_transactions(enode, transactions)
+      # adding a transaction to the mempool has two observable effects.
+      # - a transaction event should be fired
+      # - there should be a new transaction task running in the dynanamic observer.
 
-    # adding a transaction to the mempool has two observable effects.
-    # - a transaction event should be fired
-    # - there should be a new transaction task running in the dynanamic observer.
+      # check that the event has been fired for each transaction
+      for transaction <- transactions do
+        event = EEvent.transaction_event(enode, transaction)
+        EEvent.wait_for_event(event)
+      end
 
-    # check that the event has been fired for each transaction
-    for transaction <- transactions do
-      event = EEvent.transaction_event(enode, transaction)
-      EEvent.wait_for_event(event)
+      {enode, transactions}
     end
-
-    {enode, transactions}
   end
 
   # -----------------------------------------------------------
@@ -185,28 +187,28 @@ defmodule Anoma.Node.Examples.Mempool do
 
   def make_block(enode, transaction) do
     # subscribe to events here to be sure the events are caught
-    EventBroker.subscribe_me([])
+    with_subscription [[]] do
+      # fire a transaction
+      {_node, transaction} = execute_transaction(enode, transaction)
 
-    # fire a transaction
-    {_node, transaction} = execute_transaction(enode, transaction)
+      # the transaction is currently waiting for an ordering
+      # or it has already executed if it did not scry.
+      #
+      # to ensure that the transaction completes, a consensus event
+      # must be fired. This is done by the consensus engine
+      # by calling Mempool.execute(node, transaction_ids)
+      # there is no consensus in the current branch, so the call is done manually
+      #
+      # The Mempool.execute call will fire a consensus event
+      # and then call the executor to execute the transactions.
+      #
+      # The executor will order the transactions in the consensus
+      # and then wait for all transactions to complete.
+      # After this, an execution event is sent.
+      Mempool.execute(enode.node_id, [transaction.id])
 
-    # the transaction is currently waiting for an ordering
-    # or it has already executed if it did not scry.
-    #
-    # to ensure that the transaction completes, a consensus event
-    # must be fired. This is done by the consensus engine
-    # by calling Mempool.execute(node, transaction_ids)
-    # there is no consensus in the current branch, so the call is done manually
-    #
-    # The Mempool.execute call will fire a consensus event
-    # and then call the executor to execute the transactions.
-    #
-    # The executor will order the transactions in the consensus
-    # and then wait for all transactions to complete.
-    # After this, an execution event is sent.
-    Mempool.execute(enode.node_id, [transaction.id])
-
-    {enode, transaction}
+      {enode, transaction}
+    end
   end
 
   @spec complete_transaction(Anoma.Node.Examples.ENode.t()) ::
@@ -232,47 +234,47 @@ defmodule Anoma.Node.Examples.Mempool do
 
   def complete_transaction(enode, transaction, round) do
     # subscribe to events here to be sure the events are caught
-    EventBroker.subscribe_me([])
+    with_subscription [[]] do
+      # subscribe to mnesia events as well. see below.
+      events_table = Tables.table_events(enode.node_id)
+      :mnesia.subscribe({:table, events_table, :simple})
 
-    # subscribe to mnesia events as well. see below.
-    events_table = Tables.table_events(enode.node_id)
-    :mnesia.subscribe({:table, events_table, :simple})
+      {enode, transaction} = make_block(enode, transaction)
 
-    {enode, transaction} = make_block(enode, transaction)
+      # to verify that the transaction completed, n observable effects
+      # must be assertd.
+      # - consensus event is fired
+      # - the events table writes a new consensus value
+      # - order event is fired
+      # - execution event is fired
+      # - block event is fired
 
-    # to verify that the transaction completed, n observable effects
-    # must be assertd.
-    # - consensus event is fired
-    # - the events table writes a new consensus value
-    # - order event is fired
-    # - execution event is fired
-    # - block event is fired
+      # wait for the consensus event
+      consensus_event = EEvent.consensus_event(enode, [transaction.id])
+      EEvent.wait_for_event(consensus_event)
 
-    # wait for the consensus event
-    consensus_event = EEvent.consensus_event(enode, [transaction.id])
-    EEvent.wait_for_event(consensus_event)
+      # wait for the order event
+      order_event = EEvent.order_event(enode, transaction.id)
+      EEvent.wait_for_event(order_event)
 
-    # wait for the order event
-    order_event = EEvent.order_event(enode, transaction.id)
-    EEvent.wait_for_event(order_event)
+      # wait for the execution event
+      execution_event = EEvent.execution_event(enode, transaction)
 
-    # wait for the execution event
-    execution_event = EEvent.execution_event(enode, transaction)
+      # todo: these should be one function wait_for_event..
+      EEvent.wait_for_event(execution_event)
 
-    # todo: these should be one function wait_for_event..
-    EEvent.wait_for_event(execution_event)
+      # wait for the block event
+      block_event = EEvent.block_event(enode, transaction, round)
+      EEvent.wait_for_event(block_event)
 
-    # wait for the block event
-    block_event = EEvent.block_event(enode, transaction, round)
-    EEvent.wait_for_event(block_event)
+      # wait for the mnesia table to be written fully
+      wait_for_consensus_write(enode, transaction)
 
-    # wait for the mnesia table to be written fully
-    wait_for_consensus_write(enode, transaction)
+      # wait for the transaction to be removed from the events table
+      wait_for_transaction_removed(enode, transaction)
 
-    # wait for the transaction to be removed from the events table
-    wait_for_transaction_removed(enode, transaction)
-
-    {enode, transaction}
+      {enode, transaction}
+    end
   end
 
   @doc """
