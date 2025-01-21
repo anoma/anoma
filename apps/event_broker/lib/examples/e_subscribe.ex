@@ -67,6 +67,7 @@ defmodule Examples.EEventBroker.Subscribe do
   @doc """
   I unsubscribe a process from a filter and verify that it is unsubscribed.
   """
+  @spec unsubscribe_from_filter(struct()) :: {:received, any()}
   def unsubscribe_from_filter(filter \\ %EFilter.AcceptAll{}) do
     # subscribe to the trivial filter (i.e., all messages)
     EventBroker.subscribe_me([filter])
@@ -83,6 +84,53 @@ defmodule Examples.EEventBroker.Subscribe do
     EventBroker.unsubscribe_me([filter])
 
     {:received, event}
+  end
+
+  @doc """
+  I subscribe a process to events, and check whether the registry cleans up its
+  subscriptions when it goes offline.
+  """
+  def unsubscribe_on_down() do
+    # any filter will do
+    filter = %EFilter.AcceptAll{}
+
+    this = self()
+
+    # create a process that will subscribe
+    subscriber =
+      spawn(fn ->
+        EventBroker.subscribe_me([filter])
+
+        # confirm this process is subscribed
+        assert_subscription(filter)
+
+        # message the broker we're done
+        send(this, :done)
+
+        # wait for a message to terminate
+        receive do
+          :terminate ->
+            :ok
+        end
+      end)
+
+    # monitor the subscriber
+    Process.monitor(subscriber)
+
+    # wait for the subscriber to subscribe
+    assert_receive :done
+
+    # check that the process has been subscribed
+    assert [[filter]] == EventBroker.subscriptions(subscriber)
+
+    # stop the subscriber
+    send(subscriber, :terminate)
+
+    # wait for its down message
+    assert_receive {:DOWN, _, _, ^subscriber, _}
+
+    # assert that its no longer subscribed
+    assert [] == EventBroker.subscriptions(subscriber)
   end
 
   ############################################################
