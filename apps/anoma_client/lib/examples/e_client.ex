@@ -9,6 +9,7 @@ defmodule Anoma.Client.Examples.EClient do
   use TypedStruct
 
   alias Anoma.Client
+  alias Anoma.Client.Storage
   alias Anoma.Client.Examples.EClient
   alias Anoma.Node.Examples.ENode
   alias Anoma.Protobuf.Indexer.Nullifiers
@@ -26,6 +27,8 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.NockService
   alias Anoma.Protobuf.NodeInfo
   alias Examples.ETransparent.ETransaction
+  alias Anoma.TransparentResource.Action
+  alias Anoma.TransparentResource.Transaction
   alias Noun.Nounable
 
   import ExUnit.Assertions
@@ -382,6 +385,64 @@ defmodule Anoma.Client.Examples.EClient do
     assert {:ok, <<>>} == Noun.Jam.cue(success.result)
 
     success.result
+  end
+
+  @spec prove_with_internal_scry_call(EConnection.t()) :: Prove.Response.t()
+  def prove_with_internal_scry_call(conn \\ setup()) do
+    Anoma.Client.Examples.EStorage.setup()
+
+    action =
+      %Action{app_data: %{<<123>> => {"i am scried", true}}}
+
+    tx =
+      %Transaction{actions: MapSet.new([action])} |> Noun.Nounable.to_noun()
+
+    Storage.write({"key", tx})
+    program = [[12, [1], 1 | ["id" | "key"]]] |> Noun.Jam.jam()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
+
+    res = response.result |> elem(1) |> Map.get(:result)
+
+    assert res == Noun.Jam.jam(tx)
+
+    assert {:ok, "i am scried"} = Storage.read({System.os_time(), <<123>>})
+
+    res
+  end
+
+  @spec prove_with_external_scry_call(EConnection.t()) :: Prove.Response.t()
+  def prove_with_external_scry_call(conn \\ setup()) do
+    Anoma.Client.Examples.EStorage.setup()
+
+    Anoma.Node.Transaction.Storage.write(
+      conn.client.node.node_id,
+      {1, [{["key"], 123}]}
+    )
+
+    program = [[12, [1], 1 | ["id" | ["key"]]]] |> Noun.Jam.jam()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
+
+    res = response.result |> elem(1) |> Map.get(:result)
+
+    assert 123 |> Noun.Jam.jam() == res
+
+    assert Storage.read({System.os_time(), ["key"]})
+           |> elem(1)
+           |> Noun.equal?(123)
+
+    res
   end
 
   ############################################################
