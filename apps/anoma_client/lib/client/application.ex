@@ -28,6 +28,10 @@ defmodule Anoma.Client.Application do
       attributes: [:qualified_key, :value]
     )
 
+    :mnesia.create_table(Anoma.Client.Storage.Ids,
+      attributes: [:id, :timestamp]
+    )
+
     opts = [strategy: :one_for_one, name: Anoma.Client.Supervisor]
     Supervisor.start_link(children, opts)
   end
