@@ -302,6 +302,10 @@ defmodule Noun do
     -div(x + 1, 2)
   end
 
+  def decode_signed(x) when is_binary(x) do
+    atom_binary_to_signed_integer(x)
+  end
+
   @doc """
   I convert the signed integer to a noun using the [ZigZag](https://protobuf.dev/programming-guides/encoding/#signed-ints) encoding.
   """
