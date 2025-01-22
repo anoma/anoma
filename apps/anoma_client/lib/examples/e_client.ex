@@ -19,6 +19,8 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.Executor.AddROTransaction
+  alias Anoma.Protobuf.ExecutorService
   alias Anoma.Protobuf.Nock.Input
   alias Anoma.Protobuf.Nock.Prove
   alias Anoma.Protobuf.NockService
@@ -206,6 +208,30 @@ defmodule Anoma.Client.Examples.EClient do
 
     {:ok, _reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
+
+    conn
+  end
+
+  @doc """
+  I submit a read-only transaction
+  """
+  @spec submit_read_only_tx(EConnection.t()) :: EConnection.t()
+  def submit_read_only_tx(conn \\ setup()) do
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    code =
+      Anoma.Node.Examples.ETransaction.zero() |> elem(1) |> Noun.Jam.jam()
+
+    request = %AddROTransaction.Request{node_info: node_id, transaction: code}
+
+    {:ok, reply} =
+      ExecutorService.Stub.add(conn.channel, request)
+
+    result = [["key" | 0] | 0] |> Noun.Jam.jam()
+
+    {:success, res} = reply.result
+
+    assert res.result == result
 
     conn
   end
