@@ -17,12 +17,6 @@ defprotocol Anoma.RM.Transaction do
   @spec verify(t()) :: true | {:error, String.t()}
   def verify(transaction)
 
-  @spec storage_commitments(t()) :: list(binary())
-  def storage_commitments(transaction)
-
-  @spec storage_nullifiers(t()) :: list(binary())
-  def storage_nullifiers(transaction)
-
   @spec commitments(t()) :: list(binary())
   def commitments(transaction)
 
