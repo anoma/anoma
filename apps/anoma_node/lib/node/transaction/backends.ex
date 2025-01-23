@@ -142,8 +142,17 @@ defmodule Anoma.Node.Transaction.Backends do
           with [id, key] <- list |> Noun.list_nock_to_erlang(),
                {:ok, value} <-
                  (case backend do
-                    {:read_only, _pid} -> Storage.read(node_id, {time, key})
-                    _ -> Ordering.read(node_id, {id, key})
+                    {:read_only, _pid} ->
+                      Storage.read(
+                        node_id,
+                        {time, key |> Noun.list_nock_to_erlang()}
+                      )
+
+                    _ ->
+                      Ordering.read(
+                        node_id,
+                        {id, key |> Noun.list_nock_to_erlang()}
+                      )
                   end) do
             {:ok, value}
           else

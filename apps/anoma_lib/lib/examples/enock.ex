@@ -53,7 +53,7 @@ defmodule Examples.ENock do
 
   @spec zero(Noun.t()) :: Noun.t()
   def zero(key \\ "key") do
-    zero_counter_arm = [1, key | 0]
+    zero_counter_arm = [1, [key] | 0]
     arm = [10, [2 | zero_counter_arm], 1, 0 | 0]
     sample = 0
     keyspace = 0
@@ -62,7 +62,7 @@ defmodule Examples.ENock do
 
   @spec inc(Noun.t()) :: Noun.t()
   def inc(key \\ "key") do
-    increment_value_arm = [[1 | key], 4, 12, [1 | 0], [0 | 6], 1, key | 0]
+    increment_value_arm = [[1 | [key]], 4, 12, [1 | 0], [0 | 6], 1, [key] | 0]
     # Place the result in a list
     arm = [10, [2 | increment_value_arm], 1, 0 | 0]
     sample = 0

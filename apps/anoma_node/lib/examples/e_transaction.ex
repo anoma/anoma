@@ -431,8 +431,8 @@ defmodule Anoma.Node.Examples.ETransaction do
          %Mempool.Tx{
            code: ^zero,
            backend: ^back,
-           vm_result: {:ok, [[^key | 0] | 0]},
-           tx_result: {:ok, [[^key | 0]]}
+           vm_result: {:ok, [[[^key] | 0] | 0]},
+           tx_result: {:ok, [[[^key] | 0]]}
          }
        ]}
     ] = block
@@ -470,14 +470,14 @@ defmodule Anoma.Node.Examples.ETransaction do
          %Mempool.Tx{
            code: ^zero,
            backend: ^back1,
-           vm_result: {:ok, [[^key | 0] | 0]},
-           tx_result: {:ok, [[^key | 0]]}
+           vm_result: {:ok, [[[^key] | 0] | 0]},
+           tx_result: {:ok, [[[^key] | 0]]}
          },
          %Mempool.Tx{
            code: ^inc,
            backend: ^back2,
-           vm_result: {:ok, [[^key | 1] | 0]},
-           tx_result: {:ok, [[^key | 1]]}
+           vm_result: {:ok, [[[^key] | 1] | 0]},
+           tx_result: {:ok, [[[^key] | 1]]}
          }
        ]}
     ] = block
@@ -511,8 +511,8 @@ defmodule Anoma.Node.Examples.ETransaction do
          %Mempool.Tx{
            code: ^inc,
            backend: ^back,
-           vm_result: {:ok, [[^key | 1] | 0]},
-           tx_result: {:ok, [[^key | 1]]}
+           vm_result: {:ok, [[[^key] | 1] | 0]},
+           tx_result: {:ok, [[[^key] | 1]]}
          }
        ]}
     ] = block
@@ -568,7 +568,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     Executor.launch(node_id, {{:read_only, self()}, code})
 
-    assert_receive({0, [[^key | 0] | 0]}, 5000)
+    assert_receive({0, [[[^key] | 0] | 0]}, 5000)
 
     [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
     [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
@@ -586,7 +586,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     Executor.launch(node_id, {{:read_only, self()}, code})
 
-    assert_receive({1, [[^key | 1] | 0]}, 5000)
+    assert_receive({1, [[[^key] | 1] | 0]}, 5000)
 
     node_id
   end
@@ -602,7 +602,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     Executor.launch(node_id, {{:read_only, self()}, code})
 
-    assert_receive({2, [[^key | 2] | 0]}, 5000)
+    assert_receive({2, [[[^key] | 2] | 0]}, 5000)
 
     node_id
   end
@@ -638,8 +638,8 @@ defmodule Anoma.Node.Examples.ETransaction do
          %Mempool.Tx{
            code: ^inc,
            backend: ^back,
-           vm_result: {:ok, [[^key | 1] | 0]},
-           tx_result: {:ok, [[^key | 1]]}
+           vm_result: {:ok, [[[^key] | 1] | 0]},
+           tx_result: {:ok, [[[^key] | 1]]}
          }
        ]}
     ] = :mnesia.dirty_read({blocks_table, 1})

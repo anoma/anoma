@@ -227,7 +227,7 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, reply} =
       ExecutorService.Stub.add(conn.channel, request)
 
-    result = [["key" | 0] | 0] |> Noun.Jam.jam()
+    result = [[["key"] | 0] | 0] |> Noun.Jam.jam()
 
     {:success, res} = reply.result
 
