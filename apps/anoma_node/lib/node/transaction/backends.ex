@@ -121,7 +121,11 @@ defmodule Anoma.Node.Transaction.Backends do
       scry_function: fn list ->
         if list do
           with [id, key] <- list |> Noun.list_nock_to_erlang(),
-               {:ok, value} <- Ordering.read(node_id, {id, key}) do
+               {:ok, value} <-
+                 Ordering.read(
+                   node_id,
+                   {id, key |> Noun.list_nock_to_erlang()}
+                 ) do
             {:ok, value}
           else
             _ -> :error
