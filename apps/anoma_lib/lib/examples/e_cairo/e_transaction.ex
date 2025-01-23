@@ -1,11 +1,13 @@
 defmodule Examples.ECairo.ETransaction do
+  use Memoize
+
   alias Anoma.CairoResource.{LogicInstance, Transaction}
   alias Examples.ECairo.EAction
 
   use TestHelper.TestMacro
 
   @spec a_shielded_transaction() :: Transaction.t()
-  def a_shielded_transaction do
+  defmemo a_shielded_transaction do
     action = EAction.an_action()
     priv_keys = <<3::256>>
 
@@ -22,7 +24,7 @@ defmodule Examples.ECairo.ETransaction do
   end
 
   @spec a_shielded_transaction_with_intents() :: Transaction.t()
-  def a_shielded_transaction_with_intents do
+  defmemo a_shielded_transaction_with_intents do
     action = EAction.an_action_with_intents()
     priv_keys = <<3::256>>
 
@@ -39,7 +41,7 @@ defmodule Examples.ECairo.ETransaction do
   end
 
   @spec a_shielded_transaction_with_multiple_actions() :: Transaction.t()
-  def a_shielded_transaction_with_multiple_actions do
+  defmemo a_shielded_transaction_with_multiple_actions do
     an_action = EAction.an_action()
     another_action = EAction.an_action_with_intents()
     priv_keys = <<3::256>> <> <<3::256>>
@@ -58,7 +60,7 @@ defmodule Examples.ECairo.ETransaction do
 
   @spec a_shielded_transaction_with_multiple_compliance_units() ::
           Transaction.t()
-  def a_shielded_transaction_with_multiple_compliance_units do
+  defmemo a_shielded_transaction_with_multiple_compliance_units do
     an_action = EAction.an_action_with_multiple_compliance_units()
     priv_keys = <<6::256>>
 
@@ -76,7 +78,7 @@ defmodule Examples.ECairo.ETransaction do
 
   @spec a_shielded_transaction_from_compliance_units() ::
           Transaction.t()
-  def a_shielded_transaction_from_compliance_units do
+  defmemo a_shielded_transaction_from_compliance_units do
     compliance1_inputs =
       File.read!(
         Path.join(
