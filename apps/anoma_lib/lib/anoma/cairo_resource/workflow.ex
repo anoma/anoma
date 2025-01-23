@@ -320,16 +320,22 @@ defmodule Anoma.CairoResource.Workflow do
   end
 
   @spec create_action(
+          list(<<_::256>>),
+          list(<<_::256>>),
           list(ProofRecord.t()),
           list(ProofRecord.t()),
           list(ProofRecord.t())
         ) :: Action.t()
   def create_action(
+        commitments,
+        nullifiers,
         input_logic_proofs,
         output_logic_proofs,
         compliance_proofs
       ) do
     Action.new(
+      commitments,
+      nullifiers,
       Enum.concat(
         input_logic_proofs,
         output_logic_proofs

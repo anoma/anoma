@@ -20,18 +20,32 @@ defmodule Anoma.CairoResource.Action do
   alias Anoma.Constants
 
   typedstruct enforce: true do
+    field(:created_commitments, list(<<_::256>>), default: [])
+    field(:consumed_nullifiers, list(<<_::256>>), default: [])
     field(:logic_proofs, %{binary() => ProofRecord.t()}, default: {})
     field(:compliance_proofs, list(ProofRecord.t()), default: [])
   end
 
-  @spec new(list(ProofRecord.t()), list(ProofRecord.t())) :: t()
-  def new(logic_proofs, compliance_proofs) do
+  @spec new(
+          list(<<_::256>>),
+          list(<<_::256>>),
+          list(ProofRecord.t()),
+          list(ProofRecord.t())
+        ) :: t()
+  def new(
+        created_commitments,
+        consumed_nullifiers,
+        logic_proofs,
+        compliance_proofs
+      ) do
     logic_proof_map =
       Enum.into(logic_proofs, %{}, fn proof ->
         {proof.public_inputs |> LogicInstance.get_tag(), proof}
       end)
 
     %Action{
+      created_commitments: created_commitments,
+      consumed_nullifiers: consumed_nullifiers,
       logic_proofs: logic_proof_map,
       compliance_proofs: compliance_proofs
     }
@@ -39,6 +53,8 @@ defmodule Anoma.CairoResource.Action do
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
+        created_commitments,
+        consumed_nullifiers,
         logic_proofs
         | compliance_proofs
       ]) do
@@ -62,6 +78,10 @@ defmodule Anoma.CairoResource.Action do
     with true <- checked do
       {:ok,
        %Action{
+         created_commitments:
+           created_commitments |> Noun.list_nock_to_erlang(),
+         consumed_nullifiers:
+           consumed_nullifiers |> Noun.list_nock_to_erlang(),
          logic_proofs: logic_map,
          compliance_proofs: compliance_list
        }}
@@ -88,14 +108,28 @@ defmodule Anoma.CairoResource.Action do
           |> ComplianceInstance.from_public_input()
         end)
 
-      # Get cms and nfs from compliance_proofs
-      resource_tree_leaves =
+      # Check the consistence of cms and nfs in compliances
+      nfs_cms_from_compliances =
         complaince_instances
         |> Enum.flat_map(fn instance ->
           [instance.nullifier, instance.output_cm]
         end)
 
-      # Compute the expected resource tree
+      resource_tree_leaves =
+        Enum.zip_with(
+          action.consumed_nullifiers,
+          action.created_commitments,
+          &[&1, &2]
+        )
+        |> Enum.concat()
+
+      is_cms_nfs_valid =
+        MapSet.equal?(
+          MapSet.new(nfs_cms_from_compliances),
+          MapSet.new(resource_tree_leaves)
+        )
+
+      # Compute the expected resource tree root
       rt =
         Tree.construct(
           CommitmentTree.Spec.cairo_poseidon_resource_tree_spec(),
@@ -103,42 +137,52 @@ defmodule Anoma.CairoResource.Action do
         )
 
       # check correspondence between logic_proofs and compliance_proofs
-      Enum.reduce_while(complaince_instances, true, fn complaince_instance,
-                                                       _acc ->
-        # check all the resource logic proofs are included
-        res =
-          with {:ok, input_proof} <-
-                 Map.fetch(action.logic_proofs, complaince_instance.nullifier),
-               {:ok, output_proof} <-
-                 Map.fetch(action.logic_proofs, complaince_instance.output_cm) do
-            is_input_logic_valid =
-              complaince_instance.input_logic ==
-                input_proof
-                |> ProofRecord.get_cairo_program_hash()
+      is_consistent =
+        Enum.reduce_while(complaince_instances, true, fn complaince_instance,
+                                                         _acc ->
+          # check all the resource logic proofs are included
+          res =
+            with {:ok, input_proof} <-
+                   Map.fetch(
+                     action.logic_proofs,
+                     complaince_instance.nullifier
+                   ),
+                 {:ok, output_proof} <-
+                   Map.fetch(
+                     action.logic_proofs,
+                     complaince_instance.output_cm
+                   ) do
+              is_input_logic_valid =
+                complaince_instance.input_logic ==
+                  input_proof
+                  |> ProofRecord.get_cairo_program_hash()
 
-            is_output_logic_valid =
-              complaince_instance.output_logic ==
-                output_proof
-                |> ProofRecord.get_cairo_program_hash()
+              is_output_logic_valid =
+                complaince_instance.output_logic ==
+                  output_proof
+                  |> ProofRecord.get_cairo_program_hash()
 
-            is_root_valid =
-              rt.root == input_proof.public_inputs |> LogicInstance.get_root() &&
+              is_root_valid =
                 rt.root ==
-                  output_proof.public_inputs |> LogicInstance.get_root()
+                  input_proof.public_inputs |> LogicInstance.get_root() &&
+                  rt.root ==
+                    output_proof.public_inputs |> LogicInstance.get_root()
 
-            is_input_logic_valid && is_output_logic_valid && is_root_valid
-          else
-            _ -> false
+              is_input_logic_valid && is_output_logic_valid && is_root_valid
+            else
+              _ -> false
+            end
+
+          case res do
+            true ->
+              {:cont, true}
+
+            false ->
+              {:halt, false}
           end
+        end)
 
-        case res do
-          true ->
-            {:cont, true}
-
-          false ->
-            {:halt, false}
-        end
-      end)
+      is_cms_nfs_valid && is_consistent
     else
       _ -> false
     end
@@ -160,7 +204,7 @@ defmodule Anoma.CairoResource.Action do
   end
 
   @spec verify_compliance_hash(list(ProofRecord.t())) :: boolean()
-  def verify_compliance_hash(compliance_proofs) do
+  defp verify_compliance_hash(compliance_proofs) do
     compliance_proofs
     |> Enum.all?(
       &(ProofRecord.get_cairo_program_hash(&1) ==
@@ -172,6 +216,8 @@ defmodule Anoma.CairoResource.Action do
     @impl true
     def to_noun(action = %Action{}) do
       {
+        action.created_commitments,
+        action.consumed_nullifiers,
         action.logic_proofs |> Map.values(),
         action.compliance_proofs
       }

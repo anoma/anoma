@@ -23,8 +23,6 @@ defmodule Anoma.CairoResource.Transaction do
     # roots: A set of valid commitment tree roots used to prove the existence of the
     # resources being consumed in the transaction.
     field(:roots, MapSet.t(binary()), default: MapSet.new())
-    field(:commitments, list(<<_::256>>), default: [])
-    field(:nullifiers, list(<<_::256>>), default: [])
     field(:actions, list(Action.t()), default: [])
 
     # When the tx is not finalized, the delta is the collection of private keys
@@ -34,8 +32,6 @@ defmodule Anoma.CairoResource.Transaction do
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
-        commitments,
-        nullifiers,
         actions
         | delta
       ]) do
@@ -54,8 +50,6 @@ defmodule Anoma.CairoResource.Transaction do
       {:ok,
        %Transaction{
          roots: MapSet.new(roots),
-         commitments: commitments |> Noun.list_nock_to_erlang(),
-         nullifiers: nullifiers |> Noun.list_nock_to_erlang(),
          actions: actions,
          delta: delta
        }}
@@ -68,8 +62,6 @@ defmodule Anoma.CairoResource.Transaction do
     @impl true
     def to_noun(transaction = %Transaction{}) do
       {
-        transaction.commitments,
-        transaction.nullifiers,
         transaction.actions,
         transaction.delta
       }
@@ -79,14 +71,16 @@ defmodule Anoma.CairoResource.Transaction do
 
   defimpl Anoma.RM.Transaction, for: __MODULE__ do
     @impl true
-    def commitments(%Transaction{commitments: cm}), do: cm
-    @impl true
-    def nullifiers(%Transaction{nullifiers: nf}), do: nf
+    def commitments(transaction = %Transaction{}) do
+      transaction.actions
+      |> Enum.flat_map(& &1.created_commitments)
+    end
 
     @impl true
-    def storage_commitments(tx), do: commitments(tx)
-    @impl true
-    def storage_nullifiers(tx), do: nullifiers(tx)
+    def nullifiers(transaction = %Transaction{}) do
+      transaction.actions
+      |> Enum.flat_map(& &1.consumed_nullifiers)
+    end
 
     @impl true
     def compose(tx1, tx2) do
@@ -95,17 +89,12 @@ defmodule Anoma.CairoResource.Transaction do
       else
         %Transaction{
           roots: MapSet.union(tx1.roots, tx2.roots),
-          commitments: tx1.commitments ++ tx2.commitments,
-          nullifiers: tx1.nullifiers ++ tx2.nullifiers,
           actions: tx1.actions ++ tx2.actions,
           delta: tx1.delta <> tx2.delta
         }
       end
     end
 
-    # TODO: We can return roots, commitments, and nullifiers instead of just a
-    # boolean value so that we can get rid of them in the Transaction struct. We
-    # can apply the same improvement to the transparent Transaction.
     @impl true
     def verify(transaction = %Transaction{}) do
       with true <- verify_actions(transaction),
@@ -148,7 +137,9 @@ defmodule Anoma.CairoResource.Transaction do
     @spec verify_duplicate_nfs(Transaction.t()) ::
             true | {:error, String.t()}
     defp verify_duplicate_nfs(tx) do
-      if Enum.uniq(tx.nullifiers) == tx.nullifiers do
+      nullifiers = Anoma.RM.Transaction.nullifiers(tx)
+
+      if Enum.uniq(nullifiers) == nullifiers do
         true
       else
         {:error, "Duplicate nullifiers error"}
@@ -187,7 +178,8 @@ defmodule Anoma.CairoResource.Transaction do
 
   @spec get_binding_messages(Transaction.t()) :: list(list(byte()))
   def get_binding_messages(tx = %Transaction{}) do
-    (tx.nullifiers ++ tx.commitments)
+    (Anoma.RM.Transaction.nullifiers(tx) ++
+       Anoma.RM.Transaction.commitments(tx))
     |> Enum.map(&:binary.bin_to_list/1)
   end
 
@@ -210,14 +202,10 @@ defmodule Anoma.CairoResource.Transaction do
   def finalize(tx = %Transaction{}) do
     compliance_instances = get_compliance_instances(tx.actions)
     roots = Enum.map(compliance_instances, & &1.root)
-    commitments = Enum.map(compliance_instances, & &1.output_cm)
-    nullifiers = Enum.map(compliance_instances, & &1.nullifier)
 
     %Transaction{
       tx
-      | roots: MapSet.new(roots),
-        commitments: commitments,
-        nullifiers: nullifiers
+      | roots: MapSet.new(roots)
     }
     |> sign()
   end
@@ -316,6 +304,8 @@ defmodule Anoma.CairoResource.Transaction do
            Workflow.generate_compliance_proofs(compliance_inputs),
          action =
            Workflow.create_action(
+             output_commitments,
+             input_nullifiers,
              input_logic_proofs,
              output_logic_proofs,
              compliance_proofs

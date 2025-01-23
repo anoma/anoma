@@ -171,7 +171,11 @@ defmodule Examples.ECairo.ETransaction do
       }
 
     composed_shielded_tx =
-      Anoma.RM.Transaction.compose(shielded_tx_1, shielded_tx_2)
+      %Transaction{
+        roots: MapSet.union(shielded_tx_1.roots, shielded_tx_2.roots),
+        actions: shielded_tx_1.actions ++ shielded_tx_2.actions,
+        delta: shielded_tx_1.delta <> shielded_tx_2.delta
+      }
       |> Transaction.finalize()
 
     assert {:error, "Duplicate nullifiers error"} ==
