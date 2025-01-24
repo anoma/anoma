@@ -23,7 +23,7 @@ defmodule Anoma.CairoResource.Action do
     field(:created_commitments, list(<<_::256>>), default: [])
     field(:consumed_nullifiers, list(<<_::256>>), default: [])
     field(:logic_proofs, %{binary() => ProofRecord.t()}, default: {})
-    field(:compliance_proofs, list(ProofRecord.t()), default: [])
+    field(:compliance_units, list(ProofRecord.t()), default: [])
   end
 
   @spec new(
@@ -36,7 +36,7 @@ defmodule Anoma.CairoResource.Action do
         created_commitments,
         consumed_nullifiers,
         logic_proofs,
-        compliance_proofs
+        compliance_units
       ) do
     logic_proof_map =
       Enum.into(logic_proofs, %{}, fn proof ->
@@ -47,7 +47,7 @@ defmodule Anoma.CairoResource.Action do
       created_commitments: created_commitments,
       consumed_nullifiers: consumed_nullifiers,
       logic_proofs: logic_proof_map,
-      compliance_proofs: compliance_proofs
+      compliance_units: compliance_units
     }
   end
 
@@ -56,7 +56,7 @@ defmodule Anoma.CairoResource.Action do
         created_commitments,
         consumed_nullifiers,
         logic_proofs
-        | compliance_proofs
+        | compliance_units
       ]) do
     to_noun_list = fn xs ->
       xs
@@ -65,7 +65,7 @@ defmodule Anoma.CairoResource.Action do
     end
 
     logic = to_noun_list.(logic_proofs)
-    compliance = to_noun_list.(compliance_proofs)
+    compliance = to_noun_list.(compliance_units)
     checked = Enum.all?(logic ++ compliance, &(elem(&1, 0) == :ok))
 
     compliance_list = Enum.map(compliance, &elem(&1, 1))
@@ -83,7 +83,7 @@ defmodule Anoma.CairoResource.Action do
          consumed_nullifiers:
            consumed_nullifiers |> Noun.list_nock_to_erlang(),
          logic_proofs: logic_map,
-         compliance_proofs: compliance_list
+         compliance_units: compliance_list
        }}
     else
       false -> :error
@@ -96,13 +96,13 @@ defmodule Anoma.CairoResource.Action do
            verify_proofs(action.logic_proofs |> Map.values(), "logic result"),
          true <-
            verify_proofs(
-             action.compliance_proofs,
+             action.compliance_units,
              "compliance result"
            ),
-         true <- verify_compliance_hash(action.compliance_proofs) do
-      # Decode complaince_instances from compliance_proofs
+         true <- verify_compliance_hash(action.compliance_units) do
+      # Decode compliance_instances from compliance_units
       complaince_instances =
-        action.compliance_proofs
+        action.compliance_units
         |> Enum.map(fn proof_record ->
           proof_record.public_inputs
           |> ComplianceInstance.from_public_input()
@@ -136,7 +136,7 @@ defmodule Anoma.CairoResource.Action do
           resource_tree_leaves
         )
 
-      # check correspondence between logic_proofs and compliance_proofs
+      # check correspondence between logic_proofs and compliance_units
       is_consistent =
         Enum.reduce_while(complaince_instances, true, fn complaince_instance,
                                                          _acc ->
@@ -204,8 +204,8 @@ defmodule Anoma.CairoResource.Action do
   end
 
   @spec verify_compliance_hash(list(ProofRecord.t())) :: boolean()
-  defp verify_compliance_hash(compliance_proofs) do
-    compliance_proofs
+  defp verify_compliance_hash(compliance_units) do
+    compliance_units
     |> Enum.all?(
       &(ProofRecord.get_cairo_program_hash(&1) ==
           Constants.cairo_compliance_program_hash())
@@ -219,7 +219,7 @@ defmodule Anoma.CairoResource.Action do
         action.created_commitments,
         action.consumed_nullifiers,
         action.logic_proofs |> Map.values(),
-        action.compliance_proofs
+        action.compliance_units
       }
       |> Noun.Nounable.to_noun()
     end

@@ -150,7 +150,7 @@ defmodule Anoma.CairoResource.Transaction do
     defp get_binding_pub_keys(tx) do
       tx.actions
       |> Enum.flat_map(fn action ->
-        action.compliance_proofs
+        action.compliance_units
         |> Enum.map(fn proof_record ->
           proof_record.public_inputs
           |> ComplianceInstance.from_public_input()
@@ -168,7 +168,7 @@ defmodule Anoma.CairoResource.Transaction do
   def get_compliance_instances(actions) do
     actions
     |> Enum.flat_map(fn action ->
-      action.compliance_proofs
+      action.compliance_units
       |> Enum.map(fn proof_record ->
         proof_record.public_inputs
         |> ComplianceInstance.from_public_input()
@@ -300,7 +300,7 @@ defmodule Anoma.CairoResource.Transaction do
              input_resources,
              output_resources
            ),
-         {:ok, compliance_proofs} <-
+         {:ok, compliance_units} <-
            Workflow.generate_compliance_proofs(compliance_inputs),
          action =
            Workflow.create_action(
@@ -308,7 +308,7 @@ defmodule Anoma.CairoResource.Transaction do
              input_nullifiers,
              input_logic_proofs,
              output_logic_proofs,
-             compliance_proofs
+             compliance_units
            ),
          {:ok, priv_keys} <-
            Workflow.create_private_keys(compliance_input_jsons) do
