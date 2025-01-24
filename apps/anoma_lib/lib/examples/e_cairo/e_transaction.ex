@@ -14,7 +14,7 @@ defmodule Examples.ECairo.ETransaction do
     shielded_tx =
       %Transaction{
         actions: [action],
-        delta: priv_keys
+        delta_proof: priv_keys
       }
       |> Transaction.finalize()
 
@@ -31,7 +31,7 @@ defmodule Examples.ECairo.ETransaction do
     shielded_tx =
       %Transaction{
         actions: [action],
-        delta: priv_keys
+        delta_proof: priv_keys
       }
       |> Transaction.finalize()
 
@@ -49,7 +49,7 @@ defmodule Examples.ECairo.ETransaction do
     shielded_tx =
       %Transaction{
         actions: [an_action, another_action],
-        delta: priv_keys
+        delta_proof: priv_keys
       }
       |> Transaction.finalize()
 
@@ -67,7 +67,7 @@ defmodule Examples.ECairo.ETransaction do
     shielded_tx =
       %Transaction{
         actions: [an_action],
-        delta: priv_keys
+        delta_proof: priv_keys
       }
       |> Transaction.finalize()
 
@@ -137,13 +137,13 @@ defmodule Examples.ECairo.ETransaction do
     shielded_tx_1 =
       %Transaction{
         actions: [EAction.an_action()],
-        delta: priv_keys
+        delta_proof: priv_keys
       }
 
     shielded_tx_2 =
       %Transaction{
         actions: [EAction.an_action_with_intents()],
-        delta: priv_keys
+        delta_proof: priv_keys
       }
 
     shielded_tx =
@@ -163,20 +163,20 @@ defmodule Examples.ECairo.ETransaction do
     shielded_tx_1 =
       %Transaction{
         actions: [action],
-        delta: priv_keys
+        delta_proof: priv_keys
       }
 
     shielded_tx_2 =
       %Transaction{
         actions: [action],
-        delta: priv_keys
+        delta_proof: priv_keys
       }
 
     composed_shielded_tx =
       %Transaction{
         roots: MapSet.union(shielded_tx_1.roots, shielded_tx_2.roots),
         actions: shielded_tx_1.actions ++ shielded_tx_2.actions,
-        delta: shielded_tx_1.delta <> shielded_tx_2.delta
+        delta_proof: shielded_tx_1.delta_proof <> shielded_tx_2.delta_proof
       }
       |> Transaction.finalize()
 
@@ -195,7 +195,7 @@ defmodule Examples.ECairo.ETransaction do
     invalid_shielded_tx =
       %Transaction{
         actions: [action],
-        delta: invalid_priv_keys
+        delta_proof: invalid_priv_keys
       }
       |> Transaction.finalize()
 

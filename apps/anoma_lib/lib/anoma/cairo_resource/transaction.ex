@@ -25,15 +25,15 @@ defmodule Anoma.CairoResource.Transaction do
     field(:roots, MapSet.t(binary()), default: MapSet.new())
     field(:actions, list(Action.t()), default: [])
 
-    # When the tx is not finalized, the delta is the collection of private keys
-    # When the tx is finalized, the delta is the binding signature
-    field(:delta, binary(), default: <<>>)
+    # When the tx is not finalized, the delta_proof is the collection of private keys
+    # When the tx is finalized, the delta_proof is the binding signature/proof
+    field(:delta_proof, binary(), default: <<>>)
   end
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
         actions
-        | delta
+        | delta_proof
       ]) do
     actions =
       actions
@@ -51,7 +51,7 @@ defmodule Anoma.CairoResource.Transaction do
        %Transaction{
          roots: MapSet.new(roots),
          actions: actions,
-         delta: delta
+         delta_proof: delta_proof
        }}
     else
       :error
@@ -63,7 +63,7 @@ defmodule Anoma.CairoResource.Transaction do
     def to_noun(transaction = %Transaction{}) do
       {
         transaction.actions,
-        transaction.delta
+        transaction.delta_proof
       }
       |> Noun.Nounable.to_noun()
     end
@@ -90,7 +90,7 @@ defmodule Anoma.CairoResource.Transaction do
         %Transaction{
           roots: MapSet.union(tx1.roots, tx2.roots),
           actions: tx1.actions ++ tx2.actions,
-          delta: tx1.delta <> tx2.delta
+          delta_proof: tx1.delta_proof <> tx2.delta_proof
         }
       end
     end
@@ -127,7 +127,7 @@ defmodule Anoma.CairoResource.Transaction do
       case Cairo.sig_verify(
              binding_pub_keys,
              binding_messages,
-             tx.delta |> :binary.bin_to_list()
+             tx.delta_proof |> :binary.bin_to_list()
            ) do
         true -> true
         _ -> {:error, "Delta proof verification failure"}
@@ -189,12 +189,12 @@ defmodule Anoma.CairoResource.Transaction do
     msgs = get_binding_messages(tx)
 
     binding_signature =
-      tx.delta
+      tx.delta_proof
       |> :binary.bin_to_list()
       |> Cairo.sign(msgs)
       |> :binary.list_to_bin()
 
-    %Transaction{tx | delta: binding_signature}
+    %Transaction{tx | delta_proof: binding_signature}
   end
 
   # complete and sign the tx
@@ -315,7 +315,7 @@ defmodule Anoma.CairoResource.Transaction do
       {:ok,
        %Transaction{
          actions: [action],
-         delta: priv_keys
+         delta_proof: priv_keys
        }}
     else
       {:error, x} -> {:error, x}
