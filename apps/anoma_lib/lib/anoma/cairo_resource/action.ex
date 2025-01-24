@@ -20,7 +20,7 @@ defmodule Anoma.CairoResource.Action do
     field(:created_commitments, list(<<_::256>>), default: [])
     field(:consumed_nullifiers, list(<<_::256>>), default: [])
     field(:logic_proofs, %{binary() => ProofRecord.t()}, default: {})
-    field(:compliance_units, list(ProofRecord.t()), default: [])
+    field(:compliance_units, MapSet.t(ProofRecord.t()), default: MapSet.new())
   end
 
   @spec new(
@@ -44,7 +44,7 @@ defmodule Anoma.CairoResource.Action do
       created_commitments: created_commitments,
       consumed_nullifiers: consumed_nullifiers,
       logic_proofs: logic_proof_map,
-      compliance_units: compliance_units
+      compliance_units: compliance_units |> MapSet.new()
     }
   end
 
@@ -80,7 +80,7 @@ defmodule Anoma.CairoResource.Action do
          consumed_nullifiers:
            consumed_nullifiers |> Noun.list_nock_to_erlang(),
          logic_proofs: logic_map,
-         compliance_units: compliance_list
+         compliance_units: MapSet.new(compliance_list)
        }}
     else
       false -> :error
@@ -216,7 +216,7 @@ defmodule Anoma.CairoResource.Action do
         action.created_commitments,
         action.consumed_nullifiers,
         action.logic_proofs |> Map.values(),
-        action.compliance_units
+        action.compliance_units |> MapSet.to_list()
       }
       |> Noun.Nounable.to_noun()
     end
