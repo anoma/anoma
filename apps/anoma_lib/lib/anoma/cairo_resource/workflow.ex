@@ -307,13 +307,13 @@ defmodule Anoma.CairoResource.Workflow do
   @spec generate_compliance_proofs(list(String.t())) ::
           {:ok, list(ProofRecord.t())} | {:error, term()}
   def generate_compliance_proofs(compliance_inputs) do
-    with {:ok, compliance_proofs} <-
+    with {:ok, compliance_units} <-
            Enum.map(
              compliance_inputs,
              &ProofRecord.generate_compliance_proof/1
            )
            |> Utils.check_list() do
-      {:ok, compliance_proofs}
+      {:ok, compliance_units}
     else
       {:error, msg} -> {:error, "Error creating compliance proofs: #{msg}"}
     end
@@ -331,7 +331,7 @@ defmodule Anoma.CairoResource.Workflow do
         nullifiers,
         input_logic_proofs,
         output_logic_proofs,
-        compliance_proofs
+        compliance_units
       ) do
     Action.new(
       commitments,
@@ -340,7 +340,7 @@ defmodule Anoma.CairoResource.Workflow do
         input_logic_proofs,
         output_logic_proofs
       ),
-      compliance_proofs
+      compliance_units
     )
   end
 
