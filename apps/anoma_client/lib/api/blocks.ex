@@ -10,7 +10,11 @@ defmodule Anoma.Client.Api.Servers.Blocks do
   alias Anoma.Protobuf.Indexer.Blocks.Root
   alias GRPC.Server.Stream
 
+  require Logger
+
   use GRPC.Server, service: Anoma.Protobuf.BlockService.Service
+
+  import Anoma.Protobuf.ErrorHandler
 
   @doc """
   I implement the `get` API call.
@@ -29,8 +33,18 @@ defmodule Anoma.Client.Api.Servers.Blocks do
   """
   @spec get(Get.Request.t(), Stream.t()) :: Get.Response.t()
   def get(request, _stream) do
-    {:ok, response} = GRPCProxy.get_blocks(request.index)
-    %Get.Response{blocks: response.blocks}
+    Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
+
+    # validate the request. will raise if not valid.
+    validate_request!(request)
+
+    case GRPCProxy.get_blocks(request.index) do
+      {:ok, response} ->
+        response
+
+      {:error, grpc_error} ->
+        raise grpc_error
+    end
   end
 
   @doc """

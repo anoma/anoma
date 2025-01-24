@@ -62,6 +62,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
     %Add.Response{result: "intent added"}
   rescue
     e ->
+      # if the nock was invalid, this will raise a Noun.Jam.CueError.
       raise_grpc_error!(e)
   end
 end

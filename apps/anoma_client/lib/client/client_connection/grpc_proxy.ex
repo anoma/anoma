@@ -70,12 +70,13 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   #                      Public RPC API                      #
   ############################################################
 
-  @spec list_intents() :: {:ok, List.Response.t()}
+  alias Anoma.Node.Transport.GRPC
+  @spec list_intents() :: {:ok, List.Response.t()} | GRPC.RPCError.t()
   def list_intents() do
     GenServer.call(__MODULE__, {:list_intents})
   end
 
-  @spec add_intent(Intent.t()) :: {:ok, Add.Response.t()}
+  @spec add_intent(Intent.t()) :: {:ok, Add.Response.t()} | GRPC.RPCError.t()
   def add_intent(intent) do
     GenServer.call(__MODULE__, {:add_intent, intent})
   end
@@ -133,9 +134,11 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   @impl true
   def handle_call({:list_intents}, _from, state) do
     node_info = %NodeInfo{node_id: state.node_id}
+    node_info = %NodeInfo{node_id: "deadbeef"}
     request = %List.Request{node_info: node_info}
-    intents = IntentsService.Stub.list_intents(state.channel, request)
-    {:reply, intents, state}
+
+    result = IntentsService.Stub.list_intents(state.channel, request)
+    {:reply, result, state}
   end
 
   def handle_call({:add_intent, intent}, _from, state) do

@@ -158,6 +158,18 @@ defimpl Validate, for: Anoma.Protobuf.NodeInfo do
 end
 
 ############################################################
+#                      Blocks                              #
+############################################################
+
+defimpl Validate, for: Anoma.Protobuf.Indexer.Blocks.Get.Request do
+  @not_nil [:node_id, :index]
+
+  def valid?(request) do
+    Validate.Helpers.validate(request, non_nil: @not_nil)
+  end
+end
+
+############################################################
 #                       Intent                             #
 ############################################################
 

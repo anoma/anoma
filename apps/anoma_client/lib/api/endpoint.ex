@@ -14,7 +14,8 @@ defmodule Anoma.Client.Api.Endpoint do
   """
   use GRPC.Endpoint
 
-  intercept(GRPC.Server.Interceptors.Logger)
+  # intercept(GRPC.Server.Interceptors.Logger)
+  # intercept(Anoma.Client.Api.Interceptors.ErrorCatcher)
   run(Anoma.Client.Api.Servers.Intents)
   run(Anoma.Client.Api.Servers.Indexer)
   run(Anoma.Client.Api.Servers.Nock)
