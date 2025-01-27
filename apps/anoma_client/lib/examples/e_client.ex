@@ -445,6 +445,41 @@ defmodule Anoma.Client.Examples.EClient do
     res
   end
 
+  @spec prove_with_external_scry_call(EConnection.t()) :: Prove.Response.t()
+  def prove_with_external_scry_call_nounify(conn \\ setup()) do
+    Anoma.Client.Examples.EStorage.setup()
+
+    val = MapSet.new(["i am a set"])
+
+    Anoma.Node.Transaction.Storage.write(
+      conn.client.node.node_id,
+      {1, [{["key"], val}]}
+    )
+
+    program = [[12, [1], 1 | ["id" | ["key"]]]] |> Noun.Jam.jam()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
+
+    {:success, int_res} = response.result
+
+    res = int_res.result
+
+    noun_val = val |> Noun.Nounable.to_noun()
+
+    assert Noun.Jam.jam(noun_val) == res
+
+    {:ok, read_res} = Storage.read({System.os_time(), ["key"]})
+
+    assert Noun.equal?(read_res, noun_val)
+
+    res
+  end
+
   ############################################################
   #                           Helpers                        #
   ############################################################
