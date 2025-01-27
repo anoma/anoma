@@ -11,6 +11,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   alias Anoma.RM.Intent
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node
+  alias Anoma.Node.Events
 
   require Node.Event
 
@@ -165,7 +166,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
     event =
       Node.Event.new_with_body(
         node_id,
-        %Anoma.Node.Transaction.Backends.TRMEvent{
+        %Events.TRMEvent{
           nullifiers: nlfs_set,
           commitments: MapSet.new([])
         }
@@ -189,7 +190,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
     event =
       Node.Event.new_with_body(
         node_id,
-        %Anoma.Node.Transaction.Backends.TRMEvent{
+        %Events.TRMEvent{
           nullifiers: MapSet.new([]),
           commitments: cms_set
         }
