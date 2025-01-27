@@ -230,7 +230,7 @@
     * [shutdown](https://github.com/anoma/anoma/pull/456)
     * [snapshot](https://github.com/anoma/anoma/pull/462)
     * [delete-dump](https://github.com/anoma/anoma/pull/462)
-- [Add a Liscense to the project: MIT](https://github.com/anoma/anoma/pull/417)
+- [Add a License to the project: MIT](https://github.com/anoma/anoma/pull/417)
 - [Remove the suffix _dev, _prod to the anoma home directory (this may change again in the futrue)](https://github.com/anoma/anoma/pull/447)
 - [Add a warning message and a command a user should run, if rocksdb grows out of sync](https://github.com/anoma/anoma/pull/452)
 - [Configuration files are now loaded on startup and so is the default dump](https://github.com/anoma/anoma/pull/449)
