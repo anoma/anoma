@@ -1,4 +1,8 @@
 defmodule Anoma.Client.Runner do
+  alias Anoma.Client.Storage
+  alias Anoma.Client.Connection.GRPCProxy
+  alias Anoma.TransparentResource.Transaction
+
   @doc """
   I run the given Nock program with its inputs and return the result.
   """
@@ -19,8 +23,44 @@ defmodule Anoma.Client.Runner do
 
     io_sink = open_io_sink()
 
-    case Nock.nock(core, eval_call, %Nock{stdio: io_sink}) do
+    scry = fn [id | ref] ->
+      case Storage.read_with_id({id, ref}) do
+        {:ok, val} ->
+          {:ok, val |> Noun.Nounable.to_noun()}
+
+        :absent ->
+          tx_candidate = ref |> ro_tx_candidate() |> Noun.Jam.jam()
+
+          with {:ok, reply} <-
+                 tx_candidate |> GRPCProxy.add_read_only_transaction() do
+            case reply.result do
+              {:success, res} ->
+                value = res.result |> Noun.Jam.cue!()
+                key = Noun.list_nock_to_erlang(ref)
+                Storage.write({key, value})
+                {:ok, value}
+
+              _ ->
+                :error
+            end
+          end
+      end
+    end
+
+    case Nock.nock(core, eval_call, %Nock{stdio: io_sink, scry_function: scry}) do
       {:ok, noun} ->
+        try do
+          {:ok, tx} = noun |> Transaction.from_noun()
+
+          for {key, {value, bool}} <- Transaction.app_data(tx) do
+            if bool do
+              Storage.write({key, value})
+            end
+          end
+        rescue
+          _ -> :ok
+        end
+
         {:ok, result} = close_io_sink(io_sink)
 
         {:ok, noun, result}
@@ -81,5 +121,15 @@ defmodule Anoma.Client.Runner do
       _ ->
         capture(acc)
     end
+  end
+
+  @spec ro_tx_candidate(binary()) :: Noun.t()
+  def ro_tx_candidate(ref) do
+    sample = 0
+    keyspace = 0
+
+    arm = [12, [1], [0 | 6] | [1, ref]]
+
+    [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
   end
 end

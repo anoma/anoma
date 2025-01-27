@@ -28,7 +28,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   @type backend() ::
           :debug_term_storage
-          | {:debug_read_term, pid}
+          | {:read_only, pid}
           | :debug_bloblike
           | :transparent_resource
           | :cairo_resource
@@ -121,7 +121,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   First, I execute the transaction code on the Anoma VM. Next, I apply processing
   logic to the resulting value, dependent on the selected backend.
-  - For read-only backend, the value is transmitted as a Result Event.
+  - For read-only backend, the value is sent directly to specified recepient.
   - For the key-value and blob store executions, the obtained value is stored
   and a Complete Event is issued.
   - For the transparent Resource Machine (RM) execution, I verify the
@@ -134,12 +134,27 @@ defmodule Anoma.Node.Transaction.Backends do
              node_id: String.t(),
              back: backend()
   def execute(node_id, {backend, tx_code}, id) do
-    env = %Nock{
-      scry_function: fn list ->
+    time = Storage.current_time(node_id)
+
+    scry =
+      fn list ->
         if list do
           with [id, key] <- list |> Noun.list_nock_to_erlang(),
-               {:ok, value} <- Ordering.read(node_id, {id, key}) do
-            {:ok, value}
+               {:ok, value} <-
+                 (case backend do
+                    {:read_only, _pid} ->
+                      Storage.read(
+                        node_id,
+                        {time, key |> Noun.list_nock_to_erlang()}
+                      )
+
+                    _ ->
+                      Ordering.read(
+                        node_id,
+                        {id, key |> Noun.list_nock_to_erlang()}
+                      )
+                  end) do
+            {:ok, value |> Noun.Nounable.to_noun()}
           else
             _ -> :error
           end
@@ -147,14 +162,15 @@ defmodule Anoma.Node.Transaction.Backends do
           :error
         end
       end
-    }
 
+    env = %Nock{scry_function: scry}
     vm_result = vm_execute(tx_code, env, id)
     result_event(id, vm_result, node_id, backend)
 
     res =
       with {:ok, vm_res} <- vm_result,
-           {:ok, backend_res} <- backend_logic(backend, node_id, id, vm_res) do
+           {:ok, backend_res} <-
+             backend_logic(backend, node_id, id, vm_res, time: time) do
         {:ok, backend_res}
       else
         _e ->
@@ -196,25 +212,25 @@ defmodule Anoma.Node.Transaction.Backends do
   #                     Backend Execution                    #
   ############################################################
 
-  @spec backend_logic(backend(), String.t(), binary(), Noun.t()) ::
+  @spec backend_logic(backend(), String.t(), binary(), Noun.t(), list()) ::
           :error | {:ok, any()}
-  defp backend_logic(:debug_term_storage, node_id, id, vm_res) do
+  defp backend_logic(:debug_term_storage, node_id, id, vm_res, _opts) do
     store_value(node_id, id, vm_res)
   end
 
-  defp backend_logic({:debug_read_term, pid}, node_id, id, vm_res) do
-    send_value(node_id, id, vm_res, pid)
+  defp backend_logic({:read_only, pid}, _node_id, _id, vm_res, opts) do
+    send_value(vm_res, pid, opts)
   end
 
-  defp backend_logic(:debug_bloblike, node_id, id, vm_res) do
+  defp backend_logic(:debug_bloblike, node_id, id, vm_res, _opts) do
     blob_store(node_id, id, vm_res)
   end
 
-  defp backend_logic(:transparent_resource, node_id, id, vm_res) do
+  defp backend_logic(:transparent_resource, node_id, id, vm_res, _opts) do
     transparent_resource_tx(node_id, id, vm_res)
   end
 
-  defp backend_logic(:cairo_resource, node_id, id, vm_res) do
+  defp backend_logic(:cairo_resource, node_id, id, vm_res, _opts) do
     cairo_resource_tx(node_id, id, vm_res)
   end
 
@@ -245,7 +261,7 @@ defmodule Anoma.Node.Transaction.Backends do
               blobs:
                 for {key, {value, bool}} <- action.app_data, reduce: blobs do
                   acc ->
-                    if Noun.equal?(bool, 0) do
+                    if bool do
                       [{key, value} | acc]
                     else
                       acc
@@ -414,14 +430,11 @@ defmodule Anoma.Node.Transaction.Backends do
     nock_boolean in [0, <<>>, <<0>>, []]
   end
 
-  @spec send_value(String.t(), binary(), Noun.t(), pid()) ::
-          {:ok, any()} | :error
-  defp send_value(node_id, id, result, reply_to) do
-    # send the value to reply-to address and the topic
-    reply_msg = {:read_value, result}
-    send(reply_to, reply_msg)
-    Ordering.write(node_id, {id, []})
-    {:ok, reply_msg}
+  @spec send_value(Noun.t(), pid(), list()) ::
+          {:ok, any()}
+  defp send_value(result, reply_to, opts) do
+    send(reply_to, {opts[:time], result})
+    {:ok, result}
   end
 
   @spec blob_store(String.t(), binary(), Noun.t()) :: {:ok, any} | :error
@@ -451,6 +464,10 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   @spec empty_write(backend(), String.t(), binary()) :: :ok
+  defp empty_write({:read_only, _}, _node_id, _id) do
+    :ok
+  end
+
   defp empty_write(_backend, node_id, id) do
     Ordering.write(node_id, {id, []})
   end
@@ -560,25 +577,25 @@ defmodule Anoma.Node.Transaction.Backends do
           String.t(),
           backend()
         ) :: :ok
-  defp complete_event(id, result, node_id, _backend) do
+  defp complete_event(id, result, node_id, backend) do
     event =
       Node.Event.new_with_body(node_id, %__MODULE__.CompleteEvent{
         tx_id: id,
         tx_result: result
       })
 
-    EventBroker.event(event)
+    event(backend, event)
   end
 
   @spec result_event(String.t(), any(), String.t(), backend()) :: :ok
-  defp result_event(id, result, node_id, _backend) do
+  defp result_event(id, result, node_id, backend) do
     event =
       Node.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
         tx_id: id,
         vm_result: result
       })
 
-    EventBroker.event(event)
+    event(backend, event)
   end
 
   @spec transparent_rm_event(
@@ -608,6 +625,15 @@ defmodule Anoma.Node.Transaction.Backends do
         nullifiers: nlfs
       })
 
+    EventBroker.event(event)
+  end
+
+  @spec event(backend(), EventBroker.Event.t()) :: :ok
+  defp event({:read_only, _}, _event) do
+    :ok
+  end
+
+  defp event(_backend, event) do
     EventBroker.event(event)
   end
 
