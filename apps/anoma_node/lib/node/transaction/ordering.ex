@@ -30,6 +30,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   alias Anoma.Node
   alias Node.Transaction.Storage
   alias Node.Registry
+  alias Anoma.Node.Events
 
   require Node.Event
 
@@ -62,21 +63,6 @@ defmodule Anoma.Node.Transaction.Ordering do
     # maps tx ids to their height for writing.
     # the previous height is used for reading.
     field(:tx_id_to_height, %{binary() => integer()}, default: %{})
-  end
-
-  typedstruct enforce: true, module: OrderEvent do
-    @typedoc """
-    I am the type of an ordering Event.
-
-    I am sent whenever the transaction with which I am associated gets a
-    global timestamp.
-
-    ### Fields
-
-    - `tx_id` - The ID of the transaction which was ordered.
-    """
-
-    field(:tx_id, binary())
   end
 
   deffilter TxIdFilter, tx_id: binary() do
@@ -349,12 +335,7 @@ defmodule Anoma.Node.Transaction.Ordering do
       for tx_id <- tx_id_list,
           reduce: {state.tx_id_to_height, state.next_height} do
         {map, order} ->
-          order_event =
-            Node.Event.new_with_body(state.node_id, %__MODULE__.OrderEvent{
-              tx_id: tx_id
-            })
-
-          EventBroker.event(order_event)
+          Events.order_event(tx_id, state.node_id, __MODULE__)
           {Map.put(map, tx_id, order), order + 1}
       end
 
@@ -417,7 +398,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   defp block(from, tx_id, call, node_id) do
     receive do
       %EventBroker.Event{
-        body: %Node.Event{body: %__MODULE__.OrderEvent{tx_id: ^tx_id}}
+        body: %Node.Event{body: %Events.OrderEvent{tx_id: ^tx_id}}
       } ->
         result = call.()
         GenServer.reply(from, result)
