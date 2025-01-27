@@ -189,7 +189,7 @@
   + This bug would occur when we don't scry in a resource transaction,
     as the check happens for the nullifier doesn't want to see the
     complete nullifier set.
-- [Fix a bug where the atom represnetation would change the specifics of jamming](https://github.com/anoma/anoma/pull/551)
+- [Fix a bug where the atom representation would change the specifics of jamming](https://github.com/anoma/anoma/pull/551)
   + This would cause some issues in kind calculation depending on
     where we ran it, [causing interesting errors](https://github.com/anoma/anoma/issues/550).
 - [Fix TOC generation](https://github.com/anoma/anoma/pull/556)
