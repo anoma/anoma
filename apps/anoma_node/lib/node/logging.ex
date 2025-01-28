@@ -27,15 +27,16 @@ defmodule Anoma.Node.Logging do
 
   alias __MODULE__
   alias Anoma.Node
-  alias Node.{Registry, Transaction}
-  alias Transaction.{Mempool, Storage}
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Transaction.Storage
+
+  require Logger
+  require Node.Event
 
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
-
-  require Node.Event
-  require Logger
 
   ############################################################
   #                         State                            #

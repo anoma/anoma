@@ -3,9 +3,9 @@ defmodule Anoma.Node.Supervisor do
   I am the top level supervisor for the Anoma node.
   """
 
-  use Supervisor
-
   require Logger
+
+  use Supervisor
 
   @spec child_spec(any()) :: map()
   def child_spec(args) do

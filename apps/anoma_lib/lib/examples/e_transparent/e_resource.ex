@@ -1,9 +1,8 @@
 defmodule Examples.ETransparent.EResource do
-  use Memoize
-
-  alias Anoma.TransparentResource.Resource
   alias Anoma.Crypto.Randomness
+  alias Anoma.TransparentResource.Resource
 
+  use Memoize
   use TestHelper.TestMacro
 
   @doc """

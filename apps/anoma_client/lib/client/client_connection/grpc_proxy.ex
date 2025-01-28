@@ -1,7 +1,4 @@
 defmodule Anoma.Client.Connection.GRPCProxy do
-  use GenServer
-  use TypedStruct
-
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
@@ -10,10 +7,14 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.NodeInfo
   alias Anoma.Protobuf.Mempool.AddTransaction
   alias Anoma.Protobuf.MempoolService
+  alias Anoma.Protobuf.NodeInfo
+
   require Logger
+
+  use GenServer
+  use TypedStruct
 
   ############################################################
   #                    State                                 #
