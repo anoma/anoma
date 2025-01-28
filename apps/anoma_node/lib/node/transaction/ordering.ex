@@ -22,16 +22,16 @@ defmodule Anoma.Node.Transaction.Ordering do
   - `order/2`
   """
 
+  alias __MODULE__
+  alias Anoma.Node
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Storage
+
+  require Node.Event
+
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
-
-  alias __MODULE__
-  alias Anoma.Node
-  alias Node.Transaction.Storage
-  alias Node.Registry
-
-  require Node.Event
 
   ############################################################
   #                         State                            #

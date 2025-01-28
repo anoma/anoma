@@ -5,20 +5,18 @@ defmodule Anoma.CairoResource.Transaction do
 
   @behaviour Noun.Nounable.Kind
 
+  alias __MODULE__
+  alias Anoma.CairoResource.Action
+  alias Anoma.CairoResource.ComplianceInstance
+  alias Anoma.CairoResource.LogicInstance
+  alias Anoma.CairoResource.ProofRecord
+  alias Anoma.CairoResource.Resource
+  alias Anoma.CairoResource.Utils
+  alias Anoma.CairoResource.Workflow
+
   require Logger
 
-  alias __MODULE__
   use TypedStruct
-
-  alias Anoma.CairoResource.{
-    Action,
-    ComplianceInstance,
-    ProofRecord,
-    Resource,
-    LogicInstance,
-    Utils,
-    Workflow
-  }
 
   typedstruct enforce: true do
     # TODO: The roots, commitments, and nullifiers can be eliminated. We can

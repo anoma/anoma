@@ -1,9 +1,8 @@
 defmodule Examples.ECairo.EComplianceWitness do
   alias Anoma.CairoResource.ComplianceWitness
-
+  alias Anoma.CairoResource.ProofRecord
   alias Examples.ECairo.EResource
   alias Examples.ECommitmentTree
-  alias Anoma.CairoResource.ProofRecord
 
   use TestHelper.TestMacro
 

@@ -2,9 +2,14 @@ defmodule Anoma.Crypto.Id do
   @moduledoc """
   I represent the Identity
   """
+
+  alias Anoma.Crypto.Encrypt
+  alias Anoma.Crypto.Id.Extern
+  alias Anoma.Crypto.Id.Intern
+  alias Anoma.Crypto.Sign
+  alias Anoma.Crypto.Symmetric
+
   use TypedStruct
-  alias Anoma.Crypto.{Sign, Encrypt, Symmetric}
-  alias Anoma.Crypto.Id.{Intern, Extern}
 
   @type identities() :: Intern.t() | Extern.t() | t()
 

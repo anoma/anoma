@@ -4,21 +4,20 @@ defmodule Anoma.Node.Intents.IntentPool do
   m1dnight still has to write these docs.
   """
 
-  require EventBroker.Event
-  require Logger
-
   alias __MODULE__
   alias Anoma.Node
-  alias Node.Registry
-  alias Node.Transaction.Backends
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Backends
   alias Anoma.RM.Intent
   alias EventBroker.Broker
 
+  require EventBroker.Event
+  require Logger
   require Node.Event
 
   use EventBroker.DefFilter
-  use TypedStruct
   use GenServer
+  use TypedStruct
 
   typedstruct enforce: true, module: IntentAddSuccess do
     @typedoc """
