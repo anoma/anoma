@@ -6,7 +6,7 @@
 +$  resource
   $~  :*
     label=*@t
-    logic=*resource-logic
+    logic=*@
     ephemeral=|
     quantity=`@u`1
     data=*[@u @]
@@ -16,7 +16,7 @@
   ==
   $:
     label=@t              ::  the label; some binary, @t for convenience
-    logic=resource-logic  ::  the logic predicate
+    logic=@               ::  the hash referencing resource logic
     ephemeral=?           ::  the ephemerality flag
     quantity=@u           ::  quantity; some nonnegative integer
     data=[len=@u val=@]   ::  arbitrary data; see lengthy comment in
@@ -40,9 +40,6 @@
     nullified-resources=(set resource)   ::  nullified resource set
     other-private=*                      ::  some other private inputs
   ==
-+$  resource-logic
-  $~  =>(~ |=(* &))
-  $-([public-inputs private-inputs] ?)
 +$  logic-proof
   [resource=resource inputs=[public-inputs private-inputs]]
 +$  compliance-proof  %compliance
