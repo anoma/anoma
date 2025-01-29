@@ -6,6 +6,22 @@ defmodule Examples.ETransparent.EResource do
 
   use TestHelper.TestMacro
 
+  @spec trivial_false_logic() :: Noun.t()
+  def trivial_true_logic() do
+    logic = [[1], 0]
+    {:ok, res} = Nock.nock(logic, [9, 2, 0 | 1])
+    true = Noun.equal?(0, res)
+    logic
+  end
+
+  @spec trivial_false_logic() :: Noun.t()
+  def trivial_false_logic() do
+    logic = [[1 | 1], 0]
+    {:ok, res} = Nock.nock(logic, [9, 2, 0 | 1])
+    true = Noun.equal?(1, res)
+    logic
+  end
+
   @doc """
   I generate out unique trivial true resources.
 
@@ -15,7 +31,9 @@ defmodule Examples.ETransparent.EResource do
   def trivial_true_resource_generator() do
     res = %Resource{nonce: Randomness.get_random(32)}
 
-    {:ok, 0} = Nock.nock(res.logic, [9, 2, 0 | 1])
+    true =
+      trivial_true_logic() |> Resource.logic_hash() |> Noun.equal?(res.logic)
+
     res
   end
 
@@ -26,8 +44,10 @@ defmodule Examples.ETransparent.EResource do
   """
   @spec trivial_false_resource_generator() :: Resource.t()
   def trivial_false_resource_generator() do
+    logic_core = trivial_false_logic()
+
     res = %Resource{
-      logic: [[<<1>> | <<1>>], <<>> | <<>>],
+      logic: logic_core |> Resource.logic_hash(),
       nonce: Randomness.get_random(32)
     }
 
@@ -39,7 +59,6 @@ defmodule Examples.ETransparent.EResource do
              |> Resource.from_noun()
 
     assert uncued == res
-    {:ok, <<1>>} = Nock.nock(res.logic, [9, 2, 0 | 1])
     res
   end
 

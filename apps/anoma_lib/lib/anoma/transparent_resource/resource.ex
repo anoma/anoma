@@ -12,7 +12,11 @@ defmodule Anoma.TransparentResource.Resource do
   typedstruct enforce: true do
     # following two are together the kind
     field(:label, binary(), default: "")
-    field(:logic, Noun.t(), default: [[1 | 0], 0 | 0])
+
+    field(:logic, <<_::256>>,
+      default: :crypto.hash(:sha256, [[1 | 0], 0 | 0] |> Noun.Jam.jam())
+    )
+
     # ephemerality flag
     field(:ephemeral, bool(), default: false)
     # following are more value-like fields
@@ -150,5 +154,10 @@ defmodule Anoma.TransparentResource.Resource do
 
   def nullifies?(self = %Resource{}, nullifier) when is_integer(nullifier) do
     nullifies?(self, Noun.atom_integer_to_binary(nullifier))
+  end
+
+  @spec logic_hash(Noun.t()) :: <<_::256>>
+  def logic_hash(logic) do
+    :crypto.hash(:sha256, logic |> Noun.Jam.jam())
   end
 end

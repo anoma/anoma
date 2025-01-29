@@ -1,5 +1,6 @@
 defmodule Examples.ETransparent.ELogicProof do
   alias Anoma.TransparentResource.LogicProof
+  alias Anoma.TransparentResource.Resource
   alias Examples.ETransparent.EResource
 
   use TestHelper.TestMacro
@@ -96,7 +97,11 @@ defmodule Examples.ETransparent.ELogicProof do
       self_tag: {:committed, EResource.trivial_false_commitment()}
     }
 
-    refute LogicProof.verify(res)
+    logic = EResource.trivial_false_logic() |> Noun.Jam.jam()
+
+    refute LogicProof.verify(res, %{
+             Resource.logic_hash(logic) => {logic, false}
+           })
 
     res
   end

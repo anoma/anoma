@@ -135,8 +135,17 @@ defmodule Anoma.TransparentResource.Transaction do
   def verify_tx_action_logics(tx = %Transaction{}) do
     proofs = tx.actions |> Enum.flat_map(& &1.proofs)
 
+    app_datas =
+      tx.actions
+      |> Enum.reduce(%{}, fn action, acc ->
+        action.app_data |> Map.merge(acc)
+      end)
+
     failed =
-      Enum.reject(proofs, &Anoma.TransparentResource.LogicProof.verify/1)
+      Enum.reject(
+        proofs,
+        &Anoma.TransparentResource.LogicProof.verify(&1, app_datas)
+      )
 
     Enum.empty?(failed) or
       {:error,

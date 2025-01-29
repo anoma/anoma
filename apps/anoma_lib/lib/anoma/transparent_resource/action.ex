@@ -10,7 +10,13 @@ defmodule Anoma.TransparentResource.Action do
     field(:commitments, MapSet.t(binary()), default: MapSet.new())
     field(:nullifiers, MapSet.t(binary()), default: MapSet.new())
     field(:proofs, MapSet.t(LogicProof.t()), default: MapSet.new())
-    field(:app_data, %{binary() => {any(), bool()}}, default: %{})
+
+    field(:app_data, %{binary() => {any(), bool()}},
+      default: %{
+        Resource.logic_hash([[1 | 0], 0]) =>
+          {[[1 | 0], 0] |> Noun.Jam.jam(), false}
+      }
+    )
   end
 
   @spec precis(t()) :: %{nullified: Delta.t(), committed: Delta.t()}

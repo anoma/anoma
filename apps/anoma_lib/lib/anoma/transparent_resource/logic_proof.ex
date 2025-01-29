@@ -35,16 +35,26 @@ defmodule Anoma.TransparentResource.LogicProof do
     field(:other_private, Noun.t(), default: <<>>)
   end
 
-  @spec verify(t()) :: boolean()
-  def verify(proof = %LogicProof{}) do
-    {public_inputs, private_inputs} = internal_logic_inputs(proof)
+  @spec verify(t(), %{binary() => {any(), bool}}) :: boolean()
+  def verify(
+        proof = %LogicProof{},
+        app_data \\ %{
+          Resource.logic_hash([[1], 0]) => {[[1], 0] |> Noun.Jam.jam(), false}
+        }
+      ) do
+    with {logic_jammed, _bool} <- Map.get(app_data, proof.resource.logic),
+         {:ok, logic} <- Noun.Jam.cue(logic_jammed) do
+      {public_inputs, private_inputs} = internal_logic_inputs(proof)
 
-    args = [public_inputs | private_inputs]
+      args = [public_inputs | private_inputs]
 
-    result = Nock.nock(proof.resource.logic, [9, 2, 10, [6, 1 | args], 0 | 1])
+      result = logic |> Nock.nock([9, 2, 10, [6, 1 | args], 0 | 1])
 
-    case result do
-      {:ok, zero} when zero in [0, <<>>, <<0>>, []] -> true
+      case result do
+        {:ok, zero} when zero in [0, <<>>, <<0>>, []] -> true
+        _ -> false
+      end
+    else
       _ -> false
     end
   end
