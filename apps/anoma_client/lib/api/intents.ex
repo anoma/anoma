@@ -1,6 +1,5 @@
 defmodule Anoma.Client.Api.Servers.Intents do
   alias Anoma.Client.Connection.GRPCProxy
-  alias Anoma.Node.Registry
   alias Anoma.Protobuf.Intents.Add
   alias Anoma.Protobuf.Intents.List
   alias GRPC.Server.Stream

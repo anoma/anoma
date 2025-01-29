@@ -70,33 +70,38 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   #                      Public RPC API                      #
   ############################################################
 
-  alias Anoma.Node.Transport.GRPC
-  @spec list_intents() :: {:ok, List.Response.t()} | GRPC.RPCError.t()
+  @spec list_intents() ::
+          {:ok, List.Response.t()} | {:error, GRPC.RPCError.t()}
   def list_intents() do
     GenServer.call(__MODULE__, {:list_intents})
   end
 
-  @spec add_intent(Intent.t()) :: {:ok, Add.Response.t()} | GRPC.RPCError.t()
+  @spec add_intent(Intent.t()) ::
+          {:ok, Add.Response.t()} | {:error, GRPC.RPCError.t()}
   def add_intent(intent) do
     GenServer.call(__MODULE__, {:add_intent, intent})
   end
 
-  @spec list_nullifiers() :: {:ok, Nullifiers.Response.t()}
+  @spec list_nullifiers() ::
+          {:ok, Nullifiers.Response.t()} | {:error, GRPC.RPCError.t()}
   def list_nullifiers() do
     GenServer.call(__MODULE__, {:list_nullifiers})
   end
 
-  @spec list_unrevealed_commits() :: {:ok, UnrevealedCommits.Response.t()}
+  @spec list_unrevealed_commits() ::
+          {:ok, UnrevealedCommits.Response.t()} | {:error, GRPC.RPCError.t()}
   def list_unrevealed_commits() do
     GenServer.call(__MODULE__, {:list_unrevealed_commits})
   end
 
-  @spec list_commits() :: {:ok, Commits.Response.t()}
+  @spec list_commits() ::
+          {:ok, Commits.Response.t()} | {:error, GRPC.RPCError.t()}
   def list_commits() do
     GenServer.call(__MODULE__, {:list_commits})
   end
 
-  @spec list_unspent_resources() :: {:ok, UnspentResources.Response.t()}
+  @spec list_unspent_resources() ::
+          {:ok, UnspentResources.Response.t()} | {:error, GRPC.RPCError.t()}
   def list_unspent_resources() do
     GenServer.call(__MODULE__, {:list_unspent_resources})
   end
@@ -107,22 +112,24 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   end
 
   @spec get_blocks({:before | :after, non_neg_integer()}) ::
-          {:ok, Get.Response.t()}
+          {:ok, Get.Response.t()} | {:error, GRPC.RPCError.t()}
   def get_blocks({direction, offset}) do
     GenServer.call(__MODULE__, {:get_blocks, direction, offset})
   end
 
-  @spec get_latest_block() :: {:ok, Latest.Response.t()}
+  @spec get_latest_block() ::
+          {:ok, Latest.Response.t()} | {:error, GRPC.RPCError.t()}
   def get_latest_block() do
     GenServer.call(__MODULE__, :get_latest_block)
   end
 
-  @spec root() :: {:ok, Root.Response.t()}
+  @spec root() :: {:ok, Root.Response.t()} | {:error, GRPC.RPCError.t()}
   def root() do
     GenServer.call(__MODULE__, :get_root)
   end
 
-  @spec filter([{atom, any()}]) :: {:ok, Filtered.Response.t()}
+  @spec filter([{atom, any()}]) ::
+          {:ok, Filtered.Response.t()} | {:error, GRPC.RPCError.t()}
   def filter(filters) do
     GenServer.call(__MODULE__, {:filter, filters})
   end
@@ -134,7 +141,6 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   @impl true
   def handle_call({:list_intents}, _from, state) do
     node_info = %NodeInfo{node_id: state.node_id}
-    node_info = %NodeInfo{node_id: "deadbeef"}
     request = %List.Request{node_info: node_info}
 
     result = IntentsService.Stub.list_intents(state.channel, request)

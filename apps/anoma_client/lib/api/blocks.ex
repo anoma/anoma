@@ -52,8 +52,13 @@ defmodule Anoma.Client.Api.Servers.Blocks do
   """
   @spec get(Latest.Request.t(), Stream.t()) :: Latest.Response.t()
   def latest(_request, _stream) do
-    {:ok, response} = GRPCProxy.get_latest_block()
-    %Latest.Response{block: response.block}
+    case GRPCProxy.get_latest_block() do
+      {:ok, response} ->
+        response
+
+      {:error, grpc_error} ->
+        raise grpc_error
+    end
   end
 
   @doc """
@@ -61,8 +66,13 @@ defmodule Anoma.Client.Api.Servers.Blocks do
   """
   @spec root(Root.Request.t(), Stream.t()) :: Root.Response.t()
   def root(_request, _stream) do
-    {:ok, response} = GRPCProxy.root()
-    %Root.Response{root: response.root}
+    case GRPCProxy.root() do
+      {:ok, response} ->
+        response
+
+      {:error, grpc_error} ->
+        raise grpc_error
+    end
   end
 
   @doc """
@@ -70,7 +80,12 @@ defmodule Anoma.Client.Api.Servers.Blocks do
   """
   @spec filter(Filtered.Request.t(), Stream.t()) :: Filtered.Response.t()
   def filter(request, _stream) do
-    {:ok, response} = GRPCProxy.filter(request.filters)
-    %Filtered.Response{resources: response.resources}
+    case GRPCProxy.filter(request.filters) do
+      {:ok, response} ->
+        response
+
+      {:error, grpc_error} ->
+        raise grpc_error
+    end
   end
 end
