@@ -9,7 +9,7 @@
     logic=*@
     ephemeral=|
     quantity=`@u`1
-    data=*[@u @]
+    data=*@
     nullifier-key=*@I
     nonce=*@I
     rseed=%fake
@@ -19,7 +19,7 @@
     logic=@               ::  the hash referencing resource logic
     ephemeral=?           ::  the ephemerality flag
     quantity=@u           ::  quantity; some nonnegative integer
-    data=[len=@u val=@]   ::  arbitrary data; see lengthy comment in
+    data=@                ::  arbitrary data; see lengthy comment in
                           ::  resource.ex. words mean things
     nullifier-key=@I      ::  npk; 256 bits
     nonce=@I              ::  nonce for uniqueness; 256 bits
