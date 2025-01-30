@@ -332,6 +332,24 @@ defmodule Anoma.Node.Transaction.Storage do
     {:ok, state}
   end
 
+  @doc """
+  I am the Storage function for getting current time.
+
+  My main use is to coordinate latest-time reads from the user's side and
+  particularly to aid read-only transactions. Note that evidently there is
+  a possibility of clock desynchronization after the call. Hence it should
+  only be used for approximate-time getting such as require for RO
+  transactions.
+  """
+
+  @spec current_time(String.t()) :: non_neg_integer()
+  def current_time(node_id) do
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      :current_time
+    )
+  end
+
   ############################################################
   #                      Public Filters                      #
   ############################################################
@@ -401,6 +419,10 @@ defmodule Anoma.Node.Transaction.Storage do
 
   def handle_call({:read, {height, key}}, from, state) do
     handle_read({height, key}, from, state)
+  end
+
+  def handle_call(:current_time, _from, state) do
+    {:reply, state.uncommitted_height, state}
   end
 
   def handle_call({write_opt, {height, args}}, from, state)

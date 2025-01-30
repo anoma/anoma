@@ -98,7 +98,7 @@ defimpl Nounable, for: Tuple do
   def from_noun_internal(x), do: [x]
 end
 
-defimpl Nounable, for: Set do
+defimpl Nounable, for: MapSet do
   import Noun
 
   @doc """
@@ -106,9 +106,9 @@ defimpl Nounable, for: Set do
   """
   @spec to_noun(MapSet.t()) :: Noun.t()
   def to_noun(set) do
-    with [hd | tail] <- set |> Enum.to_list() do
-      for elem <- tail, reduce: [hd, 0 | 0] do
-        acc -> noun_set_put(acc, elem)
+    with [hd | tail] <- set |> MapSet.to_list() do
+      for elem <- tail, reduce: [Nounable.to_noun(hd), 0 | 0] do
+        acc -> noun_set_put(acc, Nounable.to_noun(elem))
       end
     else
       _ -> 0
@@ -171,13 +171,12 @@ defimpl Nounable, for: Set do
 end
 
 defimpl Nounable, for: Map do
-  # use nock map once it exists
   def to_noun(map) do
     for {k, v} <- map do
       [Nounable.to_noun(k) | Nounable.to_noun(v)]
     end
     |> MapSet.new()
-    |> Nounable.Set.to_noun()
+    |> Nounable.to_noun()
   end
 
   # ditto here
@@ -190,7 +189,7 @@ defimpl Nounable, for: Map do
 
   @spec from_noun(Noun.t()) :: {:ok, %{Noun.t() => Noun.t()}} | :error
   def from_noun(noun) do
-    with {:ok, value} <- Nounable.Set.from_noun(noun) do
+    with {:ok, value} <- Nounable.MapSet.from_noun(noun) do
       {:ok, Map.new(value, fn [x | y] -> {x, y} end)}
     end
   end
