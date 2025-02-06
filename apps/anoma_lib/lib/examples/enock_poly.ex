@@ -31,6 +31,21 @@ defmodule Examples.ENockPoly do
     assert Term.depth(t4) == 3
     assert Term.size(t4) == 6
 
+    # An example of a direct call to `Term.cata/2`, since `depth` and
+    # `size` are defined in terms of `eval` and thus do not directly
+    # test the `cata` wrapper.  This also serves as an example of
+    # providing a custom algebra to `cata` (the algebra parameter to
+    # `eval` has the same signature, so it is also an example of that).
+    # In this example we use a string constructor type and concatenate
+    # all the constructor names.
+    t8 = {"root", [{"left", []}, {"right", []}]}
+
+    algebra = fn {ctor, children} ->
+      to_string(ctor) <> Enum.join(children, "")
+    end
+
+    assert Term.cata(t8, algebra) == "rootleftright"
+
     # Open term test cases (terms with variables)
 
     # A single variable (open term). By definition, its depth and size are 0.
