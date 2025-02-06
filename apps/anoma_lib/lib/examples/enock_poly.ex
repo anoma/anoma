@@ -6,6 +6,8 @@ defmodule Examples.ENockPoly do
   import NockPoly
   alias NockPoly.Term, as: Term
   alias NockPoly.FinPolyF
+  alias NockPoly.NockTerms
+  alias Noun
 
   use TypedStruct
 
@@ -156,6 +158,63 @@ defmodule Examples.ENockPoly do
 
     assert FinPolyF.typecheck_v(t_multi, {tspec, vspec}) ==
              {:error, expected_errors}
+
+    true
+  end
+
+  @doc """
+  Tests for NockTerms conversion and typecheck invariants using actual Nock snippets.
+
+  In these tests the nouns are created by parsing string representations
+  (as in enock.ex and nock.ex). For each noun we:
+    - Convert it to a nock_poly_term (via `NockTerms.from_noun/1`),
+    - Ensure it passes typecheck,
+    - Convert it back to a Noun.t() with `NockTerms.to_noun/1` and verify round‑trip invariance.
+
+  We also verify that an invalid term (manually constructed) raises an error.
+  """
+  @spec nock_term_tests() :: bool()
+  def nock_term_tests() do
+    # Lifted from the `one_two` example.
+    {:ok, noun_one_two} = Noun.Format.parse("[1 2]")
+    term_one_two = NockTerms.from_noun(noun_one_two)
+    assert NockTerms.typecheck(term_one_two) == :ok
+    rt_one_two = NockTerms.to_noun(term_one_two)
+    assert rt_one_two == noun_one_two
+    assert NockTerms.from_noun(rt_one_two) == term_one_two
+
+    # Lifted from the `indexed_noun` example.
+    {:ok, noun_indexed} = Noun.Format.parse("[[4 5] [12 13] 7]")
+    term_indexed = NockTerms.from_noun(noun_indexed)
+    assert NockTerms.typecheck(term_indexed) == :ok
+    rt_indexed = NockTerms.to_noun(term_indexed)
+    assert rt_indexed == noun_indexed
+    assert NockTerms.from_noun(rt_indexed) == term_indexed
+
+    # Lifted from the `counter_arm` example.
+    counter_arm =
+      """
+      [ 6
+      [5 [1 1] 8 [9 1.406 0 1.023] 9 2 10 [6 0 118] 0 2]
+      [6 [5 [1 1] 8 [9 1.406 0 1.023] 9 2 10 [6 0 238] 0 2] [6 [5 [1 1] 8 [9 1.406 0 1.023] 9 2 10 [6 0 958] 0 2] [6 [5 [1 0] 0 446] [0 0] 6 [0 3.570] [1 0] 1 1] 1 1] 1 1]
+      1
+      1
+      ]
+      """
+
+    noun_counter = Noun.Format.parse_always(counter_arm)
+    term_counter = NockTerms.from_noun(noun_counter)
+    assert NockTerms.typecheck(term_counter) == :ok
+    rt_counter = NockTerms.to_noun(term_counter)
+    assert rt_counter == noun_counter
+    assert NockTerms.from_noun(rt_counter) == term_counter
+
+    # Error case: manually create an invalid nock_poly_term.
+    invalid_term = {:cell, []}
+
+    assert_raise CaseClauseError, fn ->
+      NockTerms.to_noun(invalid_term)
+    end
 
     true
   end
