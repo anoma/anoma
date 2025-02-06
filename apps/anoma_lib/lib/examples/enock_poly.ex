@@ -5,6 +5,7 @@ defmodule Examples.ENockPoly do
   import ExUnit.Assertions
   import NockPoly
   alias NockPoly.Term, as: Term
+  alias NockPoly.FinPolyF
 
   use TypedStruct
 
@@ -78,6 +79,83 @@ defmodule Examples.ENockPoly do
     assert Term.depth(t7) == 2
     # size = 1 + (1 + 1)
     assert Term.size(t7) == 3
+
+    true
+  end
+
+  @doc """
+  Tests for FinPolyF typechecking using a string-based specification.
+
+  The tspec accepts only the constructors "zero", "one", or "two" with the
+  corresponding expected arity (0, 1, or 2). The vspec accepts only natural numbers
+  between 0 and 4.
+
+  We check for valid terms as well as for:
+    - arity mismatches
+    - invalid constructor names, and
+    - invalid variable values.
+  We also test a case that accumulates multiple error types.
+  """
+  @spec poly_term_tests() :: bool()
+  def poly_term_tests() do
+    # tspec: valid if constructor is exactly one of "zero", "one", or "two"
+    tspec = fn
+      "zero" -> {:ok, 0}
+      "one" -> {:ok, 1}
+      "two" -> {:ok, 2}
+      _ -> {:invalid_constructor}
+    end
+
+    # vspec: valid if variable is an integer between 0 and 4.
+    vspec = fn
+      v when is_integer(v) and v >= 0 and v <= 4 -> :ok
+      _ -> {:invalid_variable}
+    end
+
+    # Valid term: "one" expects exactly 1 child.
+    t_valid = {"one", [{"zero", []}]}
+    assert FinPolyF.typecheck_v(t_valid, {tspec, vspec}) == :ok
+
+    # Arity error: "one" expects 1 child but gets none.
+    t_arity = {"one", []}
+
+    assert FinPolyF.typecheck_v(t_arity, {tspec, vspec}) ==
+             {:error, [{:invalid_arity, "one", 1, 0}]}
+
+    # Constructor error: "three" is not accepted.
+    t_ctor = {"three", []}
+
+    assert FinPolyF.typecheck_v(t_ctor, {tspec, vspec}) ==
+             {:error, [{:invalid_constructor, "three"}]}
+
+    # Valid variable.
+    t_var = 2
+
+    assert FinPolyF.typecheck_v(t_var, {tspec, vspec}) ==
+             :ok
+
+    # Variable error: 10 is not in the allowed range.
+    t_inv_var = 10
+
+    assert FinPolyF.typecheck_v(t_inv_var, {tspec, vspec}) ==
+             {:error, [{:invalid_variable, 10}]}
+
+    # Confirm that `vspec_ok` does allow the variable `10`
+    # (as it should any variable).
+    assert FinPolyF.typecheck_v(t_inv_var, {tspec, &FinPolyF.vspec_ok/1}) ==
+             :ok
+
+    # Multiple errors: "two" expects 2 children.
+    # Here, first child (10) is an invalid variable and second child has an invalid constructor.
+    t_multi = {"two", [10, {"three", []}]}
+
+    expected_errors = [
+      {:invalid_variable, 10},
+      {:invalid_constructor, "three"}
+    ]
+
+    assert FinPolyF.typecheck_v(t_multi, {tspec, vspec}) ==
+             {:error, expected_errors}
 
     true
   end
