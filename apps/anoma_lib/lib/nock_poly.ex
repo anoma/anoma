@@ -72,6 +72,18 @@ defmodule NockPoly do
     @typedoc "A generic polynomial term parameterized on a constructor type."
     @type t(ctor) :: tv(ctor, none())
 
+    @typedoc "An open natural polynomial term with variables of type `v`."
+    @type nat_tv(v) :: tv(non_neg_integer(), v)
+
+    @typedoc "An open polynomial term with Elixir atom constructors and variables of type `v`."
+    @type atom_tv(v) :: tv(atom(), v)
+
+    @typedoc "An open polynomial term with Nock atom constructors and variables of type `v`."
+    @type nock_atom_tv(v) :: tv(Noun.noun_atom(), v)
+
+    @typedoc "An open polynomial term with Nock noun constructors and variables of type `v`."
+    @type nock_noun_tv(v) :: tv(Noun.t(), v)
+
     @typedoc "A generic polynomial term with natural-number constructors."
     @type nat_term :: t(non_neg_integer())
 
