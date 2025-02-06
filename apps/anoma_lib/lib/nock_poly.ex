@@ -310,4 +310,40 @@ defmodule NockPoly do
       typecheck_v(term, {tspec, &vspec_ok/1})
     end
   end
+
+  defmodule NockTerms do
+    @moduledoc """
+    A polynomial specification for Nock terms.
+
+    A Nock term is a binary tree where:
+      - An atom node is represented as `{:atom, noun}` (with `noun` having
+        type Noun.noun_atom()).  Atoms have arity 0.
+      - A cell node is represented as `:cell`.
+        Cells have arity 2.
+
+    All constructors are always valid (any term of type `Noun.noun_atom()` is
+    a valid Nock atom).
+    """
+
+    alias Noun
+    alias NockPoly.FinPolyF
+
+    @type nock_term_ctor :: {:atom, Noun.noun_atom()} | :cell
+    @type nock_poly_term :: Term.t(nock_term_ctor)
+
+    @spec nock_tspec(nock_term_ctor) :: {:ok, non_neg_integer()}
+    def nock_tspec({:atom, _noun}) do
+      {:ok, 0}
+    end
+
+    def nock_tspec(:cell) do
+      {:ok, 2}
+    end
+
+    @spec typecheck(nock_poly_term) ::
+            FinPolyF.check_result(nock_term_ctor, none())
+    def typecheck(term) do
+      FinPolyF.typecheck(term, &nock_tspec/1)
+    end
+  end
 end
