@@ -97,6 +97,43 @@ defmodule NockPoly do
     @type nock_noun_term :: t(Noun.t())
 
     @doc """
+    I am the `eval` universal morphism -- the elimination rule for a
+    free monad -- out of `NockPoly.Term.tv`.
+
+    In addition to an open term, `eval` takes an algebra of the `termf`
+    functor and a "substitution" function which maps variables to the return
+    type.
+    """
+    @spec eval(termalg(ctor, r), (v -> r), tv(ctor, v)) :: r
+          when ctor: term, v: term, r: term
+    def eval(algebra, subst, term) do
+      case term do
+        {ctor, children} when is_list(children) ->
+          results = Enum.map(children, &eval(algebra, subst, &1))
+          algebra.({ctor, results})
+
+        var ->
+          subst.(var)
+      end
+    end
+
+    defmodule Unreachable do
+      @moduledoc """
+      This module contains a function specifically expected to be unreachable.
+      We factor it out as a module so that we can tell test coverage to ignore it.
+      """
+
+      # A helper function for the specialization of `tv` to `t` which
+      # uses the `none()` variable type.  This is effectively the
+      # unique possible `subst` parameter to `eval` when `v` is `none()`.
+      @dialyzer {:nowarn_function, unreachable_term: 1}
+      @spec unreachable_term(none()) :: no_return()
+      def unreachable_term(var) do
+        raise "Variable in closed term encountered: #{inspect(var)}"
+      end
+    end
+
+    @doc """
     I am the catamorphism (fold) -- the universal morphism out of
     an initial algebra -- for `NockPoly.Term.t`.
 
@@ -108,31 +145,35 @@ defmodule NockPoly do
     where `ctor` is the constructor type and `r` is an arbitrary result type.
     """
     @spec cata(t(ctor), termalg(ctor, r)) :: r when ctor: term, r: term
-    def cata({ctor, children}, algebra) do
-      results = Enum.map(children, &cata(&1, algebra))
-      algebra.(ctor, results)
+    def cata(term, algebra) do
+      eval(algebra, &Unreachable.unreachable_term/1, term)
     end
 
     @doc """
     I return the maximum depth of the term as a natural number.
 
-    Depth is 1 for a term with no children.
+    Depth is 1 for a term with no children, and 0 for a variable.
     """
-    @spec depth(t(any)) :: non_neg_integer()
+    @spec depth(tv(ctor, v)) :: non_neg_integer() when ctor: term, v: term
     def depth(term) do
-      cata(term, fn _ctor, depths ->
-        1 + Enum.max([0 | depths])
-      end)
+      eval(
+        fn {_ctor, results} -> 1 + Enum.max([0 | results]) end,
+        fn _var -> 0 end,
+        term
+      )
     end
 
     @doc """
-    I return the total number of constructors in the term.
+    I return the total number of constructors in the term
+    (a variable contains no constructors).
     """
-    @spec size(t(any)) :: non_neg_integer()
+    @spec size(tv(ctor, v)) :: non_neg_integer() when ctor: term, v: term
     def size(term) do
-      cata(term, fn _ctor, sizes ->
-        1 + Enum.sum(sizes)
-      end)
+      eval(
+        fn {_ctor, results} -> 1 + Enum.sum(results) end,
+        fn _var -> 0 end,
+        term
+      )
     end
   end
 end
