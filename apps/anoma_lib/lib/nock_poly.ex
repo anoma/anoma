@@ -345,5 +345,49 @@ defmodule NockPoly do
     def typecheck(term) do
       FinPolyF.typecheck(term, &nock_tspec/1)
     end
+
+    @doc """
+    Converts a Noun.t() into a Nock polynomial term (nock_poly_term).
+
+    If `noun` satisfies Noun.is_noun_atom/1, it is wrapped as an atom;
+    otherwise it must be a cell represented as a two-element list, which is
+    recursively converted. This function always succeeds and produces a term
+    that passes the Nock typecheck.
+    """
+    @spec from_noun(Noun.t()) :: nock_poly_term
+    def from_noun(noun) do
+      cond do
+        Noun.is_noun_atom(noun) ->
+          {{:atom, noun}, []}
+
+        Noun.is_noun_cell(noun) ->
+          case noun do
+            [left | right] ->
+              {:cell, [from_noun(left), from_noun(right)]}
+          end
+      end
+    end
+
+    @spec to_noun_algebra({nock_term_ctor, [Noun.t()]}) :: Noun.t()
+    defp to_noun_algebra({ctor, results}) do
+      case {ctor, results} do
+        {{:atom, noun}, []} ->
+          noun
+
+        {:cell, [left, right]} ->
+          [left | right]
+      end
+    end
+
+    @doc """
+    Converts a Nock polynomial term (nock_poly_term) back into a Noun.t().
+
+    It is assumed that the term has successfully passed the Nock typecheck.
+    This version uses `cata/2` (the catamorphism) so that it is not directly recursive.
+    """
+    @spec to_noun(nock_poly_term) :: Noun.t()
+    def to_noun(term) do
+      Term.cata(term, &to_noun_algebra/1)
+    end
   end
 end
