@@ -48,5 +48,52 @@ defmodule NockPoly do
 
     @typedoc "A generic polynomial term with Nock noun constructors."
     @type nock_noun_term :: t(Noun.t())
+
+    # The generic polynomial term itself may be viewed as the initial
+    # algebra of a polynomial functor.  Specifically, for a given constructor
+    # type `ctor`, the position-type of that functor is `ctor x Nat`, and
+    # for each position `(c, n)`, the direction-type is `Fin n` (finite sets
+    # of size `n`).  (In particular it is itself manifestly finitary.)
+    # As such, it has the universal property of an initial algebra.
+    # This is its catamorphism.
+
+    @doc """
+    I am the catamorphism (fold) -- the universal morphism out of
+    an initial algebra -- for `NockPoly.Term.t`.
+
+    `cata(term, algebra)` recursively folds the term by applying the given
+    algebra function to each constructor along with the list of results from
+    folding its children.
+
+    The algebra should be a function of type `(ctor, [r]) -> r`,
+    where `ctor` is the constructor type and `r` is an arbitrary result type.
+    """
+    @spec cata(t(ctor), (ctor, [r] -> r)) :: r when ctor: term, r: term
+    def cata({ctor, children}, algebra) do
+      results = Enum.map(children, &cata(&1, algebra))
+      algebra.(ctor, results)
+    end
+
+    @doc """
+    I return the maximum depth of the term as a natural number.
+
+    Depth is 1 for a term with no children.
+    """
+    @spec depth(t(any)) :: non_neg_integer()
+    def depth(term) do
+      cata(term, fn _ctor, depths ->
+        1 + Enum.max([0 | depths])
+      end)
+    end
+
+    @doc """
+    I return the total number of constructors in the term.
+    """
+    @spec size(t(any)) :: non_neg_integer()
+    def size(term) do
+      cata(term, fn _ctor, sizes ->
+        1 + Enum.sum(sizes)
+      end)
+    end
   end
 end
