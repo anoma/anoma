@@ -32,10 +32,25 @@ defmodule NockPoly do
     This type is parameterized on the type of its constructor so
     that different contexts may choose different representations of
     position-types.
+
+    The generic polynomial term itself may be viewed as the initial
+    algebra of a polynomial functor.  Specifically, for a given constructor
+    type `ctor`, the position-type of that functor is `ctor x Nat`, and
+    for each position `(c, n)`, the direction-type is `Fin n` (finite sets
+    of size `n`).  (In particular it is itself manifestly finitary.)
+    We call this functor `termf` below.
     """
 
+    @typedoc "Functor which generates a generic polynomial term parameterized on a constructor type."
+    @type termf(ctor, x) :: {ctor, [x]}
+
+    @typedoc "Type of algebras of `termf`."
+    @type termalg(ctor, x) :: (termf(ctor, x) -> x)
+
+    # This is the initial algebra of `termf`, which is guaranteed to have
+    # one because it is polynomial.  (Its catamorphism is defined below.)
     @typedoc "A generic polynomial term parameterized on a constructor type."
-    @type t(ctor) :: {ctor, [t(ctor)]}
+    @type t(ctor) :: termf(ctor, t(ctor))
 
     @typedoc "A generic polynomial term with natural-number constructors."
     @type nat_term :: t(non_neg_integer())
@@ -49,14 +64,6 @@ defmodule NockPoly do
     @typedoc "A generic polynomial term with Nock noun constructors."
     @type nock_noun_term :: t(Noun.t())
 
-    # The generic polynomial term itself may be viewed as the initial
-    # algebra of a polynomial functor.  Specifically, for a given constructor
-    # type `ctor`, the position-type of that functor is `ctor x Nat`, and
-    # for each position `(c, n)`, the direction-type is `Fin n` (finite sets
-    # of size `n`).  (In particular it is itself manifestly finitary.)
-    # As such, it has the universal property of an initial algebra.
-    # This is its catamorphism.
-
     @doc """
     I am the catamorphism (fold) -- the universal morphism out of
     an initial algebra -- for `NockPoly.Term.t`.
@@ -68,7 +75,7 @@ defmodule NockPoly do
     The algebra should be a function of type `(ctor, [r]) -> r`,
     where `ctor` is the constructor type and `r` is an arbitrary result type.
     """
-    @spec cata(t(ctor), (ctor, [r] -> r)) :: r when ctor: term, r: term
+    @spec cata(t(ctor), termalg(ctor, r)) :: r when ctor: term, r: term
     def cata({ctor, children}, algebra) do
       results = Enum.map(children, &cata(&1, algebra))
       algebra.(ctor, results)
