@@ -47,10 +47,30 @@ defmodule NockPoly do
     @typedoc "Type of algebras of `termf`."
     @type termalg(ctor, x) :: (termf(ctor, x) -> x)
 
+    # A functor which generates _open_ terms -- that is, terms
+    # which may contain variables drawn from a type parameter.
+    @typedoc "Functor which generates open terms:  terms of `t` potentially containing variables."
+    @type termfv(ctor, v, x) :: v | termf(ctor, x)
+
+    # `tv(ctor, v)` is the initial algebra of `termfv(ctor, v)`, which is
+    # guaranteed to have one because it is polynomial.  It comprises open terms
+    # terms like those of `t` but potentially containing variables drawn from
+    # type `v`.
+    #
+    # Viewed as a type constructor, `tv(ctor)` is the free monad of `termf`.
+    @typedoc "A generic open polynomial term parameterized on constructor and variable types."
+    @type tv(ctor, v) :: termfv(ctor, v, tv(ctor, v))
+
     # This is the initial algebra of `termf`, which is guaranteed to have
     # one because it is polynomial.  (Its catamorphism is defined below.)
+    # It can be equivalently generated (and that is what we do here, to minimize
+    # the number of explicitly-recursive types) by applying the free monad to
+    # the initial object (i.e. the empty type).
+    #
+    # Because this is an "open" term with variable type `none()` -- that is,
+    # no variables -- it is the type of _closed_ terms.
     @typedoc "A generic polynomial term parameterized on a constructor type."
-    @type t(ctor) :: termf(ctor, t(ctor))
+    @type t(ctor) :: tv(ctor, none())
 
     @typedoc "A generic polynomial term with natural-number constructors."
     @type nat_term :: t(non_neg_integer())
