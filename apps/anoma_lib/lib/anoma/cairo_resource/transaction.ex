@@ -343,7 +343,7 @@ defmodule Anoma.CairoResource.Transaction do
   def get_cipher_texts(tx) do
     tx.actions
     |> Enum.flat_map(& &1.logic_proofs)
-    |> Enum.map(fn {_tag, proof_record} ->
+    |> Enum.map(fn {_tag, {_logic_hash, proof_record}} ->
       proof_record.public_inputs
       |> LogicInstance.from_public_input()
     end)
