@@ -23,7 +23,7 @@ defmodule Anoma.CairoResource.Transaction do
     # roots: A set of valid commitment tree roots used to prove the existence of the
     # resources being consumed in the transaction.
     field(:roots, MapSet.t(binary()), default: MapSet.new())
-    field(:actions, list(Action.t()), default: [])
+    field(:actions, MapSet.t(Action.t()), default: MapSet.new())
 
     # When the tx is not finalized, the delta_proof is the collection of private keys
     # When the tx is finalized, the delta_proof is the binding signature/proof
@@ -42,7 +42,7 @@ defmodule Anoma.CairoResource.Transaction do
 
     checked = Enum.all?(actions, &(elem(&1, 0) == :ok))
 
-    actions = Enum.map(actions, fn {:ok, x} -> x end)
+    actions = MapSet.new(Enum.map(actions, fn {:ok, x} -> x end))
     compliance_instances = get_compliance_instances(actions)
     roots = Enum.map(compliance_instances, & &1.root)
 
@@ -61,11 +61,10 @@ defmodule Anoma.CairoResource.Transaction do
   defimpl Noun.Nounable, for: __MODULE__ do
     @impl true
     def to_noun(transaction = %Transaction{}) do
-      {
-        transaction.actions,
-        transaction.delta_proof
-      }
-      |> Noun.Nounable.to_noun()
+      [
+        Enum.map(transaction.actions, &Noun.Nounable.to_noun/1)
+        | transaction.delta_proof
+      ]
     end
   end
 
@@ -89,7 +88,7 @@ defmodule Anoma.CairoResource.Transaction do
       else
         %Transaction{
           roots: MapSet.union(tx1.roots, tx2.roots),
-          actions: tx1.actions ++ tx2.actions,
+          actions: MapSet.union(tx1.actions, tx2.actions),
           delta_proof: tx1.delta_proof <> tx2.delta_proof
         }
       end
@@ -163,7 +162,7 @@ defmodule Anoma.CairoResource.Transaction do
     end
   end
 
-  @spec get_compliance_instances(list(Action.t())) ::
+  @spec get_compliance_instances(MapSet.t(Action.t())) ::
           list(ComplianceInstance.t())
   def get_compliance_instances(actions) do
     actions
@@ -314,7 +313,7 @@ defmodule Anoma.CairoResource.Transaction do
            Workflow.create_private_keys(compliance_input_jsons) do
       {:ok,
        %Transaction{
-         actions: [action],
+         actions: MapSet.new([action]),
          delta_proof: priv_keys
        }}
     else
