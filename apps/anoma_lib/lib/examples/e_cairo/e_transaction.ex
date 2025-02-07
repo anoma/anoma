@@ -13,7 +13,7 @@ defmodule Examples.ECairo.ETransaction do
 
     shielded_tx =
       %Transaction{
-        actions: [action],
+        actions: MapSet.new([action]),
         delta_proof: priv_keys
       }
       |> Transaction.finalize()
@@ -30,7 +30,7 @@ defmodule Examples.ECairo.ETransaction do
 
     shielded_tx =
       %Transaction{
-        actions: [action],
+        actions: MapSet.new([action]),
         delta_proof: priv_keys
       }
       |> Transaction.finalize()
@@ -48,7 +48,7 @@ defmodule Examples.ECairo.ETransaction do
 
     shielded_tx =
       %Transaction{
-        actions: [an_action, another_action],
+        actions: MapSet.new([an_action, another_action]),
         delta_proof: priv_keys
       }
       |> Transaction.finalize()
@@ -66,7 +66,7 @@ defmodule Examples.ECairo.ETransaction do
 
     shielded_tx =
       %Transaction{
-        actions: [an_action],
+        actions: MapSet.new([an_action]),
         delta_proof: priv_keys
       }
       |> Transaction.finalize()
@@ -136,13 +136,13 @@ defmodule Examples.ECairo.ETransaction do
 
     shielded_tx_1 =
       %Transaction{
-        actions: [EAction.an_action()],
+        actions: MapSet.new([EAction.an_action()]),
         delta_proof: priv_keys
       }
 
     shielded_tx_2 =
       %Transaction{
-        actions: [EAction.an_action_with_intents()],
+        actions: MapSet.new([EAction.an_action_with_intents()]),
         delta_proof: priv_keys
       }
 
@@ -155,37 +155,6 @@ defmodule Examples.ECairo.ETransaction do
     shielded_tx
   end
 
-  @spec duplicate_nfs_shielded_transaction() :: Transaction.t()
-  def duplicate_nfs_shielded_transaction do
-    action = EAction.an_action()
-    priv_keys = <<3::256>>
-
-    shielded_tx_1 =
-      %Transaction{
-        actions: [action],
-        delta_proof: priv_keys
-      }
-
-    shielded_tx_2 =
-      %Transaction{
-        actions: [action],
-        delta_proof: priv_keys
-      }
-
-    composed_shielded_tx =
-      %Transaction{
-        roots: MapSet.union(shielded_tx_1.roots, shielded_tx_2.roots),
-        actions: shielded_tx_1.actions ++ shielded_tx_2.actions,
-        delta_proof: shielded_tx_1.delta_proof <> shielded_tx_2.delta_proof
-      }
-      |> Transaction.finalize()
-
-    assert {:error, "Duplicate nullifiers error"} ==
-             Anoma.RM.Transaction.verify(composed_shielded_tx)
-
-    composed_shielded_tx
-  end
-
   @spec a_invalid_shielded_transaction() :: Transaction.t()
   def a_invalid_shielded_transaction do
     action = EAction.an_action()
@@ -194,7 +163,7 @@ defmodule Examples.ECairo.ETransaction do
 
     invalid_shielded_tx =
       %Transaction{
-        actions: [action],
+        actions: MapSet.new([action]),
         delta_proof: invalid_priv_keys
       }
       |> Transaction.finalize()
