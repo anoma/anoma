@@ -19,7 +19,11 @@ defmodule Anoma.CairoResource.Action do
   typedstruct enforce: true do
     field(:created_commitments, list(<<_::256>>), default: [])
     field(:consumed_nullifiers, list(<<_::256>>), default: [])
-    field(:logic_proofs, %{binary() => ProofRecord.t()}, default: {})
+    # logic_proofs Type: Map<Tag, (logic_hash, Proof)>
+    field(:logic_proofs, %{binary() => {binary(), ProofRecord.t()}},
+      default: {}
+    )
+
     field(:compliance_units, MapSet.t(ProofRecord.t()), default: MapSet.new())
   end
 
@@ -37,7 +41,8 @@ defmodule Anoma.CairoResource.Action do
       ) do
     logic_proof_map =
       Enum.into(logic_proofs, %{}, fn proof ->
-        {proof.public_inputs |> LogicInstance.get_tag(), proof}
+        {proof.public_inputs |> LogicInstance.get_tag(),
+         {ProofRecord.get_cairo_program_hash(proof), proof}}
       end)
 
     %Action{
@@ -69,7 +74,8 @@ defmodule Anoma.CairoResource.Action do
 
     logic_map =
       Enum.into(logic, %{}, fn {:ok, proof} ->
-        {proof.public_inputs |> LogicInstance.get_tag(), proof}
+        {proof.public_inputs |> LogicInstance.get_tag(),
+         {ProofRecord.get_cairo_program_hash(proof), proof}}
       end)
 
     with true <- checked do
@@ -90,8 +96,6 @@ defmodule Anoma.CairoResource.Action do
   @spec verify(t()) :: boolean()
   def verify(action) do
     with true <-
-           verify_proofs(action.logic_proofs |> Map.values(), "logic result"),
-         true <-
            verify_proofs(
              action.compliance_units,
              "compliance result"
@@ -139,25 +143,23 @@ defmodule Anoma.CairoResource.Action do
                                                          _acc ->
           # check all the resource logic proofs are included
           res =
-            with {:ok, input_proof} <-
+            with {:ok, {input_logic_hash, input_proof}} <-
                    Map.fetch(
                      action.logic_proofs,
                      complaince_instance.nullifier
                    ),
-                 {:ok, output_proof} <-
+                 true <- ProofRecord.verify(input_proof),
+                 {:ok, {output_logic_hash, output_proof}} <-
                    Map.fetch(
                      action.logic_proofs,
                      complaince_instance.output_cm
-                   ) do
+                   ),
+                 true <- ProofRecord.verify(output_proof) do
               is_input_logic_valid =
-                complaince_instance.input_logic ==
-                  input_proof
-                  |> ProofRecord.get_cairo_program_hash()
+                complaince_instance.input_logic == input_logic_hash
 
               is_output_logic_valid =
-                complaince_instance.output_logic ==
-                  output_proof
-                  |> ProofRecord.get_cairo_program_hash()
+                complaince_instance.output_logic == output_logic_hash
 
               is_root_valid =
                 rt.root ==
@@ -215,7 +217,8 @@ defmodule Anoma.CairoResource.Action do
       {
         action.created_commitments,
         action.consumed_nullifiers,
-        action.logic_proofs |> Map.values(),
+        action.logic_proofs
+        |> Enum.map(fn {_tag, {_hash, proof}} -> proof end),
         action.compliance_units |> MapSet.to_list()
       }
       |> Noun.Nounable.to_noun()
