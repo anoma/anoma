@@ -473,8 +473,11 @@ defmodule Anoma.Node.Transaction.Backends do
             {val, MapSet.new()}
         end
 
+      commitments = tx |> Anoma.RM.Transaction.commitments()
+      nullifiers = tx |> Anoma.RM.Transaction.nullifiers() |> MapSet.new()
+
       {ct_new, anchor} =
-        CommitmentTree.add(ct, tx.commitments)
+        CommitmentTree.add(ct, commitments)
 
       ciphertexts = tx |> CTransaction.get_cipher_texts() |> MapSet.new()
 
@@ -483,7 +486,7 @@ defmodule Anoma.Node.Transaction.Backends do
         {id,
          %{
            append: [
-             {anoma_keyspace("cairo_nullifiers"), MapSet.new(tx.nullifiers)},
+             {anoma_keyspace("cairo_nullifiers"), nullifiers},
              {anoma_keyspace("cairo_roots"),
               MapSet.put(append_roots, anchor)},
              {anoma_keyspace("cairo_ciphertexts"), ciphertexts}
@@ -498,8 +501,8 @@ defmodule Anoma.Node.Transaction.Backends do
       # TODO: Store ciphertext
 
       cairo_rm_event(
-        MapSet.new(tx.commitments),
-        MapSet.new(tx.nullifiers),
+        MapSet.new(commitments),
+        nullifiers,
         node_id
       )
 
@@ -524,7 +527,7 @@ defmodule Anoma.Node.Transaction.Backends do
     with {:ok, stored_nullifiers} <-
            Ordering.read(node_id, {id, anoma_keyspace("cairo_nullifiers")}) do
       if Enum.any?(
-           transaction.nullifiers,
+           Anoma.RM.Transaction.nullifiers(transaction),
            &MapSet.member?(stored_nullifiers, &1)
          ) do
         {:error, "A submitted nullifier already exists in storage"}

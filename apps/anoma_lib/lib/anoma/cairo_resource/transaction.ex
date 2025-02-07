@@ -13,7 +13,6 @@ defmodule Anoma.CairoResource.Transaction do
   alias Anoma.CairoResource.{
     Action,
     ComplianceInstance,
-    ProofRecord,
     Resource,
     LogicInstance,
     Utils,
@@ -21,26 +20,20 @@ defmodule Anoma.CairoResource.Transaction do
   }
 
   typedstruct enforce: true do
-    # TODO: The roots, commitments, and nullifiers can be eliminated. We can
-    # obtain them from public inputs. Then we can make the same improvement for
-    # transparent transactions. However, they are used in the executor atm.
-    field(:roots, list(<<_::256>>), default: [])
-    field(:commitments, list(<<_::256>>), default: [])
-    field(:nullifiers, list(<<_::256>>), default: [])
-    field(:actions, list(Action.t()), default: [])
+    # roots: A set of valid commitment tree roots used to prove the existence of the
+    # resources being consumed in the transaction.
+    field(:roots, MapSet.t(binary()), default: MapSet.new())
+    field(:actions, MapSet.t(Action.t()), default: MapSet.new())
 
-    # When the tx is not finalized, the delta is the collection of private keys
-    # When the tx is finalized, the delta is the binding signature
-    field(:delta, binary(), default: <<>>)
+    # When the tx is not finalized, the delta_proof is the collection of private keys
+    # When the tx is finalized, the delta_proof is the binding signature/proof
+    field(:delta_proof, binary(), default: <<>>)
   end
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
-        roots,
-        commitments,
-        nullifiers,
         actions
-        | delta
+        | delta_proof
       ]) do
     actions =
       actions
@@ -49,14 +42,16 @@ defmodule Anoma.CairoResource.Transaction do
 
     checked = Enum.all?(actions, &(elem(&1, 0) == :ok))
 
+    actions = MapSet.new(Enum.map(actions, fn {:ok, x} -> x end))
+    compliance_instances = get_compliance_instances(actions)
+    roots = Enum.map(compliance_instances, & &1.root)
+
     if checked do
       {:ok,
        %Transaction{
-         roots: roots |> Noun.list_nock_to_erlang(),
-         commitments: commitments |> Noun.list_nock_to_erlang(),
-         nullifiers: nullifiers |> Noun.list_nock_to_erlang(),
-         actions: Enum.map(actions, &elem(&1, 1)),
-         delta: delta
+         roots: MapSet.new(roots),
+         actions: actions,
+         delta_proof: delta_proof
        }}
     else
       :error
@@ -66,27 +61,25 @@ defmodule Anoma.CairoResource.Transaction do
   defimpl Noun.Nounable, for: __MODULE__ do
     @impl true
     def to_noun(transaction = %Transaction{}) do
-      {
-        transaction.roots,
-        transaction.commitments,
-        transaction.nullifiers,
-        transaction.actions,
-        transaction.delta
-      }
-      |> Noun.Nounable.to_noun()
+      [
+        Enum.map(transaction.actions, &Noun.Nounable.to_noun/1)
+        | transaction.delta_proof
+      ]
     end
   end
 
   defimpl Anoma.RM.Transaction, for: __MODULE__ do
     @impl true
-    def commitments(%Transaction{commitments: cm}), do: cm
-    @impl true
-    def nullifiers(%Transaction{nullifiers: nf}), do: nf
+    def commitments(transaction = %Transaction{}) do
+      transaction.actions
+      |> Enum.flat_map(& &1.created_commitments)
+    end
 
     @impl true
-    def storage_commitments(tx), do: commitments(tx)
-    @impl true
-    def storage_nullifiers(tx), do: nullifiers(tx)
+    def nullifiers(transaction = %Transaction{}) do
+      transaction.actions
+      |> Enum.flat_map(& &1.consumed_nullifiers)
+    end
 
     @impl true
     def compose(tx1, tx2) do
@@ -94,33 +87,26 @@ defmodule Anoma.CairoResource.Transaction do
         nil
       else
         %Transaction{
-          roots: tx1.roots ++ tx2.roots,
-          commitments: tx1.commitments ++ tx2.commitments,
-          nullifiers: tx1.nullifiers ++ tx2.nullifiers,
-          actions: tx1.actions ++ tx2.actions,
-          delta: tx1.delta <> tx2.delta
+          roots: MapSet.union(tx1.roots, tx2.roots),
+          actions: MapSet.union(tx1.actions, tx2.actions),
+          delta_proof: tx1.delta_proof <> tx2.delta_proof
         }
       end
     end
 
-    # TODO: We can return roots, commitments, and nullifiers instead of just a
-    # boolean value so that we can get rid of them in the Transaction struct. We
-    # can apply the same improvement to the transparent Transaction.
     @impl true
     def verify(transaction = %Transaction{}) do
-      with true <- verify_proofs(transaction),
+      with true <- verify_actions(transaction),
            true <- verify_duplicate_nfs(transaction),
-           compliance_instances = decode_compliance_instances(transaction),
-           true <- verify_delta(transaction, compliance_instances),
-           true <- verify_resource_logic(transaction, compliance_instances) do
+           true <- verify_delta(transaction) do
         true
       else
         reason -> reason
       end
     end
 
-    @spec verify_proofs(Transaction.t()) :: true | {:error, String.t()}
-    defp verify_proofs(tx) do
+    @spec verify_actions(Transaction.t()) :: true | {:error, String.t()}
+    defp verify_actions(tx) do
       failed =
         Enum.reject(tx.actions, &Action.verify/1)
 
@@ -128,21 +114,11 @@ defmodule Anoma.CairoResource.Transaction do
         {:error, "Compliance proofs or logic proofs verification failure"}
     end
 
-    defp decode_compliance_instances(tx) do
-      tx.actions
-      |> Enum.flat_map(fn action ->
-        action.compliance_proofs
-        |> Enum.map(fn proof_record ->
-          ComplianceInstance.from_public_input(proof_record.public_inputs)
-        end)
-      end)
-    end
-
-    @spec verify_delta(Transaction.t(), list(binary())) ::
+    @spec verify_delta(Transaction.t()) ::
             true | {:error, String.t()}
-    defp verify_delta(tx, compliance_instances) do
+    defp verify_delta(tx) do
       # Collect binding public keys
-      binding_pub_keys = get_binding_pub_keys(compliance_instances)
+      binding_pub_keys = get_binding_pub_keys(tx)
 
       # Collect binding signature msgs
       binding_messages = Transaction.get_binding_messages(tx)
@@ -150,50 +126,35 @@ defmodule Anoma.CairoResource.Transaction do
       case Cairo.sig_verify(
              binding_pub_keys,
              binding_messages,
-             tx.delta |> :binary.bin_to_list()
+             tx.delta_proof |> :binary.bin_to_list()
            ) do
         true -> true
         _ -> {:error, "Delta proof verification failure"}
       end
     end
 
-    @spec verify_resource_logic(Transaction.t(), list(binary())) ::
-            true | {:error, String.t()}
-    defp verify_resource_logic(tx, compliance_instances) do
-      # Collect resource logics from compliance proofs
-      resource_logics_from_compliance =
-        compliance_instances
-        |> Enum.reduce([], &[&1.output_logic | [&1.input_logic | &2]])
-        |> Enum.reverse()
-
-      # Compute the program hash of resource logic proofs
-      resource_logic_from_program =
-        tx.actions
-        |> Enum.flat_map(fn action ->
-          action.logic_proofs
-          |> Enum.map(&ProofRecord.get_cairo_program_hash/1)
-        end)
-
-      if resource_logics_from_compliance == resource_logic_from_program do
-        true
-      else
-        {:error, "Resource logic check failure"}
-      end
-    end
-
     @spec verify_duplicate_nfs(Transaction.t()) ::
             true | {:error, String.t()}
     defp verify_duplicate_nfs(tx) do
-      if Enum.uniq(tx.nullifiers) == tx.nullifiers do
+      nullifiers = Anoma.RM.Transaction.nullifiers(tx)
+
+      if Enum.uniq(nullifiers) == nullifiers do
         true
       else
         {:error, "Duplicate nullifiers error"}
       end
     end
 
-    @spec get_binding_pub_keys(list(binary())) :: list(byte())
-    defp get_binding_pub_keys(compliance_instances) do
-      compliance_instances
+    @spec get_binding_pub_keys(Transaction.t()) :: list(byte())
+    defp get_binding_pub_keys(tx) do
+      tx.actions
+      |> Enum.flat_map(fn action ->
+        action.compliance_units
+        |> Enum.map(fn proof_record ->
+          proof_record.public_inputs
+          |> ComplianceInstance.from_public_input()
+        end)
+      end)
       |> Enum.reduce(
         [],
         &[:binary.bin_to_list(&1.delta_x <> &1.delta_y) | &2]
@@ -201,11 +162,12 @@ defmodule Anoma.CairoResource.Transaction do
     end
   end
 
-  @spec get_compliance_instances(t()) :: list(ComplianceInstance.t())
-  def get_compliance_instances(transaction) do
-    transaction.actions
+  @spec get_compliance_instances(MapSet.t(Action.t())) ::
+          list(ComplianceInstance.t())
+  def get_compliance_instances(actions) do
+    actions
     |> Enum.flat_map(fn action ->
-      action.compliance_proofs
+      action.compliance_units
       |> Enum.map(fn proof_record ->
         proof_record.public_inputs
         |> ComplianceInstance.from_public_input()
@@ -215,7 +177,8 @@ defmodule Anoma.CairoResource.Transaction do
 
   @spec get_binding_messages(Transaction.t()) :: list(list(byte()))
   def get_binding_messages(tx = %Transaction{}) do
-    (tx.nullifiers ++ tx.commitments)
+    (Anoma.RM.Transaction.nullifiers(tx) ++
+       Anoma.RM.Transaction.commitments(tx))
     |> Enum.map(&:binary.bin_to_list/1)
   end
 
@@ -225,27 +188,23 @@ defmodule Anoma.CairoResource.Transaction do
     msgs = get_binding_messages(tx)
 
     binding_signature =
-      tx.delta
+      tx.delta_proof
       |> :binary.bin_to_list()
       |> Cairo.sign(msgs)
       |> :binary.list_to_bin()
 
-    %Transaction{tx | delta: binding_signature}
+    %Transaction{tx | delta_proof: binding_signature}
   end
 
   # complete and sign the tx
   @spec finalize(Transaction.t()) :: Transaction.t()
   def finalize(tx = %Transaction{}) do
-    compliance_instances = get_compliance_instances(tx)
+    compliance_instances = get_compliance_instances(tx.actions)
     roots = Enum.map(compliance_instances, & &1.root)
-    commitments = Enum.map(compliance_instances, & &1.output_cm)
-    nullifiers = Enum.map(compliance_instances, & &1.nullifier)
 
     %Transaction{
       tx
-      | roots: roots,
-        commitments: commitments,
-        nullifiers: nullifiers
+      | roots: MapSet.new(roots)
     }
     |> sign()
   end
@@ -340,20 +299,22 @@ defmodule Anoma.CairoResource.Transaction do
              input_resources,
              output_resources
            ),
-         {:ok, compliance_proofs} <-
+         {:ok, compliance_units} <-
            Workflow.generate_compliance_proofs(compliance_inputs),
          action =
            Workflow.create_action(
+             output_commitments,
+             input_nullifiers,
              input_logic_proofs,
              output_logic_proofs,
-             compliance_proofs
+             compliance_units
            ),
          {:ok, priv_keys} <-
            Workflow.create_private_keys(compliance_input_jsons) do
       {:ok,
        %Transaction{
-         actions: [action],
-         delta: priv_keys
+         actions: MapSet.new([action]),
+         delta_proof: priv_keys
        }}
     else
       {:error, x} -> {:error, x}
@@ -382,7 +343,10 @@ defmodule Anoma.CairoResource.Transaction do
   def get_cipher_texts(tx) do
     tx.actions
     |> Enum.flat_map(& &1.logic_proofs)
-    |> Enum.map(&LogicInstance.from_public_input(&1.public_inputs))
+    |> Enum.map(fn {_tag, {_logic_hash, proof_record}} ->
+      proof_record.public_inputs
+      |> LogicInstance.from_public_input()
+    end)
     |> Enum.map(&%{tag: &1.tag, cipher: &1.cipher})
   end
 end

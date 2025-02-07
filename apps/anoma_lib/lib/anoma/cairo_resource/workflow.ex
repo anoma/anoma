@@ -307,38 +307,41 @@ defmodule Anoma.CairoResource.Workflow do
   @spec generate_compliance_proofs(list(String.t())) ::
           {:ok, list(ProofRecord.t())} | {:error, term()}
   def generate_compliance_proofs(compliance_inputs) do
-    with {:ok, compliance_proofs} <-
+    with {:ok, compliance_units} <-
            Enum.map(
              compliance_inputs,
              &ProofRecord.generate_compliance_proof/1
            )
            |> Utils.check_list() do
-      {:ok, compliance_proofs}
+      {:ok, compliance_units}
     else
       {:error, msg} -> {:error, "Error creating compliance proofs: #{msg}"}
     end
   end
 
   @spec create_action(
+          list(<<_::256>>),
+          list(<<_::256>>),
           list(ProofRecord.t()),
           list(ProofRecord.t()),
           list(ProofRecord.t())
         ) :: Action.t()
   def create_action(
+        commitments,
+        nullifiers,
         input_logic_proofs,
         output_logic_proofs,
-        compliance_proofs
+        compliance_units
       ) do
-    %Action{
-      logic_proofs:
-        Enum.zip_with(
-          input_logic_proofs,
-          output_logic_proofs,
-          &[&1, &2]
-        )
-        |> Enum.concat(),
-      compliance_proofs: compliance_proofs
-    }
+    Action.new(
+      commitments,
+      nullifiers,
+      Enum.concat(
+        input_logic_proofs,
+        output_logic_proofs
+      ),
+      compliance_units
+    )
   end
 
   @spec create_private_keys(list(Jason.OrderedObject.t())) ::
