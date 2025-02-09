@@ -11,211 +11,291 @@ defmodule Examples.ENockPoly do
 
   use TypedStruct
 
-  @doc """
-  I test `Term.depth/1` and `Term.size/1` (and thus indirectly also
-  `Term.eval/3`) using a variety of terms, both closed and open.
-  """
-  @spec term_tests() :: bool()
-  def term_tests() do
-    # Closed term test cases (no variables)
-    t1 = {1, []}
-    assert Term.depth(t1) == 1
-    assert Term.size(t1) == 1
-
-    t2 = {:a, [{:a, []}, {:b, []}]}
-    assert Term.depth(t2) == 2
-    assert Term.size(t2) == 3
-
-    t3 = {:x, [{:y, [{:z, []}]}]}
-    assert Term.depth(t3) == 3
-    assert Term.size(t3) == 3
-
-    t4 = {0, [{1, []}, {2, [{3, []}, {4, []}]}, {5, []}]}
-    assert Term.depth(t4) == 3
-    assert Term.size(t4) == 6
-
-    # An example of a direct call to `Term.cata/2`, since `depth` and
-    # `size` are defined in terms of `eval` and thus do not directly
-    # test the `cata` wrapper.  This also serves as an example of
-    # providing a custom algebra to `cata` (the algebra parameter to
-    # `eval` has the same signature, so it is also an example of that).
-    # In this example we use a string constructor type and concatenate
-    # all the constructor names.
-    t8 = {"root", [{"left", []}, {"right", []}]}
-
-    algebra = fn {ctor, children} ->
-      to_string(ctor) <> Enum.join(children, "")
-    end
-
-    assert Term.cata(t8, algebra) == "rootleftright"
-
-    # Open term test cases (terms with variables)
-
-    # A single variable (open term). By definition, its depth and size are 0.
-    v1 = "x"
-    assert Term.depth(v1) == 0
-    assert Term.size(v1) == 0
-
-    # An open term with a single variable as a child.
-    t5 = {:a, ["x"]}
-
-    # The root is a constructor (depth = 1), and the single child is a variable (depth 0).
-    assert Term.depth(t5) == 1
-    # Size is 1 (the constructor) + 0 for the variable.
-    assert Term.size(t5) == 1
-
-    # An open term with multiple variables.
-    t6 = {:b, ["x", {:c, ["y", "z"]}]}
-    # For t6:
-    #   - the variable "x" has depth 0;
-    #   - {:c, ["y", "z"]} has depth = 1 + max(0, 0) = 1.
-    # So overall depth = 1 + max(0, 1) = 2.
-    # The sizes are: "x" → 0; {:c, ["y", "z"]} → 1 + (0 + 0) = 1;
-    # so overall size = 1 (for :b) + (0 + 1) = 2.
-    assert Term.depth(t6) == 2
-    assert Term.size(t6) == 2
-
-    # An open term with no variables (a closed term, but viewed as open).
-    t7 = {:d, [{:e, []}, {:f, []}]}
-    # depth = 1 + max(1,1)
-    assert Term.depth(t7) == 2
-    # size = 1 + (1 + 1)
-    assert Term.size(t7) == 3
-
-    true
-  end
-
-  @doc """
-  Tests for FinPolyF typechecking using a string-based specification.
-
-  The tspec accepts only the constructors "zero", "one", or "two" with the
-  corresponding expected arity (0, 1, or 2). The vspec accepts only natural numbers
-  between 0 and 4.
-
-  We check for valid terms as well as for:
-    - arity mismatches
-    - invalid constructor names, and
-    - invalid variable values.
-  We also test a case that accumulates multiple error types.
-  """
-  @spec poly_term_tests() :: bool()
-  def poly_term_tests() do
-    # tspec: valid if constructor is exactly one of "zero", "one", or "two"
-    tspec = fn
+  # Common tspec (constructor-check function) for poly_term tests.
+  defp common_tspec() do
+    fn
       "zero" -> {:ok, 0}
       "one" -> {:ok, 1}
       "two" -> {:ok, 2}
       _ -> {:invalid_constructor}
     end
+  end
 
-    # vspec: valid if variable is an integer between 0 and 4.
-    vspec = fn
+  # Common vspec (variable-check function) for poly_term tests.
+  defp common_vspec() do
+    fn
       v when is_integer(v) and v >= 0 and v <= 4 -> :ok
       _ -> {:invalid_variable}
     end
+  end
 
-    # Valid term: "one" expects exactly 1 child.
-    t_valid = {"one", [{"zero", []}]}
-    assert FinPolyF.typecheck_v(t_valid, {tspec, vspec}) == :ok
+  ####################################################################
+  ##                        TERM TESTS                              ##
+  ####################################################################
+  @doc """
+  t1: a closed term with no children.
+  """
+  def term_test_t1() do
+    res = {1, []}
+    assert Term.depth(res) == 1
+    assert Term.size(res) == 1
+    res
+  end
 
-    # Arity error: "one" expects 1 child but gets none.
-    t_arity = {"one", []}
+  @doc """
+  t2: a closed term with two children.
+  """
+  def term_test_t2() do
+    res = {:a, [{:a, []}, {:b, []}]}
+    assert Term.depth(res) == 2
+    assert Term.size(res) == 3
+    res
+  end
 
-    assert FinPolyF.typecheck_v(t_arity, {tspec, vspec}) ==
+  @doc """
+  t3: a nested closed term.
+  """
+  def term_test_t3() do
+    res = {:x, [{:y, [{:z, []}]}]}
+    assert Term.depth(res) == 3
+    assert Term.size(res) == 3
+    res
+  end
+
+  @doc """
+  t4: a more complex closed term.
+  """
+  def term_test_t4() do
+    res = {0, [{1, []}, {2, [{3, []}, {4, []}]}, {5, []}]}
+    assert Term.depth(res) == 3
+    assert Term.size(res) == 6
+    res
+  end
+
+  @doc """
+  t8: a term tested with a custom cata algebra.
+  An example of a direct call to `Term.cata/2`, since `depth` and
+  `size` are defined in terms of `eval` and thus do not directly
+  test the `cata` wrapper.  This also serves as an example of
+  providing a custom algebra to `cata` (the algebra parameter to
+  `eval` has the same signature, so it is also an example of that).
+  In this example we use a string constructor type and concatenate
+  all the constructor names.
+  """
+  def term_test_t8() do
+    res = {"root", [{"left", []}, {"right", []}]}
+
+    algebra = fn {ctor, children} ->
+      to_string(ctor) <> Enum.join(children, "")
+    end
+
+    assert Term.cata(res, algebra) == "rootleftright"
+    res
+  end
+
+  @doc """
+  v1: a single variable (an open term), which has depth and size 0.
+  """
+  def term_test_v1() do
+    res = "x"
+    assert Term.depth(res) == 0
+    assert Term.size(res) == 0
+    res
+  end
+
+  @doc """
+  t5: an open term whose child is a variable.
+  """
+  def term_test_t5() do
+    res = {:a, ["x"]}
+    assert Term.depth(res) == 1
+    assert Term.size(res) == 1
+    res
+  end
+
+  @doc """
+  t6: an open term with multiple variables (one nested).
+  """
+  def term_test_t6() do
+    res = {:b, ["x", {:c, ["y", "z"]}]}
+    assert Term.depth(res) == 2
+    assert Term.size(res) == 2
+    res
+  end
+
+  @doc """
+  t7: an open term with no variables (a closed term viewed as open).
+  """
+  def term_test_t7() do
+    res = {:d, [{:e, []}, {:f, []}]}
+    assert Term.depth(res) == 2
+    assert Term.size(res) == 3
+    res
+  end
+
+  ####################################################################
+  ##                     POLY TERM TESTS                            ##
+  ####################################################################
+  @doc """
+  poly_term_test_valid: A valid term using a string-based tspec.
+  """
+  def poly_term_test_valid() do
+    res = {"one", [{"zero", []}]}
+    assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) == :ok
+    res
+  end
+
+  @doc """
+  poly_term_test_arity: Term with an arity mismatch.
+  """
+  def poly_term_test_arity() do
+    res = {"one", []}
+
+    assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) ==
              {:error, [{:invalid_arity, "one", 1, 0}]}
 
-    # Constructor error: "three" is not accepted.
-    t_ctor = {"three", []}
+    res
+  end
 
-    assert FinPolyF.typecheck_v(t_ctor, {tspec, vspec}) ==
+  @doc """
+  poly_term_test_ctor: Term with an invalid constructor.
+  """
+  def poly_term_test_ctor() do
+    res = {"three", []}
+
+    assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) ==
              {:error, [{:invalid_constructor, "three"}]}
 
-    # Valid variable.
-    t_var = 2
+    res
+  end
 
-    assert FinPolyF.typecheck_v(t_var, {tspec, vspec}) ==
-             :ok
+  @doc """
+  poly_term_test_valid_variable: A valid variable term.
+  """
+  def poly_term_test_valid_variable() do
+    res = 2
+    assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) == :ok
+    res
+  end
 
-    # Variable error: 10 is not in the allowed range.
-    t_inv_var = 10
+  @doc """
+  poly_term_test_invalid_variable: A term with an invalid variable.
+  """
+  def poly_term_test_invalid_variable() do
+    res = 10
 
-    assert FinPolyF.typecheck_v(t_inv_var, {tspec, vspec}) ==
+    assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) ==
              {:error, [{:invalid_variable, 10}]}
 
-    # Confirm that `vspec_ok` does allow the variable `10`
-    # (as it should any variable).
-    assert FinPolyF.typecheck_v(t_inv_var, {tspec, &FinPolyF.vspec_ok/1}) ==
+    res
+  end
+
+  @doc """
+  poly_term_test_vspec_ok: Using vspec_ok to always succeed.
+  """
+  def poly_term_test_vspec_ok() do
+    res = 10
+
+    assert FinPolyF.typecheck_v(res, {common_tspec(), &FinPolyF.vspec_ok/1}) ==
              :ok
 
-    # Multiple errors: "two" expects 2 children.
-    # Here, first child (10) is an invalid variable and second child has an invalid constructor.
-    t_multi = {"two", [10, {"three", []}]}
+    res
+  end
+
+  @doc """
+  poly_term_test_multi: A term accumulating multiple errors.
+  """
+  def poly_term_test_multi() do
+    res = {"two", [10, {"three", []}]}
 
     expected_errors = [
       {:invalid_variable, 10},
       {:invalid_constructor, "three"}
     ]
 
-    assert FinPolyF.typecheck_v(t_multi, {tspec, vspec}) ==
+    assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) ==
              {:error, expected_errors}
 
-    true
+    res
+  end
+
+  ####################################################################
+  ##                    NOCK TERM TESTS                             ##
+  ####################################################################
+  #  Tests for NockTerms conversion and typecheck invariants using
+  # nouns (Nock terms) lifted from Nock examples.
+  #
+  #  In these tests the nouns are created by parsing string representations
+  #  (as in enock.ex and nock.ex). For each noun we:
+  #    - Convert it to a nock_poly_term (via `NockTerms.from_noun/1`),
+  #    - Ensure it passes typecheck,
+  #    - Convert it back to a Noun.t() with `NockTerms.to_noun/1` and verify round‑trip invariance.
+  #
+  #  We also verify that an invalid term (manually constructed) raises an error.
+
+  @doc """
+  nock_term_test_one_two: Tests conversion round-trip using a Nock term
+  lifted from the one_two examples.
+  """
+  def nock_term_test_one_two() do
+    {:ok, noun_one_two} = Noun.Format.parse("[1 2]")
+    res = NockTerms.from_noun(noun_one_two)
+    assert NockTerms.typecheck(res) == :ok
+    rt = NockTerms.to_noun(res)
+    assert rt == noun_one_two
+    assert NockTerms.from_noun(rt) == res
+    res
   end
 
   @doc """
-  Tests for NockTerms conversion and typecheck invariants using actual Nock snippets.
-
-  In these tests the nouns are created by parsing string representations
-  (as in enock.ex and nock.ex). For each noun we:
-    - Convert it to a nock_poly_term (via `NockTerms.from_noun/1`),
-    - Ensure it passes typecheck,
-    - Convert it back to a Noun.t() with `NockTerms.to_noun/1` and verify round‑trip invariance.
-
-  We also verify that an invalid term (manually constructed) raises an error.
+  nock_term_test_indexed: Tests conversion round-trip using a Nock term
+  lifted from the indexed_noun examples.
   """
-  @spec nock_term_tests() :: bool()
-  def nock_term_tests() do
-    # Lifted from the `one_two` example.
-    {:ok, noun_one_two} = Noun.Format.parse("[1 2]")
-    term_one_two = NockTerms.from_noun(noun_one_two)
-    assert NockTerms.typecheck(term_one_two) == :ok
-    rt_one_two = NockTerms.to_noun(term_one_two)
-    assert rt_one_two == noun_one_two
-    assert NockTerms.from_noun(rt_one_two) == term_one_two
-
-    # Lifted from the `indexed_noun` example.
+  def nock_term_test_indexed() do
     {:ok, noun_indexed} = Noun.Format.parse("[[4 5] [12 13] 7]")
-    term_indexed = NockTerms.from_noun(noun_indexed)
-    assert NockTerms.typecheck(term_indexed) == :ok
-    rt_indexed = NockTerms.to_noun(term_indexed)
-    assert rt_indexed == noun_indexed
-    assert NockTerms.from_noun(rt_indexed) == term_indexed
+    res = NockTerms.from_noun(noun_indexed)
+    assert NockTerms.typecheck(res) == :ok
+    rt = NockTerms.to_noun(res)
+    assert rt == noun_indexed
+    assert NockTerms.from_noun(rt) == res
+    res
+  end
 
-    # Lifted from the `counter_arm` example.
-    counter_arm =
-      """
-      [ 6
+  @doc """
+  nock_term_test_counter_arm: Tests conversion round-trip using a Nock term
+  lifted from the counter_arm examples.
+  """
+  def nock_term_test_counter_arm() do
+    counter_arm = """
+    [ 6
       [5 [1 1] 8 [9 1.406 0 1.023] 9 2 10 [6 0 118] 0 2]
       [6 [5 [1 1] 8 [9 1.406 0 1.023] 9 2 10 [6 0 238] 0 2] [6 [5 [1 1] 8 [9 1.406 0 1.023] 9 2 10 [6 0 958] 0 2] [6 [5 [1 0] 0 446] [0 0] 6 [0 3.570] [1 0] 1 1] 1 1] 1 1]
       1
       1
-      ]
-      """
+    ]
+    """
 
     noun_counter = Noun.Format.parse_always(counter_arm)
-    term_counter = NockTerms.from_noun(noun_counter)
-    assert NockTerms.typecheck(term_counter) == :ok
-    rt_counter = NockTerms.to_noun(term_counter)
-    assert rt_counter == noun_counter
-    assert NockTerms.from_noun(rt_counter) == term_counter
+    res = NockTerms.from_noun(noun_counter)
+    assert NockTerms.typecheck(res) == :ok
+    rt = NockTerms.to_noun(res)
+    assert rt == noun_counter
+    assert NockTerms.from_noun(rt) == res
+    res
+  end
 
-    # Error case: manually create an invalid nock_poly_term.
-    invalid_term = {:cell, []}
+  @doc """
+  nock_term_test_invalid: Checks that an invalid term raises an error.
+  (This term is invalid because a cell should have two children, and
+  this alleged cell has none.)
+  """
+  def nock_term_test_invalid() do
+    res = {:cell, []}
 
     assert_raise CaseClauseError, fn ->
-      NockTerms.to_noun(invalid_term)
+      NockTerms.to_noun(res)
     end
 
-    true
+    res
   end
 end
