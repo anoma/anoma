@@ -66,7 +66,7 @@ defmodule Examples.ENockPoly do
   t4: a more complex closed term.
   """
   def term_test_t4() do
-    res = {0, [{1, []}, {2, [{3, []}, {4, []}]}, {5, []}]}
+    res = {0, [term_test_t1(), {2, [{3, []}, {4, []}]}, {5, []}]}
     assert Term.depth(res) == 3
     assert Term.size(res) == 6
     res
