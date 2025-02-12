@@ -51,13 +51,36 @@ defmodule NockPoly do
     @typedoc "I generate open terms:  terms of `t` potentially containing variables."
     @type termfv(ctor, v, x) :: v | termf(ctor, x)
 
-    # I am the initial algebra of `termfv(ctor, v)`, which is guaranteed to have
-    # one because it is polynomial.  It comprises open terms terms like those of
-    # `t` but potentially containing variables drawn from type `v`.
+    # I am the carrier of the initial algebra of `termfv(ctor, v)`, which is
+    # guaranteed to have one because it is polynomial.  I comprise open terms
+    # terms like those of `t` but potentially containing variables drawn from
+    # type `v`.
     #
     # Viewed as a type constructor, I am the free monad of `termf`.
     @typedoc "A generic open polynomial term parameterized on constructor and variable types."
     @type tv(ctor, v) :: termfv(ctor, v, tv(ctor, v))
+
+    # I am the action of the initial algebra of `termfv(ctor, v)`.
+    # My implementation is trivial; I am here only to make it explicit
+    # that `tv` _is_ an algebra.
+    @spec in_tv(termfv(ctor, v, tv(ctor, v))) :: tv(ctor, v)
+          when ctor: term, v: term
+    def in_tv(x) do
+      x
+    end
+
+    # I am the inverse of the action of of the initial algebra of
+    # `termfv(ctor, v)`; I must exist because that initial algebra
+    # is a fixed point of the application of `termfv`.  I correspond
+    # to pattern-matching.  Being the inverse of an algebra, I am a coalgebra.
+    #
+    # My implementation is trivial; I am here only to make it explicit
+    # that `in_tv` has an inverse.
+    @spec out_tv(tv(ctor, v)) :: termfv(ctor, v, tv(ctor, v))
+          when ctor: term, v: term
+    def out_tv(x) do
+      x
+    end
 
     # I am the initial algebra of `termf`, which is guaranteed to have
     # one because it is polynomial.  (Its catamorphism is defined below.)
