@@ -386,3 +386,27 @@ defmodule Anoma.CairoResource.Transaction do
     |> Enum.map(&%{tag: &1.tag, cipher: &1.cipher})
   end
 end
+
+defimpl Anoma.RM.Intent, for: Anoma.CairoResource.Transaction do
+  alias Anoma.CairoResource.Transaction
+
+  @impl true
+  def compose(t1 = %Transaction{}, t2 = %Transaction{}) do
+    Anoma.RM.Transaction.compose(t1, t2)
+  end
+
+  @impl true
+  def verify(tx = %Transaction{}) do
+    Anoma.RM.Transaction.verify(tx)
+  end
+
+  @impl true
+  def nullifiers(tx = %Transaction{}) do
+    Anoma.RM.Transaction.nullifiers(tx) |> MapSet.new()
+  end
+
+  @impl true
+  def commitments(tx = %Transaction{}) do
+    Anoma.RM.Transaction.commitments(tx) |> MapSet.new()
+  end
+end
