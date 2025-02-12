@@ -153,8 +153,7 @@ defmodule Anoma.Node.Intents.Solver do
     unsolved? = intent in state.unsolved
 
     unless unsolved? do
-      new_state = %{state | unsolved: MapSet.put(state.unsolved, intent)}
-      do_solve(new_state)
+      do_solve(intent, state)
     else
       Logger.debug("ignoring intent; unsolved: #{unsolved?}")
 
@@ -177,12 +176,18 @@ defmodule Anoma.Node.Intents.Solver do
   an appropriate wrapper.
   """
 
-  @spec do_solve(t()) :: t()
-  def do_solve(state) do
-    unsolved_list = state.unsolved |> Enum.to_list()
-    set = unsolved_list |> solve()
+  @spec do_solve(Intent.t(), t()) :: t()
+  def do_solve(intent, state) do
+    unsolved_list =
+      state.unsolved |> Enum.to_list() |> Enum.filter(intent_filter(intent))
 
-    unsolved = MapSet.filter(state.unsolved, &unsolved_reject(set, &1))
+    set = [intent | unsolved_list] |> solve()
+
+    unsolved =
+      MapSet.filter(
+        MapSet.put(state.unsolved, intent),
+        &unsolved_reject(set, &1)
+      )
 
     unless Enum.empty?(set) do
       set |> Enum.reduce(&Intent.compose/2) |> submit(state.node_id)
@@ -260,13 +265,16 @@ defmodule Anoma.Node.Intents.Solver do
 
   ### Pattern-Matching Variations
 
-  - `submit(%TransparentResource.Transaction{}, node_id)` - I wrap a transaction in trivial
-                                                            core and send it to the Mempool.
-  - `submit(any, node_id)` - I do nothing
+  - `submit(%DumbIntent{}, node_id)` - I do nothing
+  - `submit(any, node_id)` - I wrap the transaction in a trivial tx function
+                             wrapper and send it to mempool.
   """
 
   @spec submit(Intent.t(), String.t()) :: :ok
-  def submit(tx = %Anoma.TransparentResource.Transaction{}, node_id) do
+  def submit(%Anoma.RM.DumbIntent{}, _) do
+  end
+
+  def submit(tx, node_id) do
     tx_noun = tx |> Noun.Nounable.to_noun()
     tx_candidate = [[1, 0, [1 | tx_noun], 0 | 909], 0 | 707]
     tx_filter = [Node.Event.node_filter(node_id), %Mempool.TxFilter{}]
@@ -274,7 +282,7 @@ defmodule Anoma.Node.Intents.Solver do
     with_subscription [tx_filter] do
       Mempool.tx(
         node_id,
-        {:transparent_resource, tx_candidate}
+        {backend_choice(tx), tx_candidate}
       )
 
       receive do
@@ -291,7 +299,35 @@ defmodule Anoma.Node.Intents.Solver do
     end
   end
 
-  def submit(_, _) do
+  defp intent_filter(%Anoma.TransparentResource.Transaction{}) do
+    fn
+      %Anoma.TransparentResource.Transaction{} -> true
+      _ -> false
+    end
+  end
+
+  defp intent_filter(%Anoma.CairoResource.Transaction{}) do
+    fn
+      %Anoma.CairoResource.Transaction{} -> true
+      _ -> false
+    end
+  end
+
+  defp intent_filter(%Anoma.RM.DumbIntent{}) do
+    fn
+      %Anoma.RM.DumbIntent{} -> true
+      _ -> false
+    end
+  end
+
+  @spec backend_choice(Intent.t()) ::
+          Anoma.Node.Transaction.Backends.backend()
+  defp backend_choice(%Anoma.TransparentResource.Transaction{}) do
+    :transparent_resource
+  end
+
+  defp backend_choice(%Anoma.CairoResource.Transaction{}) do
+    :cairo_resource
   end
 
   @spec unsolved_reject(MapSet.t(Intent.t()), Intent.t()) :: bool()
