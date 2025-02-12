@@ -66,7 +66,7 @@ defmodule Examples.ENockPoly do
   t4: a more complex closed term.
   """
   def term_test_t4() do
-    res = {0, [term_test_t1(), {2, [{3, []}, {4, []}]}, {5, []}]}
+    res = Term.in_tv({0, [term_test_t1(), {2, [{3, []}, {4, []}]}, {5, []}]})
     assert Term.depth(res) == 3
     assert Term.size(res) == 6
     res
@@ -104,6 +104,17 @@ defmodule Examples.ENockPoly do
   end
 
   @doc """
+  I apply `out_tv` to a variable term (the way that we define structures in
+  Elixir, we expect `out_tv` simply to be the identity).
+  """
+  def term_test_v1_out_tv() do
+    res = term_test_v1()
+    out = Term.out_tv(res)
+    assert out == res
+    out
+  end
+
+  @doc """
   t5: an open term whose child is a variable.
   """
   def term_test_t5() do
@@ -131,6 +142,17 @@ defmodule Examples.ENockPoly do
     assert Term.depth(res) == 2
     assert Term.size(res) == 3
     res
+  end
+
+  @doc """
+  I apply `out_tv` to a constructor term (the way that we define structures in
+  Elixir, we expect `out_tv` simply to be the identity).
+  """
+  def term_test_t7_out_tv() do
+    res = term_test_t7()
+    out = Term.out_tv(res)
+    assert out == res
+    out
   end
 
   ####################################################################
