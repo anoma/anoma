@@ -85,6 +85,37 @@ defmodule Anoma.Node.Examples.EGRPC do
   end
 
   @doc """
+  I list the intents over grpc on the client and expect a failure by not
+  providing a node id.
+  """
+  @spec list_intents_fail(EGRPC.t()) :: boolean()
+  def list_intents_fail(%EGRPC{} = client \\ connect_to_node()) do
+    request = %List.Request{}
+
+    expected =
+      {:error, %GRPC.RPCError{status: 3, message: "node_info can not be nil"}}
+
+    assert expected ==
+             IntentsService.Stub.list_intents(client.channel, request)
+  end
+
+  @doc """
+  I list the intents over grpc on the client.
+  """
+  @spec list_intents_invalid_node(EGRPC.t()) :: boolean()
+  def list_intents_invalid_node(%EGRPC{} = client \\ connect_to_node()) do
+    # we assume here that nodeid deadbeef does not exist.
+    node_id = %NodeInfo{node_id: "deadbeef"}
+    request = %List.Request{node_info: node_id}
+
+    expected_result =
+      {:error, %GRPC.RPCError{status: 3, message: "node id does not exist"}}
+
+    assert expected_result ==
+             IntentsService.Stub.list_intents(client.channel, request)
+  end
+
+  @doc """
   I add an intent to the client.
   """
   @spec add_intent(EGRPC.t()) :: boolean()
@@ -110,6 +141,23 @@ defmodule Anoma.Node.Examples.EGRPC do
     {:ok, reply} = IntentsService.Stub.list_intents(client.channel, request)
 
     assert reply.intents == [intent_jammed]
+  end
+
+  @doc """
+  I make a request to add an intent, but without an intent.
+
+  I expect an error to occur.
+  """
+  def add_intent_fail_no_intent(%EGRPC{} = client \\ connect_to_node()) do
+    node_id = %NodeInfo{node_id: client.node.node_id}
+
+    request = %Add.Request{node_info: node_id}
+
+    result = IntentsService.Stub.add_intent(client.channel, request)
+
+    assert result ==
+             {:error,
+              %GRPC.RPCError{status: 2, message: "intent can not be nil"}}
   end
 
   @doc """
