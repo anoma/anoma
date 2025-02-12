@@ -43,6 +43,13 @@ defmodule NockPoly do
     @typedoc "I generate a generic polynomial term parameterized on a constructor type."
     @type termf(ctor, x) :: {ctor, [x]}
 
+    @doc "I am the morphism-map component of the functor `termf`."
+    @spec termf_map((a -> b), termf(ctor, a)) :: termf(ctor, b)
+          when ctor: term, a: term, b: term
+    def termf_map(f, {c, children}) do
+      {c, Enum.map(children, f)}
+    end
+
     @typedoc "Type of algebras of `termf`."
     @type termalg(ctor, x) :: (termf(ctor, x) -> x)
 
@@ -50,6 +57,20 @@ defmodule NockPoly do
     # which may contain variables drawn from a type parameter.
     @typedoc "I generate open terms:  terms of `t` potentially containing variables."
     @type termfv(ctor, v, x) :: v | termf(ctor, x)
+
+    @doc "I am the morphism-map component of the bifunctor `termfv(ctor)`."
+    @spec termfv_bimap((v -> w), (x -> y), termfv(ctor, v, x)) ::
+            termfv(ctor, w, y)
+          when ctor: term, v: term, w: term, x: term, y: term
+    def termfv_bimap(f, g, term) do
+      case term do
+        {c, children} when is_list(children) ->
+          termf_map(g, {c, children})
+
+        var ->
+          f.(var)
+      end
+    end
 
     # I am the carrier of the initial algebra of `termfv(ctor, v)`, which is
     # guaranteed to have one because it is polynomial.  I comprise open terms
@@ -63,6 +84,15 @@ defmodule NockPoly do
     # I am the action of the initial algebra of `termfv(ctor, v)`.
     # My implementation is trivial; I am here only to make it explicit
     # that `tv` _is_ an algebra.
+    #
+    # Because `termfv` uses Elixir's union types, I can accept either
+    # a constructor term or a variable term without any kind of tag.
+    # The two cases each correspond to universal morphisms:
+    #  - My application to a variable term is the unit of the
+    #    free/forgetful adjunction between the category of algebras
+    #    of `termfv` (on the left) and Elixir's base category (on the right)
+    #  - My application to a constructor term is the action component
+    #    of the object-map component of the left adjoint of that adjunction
     @spec in_tv(termfv(ctor, v, tv(ctor, v))) :: tv(ctor, v)
           when ctor: term, v: term
     def in_tv(x) do
@@ -136,6 +166,29 @@ defmodule NockPoly do
         var ->
           subst.(var)
       end
+    end
+
+    # I am the algebra used to implement `tvmap` below.
+    @spec tvmap_alg(termf(ctor, tv(ctor, b))) :: tv(ctor, b)
+          when ctor: term, b: term
+    def tvmap_alg(x) do
+      in_tv(x)
+    end
+
+    # I am the substitution used to implement `tvmap` below.
+    @spec tvmap_subst((a -> b), a) :: tv(ctor, b)
+          when ctor: term, a: term, b: term
+    def tvmap_subst(f, x) do
+      f.(x)
+    end
+
+    # I am the morphism-map component of the left adjoint of the
+    # free-algebra adjunction of `termfv` (the object-map component
+    # is `in_tv` above).
+    @spec tvmap((a -> b), tv(ctor, a)) :: tv(ctor, b)
+          when ctor: term, a: term, b: term
+    def tvmap(f, x) do
+      eval(&tvmap_alg(&1), &tvmap_subst(f, &1), x)
     end
 
     defmodule Unreachable do
