@@ -320,4 +320,38 @@ defmodule Examples.ENockPoly do
 
     res
   end
+
+  # We are functions used in multiple term tests below.
+  defp add1(x), do: x + 1
+  defp times2(x), do: x * 2
+
+  @doc """
+  I test the application of `termfv_bimap` to a variable term.
+  """
+  def termfv_bimap_variable_test() do
+    term = 3
+    res = NockPoly.Term.termfv_bimap(&add1/1, &times2/1, term)
+    assert res == 4
+    res
+  end
+
+  @doc """
+  I test the application of `termfv_bimap` to a constructor term.
+  """
+  def termfv_bimap_constructor_test() do
+    term = {:a, [3, 4]}
+    res = NockPoly.Term.termfv_bimap(&add1/1, &times2/1, term)
+    assert res == {:a, [6, 8]}
+    res
+  end
+
+  @doc """
+  I test the use of `tvmap` to transform variables within a term.
+  """
+  def tvmap_test() do
+    term = {:a, [3, {:b, [4]}]}
+    res = NockPoly.Term.tvmap(&add1/1, term)
+    assert res == {:a, [4, {:b, [5]}]}
+    res
+  end
 end
