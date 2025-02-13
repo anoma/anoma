@@ -428,4 +428,44 @@ defmodule Examples.ENockPoly do
     assert flattened == expected
     flattened
   end
+
+  @doc """
+  I test `tv_bind` on a variable term.
+  """
+  def tv_bind_variable_test() do
+    term = termfv_bimap_variable_test()
+    f = fn x -> NockPoly.Term.in_tv(x + 1) end
+    bound = NockPoly.Term.tv_bind(f, term)
+    assert bound == NockPoly.Term.out_tv(term) + 1
+    bound
+  end
+
+  @doc """
+  I test `tv_bind` on a hybrid term.
+
+  We construct a term using a variable term and a constructor term:
+    - `var_term` is obtained from `termfv_bimap_variable_test()` (yielding 4).
+    - `cons_term` is obtained from `termfv_bimap_constructor_test()` (yielding {:a, [6, 8]}).
+  Then we define `m = {:c, [var_term, cons_term]}`.
+  We let `f` map any variable `x` to `in_tv({:b, [x, x + 10]})`.
+  Thus:
+    - For the variable branch (4), f returns `in_tv({:b, [4, 14]})`, which flattens to `{ :b, [4, 14]}`.
+    - For the constructor branch, the function is applied recursively to its children. That is, for
+        {:a, [6, 8]} the children become `in_tv({:b, [6, 16]})` and `in_tv({:b, [8, 18]})`
+        and after flattening become `{ :b, [6, 16]}` and `{ :b, [8, 18]}`.
+  The entire term then yields:
+      {:c, [{:b, [4, 14]}, {:a, [{:b, [6, 16]}, {:b, [8, 18]}]}]}
+  """
+  def tv_bind_hybrid_test() do
+    # expected 4
+    var_term = termfv_bimap_variable_test()
+    # expected {:a, [6, 8]}
+    cons_term = termfv_bimap_constructor_test()
+    m = {:c, [var_term, cons_term]}
+    f = fn x -> NockPoly.Term.in_tv({:b, [x, x + 10]}) end
+    bound = NockPoly.Term.tv_bind(f, m)
+    expected = {:c, [{:b, [4, 14]}, {:a, [{:b, [6, 16]}, {:b, [8, 18]}]}]}
+    assert bound == expected
+    bound
+  end
 end
