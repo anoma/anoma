@@ -207,6 +207,22 @@ defmodule NockPoly do
       tvmap(&in_tv/1, term)
     end
 
+    @doc """
+    I am the join (or multiplication) for the free monad `tv`.
+
+    Given a term of type `tv(ctor, tv(ctor, v))`, I return a term of type
+    `tv(ctor, v)` by flattening the structure.
+    """
+    @spec tv_mult(tv(ctor, tv(ctor, v))) :: tv(ctor, v)
+          when ctor: term, v: term
+    def tv_mult(term) do
+      eval(
+        fn {ctor, children} -> {ctor, children} end,
+        &Function.identity/1,
+        term
+      )
+    end
+
     defmodule Unreachable do
       @moduledoc """
       This module contains a function specifically expected to be unreachable.
