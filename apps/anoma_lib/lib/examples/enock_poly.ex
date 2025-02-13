@@ -354,4 +354,32 @@ defmodule Examples.ENockPoly do
     assert res == {:a, [4, {:b, [5]}]}
     res
   end
+
+  @doc """
+  I test `tv_comult` on the output of `termfv_bimap_variable_test`.
+
+  The free monad law states that:
+      tvmap(out_tv, tv_comult(term)) == term
+  """
+  def tv_comult_variable_from_bimap_test() do
+    term = termfv_bimap_variable_test()
+    duplicated = NockPoly.Term.tv_comult(term)
+    result = NockPoly.Term.tvmap(&NockPoly.Term.out_tv/1, duplicated)
+    assert result == term
+    duplicated
+  end
+
+  @doc """
+  I test `tv_comult` on the output of `termfv_bimap_constructor_test`.
+
+  The free monad law states that:
+      tvmap(out_tv, tv_comult(term)) == term
+  """
+  def tv_comult_constructor_from_bimap_test() do
+    term = termfv_bimap_constructor_test()
+    duplicated = NockPoly.Term.tv_comult(term)
+    result = NockPoly.Term.tvmap(&NockPoly.Term.out_tv/1, duplicated)
+    assert result == term
+    duplicated
+  end
 end

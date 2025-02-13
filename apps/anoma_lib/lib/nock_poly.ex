@@ -195,6 +195,18 @@ defmodule NockPoly do
       eval(&tvmap_alg(&1), &tvmap_subst(f, &1), x)
     end
 
+    @doc """
+    I am the comultiplication (or "duplicate") for the free monad `tv`.
+
+    Given a term of type `tv(ctor, v)`, I return a term of type
+    `tv(ctor, tv(ctor, v))`.
+    """
+    @spec tv_comult(tv(ctor, v)) :: tv(ctor, tv(ctor, v))
+          when ctor: term, v: term
+    def tv_comult(term) do
+      tvmap(&in_tv/1, term)
+    end
+
     defmodule Unreachable do
       @moduledoc """
       This module contains a function specifically expected to be unreachable.
