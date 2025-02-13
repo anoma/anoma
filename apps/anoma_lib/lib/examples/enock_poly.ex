@@ -382,4 +382,50 @@ defmodule Examples.ENockPoly do
     assert result == term
     duplicated
   end
+
+  @doc """
+  I test `tv_mult` on the output of `tv_comult` for a variable term.
+
+  The free monad law for join is that flattening a duplicated term (using `tv_mult`)
+  returns the original term.
+  """
+  def tv_mult_variable_from_comult_test() do
+    term = termfv_bimap_variable_test()
+    duplicated = NockPoly.Term.tv_comult(term)
+    flattened = NockPoly.Term.tv_mult(duplicated)
+    assert flattened == term
+    flattened
+  end
+
+  @doc """
+  I test `tv_mult` on a larger term using the results of some previous examples.
+  """
+  def tv_mult_hybrid_test() do
+    var_term = termfv_bimap_variable_test()
+    cons_term = termfv_bimap_constructor_test()
+    deep_term = term_test_t6()
+    term = {:a, [var_term, {:b, [cons_term, deep_term]}]}
+    duplicated = NockPoly.Term.tv_comult(term)
+    flattened = NockPoly.Term.tv_mult(duplicated)
+    assert flattened == term
+    flattened
+  end
+
+  @doc """
+  I test `tv_mult` on a manually constructed nested free monad term.
+
+  Here we construct a term of type `tv(tv(v))`:
+    - The inner free monad values are created by wrapping variables with `in_tv`.
+    - We then wrap a constructor term containing these inner values with `in_tv`.
+  Applying `tv_mult` should flatten the structure to an ordinary free monad term.
+  """
+  def tv_mult_manual_test() do
+    inner1 = NockPoly.Term.in_tv(3)
+    inner2 = NockPoly.Term.in_tv({:b, [NockPoly.Term.in_tv(4)]})
+    manual = NockPoly.Term.in_tv({:a, [inner1, inner2]})
+    flattened = NockPoly.Term.tv_mult(manual)
+    expected = {:a, [3, {:b, [4]}]}
+    assert flattened == expected
+    flattened
+  end
 end
