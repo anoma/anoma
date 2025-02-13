@@ -223,6 +223,17 @@ defmodule NockPoly do
       )
     end
 
+    @doc """
+    I am the monadic bind for the free monad `tv`.
+
+    The bind of a free monad implements substitution.
+    """
+    @spec tv_bind((v -> tv(ctor, w)), tv(ctor, v)) :: tv(ctor, w)
+          when ctor: term, v: term, w: term
+    def tv_bind(f, m) do
+      tv_mult(tvmap(f, m))
+    end
+
     defmodule Unreachable do
       @moduledoc """
       This module contains a function specifically expected to be unreachable.
