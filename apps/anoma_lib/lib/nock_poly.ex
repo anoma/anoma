@@ -151,6 +151,10 @@ defmodule NockPoly do
     I am the `eval` universal morphism -- the elimination rule for a
     free monad -- out of `NockPoly.Term.tv`.
 
+    I am the right adjunct of the free/forgetful adjunction between the
+    category of algebras of `termf` (on the left) and Elixir's base
+    category (on the right).
+
     In addition to an open term, `eval` takes an algebra of the `termf`
     functor and a "substitution" function which maps variables to the return
     type.
