@@ -28,6 +28,13 @@ defmodule Anoma.CairoResource.Action do
     )
 
     field(:compliance_units, MapSet.t(ProofRecord.t()), default: MapSet.new())
+    # app_data Type: Map<Tag, list({field_element, DeletionCriterion})>. Right
+    # now, the DeletionCriterion can be either 0 or 1 to indicate whether need
+    # to store the field_element. It could be extended to more complex criterion
+    # in the future.
+    field(:app_data, %{<<_::256>> => list({<<_::256>>, <<_::256>>})},
+      default: %{}
+    )
   end
 
   @spec new(
@@ -48,11 +55,19 @@ defmodule Anoma.CairoResource.Action do
          {ProofRecord.get_cairo_program_hash(proof), proof}}
       end)
 
+    app_data =
+      Enum.map(logic_proofs, fn proof ->
+        proof.public_inputs |> LogicInstance.get_app_data_pair()
+      end)
+      |> Enum.filter(fn {_, app_data} -> app_data != [] end)
+      |> Enum.into(%{})
+
     %Action{
       created_commitments: created_commitments,
       consumed_nullifiers: consumed_nullifiers,
       logic_proofs: logic_proof_map,
-      compliance_units: compliance_units |> MapSet.new()
+      compliance_units: compliance_units |> MapSet.new(),
+      app_data: app_data
     }
   end
 
@@ -81,6 +96,13 @@ defmodule Anoma.CairoResource.Action do
          {ProofRecord.get_cairo_program_hash(proof), proof}}
       end)
 
+    app_data =
+      Enum.map(logic, fn {:ok, proof} ->
+        proof.public_inputs |> LogicInstance.get_app_data_pair()
+      end)
+      |> Enum.filter(fn {_, app_data} -> app_data != [] end)
+      |> Enum.into(%{})
+
     with true <- checked do
       {:ok,
        %Action{
@@ -89,7 +111,8 @@ defmodule Anoma.CairoResource.Action do
          consumed_nullifiers:
            consumed_nullifiers |> Noun.list_nock_to_erlang(),
          logic_proofs: logic_map,
-         compliance_units: MapSet.new(compliance_list)
+         compliance_units: MapSet.new(compliance_list),
+         app_data: app_data
        }}
     else
       false -> :error
