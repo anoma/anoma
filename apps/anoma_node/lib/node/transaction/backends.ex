@@ -445,6 +445,22 @@ defmodule Anoma.Node.Transaction.Backends do
 
       ciphertexts = tx |> CTransaction.get_cipher_texts() |> MapSet.new()
 
+      write_app_data =
+        tx.actions
+        |> Enum.flat_map(fn action ->
+          action.app_data
+          |> Enum.flat_map(fn {_key, value_list} ->
+            value_list
+            |> Enum.filter(fn {_, deletion} ->
+              Noun.equal?(deletion, <<1::256>>)
+            end)
+            |> Enum.map(fn {value, _} ->
+              {["anoma", "blob", "cairo", :crypto.hash(:sha256, value)],
+               value}
+            end)
+          end)
+        end)
+
       Ordering.add(
         node_id,
         {id,
@@ -455,7 +471,7 @@ defmodule Anoma.Node.Transaction.Backends do
               MapSet.put(append_roots, anchor)},
              {anoma_keyspace("cairo_ciphertexts"), ciphertexts}
            ],
-           write: [{anoma_keyspace("cairo_ct"), ct_new}]
+           write: [{anoma_keyspace("cairo_ct"), ct_new} | write_app_data]
          }}
       )
 
