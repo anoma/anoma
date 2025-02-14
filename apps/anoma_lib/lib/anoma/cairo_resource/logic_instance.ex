@@ -13,7 +13,7 @@ defmodule Anoma.CairoResource.LogicInstance do
     # Ciphertext
     field(:cipher, list(<<_::256>>), default: [])
     # Custom public inputs
-    field(:app_data, list(<<_::256>>), default: [])
+    field(:app_data, list({<<_::256>>, <<_::256>>}), default: [])
   end
 
   @spec from_public_input(binary()) :: t()
@@ -58,7 +58,8 @@ defmodule Anoma.CairoResource.LogicInstance do
         pk_y |> :binary.list_to_bin(),
         nonce |> :binary.list_to_bin()
       ],
-      app_data: app_data |> Enum.map(&:binary.list_to_bin/1)
+      app_data:
+        app_data |> Enum.map(&:binary.list_to_bin/1) |> Enum.chunk_every(2)
     }
   end
 
@@ -95,5 +96,22 @@ defmodule Anoma.CairoResource.LogicInstance do
       plain_text ->
         {:ok, plain_text |> Enum.map(&:binary.list_to_bin/1)}
     end
+  end
+
+  def get_app_data_pair(public_input) do
+    output =
+      public_input
+      |> :binary.bin_to_list()
+      |> Cairo.get_output()
+
+    tag = hd(output) |> :binary.list_to_bin()
+
+    app_data =
+      output
+      |> Enum.drop(16)
+      |> Enum.map(&:binary.list_to_bin/1)
+      |> Enum.chunk_every(2)
+
+    {tag, app_data}
   end
 end
