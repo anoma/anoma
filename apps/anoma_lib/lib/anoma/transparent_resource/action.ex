@@ -134,7 +134,7 @@ defmodule Anoma.TransparentResource.Action do
         MapSet.to_list(trans.commitments),
         MapSet.to_list(trans.nullifiers),
         Enum.map(trans.proofs, &Noun.Nounable.to_noun/1)
-        | Noun.Nounable.Set.to_noun(trans.app_data)
+        | Noun.Nounable.Map.to_noun(trans.app_data)
       ]
     end
   end
