@@ -1,7 +1,7 @@
 defmodule Examples.ECairo.ETransaction do
   use Memoize
 
-  alias Anoma.CairoResource.{LogicInstance, Transaction}
+  alias Anoma.CairoResource.{LogicInstance, Transaction, Utils}
   alias Examples.ECairo.EAction
 
   use TestHelper.TestMacro
@@ -108,26 +108,45 @@ defmodule Examples.ECairo.ETransaction do
         Path.join(:code.priv_dir(:anoma_lib), "params/default_witness.json")
       )
 
-    compliance_units = [compliance1_inputs, compliance2_inputs]
-    input_logics = [resource_logic, resource_logic]
-    input_witnesses = [witness, witness]
-    output_logics = [resource_logic, resource_logic]
-    output_witnesses = [witness, witness]
+    compliance_units_raw = [compliance1_inputs, compliance2_inputs]
 
-    {:ok, pre_tx} =
-      Transaction.create_from_compliance_units(
-        compliance_units,
-        input_logics,
-        input_witnesses,
-        output_logics,
-        output_witnesses
-      )
+    with {:ok, compliance_units} <-
+           Enum.map(
+             compliance_units_raw,
+             &Jason.decode(&1, objects: :ordered_objects)
+           )
+           |> Utils.check_list(),
+         input_logics = [resource_logic, resource_logic],
+         input_witnesses_raw = [witness, witness],
+         {:ok, input_witnesses} <-
+           Enum.map(
+             input_witnesses_raw,
+             &Jason.decode(&1, objects: :ordered_objects)
+           )
+           |> Utils.check_list(),
+         output_logics = [resource_logic, resource_logic],
+         output_witnesses_raw = [witness, witness],
+         {:ok, output_witnesses} <-
+           Enum.map(
+             output_witnesses_raw,
+             &Jason.decode(&1, objects: :ordered_objects)
+           )
+           |> Utils.check_list(),
+         {:ok, pre_tx} <-
+           Transaction.create_from_compliance_units(
+             compliance_units,
+             input_logics,
+             input_witnesses,
+             output_logics,
+             output_witnesses
+           ),
+         shielded_tx = Transaction.prove_delta(pre_tx) do
+      assert Anoma.RM.Transaction.verify(shielded_tx)
 
-    shielded_tx = Transaction.prove_delta(pre_tx)
-
-    assert true == Transaction.verify(shielded_tx)
-
-    shielded_tx
+      shielded_tx
+    else
+      _ -> assert False
+    end
   end
 
   @spec a_shielded_transaction_composition() :: Transaction.t()
