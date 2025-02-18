@@ -26,13 +26,13 @@ defmodule Examples.ECairo.EProofRecord do
         input_file
       )
 
-    circuit_dir =
+    proving_key_dir =
       Path.join(
         :code.priv_dir(:anoma_lib),
         "params/trivial_resource_logic.json"
       )
 
-    assert {:ok, circuit} = File.read(circuit_dir)
+    assert {:ok, proving_key} = File.read(proving_key_dir)
     assert {:ok, witness} = File.read(witness_dir)
 
     updated_witness =
@@ -45,7 +45,7 @@ defmodule Examples.ECairo.EProofRecord do
 
     assert {:ok, input_resource_logic_proof} =
              ProofRecord.prove(
-               circuit,
+               proving_key,
                updated_witness
              )
 
