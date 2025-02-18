@@ -16,7 +16,7 @@ defmodule Examples.ECairo.ETransaction do
         actions: MapSet.new([action]),
         delta_proof: priv_keys
       }
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
     assert Anoma.RM.Transaction.verify(shielded_tx)
 
@@ -33,7 +33,7 @@ defmodule Examples.ECairo.ETransaction do
         actions: MapSet.new([action]),
         delta_proof: priv_keys
       }
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
     assert Anoma.RM.Transaction.verify(shielded_tx)
 
@@ -51,7 +51,7 @@ defmodule Examples.ECairo.ETransaction do
         actions: MapSet.new([an_action, another_action]),
         delta_proof: priv_keys
       }
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
     assert Anoma.RM.Transaction.verify(shielded_tx)
 
@@ -69,7 +69,7 @@ defmodule Examples.ECairo.ETransaction do
         actions: MapSet.new([an_action]),
         delta_proof: priv_keys
       }
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
     assert Anoma.RM.Transaction.verify(shielded_tx)
 
@@ -123,7 +123,7 @@ defmodule Examples.ECairo.ETransaction do
         output_witnesses
       )
 
-    shielded_tx = Transaction.finalize(pre_tx)
+    shielded_tx = Transaction.prove_delta(pre_tx)
 
     assert Anoma.RM.Transaction.verify(shielded_tx)
 
@@ -148,7 +148,7 @@ defmodule Examples.ECairo.ETransaction do
 
     shielded_tx =
       Anoma.RM.Transaction.compose(shielded_tx_1, shielded_tx_2)
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
     assert Anoma.RM.Transaction.verify(shielded_tx)
 
@@ -166,7 +166,7 @@ defmodule Examples.ECairo.ETransaction do
         actions: MapSet.new([action]),
         delta_proof: invalid_priv_keys
       }
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
     assert {:error, "Delta proof verification failure"} ==
              Anoma.RM.Transaction.verify(invalid_shielded_tx)
