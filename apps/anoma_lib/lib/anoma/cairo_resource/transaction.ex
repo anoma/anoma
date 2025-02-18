@@ -66,98 +66,92 @@ defmodule Anoma.CairoResource.Transaction do
     end
   end
 
-  defimpl Anoma.RM.Transaction, for: __MODULE__ do
-    @impl true
-    def commitments(transaction = %Transaction{}) do
-      transaction.actions
-      |> Enum.flat_map(& &1.created_commitments)
+  @spec commitments(t()) :: list(binary())
+  def commitments(transaction = %Transaction{}) do
+    transaction.actions
+    |> Enum.flat_map(& &1.created_commitments)
+  end
+
+  @spec nullifiers(t()) :: list(binary())
+  def nullifiers(transaction = %Transaction{}) do
+    transaction.actions
+    |> Enum.flat_map(& &1.consumed_nullifiers)
+  end
+
+  @spec compose(t(), t()) :: t()
+  def compose(tx1, tx2) do
+    %Transaction{
+      roots: MapSet.union(tx1.roots, tx2.roots),
+      actions: MapSet.union(tx1.actions, tx2.actions),
+      delta_proof: tx1.delta_proof <> tx2.delta_proof
+    }
+  end
+
+  @spec verify(t()) :: true | {:error, String.t()}
+  def verify(transaction = %Transaction{}) do
+    with true <- verify_actions(transaction),
+         true <- verify_duplicate_nfs(transaction),
+         true <- verify_delta(transaction) do
+      true
+    else
+      reason -> reason
     end
+  end
 
-    @impl true
-    def nullifiers(transaction = %Transaction{}) do
-      transaction.actions
-      |> Enum.flat_map(& &1.consumed_nullifiers)
+  @spec verify_actions(Transaction.t()) :: true | {:error, String.t()}
+  defp verify_actions(tx) do
+    failed =
+      Enum.reject(tx.actions, &Action.verify/1)
+
+    Enum.empty?(failed) or
+      {:error, "Compliance proofs or logic proofs verification failure"}
+  end
+
+  @spec verify_delta(Transaction.t()) ::
+          true | {:error, String.t()}
+  defp verify_delta(tx) do
+    # Collect binding public keys
+    binding_pub_keys = get_binding_pub_keys(tx)
+
+    # Collect binding signature msgs
+    binding_messages = Transaction.get_binding_messages(tx)
+
+    case Cairo.sig_verify(
+           binding_pub_keys,
+           binding_messages,
+           tx.delta_proof |> :binary.bin_to_list()
+         ) do
+      true -> true
+      _ -> {:error, "Delta proof verification failure"}
     end
+  end
 
-    @impl true
-    def compose(tx1, tx2) do
-      unless Anoma.RM.Trans.compose_pre_check(tx1, tx2) do
-        nil
-      else
-        %Transaction{
-          roots: MapSet.union(tx1.roots, tx2.roots),
-          actions: MapSet.union(tx1.actions, tx2.actions),
-          delta_proof: tx1.delta_proof <> tx2.delta_proof
-        }
-      end
+  @spec verify_duplicate_nfs(Transaction.t()) ::
+          true | {:error, String.t()}
+  defp verify_duplicate_nfs(tx) do
+    nullifiers = Transaction.nullifiers(tx)
+
+    if Enum.uniq(nullifiers) == nullifiers do
+      true
+    else
+      {:error, "Duplicate nullifiers error"}
     end
+  end
 
-    @impl true
-    def verify(transaction = %Transaction{}) do
-      with true <- verify_actions(transaction),
-           true <- verify_duplicate_nfs(transaction),
-           true <- verify_delta(transaction) do
-        true
-      else
-        reason -> reason
-      end
-    end
-
-    @spec verify_actions(Transaction.t()) :: true | {:error, String.t()}
-    defp verify_actions(tx) do
-      failed =
-        Enum.reject(tx.actions, &Action.verify/1)
-
-      Enum.empty?(failed) or
-        {:error, "Compliance proofs or logic proofs verification failure"}
-    end
-
-    @spec verify_delta(Transaction.t()) ::
-            true | {:error, String.t()}
-    defp verify_delta(tx) do
-      # Collect binding public keys
-      binding_pub_keys = get_binding_pub_keys(tx)
-
-      # Collect binding signature msgs
-      binding_messages = Transaction.get_binding_messages(tx)
-
-      case Cairo.sig_verify(
-             binding_pub_keys,
-             binding_messages,
-             tx.delta_proof |> :binary.bin_to_list()
-           ) do
-        true -> true
-        _ -> {:error, "Delta proof verification failure"}
-      end
-    end
-
-    @spec verify_duplicate_nfs(Transaction.t()) ::
-            true | {:error, String.t()}
-    defp verify_duplicate_nfs(tx) do
-      nullifiers = Anoma.RM.Transaction.nullifiers(tx)
-
-      if Enum.uniq(nullifiers) == nullifiers do
-        true
-      else
-        {:error, "Duplicate nullifiers error"}
-      end
-    end
-
-    @spec get_binding_pub_keys(Transaction.t()) :: list(byte())
-    defp get_binding_pub_keys(tx) do
-      tx.actions
-      |> Enum.flat_map(fn action ->
-        action.compliance_units
-        |> Enum.map(fn proof_record ->
-          proof_record.instance
-          |> ComplianceInstance.from_public_input()
-        end)
+  @spec get_binding_pub_keys(Transaction.t()) :: list(byte())
+  defp get_binding_pub_keys(tx) do
+    tx.actions
+    |> Enum.flat_map(fn action ->
+      action.compliance_units
+      |> Enum.map(fn proof_record ->
+        proof_record.instance
+        |> ComplianceInstance.from_public_input()
       end)
-      |> Enum.reduce(
-        [],
-        &[:binary.bin_to_list(&1.delta_x <> &1.delta_y) | &2]
-      )
-    end
+    end)
+    |> Enum.reduce(
+      [],
+      &[:binary.bin_to_list(&1.delta_x <> &1.delta_y) | &2]
+    )
   end
 
   @spec get_compliance_instances(MapSet.t(Action.t())) ::
@@ -175,8 +169,8 @@ defmodule Anoma.CairoResource.Transaction do
 
   @spec get_binding_messages(Transaction.t()) :: list(list(byte()))
   def get_binding_messages(tx = %Transaction{}) do
-    (Anoma.RM.Transaction.nullifiers(tx) ++
-       Anoma.RM.Transaction.commitments(tx))
+    (Transaction.nullifiers(tx) ++
+       Transaction.commitments(tx))
     |> Enum.map(&:binary.bin_to_list/1)
   end
 
