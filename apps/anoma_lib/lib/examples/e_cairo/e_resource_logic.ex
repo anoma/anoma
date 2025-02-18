@@ -63,7 +63,7 @@ defmodule Examples.ECairo.EResourceLogic do
   @spec a_resource_logic_invalid_circuit() :: {:error, term()}
   def a_resource_logic_invalid_circuit() do
     ret =
-      ProofRecord.generate_cairo_proof(
+      ProofRecord.prove(
         "",
         ""
       )
@@ -84,13 +84,13 @@ defmodule Examples.ECairo.EResourceLogic do
     assert {:ok, circuit} = File.read(circuit_dir)
 
     assert {:error, "Invalid input JSON"} =
-             ProofRecord.generate_cairo_proof(
+             ProofRecord.prove(
                circuit,
                "xxx"
              )
 
     assert {:error, "Runtime error: The cairo program execution failed"} =
-             ProofRecord.generate_cairo_proof(
+             ProofRecord.prove(
                circuit,
                ""
              )
@@ -100,7 +100,7 @@ defmodule Examples.ECairo.EResourceLogic do
     """
 
     ret =
-      ProofRecord.generate_cairo_proof(
+      ProofRecord.prove(
         circuit,
         invalid_input
       )
