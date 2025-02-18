@@ -131,8 +131,8 @@ defmodule Anoma.CairoResource.ProofRecord do
     dir =
       Path.join(:code.priv_dir(:anoma_lib), "params/cairo_compliance.json")
 
-    with {:ok, compliance_circuit} <- File.read(dir) do
-      prove(compliance_circuit, witness)
+    with {:ok, compliance_proving_key} <- File.read(dir) do
+      prove(compliance_proving_key, witness)
     else
       _ -> {:error, "cairo_compliance.json not found"}
     end
