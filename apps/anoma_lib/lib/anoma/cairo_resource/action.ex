@@ -122,10 +122,7 @@ defmodule Anoma.CairoResource.Action do
   @spec verify(t()) :: boolean()
   def verify(action) do
     with true <-
-           verify_proofs(
-             action.compliance_units,
-             "compliance result"
-           ),
+           verify_proofs(action.compliance_units),
          true <- verify_compliance_hash(action.compliance_units) do
       # Decode compliance_instances from compliance_units
       complaince_instances =
@@ -213,12 +210,10 @@ defmodule Anoma.CairoResource.Action do
     end
   end
 
-  @spec verify_proofs(list(ProofRecord.t()), binary() | nil) :: boolean()
-  defp verify_proofs(proofs, debug_msg) do
+  @spec verify_proofs(list(ProofRecord.t())) :: boolean()
+  defp verify_proofs(proofs) do
     Enum.reduce_while(proofs, true, fn proof_record, _acc ->
       res = ProofRecord.verify(proof_record)
-
-      Logger.debug("#{debug_msg}: #{inspect(res)}")
 
       case res do
         true -> {:cont, true}

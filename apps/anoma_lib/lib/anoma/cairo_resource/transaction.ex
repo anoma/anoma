@@ -31,41 +31,6 @@ defmodule Anoma.CairoResource.Transaction do
     field(:delta_proof, binary(), default: <<>>)
   end
 
-  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([
-        actions
-        | delta_proof
-      ]) do
-    actions =
-      actions
-      |> Noun.list_nock_to_erlang()
-      |> Enum.map(&Action.from_noun/1)
-
-    checked = Enum.all?(actions, &(elem(&1, 0) == :ok))
-
-    actions = MapSet.new(Enum.map(actions, fn {:ok, x} -> x end))
-
-    if checked do
-      {:ok,
-       %Transaction{
-         actions: actions,
-         delta_proof: delta_proof
-       }}
-    else
-      :error
-    end
-  end
-
-  defimpl Noun.Nounable, for: __MODULE__ do
-    @impl true
-    def to_noun(transaction = %Transaction{}) do
-      [
-        Enum.map(transaction.actions, &Noun.Nounable.to_noun/1)
-        | transaction.delta_proof
-      ]
-    end
-  end
-
   @spec commitments(t()) :: list(binary())
   def commitments(transaction = %Transaction{}) do
     transaction.actions
@@ -87,6 +52,11 @@ defmodule Anoma.CairoResource.Transaction do
     }
   end
 
+  @spec prove_delta(Transaction.t()) :: Transaction.t()
+  def prove_delta(tx = %Transaction{}) do
+    tx |> sign()
+  end
+
   @spec verify(t()) :: true | {:error, String.t()}
   def verify(transaction = %Transaction{}) do
     with true <- verify_actions(transaction),
@@ -96,6 +66,36 @@ defmodule Anoma.CairoResource.Transaction do
     else
       reason -> reason
     end
+  end
+
+  @doc """
+  Gets the Cairo Poseidon commitment tree specification.
+  """
+  @spec cm_tree() :: CommitmentTree.t()
+  def cm_tree() do
+    CommitmentTree.new(
+      CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
+      nil
+    )
+  end
+
+  @doc """
+  Retrieves the cipher texts from the given transaction.
+
+  ## Returns
+    - A list of tuples where each tuple contains a binary tag(commitment) and a
+      cipher text(a list of binary).
+  """
+  @spec get_cipher_texts(Transaction.t()) ::
+          list(%{tag: binary(), cipher: list(binary())})
+  def get_cipher_texts(tx) do
+    tx.actions
+    |> Enum.flat_map(& &1.logic_proofs)
+    |> Enum.map(fn {_tag, {_logic_hash, proof_record}} ->
+      proof_record.instance
+      |> LogicInstance.from_public_input()
+    end)
+    |> Enum.map(&%{tag: &1.tag, cipher: &1.cipher})
   end
 
   @spec verify_actions(Transaction.t()) :: true | {:error, String.t()}
@@ -114,7 +114,7 @@ defmodule Anoma.CairoResource.Transaction do
     binding_pub_keys = get_binding_pub_keys(tx)
 
     # Collect binding signature msgs
-    binding_messages = Transaction.get_binding_messages(tx)
+    binding_messages = get_binding_messages(tx)
 
     case Cairo.sig_verify(
            binding_pub_keys,
@@ -154,21 +154,8 @@ defmodule Anoma.CairoResource.Transaction do
     )
   end
 
-  @spec get_compliance_instances(MapSet.t(Action.t())) ::
-          list(ComplianceInstance.t())
-  def get_compliance_instances(actions) do
-    actions
-    |> Enum.flat_map(fn action ->
-      action.compliance_units
-      |> Enum.map(fn proof_record ->
-        proof_record.instance
-        |> ComplianceInstance.from_public_input()
-      end)
-    end)
-  end
-
   @spec get_binding_messages(Transaction.t()) :: list(list(byte()))
-  def get_binding_messages(tx = %Transaction{}) do
+  defp get_binding_messages(tx = %Transaction{}) do
     (Transaction.nullifiers(tx) ++
        Transaction.commitments(tx))
     |> Enum.map(&:binary.bin_to_list/1)
@@ -187,11 +174,45 @@ defmodule Anoma.CairoResource.Transaction do
     %Transaction{tx | delta_proof: binding_signature}
   end
 
-  @spec prove_delta(Transaction.t()) :: Transaction.t()
-  def prove_delta(tx = %Transaction{}) do
-    tx |> sign()
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
+  def from_noun([
+        actions
+        | delta_proof
+      ]) do
+    actions =
+      actions
+      |> Noun.list_nock_to_erlang()
+      |> Enum.map(&Action.from_noun/1)
+
+    checked = Enum.all?(actions, &(elem(&1, 0) == :ok))
+
+    actions = MapSet.new(Enum.map(actions, fn {:ok, x} -> x end))
+
+    if checked do
+      {:ok,
+       %Transaction{
+         actions: actions,
+         delta_proof: delta_proof
+       }}
+    else
+      :error
+    end
   end
 
+  defimpl Noun.Nounable, for: __MODULE__ do
+    @impl true
+    def to_noun(transaction = %Transaction{}) do
+      [
+        Enum.map(transaction.actions, &Noun.Nounable.to_noun/1)
+        | transaction.delta_proof
+      ]
+    end
+  end
+
+  @doc """
+    The arguments are JSON strings of compliance units, input logics, input
+    witnesses, output logics, and output witnesses.
+  """
   @spec create_from_compliance_units(
           list(binary()),
           list(binary()),
@@ -200,10 +221,6 @@ defmodule Anoma.CairoResource.Transaction do
           list(binary())
         ) ::
           {:ok, Transaction.t()} | {:error, term()}
-  @doc """
-    The arguments are JSON strings of compliance units, input logics, input
-    witnesses, output logics, and output witnesses.
-  """
   def create_from_compliance_units(
         compliance_units,
         input_logics,
@@ -302,34 +319,5 @@ defmodule Anoma.CairoResource.Transaction do
     else
       {:error, x} -> {:error, x}
     end
-  end
-
-  @spec cm_tree() :: CommitmentTree.t()
-  def cm_tree() do
-    CommitmentTree.new(
-      CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
-      nil
-    )
-  end
-
-  @doc """
-  Retrieves the cipher texts from the given transaction.
-
-  ## Parameters
-    - tx: A `Transaction` struct containing the transaction data.
-
-  ## Returns
-    - A list of tuples where each tuple contains a binary tag(commitment) and a cipher text(a list of binary).
-  """
-  @spec get_cipher_texts(Transaction.t()) ::
-          list(%{tag: binary(), cipher: list(binary())})
-  def get_cipher_texts(tx) do
-    tx.actions
-    |> Enum.flat_map(& &1.logic_proofs)
-    |> Enum.map(fn {_tag, {_logic_hash, proof_record}} ->
-      proof_record.instance
-      |> LogicInstance.from_public_input()
-    end)
-    |> Enum.map(&%{tag: &1.tag, cipher: &1.cipher})
   end
 end
