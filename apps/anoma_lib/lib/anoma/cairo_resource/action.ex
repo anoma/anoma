@@ -48,13 +48,13 @@ defmodule Anoma.CairoResource.Action do
       ) do
     logic_proof_map =
       Enum.into(logic_proofs, %{}, fn proof ->
-        {proof.public_inputs |> LogicInstance.get_tag(),
+        {proof.instance |> LogicInstance.get_tag(),
          {ProofRecord.get_cairo_program_hash(proof), proof}}
       end)
 
     app_data =
       Enum.map(logic_proofs, fn proof ->
-        proof.public_inputs |> LogicInstance.get_app_data_pair()
+        proof.instance |> LogicInstance.get_app_data_pair()
       end)
       |> Enum.filter(fn {_, app_data} -> app_data != [] end)
       |> Enum.into(%{})
@@ -89,13 +89,13 @@ defmodule Anoma.CairoResource.Action do
 
     logic_map =
       Enum.into(logic, %{}, fn {:ok, proof} ->
-        {proof.public_inputs |> LogicInstance.get_tag(),
+        {proof.instance |> LogicInstance.get_tag(),
          {ProofRecord.get_cairo_program_hash(proof), proof}}
       end)
 
     app_data =
       Enum.map(logic, fn {:ok, proof} ->
-        proof.public_inputs |> LogicInstance.get_app_data_pair()
+        proof.instance |> LogicInstance.get_app_data_pair()
       end)
       |> Enum.filter(fn {_, app_data} -> app_data != [] end)
       |> Enum.into(%{})
@@ -128,7 +128,7 @@ defmodule Anoma.CairoResource.Action do
       complaince_instances =
         action.compliance_units
         |> Enum.map(fn proof_record ->
-          proof_record.public_inputs
+          proof_record.instance
           |> ComplianceInstance.from_public_input()
         end)
 
@@ -186,9 +186,9 @@ defmodule Anoma.CairoResource.Action do
 
               is_root_valid =
                 rt.root ==
-                  input_proof.public_inputs |> LogicInstance.get_root() &&
+                  input_proof.instance |> LogicInstance.get_root() &&
                   rt.root ==
-                    output_proof.public_inputs |> LogicInstance.get_root()
+                    output_proof.instance |> LogicInstance.get_root()
 
               is_input_logic_valid && is_output_logic_valid && is_root_valid
             else
