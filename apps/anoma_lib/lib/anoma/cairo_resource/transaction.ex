@@ -20,13 +20,14 @@ defmodule Anoma.CairoResource.Transaction do
   }
 
   typedstruct enforce: true do
-    # roots: A set of valid commitment tree roots used to prove the existence of the
-    # resources being consumed in the transaction.
+    # The roots seems redundant here as we can get the roots from the instance
+    # of actions
     field(:roots, MapSet.t(binary()), default: MapSet.new())
     field(:actions, MapSet.t(Action.t()), default: MapSet.new())
 
-    # When the tx is not finalized, the delta_proof is the collection of private keys
-    # When the tx is finalized, the delta_proof is the binding signature/proof
+    # When the tx is not finalized/signed, the delta_proof is the collection of
+    # private keys. When the tx is finalized/signed, the delta_proof is the
+    # binding signature/proof
     field(:delta_proof, binary(), default: <<>>)
   end
 
@@ -43,13 +44,10 @@ defmodule Anoma.CairoResource.Transaction do
     checked = Enum.all?(actions, &(elem(&1, 0) == :ok))
 
     actions = MapSet.new(Enum.map(actions, fn {:ok, x} -> x end))
-    compliance_instances = get_compliance_instances(actions)
-    roots = Enum.map(compliance_instances, & &1.root)
 
     if checked do
       {:ok,
        %Transaction{
-         roots: MapSet.new(roots),
          actions: actions,
          delta_proof: delta_proof
        }}
@@ -182,7 +180,6 @@ defmodule Anoma.CairoResource.Transaction do
     |> Enum.map(&:binary.bin_to_list/1)
   end
 
-  # sign(binding signature) the transation when the transaction is balanced and finalized
   @spec sign(Transaction.t()) :: Transaction.t()
   defp sign(tx = %Transaction{}) do
     msgs = get_binding_messages(tx)
@@ -196,17 +193,9 @@ defmodule Anoma.CairoResource.Transaction do
     %Transaction{tx | delta_proof: binding_signature}
   end
 
-  # complete and sign the tx
-  @spec finalize(Transaction.t()) :: Transaction.t()
-  def finalize(tx = %Transaction{}) do
-    compliance_instances = get_compliance_instances(tx.actions)
-    roots = Enum.map(compliance_instances, & &1.root)
-
-    %Transaction{
-      tx
-      | roots: MapSet.new(roots)
-    }
-    |> sign()
+  @spec prove_delta(Transaction.t()) :: Transaction.t()
+  def prove_delta(tx = %Transaction{}) do
+    tx |> sign()
   end
 
   @spec create_from_compliance_units(
