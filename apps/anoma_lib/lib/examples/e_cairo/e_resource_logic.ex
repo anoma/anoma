@@ -14,7 +14,7 @@ defmodule Examples.ECairo.EResourceLogic do
         "params/trivial_input_resource_logic_witness.json"
       )
 
-    instance = res.public_inputs |> LogicInstance.from_public_input()
+    instance = res.instance |> LogicInstance.from_public_input()
 
     assert {:ok, plaintext} =
              LogicInstance.decrypt(instance.cipher, <<1::256>>)

@@ -11,15 +11,15 @@ defmodule Anoma.CairoResource.ProofRecord do
   typedstruct enforce: true do
     field(:verifying_key, binary(), default: <<>>)
     field(:proof, binary(), default: <<>>)
-    field(:public_inputs, binary(), default: <<>>)
+    field(:instance, binary(), default: <<>>)
   end
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([proof | public_inputs]) do
+  def from_noun([proof | instance]) do
     {:ok,
      %ProofRecord{
        proof: proof,
-       public_inputs: public_inputs
+       instance: instance
      }}
   end
 
@@ -30,7 +30,7 @@ defmodule Anoma.CairoResource.ProofRecord do
     def to_noun(proof_record = %ProofRecord{}) do
       {
         proof_record.proof,
-        proof_record.public_inputs
+        proof_record.instance
       }
       |> Noun.Nounable.to_noun()
     end
@@ -49,7 +49,7 @@ defmodule Anoma.CairoResource.ProofRecord do
   ## Returns
 
     - `{:ok, %ProofRecord{}}`: A tuple containing `:ok` and a `ProofRecord`
-      struct with the generated proof and public inputs.
+      struct with the generated proof and instance.
     - `{:error, any()}`: A tuple containing `:error` and the reason for the
       failure.
 
@@ -57,16 +57,16 @@ defmodule Anoma.CairoResource.ProofRecord do
   @spec prove(binary(), binary(), any()) ::
           {:error, any()} | {:ok, t()}
   def prove(proving_key, witness, _instance \\ <<>>) do
-    with {_output, trace, memory, public_inputs} <-
+    with {_output, trace, memory, instance} <-
            Cairo.cairo_vm_runner(
              proving_key,
              witness
            ),
-         {proof, public_inputs} <- Cairo.prove(trace, memory, public_inputs) do
+         {proof, instance} <- Cairo.prove(trace, memory, instance) do
       {:ok,
        %ProofRecord{
          proof: proof |> :binary.list_to_bin(),
-         public_inputs: public_inputs |> :binary.list_to_bin()
+         instance: instance |> :binary.list_to_bin()
        }}
     else
       {:error, reason} ->
@@ -78,12 +78,11 @@ defmodule Anoma.CairoResource.ProofRecord do
   Verifies the given `ProofRecord`.
 
   This function takes a `ProofRecord` and verifies its proof against its public
-  inputs. It converts the binary data of both the public inputs and the proof to
+  inputs. It converts the binary data of both the instance and the proof to
   lists before passing them to the `Cairo.verify/2` function. There is no
   verifying key in the Cairo system; instead, a program segment in the instance
   serves this purpose.  For efficiency, we provide a method to retrieve the
-  verifying key from public inputs without explicitly using the verifying key
-  field.
+  verifying key from instance without explicitly using the verifying key field.
 
   ## Parameters
 
@@ -99,13 +98,13 @@ defmodule Anoma.CairoResource.ProofRecord do
   """
   @spec verify(ProofRecord.t()) :: boolean() | {:error, term()}
   def verify(proof) do
-    public_inputs =
-      proof.public_inputs
+    instance =
+      proof.instance
       |> :binary.bin_to_list()
 
     proof.proof
     |> :binary.bin_to_list()
-    |> Cairo.verify(public_inputs)
+    |> Cairo.verify(instance)
   end
 
   @doc """
@@ -144,7 +143,7 @@ defmodule Anoma.CairoResource.ProofRecord do
 
   ## Parameters
 
-    - proof_record: A `ProofRecord` struct containing the public inputs.
+    - proof_record: A `ProofRecord` struct containing the instance.
 
   ## Returns
 
@@ -153,7 +152,7 @@ defmodule Anoma.CairoResource.ProofRecord do
   """
   @spec get_cairo_program_hash(ProofRecord.t()) :: binary()
   def get_cairo_program_hash(proof_record) do
-    proof_record.public_inputs
+    proof_record.instance
     |> :binary.bin_to_list()
     |> Cairo.get_program_hash()
     |> :binary.list_to_bin()

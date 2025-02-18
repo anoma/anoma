@@ -1,6 +1,6 @@
 defmodule Anoma.CairoResource.LogicInstance do
   @moduledoc """
-  I represent the resource logic's public inputs.
+  I represent the resource logic's instance.
   """
 
   use TypedStruct
@@ -12,7 +12,6 @@ defmodule Anoma.CairoResource.LogicInstance do
     field(:root, <<_::256>>, default: <<0::256>>)
     # Ciphertext
     field(:cipher, list(<<_::256>>), default: [])
-    # Custom public inputs
     field(:app_data, list({<<_::256>>, <<_::256>>}), default: [])
   end
 
