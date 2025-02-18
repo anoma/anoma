@@ -219,9 +219,23 @@ defmodule Anoma.Node.Transaction.Backends do
             }
         end
 
+      old_cms =
+        case Ordering.read(node_id, {id, anoma_keyspace("commitments")}) do
+          :absent -> MapSet.new()
+          {:ok, res} -> res
+        end
+
       writes =
         for {key, value} <- map.blobs,
-            reduce: [{anoma_keyspace("anchor"), value(map.commitments)}] do
+            reduce: [
+              {anoma_keyspace("anchor"),
+               value(
+                 MapSet.union(
+                   map.commitments,
+                   old_cms
+                 )
+               )}
+            ] do
           acc -> [{["anoma", "blob", key], value} | acc]
         end
 
