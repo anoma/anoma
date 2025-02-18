@@ -286,7 +286,7 @@ defmodule Anoma.CairoResource.Workflow do
         input_resources,
         output_resources
       ) do
-    with {:ok, compliance_inputs} <-
+    with {:ok, compliance_witness} <-
            Enum.zip_with(
              compliance_pre_inputs,
              output_resources,
@@ -298,7 +298,7 @@ defmodule Anoma.CairoResource.Workflow do
            )
            |> Enum.map(&Jason.encode/1)
            |> Utils.check_list() do
-      {:ok, compliance_inputs}
+      {:ok, compliance_witness}
     else
       {:error, msg} -> {:error, "Error creating compliance inputs: #{msg}"}
     end
@@ -306,10 +306,10 @@ defmodule Anoma.CairoResource.Workflow do
 
   @spec generate_compliance_proofs(list(String.t())) ::
           {:ok, list(ProofRecord.t())} | {:error, term()}
-  def generate_compliance_proofs(compliance_inputs) do
+  def generate_compliance_proofs(compliance_witness) do
     with {:ok, compliance_units} <-
            Enum.map(
-             compliance_inputs,
+             compliance_witness,
              &ProofRecord.generate_compliance_proof/1
            )
            |> Utils.check_list() do
