@@ -34,14 +34,14 @@ defmodule Examples.ECairo.EComplianceWitness do
     assert {:error, "Runtime error: The cairo program execution failed"} =
              ProofRecord.generate_compliance_proof(empty_json)
 
-    invalid_compliance_input = """
+    invalid_compliance_witness = """
     {"eph_root": "0x4"}
     """
 
     assert {:error, "Runtime error: The cairo program execution failed"} =
-             ProofRecord.generate_compliance_proof(invalid_compliance_input)
+             ProofRecord.generate_compliance_proof(invalid_compliance_witness)
 
-    invalid_compliance_input
+    invalid_compliance_witness
   end
 
   @spec a_compliance_private_input_for_intents :: binary()

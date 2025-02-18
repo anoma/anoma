@@ -291,14 +291,14 @@ defmodule Anoma.CairoResource.Transaction do
              output_logics,
              updated_output_witnesses
            ),
-         {:ok, compliance_inputs} <-
+         {:ok, compliance_witness} <-
            Workflow.create_compliance_inputs(
              compliance_input_jsons,
              input_resources,
              output_resources
            ),
          {:ok, compliance_units} <-
-           Workflow.generate_compliance_proofs(compliance_inputs),
+           Workflow.generate_compliance_proofs(compliance_witness),
          action =
            Workflow.create_action(
              output_commitments,
