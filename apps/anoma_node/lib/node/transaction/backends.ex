@@ -423,7 +423,7 @@ defmodule Anoma.Node.Transaction.Backends do
           :ok | :error
   defp cairo_resource_tx(node_id, id, result) do
     with {:ok, tx} <- CTransaction.from_noun(result),
-         true <- Anoma.RM.Transaction.verify(tx),
+         true <- CTransaction.verify(tx),
          true <- root_existence_check(tx, node_id, id),
          # No need to check the commitment existence
          true <- nullifier_existence_check(tx, node_id, id) do
@@ -437,8 +437,8 @@ defmodule Anoma.Node.Transaction.Backends do
             {val, MapSet.new()}
         end
 
-      commitments = tx |> Anoma.RM.Transaction.commitments()
-      nullifiers = tx |> Anoma.RM.Transaction.nullifiers() |> MapSet.new()
+      commitments = tx |> CTransaction.commitments()
+      nullifiers = tx |> CTransaction.nullifiers() |> MapSet.new()
 
       {ct_new, anchor} =
         CommitmentTree.add(ct, commitments)
@@ -508,7 +508,7 @@ defmodule Anoma.Node.Transaction.Backends do
     with {:ok, stored_nullifiers} <-
            Ordering.read(node_id, {id, anoma_keyspace("cairo_nullifiers")}) do
       if Enum.any?(
-           Anoma.RM.Transaction.nullifiers(transaction),
+           CTransaction.nullifiers(transaction),
            &MapSet.member?(stored_nullifiers, &1)
          ) do
         {:error, "A submitted nullifier already exists in storage"}
