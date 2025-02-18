@@ -306,9 +306,13 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec verify_tx_root(String.t(), TTransaction.t()) ::
           true | {:error, String.t()}
   defp verify_tx_root(node_id, trans = %TTransaction{}) do
-    # TODO improve the error messages
-    commitments_exist_in_roots(node_id, trans) or
-      {:error, "Nullified resources are not committed at latest root"}
+    with true <- commitments_exist_in_roots(node_id, trans) do
+      true
+    else
+      {:error, msg} ->
+        {:error,
+         "Nullified resources are not committed at latest root: " <> msg}
+    end
   end
 
   @spec storage_check?(String.t(), binary(), TTransaction.t()) ::
@@ -365,7 +369,8 @@ defmodule Anoma.Node.Transaction.Backends do
     Enum.any?(commitments, &MapSet.member?(stored_comms, &1))
   end
 
-  @spec commitments_exist_in_roots(String.t(), TTransaction.t()) :: bool()
+  @spec commitments_exist_in_roots(String.t(), TTransaction.t()) ::
+          true | {:error, String.t()}
   defp commitments_exist_in_roots(
          node_id,
          trans = %TTransaction{}
@@ -399,20 +404,33 @@ defmodule Anoma.Node.Transaction.Backends do
           {latest_root_time, anoma_keyspace("commitments")}
         )
 
-      for <<"NF_", rest::binary>> <- action_nullifiers,
-          reduce: MapSet.new([]) do
-        cm_set ->
-          if ephemeral?(rest) do
-            cm_set
-          else
-            MapSet.put(cm_set, "CM_" <> rest)
-          end
+      commitments =
+        for <<"NF_", rest::binary>> <- action_nullifiers,
+            reduce: MapSet.new([]) do
+          cm_set ->
+            if ephemeral?(rest) do
+              cm_set
+            else
+              MapSet.put(cm_set, "CM_" <> rest)
+            end
+        end
+
+      case commitments |> MapSet.subset?(root_coms) do
+        true ->
+          true
+
+        _ ->
+          {:error,
+           "commitments absent: #{inspect(MapSet.difference(commitments, root_coms) |> Enum.to_list())}"}
       end
-      |> MapSet.subset?(root_coms)
     else
-      Enum.all?(action_nullifiers, fn <<"NF_", rest::binary>> ->
-        ephemeral?(rest)
-      end)
+      if Enum.all?(action_nullifiers, fn <<"NF_", rest::binary>> ->
+           ephemeral?(rest)
+         end) do
+        true
+      else
+        {:error, "not all resources ephemeral for initiating transaction"}
+      end
     end
   end
 
