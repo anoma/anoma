@@ -1,6 +1,6 @@
 defmodule Anoma.CairoResource.ComplianceInstance do
   @moduledoc """
-  I represent the resource's public inputs.
+  I represent the resource's instance.
   """
 
   use TypedStruct

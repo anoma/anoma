@@ -151,7 +151,7 @@ defmodule Anoma.CairoResource.Transaction do
       |> Enum.flat_map(fn action ->
         action.compliance_units
         |> Enum.map(fn proof_record ->
-          proof_record.public_inputs
+          proof_record.instance
           |> ComplianceInstance.from_public_input()
         end)
       end)
@@ -169,7 +169,7 @@ defmodule Anoma.CairoResource.Transaction do
     |> Enum.flat_map(fn action ->
       action.compliance_units
       |> Enum.map(fn proof_record ->
-        proof_record.public_inputs
+        proof_record.instance
         |> ComplianceInstance.from_public_input()
       end)
     end)
@@ -344,7 +344,7 @@ defmodule Anoma.CairoResource.Transaction do
     tx.actions
     |> Enum.flat_map(& &1.logic_proofs)
     |> Enum.map(fn {_tag, {_logic_hash, proof_record}} ->
-      proof_record.public_inputs
+      proof_record.instance
       |> LogicInstance.from_public_input()
     end)
     |> Enum.map(&%{tag: &1.tag, cipher: &1.cipher})
