@@ -44,7 +44,7 @@ defmodule Examples.ECairo.EProofRecord do
       end
 
     assert {:ok, input_resource_logic_proof} =
-             ProofRecord.generate_cairo_proof(
+             ProofRecord.prove(
                circuit,
                updated_witness
              )

@@ -266,7 +266,7 @@ defmodule Anoma.CairoResource.Workflow do
            Enum.zip_with(
              resource_logics,
              resource_logic_witnesses,
-             &ProofRecord.generate_cairo_proof/2
+             &ProofRecord.prove/2
            )
            |> Utils.check_list() do
       {:ok, proofs}
