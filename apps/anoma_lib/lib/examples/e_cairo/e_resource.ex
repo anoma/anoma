@@ -15,7 +15,7 @@ defmodule Examples.ECairo.EResource do
       is_ephemeral: false,
       nonce: zero_binary,
       nk_commitment: Resource.get_nk_commitment(input_nf_key),
-      rseed: zero_binary
+      rand_seed: zero_binary
     }
 
     aresource
@@ -62,7 +62,7 @@ defmodule Examples.ECairo.EResource do
       is_ephemeral: true,
       nonce: zero_binary,
       nk_commitment: Resource.get_nk_commitment(input_nf_key),
-      rseed: zero_binary
+      rand_seed: zero_binary
     }
 
     aresource
@@ -86,7 +86,7 @@ defmodule Examples.ECairo.EResource do
       is_ephemeral: true,
       nonce: zero_binary,
       nk_commitment: Resource.get_nk_commitment(input_nf_key),
-      rseed: zero_binary
+      rand_seed: zero_binary
     }
 
     Resource.set_nonce(aresource, a_trivial_input_intent_resource_nullifier())

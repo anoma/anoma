@@ -7,7 +7,7 @@
         "is_ephemeral" : false,
         "nonce" : "0x4e0fe42eacd0bd5ca0cc04f626fff028a41ff36f717b9e5363feb09ec3a151d",
         "nk_commitment" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
-        "rseed" : "0x0"
+        "rand_seed" : "0x0"
     },
     "resource_nf_key": "0x1",
     "merkle_path": [{"fst": "0x4e0fe42eacd0bd5ca0cc04f626fff028a41ff36f717b9e5363feb09ec3a151d", "snd": true}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}, {"fst": "0x0", "snd": false}]
