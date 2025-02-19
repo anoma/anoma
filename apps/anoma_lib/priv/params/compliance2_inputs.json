@@ -1,6 +1,6 @@
 {
     "input": {
-        "label": "0x0",
+        "label_ref": "0x0",
         "quantity": "0x1",
         "data": "0x0",
         "eph": true,
@@ -8,7 +8,7 @@
         "rseed": "0x0"
     },
     "output": {
-        "label": "0x0",
+        "label_ref": "0x0",
         "quantity": "0x1",
         "data": "0x0",
         "eph": true,

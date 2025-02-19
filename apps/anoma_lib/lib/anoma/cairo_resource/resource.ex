@@ -14,8 +14,8 @@ defmodule Anoma.CairoResource.Resource do
   typedstruct enforce: true do
     # Hash of the predicate associated with the resource (resource logic)
     field(:logic_ref, <<_::256>>, default: <<0::256>>)
-    # fungibility label
-    field(:label, <<_::256>>, default: <<0::256>>)
+    # Hash of the resource label
+    field(:label_ref, <<_::256>>, default: <<0::256>>)
     # quantity
     field(:quantity, <<_::256>>, default: <<0::256>>)
     # arbitrary data
@@ -36,8 +36,8 @@ defmodule Anoma.CairoResource.Resource do
   def from_json_object(mp) do
     with {:ok, logic_ref} <-
            Utils.parse_json_field_to_binary32(mp, "logic_ref"),
-         {:ok, label} <-
-           Utils.parse_json_field_to_binary32(mp, "label"),
+         {:ok, label_ref} <-
+           Utils.parse_json_field_to_binary32(mp, "label_ref"),
          {:ok, quantity} <-
            Utils.parse_json_field_to_binary32(mp, "quantity"),
          {:ok, data} <-
@@ -51,7 +51,7 @@ defmodule Anoma.CairoResource.Resource do
            Utils.parse_json_field_to_binary32(mp, "rseed") do
       %Resource{
         logic_ref: logic_ref,
-        label: label,
+        label_ref: label_ref,
         quantity: quantity,
         data: data,
         eph: eph,
@@ -69,7 +69,7 @@ defmodule Anoma.CairoResource.Resource do
     %Jason.OrderedObject{
       values: [
         {"logic_ref", Utils.binary_to_hex(resource.logic_ref)},
-        {"label", Utils.binary_to_hex(resource.label)},
+        {"label_ref", Utils.binary_to_hex(resource.label_ref)},
         {"quantity", Utils.binary_to_hex(resource.quantity)},
         {"data", Utils.binary_to_hex(resource.data)},
         {"eph", resource.eph},
@@ -131,7 +131,7 @@ defmodule Anoma.CairoResource.Resource do
 
     [
       resource.logic_ref,
-      resource.label,
+      resource.label_ref,
       resource.data,
       resource.nk_commitment,
       resource.nonce,
@@ -171,7 +171,7 @@ defmodule Anoma.CairoResource.Resource do
   def to_bytes(resource = %Resource{}) do
     binaries =
       resource.logic_ref <>
-        resource.label <>
+        resource.label_ref <>
         resource.quantity <>
         resource.data <>
         resource.nonce <> resource.nk_commitment <> resource.rseed
