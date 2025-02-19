@@ -5,5 +5,5 @@ package Anoma.Protobuf.Intents.List;
 message Request {}
 
 message Response {
-  repeated string intents = 1; // a list of intents.
+  repeated bytes intents = 1; // a list of intents.
 }
