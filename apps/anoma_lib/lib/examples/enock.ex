@@ -2023,7 +2023,7 @@ defmodule Examples.ENock do
   def is_commitment_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
-    "[8 [9 1.526 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 6.102 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
