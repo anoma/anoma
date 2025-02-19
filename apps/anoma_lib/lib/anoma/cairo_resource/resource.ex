@@ -22,7 +22,7 @@ defmodule Anoma.CairoResource.Resource do
     # Hash of the resource value
     field(:value_ref, <<_::256>>, default: <<0::256>>)
     # ephemerality flag
-    field(:eph, bool(), default: false)
+    field(:is_ephemeral, bool(), default: false)
     # resource nonce
     field(:nonce, <<_::256>>, default: <<0::256>>)
     # commitment to nullifier key
@@ -43,7 +43,8 @@ defmodule Anoma.CairoResource.Resource do
            Utils.parse_json_field_to_binary32(mp, "quantity"),
          {:ok, value_ref} <-
            Utils.parse_json_field_to_binary32(mp, "value_ref"),
-         {:ok, eph} <- Utils.parse_json_field_to_boolean(mp, "eph"),
+         {:ok, is_ephemeral} <-
+           Utils.parse_json_field_to_boolean(mp, "is_ephemeral"),
          {:ok, nonce} <-
            Utils.parse_json_field_to_binary32(mp, "nonce"),
          {:ok, nk_commitment} <-
@@ -55,7 +56,7 @@ defmodule Anoma.CairoResource.Resource do
         label_ref: label_ref,
         quantity: quantity,
         value_ref: value_ref,
-        eph: eph,
+        is_ephemeral: is_ephemeral,
         nonce: nonce,
         nk_commitment: nk_commitment,
         rseed: rseed
@@ -73,7 +74,7 @@ defmodule Anoma.CairoResource.Resource do
         {"label_ref", Utils.binary_to_hex(resource.label_ref)},
         {"quantity", Utils.binary_to_hex(resource.quantity)},
         {"value_ref", Utils.binary_to_hex(resource.value_ref)},
-        {"eph", resource.eph},
+        {"is_ephemeral", resource.is_ephemeral},
         {"nonce", Utils.binary_to_hex(resource.nonce)},
         {"nk_commitment", Utils.binary_to_hex(resource.nk_commitment)},
         {"rseed", Utils.binary_to_hex(resource.rseed)}
@@ -124,7 +125,7 @@ defmodule Anoma.CairoResource.Resource do
       |> :binary.list_to_bin()
 
     eph_field =
-      if resource.eph do
+      if resource.is_ephemeral do
         Constants.felt_one()
       else
         Constants.felt_zero()
@@ -178,7 +179,7 @@ defmodule Anoma.CairoResource.Resource do
         resource.nonce <> resource.nk_commitment <> resource.rseed
 
     binaries =
-      if resource.eph do
+      if resource.is_ephemeral do
         binaries <> <<1>>
       else
         binaries <> <<0>>
