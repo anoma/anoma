@@ -10,7 +10,7 @@ defmodule Examples.ECairo.EProofRecord do
   @spec a_compliance_proof() :: ProofRecord.t()
   defmemo a_compliance_proof do
     compliance_witness =
-      EComplianceWitness.a_compliance_private_input()
+      EComplianceWitness.a_compliance_witness()
 
     assert {:ok, proof} =
              ProofRecord.generate_compliance_proof(compliance_witness)
@@ -57,7 +57,7 @@ defmodule Examples.ECairo.EProofRecord do
   @spec a_compliance_proof_with_intents() :: ProofRecord.t()
   defmemo a_compliance_proof_with_intents do
     compliance_witness =
-      EComplianceWitness.a_compliance_private_input_for_intents()
+      EComplianceWitness.a_compliance_witness_for_intents()
 
     assert {:ok, proof} =
              ProofRecord.generate_compliance_proof(compliance_witness)
