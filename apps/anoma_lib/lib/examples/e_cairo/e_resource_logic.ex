@@ -22,7 +22,7 @@ defmodule Examples.ECairo.EResourceLogic do
     a_resource = EResource.a_fixed_resource()
 
     expected_text = [
-      a_resource.logic,
+      a_resource.logic_ref,
       a_resource.label,
       a_resource.quantity,
       a_resource.data,

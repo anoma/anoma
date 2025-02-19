@@ -8,7 +8,7 @@ defmodule Examples.ECairo.EResource do
     input_nf_key = <<1::256>>
 
     aresource = %Resource{
-      logic: Constants.cairo_trivial_resource_logic_hash(),
+      logic_ref: Constants.cairo_trivial_resource_logic_hash(),
       label: zero_binary,
       quantity: <<5::256>>,
       data: zero_binary,
@@ -55,7 +55,7 @@ defmodule Examples.ECairo.EResource do
     input_nf_key = <<1::256>>
 
     aresource = %Resource{
-      logic: Constants.cairo_trivial_resource_logic_hash(),
+      logic_ref: Constants.cairo_trivial_resource_logic_hash(),
       label: zero_binary,
       quantity: <<1::256>>,
       data: zero_binary,
@@ -79,7 +79,7 @@ defmodule Examples.ECairo.EResource do
     input_nf_key = <<1::256>>
 
     aresource = %Resource{
-      logic: Constants.cairo_trivial_resource_logic_hash(),
+      logic_ref: Constants.cairo_trivial_resource_logic_hash(),
       label: zero_binary,
       quantity: <<1::256>>,
       data: zero_binary,
