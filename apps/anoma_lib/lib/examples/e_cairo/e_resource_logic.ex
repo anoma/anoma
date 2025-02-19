@@ -30,7 +30,7 @@ defmodule Examples.ECairo.EResourceLogic do
       <<0::256>>,
       a_resource.nonce,
       a_resource.nk_commitment,
-      a_resource.rseed,
+      a_resource.rand_seed,
       <<0::256>>,
       <<0::256>>
     ]
