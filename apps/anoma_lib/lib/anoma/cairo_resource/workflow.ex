@@ -39,7 +39,7 @@ defmodule Anoma.CairoResource.Workflow do
     Enum.zip_with(
       jsons,
       hex_logic_hashes,
-      &put_in(&1["logic"], &2)
+      &put_in(&1["logic_ref"], &2)
     )
   end
 
