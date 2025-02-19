@@ -12,8 +12,8 @@ defmodule Anoma.CairoResource.Resource do
   use TypedStruct
 
   typedstruct enforce: true do
-    # resource logic
-    field(:logic, <<_::256>>, default: <<0::256>>)
+    # Hash of the predicate associated with the resource (resource logic)
+    field(:logic_ref, <<_::256>>, default: <<0::256>>)
     # fungibility label
     field(:label, <<_::256>>, default: <<0::256>>)
     # quantity
@@ -34,8 +34,8 @@ defmodule Anoma.CairoResource.Resource do
           {:ok, t()}
           | {:error, term()}
   def from_json_object(mp) do
-    with {:ok, logic} <-
-           Utils.parse_json_field_to_binary32(mp, "logic"),
+    with {:ok, logic_ref} <-
+           Utils.parse_json_field_to_binary32(mp, "logic_ref"),
          {:ok, label} <-
            Utils.parse_json_field_to_binary32(mp, "label"),
          {:ok, quantity} <-
@@ -50,7 +50,7 @@ defmodule Anoma.CairoResource.Resource do
          {:ok, rseed} <-
            Utils.parse_json_field_to_binary32(mp, "rseed") do
       %Resource{
-        logic: logic,
+        logic_ref: logic_ref,
         label: label,
         quantity: quantity,
         data: data,
@@ -68,7 +68,7 @@ defmodule Anoma.CairoResource.Resource do
   def to_json_object(resource) do
     %Jason.OrderedObject{
       values: [
-        {"logic", Utils.binary_to_hex(resource.logic)},
+        {"logic_ref", Utils.binary_to_hex(resource.logic_ref)},
         {"label", Utils.binary_to_hex(resource.label)},
         {"quantity", Utils.binary_to_hex(resource.quantity)},
         {"data", Utils.binary_to_hex(resource.data)},
@@ -130,7 +130,7 @@ defmodule Anoma.CairoResource.Resource do
       end
 
     [
-      resource.logic,
+      resource.logic_ref,
       resource.label,
       resource.data,
       resource.nk_commitment,
@@ -170,7 +170,7 @@ defmodule Anoma.CairoResource.Resource do
   @spec to_bytes(t()) :: [byte()]
   def to_bytes(resource = %Resource{}) do
     binaries =
-      resource.logic <>
+      resource.logic_ref <>
         resource.label <>
         resource.quantity <>
         resource.data <>

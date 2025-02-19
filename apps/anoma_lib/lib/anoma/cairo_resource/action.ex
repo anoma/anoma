@@ -176,10 +176,10 @@ defmodule Anoma.CairoResource.Action do
                    ),
                  true <- ProofRecord.verify(output_proof) do
               is_input_logic_valid =
-                complaince_instance.input_logic == input_logic_hash
+                complaince_instance.input_logic_ref == input_logic_hash
 
               is_output_logic_valid =
-                complaince_instance.output_logic == output_logic_hash
+                complaince_instance.output_logic_ref == output_logic_hash
 
               is_root_valid =
                 rt.root ==
