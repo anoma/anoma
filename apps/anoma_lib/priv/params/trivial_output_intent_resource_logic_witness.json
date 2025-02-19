@@ -4,7 +4,7 @@
         "label_ref" : "0x0",
         "quantity" : "0x1",
         "value_ref" : "0x0",
-        "eph" : true,
+        "is_ephemeral" : true,
         "nonce" : "0x7169270b9d6cedb2dca1757090e63be7b434683d46a2ef90421e9aaaa605ad8",
         "nk_commitment" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
         "rseed" : "0x0"

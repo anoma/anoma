@@ -12,7 +12,7 @@ defmodule Examples.ECairo.EResource do
       label_ref: zero_binary,
       quantity: <<5::256>>,
       value_ref: zero_binary,
-      eph: false,
+      is_ephemeral: false,
       nonce: zero_binary,
       nk_commitment: Resource.get_nk_commitment(input_nf_key),
       rseed: zero_binary
@@ -59,7 +59,7 @@ defmodule Examples.ECairo.EResource do
       label_ref: zero_binary,
       quantity: <<1::256>>,
       value_ref: zero_binary,
-      eph: true,
+      is_ephemeral: true,
       nonce: zero_binary,
       nk_commitment: Resource.get_nk_commitment(input_nf_key),
       rseed: zero_binary
@@ -83,7 +83,7 @@ defmodule Examples.ECairo.EResource do
       label_ref: zero_binary,
       quantity: <<1::256>>,
       value_ref: zero_binary,
-      eph: true,
+      is_ephemeral: true,
       nonce: zero_binary,
       nk_commitment: Resource.get_nk_commitment(input_nf_key),
       rseed: zero_binary
