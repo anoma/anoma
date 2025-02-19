@@ -3,7 +3,7 @@
         "logic_ref" : "0x190b872fb979300555afbdab15fee956aeb133771dc1e290f75a8d7a2eedbe5",
         "label_ref" : "0x0",
         "quantity" : "0x1",
-        "data" : "0x0",
+        "value_ref" : "0x0",
         "eph" : true,
         "nonce" : "0x7169270b9d6cedb2dca1757090e63be7b434683d46a2ef90421e9aaaa605ad8",
         "nk_commitment" : "0x7752582c54a42fe0fa35c40f07293bb7d8efe90e21d8d2c06a7db52d7d9b7a1",
