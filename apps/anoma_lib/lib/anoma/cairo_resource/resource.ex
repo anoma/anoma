@@ -27,7 +27,7 @@ defmodule Anoma.CairoResource.Resource do
     # commitment to nullifier key
     field(:nk_commitment, <<_::256>>, default: <<0::256>>)
     # random seed
-    field(:rseed, <<_::256>>, default: <<0::256>>)
+    field(:rand_seed, <<_::256>>, default: <<0::256>>)
   end
 
   @spec from_json_object(Jason.OrderedObject.t()) ::
@@ -48,8 +48,8 @@ defmodule Anoma.CairoResource.Resource do
            Utils.parse_json_field_to_binary32(mp, "nonce"),
          {:ok, nk_commitment} <-
            Utils.parse_json_field_to_binary32(mp, "nk_commitment"),
-         {:ok, rseed} <-
-           Utils.parse_json_field_to_binary32(mp, "rseed") do
+         {:ok, rand_seed} <-
+           Utils.parse_json_field_to_binary32(mp, "rand_seed") do
       %Resource{
         logic_ref: logic_ref,
         label_ref: label_ref,
@@ -58,7 +58,7 @@ defmodule Anoma.CairoResource.Resource do
         is_ephemeral: is_ephemeral,
         nonce: nonce,
         nk_commitment: nk_commitment,
-        rseed: rseed
+        rand_seed: rand_seed
       }
     else
       {:error, msg} -> {:error, "Error parsing resource JSON: #{msg}"}
@@ -76,16 +76,16 @@ defmodule Anoma.CairoResource.Resource do
         {"is_ephemeral", resource.is_ephemeral},
         {"nonce", Utils.binary_to_hex(resource.nonce)},
         {"nk_commitment", Utils.binary_to_hex(resource.nk_commitment)},
-        {"rseed", Utils.binary_to_hex(resource.rseed)}
+        {"rand_seed", Utils.binary_to_hex(resource.rand_seed)}
       ]
     }
   end
 
-  @doc "Randomizes the rseed of a resource."
+  @doc "Randomizes the rand_seed of a resource."
   @spec random(t()) :: t()
   def random(r = %Resource{}) do
-    rseed = :crypto.strong_rand_bytes(32)
-    %Resource{r | rseed: rseed}
+    rand_seed = :crypto.strong_rand_bytes(32)
+    %Resource{r | rand_seed: rand_seed}
   end
 
   @doc """
@@ -105,7 +105,7 @@ defmodule Anoma.CairoResource.Resource do
       [
         Constants.prf_expand_personalization_felt(),
         Constants.felt_zero(),
-        resource.rseed,
+        resource.rand_seed,
         resource.nonce
       ]
       |> Enum.map(&:binary.bin_to_list/1)
@@ -116,7 +116,7 @@ defmodule Anoma.CairoResource.Resource do
       [
         Constants.prf_expand_personalization_felt(),
         Constants.felt_one(),
-        resource.rseed,
+        resource.rand_seed,
         resource.nonce
       ]
       |> Enum.map(&:binary.bin_to_list/1)
@@ -155,7 +155,7 @@ defmodule Anoma.CairoResource.Resource do
       [
         Constants.prf_expand_personalization_felt(),
         Constants.felt_zero(),
-        resource.rseed,
+        resource.rand_seed,
         resource.nonce
       ]
       |> Enum.map(&:binary.bin_to_list/1)
@@ -175,7 +175,7 @@ defmodule Anoma.CairoResource.Resource do
         resource.label_ref <>
         resource.quantity <>
         resource.value_ref <>
-        resource.nonce <> resource.nk_commitment <> resource.rseed
+        resource.nonce <> resource.nk_commitment <> resource.rand_seed
 
     binaries =
       if resource.is_ephemeral do
