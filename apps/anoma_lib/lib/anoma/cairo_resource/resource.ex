@@ -19,8 +19,8 @@ defmodule Anoma.CairoResource.Resource do
     field(:label_ref, <<_::256>>, default: <<0::256>>)
     # quantity
     field(:quantity, <<_::256>>, default: <<0::256>>)
-    # arbitrary data
-    field(:data, <<_::256>>, default: <<0::256>>)
+    # Hash of the resource value
+    field(:value_ref, <<_::256>>, default: <<0::256>>)
     # ephemerality flag
     field(:eph, bool(), default: false)
     # resource nonce
@@ -41,8 +41,8 @@ defmodule Anoma.CairoResource.Resource do
            Utils.parse_json_field_to_binary32(mp, "label_ref"),
          {:ok, quantity} <-
            Utils.parse_json_field_to_binary32(mp, "quantity"),
-         {:ok, data} <-
-           Utils.parse_json_field_to_binary32(mp, "data"),
+         {:ok, value_ref} <-
+           Utils.parse_json_field_to_binary32(mp, "value_ref"),
          {:ok, eph} <- Utils.parse_json_field_to_boolean(mp, "eph"),
          {:ok, nonce} <-
            Utils.parse_json_field_to_binary32(mp, "nonce"),
@@ -54,7 +54,7 @@ defmodule Anoma.CairoResource.Resource do
         logic_ref: logic_ref,
         label_ref: label_ref,
         quantity: quantity,
-        data: data,
+        value_ref: value_ref,
         eph: eph,
         nonce: nonce,
         nk_commitment: nk_commitment,
@@ -72,7 +72,7 @@ defmodule Anoma.CairoResource.Resource do
         {"logic_ref", Utils.binary_to_hex(resource.logic_ref)},
         {"label_ref", Utils.binary_to_hex(resource.label_ref)},
         {"quantity", Utils.binary_to_hex(resource.quantity)},
-        {"data", Utils.binary_to_hex(resource.data)},
+        {"value_ref", Utils.binary_to_hex(resource.value_ref)},
         {"eph", resource.eph},
         {"nonce", Utils.binary_to_hex(resource.nonce)},
         {"nk_commitment", Utils.binary_to_hex(resource.nk_commitment)},
@@ -133,7 +133,7 @@ defmodule Anoma.CairoResource.Resource do
     [
       resource.logic_ref,
       resource.label_ref,
-      resource.data,
+      resource.value_ref,
       resource.nk_commitment,
       resource.nonce,
       psi,
@@ -174,7 +174,7 @@ defmodule Anoma.CairoResource.Resource do
       resource.logic_ref <>
         resource.label_ref <>
         resource.quantity <>
-        resource.data <>
+        resource.value_ref <>
         resource.nonce <> resource.nk_commitment <> resource.rseed
 
     binaries =

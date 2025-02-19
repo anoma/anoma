@@ -26,7 +26,7 @@ defmodule Examples.ECairo.EResourceLogic do
       a_resource.logic_ref,
       a_resource.label_ref,
       a_resource.quantity,
-      a_resource.data,
+      a_resource.value_ref,
       <<0::256>>,
       a_resource.nonce,
       a_resource.nk_commitment,
