@@ -378,7 +378,8 @@ defmodule Anoma.Node.Transaction.Backends do
           with {:atomic, [{_, {height, _}, ^root}]} <-
                  :mnesia.transaction(fn ->
                    :mnesia.match_object(
-                     {Storage.values_table(node_id), {:_, :anchor}, root}
+                     {Storage.values_table(node_id),
+                      {:_, anoma_keyspace("anchor")}, root}
                    )
                  end) do
             if height > time do
