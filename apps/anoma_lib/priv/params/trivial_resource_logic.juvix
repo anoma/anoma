@@ -25,6 +25,7 @@ type LogicResult :=
   mkResult@{
     -- nullifier of input resource or commitment of output resource
     tag : Field;
+    is_consumed : Field;
     -- The merkle root of resources
     root : Field;
     cipher_text_elem0 : Field;
@@ -222,20 +223,12 @@ encryption
 
 main
   (self_resource : Resource)
+  (is_consumed : Bool)
   (resource_nf_key : Field)
   (merkle_path : List (Pair Field Bool))
   : LogicResult :=
-
-  -- Check the self_resource resource commitment:
-  -- TODO: add a explicit is_input_or_output flag to the resource
+  -- Generate the commitment of self_resource resource
   let
-    is_output_resource :=
-      case merkle_path of
-        -- merkle_path can not be empty
-        | nil := true
-        | (_, is_left) :: t := is_left;
-
-    -- Generate the commitment of self_resource resource
     resource_cm := resource_commitment self_resource;
 
     -- Generate the nullifier of self_resource resource
@@ -244,8 +237,13 @@ main
 
     tag :=
       if
-        | is_output_resource := resource_cm
-        | else := resource_nullifier;
+        | is_consumed := resource_nullifier
+        | else := resource_cm;
+
+    is_consumed_field :=
+      if
+        | is_consumed := 1
+        | else := 0;
 
     root := check_merkle_path tag merkle_path;
 
@@ -269,9 +267,9 @@ main
       ];
 
     cihper := encryption messages Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
-  -- cihper_ := encryption [Resource.logic_ref self_resource; Resource.label_ref self_resource; Resource.quantity self_resource; Resource.value_ref self_resource; Resource.is_ephemeral self_resource; Resource.nonce self_resource; Resource.nk_commitment self_resource; Resource.rand_seed self_resource; 0; 0 ] Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
   in mkResult@{
        tag := tag;
+       is_consumed := is_consumed_field;
        root := root;
        cipher_text_elem0 := EncryptionResult.cipher_text_elem0 cihper;
        cipher_text_elem1 := EncryptionResult.cipher_text_elem1 cihper;
