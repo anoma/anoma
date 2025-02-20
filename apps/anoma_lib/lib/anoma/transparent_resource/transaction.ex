@@ -229,6 +229,14 @@ defmodule Anoma.TransparentResource.Transaction do
     |> Stream.map(&Action.nullified_resources/1)
     |> Enum.reduce(MapSet.new(), &MapSet.union/2)
   end
+
+  @spec app_data(t()) :: %{binary() => {any(), bool()}}
+  def app_data(self = %Transaction{}) do
+    self.actions
+    |> Enum.reduce(%{}, fn action, acc ->
+      action.app_data |> Map.merge(acc)
+    end)
+  end
 end
 
 defimpl Anoma.RM.Intent, for: Anoma.TransparentResource.Transaction do
