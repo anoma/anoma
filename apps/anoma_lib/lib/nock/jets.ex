@@ -663,7 +663,7 @@ defmodule Nock.Jets do
   def silt(core) do
     with {:ok, a} <- sample(core),
          {:ok, list} <- Noun.Nounable.List.from_noun(a) do
-      {:ok, list |> MapSet.new() |> Noun.Nounable.Set.to_noun()}
+      {:ok, list |> MapSet.new() |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -673,8 +673,8 @@ defmodule Nock.Jets do
   def put(core) do
     with {:ok, elem} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set} <- Noun.Nounable.Set.from_noun(door_set) do
-      {:ok, set |> MapSet.put(elem) |> Noun.Nounable.Set.to_noun()}
+         {:ok, set} <- Noun.Nounable.MapSet.from_noun(door_set) do
+      {:ok, set |> MapSet.put(elem) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -684,9 +684,9 @@ defmodule Nock.Jets do
   def uni(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set1} <- Noun.Nounable.Set.from_noun(set_arg),
-         {:ok, set2} <- Noun.Nounable.Set.from_noun(door_set) do
-      {:ok, set1 |> MapSet.union(set2) |> Noun.Nounable.Set.to_noun()}
+         {:ok, set1} <- Noun.Nounable.MapSet.from_noun(set_arg),
+         {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set) do
+      {:ok, set1 |> MapSet.union(set2) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -696,9 +696,9 @@ defmodule Nock.Jets do
   def int(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set1} <- Noun.Nounable.Set.from_noun(set_arg),
-         {:ok, set2} <- Noun.Nounable.Set.from_noun(door_set) do
-      {:ok, set1 |> MapSet.intersection(set2) |> Noun.Nounable.Set.to_noun()}
+         {:ok, set1} <- Noun.Nounable.MapSet.from_noun(set_arg),
+         {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set) do
+      {:ok, set1 |> MapSet.intersection(set2) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -708,9 +708,9 @@ defmodule Nock.Jets do
   def sdif(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set1} <- Noun.Nounable.Set.from_noun(set_arg),
-         {:ok, set2} <- Noun.Nounable.Set.from_noun(door_set) do
-      {:ok, set1 |> MapSet.difference(set2) |> Noun.Nounable.Set.to_noun()}
+         {:ok, set1} <- Noun.Nounable.MapSet.from_noun(set_arg),
+         {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set) do
+      {:ok, set1 |> MapSet.difference(set2) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -720,10 +720,10 @@ defmodule Nock.Jets do
   def duni(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set1} <- Noun.Nounable.Set.from_noun(set_arg),
-         {:ok, set2} <- Noun.Nounable.Set.from_noun(door_set),
+         {:ok, set1} <- Noun.Nounable.MapSet.from_noun(set_arg),
+         {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set),
          true <- MapSet.disjoint?(set1, set2) do
-      {:ok, set1 |> MapSet.union(set2) |> Noun.Nounable.Set.to_noun()}
+      {:ok, set1 |> MapSet.union(set2) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -733,7 +733,7 @@ defmodule Nock.Jets do
   def has(core) do
     with {:ok, elem} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set} <- Noun.Nounable.Set.from_noun(door_set) do
+         {:ok, set} <- Noun.Nounable.MapSet.from_noun(door_set) do
       {:ok, set |> MapSet.member?(elem) |> Noun.bool_to_noun()}
     else
       _ -> :error
@@ -814,8 +814,8 @@ defmodule Nock.Jets do
   @spec make_delta(Noun.t()) :: :error | {:ok, Noun.t()}
   def make_delta(core) do
     with {:ok, a} <- sample(core),
-         {:ok, list} <- Noun.list_nock_to_erlang_safe(a),
-         action_list <- list |> Enum.map(&Action.from_noun/1),
+         {:ok, set} <- Noun.Nounable.MapSet.from_noun(a),
+         action_list <- set |> Enum.map(&Action.from_noun/1),
          false <- action_list |> Enum.any?(&(&1 == :error)) do
       res =
         action_list
