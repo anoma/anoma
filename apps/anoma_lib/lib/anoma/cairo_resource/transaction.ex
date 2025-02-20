@@ -269,17 +269,23 @@ defmodule Anoma.CairoResource.Transaction do
              input_nullifiers,
              output_commitments
            ),
+         input_is_consumed_flags =
+           Enum.map(input_resources, fn _ -> true end),
          {:ok, updated_input_witnesses} <-
            Workflow.update_witnesses(
              input_witnesses,
              input_resources,
+             input_is_consumed_flags,
              input_nf_keys,
              input_paths
            ),
+         output_is_consumed_flags =
+           Enum.map(output_resources, fn _ -> false end),
          {:ok, updated_output_witnesses} <-
            Workflow.update_witnesses(
              output_witnesses,
              output_resources,
+             output_is_consumed_flags,
              input_nf_keys,
              output_paths
            ),
