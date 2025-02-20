@@ -26,7 +26,7 @@ defmodule Anoma.Client.Runner do
     scry = fn [id | ref] ->
       case Storage.read_with_id({id, ref}) do
         {:ok, val} ->
-          {:ok, val}
+          {:ok, val |> Noun.Nounable.to_noun()}
 
         :absent ->
           tx_candidate = ref |> ro_tx_candidate() |> Noun.Jam.jam()

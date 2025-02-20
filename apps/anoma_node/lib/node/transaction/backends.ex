@@ -154,7 +154,7 @@ defmodule Anoma.Node.Transaction.Backends do
                         {id, key |> Noun.list_nock_to_erlang()}
                       )
                   end) do
-            {:ok, value}
+            {:ok, value |> Noun.Nounable.to_noun()}
           else
             _ -> :error
           end
