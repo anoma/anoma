@@ -261,7 +261,8 @@ defmodule Anoma.Node.Transaction.Backends do
               blobs:
                 for {key, {value, bool}} <- action.app_data, reduce: blobs do
                   acc ->
-                    if bool do
+                    if Noun.equal?(bool, 0) and
+                         :crypto.hash(:sha256, Noun.Jam.jam(value)) == key do
                       [{key, value} | acc]
                     else
                       acc
