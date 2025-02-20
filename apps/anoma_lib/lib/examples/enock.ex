@@ -1812,7 +1812,7 @@ defmodule Examples.ENock do
     layer_depth = example_layer_depth(11)
 
     arm =
-      "[8 [9 21 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      "[8 [9 93 0 #{layer_depth}] 10 [6 0 14] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = 0
