@@ -18,7 +18,7 @@ defmodule Examples.ECairo.ETransaction do
       }
       |> Transaction.prove_delta()
 
-    assert Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
   end
@@ -35,7 +35,7 @@ defmodule Examples.ECairo.ETransaction do
       }
       |> Transaction.prove_delta()
 
-    assert Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
   end
@@ -53,7 +53,7 @@ defmodule Examples.ECairo.ETransaction do
       }
       |> Transaction.prove_delta()
 
-    assert Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
   end
@@ -71,7 +71,7 @@ defmodule Examples.ECairo.ETransaction do
       }
       |> Transaction.prove_delta()
 
-    assert Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
   end
@@ -125,7 +125,7 @@ defmodule Examples.ECairo.ETransaction do
 
     shielded_tx = Transaction.prove_delta(pre_tx)
 
-    assert Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
   end
@@ -150,7 +150,7 @@ defmodule Examples.ECairo.ETransaction do
       Transaction.compose(shielded_tx_1, shielded_tx_2)
       |> Transaction.prove_delta()
 
-    assert Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
   end
