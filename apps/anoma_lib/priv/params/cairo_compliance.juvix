@@ -11,14 +11,14 @@ PRF_EXPAND_PERSONALIZATION_FELT : Field :=
 
 type Resource :=
   mkResource@{
-    logic : Field;
-    label : Field;
+    logic_ref : Field;
+    label_ref : Field;
     quantity : Field;
-    data : Field;
-    eph : Bool;
+    value_ref : Field;
+    is_ephemeral : Bool;
     nonce : Field;
     nk_commitment : Field;
-    rseed : Field;
+    rand_seed : Field;
   };
 
 type ComplianceResult :=
@@ -32,11 +32,11 @@ type ComplianceResult :=
     -- Resource delta is used to reason about total quantities of different kinds of resources
     delta_x : Field;
     delta_y : Field;
-    -- TODO: add resource logic commitments (for functional privacy)
+    -- TODO: add resource logic_ref commitments (for functional privacy)
     -- input_logic_commitment:
     -- output_logic_commitment:
-    input_logic : Field;
-    output_logic : Field;
+    input_logic_ref : Field;
+    output_logic_ref : Field;
   };
 
 check_merkle (current_root : Field) : Pair Field Bool -> Field
@@ -61,7 +61,7 @@ resource_commitment (resource : Resource) : Field :=
         [
           PRF_EXPAND_PERSONALIZATION_FELT;
           0;
-          Resource.rseed resource;
+          Resource.rand_seed resource;
           Resource.nonce resource;
         ];
     rcm :=
@@ -69,18 +69,18 @@ resource_commitment (resource : Resource) : Field :=
         [
           PRF_EXPAND_PERSONALIZATION_FELT;
           1;
-          Resource.rseed resource;
+          Resource.rand_seed resource;
           Resource.nonce resource;
         ];
     eph_field : Field :=
       if
-        | Resource.eph resource := 1
+        | Resource.is_ephemeral resource := 1
         | else := 0;
   in poseidonHashList
     [
-      Resource.logic resource;
-      Resource.label resource;
-      Resource.data resource;
+      Resource.logic_ref resource;
+      Resource.label_ref resource;
+      Resource.value_ref resource;
       Resource.nk_commitment resource;
       Resource.nonce resource;
       psi;
@@ -97,7 +97,7 @@ resource_nullifier
         [
           PRF_EXPAND_PERSONALIZATION_FELT;
           0;
-          Resource.rseed resource;
+          Resource.rand_seed resource;
           Resource.nonce resource;
         ];
     input_nk_commitment : Field := poseidonHash2 nf_key 0;
@@ -109,9 +109,11 @@ delta_commitment
   let
     blind_base := Ec.mkPoint Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y;
     input_kind :=
-      pedersenHashToCurve (Resource.logic input) (Resource.label input);
+      pedersenHashToCurve (Resource.logic_ref input) (Resource.label_ref input);
     output_kind :=
-      pedersenHashToCurve (Resource.logic output) (Resource.label output);
+      pedersenHashToCurve
+        (Resource.logic_ref output)
+        (Resource.label_ref output);
     d1 := Ec.mul (Resource.quantity input) input_kind;
     d2 := Ec.mul (Resource.quantity output) output_kind;
     d3 := Ec.mul rcv blind_base;
@@ -139,7 +141,7 @@ main
     -- Check the Merkle path
     root :=
       if
-        | Resource.eph input := eph_root
+        | Resource.is_ephemeral input := eph_root
         | else := check_merkle_path input_cm merkle_path;
 
     -- Compute the delta commitment
@@ -155,9 +157,9 @@ main
        -- Resource delta is used to reason about total quantities of different kinds of resources
        delta_x := Ec.Point.x delta;
        delta_y := Ec.Point.y delta;
-       -- TODO: compute resource logic commitments instead of using the input/output logic fields
+       -- TODO: compute resource logic_ref commitments instead of using the input/output logic_ref fields
        -- input_logic_commitment:
        -- output_logic_commitment:
-       input_logic := Resource.logic input;
-       output_logic := Resource.logic output;
+       input_logic_ref := Resource.logic_ref input;
+       output_logic_ref := Resource.logic_ref output;
      };
