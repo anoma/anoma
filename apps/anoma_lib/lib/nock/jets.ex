@@ -7,6 +7,8 @@ defmodule Nock.Jets do
   import Bitwise
   alias Anoma.Crypto.Sign
   alias Anoma.TransparentResource.{Delta, Action, Resource}
+  alias Anoma.RM.Transparent.ProvingSystem.DPS
+  alias Anoma.RM.Transparent.ProvingSystem.CPS
 
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
           non_neg_integer()
@@ -828,6 +830,30 @@ defmodule Nock.Jets do
         |> Delta.to_noun()
 
       {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec trm_compliance_key(Noun.t()) :: :error | {:ok, Noun.t()}
+  def trm_compliance_key(core) do
+    with {:ok, sample} <- sample(core),
+         {:ok, instance} <- CPS.Instance.from_noun(sample) do
+      CPS.verify_jet(
+        instance.consumed,
+        instance.created,
+        instance.unit_delta
+      )
+    else
+      _ -> :error
+    end
+  end
+
+  @spec trm_delta_key(Noun.t()) :: :error | {:ok, Noun.t()}
+  def trm_delta_key(core) do
+    with {:ok, sample} <- sample(core),
+         {:ok, instance} <- DPS.Instance.from_noun(sample) do
+      DPS.verify_jet(instance.delta, instance.expected_balance)
     else
       _ -> :error
     end

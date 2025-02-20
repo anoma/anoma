@@ -89,8 +89,10 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
   require Logger
   use TypedStruct
 
-  @type cps_key :: <<>>
-  @cps_key <<>>
+  @type cps_key :: binary()
+  @cps_key "[8 [9 382 0 7] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+           |> Noun.Format.parse_always()
+           |> Noun.Jam.jam()
 
   typedstruct enforce: true do
     # pk and vk is the jam of the gate calling CPS.verify_jet
