@@ -29,7 +29,6 @@ Interactive Elixir (1.17.1) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)> node = Anoma.Node.Examples.ENode.start_node()
 %Anoma.Node.Examples.ENode{
   grpc_port: 58447,
-  tcp_ports: [],
   pid: #PID<0.318.0>,
   node_id: "2615099"
 }
@@ -55,7 +54,6 @@ Interactive Elixir (1.17.1) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)> node = ENode.start_node(grpc_port: 0)
 %Anoma.Node.Examples.ENode{
   grpc_port: 63796,
-  tcp_ports: [],
   pid: #PID<0.345.0>,
   node_id: "62831092"
 }

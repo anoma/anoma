@@ -13,7 +13,7 @@ defmodule Anoma.Client do
   alias Anoma.TransparentResource.Transaction
 
   typedstruct do
-    field(:type, :grpc | :tcp)
+    field(:type, :grpc)
     field(:supervisor, pid())
     field(:grpc_port, integer())
   end

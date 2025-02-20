@@ -1,10 +1,7 @@
 defmodule Anoma.Node.Examples.ENode do
   use TypedStruct
 
-  import ExUnit.Assertions
-
   alias __MODULE__
-  alias Anoma.Node.Examples.ERegistry
 
   require Logger
 
@@ -21,12 +18,10 @@ defmodule Anoma.Node.Examples.ENode do
     ### Fields
     - `:node_id`    - The key of this router. This value is used to announce myself to other
     - `:pid`        - the pid of the supervision tree.
-    - `:tcp_ports`  - The ports on which the node is listening for connections.
     - `:grpc_ports` - The ports on which the node is listening for grpc connections.
     """
     field(:node_id, String.t())
     field(:pid, pid())
-    field(:tcp_ports, [integer()], default: [])
     field(:grpc_port, integer(), default: 0)
   end
 
@@ -76,7 +71,6 @@ defmodule Anoma.Node.Examples.ENode do
           enode = %ENode{
             node_id: opts[:node_id],
             pid: pid,
-            tcp_ports: [],
             grpc_port:
               :ranch.get_port(<<"Anoma.Node.Transport.GRPC.Endpoint">>)
           }
@@ -92,7 +86,7 @@ defmodule Anoma.Node.Examples.ENode do
 
             _ ->
               {:error, :node_started_but_not_in_cache}
-              enode = %ENode{node_id: opts[:node_id], pid: pid, tcp_ports: []}
+              enode = %ENode{node_id: opts[:node_id], pid: pid}
               :ets.insert(@table_name, {pid, enode})
               enode
           end
@@ -106,8 +100,6 @@ defmodule Anoma.Node.Examples.ENode do
         enode
 
       enode ->
-        assert ERegistry.process_registered?(enode.node_id, :tcp_supervisor)
-        assert ERegistry.process_registered?(enode.node_id, :proxy_supervisor)
         enode
     end
   end
@@ -119,8 +111,6 @@ defmodule Anoma.Node.Examples.ENode do
   def stop_node(node) do
     Supervisor.stop(node.pid)
 
-    refute ERegistry.process_registered?(node.node_id, :tcp_supervisor)
-    refute ERegistry.process_registered?(node.node_id, :proxy_supervisor)
     :ok
   end
 
