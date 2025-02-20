@@ -46,6 +46,29 @@ defmodule Anoma.Client.Storage do
   end
 
   @doc """
+  I am the Client Storage function for reading with IDs.
+
+  Given an existing id in the stored table, I read the key at the associated
+  timestamp. Otherwise, I read at current time and store said time as value
+  to the provided id.
+  """
+  @spec read_with_id({any(), any()}) :: {:ok, any()} | :absent | :error
+  def read_with_id({id, key}) do
+    case :mnesia.transaction(fn -> :mnesia.read({Storage.Ids, id}) end) do
+      {:atomic, []} ->
+        time = System.os_time()
+        :mnesia.transaction(fn -> :mnesia.write({Storage.Ids, id, time}) end)
+        read({time, key})
+
+      {:atomic, [{Storage.Ids, ^id, old_time}]} ->
+        read({old_time, key})
+
+      {:aborted, _} ->
+        :error
+    end
+  end
+
+  @doc """
   I am the Client Storage read function.
 
   If the time is in the future in comparisson to OS time, I error.
