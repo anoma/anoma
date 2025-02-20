@@ -195,11 +195,18 @@ defmodule Anoma.CairoResource.Workflow do
   @spec update_witness_json(
           Jason.OrderedObject.t(),
           Resource.t(),
+          boolean(),
           binary(),
           list(Jason.OrderedObject.t())
         ) ::
           Jason.OrderedObject.t()
-  defp update_witness_json(witness_json, resource, nf_key, merkle_path) do
+  defp update_witness_json(
+         witness_json,
+         resource,
+         is_consumed,
+         nf_key,
+         merkle_path
+       ) do
     witness1 =
       if Utils.json_object_has_empty_key(witness_json, "self_resource") do
         put_in(
@@ -210,31 +217,40 @@ defmodule Anoma.CairoResource.Workflow do
         witness_json
       end
 
-    witness2 =
-      if Utils.json_object_has_empty_key(witness1, "resource_nf_key") do
-        put_in(witness1["resource_nf_key"], Utils.binary_to_hex(nf_key))
-      else
-        witness1
-      end
+    witness2 = put_in(witness1["is_consumed"], is_consumed)
 
     witness3 =
-      if Utils.json_object_has_empty_key(witness2, "merkle_path") do
-        put_in(witness2["merkle_path"], merkle_path)
+      if Utils.json_object_has_empty_key(witness2, "resource_nf_key") do
+        put_in(witness2["resource_nf_key"], Utils.binary_to_hex(nf_key))
       else
         witness2
       end
 
-    witness3
+    witness4 =
+      if Utils.json_object_has_empty_key(witness3, "merkle_path") do
+        put_in(witness3["merkle_path"], merkle_path)
+      else
+        witness3
+      end
+
+    witness4
   end
 
   @spec update_witnesses(
           list(binary()),
           list(Resource.t()),
+          list(boolean()),
           list(binary()),
           list(list(Jason.OrderedObject.t()))
         ) ::
           {:ok, list(binary())} | {:error, term()}
-  def update_witnesses(witnesses, resources, nf_keys, merkle_paths) do
+  def update_witnesses(
+        witnesses,
+        resources,
+        is_consumed_flags,
+        nf_keys,
+        merkle_paths
+      ) do
     with {:ok, witness_jsons} <-
            Enum.map(
              witnesses,
@@ -244,8 +260,13 @@ defmodule Anoma.CairoResource.Workflow do
          updated_witness_jsons =
            Enum.zip_with(
              witness_jsons,
-             Enum.zip(resources, Enum.zip(nf_keys, merkle_paths)),
-             fn json, {r, {nk, p}} -> update_witness_json(json, r, nk, p) end
+             Enum.zip(
+               resources,
+               Enum.zip(is_consumed_flags, Enum.zip(nf_keys, merkle_paths))
+             ),
+             fn json, {r, {is_consumed_flag, {nk, p}}} ->
+               update_witness_json(json, r, is_consumed_flag, nk, p)
+             end
            ),
          {:ok, updated_witnesses} <-
            Enum.map(updated_witness_jsons, &Jason.encode/1)

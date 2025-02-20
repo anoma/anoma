@@ -8,6 +8,8 @@ defmodule Anoma.CairoResource.LogicInstance do
   typedstruct enforce: true do
     # nullifier of input resource or commitment of output resource
     field(:tag, <<_::256>>, default: <<0::256>>)
+    # a flag that tells the logic if the resource is consumed or created
+    field(:is_consumed, <<_::256>>, default: <<0::256>>)
     # The merkle root of resources in current action(execution context)
     field(:root, <<_::256>>, default: <<0::256>>)
     # Ciphertext
@@ -20,6 +22,7 @@ defmodule Anoma.CairoResource.LogicInstance do
     # call cairo api to get output bytes
     [
       tag,
+      is_consumed,
       root,
       cipher_text_elem0,
       cipher_text_elem1,
@@ -40,6 +43,7 @@ defmodule Anoma.CairoResource.LogicInstance do
 
     %__MODULE__{
       tag: tag |> :binary.list_to_bin(),
+      is_consumed: is_consumed |> :binary.list_to_bin(),
       root: root |> :binary.list_to_bin(),
       cipher: [
         cipher_text_elem0 |> :binary.list_to_bin(),
@@ -76,8 +80,7 @@ defmodule Anoma.CairoResource.LogicInstance do
     public_input
     |> :binary.bin_to_list()
     |> Cairo.get_output()
-    |> tl()
-    |> hd()
+    |> Enum.at(2)
     |> :binary.list_to_bin()
   end
 
@@ -107,7 +110,7 @@ defmodule Anoma.CairoResource.LogicInstance do
 
     app_data =
       output
-      |> Enum.drop(16)
+      |> Enum.drop(17)
       |> Enum.map(&:binary.list_to_bin/1)
       |> Enum.chunk_every(2)
 
