@@ -391,14 +391,18 @@ defmodule Anoma.Client.Examples.EClient do
   def prove_with_internal_scry_call(conn \\ setup()) do
     Anoma.Client.Examples.EStorage.setup()
 
+    blob_key = ["anoma", "blob", <<123>>]
+    blob_value = "i am scried"
+
     action =
-      %Action{app_data: %{<<123>> => {"i am scried", true}}}
+      %Action{app_data: %{blob_key => {blob_value, true}}}
 
     tx =
       %Transaction{actions: MapSet.new([action])} |> Noun.Nounable.to_noun()
 
-    Storage.write({"key", tx})
-    program = [[12, [1], 1 | ["id" | "key"]]] |> Noun.Jam.jam()
+    key = ["anoma", "blob", "key"]
+    Storage.write({key, tx})
+    program = [[12, [1], 1 | ["id" | key]]] |> Noun.Jam.jam()
 
     request = %Prove.Request{
       program: {:jammed_program, program},
@@ -411,7 +415,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     assert res == Noun.Jam.jam(tx)
 
-    assert {:ok, "i am scried"} = Storage.read({System.os_time(), <<123>>})
+    assert {:ok, ^blob_value} = Storage.read({System.os_time(), blob_key})
 
     res
   end
@@ -419,13 +423,14 @@ defmodule Anoma.Client.Examples.EClient do
   @spec prove_with_external_scry_call(EConnection.t()) :: Prove.Response.t()
   def prove_with_external_scry_call(conn \\ setup()) do
     Anoma.Client.Examples.EStorage.setup()
+    key = ["anoma", "blob", "key"]
 
     Anoma.Node.Transaction.Storage.write(
       conn.client.node.node_id,
-      {1, [{["key"], 123}]}
+      {1, [{key, 123}]}
     )
 
-    program = [[12, [1], 1 | ["id" | ["key"]]]] |> Noun.Jam.jam()
+    program = [[12, [1], 1 | ["id" | key]]] |> Noun.Jam.jam()
 
     request = %Prove.Request{
       program: {:jammed_program, program},
@@ -438,7 +443,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     assert 123 |> Noun.Jam.jam() == res
 
-    assert Storage.read({System.os_time(), ["key"]})
+    assert Storage.read({System.os_time(), key})
            |> elem(1)
            |> Noun.equal?(123)
 
