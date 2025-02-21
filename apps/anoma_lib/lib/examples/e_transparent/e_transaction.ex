@@ -77,6 +77,25 @@ defmodule Examples.ETransparent.ETransaction do
     res
   end
 
+  @spec nullify_intent_eph_rand() :: Transaction.t()
+  def nullify_intent_eph_rand() do
+    actions =
+      MapSet.new([EAction.trivial_true_eph_nullifier_action_rand()])
+
+    delta = EAction.trivial_true_2_nullifier_delta()
+    res = %Transaction{empty() | actions: actions, delta: delta}
+
+    assert {:error, _} = Transaction.verify(res)
+
+    # the delta should be negative let's say we can jam and cue this
+    noun = res |> Noun.Nounable.to_noun()
+
+    assert noun |> Noun.Jam.jam() |> Noun.Jam.cue()
+    assert Transaction.from_noun(noun) == {:ok, res}
+
+    res
+  end
+
   @spec nullify_intent() :: Transaction.t()
   def nullify_intent() do
     actions =
@@ -96,6 +115,16 @@ defmodule Examples.ETransparent.ETransaction do
     res
   end
 
+  @spec swap_from_actions_random() :: Transaction.t()
+  def swap_from_actions_random() do
+    res = Transaction.compose(nullify_intent_eph_rand(), commit_intent())
+
+    assert %{} = res.delta
+    assert Transaction.verify(res)
+
+    res
+  end
+
   # This should fail verification on submission if storage is not
   # primed
   @spec swap_from_actions_non_eph_nullifier() :: Transaction.t()
@@ -107,4 +136,5 @@ defmodule Examples.ETransparent.ETransaction do
 
     res
   end
+
 end

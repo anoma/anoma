@@ -68,6 +68,15 @@ defmodule Examples.ETransparent.EResource do
     }
   end
 
+  @spec trivial_true_resource_eph_rand() :: Resource.t()
+  def trivial_true_resource_eph_rand() do
+    %Resource{
+      trivial_true_resource_generator()
+      | nonce: Randomness.get_random(32),
+        ephemeral: true
+    }
+  end
+
   @spec trivial_false_resource() :: Resource.t()
   defmemo trivial_false_resource() do
     %Resource{

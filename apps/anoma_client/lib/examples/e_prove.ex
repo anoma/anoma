@@ -1,5 +1,10 @@
 defmodule Anoma.Client.Examples.EProve do
-  alias Anoma.Client.Runner
+  @moduledoc """
+  I contain functions that test and showcase the Runer module.
+
+  I test and run nock programs and verify their outputs.
+  """
+  alias Anoma.Client.Nock.Runner
 
   require ExUnit.Assertions
   import ExUnit.Assertions

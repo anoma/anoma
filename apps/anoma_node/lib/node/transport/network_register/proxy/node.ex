@@ -20,11 +20,11 @@ defmodule Anoma.Node.Transport.Proxy.Node do
 
   The engine instance name corresponds to the remote NodeID.
   """
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transport.Proxy.TransportProtocol
   alias Anoma.Node.Event
-  alias Anoma.Node.Transaction.Mempool.TxFilter
-  alias Anoma.Node.Intents.IntentPool.IntentAddSuccess
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Events.Filters
+  alias Anoma.Node.Transport.Proxy.TransportProtocol
+  alias Anoma.Node.Events
 
   use GenServer
   use TypedStruct
@@ -111,6 +111,7 @@ defmodule Anoma.Node.Transport.Proxy.Node do
 
     with {:ok, filters} <- topic_to_filter(state.node_id, topic),
          :ok <- EventBroker.subscribe_me(filters) do
+      IO.inspect(filters)
       {:reply, :ok, state}
     else
       {:error, :invalid_topic} ->
@@ -127,9 +128,7 @@ defmodule Anoma.Node.Transport.Proxy.Node do
   end
 
   @impl true
-  def handle_info(event = %EventBroker.Event{}, state) do
-    IO.inspect(event, label: "node event")
-
+  def handle_info(%EventBroker.Event{body: %{body: event}}, state) do
     # determine the topic the event belongs to
     topic = filter_to_topic(event)
 
@@ -140,7 +139,7 @@ defmodule Anoma.Node.Transport.Proxy.Node do
     # this to the remote node
     message = %{
       topic: topic,
-      event: nil,
+      event: event,
       from: local_node_id,
       to: remote_node_id
     }
@@ -181,7 +180,7 @@ defmodule Anoma.Node.Transport.Proxy.Node do
   defp topic_to_filter(node_id, "tx_events") do
     # this filter subscribes to all transaction events pertaining to this
     # particular node
-    {:ok, [Event.node_filter(node_id), %TxFilter{}]}
+    {:ok, [Event.node_filter(node_id), %Filters.Intentpool{}]}
   end
 
   defp topic_to_filter(_, _) do
@@ -196,7 +195,7 @@ defmodule Anoma.Node.Transport.Proxy.Node do
   @spec filter_to_topic(term()) :: String.t()
   defp filter_to_topic(event) do
     case event do
-      %{body: %{body: %IntentAddSuccess{}}} ->
+      %{body: %{body: %Events.IntentAddSuccess{}}} ->
         "tx_event"
 
       _ ->

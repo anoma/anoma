@@ -131,6 +131,5 @@ defmodule Anoma.Node.Transport.Proxy.TransportProtocol do
 
   defp send_event(%GRPCAddress{} = address, message) do
     Anoma.Node.Transport.GRPC.Behavior.event(address, message)
-    |> tap(&IO.inspect(&1, label: "grpc event result"))
   end
 end
