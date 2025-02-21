@@ -59,6 +59,10 @@ defmodule Anoma.Node.Registry do
     {:via, Registry, {__MODULE__, address}}
   end
 
+  def via(%Address{} = address) do
+    {:via, Registry, {__MODULE__, address}}
+  end
+
   @doc """
   Given a node id and engine, I check if there is a process registered with that address
   and return the pid.
@@ -98,6 +102,19 @@ defmodule Anoma.Node.Registry do
         ])
     )
     |> Enum.sort()
+  end
+
+  def match(node_id, engine) do
+    pattern = {%{node_id: :"$1", engine: :"$2"}, :"$3", :"$4"}
+
+    # guards: filters applied on the results
+
+    guards = [{:andalso, {:==, :"$1", node_id}, {:"=:=", :"$2", engine}}]
+
+    # shape: the shape of the results the registry should return
+    shape = [{:element, 1, :"$_"}]
+
+    Registry.select(__MODULE__, [{pattern, guards, shape}])
   end
 
   @doc """

@@ -1,0 +1,33 @@
+
+syntax = "proto3";
+
+package Anoma.Proto.Advertisement;
+
+import "node.proto";
+
+/*
+  Advertise a node to the network.
+*/
+message Advertise {
+  message Request {
+    Node node = 1;
+    Node remote_node = 2;
+    bytes signature = 3;
+    GRPCAddress grpc_address = 4;
+    TCPAddress tcp_address = 5;
+  }
+
+  message Response {}
+}
+
+/* GRPC address structure. */
+message GRPCAddress {
+  string host = 1;
+  int32 port = 2;
+}
+
+/* TCP address structure. */
+message TCPAddress {
+  string host = 1;
+  int32 port = 2;
+}

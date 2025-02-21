@@ -38,10 +38,13 @@ defmodule Anoma.Node.Examples.ENode do
   """
   @spec start_node(Keyword.t()) :: ENode.t() | {:error, :failed_to_start_node}
   def start_node(opts \\ []) do
+    node_id = "#{:erlang.phash2(make_ref())}"
+    grpc_port = Application.get_env(:anoma_node, :grpc_port)
     opts =
-      Keyword.validate!(opts,
-        node_id: "#{:erlang.phash2(make_ref())}"
-      )
+      Keyword.validate!(opts, [
+        node_config: %{node_id: node_id, grpc_host: "localhost" ,grpc_port: grpc_port},
+        node_id: node_id
+      ])
 
     enode =
       case Anoma.Supervisor.start_node(opts) do
