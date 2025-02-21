@@ -148,4 +148,16 @@
   %delta
 ++  zero-delta  ::  the value of the zero delta, for convenience
   ~
+++  trm-compliance-key
+  ~/  %trm-compliance-key
+  |=  [nfs=(list nullifier) cms=(list commitment) delta=@]
+  =+  c=%trm-compliance-key
+  ^-  ?
+  !!
+++  trm-delta-key
+  ~/  %trm-delta-key
+  |=  [delta=@ expected=@]
+  =+  c=%trm-delta-key
+  ^-  ?
+  =(delta expected)
 --
