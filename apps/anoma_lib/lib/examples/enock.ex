@@ -1615,7 +1615,7 @@ defmodule Examples.ENock do
   end
 
   def tap_in_test() do
-    set = [123, 0] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set = [123, 0] |> MapSet.new() |> Noun.Nounable.MapSet.to_noun()
     {:ok, in_core} = in_call(set)
     {:ok, res} = in_core |> tap_in_with_core_call()
 
