@@ -11,6 +11,8 @@ defmodule Anoma.Supervisor do
 
   use Supervisor
 
+  alias Anoma.Node.Transport
+
   @spec start_link(any()) :: Supervisor.on_start()
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
@@ -20,8 +22,12 @@ defmodule Anoma.Supervisor do
   def init(_args) do
     Process.set_label(__MODULE__)
 
+    grpc_port = Application.get_env(:anoma_node, :grpc_port)
+
     children = [
       {Elixir.Registry, keys: :unique, name: Anoma.Node.Registry},
+      {GRPC.Server.Supervisor,
+       endpoint: Transport.GRPC.Endpoint, port: grpc_port, start_server: true},
       {DynamicSupervisor, name: Anoma.Node.NodeSupervisor}
     ]
 
@@ -34,7 +40,6 @@ defmodule Anoma.Supervisor do
   @spec start_node(
           list(
             {:node_id, String.t()}
-            | {:grpc_port, non_neg_integer()}
             | {:tx_args, any()}
           )
         ) :: DynamicSupervisor.on_start_child()
@@ -42,7 +47,6 @@ defmodule Anoma.Supervisor do
     args =
       Keyword.validate!(args, [
         :node_id,
-        :grpc_port,
         tx_args: [mempool: [], ordering: [], storage: []]
       ])
 

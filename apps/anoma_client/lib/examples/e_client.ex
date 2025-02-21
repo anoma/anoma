@@ -70,7 +70,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec create_single_example_node() :: ENode.t()
   def create_single_example_node() do
     ENode.kill_all_nodes()
-    ENode.start_node(grpc_port: 0)
+    ENode.start_node()
   end
 
   @doc """
@@ -92,8 +92,9 @@ defmodule Anoma.Client.Examples.EClient do
   def create_example_client(enode \\ create_single_example_node()) do
     kill_existing_client()
 
-    {:ok, client} =
-      Client.connect("localhost", enode.grpc_port, 0, enode.node_id)
+    grpc_port = Application.get_env(:anoma_node, :grpc_port)
+
+    {:ok, client} = Client.connect("localhost", grpc_port, 0, enode.node_id)
 
     %EClient{supervisor: nil, client: client, node: enode}
   end

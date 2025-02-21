@@ -9,4 +9,3 @@ ExUnit.start(exclude: [:juvix])
 #
 # the function is still called by the e_node module, to ensure that the table is also created
 # when the tests are run as examples.
-Anoma.Node.Examples.ENode.initialize_ets()

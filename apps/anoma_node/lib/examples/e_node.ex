@@ -18,33 +18,14 @@ defmodule Anoma.Node.Examples.ENode do
     ### Fields
     - `:node_id`    - The key of this router. This value is used to announce myself to other
     - `:pid`        - the pid of the supervision tree.
-    - `:grpc_ports` - The ports on which the node is listening for grpc connections.
     """
     field(:node_id, String.t())
     field(:pid, pid())
-    field(:grpc_port, integer(), default: 0)
   end
 
   ############################################################
   #                  Public API                              #
   ############################################################
-
-  @table_name :enode_table
-
-  @doc """
-  I initialize the ETS table to keep track of creates nodes.
-
-  My only reason for existence is to keep track of the nodes that are created in the system and their
-  GRPC ports.
-  """
-  @spec initialize_ets() :: atom()
-  def initialize_ets() do
-    unless @table_name in :ets.all() do
-      :ets.new(@table_name, [:named_table, :set, :named_table, :public])
-    end
-
-    @table_name
-  end
 
   @doc """
   I start a new node given a node id and returns its process id.
@@ -57,39 +38,24 @@ defmodule Anoma.Node.Examples.ENode do
   """
   @spec start_node(Keyword.t()) :: ENode.t() | {:error, :failed_to_start_node}
   def start_node(opts \\ []) do
-    initialize_ets()
-
     opts =
       Keyword.validate!(opts,
-        node_id: "#{:erlang.phash2(make_ref())}",
-        grpc_port: 0
+        node_id: "#{:erlang.phash2(make_ref())}"
       )
 
     enode =
       case Anoma.Supervisor.start_node(opts) do
         {:ok, pid} ->
-          enode = %ENode{
+          %ENode{
             node_id: opts[:node_id],
-            pid: pid,
-            grpc_port:
-              :ranch.get_port(<<"Anoma.Node.Transport.GRPC.Endpoint">>)
+            pid: pid
           }
 
-          :ets.insert(@table_name, {pid, enode})
-
-          enode
-
         {:error, {:already_started, pid}} ->
-          case :ets.lookup(@table_name, pid) do
-            [{_, enode}] ->
-              enode
-
-            _ ->
-              {:error, :node_started_but_not_in_cache}
-              enode = %ENode{node_id: opts[:node_id], pid: pid}
-              :ets.insert(@table_name, {pid, enode})
-              enode
-          end
+          %ENode{
+            node_id: opts[:node_id],
+            pid: pid
+          }
 
         {:error, _} ->
           {:error, :failed_to_start_node}
