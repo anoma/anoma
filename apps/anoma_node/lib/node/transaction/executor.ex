@@ -212,8 +212,6 @@ defmodule Anoma.Node.Transaction.Executor do
         }
       } ->
         {res, id}
-    after
-      5000 -> raise "Timeout waiting for #{inspect(id)}"
     end
   end
 
