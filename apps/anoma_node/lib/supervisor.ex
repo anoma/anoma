@@ -41,15 +41,20 @@ defmodule Anoma.Supervisor do
           list(
             {:node_id, String.t()}
             | {:tx_args, any()}
+            | {:node_config, map()}
           )
         ) :: DynamicSupervisor.on_start_child()
   def start_node(args) do
     args =
       Keyword.validate!(args, [
         :node_id,
-        tx_args: [mempool: [], ordering: [], storage: []]
+        tx_args: [mempool: [], ordering: [], storage: []],
+        node_config: %{}
       ])
 
+    # todo: make this more clean by passing in a single config map
+    # for now just use the config map in the transport module
+    # fix the rest later
     DynamicSupervisor.start_child(
       Anoma.Node.NodeSupervisor,
       {Anoma.Node.Supervisor, args}
