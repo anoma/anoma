@@ -468,4 +468,27 @@ defmodule Examples.ENockPoly do
     assert bound == expected
     bound
   end
+
+  def substitute_test_variable() do
+    open_term = 7
+
+    closed_term =
+      NockTerms.substitute(open_term, fn var -> {{:atom, var + 1}, []} end)
+
+    noun = NockTerms.to_noun(closed_term)
+    ExUnit.Assertions.assert(noun == 8)
+    closed_term
+  end
+
+  def substitute_test_cell() do
+    open_term = {:cell, [7, {{:atom, 99}, []}]}
+    {:ok, expected} = Noun.Format.parse("[70 99]")
+
+    closed_term =
+      NockTerms.substitute(open_term, fn v -> {{:atom, v * 10}, []} end)
+
+    noun = NockTerms.to_noun(closed_term)
+    ExUnit.Assertions.assert(noun == expected)
+    closed_term
+  end
 end
