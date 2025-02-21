@@ -14,6 +14,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   alias Examples.ETransparent.ETransaction
 
   import ExUnit.Assertions
+  import ExUnit.CaptureLog
 
   require Logger
 
@@ -83,6 +84,52 @@ defmodule Anoma.Node.Examples.EGRPC do
   end
 
   @doc """
+  I list the intents over grpc on the client and expect a failure by not
+  providing a node id.
+  """
+  @spec list_intents_fail(EGRPC.t()) :: boolean()
+  def list_intents_fail(%EGRPC{} = client \\ connect_to_node()) do
+    request = %List.Request{}
+
+    expected =
+      {:error, %GRPC.RPCError{status: 3, message: "node can not be nil"}}
+
+    assert capture_log(fn ->
+             assert expected ==
+                      IntentpoolService.Stub.list(
+                        client.channel,
+                        request
+                      )
+           end) =~ "node can not be nil"
+  end
+
+  @doc """
+  I list the intents over grpc on the client, but I provide a wrong node id.
+  """
+  @spec list_intents_invalid_node(EGRPC.t()) :: boolean()
+  def list_intents_invalid_node(%EGRPC{} = client \\ connect_to_node()) do
+    # we assume here that nodeid deadbeef does not exist.
+    node = %Node{id: "wrong"}
+    request = %List.Request{node: node}
+
+    expected =
+      {:error,
+       %GRPC.RPCError{
+         __exception__: true,
+         message: "node id does not exist",
+         status: 3
+       }}
+
+    assert capture_log(fn ->
+             assert expected ==
+                      IntentpoolService.Stub.list(
+                        client.channel,
+                        request
+                      )
+           end) =~ "node id does not exist"
+  end
+
+  @doc """
   I add an intent to the client.
   """
   @spec add_intent(EGRPC.t()) :: boolean()
@@ -110,5 +157,26 @@ defmodule Anoma.Node.Examples.EGRPC do
     intents = Enum.map(reply.intents, &Map.get(&1, :intent))
 
     assert intents == [intent_jammed]
+  end
+
+  @doc """
+  I make a request to add an intent, but without an intent.
+
+  I expect an error to occur.
+  """
+  def add_intent_fail_no_intent(%EGRPC{} = client \\ connect_to_node()) do
+    node = %Node{id: client.node.node_id}
+    request = %Add.Request{node: node}
+
+    assert capture_log(fn ->
+             result = IntentpoolService.Stub.add(client.channel, request)
+
+             assert result ==
+                      {:error,
+                       %GRPC.RPCError{
+                         status: 2,
+                         message: "intent can not be nil"
+                       }}
+           end) =~ "intent can not be nil"
   end
 end
