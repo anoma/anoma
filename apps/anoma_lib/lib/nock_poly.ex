@@ -506,5 +506,25 @@ defmodule NockPoly do
     def to_noun(term) do
       Term.cata(term, &to_noun_algebra/1)
     end
+
+    @typedoc "I am an open Nock polynomial term containing metavariables of type `v`."
+    @type open_nock_poly_term(v) :: Term.tv(nock_term_ctor, v)
+
+    @doc """
+    I substitute metavariables in an open Nock term using the provided
+    substitution function.
+
+    Given an open Nock term of type `open_nock_poly_term(v)` and a substitution
+    function `f` from `v` to a closed Nock term, I return a closed
+    Nock term (of type `nock_poly_term`).
+
+    I am implemented using monadic bind (`tv_bind`).
+    """
+    @spec substitute(open_nock_poly_term(v), (v -> nock_poly_term)) ::
+            nock_poly_term
+          when v: term
+    def substitute(term, f) do
+      Term.tv_bind(f, term)
+    end
   end
 end
