@@ -58,6 +58,21 @@ defmodule Examples.ETransparent.ELogicProof do
     res
   end
 
+  @spec trivial_true_eph_nullifier_rand() :: LogicProof.t()
+  def trivial_true_eph_nullifier_rand() do
+    res = %LogicProof{
+      resource: EResource.trivial_true_resource_eph_rand(),
+      self_tag: {:nullified, EResource.trivial_true_nullifier_eph()},
+      nullifiers: MapSet.new([EResource.trivial_true_nullifier_eph()]),
+      nullified_plaintexts:
+        MapSet.new([EResource.trivial_true_resource_eph_rand()])
+    }
+
+    assert LogicProof.verify(res)
+
+    res
+  end
+
   @spec trivial_true_swap_proof_commitment() :: LogicProof.t()
   def trivial_true_swap_proof_commitment() do
     nullifier_info = trivial_true_2_nullifier()

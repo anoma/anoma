@@ -37,13 +37,14 @@ defmodule Anoma.Node.Transport.GRPC.Behavior do
     # connect to the grpc endpoint
     {:ok, channel} = GRPC.Stub.connect("#{host}:#{port}")
 
+    # encode the message as json
+    message = Jason.encode!(event)
+
     request =
       PubSub.Event.Request.new(%{
         topic: %PubSub.Topic{topic: event.topic},
-        message: %PubSub.Message{message: inspect(event.event)}
+        message: %PubSub.Message{message: message}
       })
-
-    IO.inspect(request)
 
     PubSubService.Stub.publish(channel, request)
   end

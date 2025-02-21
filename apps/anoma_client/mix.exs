@@ -13,9 +13,14 @@ defmodule Anoma.Client.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       escript: [main_module: Anoma.Client.CLI],
-      runtime: false
+      runtime: false,
+      elixirc_paths: elixirc_paths(Mix.env())
     ]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib", "test/support"]
 
   # Run "mix help compile.app" to learn about applications.
   def application do
@@ -35,7 +40,9 @@ defmodule Anoma.Client.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
       # {:sibling_app_in_umbrella, in_umbrella: true}
       {:protobuf, "~> 0.11.0"},
-      {:grpc, "~> 0.9"}
+      {:grpc, "~> 0.9"},
+      {:phoenix, "~> 1.7.14"},
+      {:bandit, "~> 1.5"}
     ]
   end
 end

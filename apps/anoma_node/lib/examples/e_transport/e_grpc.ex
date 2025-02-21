@@ -100,6 +100,10 @@ defmodule Anoma.Node.Examples.EGRPC do
                         client.channel,
                         request
                       )
+
+             # this process sleep is here to ensure that the logs are printed and caught by capture_log.
+             # I don't know how to fix it otherwise. We can duel over it, Jeremy.
+             Process.sleep(1000)
            end) =~ "node can not be nil"
   end
 
@@ -126,6 +130,10 @@ defmodule Anoma.Node.Examples.EGRPC do
                         client.channel,
                         request
                       )
+
+             # this process sleep is here to ensure that the logs are printed and caught by capture_log.
+             # I don't know how to fix it otherwise. We can duel over it, Jeremy.
+             Process.sleep(1000)
            end) =~ "node id does not exist"
   end
 
@@ -177,6 +185,8 @@ defmodule Anoma.Node.Examples.EGRPC do
                          status: 2,
                          message: "intent can not be nil"
                        }}
+
+             Process.sleep(1000)
            end) =~ "intent can not be nil"
   end
 end

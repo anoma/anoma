@@ -1,4 +1,4 @@
-defmodule Anoma.Client.Runner do
+defmodule Anoma.Client.Nock.Runner do
   @doc """
   I run the given Nock program with its inputs and return the result.
   """

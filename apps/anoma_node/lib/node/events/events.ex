@@ -9,6 +9,7 @@ defmodule Anoma.Node.Events do
 
   use TypedStruct
 
+  require Logger
   require Anoma.Node.Event
 
   @type transaction_result :: {{:ok, any()}, binary()} | {:error, binary()}
@@ -59,6 +60,20 @@ defmodule Anoma.Node.Events do
     field(:intent, Intent.t())
   end
 
+  defimpl Jason.Encoder, for: IntentAddSuccess do
+    def encode(event = %IntentAddSuccess{intent: intent}, opts) do
+      # the intent will be nouned and then encoded
+      with noun <- Noun.Nounable.to_noun(intent),
+           jammed <- Noun.Jam.jam(noun),
+           encoded <- Base.encode64(jammed),
+           name <- Map.get(event, :__struct__) do
+        event = %{intent: encoded, name: name}
+        IO.inspect(event, label: "event")
+        Jason.encode!(event)
+      end
+    end
+  end
+
   typedstruct enforce: true, module: IntentAddError do
     @typedoc """
     I am an event specifying that an intent submission has failed alongside with
@@ -70,6 +85,19 @@ defmodule Anoma.Node.Events do
     """
     field(:intent, Intent.t())
     field(:reason, String.t())
+  end
+
+  defimpl Jason.Encoder, for: IntentAddError do
+    def encode(event = %IntentAddError{}, opts) do
+      # the intent will be nouned and then encoded
+      with noun <- Noun.Nounable.to_noun(event.intent),
+           jammed <- Noun.Jam.jam(noun),
+           encoded <- Base.encode64(jammed),
+           name <- Map.get(event, :__struct__) do
+        event = %{intent: encoded, name: name, reason: event.reason}
+        Jason.encode!(event)
+      end
+    end
   end
 
   typedstruct enforce: true, module: ResultEvent do

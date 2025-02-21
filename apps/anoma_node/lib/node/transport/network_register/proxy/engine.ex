@@ -48,7 +48,6 @@ defmodule Anoma.Node.Transport.Proxy.Engine do
   """
   @spec start_link(startup_options) :: GenServer.on_start()
   def start_link(args \\ []) do
-
     name =
       Registry.via(args[:remote_node_id], args[:engine])
 

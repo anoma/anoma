@@ -112,13 +112,11 @@ defmodule Anoma.Node.Transport.Proxy.TransportProtocol do
 
   @impl true
   def handle_cast({:event, event}, state) do
-
     send_event(state.address, event)
     {:noreply, state}
   end
 
   def handle_cast(_message, state) do
-
     {:noreply, state}
   end
 
@@ -133,6 +131,5 @@ defmodule Anoma.Node.Transport.Proxy.TransportProtocol do
 
   defp send_event(%GRPCAddress{} = address, message) do
     Anoma.Node.Transport.GRPC.Behavior.event(address, message)
-    |> tap(&IO.inspect(&1, label: "grpc event result"))
   end
 end
