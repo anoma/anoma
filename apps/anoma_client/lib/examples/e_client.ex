@@ -455,13 +455,14 @@ defmodule Anoma.Client.Examples.EClient do
     Anoma.Client.Examples.EStorage.setup()
 
     val = MapSet.new(["i am a set"])
+    key = ["anoma", "blob", "key"]
 
     Anoma.Node.Transaction.Storage.write(
       conn.client.node.node_id,
-      {1, [{["key"], val}]}
+      {1, [{key, val}]}
     )
 
-    program = [[12, [1], 1 | ["id" | ["key"]]]] |> Noun.Jam.jam()
+    program = [[12, [1], 1 | ["id" | key]]] |> Noun.Jam.jam()
 
     request = %Prove.Request{
       program: {:jammed_program, program},
@@ -478,7 +479,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     assert Noun.Jam.jam(noun_val) == res
 
-    {:ok, read_res} = Storage.read({System.os_time(), ["key"]})
+    {:ok, read_res} = Storage.read({System.os_time(), key})
 
     assert Noun.equal?(read_res, noun_val)
 
