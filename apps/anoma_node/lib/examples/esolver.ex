@@ -13,6 +13,7 @@ defmodule Anoma.Node.Examples.ESolver do
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.RM.DumbIntent
   alias Anoma.Node.Examples.ENode
+  alias Anoma.Node.Events
 
   ############################################################
   #                           Scenarios                      #
@@ -133,7 +134,7 @@ defmodule Anoma.Node.Examples.ESolver do
           %EventBroker.Event{
             body: %Anoma.Node.Event{
               node_id: ^node_id,
-              body: %Mempool.TxEvent{
+              body: %Events.TxEvent{
                 tx: %Mempool.Tx{backend: _, code: ^tx_candidate}
               }
             }

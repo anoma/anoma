@@ -10,43 +10,20 @@ defmodule Anoma.Node.Intents.IntentPool do
   alias __MODULE__
   alias Anoma.Node
   alias Node.Registry
-  alias Node.Transaction.Backends
   alias Anoma.RM.Intent
-  alias EventBroker.Broker
+  alias Anoma.Node.Events
   alias Anoma.Node.Tables
 
   require Node.Event
+  require Anoma.Node.Events
 
   use EventBroker.DefFilter
   use TypedStruct
   use GenServer
 
-  typedstruct enforce: true, module: IntentAddSuccess do
-    @typedoc """
-    I am an event specifying that an intent has been submitted succesfully.
-
-    ### Fields
-    - `:intent` - The intent added.
-    """
-    field(:intent, Intent.t())
-  end
-
-  typedstruct enforce: true, module: IntentAddError do
-    @typedoc """
-    I am an event specifying that an intent submission has failed alongside
-    with a reason.
-
-    ### Fields
-    - `:intent` - The intent submitted.
-    - `:reason` - The reason why it was rejected from the pool.
-    """
-    field(:intent, Intent.t())
-    field(:reason, String.t())
-  end
-
   deffilter IntentAddSuccessFilter do
     %EventBroker.Event{
-      body: %Node.Event{body: %IntentPool.IntentAddSuccess{}}
+      body: %Node.Event{body: %Events.IntentAddSuccess{}}
     } ->
       true
 
@@ -55,7 +32,9 @@ defmodule Anoma.Node.Intents.IntentPool do
   end
 
   deffilter IntentAddErrorFilter do
-    %EventBroker.Event{body: %Node.Event{body: %IntentPool.IntentAddError{}}} ->
+    %EventBroker.Event{
+      body: %Node.Event{body: %Events.IntentAddError{}}
+    } ->
       true
 
     _ ->
@@ -185,7 +164,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   @impl true
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{body: %Backends.TRMEvent{}}
+          body: %Node.Event{body: %Events.TRMEvent{}}
         },
         state
       ) do
@@ -247,10 +226,7 @@ defmodule Anoma.Node.Intents.IntentPool do
     if MapSet.member?(state.intents, intent) do
       Logger.debug("intent removed #{inspect(intent)}")
 
-      EventBroker.event(
-        Node.Event.new_with_body(state.node_id, {:intent_removed, intent}),
-        Broker
-      )
+      Events.generic_event({:intent_removed, intent}, state.node_id)
 
       state = Map.update!(state, :intents, &MapSet.delete(&1, intent))
       {:ok, :removed, state}
@@ -264,7 +240,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   @spec handle_new_state(t(), EventBroker.Event.t()) :: t()
   defp handle_new_state(state, %EventBroker.Event{
          body: %Node.Event{
-           body: %Backends.TRMEvent{
+           body: %Events.TRMEvent{
              nullifiers: nlfs_set,
              commitments: cms_set
            }
@@ -324,25 +300,13 @@ defmodule Anoma.Node.Intents.IntentPool do
   defp add_intent!(intent, state) do
     Logger.debug("new intent added #{inspect(intent)}")
 
-    EventBroker.event(
-      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddSuccess{
-        intent: intent
-      }),
-      Broker
-    )
+    Events.intent_add_success(intent, state.node_id)
 
     Map.update!(state, :intents, &MapSet.put(&1, intent))
   end
 
   defp handle_error(intent, reason, state) do
-    EventBroker.event(
-      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddError{
-        intent: intent,
-        reason: reason
-      }),
-      Broker
-    )
-
+    Events.intent_add_error(intent, reason, state.node_id)
     {:ok, reason, state}
   end
 
@@ -359,7 +323,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   deffilter TRMFilter do
     %EventBroker.Event{
-      body: %Anoma.Node.Event{body: %Backends.TRMEvent{}}
+      body: %Anoma.Node.Event{body: %Events.TRMEvent{}}
     } ->
       true
 

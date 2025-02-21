@@ -4,6 +4,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   alias Node.Transaction.{Storage, Ordering, Mempool, Executor, Backends}
   alias Anoma.TransparentResource.Transaction
 
+  alias Anoma.Node.Events
   alias Examples.{ENock, ETransparent.ETransaction}
 
   alias Anoma.Node.Examples.ENode
@@ -713,7 +714,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.BlockEvent{round: ^round}
+          body: %Events.BlockEvent{round: ^round}
         }
       } ->
         :ok
@@ -728,7 +729,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Anoma.Node.Logging.LoggingEvent{flag: :error, msg: msg}
+          body: %Events.LoggingEvent{flag: :error, msg: msg}
         }
       } ->
         assert msg =~ exp_message

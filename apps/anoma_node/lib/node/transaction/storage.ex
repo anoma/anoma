@@ -49,6 +49,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
   alias Anoma.Node
   alias Anoma.Node.Tables
+  alias Anoma.Node.Events
   alias Anoma.Node.Registry
 
   use EventBroker.DefFilter
@@ -69,6 +70,11 @@ defmodule Anoma.Node.Transaction.Storage do
             uncommitted_height: non_neg_integer()
           ]
           | [node_id: String.t()]
+
+  @typedoc """
+  I am the type of an event write.
+  """
+  @type event_write :: {[binary()], binary()}
 
   @typedoc """
   I am the type of the key to be stored.
@@ -120,22 +126,6 @@ defmodule Anoma.Node.Transaction.Storage do
     field(:uncommitted_updates, %{bare_key() => list(integer())},
       default: %{}
     )
-  end
-
-  typedstruct enforce: true, module: WriteEvent do
-    @typedoc """
-    I am the type of a write event.
-
-    I am sent whenever something has been written at a particular height.
-
-    ### Fields
-
-    - `:height` - The height at which something was just written.
-    - `:writes` - A list of tuples {key, value}
-    """
-
-    field(:height, non_neg_integer())
-    field(:writes, list({Anoma.Node.Transaction.Storage.bare_key(), term()}))
   end
 
   deffilter HeightFilter, height: non_neg_integer() do
@@ -545,13 +535,7 @@ defmodule Anoma.Node.Transaction.Storage do
     else
       {new_state, event_writes} = abwrite(write_opt, {height, args}, state)
 
-      write_event =
-        Node.Event.new_with_body(state.node_id, %__MODULE__.WriteEvent{
-          height: height,
-          writes: event_writes
-        })
-
-      EventBroker.event(write_event)
+      Events.write_event(height, event_writes, state.node_id, __MODULE__)
 
       {:reply, :ok, new_state}
     end
@@ -734,7 +718,7 @@ defmodule Anoma.Node.Transaction.Storage do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
-          body: %__MODULE__.WriteEvent{height: ^awaited_height}
+          body: %Events.WriteEvent{height: ^awaited_height}
         }
       } ->
         GenServer.reply(from, write(node_id, {height, kvlist}))
@@ -755,7 +739,7 @@ defmodule Anoma.Node.Transaction.Storage do
       # care about, then we already have the value for free
       %EventBroker.Event{
         body: %Node.Event{
-          body: %__MODULE__.WriteEvent{height: ^height, writes: writes}
+          body: %Events.WriteEvent{height: ^height, writes: writes}
         }
       } ->
         case Enum.find(writes, fn {keywrite, _value} -> key == keywrite end) do

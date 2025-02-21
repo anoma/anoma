@@ -1,9 +1,10 @@
 defmodule Anoma.Node.Examples.ELogging do
   alias Anoma.Node
   alias Node.Logging
-  alias Node.Transaction.{Mempool, Storage, Backends}
+  alias Node.Transaction.{Mempool, Storage}
   alias Node.Examples.ENode
   alias Anoma.Node.Tables
+  alias Anoma.Node.Events
 
   require Node.Event
 
@@ -19,7 +20,11 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :mnesia.subscribe({:table, table_name, :simple})
 
-    tx_event("id 1", :transparent_resource, "code 1", node_id)
+    Events.transaction_event(
+      {:transparent_resource, "code 1"},
+      "id 1",
+      node_id
+    )
 
     assert_receive(
       {:mnesia_table_event,
@@ -45,8 +50,17 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :mnesia.subscribe({:table, table_name, :simple})
 
-    tx_event("id 1", :transparent_resource, "code 1", node_id)
-    tx_event("id 2", :transparent_resource, "code 2", node_id)
+    Events.transaction_event(
+      {:transparent_resource, "code 1"},
+      "id 1",
+      node_id
+    )
+
+    Events.transaction_event(
+      {:transparent_resource, "code 2"},
+      "id 2",
+      node_id
+    )
 
     assert_receive(
       {:mnesia_table_event,
@@ -90,7 +104,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :mnesia.subscribe({:table, table_name, :simple})
 
-    consensus_event(["id 1"], node_id)
+    Events.consensus_event(["id 1"], node_id)
 
     assert_receive(
       {:mnesia_table_event,
@@ -118,8 +132,8 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :mnesia.subscribe({:table, table_name, :simple})
 
-    consensus_event(["id 1"], node_id)
-    consensus_event(["id 2"], node_id)
+    Events.consensus_event(["id 1"], node_id)
+    Events.consensus_event(["id 2"], node_id)
 
     assert_receive(
       {:mnesia_table_event,
@@ -151,7 +165,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
     :mnesia.subscribe({:table, table_name, :simple})
 
-    block_event(["id 1"], 0, node_id)
+    Events.block_event(["id 1"], 0, node_id)
 
     assert_receive(
       {:mnesia_table_event, {:delete, {^table_name, "id 1"}, _}},
@@ -182,7 +196,7 @@ defmodule Anoma.Node.Examples.ELogging do
     table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
-    block_event(["id 1"], 0, node_id)
+    Events.block_event(["id 1"], 0, node_id)
 
     assert_receive(
       {:mnesia_table_event, {:delete, {^table_name, "id 1"}, _}},
@@ -199,7 +213,7 @@ defmodule Anoma.Node.Examples.ELogging do
                :mnesia.read(table_name, "id 1")
              end)
 
-    block_event(["id 2"], 0, node_id)
+    Events.block_event(["id 2"], 0, node_id)
 
     assert_receive(
       {:mnesia_table_event, {:delete, {^table_name, "id 2"}, _}},
@@ -230,7 +244,7 @@ defmodule Anoma.Node.Examples.ELogging do
     table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
-    block_event(["id 1"], 0, node_id)
+    Events.block_event(["id 1"], 0, node_id)
 
     assert_receive(
       {:mnesia_table_event, {:delete, {^table_name, "id 1"}, _}},
@@ -500,7 +514,7 @@ defmodule Anoma.Node.Examples.ELogging do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.ConsensusEvent{
+          body: %Events.ConsensusEvent{
             order: ^consensus
           }
         }
@@ -517,7 +531,7 @@ defmodule Anoma.Node.Examples.ELogging do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.TxEvent{
+          body: %Events.TxEvent{
             id: ^id,
             tx: %Mempool.Tx{backend: _, code: ^code}
           }
@@ -556,37 +570,5 @@ defmodule Anoma.Node.Examples.ELogging do
       values_table: values_table,
       updates_table: updates_table
     ]
-  end
-
-  @spec tx_event(binary(), Backends.backend(), Noun.t(), String.t()) :: :ok
-  def tx_event(id, backend, code, node_id) do
-    event =
-      Node.Event.new_with_body(node_id, %Mempool.TxEvent{
-        id: id,
-        tx: %Mempool.Tx{backend: backend, code: code}
-      })
-
-    EventBroker.event(event)
-  end
-
-  @spec consensus_event(list(binary()), String.t()) :: :ok
-  def consensus_event(order, node_id) do
-    event =
-      Node.Event.new_with_body(node_id, %Mempool.ConsensusEvent{
-        order: order
-      })
-
-    EventBroker.event(event)
-  end
-
-  @spec block_event(list(binary()), non_neg_integer(), String.t()) :: :ok
-  def block_event(order, round, node_id) do
-    event =
-      Node.Event.new_with_body(node_id, %Mempool.BlockEvent{
-        order: order,
-        round: round
-      })
-
-    EventBroker.event(event)
   end
 end
