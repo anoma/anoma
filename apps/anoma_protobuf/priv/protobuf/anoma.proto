@@ -1,45 +1,37 @@
-
 syntax = "proto3";
 
-package Anoma.Protobuf;
+package Anoma.Proto;
 
-import "nock/prove.proto";
-import "nock/run.proto";
-import "intents/list_intents.proto";
-import "intents/add_intent.proto";
-import "indexer/nullifiers.proto";
-import "indexer/unrevealed_commits.proto";
-import "indexer/unspent_resources.proto";
-import "mempool/add_transaction.proto";
+import "intents.proto";
+import "mempool.proto";
+import "nock.proto";
 
-service NockService {
-  rpc Prove(Anoma.Protobuf.Nock.Prove.Request)
-      returns (Anoma.Protobuf.Nock.Prove.Response) {}
+/*
+ The intents service allows adding intents to the intent pool,
+ or retrieve all current intents in the intentpool.
+ */
+service IntentpoolService {
+  rpc Add(Anoma.Proto.Intentpool.Add.Request)
+      returns (Anoma.Proto.Intentpool.Add.Response) {}
 
-  rpc Run(Anoma.Protobuf.Nock.Run.Request)
-      returns (Anoma.Protobuf.Nock.Run.Response) {}
+  rpc List(Anoma.Proto.Intentpool.List.Request)
+      returns (Anoma.Proto.Intentpool.List.Response) {}
 }
 
-service IntentsService {
-  rpc ListIntents(Anoma.Protobuf.Intents.List.Request)
-      returns (Anoma.Protobuf.Intents.List.Response) {}
-
-  rpc AddIntent(Anoma.Protobuf.Intents.Add.Request)
-      returns (Anoma.Protobuf.Intents.Add.Response) {}
-}
-
-service IndexerService {
-  rpc ListNullifiers(Anoma.Protobuf.Indexer.Nullifiers.Request)
-      returns (Anoma.Protobuf.Indexer.Nullifiers.Response) {}
-
-  rpc ListUnrevealedCommits(Anoma.Protobuf.Indexer.UnrevealedCommits.Request)
-      returns (Anoma.Protobuf.Indexer.UnrevealedCommits.Response) {}
-
-  rpc ListUnspentResources(Anoma.Protobuf.Indexer.UnspentResources.Request)
-      returns (Anoma.Protobuf.Indexer.UnspentResources.Response) {}
-}
-
+/*
+ The mempool service allows adding intents to the mempool.
+ */
 service MempoolService {
-  rpc Add(Anoma.Protobuf.Mempool.AddTransaction.Request)
-      returns (Anoma.Protobuf.Mempool.AddTransaction.Response) {}
+  rpc Add(Anoma.Proto.Mempool.Add.Request) returns (Anoma.Proto.Mempool.Add.Response) {}
+}
+
+/*
+ The Nock service allows a user to make nock requests to the client.
+*/
+service NockService {
+  rpc Prove(Anoma.Proto.Nock.Prove.Request)
+      returns (Anoma.Proto.Nock.Prove.Response) {}
+
+  rpc Run(Anoma.Proto.Nock.Run.Request)
+      returns (Anoma.Proto.Nock.Run.Response) {}
 }

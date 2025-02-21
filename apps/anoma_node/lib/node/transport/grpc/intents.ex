@@ -1,33 +1,35 @@
 defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
   alias Anoma.Node.Intents.IntentPool
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.Intents.List
+  alias Anoma.Proto.Intentpool.Intent
+  alias Anoma.Proto.Intentpool.Add
+  alias Anoma.Proto.Intentpool.List
   alias GRPC.Server.Stream
 
-  use GRPC.Server, service: Anoma.Protobuf.IntentsService.Service
+  use GRPC.Server, service: Anoma.Proto.IntentpoolService.Service
 
   require Logger
 
-  @spec list_intents(List.Request.t(), Stream.t()) :: List.Response.t()
-  def list_intents(request, _stream) do
+  @spec list(List.Request.t(), Stream.t()) :: List.Response.t()
+  def list(request, _stream) do
     Logger.debug(
       "GRPC #{inspect(__ENV__.function)} request: #{inspect(request)}"
     )
 
     intents =
-      IntentPool.intents(request.node_info.node_id)
+      IntentPool.intents(request.node.id)
       |> Enum.map(fn i ->
         i
         |> Noun.Nounable.to_noun()
         |> Noun.Jam.jam()
       end)
+      |> Enum.map(&%Intent{intent: &1})
 
     %List.Response{intents: intents}
   end
 
-  @spec add_intent(Add.Request.t(), Stream.t()) ::
+  @spec add(Add.Request.t(), Stream.t()) ::
           Add.Response.t()
-  def add_intent(request, _stream) do
+  def add(request, _stream) do
     Logger.debug(
       "GRPC #{inspect(__ENV__.function)} request: #{inspect(request)}"
     )
@@ -39,7 +41,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
       |> Noun.Jam.cue!()
       |> Anoma.TransparentResource.Transaction.from_noun()
 
-    IntentPool.new_intent(request.node_info.node_id, intent)
+    IntentPool.new_intent(request.node.id, intent)
 
     %Add.Response{result: "intent added"}
   end

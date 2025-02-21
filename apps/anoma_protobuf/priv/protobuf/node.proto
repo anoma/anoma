@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package Anoma.Proto;
+
+/*
+ A description of a node.
+*/
+message Node { bytes id = 1; }

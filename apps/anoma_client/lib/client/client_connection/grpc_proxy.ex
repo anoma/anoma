@@ -2,13 +2,12 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   use GenServer
   use TypedStruct
 
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.List
-  alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.NodeInfo
-  alias Anoma.Protobuf.Mempool.AddTransaction
-  alias Anoma.Protobuf.MempoolService
+  alias Anoma.Proto.IntentpoolService
+  alias Anoma.Proto.Intentpool
+  alias Anoma.Proto.Intentpool.Intent
+  alias Anoma.Proto.Mempool
+  alias Anoma.Proto.Node
+  alias Anoma.Proto.MempoolService
   require Logger
 
   ############################################################
@@ -60,12 +59,12 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   #                      Public RPC API                      #
   ############################################################
 
-  @spec list_intents() :: {:ok, List.Response.t()}
+  @spec list_intents() :: {:ok, Intentpool.List.Response.t()}
   def list_intents() do
     GenServer.call(__MODULE__, {:list_intents})
   end
 
-  @spec add_intent(Intent.t()) :: {:ok, Add.Response.t()}
+  @spec add_intent(Intent.t()) :: {:ok, Intentpool.Add.Response.t()}
   def add_intent(intent) do
     GenServer.call(__MODULE__, {:add_intent, intent})
   end
@@ -80,25 +79,26 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
   @impl true
   def handle_call({:list_intents}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
-    request = %List.Request{node_info: node_info}
-    intents = IntentsService.Stub.list_intents(state.channel, request)
+    node_info = %Node{id: state.node_id}
+    request = %Intentpool.List.Request{node: node_info}
+    intents = IntentpoolService.Stub.list(state.channel, request)
     {:reply, intents, state}
   end
 
   def handle_call({:add_intent, intent}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
-    request = %Add.Request{node_info: node_info, intent: intent}
-    result = IntentsService.Stub.add_intent(state.channel, request)
+    node_info = %Node{id: state.node_id}
+    request = %Intentpool.Add.Request{node: node_info, intent: intent}
+
+    result = IntentpoolService.Stub.add(state.channel, request)
     {:reply, result, state}
   end
 
   def handle_call({:add_transaction, jammed_nock}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
+    node_info = %Node{id: state.node_id}
 
-    request = %AddTransaction.Request{
+    request = %Mempool.Add.Request{
       transaction: jammed_nock,
-      node_info: node_info
+      node: node_info
     }
 
     MempoolService.Stub.add(state.channel, request)

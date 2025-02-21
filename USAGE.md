@@ -120,23 +120,23 @@ grpcurl -plaintext localhost:50051 list
 results in the output below.
 
 ```text
-Anoma.Protobuf.IndexerService
-Anoma.Protobuf.IntentsService
-Anoma.Protobuf.NockService
+Anoma.Proto.IndexerService
+Anoma.Proto.IntentpoolService
+Anoma.Proto.NockService
 ```
 
 ### Listing individual services
 
 ```shell
-grpcurl -plaintext localhost:50051 list Anoma.Protobuf.IndexerService
+grpcurl -plaintext localhost:50051 list Anoma.Proto.IndexerService
 ```
 
 results in the output below.
 
 ```text
-Anoma.Protobuf.IndexerService.ListNullifiers
-Anoma.Protobuf.IndexerService.ListUnrevealedCommits
-Anoma.Protobuf.IndexerService.ListUnspentResources
+Anoma.Proto.IndexerService.ListNullifiers
+Anoma.Proto.IndexerService.ListUnrevealedCommits
+Anoma.Proto.IndexerService.ListUnspentResources
 ```
 
 # Making requests
@@ -144,7 +144,7 @@ Anoma.Protobuf.IndexerService.ListUnspentResources
 ## List intents
 
 ```shell
-grpcurl -plaintext localhost:50051 Anoma.Protobuf.IntentsService.ListIntents
+grpcurl -plaintext localhost:50051 Anoma.Proto.IntentpoolServiceListIntents
 ```
 
 results in the output below.
@@ -183,7 +183,7 @@ Both values are base64 encoded jammed Nock nouns.
 Store the request from above into a file on disk, such as `/tmp/my_input`.
 
 ```shell
-grpcurl -plaintext -d @ localhost:50051 Anoma.Protobuf.NockService/Prove < /tmp/my_input
+grpcurl -plaintext -d @ localhost:50051 Anoma.Proto.NockService/Prove < /tmp/my_input
 ```
 
 results in the output below.

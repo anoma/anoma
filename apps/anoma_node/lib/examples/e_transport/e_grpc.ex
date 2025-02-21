@@ -6,11 +6,11 @@ defmodule Anoma.Node.Examples.EGRPC do
 
   alias Anoma.Node.Examples.EGRPC
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.List
-  alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.NodeInfo
+  alias Anoma.Proto.Intentpool.Add
+  alias Anoma.Proto.Intentpool.Intent
+  alias Anoma.Proto.Intentpool.List
+  alias Anoma.Proto.IntentpoolService
+  alias Anoma.Proto.Node
   alias Examples.ETransparent.ETransaction
 
   import ExUnit.Assertions
@@ -72,10 +72,10 @@ defmodule Anoma.Node.Examples.EGRPC do
   """
   @spec list_intents(EGRPC.t()) :: boolean()
   def list_intents(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %NodeInfo{node_id: client.node.node_id}
-    request = %List.Request{node_info: node_id}
+    node = %Node{id: client.node.node_id}
+    request = %List.Request{node: node}
 
-    {:ok, reply} = IntentsService.Stub.list_intents(client.channel, request)
+    {:ok, reply} = IntentpoolService.Stub.list(client.channel, request)
 
     assert reply.intents == []
   end
@@ -85,7 +85,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   """
   @spec add_intent(EGRPC.t()) :: boolean()
   def add_intent(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %NodeInfo{node_id: client.node.node_id}
+    node_id = %Node{id: client.node.node_id}
 
     # create an arbitrary intent and jam it
     intent_jammed =
@@ -94,17 +94,19 @@ defmodule Anoma.Node.Examples.EGRPC do
       |> Noun.Jam.jam()
 
     request = %Add.Request{
-      node_info: node_id,
+      node: node_id,
       intent: %Intent{intent: intent_jammed}
     }
 
-    {:ok, _reply} = IntentsService.Stub.add_intent(client.channel, request)
+    {:ok, _reply} = IntentpoolService.Stub.add(client.channel, request)
 
     # fetch the intents to ensure it was added
-    request = %List.Request{node_info: node_id}
+    request = %List.Request{node: node_id}
 
-    {:ok, reply} = IntentsService.Stub.list_intents(client.channel, request)
+    {:ok, reply} = IntentpoolService.Stub.list(client.channel, request)
 
-    assert reply.intents == [intent_jammed]
+    intents = Enum.map(reply.intents, &Map.get(&1, :intent))
+
+    assert intents == [intent_jammed]
   end
 end

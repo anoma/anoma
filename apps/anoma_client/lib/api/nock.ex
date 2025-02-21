@@ -1,13 +1,13 @@
 defmodule Anoma.Client.Api.Servers.Nock do
-  alias Anoma.Protobuf.Nock.Input
-  alias Anoma.Protobuf.Nock.Prove
-  alias Anoma.Protobuf.Nock.Run
+  alias Anoma.Proto.Nock.Input
+  alias Anoma.Proto.Nock.Prove
+  alias Anoma.Proto.Nock.Run
   alias Anoma.Client.Runner
   alias GRPC.Server.Stream
-  alias Anoma.Protobuf.Nock.Success
-  alias Anoma.Protobuf.Nock.Error
+  alias Anoma.Proto.Nock.Success
+  alias Anoma.Proto.Nock.Error
 
-  use GRPC.Server, service: Anoma.Protobuf.NockService.Service
+  use GRPC.Server, service: Anoma.Proto.NockService.Service
 
   @spec prove(Prove.Request.t(), Stream.t()) :: Prove.Response.t()
   def prove(request, _stream) do

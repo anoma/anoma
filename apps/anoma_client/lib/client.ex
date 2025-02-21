@@ -9,7 +9,7 @@ defmodule Anoma.Client do
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Client.ConnectionSupervisor
   alias Anoma.Client.Runner
-  alias Anoma.Protobuf.Intents.Intent
+  alias Anoma.Proto.Intentpool.Intent
   alias Anoma.TransparentResource.Transaction
 
   typedstruct do
@@ -77,7 +77,10 @@ defmodule Anoma.Client do
   def list_intents do
     {:ok, result} = GRPCProxy.list_intents()
 
-    result.intents
+    result
+    |> Map.get(:intents)
+    |> Enum.map(&Map.get(&1, :intent))
+    |> Enum.map(&Noun.Jam.cue!/1)
   end
 
   @doc """
