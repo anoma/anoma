@@ -137,7 +137,7 @@ defmodule Anoma.Client.Runner do
     end
   end
 
-  @spec ro_tx_candidate(binary()) :: Noun.t()
+  @spec ro_tx_candidate(Noun.t()) :: Noun.t()
   def ro_tx_candidate(ref) do
     sample = 0
     keyspace = 0
