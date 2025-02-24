@@ -23,6 +23,7 @@ defmodule Anoma.RM.Transparent.Action do
   alias Anoma.RM.Transparent.ProvingSystem.RLPS
   alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias Anoma.RM.Transparent.ProvingSystem.CPS.Instance
+  alias __MODULE__
 
   require Logger
   use TypedStruct
@@ -331,14 +332,16 @@ defmodule Anoma.RM.Transparent.Action do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [
-      Noun.Nounable.to_noun(t.created),
-      Noun.Nounable.to_noun(t.consumed),
-      Noun.Nounable.to_noun(t.resource_logic_proofs),
-      Noun.Nounable.to_noun(t.compliance_units)
-      | Noun.Nounable.to_noun(t.app_data)
-    ]
+  defimpl Noun.Nounable, for: Action do
+    @impl true
+    def to_noun(t = %Action{}) do
+      [
+        Noun.Nounable.to_noun(t.created),
+        Noun.Nounable.to_noun(t.consumed),
+        Noun.Nounable.to_noun(t.resource_logic_proofs),
+        Noun.Nounable.to_noun(t.compliance_units)
+        | Noun.Nounable.to_noun(t.app_data)
+      ]
+    end
   end
 end
