@@ -3,7 +3,6 @@ defmodule Anoma.Client.Api.ReflectionServer do
     version: :v1alpha,
     services: [
       Anoma.Protobuf.IntentsService.Service,
-      Anoma.Protobuf.IndexerService.Service,
       Anoma.Protobuf.NockService.Service,
       Anoma.Protobuf.ExecutorService.Service
     ]
