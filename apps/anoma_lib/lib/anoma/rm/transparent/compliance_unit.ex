@@ -42,7 +42,7 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   """
   @spec created(t()) :: MapSet.t(integer())
   def created(t) do
-    t.insance.created |> Enum.map(&elem(&1, 0)) |> MapSet.new()
+    t.instance.created |> Enum.map(&elem(&1, 0)) |> MapSet.new()
   end
 
   @doc """
@@ -53,7 +53,7 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   """
   @spec consumed(t()) :: MapSet.t(integer())
   def consumed(t) do
-    t.insance.consumed |> Enum.map(&elem(&1, 0)) |> MapSet.new()
+    t.instance.consumed |> Enum.map(&elem(&1, 0)) |> MapSet.new()
   end
 
   @doc """
