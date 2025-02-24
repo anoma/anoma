@@ -305,9 +305,9 @@ defmodule Nock.Jets do
       when is_noun_atom(a) and is_noun_atom(b) and is_noun_atom(c) ->
         try do
           if Sign.verify_detached(
-               Noun.atom_integer_to_binary(a),
+               Noun.atom_integer_to_binary(a, 64),
                Noun.atom_integer_to_binary(b),
-               Noun.atom_integer_to_binary(c)
+               Noun.atom_integer_to_binary(c, 32)
              ) do
             {:ok, 0}
           else
@@ -331,7 +331,7 @@ defmodule Nock.Jets do
         try do
           case Sign.verify(
                  Noun.atom_integer_to_binary(a),
-                 Noun.atom_integer_to_binary(b)
+                 Noun.atom_integer_to_binary(b, 32)
                ) do
             {:ok, val} -> {:ok, [0 | val]}
             {:error, _} -> {:ok, 0}
@@ -369,7 +369,7 @@ defmodule Nock.Jets do
           {:ok,
            sign_fn.(
              Noun.atom_integer_to_binary(a),
-             Noun.atom_integer_to_binary(b)
+             Noun.atom_integer_to_binary(b, 64)
            )}
         rescue
           _ in ArgumentError -> :error
