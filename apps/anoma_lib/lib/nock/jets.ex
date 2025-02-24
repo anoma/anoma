@@ -3,12 +3,15 @@ defmodule Nock.Jets do
   Jets for the Nock interpreter, taking a gate core. Not fully general.
   """
 
-  import Noun
-  import Bitwise
   alias Anoma.Crypto.Sign
-  alias Anoma.TransparentResource.{Delta, Action, Resource}
+  alias Anoma.TransparentResource.Action
+  alias Anoma.TransparentResource.Delta
+  alias Anoma.TransparentResource.Resource
   alias Anoma.RM.Transparent.ProvingSystem.DPS
   alias Anoma.RM.Transparent.ProvingSystem.CPS
+
+  import Bitwise
+  import Noun
 
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
           non_neg_integer()

@@ -4,9 +4,6 @@ defmodule Anoma.Node.Intents.IntentPool do
   m1dnight still has to write these docs.
   """
 
-  require EventBroker.Event
-  require Logger
-
   alias __MODULE__
   alias Anoma.Node
   alias Node.Registry
@@ -14,12 +11,14 @@ defmodule Anoma.Node.Intents.IntentPool do
   alias Anoma.Node.Events
   alias Anoma.Node.Tables
 
+  require EventBroker.Event
+  require Logger
   require Node.Event
   require Anoma.Node.Events
 
   use EventBroker.DefFilter
-  use TypedStruct
   use GenServer
+  use TypedStruct
 
   deffilter IntentAddSuccessFilter do
     %EventBroker.Event{

@@ -9,20 +9,20 @@ defmodule Anoma.Node.Intents.Solver do
   - `get_unsolved/1`
   """
 
-  use TypedStruct
-  use GenServer
-  use EventBroker.WithSubscription
-
   alias __MODULE__
   alias Anoma.Node
-  alias Node.Intents.IntentPool
-  alias Node.Transaction.Mempool
-  alias Node.Registry
+  alias Anoma.Node.Intents.IntentPool
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Mempool
   alias Anoma.RM.Intent
   alias EventBroker.Event
   alias Anoma.Node.Events
 
   require Logger
+
+  use EventBroker.WithSubscription
+  use GenServer
+  use TypedStruct
 
   ############################################################
   #                    State                                 #

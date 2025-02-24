@@ -1,7 +1,4 @@
 defmodule Anoma.Client.Connection.GRPCProxy do
-  use GenServer
-  use TypedStruct
-
   alias Anoma.Protobuf.Intents.Add
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
@@ -12,6 +9,9 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   alias Anoma.Protobuf.Executor.AddROTransaction
   alias Anoma.Protobuf.ExecutorService
   require Logger
+
+  use GenServer
+  use TypedStruct
 
   ############################################################
   #                    State                                 #

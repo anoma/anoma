@@ -8,9 +8,9 @@ defmodule Anoma.Client.Application do
    - Forwarding requests to the Anoma node.
   """
 
-  use Application
-
   require Logger
+
+  use Application
 
   @impl true
   def start(_type, _args) do

@@ -1,14 +1,15 @@
 defmodule Anoma.Node.Examples.ELogging do
   alias Anoma.Node
   alias Node.Logging
-  alias Node.Transaction.{Mempool, Storage}
   alias Node.Examples.ENode
   alias Anoma.Node.Tables
   alias Anoma.Node.Events
-
-  require Node.Event
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Transaction.Storage
 
   require ExUnit.Assertions
+  require Node.Event
+
   import ExUnit.Assertions
 
   use EventBroker.WithSubscription

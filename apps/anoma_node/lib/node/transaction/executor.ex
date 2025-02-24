@@ -19,15 +19,16 @@ defmodule Anoma.Node.Transaction.Executor do
 
   alias __MODULE__
   alias Anoma.Node
-  alias Node.Transaction.{Backends, Mempool, Ordering}
-  alias Node.Registry
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Backends
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Events
 
-  use TypedStruct
+  require Node.Event
 
   use GenServer
-
-  require Node.Event
+  use TypedStruct
 
   ############################################################
   #                         State                            #

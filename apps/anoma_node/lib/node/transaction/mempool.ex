@@ -26,12 +26,14 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   alias __MODULE__
   alias Anoma.Node
-  alias Node.Registry
-  alias Node.Transaction.{Storage, Executor, Backends}
   alias Anoma.Node.Events
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Backends
+  alias Anoma.Node.Transaction.Executor
+  alias Anoma.Node.Transaction.Storage
 
-  require Node.Event
   require Logger
+  require Node.Event
 
   use EventBroker.DefFilter
   use GenServer

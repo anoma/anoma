@@ -1,13 +1,12 @@
 defmodule Examples.ECairo.EAction do
-  use Memoize
-
   alias Anoma.CairoResource.Action
-  alias Examples.ECairo.EProofRecord
-  alias Examples.ECairo.EResourceLogic
-  alias Examples.ECairo.EResource
-  alias Anoma.CairoResource.Tree
   alias Anoma.CairoResource.Resource
+  alias Anoma.CairoResource.Tree
+  alias Examples.ECairo.EProofRecord
+  alias Examples.ECairo.EResource
+  alias Examples.ECairo.EResourceLogic
 
+  use Memoize
   use TestHelper.TestMacro
 
   @spec an_action() :: Action.t()
