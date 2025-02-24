@@ -417,7 +417,7 @@ defmodule Anoma.Client.Examples.EClient do
     request = %Blocks.Filtered.Request{node_info: node_id, filters: []}
 
     {:ok, response} = BlockService.Stub.filter(conn.channel, request)
-    assert Enum.count(response.resources) == 0
+    assert Enum.empty?(response.resources)
 
     conn
   end
@@ -456,7 +456,7 @@ defmodule Anoma.Client.Examples.EClient do
     }
 
     {:ok, response} = BlockService.Stub.filter(conn.channel, request)
-    assert Enum.count(response.resources) == 0
+    assert Enum.empty?(response.resources)
 
     conn
   end
