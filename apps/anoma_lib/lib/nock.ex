@@ -24,7 +24,7 @@ defmodule Nock do
 
     field(:meter_pid, pid() | nil, default: nil)
     field(:gas_limit, non_neg_integer() | nil, default: nil)
-    field(:stdio, any(), default: :stdio)
+    field(:stdio, any(), default: :logger)
   end
 
   @dialyzer :no_improper_lists
@@ -398,12 +398,17 @@ defmodule Nock do
     # if the output is not stdio, then the hint is jammed.
     # right now there is no way to reliably turn a noun into a string and read it back
     # if it has binaries. So this is a temporary workaround.
-    if environment.stdio == :stdio do
-      IO.write(environment.stdio, "#{inspect(hint_result)}\n")
-    else
-      # hint_str = Noun.Format.print(hint_result)
-      hint_str = Noun.Jam.jam(hint_result) |> Base.encode64()
-      IO.write(environment.stdio, hint_str)
+    case environment.stdio do
+      :logger ->
+        Logger.debug("nock hint: #{inspect(hint_result)}")
+
+      :stdio ->
+        IO.write(environment.stdio, "#{inspect(hint_result)}\n")
+
+      _ ->
+        # hint_str = Noun.Format.print(hint_result)
+        hint_str = Noun.Jam.jam(hint_result) |> Base.encode64()
+        IO.write(environment.stdio, hint_str)
     end
   end
 
