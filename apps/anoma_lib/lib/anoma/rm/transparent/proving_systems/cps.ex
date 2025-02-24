@@ -215,8 +215,9 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
   @spec verify_nulfs_compliance(list({integer(), integer()})) ::
           {:ok, MapSet.t(Resource.t())} | {:error, String.t()}
   def verify_nulfs_compliance(consumed) do
-    Enum.reduce_while(consumed, MapSet.new(), fn {nul, rt}, {:ok, acc} ->
-      with <<"NF_", rest::bitstring>> <- nul,
+    Enum.reduce_while(consumed, {:ok, MapSet.new()}, fn {nul, rt},
+                                                        {:ok, acc} ->
+      with <<"NF_", rest::bitstring>> <- nul |> Noun.atom_integer_to_binary(),
            {:ok, noun_resource} <- Noun.Jam.cue(rest),
            {:ok, resource} <- Resource.from_noun(noun_resource),
            true <-
@@ -244,8 +245,8 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
   @spec verify_cms_compliance(list({integer(), integer()})) ::
           {:ok, MapSet.t(Resource.t())} | {:error, String.t()}
   def verify_cms_compliance(consumed) do
-    Enum.reduce_while(consumed, true, fn {cm, _}, {:ok, acc} ->
-      with <<"CM_", rest::bitstring>> <- cm,
+    Enum.reduce_while(consumed, {:ok, MapSet.new()}, fn {cm, _}, {:ok, acc} ->
+      with <<"CM_", rest::bitstring>> <- cm |> Noun.atom_integer_to_binary(),
            {:ok, noun_resource} <- Noun.Jam.cue(rest),
            {:ok, resource} <- Resource.from_noun(noun_resource) do
         {:cont, {:ok, MapSet.put(acc, resource)}}
