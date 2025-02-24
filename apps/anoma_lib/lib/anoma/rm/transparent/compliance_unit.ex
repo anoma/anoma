@@ -21,7 +21,7 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   typedstruct enforce: true do
     field(:proof, <<>>, default: <<>>)
     field(:instance, Instance.t(), default: %Instance{})
-    field(:vk, <<>>, default: CPS.key())
+    field(:vk, binary(), default: CPS.key())
   end
 
   @doc """
