@@ -42,6 +42,7 @@ defmodule Anoma.Node.Supervisor do
       {Anoma.Node.Transaction.Supervisor,
        [node_id: args[:node_id], tx_args: args[:tx_args]]},
       {Anoma.Node.Intents.Supervisor, node_id: args[:node_id]},
+      {Anoma.Node.Utility.Supervisor, node_id: args[:node_id]},
       {Anoma.Node.Logging, node_id: args[:node_id]}
     ]
 

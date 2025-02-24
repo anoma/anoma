@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Indexer.Blocks;
+
+message Transaction {
+  bytes code = 1;
+
+  oneof result {
+    string error = 2;
+    bytes success = 3;
+  }
+}
+message Block {
+
+  repeated Transaction transactions = 1;
+  uint32 height = 2;
+}

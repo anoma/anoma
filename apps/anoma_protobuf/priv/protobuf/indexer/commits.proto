@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package Anoma.Protobuf.Indexer.UnrevealedCommits;
+package Anoma.Protobuf.Indexer.Commits;
 
 import "node_info.proto";
 
