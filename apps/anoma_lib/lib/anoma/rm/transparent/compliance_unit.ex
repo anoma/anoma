@@ -15,6 +15,7 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   """
   alias Anoma.RM.Transparent.ProvingSystem.CPS
   alias Anoma.RM.Transparent.ProvingSystem.CPS.Instance
+  alias __MODULE__
 
   use TypedStruct
 
@@ -88,8 +89,10 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [<<>>, Instance.to_noun(t.instance) | <<>>]
+  defimpl Noun.Nounable, for: ComplianceUnit do
+    @impl true
+    def to_noun(t = %ComplianceUnit{}) do
+      [<<>>, Noun.Nounable.to_noun(t.instance) | <<>>]
+    end
   end
 end
