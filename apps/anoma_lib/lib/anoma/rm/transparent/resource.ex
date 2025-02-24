@@ -23,15 +23,18 @@ defmodule Anoma.RM.Transparent.Resource do
 
   typedstruct enforce: true do
     # the jam of a resource logic
-    field(:logicref, integer(), default: [[1 | 0], 0 | 0] |> Noun.Jam.jam())
+    field(:logicref, integer(),
+      default:
+        [[1 | 0], 0 | 0] |> Noun.Jam.jam() |> Noun.atom_binary_to_integer()
+    )
 
     # jammed
     field(:labelref, integer(), default: 2)
     # jammed
     field(:valueref, integer(), default: 2)
-    field(:quantity, integer(), default: 0)
+    field(:quantity, integer(), default: 1)
     # whether the resource is ephemetal or not
-    field(:isephemeral, boolean(), default: true)
+    field(:isephemeral, boolean(), default: false)
     field(:nonce, <<_::256>>, default: <<0::256>>)
     # a commitment to the nullifier key
     # with the commitment hash being just the identity function
