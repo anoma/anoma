@@ -1,13 +1,18 @@
 defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node
-  alias Anoma.Node.Tables
-  alias Node.Transaction.{Storage, Ordering, Mempool, Executor, Backends}
-  alias Anoma.TransparentResource.Transaction
-
-  alias Examples.{ENock, ETransparent.ETransaction}
-
   alias Anoma.Node.Examples.ENode
+  alias Anoma.Node.Transaction.Backends
+  alias Anoma.Node.Transaction.Executor
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Transaction.Ordering
+  alias Anoma.Node.Transaction.Storage
+  alias Anoma.Node.Tables
+  alias Anoma.TransparentResource.Transaction
+  alias Examples.ENock
+  alias Examples.ETransparent.ETransaction
+
   require ExUnit.Assertions
+
   import ExUnit.Assertions
   import ExUnit.CaptureLog
 

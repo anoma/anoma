@@ -51,10 +51,11 @@ defmodule Anoma.Node.Transaction.Storage do
   alias Anoma.Node.Tables
   alias Anoma.Node.Registry
 
+  require Node.Event
+
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
-  require Node.Event
 
   ############################################################
   #                       Types                              #

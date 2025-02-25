@@ -3,14 +3,13 @@ defmodule Anoma.CairoResource.Resource do
   I am a shielded resource.
   """
 
+  alias __MODULE__
   alias Anoma.CairoResource.Utils
+  alias Anoma.Constants
 
   require Logger
 
-  alias __MODULE__
   use TypedStruct
-
-  alias Anoma.Constants
 
   typedstruct enforce: true do
     # resource logic

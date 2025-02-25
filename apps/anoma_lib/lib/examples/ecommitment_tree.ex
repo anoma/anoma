@@ -1,12 +1,12 @@
 defmodule Examples.ECommitmentTree do
   alias Anoma.Node.Tables
-  alias Examples.ETransparent.ETransaction
   alias Anoma.TransparentResource.Transaction
+  alias Examples.ECairo
+  alias Examples.ETransparent.ETransaction
 
   require ExUnit.Assertions
-  import ExUnit.Assertions
 
-  alias Examples.ECairo
+  import ExUnit.Assertions
 
   @spec sha256_32_spec() :: CommitmentTree.Spec.t()
   def sha256_32_spec() do

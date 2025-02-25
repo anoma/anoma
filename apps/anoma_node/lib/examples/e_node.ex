@@ -1,12 +1,12 @@
 defmodule Anoma.Node.Examples.ENode do
-  use TypedStruct
-
-  import ExUnit.Assertions
-
   alias __MODULE__
   alias Anoma.Node.Examples.ERegistry
 
   require Logger
+
+  import ExUnit.Assertions
+
+  use TypedStruct
 
   ############################################################
   #                    Context                               #

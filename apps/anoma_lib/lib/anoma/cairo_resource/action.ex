@@ -5,19 +5,16 @@ defmodule Anoma.CairoResource.Action do
 
   @behaviour Noun.Nounable.Kind
 
+  alias __MODULE__
+  alias Anoma.CairoResource.ComplianceInstance
+  alias Anoma.CairoResource.LogicInstance
+  alias Anoma.CairoResource.ProofRecord
+  alias Anoma.CairoResource.Tree
+  alias Anoma.Constants
+
   require Logger
 
-  alias __MODULE__
   use TypedStruct
-
-  alias Anoma.CairoResource.{
-    ProofRecord,
-    ComplianceInstance,
-    Tree,
-    LogicInstance
-  }
-
-  alias Anoma.Constants
 
   typedstruct enforce: true do
     field(:logic_proofs, %{binary() => ProofRecord.t()}, default: {})

@@ -26,17 +26,16 @@ defmodule Anoma.Node.Logging do
   """
 
   alias Anoma.Node
-  alias Anoma.Node.Logging
   alias Anoma.Node.Registry
-  alias Anoma.Node.Tables
   alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Tables
+
+  require Logger
+  require Node.Event
 
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
-
-  require Node.Event
-  require Logger
 
   ############################################################
   #                         State                            #
@@ -190,7 +189,7 @@ defmodule Anoma.Node.Logging do
   def handle_info(
         e = %EventBroker.Event{
           body: %Node.Event{
-            body: %Logging.LoggingEvent{}
+            body: %__MODULE__.LoggingEvent{}
           }
         },
         state
@@ -239,7 +238,7 @@ defmodule Anoma.Node.Logging do
   defp handle_logging_event(
          %EventBroker.Event{
            body: %Node.Event{
-             body: %Logging.LoggingEvent{
+             body: %__MODULE__.LoggingEvent{
                flag: flag,
                msg: msg
              }
