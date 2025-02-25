@@ -1588,6 +1588,43 @@ defmodule Examples.ENock do
   end
 
   @doc """
+  I represent a tap:in call with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  a=_in  tap:a
+
+  and grabbing the arm with [0 2]
+  """
+  @spec tap_in_with_core() :: Noun.t()
+  def tap_in_with_core() do
+    arm =
+      "[7 [0 6] 9 186 0 1]"
+      |> Noun.Format.parse_always()
+
+    sample = 0
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec tap_in_with_core_call(Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def tap_in_with_core_call(core) do
+    Nock.nock(tap_in_with_core(), [9, 2, 10, [6, 1 | core], 0 | 1])
+  end
+
+  def tap_in_test() do
+    set = [123, 0] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    {:ok, in_core} = in_call(set)
+    {:ok, res} = in_core |> tap_in_with_core_call()
+
+    # this is due to how 0 and 123 get located in set
+    # test it like this since this is deterministic
+    assert res |> Noun.equal?([0, 123])
+  end
+
+  @doc """
   I represent an int gate with a specified instantiated in core given
   as an extra argument.
 
@@ -1900,6 +1937,43 @@ defmodule Examples.ENock do
            |> got_with_core_call("a")
            |> elem(1)
            |> Noun.equal?(1)
+  end
+
+  @doc """
+  I represent a tap:by call with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  a=_by  tap:a
+
+  and grabbing the arm with [0 2]
+  """
+  @spec tap_by_with_core() :: Noun.t()
+  def tap_by_with_core() do
+    arm =
+      "[7 [0 6] 9 174 0 1]"
+      |> Noun.Format.parse_always()
+
+    sample = 0
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec tap_by_with_core_call(Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def tap_by_with_core_call(core) do
+    Nock.nock(tap_by_with_core(), [9, 2, 10, [6, 1 | core], 0 | 1])
+  end
+
+  def tap_by_test() do
+    set = %{123 => "blah"} |> Map.new() |> Noun.Nounable.to_noun()
+    {:ok, by_core} = by_call(set)
+    {:ok, res} = by_core |> tap_by_with_core_call()
+
+    # this is due to how 0 and 123 get located in set
+    # test it like this since this is deterministic
+    assert res |> Noun.equal?([[123 | "blah"]])
   end
 
   def kind_arm() do
