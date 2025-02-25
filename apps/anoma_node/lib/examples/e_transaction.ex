@@ -1,6 +1,6 @@
 defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node
-  alias Node.Transaction.{Storage, Ordering, Mempool, Backends}
+  alias Node.Transaction.{Storage, Ordering, Mempool, Executor, Backends}
   alias Anoma.TransparentResource.Transaction
 
   alias Examples.{ENock, ETransparent.ETransaction}
@@ -431,8 +431,8 @@ defmodule Anoma.Node.Examples.ETransaction do
          %Mempool.Tx{
            code: ^zero,
            backend: ^back,
-           vm_result: {:ok, [[^key | 0] | 0]},
-           tx_result: {:ok, [[^key | 0]]}
+           vm_result: {:ok, [[[^key] | 0] | 0]},
+           tx_result: {:ok, [[[^key] | 0]]}
          }
        ]}
     ] = block
@@ -470,14 +470,14 @@ defmodule Anoma.Node.Examples.ETransaction do
          %Mempool.Tx{
            code: ^zero,
            backend: ^back1,
-           vm_result: {:ok, [[^key | 0] | 0]},
-           tx_result: {:ok, [[^key | 0]]}
+           vm_result: {:ok, [[[^key] | 0] | 0]},
+           tx_result: {:ok, [[[^key] | 0]]}
          },
          %Mempool.Tx{
            code: ^inc,
            backend: ^back2,
-           vm_result: {:ok, [[^key | 1] | 0]},
-           tx_result: {:ok, [[^key | 1]]}
+           vm_result: {:ok, [[[^key] | 1] | 0]},
+           tx_result: {:ok, [[[^key] | 1]]}
          }
        ]}
     ] = block
@@ -511,52 +511,8 @@ defmodule Anoma.Node.Examples.ETransaction do
          %Mempool.Tx{
            code: ^inc,
            backend: ^back,
-           vm_result: {:ok, [[^key | 1] | 0]},
-           tx_result: {:ok, [[^key | 1]]}
-         }
-       ]}
-    ] = block
-
-    node_id
-  end
-
-  @spec inc_counter_submit_after_read(String.t()) :: String.t()
-  def inc_counter_submit_after_read(node_id \\ Node.example_random_id()) do
-    blocks_table = Storage.blocks_table(node_id)
-
-    key = "key"
-    zero_counter_submit(node_id)
-    {:debug_term_storage, zero} = zero(key)
-    {back, inc} = inc(key)
-    Mempool.tx(node_id, {{:debug_read_term, self()}, zero}, "id 2")
-    Mempool.tx(node_id, inc(key), "id 3")
-    :mnesia.subscribe({:table, blocks_table, :simple})
-    Mempool.execute(node_id, ["id 2", "id 3"])
-
-    assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
-      5000
-    )
-
-    :mnesia.unsubscribe({:table, blocks_table, :simple})
-
-    {:atomic, block} =
-      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
-
-    [
-      {^blocks_table, 1,
-       [
-         %Mempool.Tx{
-           code: ^zero,
-           backend: {:debug_read_term, _},
-           vm_result: {:ok, [[^key | 0] | 0]},
-           tx_result: {:ok, {:read_value, [[^key | 0] | 0]}}
-         },
-         %Mempool.Tx{
-           code: ^inc,
-           backend: ^back,
-           vm_result: {:ok, [[^key | 1] | 0]},
-           tx_result: {:ok, [[^key | 1]]}
+           vm_result: {:ok, [[[^key] | 1] | 0]},
+           tx_result: {:ok, [[[^key] | 1]]}
          }
        ]}
     ] = block
@@ -606,24 +562,88 @@ defmodule Anoma.Node.Examples.ETransaction do
 
   @spec read_txs_write_nothing(String.t()) :: String.t()
   def read_txs_write_nothing(node_id \\ Node.example_random_id()) do
-    blocks_table = Storage.blocks_table(node_id)
     key = "key"
     start_tx_module(node_id)
     {_backend, code} = zero(key)
 
-    Mempool.tx(node_id, {{:debug_read_term, self()}, code}, "id 1")
+    Executor.launch(node_id, {{:read_only, self()}, code})
+
+    assert_receive({0, [[[^key] | 0] | 0]}, 5000)
+
+    [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
+    [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
+    node_id
+  end
+
+  @spec read_txs_actually_read(String.t()) :: String.t()
+  def read_txs_actually_read(node_id \\ Node.example_random_id()) do
+    read_txs_write_nothing(node_id)
+    key = "key"
+
+    {_backend, code} = inc(key)
+
+    zero_counter_submit(node_id)
+
+    Executor.launch(node_id, {{:read_only, self()}, code})
+
+    assert_receive({1, [[[^key] | 1] | 0]}, 5000)
+
+    node_id
+  end
+
+  @spec read_txs_read_recent(String.t()) :: String.t()
+  def read_txs_read_recent(node_id \\ Node.example_random_id()) do
+    read_txs_write_nothing(node_id)
+    key = "key"
+
+    {_backend, code} = inc(key)
+
+    inc_counter_submit_with_zero(node_id)
+
+    Executor.launch(node_id, {{:read_only, self()}, code})
+
+    assert_receive({2, [[[^key] | 2] | 0]}, 5000)
+
+    node_id
+  end
+
+  @spec inc_counter_submit_after_bluff(String.t()) :: String.t()
+  def inc_counter_submit_after_bluff(node_id \\ Node.example_random_id()) do
+    blocks_table = Storage.blocks_table(node_id)
+    key = "key"
+
+    zero_counter_submit(node_id)
+    {back, inc} = inc(key)
+    Mempool.tx(node_id, {:debug_term_storage, bluf()}, "id 2")
+    Mempool.tx(node_id, inc(key), "id 3")
     :mnesia.subscribe({:table, blocks_table, :simple})
-    Mempool.execute(node_id, ["id 1"])
+    Mempool.execute(node_id, ["id 2", "id 3"])
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 0, _}, _}},
+      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
       5000
     )
 
     :mnesia.unsubscribe({:table, blocks_table, :simple})
 
-    [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
-    [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
+    [
+      {^blocks_table, 1,
+       [
+         %Mempool.Tx{
+           code: [0 | 0],
+           backend: :debug_term_storage,
+           vm_result: :vm_error,
+           tx_result: :error
+         },
+         %Mempool.Tx{
+           code: ^inc,
+           backend: ^back,
+           vm_result: {:ok, [[[^key] | 1] | 0]},
+           tx_result: {:ok, [[[^key] | 1]]}
+         }
+       ]}
+    ] = :mnesia.dirty_read({blocks_table, 1})
+
     node_id
   end
 

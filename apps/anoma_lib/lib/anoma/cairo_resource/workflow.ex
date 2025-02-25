@@ -329,16 +329,13 @@ defmodule Anoma.CairoResource.Workflow do
         output_logic_proofs,
         compliance_proofs
       ) do
-    %Action{
-      logic_proofs:
-        Enum.zip_with(
-          input_logic_proofs,
-          output_logic_proofs,
-          &[&1, &2]
-        )
-        |> Enum.concat(),
-      compliance_proofs: compliance_proofs
-    }
+    Action.new(
+      Enum.concat(
+        input_logic_proofs,
+        output_logic_proofs
+      ),
+      compliance_proofs
+    )
   end
 
   @spec create_private_keys(list(Jason.OrderedObject.t())) ::
