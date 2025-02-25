@@ -12,10 +12,6 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Client.Storage
   alias Anoma.Client.Examples.EClient
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Protobuf.Indexer.Nullifiers
-  alias Anoma.Protobuf.Indexer.UnrevealedCommits
-  alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.IndexerService
   alias Anoma.Protobuf.Intents.Add
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
@@ -171,70 +167,6 @@ defmodule Anoma.Client.Examples.EClient do
     {:ok, reply} = IntentsService.Stub.list_intents(conn.channel, request)
 
     assert reply.intents == [intent_jammed]
-
-    conn
-  end
-
-  @doc """
-  I list all nullifiers.
-  """
-  @spec list_nullifiers(EConnection.t()) :: EConnection.t()
-  def list_nullifiers(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %Nullifiers.Request{node_info: node_id}
-    {:ok, _reply} = IndexerService.Stub.list_nullifiers(conn.channel, request)
-
-    conn
-  end
-
-  @doc """
-  I list all unrevealed commits.
-  """
-  @spec list_unrevealed_commits(EConnection.t()) :: EConnection.t()
-  def list_unrevealed_commits(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %UnrevealedCommits.Request{node_info: node_id}
-
-    {:ok, _reply} =
-      IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
-
-    conn
-  end
-
-  @doc """
-  I list all unspent resources.
-  """
-  @spec list_unspent_resources(EConnection.t()) :: EConnection.t()
-  def list_unspent_resources(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %UnspentResources.Request{node_info: node_id}
-
-    {:ok, _reply} =
-      IndexerService.Stub.list_unspent_resources(conn.channel, request)
-
-    conn
-  end
-
-  @doc """
-  I submit a read-only transaction
-  """
-  @spec submit_read_only_tx(EConnection.t()) :: EConnection.t()
-  def submit_read_only_tx(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-
-    code =
-      Anoma.Node.Examples.ETransaction.zero() |> elem(1) |> Noun.Jam.jam()
-
-    request = %AddROTransaction.Request{node_info: node_id, transaction: code}
-
-    {:ok, reply} =
-      ExecutorService.Stub.add(conn.channel, request)
-
-    result = [[["key"] | 0] | 0] |> Noun.Jam.jam()
-
-    {:success, res} = reply.result
-
-    assert res.result == result
 
     conn
   end
