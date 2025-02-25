@@ -56,16 +56,14 @@ defmodule Anoma.RM.Transparent.Action do
   @spec create(
           list({<<_::256>>, Resource.t(), integer()}),
           list(Resource.t()),
-          %{integer => {binary(), boolean()}}
+          %{integer() => list({binary(), boolean()})}
         ) :: t()
   def create(to_nullify, to_commit, app_data) do
     consumed =
       Enum.map(
         to_nullify,
         fn {nfkey, resource, acc} ->
-          {Resource.nullifier_hash(nfkey, resource),
-           Noun.Jam.jam(acc)
-           |> Noun.atom_binary_to_integer(), resource.logicref}
+          {Resource.nullifier_hash(nfkey, resource), acc, resource.logicref}
         end
       )
 
@@ -167,7 +165,7 @@ defmodule Anoma.RM.Transparent.Action do
     Enum.all?(t.created, fn cm ->
       with {:ok, resource} <- RLPS.match_resource(cm, false) do
         RLPS.verify(
-          resource.logicref,
+          Noun.atom_integer_to_binary(resource.logicref),
           %RLPS.Instance{
             tag: cm,
             flag: false,
@@ -194,7 +192,7 @@ defmodule Anoma.RM.Transparent.Action do
     Enum.all?(t.consumed, fn nf ->
       with {:ok, resource} <- RLPS.match_resource(nf, true) do
         RLPS.verify(
-          resource.logicref,
+          Noun.atom_integer_to_binary(resource.logicref),
           %RLPS.Instance{
             tag: nf,
             flag: true,
@@ -243,8 +241,10 @@ defmodule Anoma.RM.Transparent.Action do
         created = ComplianceUnit.created(cu)
         consumed = ComplianceUnit.consumed(cu)
 
-        if MapSet.disjoint?(acc.created, created) and
-             MapSet.disjoint?(acc.consumed, consumed) do
+        if (MapSet.size(acc.created) == 0 or
+              MapSet.disjoint?(acc.created, created)) and
+             (MapSet.size(acc.consumed) == 0 or
+                MapSet.disjoint?(acc.consumed, consumed)) do
           {:cont,
            {:ok,
             %{
@@ -266,7 +266,7 @@ defmodule Anoma.RM.Transparent.Action do
   @spec is_list_unique(list()) :: {:ok, list()} | {:error, String.t()}
   defp is_list_unique(list) do
     Enum.reduce_while(list, {:ok, []}, fn elem, {:ok, acc} ->
-      if Enum.any?(acc, fn x -> x == elem end) do
+      unless Enum.any?(acc, fn x -> x == elem end) do
         {:cont, {:ok, [elem | acc]}}
       else
         {:halt,
@@ -310,19 +310,19 @@ defmodule Anoma.RM.Transparent.Action do
          consumed: list_consumed |> Enum.map(&Noun.atom_binary_to_integer/1),
          resource_logic_proofs:
            proof_map
-           |> Enum.into(%{}, fn {tag, {bin, proof}} ->
+           |> Enum.into(%{}, fn {tag, [bin | proof]} ->
              {Noun.atom_binary_to_integer(tag),
               {Noun.atom_binary_to_integer(bin), proof}}
            end),
          compliance_units:
            cu_map
            |> Enum.into(MapSet.new(), fn x ->
-             {:ok, instance} = Instance.from_noun(x)
-             instance
+             {:ok, cu} = ComplianceUnit.from_noun(x)
+             cu
            end),
          app_data:
            appdata
-           |> Enum.into(%{}, fn {tag, {bin, bool}} ->
+           |> Enum.into(%{}, fn {tag, [bin | bool]} ->
              {Noun.atom_binary_to_integer(tag),
               {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}}
            end)
