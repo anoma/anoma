@@ -1,6 +1,6 @@
 defmodule Examples.ETransparent.EAction do
-  alias Anoma.TransparentResource.Delta
   alias Anoma.TransparentResource.Action
+  alias Anoma.TransparentResource.Delta
   alias Examples.ETransparent.ELogicProof
 
   use TestHelper.TestMacro

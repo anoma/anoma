@@ -31,12 +31,11 @@ defmodule Anoma.Node.Logging do
   alias Anoma.Node.Tables
   alias Anoma.Node.Transaction.Mempool
 
+  require Logger
+
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
-
-  require Node.Event
-  require Logger
 
   ############################################################
   #                         State                            #
