@@ -31,7 +31,8 @@ defmodule AnomaNode.MixProject do
         :logger,
         :mnesia,
         :runtime_tools,
-        :tools
+        :tools,
+        :ex_unit
       ]
     ]
   end
