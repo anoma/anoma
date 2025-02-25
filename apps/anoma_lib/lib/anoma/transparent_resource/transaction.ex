@@ -1,11 +1,11 @@
 defmodule Anoma.TransparentResource.Transaction do
-  use TypedStruct
-
   @behaviour Noun.Nounable.Kind
 
+  alias __MODULE__
   alias Anoma.TransparentResource.Action
   alias Anoma.TransparentResource.Delta
-  alias __MODULE__
+
+  use TypedStruct
 
   typedstruct enforce: true do
     field(:roots, MapSet.t(binary()), default: MapSet.new())

@@ -2,7 +2,6 @@ defmodule Anoma.Client do
   @moduledoc """
   Documentation for `Client`.
   """
-  use TypedStruct
 
   alias Anoma.Client
   alias Anoma.Client.Connection
@@ -11,6 +10,8 @@ defmodule Anoma.Client do
   alias Anoma.Client.Runner
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.TransparentResource.Transaction
+
+  use TypedStruct
 
   typedstruct do
     field(:type, :grpc | :tcp)

@@ -6,7 +6,6 @@ defmodule Anoma.Client.Examples.EClient do
 
   I test the public GRPC interface of the client to ensure it works as expected.
   """
-  use TypedStruct
 
   alias Anoma.Client
   alias Anoma.Client.Storage
@@ -28,6 +27,8 @@ defmodule Anoma.Client.Examples.EClient do
   alias Noun.Nounable
 
   import ExUnit.Assertions
+
+  use TypedStruct
 
   ############################################################
   #                    Context                               #
