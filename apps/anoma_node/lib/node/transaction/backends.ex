@@ -12,91 +12,35 @@ defmodule Anoma.Node.Transaction.Backends do
   - `execute/3`
   """
 
-  alias Anoma.Node
-  alias Node.Logging
-  alias Node.Transaction.{Executor, Ordering, Storage}
-  alias Anoma.TransparentResource
-  alias Anoma.TransparentResource.Transaction, as: TTransaction
-  alias Anoma.TransparentResource.Resource, as: TResource
   alias Anoma.CairoResource.Transaction, as: CTransaction
+  alias Anoma.Node
+  alias Anoma.Node.Logging
+  alias Anoma.Node.Transaction.Ordering
+  alias Anoma.Node.Transaction.Storage
+  alias Anoma.TransparentResource
+  alias Anoma.TransparentResource.Resource, as: TResource
+  alias Anoma.TransparentResource.Transaction, as: TTransaction
+  alias Anoma.Node.Events
+
+  require Node.Event
+  require Noun
 
   import Nock
-  require Noun
-  require Node.Event
+
   use EventBroker.DefFilter
   use TypedStruct
 
   @type backend() ::
           :debug_term_storage
-          | {:debug_read_term, pid}
+          | {:read_only, pid}
           | :debug_bloblike
           | :transparent_resource
           | :cairo_resource
 
   @type transaction() :: {backend(), Noun.t() | binary()}
 
-  typedstruct enforce: true, module: ResultEvent do
-    @typedoc """
-    I hold the content of the Result Event, which conveys the result of
-    the transaction candidate code execution on the Anoma VM to
-    the Mempool engine.
-
-    ### Fields
-    - `:tx_id`              - The transaction id.
-    - `:tx_result`          - VM execution result; either :error or an
-                              {:ok, noun} tuple.
-    """
-    field(:tx_id, binary())
-    field(:vm_result, {:ok, Noun.t()} | :error)
-  end
-
-  typedstruct enforce: true, module: CompleteEvent do
-    @typedoc """
-    I hold the content of the Complete Event, which communicates the result
-    of the transaction candidate execution to the Executor engine.
-
-    ### Fields
-    - `:tx_id`              - The transaction id.
-    - `:tx_result`          - Execution result; either :error or an
-                              {:ok, value} tuple.
-    """
-    field(:tx_id, binary())
-    field(:tx_result, {:ok, any()} | :error)
-  end
-
-  typedstruct enforce: true, module: TRMEvent do
-    @typedoc """
-    I hold the content of the The Resource Machine Event, which
-    communicates a set of nullifiers/commitments defined by the actions of the
-    transaction candidate to the Intent Pool.
-
-    ### Fields
-
-    - `:commitments`        - The set of commitments.
-    - `:nullifiers`         - The set of nullifiers.
-    - `:commitments`        - The set of commitments.
-    """
-    field(:commitments, MapSet.t(binary()))
-    field(:nullifiers, MapSet.t(binary()))
-  end
-
-  typedstruct enforce: true, module: SRMEvent do
-    @typedoc """
-    I hold the content of the The Shielded Resource Machine Event, which
-    communicates a set of nullifiers/commitments defined by the actions of the
-    transaction candidate to the Intent Pool.
-
-    ### Fields
-
-    - `:commitments`        - The set of commitments.
-    - `:nullifiers`         - The set of nullifiers.
-    """
-    field(:commitments, MapSet.t(binary()))
-    field(:nullifiers, MapSet.t(binary()))
-  end
-
   deffilter CompleteFilter do
-    %EventBroker.Event{body: %Node.Event{body: %CompleteEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Events.CompleteEvent{}}} ->
       true
 
     _ ->
@@ -104,10 +48,15 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   deffilter ForMempoolFilter do
-    %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Events.ResultEvent{}}} ->
       true
 
-    %EventBroker.Event{body: %Node.Event{body: %Executor.ExecutionEvent{}}} ->
+    _ ->
+      false
+  end
+
+  deffilter ForMempoolExecutionFilter do
+    %EventBroker.Event{body: %Node.Event{body: %Events.ExecutionEvent{}}} ->
       true
 
     _ ->
@@ -121,7 +70,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   First, I execute the transaction code on the Anoma VM. Next, I apply processing
   logic to the resulting value, dependent on the selected backend.
-  - For read-only backend, the value is transmitted as a Result Event.
+  - For read-only backend, the value is sent directly to specified recepient.
   - For the key-value and blob store executions, the obtained value is stored
   and a Complete Event is issued.
   - For the transparent Resource Machine (RM) execution, I verify the
@@ -134,11 +83,26 @@ defmodule Anoma.Node.Transaction.Backends do
              node_id: String.t(),
              back: backend()
   def execute(node_id, {backend, tx_code}, id) do
-    env = %Nock{
-      scry_function: fn list ->
+    time = Storage.current_time(node_id)
+
+    scry =
+      fn list ->
         if list do
           with [id, key] <- list |> Noun.list_nock_to_erlang(),
-               {:ok, value} <- Ordering.read(node_id, {id, key}) do
+               {:ok, value} <-
+                 (case backend do
+                    {:read_only, _pid} ->
+                      Storage.read(
+                        node_id,
+                        {time, key |> Noun.list_nock_to_erlang()}
+                      )
+
+                    _ ->
+                      Ordering.read(
+                        node_id,
+                        {id, key |> Noun.list_nock_to_erlang()}
+                      )
+                  end) do
             {:ok, value}
           else
             _ -> :error
@@ -147,14 +111,18 @@ defmodule Anoma.Node.Transaction.Backends do
           :error
         end
       end
-    }
 
+    env = %Nock{scry_function: scry}
     vm_result = vm_execute(tx_code, env, id)
-    result_event(id, vm_result, node_id, backend)
+
+    event(backend, fn ->
+      Events.transaction_result(id, vm_result, node_id, __MODULE__)
+    end)
 
     res =
       with {:ok, vm_res} <- vm_result,
-           {:ok, backend_res} <- backend_logic(backend, node_id, id, vm_res) do
+           {:ok, backend_res} <-
+             backend_logic(backend, node_id, id, vm_res, time: time) do
         {:ok, backend_res}
       else
         _e ->
@@ -163,12 +131,23 @@ defmodule Anoma.Node.Transaction.Backends do
           :error
       end
 
-    complete_event(id, res, node_id, backend)
+    event(backend, fn ->
+      Events.transaction_complete(id, res, node_id, __MODULE__)
+    end)
   end
 
   ############################################################
   #                       VM Execution                       #
   ############################################################
+
+  @spec event(backend(), (-> :ok)) :: :ok
+  defp event({:read_only, _}, _event) do
+    :ok
+  end
+
+  defp event(_backend, event) do
+    event.()
+  end
 
   @spec vm_execute(Noun.t(), Nock.t(), binary()) ::
           {:ok, Noun.t()} | :vm_error
@@ -196,25 +175,25 @@ defmodule Anoma.Node.Transaction.Backends do
   #                     Backend Execution                    #
   ############################################################
 
-  @spec backend_logic(backend(), String.t(), binary(), Noun.t()) ::
+  @spec backend_logic(backend(), String.t(), binary(), Noun.t(), list()) ::
           :error | {:ok, any()}
-  defp backend_logic(:debug_term_storage, node_id, id, vm_res) do
+  defp backend_logic(:debug_term_storage, node_id, id, vm_res, _opts) do
     store_value(node_id, id, vm_res)
   end
 
-  defp backend_logic({:debug_read_term, pid}, node_id, id, vm_res) do
-    send_value(node_id, id, vm_res, pid)
+  defp backend_logic({:read_only, pid}, _node_id, _id, vm_res, opts) do
+    send_value(vm_res, pid, opts)
   end
 
-  defp backend_logic(:debug_bloblike, node_id, id, vm_res) do
+  defp backend_logic(:debug_bloblike, node_id, id, vm_res, _opts) do
     blob_store(node_id, id, vm_res)
   end
 
-  defp backend_logic(:transparent_resource, node_id, id, vm_res) do
+  defp backend_logic(:transparent_resource, node_id, id, vm_res, _opts) do
     transparent_resource_tx(node_id, id, vm_res)
   end
 
-  defp backend_logic(:cairo_resource, node_id, id, vm_res) do
+  defp backend_logic(:cairo_resource, node_id, id, vm_res, _opts) do
     cairo_resource_tx(node_id, id, vm_res)
   end
 
@@ -245,7 +224,8 @@ defmodule Anoma.Node.Transaction.Backends do
               blobs:
                 for {key, {value, bool}} <- action.app_data, reduce: blobs do
                   acc ->
-                    if Noun.equal?(bool, 0) do
+                    if Noun.equal?(bool, 0) and
+                         :crypto.hash(:sha256, Noun.Jam.jam(value)) == key do
                       [{key, value} | acc]
                     else
                       acc
@@ -254,9 +234,23 @@ defmodule Anoma.Node.Transaction.Backends do
             }
         end
 
+      old_cms =
+        case Ordering.read(node_id, {id, anoma_keyspace("commitments")}) do
+          :absent -> MapSet.new()
+          {:ok, res} -> res
+        end
+
       writes =
         for {key, value} <- map.blobs,
-            reduce: [{anoma_keyspace("anchor"), value(map.commitments)}] do
+            reduce: [
+              {anoma_keyspace("anchor"),
+               value(
+                 MapSet.union(
+                   map.commitments,
+                   old_cms
+                 )
+               )}
+            ] do
           acc -> [{["anoma", "blob", key], value} | acc]
         end
 
@@ -272,7 +266,7 @@ defmodule Anoma.Node.Transaction.Backends do
          }}
       )
 
-      transparent_rm_event(map.commitments, map.nullifiers, node_id)
+      Events.trm_event(map.commitments, map.nullifiers, node_id, __MODULE__)
 
       {:ok, tx}
     else
@@ -292,9 +286,13 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec verify_tx_root(String.t(), TTransaction.t()) ::
           true | {:error, String.t()}
   defp verify_tx_root(node_id, trans = %TTransaction{}) do
-    # TODO improve the error messages
-    commitments_exist_in_roots(node_id, trans) or
-      {:error, "Nullified resources are not committed at latest root"}
+    with true <- commitments_exist_in_roots(node_id, trans) do
+      true
+    else
+      {:error, msg} ->
+        {:error,
+         "Nullified resources are not committed at latest root: " <> msg}
+    end
   end
 
   @spec storage_check?(String.t(), binary(), TTransaction.t()) ::
@@ -351,7 +349,8 @@ defmodule Anoma.Node.Transaction.Backends do
     Enum.any?(commitments, &MapSet.member?(stored_comms, &1))
   end
 
-  @spec commitments_exist_in_roots(String.t(), TTransaction.t()) :: bool()
+  @spec commitments_exist_in_roots(String.t(), TTransaction.t()) ::
+          true | {:error, String.t()}
   defp commitments_exist_in_roots(
          node_id,
          trans = %TTransaction{}
@@ -362,7 +361,8 @@ defmodule Anoma.Node.Transaction.Backends do
           with {:atomic, [{_, {height, _}, ^root}]} <-
                  :mnesia.transaction(fn ->
                    :mnesia.match_object(
-                     {Storage.values_table(node_id), {:_, :anchor}, root}
+                     {Storage.values_table(node_id),
+                      {:_, anoma_keyspace("anchor")}, root}
                    )
                  end) do
             if height > time do
@@ -384,20 +384,33 @@ defmodule Anoma.Node.Transaction.Backends do
           {latest_root_time, anoma_keyspace("commitments")}
         )
 
-      for <<"NF_", rest::binary>> <- action_nullifiers,
-          reduce: MapSet.new([]) do
-        cm_set ->
-          if ephemeral?(rest) do
-            cm_set
-          else
-            MapSet.put(cm_set, "CM_" <> rest)
-          end
+      commitments =
+        for <<"NF_", rest::binary>> <- action_nullifiers,
+            reduce: MapSet.new([]) do
+          cm_set ->
+            if ephemeral?(rest) do
+              cm_set
+            else
+              MapSet.put(cm_set, "CM_" <> rest)
+            end
+        end
+
+      case commitments |> MapSet.subset?(root_coms) do
+        true ->
+          true
+
+        _ ->
+          {:error,
+           "commitments absent: #{inspect(MapSet.difference(commitments, root_coms) |> Enum.to_list())}"}
       end
-      |> MapSet.subset?(root_coms)
     else
-      Enum.all?(action_nullifiers, fn <<"NF_", rest::binary>> ->
-        ephemeral?(rest)
-      end)
+      if Enum.all?(action_nullifiers, fn <<"NF_", rest::binary>> ->
+           ephemeral?(rest)
+         end) do
+        true
+      else
+        {:error, "not all resources ephemeral for initiating transaction"}
+      end
     end
   end
 
@@ -414,14 +427,11 @@ defmodule Anoma.Node.Transaction.Backends do
     nock_boolean in [0, <<>>, <<0>>, []]
   end
 
-  @spec send_value(String.t(), binary(), Noun.t(), pid()) ::
-          {:ok, any()} | :error
-  defp send_value(node_id, id, result, reply_to) do
-    # send the value to reply-to address and the topic
-    reply_msg = {:read_value, result}
-    send(reply_to, reply_msg)
-    Ordering.write(node_id, {id, []})
-    {:ok, reply_msg}
+  @spec send_value(Noun.t(), pid(), list()) ::
+          {:ok, any()}
+  defp send_value(result, reply_to, opts) do
+    send(reply_to, {opts[:time], result})
+    {:ok, result}
   end
 
   @spec blob_store(String.t(), binary(), Noun.t()) :: {:ok, any} | :error
@@ -451,6 +461,10 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   @spec empty_write(backend(), String.t(), binary()) :: :ok
+  defp empty_write({:read_only, _}, _node_id, _id) do
+    :ok
+  end
+
   defp empty_write(_backend, node_id, id) do
     Ordering.write(node_id, {id, []})
   end
@@ -497,10 +511,11 @@ defmodule Anoma.Node.Transaction.Backends do
 
       # TODO: Store ciphertext
 
-      cairo_rm_event(
+      Events.srm_event(
         MapSet.new(tx.commitments),
         MapSet.new(tx.nullifiers),
-        node_id
+        node_id,
+        __MODULE__
       )
 
       {:ok, tx}
@@ -553,63 +568,6 @@ defmodule Anoma.Node.Transaction.Backends do
   ############################################################
   #                        Helpers                           #
   ############################################################
-
-  @spec complete_event(
-          String.t(),
-          :error | {:ok, any()},
-          String.t(),
-          backend()
-        ) :: :ok
-  defp complete_event(id, result, node_id, _backend) do
-    event =
-      Node.Event.new_with_body(node_id, %__MODULE__.CompleteEvent{
-        tx_id: id,
-        tx_result: result
-      })
-
-    EventBroker.event(event)
-  end
-
-  @spec result_event(String.t(), any(), String.t(), backend()) :: :ok
-  defp result_event(id, result, node_id, _backend) do
-    event =
-      Node.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
-        tx_id: id,
-        vm_result: result
-      })
-
-    EventBroker.event(event)
-  end
-
-  @spec transparent_rm_event(
-          MapSet.t(binary()),
-          MapSet.t(binary()),
-          String.t()
-        ) :: :ok
-  defp transparent_rm_event(cms, nlfs, node_id) do
-    event =
-      Node.Event.new_with_body(node_id, %__MODULE__.TRMEvent{
-        commitments: cms,
-        nullifiers: nlfs
-      })
-
-    EventBroker.event(event)
-  end
-
-  @spec cairo_rm_event(
-          MapSet.t(binary()),
-          MapSet.t(binary()),
-          String.t()
-        ) :: :ok
-  defp cairo_rm_event(cms, nlfs, node_id) do
-    event =
-      Node.Event.new_with_body(node_id, %__MODULE__.SRMEvent{
-        commitments: cms,
-        nullifiers: nlfs
-      })
-
-    EventBroker.event(event)
-  end
 
   @doc """
   I am the commitment accumulator add function for the transparent resource

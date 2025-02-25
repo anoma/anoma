@@ -19,6 +19,7 @@ on:
   push:
     tags:
       - v*
+      - '!v*-*'
 
 jobs:
   compile:

@@ -3,16 +3,18 @@ defmodule Anoma.Node.Examples.EIntentPool do
   I contain several examples on how to run the intent pool.
   """
 
-  require ExUnit.Assertions
-  import ExUnit.Assertions
-
+  alias Anoma.Node
+  alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Intents.IntentPool
   alias Anoma.RM.DumbIntent
   alias Anoma.RM.Intent
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Node
+  alias Anoma.Node.Events
+  alias Anoma.Node.Tables
 
+  require ExUnit.Assertions
   require Node.Event
+
+  import ExUnit.Assertions
 
   ############################################################
   #                           Scenarios                      #
@@ -108,10 +110,10 @@ defmodule Anoma.Node.Examples.EIntentPool do
 
     new_nullifiers_event(enode, nlfs_set)
 
+    Process.sleep(100)
+
     node_id = enode.node_id
     IntentPool.new_intent(node_id, intent)
-
-    Process.sleep(100)
 
     # the intent will not be present in the mapset
     assert IntentPool.intents(node_id) == MapSet.new([])
@@ -130,10 +132,10 @@ defmodule Anoma.Node.Examples.EIntentPool do
 
     new_commitments_event(enode, cms_set)
 
+    Process.sleep(100)
+
     node_id = enode.node_id
     IntentPool.new_intent(node_id, intent)
-
-    Process.sleep(100)
 
     # the intent will not be present in the mapset
     assert IntentPool.intents(node_id) == MapSet.new([])
@@ -144,7 +146,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   def intents_are_written(enode \\ ENode.start_node()) do
     add_intent_transaction_nullifier(enode)
 
-    table = IntentPool.table_name(enode.node_id)
+    table = Tables.table_intents(enode.node_id)
 
     pool = IntentPool.intents(enode.node_id)
 
@@ -165,7 +167,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
     event =
       Node.Event.new_with_body(
         node_id,
-        %Anoma.Node.Transaction.Backends.TRMEvent{
+        %Events.TRMEvent{
           nullifiers: nlfs_set,
           commitments: MapSet.new([])
         }
@@ -189,7 +191,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
     event =
       Node.Event.new_with_body(
         node_id,
-        %Anoma.Node.Transaction.Backends.TRMEvent{
+        %Events.TRMEvent{
           nullifiers: MapSet.new([]),
           commitments: cms_set
         }
