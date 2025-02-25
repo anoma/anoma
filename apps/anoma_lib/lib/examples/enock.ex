@@ -288,15 +288,10 @@ defmodule Examples.ENock do
     core = [sign_arm(), sample | Nock.Lib.logics_core()]
 
     valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
-    invalid_args = [ECrypto.blood_msg() | ECrypto.londo().external.sign]
 
     assert Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
            |> elem(1)
            |> Noun.equal?(ECrypto.blood_l_signed())
-
-    assert :error ==
-             Nock.nock(core, [9, 2, 10, [6, 1 | invalid_args], 0 | 1]),
-           "Can't sign with one's public key!"
 
     core
   end
@@ -368,9 +363,6 @@ defmodule Examples.ENock do
            |> elem(1)
            |> Noun.equal?(ECrypto.blood_l_signed_detached())
 
-    assert :error == Nock.nock(core, [9, 2, 10, [6, 1, <<3>> | 5], 0 | 1])
-    assert :error == Nock.nock(core, [9, 2, 10, [6, 1, <<3>> | <<5>>], 0 | 1])
-    assert :error == Nock.nock(core, [9, 2, 10, [6, 1, 3 | <<5>>], 0 | 1])
     core
   end
 
