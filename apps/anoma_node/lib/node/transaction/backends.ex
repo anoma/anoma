@@ -14,11 +14,12 @@ defmodule Anoma.Node.Transaction.Backends do
 
   alias Anoma.Node
   alias Node.Logging
-  alias Node.Transaction.{Executor, Ordering, Storage}
+  alias Node.Transaction.{Ordering, Storage}
   alias Anoma.TransparentResource
   alias Anoma.TransparentResource.Transaction, as: TTransaction
   alias Anoma.TransparentResource.Resource, as: TResource
   alias Anoma.CairoResource.Transaction, as: CTransaction
+  alias Anoma.Node.Events
 
   import Nock
   require Noun
@@ -35,68 +36,8 @@ defmodule Anoma.Node.Transaction.Backends do
 
   @type transaction() :: {backend(), Noun.t() | binary()}
 
-  typedstruct enforce: true, module: ResultEvent do
-    @typedoc """
-    I hold the content of the Result Event, which conveys the result of
-    the transaction candidate code execution on the Anoma VM to
-    the Mempool engine.
-
-    ### Fields
-    - `:tx_id`              - The transaction id.
-    - `:tx_result`          - VM execution result; either :error or an
-                              {:ok, noun} tuple.
-    """
-    field(:tx_id, binary())
-    field(:vm_result, {:ok, Noun.t()} | :error)
-  end
-
-  typedstruct enforce: true, module: CompleteEvent do
-    @typedoc """
-    I hold the content of the Complete Event, which communicates the result
-    of the transaction candidate execution to the Executor engine.
-
-    ### Fields
-    - `:tx_id`              - The transaction id.
-    - `:tx_result`          - Execution result; either :error or an
-                              {:ok, value} tuple.
-    """
-    field(:tx_id, binary())
-    field(:tx_result, {:ok, any()} | :error)
-  end
-
-  typedstruct enforce: true, module: TRMEvent do
-    @typedoc """
-    I hold the content of the The Resource Machine Event, which
-    communicates a set of nullifiers/commitments defined by the actions of the
-    transaction candidate to the Intent Pool.
-
-    ### Fields
-
-    - `:commitments`        - The set of commitments.
-    - `:nullifiers`         - The set of nullifiers.
-    - `:commitments`        - The set of commitments.
-    """
-    field(:commitments, MapSet.t(binary()))
-    field(:nullifiers, MapSet.t(binary()))
-  end
-
-  typedstruct enforce: true, module: SRMEvent do
-    @typedoc """
-    I hold the content of the The Shielded Resource Machine Event, which
-    communicates a set of nullifiers/commitments defined by the actions of the
-    transaction candidate to the Intent Pool.
-
-    ### Fields
-
-    - `:commitments`        - The set of commitments.
-    - `:nullifiers`         - The set of nullifiers.
-    """
-    field(:commitments, MapSet.t(binary()))
-    field(:nullifiers, MapSet.t(binary()))
-  end
-
   deffilter CompleteFilter do
-    %EventBroker.Event{body: %Node.Event{body: %CompleteEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Events.CompleteEvent{}}} ->
       true
 
     _ ->
@@ -104,7 +45,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   deffilter ForMempoolFilter do
-    %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Events.ResultEvent{}}} ->
       true
 
     _ ->
@@ -112,7 +53,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   deffilter ForMempoolExecutionFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Executor.ExecutionEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Events.ExecutionEvent{}}} ->
       true
 
     _ ->
@@ -170,7 +111,10 @@ defmodule Anoma.Node.Transaction.Backends do
 
     env = %Nock{scry_function: scry}
     vm_result = vm_execute(tx_code, env, id)
-    result_event(id, vm_result, node_id, backend)
+
+    event(backend, fn ->
+      Events.transaction_result(id, vm_result, node_id, __MODULE__)
+    end)
 
     res =
       with {:ok, vm_res} <- vm_result,
@@ -184,12 +128,23 @@ defmodule Anoma.Node.Transaction.Backends do
           :error
       end
 
-    complete_event(id, res, node_id, backend)
+    event(backend, fn ->
+      Events.transaction_complete(id, res, node_id, __MODULE__)
+    end)
   end
 
   ############################################################
   #                       VM Execution                       #
   ############################################################
+
+  @spec event(backend(), (-> :ok)) :: :ok
+  defp event({:read_only, _}, _event) do
+    :ok
+  end
+
+  defp event(_backend, event) do
+    event.()
+  end
 
   @spec vm_execute(Noun.t(), Nock.t(), binary()) ::
           {:ok, Noun.t()} | :vm_error
@@ -308,7 +263,7 @@ defmodule Anoma.Node.Transaction.Backends do
          }}
       )
 
-      transparent_rm_event(map.commitments, map.nullifiers, node_id)
+      Events.trm_event(map.commitments, map.nullifiers, node_id, __MODULE__)
 
       {:ok, tx}
     else
@@ -553,10 +508,11 @@ defmodule Anoma.Node.Transaction.Backends do
 
       # TODO: Store ciphertext
 
-      cairo_rm_event(
+      Events.srm_event(
         MapSet.new(tx.commitments),
         MapSet.new(tx.nullifiers),
-        node_id
+        node_id,
+        __MODULE__
       )
 
       {:ok, tx}
@@ -609,72 +565,6 @@ defmodule Anoma.Node.Transaction.Backends do
   ############################################################
   #                        Helpers                           #
   ############################################################
-
-  @spec complete_event(
-          String.t(),
-          :error | {:ok, any()},
-          String.t(),
-          backend()
-        ) :: :ok
-  defp complete_event(id, result, node_id, backend) do
-    event =
-      Node.Event.new_with_body(node_id, %__MODULE__.CompleteEvent{
-        tx_id: id,
-        tx_result: result
-      })
-
-    event(backend, event)
-  end
-
-  @spec result_event(String.t(), any(), String.t(), backend()) :: :ok
-  defp result_event(id, result, node_id, backend) do
-    event =
-      Node.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
-        tx_id: id,
-        vm_result: result
-      })
-
-    event(backend, event)
-  end
-
-  @spec transparent_rm_event(
-          MapSet.t(binary()),
-          MapSet.t(binary()),
-          String.t()
-        ) :: :ok
-  defp transparent_rm_event(cms, nlfs, node_id) do
-    event =
-      Node.Event.new_with_body(node_id, %__MODULE__.TRMEvent{
-        commitments: cms,
-        nullifiers: nlfs
-      })
-
-    EventBroker.event(event)
-  end
-
-  @spec cairo_rm_event(
-          MapSet.t(binary()),
-          MapSet.t(binary()),
-          String.t()
-        ) :: :ok
-  defp cairo_rm_event(cms, nlfs, node_id) do
-    event =
-      Node.Event.new_with_body(node_id, %__MODULE__.SRMEvent{
-        commitments: cms,
-        nullifiers: nlfs
-      })
-
-    EventBroker.event(event)
-  end
-
-  @spec event(backend(), EventBroker.Event.t()) :: :ok
-  defp event({:read_only, _}, _event) do
-    :ok
-  end
-
-  defp event(_backend, event) do
-    EventBroker.event(event)
-  end
 
   @doc """
   I am the commitment accumulator add function for the transparent resource
