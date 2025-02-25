@@ -64,6 +64,13 @@ defmodule Anoma.Node.Transaction.Executor do
     field(:result, list({{:ok, any} | :error, binary()}))
   end
 
+  typedstruct enforce: true, module: TaskCrash do
+    @typedoc """
+    I am a crash event for a task that failed.
+    """
+    field(:task, any())
+  end
+
   ############################################################
   #                    Genserver Helpers                     #
   ############################################################
@@ -173,10 +180,20 @@ defmodule Anoma.Node.Transaction.Executor do
   #                 Genserver Implementation                 #
   ############################################################
 
+  # @doc """
+  # I launch a transaction in its own Task to execute.
+  # """
   @spec handle_launch({Backends.backend(), Noun.t()}, binary(), t()) :: :ok
   defp handle_launch(tw_w_backend, id, state = %Executor{}) do
-    Task.start(fn ->
-      Backends.execute(state.node_id, tw_w_backend, id)
+    tx_supervisor = Registry.via(state.node_id, TxSupervisor)
+
+    Task.Supervisor.start_child(tx_supervisor, fn ->
+      try do
+        Backends.execute(state.node_id, tw_w_backend, id)
+      rescue
+        _e ->
+          task_crash_event(id, state.node_id)
+      end
     end)
 
     :ok
@@ -222,6 +239,14 @@ defmodule Anoma.Node.Transaction.Executor do
       Node.Event.new_with_body(node_id, %__MODULE__.ExecutionEvent{
         result: res_list
       })
+
+    EventBroker.event(event)
+  end
+
+  @spec task_crash_event(any(), String.t()) :: :ok
+  defp task_crash_event(task, node_id) do
+    event =
+      Node.Event.new_with_body(node_id, %__MODULE__.TaskCrash{task: task})
 
     EventBroker.event(event)
   end

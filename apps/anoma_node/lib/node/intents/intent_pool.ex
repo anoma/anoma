@@ -13,6 +13,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   alias Node.Transaction.Backends
   alias Anoma.RM.Intent
   alias EventBroker.Broker
+  alias Anoma.Node.Tables
 
   require Node.Event
 
@@ -74,13 +75,11 @@ defmodule Anoma.Node.Intents.IntentPool do
     - `:node_id` - The ID of the Node.
     - `:nlfs_set` - The set of known nullifiers.
     - `:cms_set` - The set of known commitments.
-    - `:table` - The table name for storing intents.
     """
     field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
     field(:node_id, String.t())
     field(:nlfs_set, MapSet.t(binary()), default: MapSet.new())
     field(:cms_set, MapSet.t(binary()), default: MapSet.new())
-    field(:table, atom())
   end
 
   ############################################################
@@ -104,15 +103,8 @@ defmodule Anoma.Node.Intents.IntentPool do
         intents: MapSet.new([]),
         nlfs_set: MapSet.new([]),
         cms_set: MapSet.new([]),
-        rocks: false,
-        table: __MODULE__.Intents
+        rocks: false
       ])
-
-    table =
-      String.to_atom("#{args[:table]}_#{:erlang.phash2(args[:node_id])}")
-
-    rocks_opt = args[:rocks] |> Anoma.Utility.rock_opts()
-    :mnesia.create_table(table, rocks_opt ++ [attributes: [:type, :body]])
 
     node_id = args[:node_id]
 
@@ -132,8 +124,7 @@ defmodule Anoma.Node.Intents.IntentPool do
        node_id: node_id,
        intents: intents,
        nlfs_set: args[:nlfs_set],
-       cms_set: args[:cms_set],
-       table: table
+       cms_set: args[:cms_set]
      }}
   end
 
@@ -219,7 +210,7 @@ defmodule Anoma.Node.Intents.IntentPool do
     with :ok <- validate_intent_uniqueness(intent, state),
          :ok <- validate_nullifier_uniqueness(intent, state.nlfs_set),
          :ok <- validate_commitment_uniqueness(intent, state.cms_set) do
-      table = state.table
+      table = Tables.table_intents(state.node_id)
 
       :mnesia.transaction(fn ->
         res =
@@ -378,16 +369,5 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   defp trm_filter() do
     %__MODULE__.TRMFilter{}
-  end
-
-  @doc """
-  I am the name of the unsolved table.
-  Given a Node ID, I create an appropriately named table for storing
-  unsolved intents.
-  """
-
-  @spec table_name(String.t()) :: atom()
-  def table_name(node_id) do
-    String.to_atom("#{__MODULE__.Intents}_#{:erlang.phash2(node_id)}")
   end
 end

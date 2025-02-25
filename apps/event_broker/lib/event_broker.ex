@@ -15,6 +15,56 @@ defmodule EventBroker do
   - `unsubscribe_me/1`
   - `subscribe/2`
   - `unsubscribe/2`
+
+  ## Overview
+
+  The EventBroker manages subscriptions for processes that are interested in a
+  particular type of message.
+
+  ### Filters
+
+  Messages are defined as "filter specs" that define patterns an event must
+  match in order for them to be sent. The filter below will subscribe to all
+  events that are are maps with a key `:type` that has value `:error`.
+
+  ```
+  deffilter MyFilter do
+    %{type: :error} -> true
+    _ -> false
+  end
+  ```
+
+  Filters can be composed by creating a "filter spec list". If a process is
+  interested in all `MyFilter` events, but only those whose `message` field is
+  `nil`, a second filter can be used to refine the filter.
+
+  ```
+  deffilter MyFilterNil do
+    %{message: nil} -> true
+    _ -> false
+  end
+
+  ```
+
+  ### Subscribing to events
+
+  To subscribe to all messages that match the `MyFilter` the subscribing process
+  must call `&EventBroker.subscribe/1` with the filter spec list as argument.
+  E.g., `EventBroker.subscribe([MyFilter])`. To only subscribe to events that
+  also have `nil` for the `:message` value, the filter spec list should include
+  the `MyFilterNil` filter. E.g., `EventBroker.subscribe([MyFilter,
+  MyFilterNil])`.
+
+  If a particular filter is no longer of intrest, `EventBroker.unsubscribe/1`
+  can be used to unsubscribe from a filter.
+
+  ### Sending events
+
+  Any process can generate an event using the `&EventBroker.event/1` function.
+
+  ```
+  EventBroker.event(%{type: :error, message: "something happened"})
+  ```
   """
 
   use Application
@@ -35,6 +85,24 @@ defmodule EventBroker do
   ############################################################
   #                      Public RPC API                      #
   ############################################################
+
+  @doc """
+  I return the filter specs for the current process.
+  I return a list of filterspeclists.
+  """
+  @spec my_subscriptions() :: [filter_spec_list]
+  def my_subscriptions() do
+    subscriptions(self())
+  end
+
+  @doc """
+  I return the filter specs for the given process id.
+  I return a list of filterspeclists.
+  """
+  @spec subscriptions(pid()) :: [filter_spec_list]
+  def subscriptions(pid) do
+    GenServer.call(EventBroker.Registry, {:subscriptions, pid})
+  end
 
   @doc """
   I am the Event Broker event function.

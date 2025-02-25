@@ -21,7 +21,7 @@ defmodule Anoma.MixProject do
           # bare cons frequently and deliberately.
           "-Wno_improper_lists"
         ],
-        plt_add_apps: [:mix, :ex_unit]
+        plt_add_apps: [:mix, :ex_unit, :mnesia]
       ],
       # Docs
       name: "Anoma",
@@ -131,12 +131,16 @@ defmodule Anoma.MixProject do
   end
 
   # Run "mix help compile.app" to learn about applications.
+  # note: included_applications do *not* get started automatically
+  #       extra_applications do get started automatically
+  #       mnesia should *not* be started automatically
   def application do
     [
       extra_applications: [
         :observer,
         :wx
-      ]
+      ],
+      included_applications: [:mnesia]
     ]
   end
 

@@ -1,4 +1,5 @@
 defmodule Examples.ECommitmentTree do
+  alias Anoma.Node.Tables
   alias Examples.ETransparent.ETransaction
   alias Anoma.TransparentResource.Transaction
 
@@ -6,11 +7,6 @@ defmodule Examples.ECommitmentTree do
   import ExUnit.Assertions
 
   alias Examples.ECairo
-
-  @spec tree_storage() :: atom()
-  def tree_storage() do
-    :cmtree_test
-  end
 
   @spec sha256_32_spec() :: CommitmentTree.Spec.t()
   def sha256_32_spec() do
@@ -64,28 +60,30 @@ defmodule Examples.ECommitmentTree do
 
   @spec empty_mnesia_backed_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
   def empty_mnesia_backed_ct(spec \\ sha256_32_spec()) do
-    # Ensure it's really empty
-    :mnesia.delete_table(tree_storage())
-    CommitmentTree.init_storage(tree_storage())
-    tree = CommitmentTree.new(spec, tree_storage())
+    CommitmentTree.init_storage("no_node")
+
+    table_name = Tables.table_commitment_tree()
+    Tables.clear_table(Tables.table_commitment_tree())
+    tree = CommitmentTree.new(spec, table_name)
 
     assert tree.size == 0
-    assert tree.table == tree_storage()
+    assert tree.table == table_name
 
     tree
   end
 
-  @doc """
-  This fetches the current mnesia tree storage
+  # @doc """
+  # This fetches the current mnesia tree storage
 
-  This value is expected to differ, and will be a fixture for other
-  tests to assert about.
-  """
+  # This value is expected to differ, and will be a fixture for other
+  # tests to assert about.
+  # """
   @spec current_tree_mnesia_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
-  def current_tree_mnesia_ct(spec \\ sha256_32_spec()) do
-    tree = CommitmentTree.new(spec, tree_storage())
+  def current_tree_mnesia_ct(spec) do
+    table_name = Tables.table_commitment_tree()
+    tree = CommitmentTree.new(spec, table_name)
 
-    assert :mnesia.table_info(tree_storage(), :size) == tree.size
+    assert :mnesia.table_info(table_name, :size) == tree.size
 
     tree
   end
