@@ -1,10 +1,10 @@
 defmodule Anoma.TransparentResource.LogicProof do
-  use TypedStruct
-
   @behaviour Noun.Nounable.Kind
 
-  alias Anoma.TransparentResource.Resource
   alias __MODULE__
+  alias Anoma.TransparentResource.Resource
+
+  use TypedStruct
 
   typedstruct enforce: true do
     # the resource being proven

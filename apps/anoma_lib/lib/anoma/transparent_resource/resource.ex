@@ -3,8 +3,9 @@ defmodule Anoma.TransparentResource.Resource do
   resource struct
   """
 
-  use TypedStruct
   alias __MODULE__
+
+  use TypedStruct
 
   @type commitment() :: binary()
   @type nullifier() :: binary()

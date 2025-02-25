@@ -2,15 +2,16 @@ defmodule Anoma.Client.Connection.TCP do
   @moduledoc """
   I am the TCP connection process. I manage a tcp connection with a remote node.
   """
-  use GenServer
-  use TypedStruct
-
-  require Logger
 
   alias Anoma.Node.Transport.Messages
   alias Anoma.Protobuf.Announce.Announcement
   alias Anoma.Protobuf.Envelope
   alias Anoma.Protobuf.NodeInfo
+
+  require Logger
+
+  use GenServer
+  use TypedStruct
 
   @typedoc """
   Shorthand type for socket.

@@ -3,12 +3,12 @@ defmodule Nock do
   Nock, a universal function on nouns.
   """
 
+  alias __MODULE__
+
   require Noun
   require Logger
 
   use TypedStruct
-
-  alias __MODULE__
 
   @typedoc """
   I contain environmental information on how Nock shall be evaluated.

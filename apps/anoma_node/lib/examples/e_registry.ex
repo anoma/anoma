@@ -1,9 +1,9 @@
 defmodule Anoma.Node.Examples.ERegistry do
-  import ExUnit.Assertions
-
   alias __MODULE__
   alias Anoma.Node.Registry
   alias Anoma.Node.Registry.Address
+
+  import ExUnit.Assertions
 
   use TypedStruct
 

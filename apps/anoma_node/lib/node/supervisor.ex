@@ -3,9 +3,9 @@ defmodule Anoma.Node.Supervisor do
   I am the top level supervisor for the Anoma node.
   """
 
-  use Supervisor
-
   require Logger
+
+  use Supervisor
 
   alias Anoma.Node.Intents
   alias Anoma.Node.Logging
