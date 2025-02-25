@@ -144,6 +144,31 @@ defmodule Anoma.RM.Transparent.Action do
   end
 
   @doc """
+  I am the root function for the transparent action.
+
+  I go through the roots in the compliance units that are used for non
+  ephemetal resources and collect them in a set
+  """
+  @spec roots(t()) :: MapSet.t(integer())
+  def roots(t) do
+    for cu <- t.compliance_units, reduce: MapSet.new() do
+      acc -> ComplianceUnit.roots(cu) |> MapSet.union(acc)
+    end
+  end
+
+  @doc """
+  I am the app data function.
+
+  I gather all the app data used up in a transparent transaction.
+  """
+  @spec app_data(t()) :: MapSet.t({binary(), bool()})
+  def app_data(t) do
+    for {_key, value} <- t.app_data, reduce: MapSet.new() do
+      acc -> MapSet.put(acc, value)
+    end
+  end
+
+  @doc """
   I am the check for compliance units in a transparent action.
 
   I simply go through the compliance units and verify each one using the
