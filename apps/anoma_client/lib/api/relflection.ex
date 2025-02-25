@@ -4,6 +4,7 @@ defmodule Anoma.Client.Api.ReflectionServer do
     services: [
       Anoma.Protobuf.IntentsService.Service,
       Anoma.Protobuf.IndexerService.Service,
-      Anoma.Protobuf.NockService.Service
+      Anoma.Protobuf.NockService.Service,
+      Anoma.Protobuf.ExecutorService.Service
     ]
 end

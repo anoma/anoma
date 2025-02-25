@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Executor.AddROTransaction;
+
+import "node_info.proto";
+import "nock/result.proto";
+
+message Request {
+  NodeInfo node_info = 1;
+
+  bytes transaction = 2;
+}
+
+message Response {
+  oneof result {
+    Anoma.Protobuf.Nock.Success success = 1;
+    Anoma.Protobuf.Nock.Error error = 2;
+  }
+}

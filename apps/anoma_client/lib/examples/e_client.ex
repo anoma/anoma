@@ -9,6 +9,7 @@ defmodule Anoma.Client.Examples.EClient do
   use TypedStruct
 
   alias Anoma.Client
+  alias Anoma.Client.Storage
   alias Anoma.Client.Examples.EClient
   alias Anoma.Node.Examples.ENode
   alias Anoma.Protobuf.Indexer.Nullifiers
@@ -19,11 +20,15 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.Executor.AddROTransaction
+  alias Anoma.Protobuf.ExecutorService
   alias Anoma.Protobuf.Nock.Input
   alias Anoma.Protobuf.Nock.Prove
   alias Anoma.Protobuf.NockService
   alias Anoma.Protobuf.NodeInfo
   alias Examples.ETransparent.ETransaction
+  alias Anoma.TransparentResource.Action
+  alias Anoma.TransparentResource.Transaction
   alias Noun.Nounable
 
   import ExUnit.Assertions
@@ -211,6 +216,30 @@ defmodule Anoma.Client.Examples.EClient do
   end
 
   @doc """
+  I submit a read-only transaction
+  """
+  @spec submit_read_only_tx(EConnection.t()) :: EConnection.t()
+  def submit_read_only_tx(conn \\ setup()) do
+    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+
+    code =
+      Anoma.Node.Examples.ETransaction.zero() |> elem(1) |> Noun.Jam.jam()
+
+    request = %AddROTransaction.Request{node_info: node_id, transaction: code}
+
+    {:ok, reply} =
+      ExecutorService.Stub.add(conn.channel, request)
+
+    result = [[["key"] | 0] | 0] |> Noun.Jam.jam()
+
+    {:success, res} = reply.result
+
+    assert res.result == result
+
+    conn
+  end
+
+  @doc """
   I run a plaintext nock program using the client.
   """
   @spec prove_something_text(EConnection.t()) :: Prove.Response.t()
@@ -356,6 +385,69 @@ defmodule Anoma.Client.Examples.EClient do
     assert {:ok, <<>>} == Noun.Jam.cue(success.result)
 
     success.result
+  end
+
+  @spec prove_with_internal_scry_call(EConnection.t()) :: Prove.Response.t()
+  def prove_with_internal_scry_call(conn \\ setup()) do
+    Anoma.Client.Examples.EStorage.setup()
+
+    blob_key = ["anoma", "blob", <<123>>]
+    blob_value = "i am scried"
+
+    action =
+      %Action{app_data: %{blob_key => {blob_value, true}}}
+
+    tx =
+      %Transaction{actions: MapSet.new([action])} |> Noun.Nounable.to_noun()
+
+    key = ["anoma", "blob", "key"]
+    Storage.write({key, tx})
+    program = [[12, [1], 1 | ["id" | key]]] |> Noun.Jam.jam()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
+
+    res = response.result |> elem(1) |> Map.get(:result)
+
+    assert res == Noun.Jam.jam(tx)
+
+    assert {:ok, ^blob_value} = Storage.read({System.os_time(), blob_key})
+
+    res
+  end
+
+  @spec prove_with_external_scry_call(EConnection.t()) :: Prove.Response.t()
+  def prove_with_external_scry_call(conn \\ setup()) do
+    Anoma.Client.Examples.EStorage.setup()
+    key = ["anoma", "blob", "key"]
+
+    Anoma.Node.Transaction.Storage.write(
+      conn.client.node.node_id,
+      {1, [{key, 123}]}
+    )
+
+    program = [[12, [1], 1 | ["id" | key]]] |> Noun.Jam.jam()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
+
+    res = response.result |> elem(1) |> Map.get(:result)
+
+    assert 123 |> Noun.Jam.jam() == res
+
+    assert Storage.read({System.os_time(), key})
+           |> elem(1)
+           |> Noun.equal?(123)
+
+    res
   end
 
   ############################################################

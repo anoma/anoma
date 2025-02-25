@@ -27,4 +27,7 @@ runs:
     # install protobuf package
     - name: Install Protobuf Elixir dependencies
       shell: bash
-      run: mix escript.install hex protobuf --force
+      run: |
+        version=$(echo -n $(elixir -e "$(<mix.lock) |> Map.get(:protobuf) |> elem(2) |> IO.puts"))
+        echo "version: ${version}"
+        mix escript.install hex protobuf "$version" --force

@@ -14,6 +14,8 @@ defmodule Anoma.Node.Examples.EGRPC do
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.Executor.AddROTransaction
+  alias Anoma.Protobuf.ExecutorService
   alias Anoma.Protobuf.NodeInfo
   alias Examples.ETransparent.ETransaction
 
@@ -147,5 +149,27 @@ defmodule Anoma.Node.Examples.EGRPC do
 
     {:ok, _reply} =
       IndexerService.Stub.list_unspent_resources(client.channel, request)
+  end
+
+  @doc """
+  I submit a read-only transaction
+  """
+  @spec submit_read_only_tx(EGRPC.t()) :: term()
+  def submit_read_only_tx(%EGRPC{} = client \\ connect_to_node()) do
+    node_id = %NodeInfo{node_id: client.node.node_id}
+
+    code =
+      Anoma.Node.Examples.ETransaction.zero() |> elem(1) |> Noun.Jam.jam()
+
+    request = %AddROTransaction.Request{node_info: node_id, transaction: code}
+
+    {:ok, reply} =
+      ExecutorService.Stub.add(client.channel, request)
+
+    result = [[["key"] | 0] | 0] |> Noun.Jam.jam()
+
+    {:success, res} = reply.result
+
+    assert res.result == result
   end
 end

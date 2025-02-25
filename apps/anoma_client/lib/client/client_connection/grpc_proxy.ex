@@ -13,6 +13,8 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   alias Anoma.Protobuf.NodeInfo
   alias Anoma.Protobuf.Mempool.AddTransaction
   alias Anoma.Protobuf.MempoolService
+  alias Anoma.Protobuf.Executor.AddROTransaction
+  alias Anoma.Protobuf.ExecutorService
   require Logger
 
   ############################################################
@@ -93,6 +95,12 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, {:add_transaction, jammed_nock})
   end
 
+  @spec add_read_only_transaction(binary()) ::
+          {:ok, AddROTransaction.Response.t()}
+  def add_read_only_transaction(jammed_nock) do
+    GenServer.call(__MODULE__, {:add_ro_transaction, jammed_nock})
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -150,6 +158,18 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
     MempoolService.Stub.add(state.channel, request)
     {:reply, :ok, state}
+  end
+
+  def handle_call({:add_ro_transaction, jammed_nock}, _from, state) do
+    node_info = %NodeInfo{node_id: state.node_id}
+
+    request = %AddROTransaction.Request{
+      transaction: jammed_nock,
+      node_info: node_info
+    }
+
+    response = ExecutorService.Stub.add(state.channel, request)
+    {:reply, response, state}
   end
 
   @impl true

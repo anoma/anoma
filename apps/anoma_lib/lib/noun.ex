@@ -183,7 +183,7 @@ defmodule Noun do
       fal
     else
       haz = Murmur.hash_x86_32(key, seed)
-      ham = haz >>> 31 |> bxor(haz &&& (1 <<< 31) - 1)
+      ham = (haz >>> 31) |> bxor(haz &&& (1 <<< 31) - 1)
 
       unless ham == 0 do
         ham
@@ -300,6 +300,10 @@ defmodule Noun do
 
   def decode_signed(x) when Integer.is_odd(x) do
     -div(x + 1, 2)
+  end
+
+  def decode_signed(x) when is_binary(x) do
+    atom_binary_to_signed_integer(x)
   end
 
   @doc """

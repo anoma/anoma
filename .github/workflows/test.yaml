@@ -47,3 +47,11 @@ jobs:
       - name: mix test
         shell: bash
         run: MIX_ENV=${{inputs.mix-env}} mix test
+
+      - name: mix test (juvix)
+        shell: bash
+        run: MIX_ENV=${{inputs.mix-env}} mix test --only juvix
+
+      - name: mix test (zk)
+        shell: bash
+        run: MIX_ENV=${{inputs.mix-env}} mix test --only zk

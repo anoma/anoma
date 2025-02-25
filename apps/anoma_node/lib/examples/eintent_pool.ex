@@ -108,10 +108,10 @@ defmodule Anoma.Node.Examples.EIntentPool do
 
     new_nullifiers_event(enode, nlfs_set)
 
+    Process.sleep(100)
+
     node_id = enode.node_id
     IntentPool.new_intent(node_id, intent)
-
-    Process.sleep(100)
 
     # the intent will not be present in the mapset
     assert IntentPool.intents(node_id) == MapSet.new([])
@@ -130,10 +130,10 @@ defmodule Anoma.Node.Examples.EIntentPool do
 
     new_commitments_event(enode, cms_set)
 
+    Process.sleep(100)
+
     node_id = enode.node_id
     IntentPool.new_intent(node_id, intent)
-
-    Process.sleep(100)
 
     # the intent will not be present in the mapset
     assert IntentPool.intents(node_id) == MapSet.new([])
