@@ -250,3 +250,27 @@ defmodule Anoma.RM.Transparent.Transaction do
     end
   end
 end
+
+defimpl Anoma.RM.Intent, for: Anoma.RM.Transparent.Transaction do
+  alias Anoma.RM.Transparent.Transaction
+
+  @impl true
+  def compose(t1 = %Transaction{}, t2 = %Transaction{}) do
+    Transaction.compose(t1, t2)
+  end
+
+  @impl true
+  def verify(tx = %Transaction{}) do
+    Transaction.verify(tx)
+  end
+
+  @impl true
+  def nullifiers(tx = %Transaction{}) do
+    Transaction.nullifiers(tx)
+  end
+
+  @impl true
+  def commitments(tx = %Transaction{}) do
+    Transaction.commitments(tx)
+  end
+end
