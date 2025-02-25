@@ -1,6 +1,6 @@
 defmodule Examples.ECairo.EResource do
-  alias Anoma.Constants
   alias Anoma.CairoResource.Resource
+  alias Anoma.Constants
 
   @spec a_fixed_resource() :: Resource.t()
   def a_fixed_resource do

@@ -1,10 +1,10 @@
 defmodule Anoma.TransparentResource.Action do
-  use TypedStruct
-
+  alias __MODULE__
   alias Anoma.TransparentResource.Delta
   alias Anoma.TransparentResource.LogicProof
   alias Anoma.TransparentResource.Resource
-  alias __MODULE__
+
+  use TypedStruct
 
   typedstruct enforce: true do
     field(:commitments, MapSet.t(binary()), default: MapSet.new())

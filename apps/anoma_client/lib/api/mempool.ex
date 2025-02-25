@@ -3,9 +3,9 @@ defmodule Anoma.Client.Api.Servers.Mempool do
   alias Anoma.Protobuf.Mempool.AddTransaction
   alias GRPC.Server.Stream
 
-  use GRPC.Server, service: Anoma.Protobuf.MempoolService.Service
-
   require Logger
+
+  use GRPC.Server, service: Anoma.Protobuf.MempoolService.Service
 
   @spec add(AddTransaction.Request.t(), Stream.t()) ::
           AddTransaction.Response.t()
