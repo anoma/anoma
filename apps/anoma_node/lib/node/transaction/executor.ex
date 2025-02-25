@@ -21,6 +21,7 @@ defmodule Anoma.Node.Transaction.Executor do
   alias Anoma.Node
   alias Node.Transaction.{Backends, Mempool, Ordering}
   alias Node.Registry
+  alias Anoma.Node.Events
 
   use TypedStruct
 
@@ -47,21 +48,6 @@ defmodule Anoma.Node.Transaction.Executor do
     """
 
     field(:node_id, String.t())
-  end
-
-  typedstruct enforce: true, module: ExecutionEvent do
-    @typedoc """
-    I am the type of an execution event.
-
-    I am launched when transactions for a specific block have been
-    succesfully processed by their respective workers.
-
-    I hence signal the results with a message containing the result list.
-    The order of the results should coincide with the ordering of the
-    corresponding transactions.
-    """
-
-    field(:result, list({{:ok, any} | :error, binary()}))
   end
 
   ############################################################
@@ -191,7 +177,7 @@ defmodule Anoma.Node.Transaction.Executor do
       Enum.map(consensus, &listen_for_worker_finish!/1)
       |> Enum.reverse()
 
-    execution_event(res_list, node_id)
+    Events.execution_event(res_list, node_id)
   end
 
   ############################################################
@@ -204,7 +190,7 @@ defmodule Anoma.Node.Transaction.Executor do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
-          body: %Backends.CompleteEvent{
+          body: %Events.CompleteEvent{
             tx_id: ^id,
             tx_result: res
           }
@@ -214,16 +200,5 @@ defmodule Anoma.Node.Transaction.Executor do
     after
       5000 -> raise "Timeout waiting for #{inspect(id)}"
     end
-  end
-
-  @spec execution_event([{{:ok, any()} | :error, binary()}], String.t()) ::
-          :ok
-  defp execution_event(res_list, node_id) do
-    event =
-      Node.Event.new_with_body(node_id, %__MODULE__.ExecutionEvent{
-        result: res_list
-      })
-
-    EventBroker.event(event)
   end
 end
