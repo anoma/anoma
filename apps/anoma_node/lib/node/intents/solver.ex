@@ -20,6 +20,7 @@ defmodule Anoma.Node.Intents.Solver do
   alias Node.Registry
   alias Anoma.RM.Intent
   alias EventBroker.Event
+  alias Anoma.Node.Events
 
   require Logger
 
@@ -122,9 +123,15 @@ defmodule Anoma.Node.Intents.Solver do
   defp handle_event(event = %Event{}, state) do
     case event do
       %Event{
-        source_module: IntentPool,
+        # todo: do we really need the source module of an event? these events
+        # are not distributed, and we know there is only one intent pool. if
+        # other engines can send the same event, it might be useful to put that
+        # value into the field of the event, rather than having this additional
+        # data thats mostly ignored by the evnet handlers anyway. Will have to
+        # check if there are a lot of event handlers that actually specify
+        # engines from which the evnets must come, source_module: IntentPool,
         body: %Anoma.Node.Event{
-          body: %IntentPool.IntentAddSuccess{intent: intent}
+          body: %Events.IntentAddSuccess{intent: intent}
         }
       } ->
         handle_new_intent(intent, state)
@@ -281,7 +288,7 @@ defmodule Anoma.Node.Intents.Solver do
         %EventBroker.Event{
           body: %Node.Event{
             node_id: ^node_id,
-            body: %Mempool.TxEvent{
+            body: %Events.TxEvent{
               tx: %Mempool.Tx{backend: _, code: ^tx_candidate}
             }
           }
