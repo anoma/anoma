@@ -1,3 +1,78 @@
+defmodule Anoma.Node.Transaction.Mempool.Tx do
+  alias Anoma.Node.Transaction.Mempool
+  alias __MODULE__
+  use TypedStruct
+
+  typedstruct do
+    @typedoc """
+    I am the type of a transaction as stores in the Mempool.
+
+    I store all information about transaction results, backend it uses, as
+    well as the Nockma represented code.
+
+    ### Fields
+
+    - `:tx_result` - The transaction execution result.
+    Default: `:in_progress`
+    - `:vm_result` - The Nock VM result of the transaction code.
+    Default: `:in_progress`
+    - `:backend` - The backend for the transaction.
+    - `:code` - The Nockma transaction code to be executed.
+    """
+
+    field(:tx_result, Mempool.tx_result(), default: :in_progress)
+    field(:vm_result, Mempool.vm_result(), default: :in_progress)
+    field(:backend, Anoma.Node.Transaction.Backends.backend())
+    field(:code, Noun.t())
+  end
+
+  def from_noun([tx_result, vm_result, backend | code]) do
+    tx_result =
+      case tx_result do
+        [_ok | noun] -> {:ok, noun}
+        res -> res |> Noun.atom_integer_to_binary() |> String.to_atom()
+      end
+
+    vm_result =
+      case vm_result do
+        [_ok | noun] -> {:ok, noun}
+        res -> res |> Noun.atom_integer_to_binary() |> String.to_atom()
+      end
+
+    %__MODULE__{
+      tx_result: tx_result,
+      vm_result: vm_result,
+      backend: backend |> Noun.atom_integer_to_binary() |> String.to_atom(),
+      code: code
+    }
+  end
+
+  defimpl Noun.Nounable, for: Tx do
+    @impl true
+    def to_noun(t) do
+      tx_result =
+        case t.tx_result do
+          {:ok, noun} -> ["ok" | noun]
+          res -> Noun.Nounable.to_noun(res)
+        end
+
+      vm_result =
+        case t.vm_result do
+          {:ok, noun} -> ["ok" | noun]
+          res -> Noun.Nounable.to_noun(res)
+        end
+
+      backend =
+        case t.backend do
+          {:debug_read_term, _} -> "read"
+          res -> Noun.Nounable.to_noun(res)
+        end
+
+      [tx_result, vm_result, backend | t.code]
+    end
+  end
+end
+
 defmodule Anoma.Node.Transaction.Mempool do
   @moduledoc """
   I am the Mempool Engine.
@@ -28,6 +103,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   alias Anoma.Node
   alias Node.Registry
   alias Node.Transaction.{Storage, Executor, Backends}
+  alias Node.Transaction.Mempool.Tx
   alias Backends.ResultEvent
   alias Executor.ExecutionEvent
 
@@ -56,29 +132,6 @@ defmodule Anoma.Node.Transaction.Mempool do
            | {:transactions, list({binary, {Backends.backend(), Noun.t()}})}
            | {:consensus, list(list(binary))}
            | {:round, non_neg_integer()}
-
-  typedstruct module: Tx do
-    @typedoc """
-    I am the type of a transaction as stores in the Mempool.
-
-    I store all information about transaction results, backend it uses, as
-    well as the Nockma represented code.
-
-    ### Fields
-
-    - `:tx_result` - The transaction execution result.
-                     Default: `:in_progress`
-    - `:vm_result` - The Nock VM result of the transaction code.
-                     Default: `:in_progress`
-    - `:backend` - The backend for the transaction.
-    - `:code` - The Nockma transaction code to be executed.
-    """
-
-    field(:tx_result, Mempool.tx_result(), default: :in_progress)
-    field(:vm_result, Mempool.vm_result(), default: :in_progress)
-    field(:backend, Backends.backend())
-    field(:code, Noun.t())
-  end
 
   typedstruct module: TxEvent do
     @typedoc """
