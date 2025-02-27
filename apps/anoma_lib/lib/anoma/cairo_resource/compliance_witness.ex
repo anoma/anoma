@@ -5,6 +5,7 @@ defmodule Anoma.CairoResource.ComplianceWitness do
 
   alias __MODULE__
   alias Anoma.CairoResource.Resource
+  alias Anoma.CommitmentTree
 
   use TypedStruct
 

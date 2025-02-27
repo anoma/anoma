@@ -2,6 +2,7 @@ defmodule Examples.ECairo.EAction do
   alias Anoma.CairoResource.Action
   alias Anoma.CairoResource.Resource
   alias Anoma.CairoResource.Tree
+  alias Anoma.CommitmentTree
   alias Examples.ECairo.EProofRecord
   alias Examples.ECairo.EResource
   alias Examples.ECairo.EResourceLogic

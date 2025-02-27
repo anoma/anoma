@@ -6,6 +6,8 @@ defmodule Anoma.CairoResource.Tree do
 
   use TypedStruct
 
+  alias Anoma.CommitmentTree
+
   typedstruct enforce: true do
     # The resource merkle tree
     field(:tree, CommitmentTree.t())

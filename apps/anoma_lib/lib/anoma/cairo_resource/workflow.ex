@@ -8,6 +8,7 @@ defmodule Anoma.CairoResource.Workflow do
   alias Anoma.CairoResource.Resource
   alias Anoma.CairoResource.Tree
   alias Anoma.CairoResource.Utils
+  alias Anoma.CommitmentTree
 
   require Logger
 

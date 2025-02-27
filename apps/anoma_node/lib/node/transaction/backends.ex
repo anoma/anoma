@@ -13,6 +13,7 @@ defmodule Anoma.Node.Transaction.Backends do
   """
 
   alias Anoma.CairoResource.Transaction, as: CTransaction
+  alias Anoma.CommitmentTree
   alias Anoma.Node
   alias Anoma.Node.Logging
   alias Anoma.Node.Transaction.Executor

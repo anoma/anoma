@@ -10,6 +10,7 @@ defmodule Anoma.CairoResource.Action do
   alias Anoma.CairoResource.LogicInstance
   alias Anoma.CairoResource.ProofRecord
   alias Anoma.CairoResource.Tree
+  alias Anoma.CommitmentTree
   alias Anoma.Constants
 
   require Logger

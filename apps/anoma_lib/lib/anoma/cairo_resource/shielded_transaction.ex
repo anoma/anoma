@@ -13,6 +13,7 @@ defmodule Anoma.CairoResource.Transaction do
   alias Anoma.CairoResource.Resource
   alias Anoma.CairoResource.Utils
   alias Anoma.CairoResource.Workflow
+  alias Anoma.CommitmentTree
 
   require Logger
 
@@ -62,6 +63,8 @@ defmodule Anoma.CairoResource.Transaction do
   end
 
   defimpl Noun.Nounable, for: __MODULE__ do
+    alias Anoma.CommitmentTree
+
     @impl true
     def to_noun(transaction = %Transaction{}) do
       {

@@ -1,4 +1,5 @@
 defmodule CommitmentTreeTest do
+  alias Anoma.CommitmentTree
   alias Examples.ECommitmentTree
 
   use ExUnit.Case, async: true
