@@ -1,4 +1,4 @@
-defmodule Examples.TcpTest do
+defmodule Anoma.Node.TcpTest do
   use ExUnit.Case, async: true
   use TestHelper.TestMacro
 

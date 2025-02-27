@@ -1,4 +1,4 @@
-defmodule LoggingTest do
+defmodule Anoma.Node.LoggingTest do
   use ExUnit.Case, async: true
 
   use TestHelper.GenerateExampleTests,
