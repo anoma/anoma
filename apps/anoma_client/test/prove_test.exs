@@ -1,4 +1,4 @@
-defmodule ProveTEst do
+defmodule Anoma.Client.ProveTEst do
   use ExUnit.Case
 
   @moduletag :juvix

@@ -1,4 +1,6 @@
-defmodule CommitmentTree.Node do
+defmodule Anoma.CommitmentTree.Node do
+  alias Anoma.CommitmentTree
+
   use TypedStruct
 
   typedstruct enforce: true do

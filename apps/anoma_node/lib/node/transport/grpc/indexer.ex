@@ -4,9 +4,9 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
   alias Anoma.Protobuf.Indexer.UnspentResources
   alias GRPC.Server.Stream
 
-  use GRPC.Server, service: Anoma.Protobuf.IndexerService.Service
-
   require Logger
+
+  use GRPC.Server, service: Anoma.Protobuf.IndexerService.Service
 
   @spec list_nullifiers(Nullifiers.Request.t(), Stream.t()) ::
           Nullifiers.Response.t()

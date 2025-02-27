@@ -1,6 +1,7 @@
-defmodule Examples.ECairo.ETransaction do
-  alias Anoma.CairoResource.{LogicInstance, Transaction}
-  alias Examples.ECairo.EAction
+defmodule Anoma.Examples.ECairo.ETransaction do
+  alias Anoma.CairoResource.LogicInstance
+  alias Anoma.CairoResource.Transaction
+  alias Anoma.Examples.ECairo.EAction
 
   use TestHelper.TestMacro
 

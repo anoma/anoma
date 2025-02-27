@@ -1,5 +1,6 @@
 defmodule AnomaTest.CairoResource do
   use TestHelper.TestMacro, async: true
+  alias Anoma.Examples
 
   @moduletag :zk
 

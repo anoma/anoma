@@ -12,17 +12,22 @@ defmodule Anoma.Node.Transaction.Backends do
   - `execute/3`
   """
 
-  alias Anoma.Node
-  alias Node.Logging
-  alias Node.Transaction.{Executor, Ordering, Storage}
-  alias Anoma.TransparentResource
-  alias Anoma.TransparentResource.Transaction, as: TTransaction
-  alias Anoma.TransparentResource.Resource, as: TResource
   alias Anoma.CairoResource.Transaction, as: CTransaction
+  alias Anoma.CommitmentTree
+  alias Anoma.Node
+  alias Anoma.Node.Logging
+  alias Anoma.Node.Transaction.Executor
+  alias Anoma.Node.Transaction.Ordering
+  alias Anoma.Node.Transaction.Storage
+  alias Anoma.TransparentResource
+  alias Anoma.TransparentResource.Resource, as: TResource
+  alias Anoma.TransparentResource.Transaction, as: TTransaction
+
+  require Node.Event
+  require Noun
 
   import Nock
-  require Noun
-  require Node.Event
+
   use EventBroker.DefFilter
   use TypedStruct
 

@@ -1,8 +1,10 @@
-defmodule CommitmentTree.Spec do
+defmodule Anoma.CommitmentTree.Spec do
   @moduledoc """
   A specification for a commitment tree.
   """
   use TypedStruct
+
+  alias Anoma.CommitmentTree
 
   typedstruct enforce: true do
     # the (fixed) depth of the tree

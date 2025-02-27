@@ -1,6 +1,6 @@
-defmodule Examples.ETransparent.ELogicProof do
+defmodule Anoma.Examples.ETransparent.ELogicProof do
+  alias Anoma.Examples.ETransparent.EResource
   alias Anoma.TransparentResource.LogicProof
-  alias Examples.ETransparent.EResource
 
   use TestHelper.TestMacro
 

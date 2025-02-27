@@ -11,13 +11,13 @@ defmodule Anoma.Node.Transport.TCP.Listener do
   - `port/1`
   """
 
-  use GenServer
-  use TypedStruct
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transport.TCP
 
   require Logger
 
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transport.TCP
+  use GenServer
+  use TypedStruct
 
   @typedoc """
   Shorthand type for socket.

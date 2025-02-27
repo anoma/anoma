@@ -1,11 +1,12 @@
-defmodule Examples.ECommitmentTree do
-  alias Examples.ETransparent.ETransaction
+defmodule Anoma.Examples.ECommitmentTree do
+  alias Anoma.CommitmentTree
+  alias Anoma.Examples.ECairo
+  alias Anoma.Examples.ETransparent.ETransaction
   alias Anoma.TransparentResource.Transaction
 
   require ExUnit.Assertions
-  import ExUnit.Assertions
 
-  alias Examples.ECairo
+  import ExUnit.Assertions
 
   @spec tree_storage() :: atom()
   def tree_storage() do

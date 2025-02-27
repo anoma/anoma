@@ -1,10 +1,9 @@
-defmodule Examples.ECairo.EProofRecord do
-  use Memoize
-
-  alias Examples.ECairo.EComplianceWitness
+defmodule Anoma.Examples.ECairo.EProofRecord do
   alias Anoma.CairoResource.ProofRecord
   alias Anoma.CairoResource.Tree
+  alias Anoma.Examples.ECairo.EComplianceWitness
 
+  use Memoize
   use TestHelper.TestMacro
 
   @spec a_compliance_proof() :: ProofRecord.t()

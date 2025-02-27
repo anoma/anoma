@@ -4,9 +4,10 @@ defmodule Anoma.CairoResource.ComplianceWitness do
   """
 
   alias __MODULE__
-  use TypedStruct
-
   alias Anoma.CairoResource.Resource
+  alias Anoma.CommitmentTree
+
+  use TypedStruct
 
   typedstruct enforce: true do
     # Input resource

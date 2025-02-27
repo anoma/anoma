@@ -1,9 +1,11 @@
-defmodule CommitmentTree.Proof do
+defmodule Anoma.CommitmentTree.Proof do
   @moduledoc """
   I represent a compact proof that a particular element is contained within the
   commitment tree.
   """
   use TypedStruct
+
+  alias Anoma.CommitmentTree
 
   # Not sure if there is a nice way to represent this for sending over the wire
   # (ok, I do, but it involves mutation), but for elixir, represent this is as:

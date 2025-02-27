@@ -1,4 +1,4 @@
-defmodule SolverTest do
+defmodule Anoma.Node.SolverTest do
   use ExUnit.Case, async: true
 
   use TestHelper.GenerateExampleTests,

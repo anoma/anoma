@@ -2,7 +2,6 @@ defmodule Anoma.Node.Examples.EGRPC do
   @moduledoc """
   I contain examples to test the GRPC endpoint of the node.
   """
-  use TypedStruct
 
   alias Anoma.Node.Examples.EGRPC
   alias Anoma.Node.Examples.ENode
@@ -15,11 +14,13 @@ defmodule Anoma.Node.Examples.EGRPC do
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
   alias Anoma.Protobuf.NodeInfo
-  alias Examples.ETransparent.ETransaction
+  alias Anoma.Examples.ETransparent.ETransaction
+
+  require Logger
 
   import ExUnit.Assertions
 
-  require Logger
+  use TypedStruct
 
   ############################################################
   #                    Context                               #

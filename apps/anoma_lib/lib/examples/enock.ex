@@ -1,14 +1,16 @@
-defmodule Examples.ENock do
-  use Memoize
+defmodule Anoma.Examples.ENock do
+  alias Anoma.Examples
+  alias Anoma.Examples.ECrypto
+  alias Anoma.Examples.ETransparent.EAction
+  alias Anoma.TransparentResource.Delta
+  alias Anoma.TransparentResource.Transaction
 
   require ExUnit.Assertions
-  import ExUnit.Assertions
 
-  alias Examples.ECrypto
-  alias Anoma.TransparentResource.Transaction
-  alias Examples.ETransparent.EAction
-  alias Anoma.TransparentResource.Delta
+  import ExUnit.Assertions
   import Noun
+
+  use Memoize
 
   ####################################################################
   ##                        Resource Logics                         ##

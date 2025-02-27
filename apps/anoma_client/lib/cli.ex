@@ -48,9 +48,9 @@ defmodule Anoma.Client.CLI do
   ```
   """
 
-  require Logger
-
   alias Anoma.Client
+
+  require Logger
 
   @spec main([String.t()]) :: any()
   def main(args) do

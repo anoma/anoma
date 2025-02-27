@@ -1,11 +1,10 @@
-defmodule Examples.ECairo.EResourceLogic do
-  use Memoize
-
-  alias Anoma.CairoResource.ProofRecord
-  alias Examples.ECairo.EProofRecord
+defmodule Anoma.Examples.ECairo.EResourceLogic do
   alias Anoma.CairoResource.LogicInstance
-  alias Examples.ECairo.EResource
+  alias Anoma.CairoResource.ProofRecord
+  alias Anoma.Examples.ECairo.EProofRecord
+  alias Anoma.Examples.ECairo.EResource
 
+  use Memoize
   use TestHelper.TestMacro
 
   @spec a_input_resource_logic() :: ProofRecord.t()

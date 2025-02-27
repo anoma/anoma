@@ -1,4 +1,4 @@
-defmodule CommitmentTree do
+defmodule Anoma.CommitmentTree do
   @moduledoc """
   A simple commitment tree.
 
@@ -11,6 +11,7 @@ defmodule CommitmentTree do
   Fiats that empty subtrees have a hash of 0 for simplicity.
   """
   use TypedStruct
+  alias Anoma.CommitmentTree
 
   typedstruct enforce: true do
     # the specification for this tree

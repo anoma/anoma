@@ -3,13 +3,14 @@ defmodule Anoma.CairoResource.Workflow do
   I am a bunch of workflow functions for creating a shielded transaction.
   """
 
-  require Logger
-
-  alias Anoma.CairoResource.Utils
-  alias Anoma.CairoResource.Resource
-  alias Anoma.CairoResource.Tree
   alias Anoma.CairoResource.Action
   alias Anoma.CairoResource.ProofRecord
+  alias Anoma.CairoResource.Resource
+  alias Anoma.CairoResource.Tree
+  alias Anoma.CairoResource.Utils
+  alias Anoma.CommitmentTree
+
+  require Logger
 
   @spec hash_resource_logic(binary()) :: {:ok, binary()} | {:error, term()}
   def hash_resource_logic(resource_logic_bin) do

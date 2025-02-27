@@ -1,8 +1,12 @@
-defmodule Examples.EEventBroker do
+defmodule EventBroker.Examples.EEventBroker do
   @moduledoc false
 
+  alias EventBroker.Event
+  alias EventBroker.Filters
+  alias EventBroker.Registry
+  alias EventBroker.Supervisor
+
   use ExUnit.Case
-  alias EventBroker.{Supervisor, Registry, Filters, Event}
 
   @doc """
   I start the broker-registry duo.

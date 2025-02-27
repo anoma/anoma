@@ -1,7 +1,7 @@
-defmodule EventbrokerTest.EventBroker do
+defmodule EventBroker.EventBrokerTest do
   use ExUnit.Case, async: true
 
-  alias Examples.EEventBroker
+  alias EventBroker.Examples.EEventBroker
 
   test "examples" do
     EEventBroker.check_self_sub()

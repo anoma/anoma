@@ -1,4 +1,4 @@
-defmodule Examples.GrpcTest do
+defmodule Anoma.Node.Examples.GrpcTest do
   use TestHelper.TestMacro
 
   use TestHelper.GenerateExampleTests,
