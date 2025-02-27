@@ -19,6 +19,7 @@
   {:qex, ">= 0.5.1"},
   {:recon, "~> 2.5.4"},
   {:rexbug, ">= 2.0.0-rc1"},
+  {:spark, "~> 2.2"},
   {:toml, "~> 0.7"},
   {:typed_struct, "~> 0.3.0"},
   {:lexical_credo, "~> 0.1.0", only: [:dev, :test]},
