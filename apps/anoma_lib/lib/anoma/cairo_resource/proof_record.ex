@@ -157,4 +157,16 @@ defmodule Anoma.CairoResource.ProofRecord do
     |> Cairo.get_program_hash()
     |> :binary.list_to_bin()
   end
+
+  @spec padding_resource_logic_proving_key() ::
+          {:error, atom()} | {:ok, binary()}
+  def padding_resource_logic_proving_key() do
+    proving_key_dir =
+      Path.join(
+        :code.priv_dir(:anoma_lib),
+        "params/trivial_resource_logic.json"
+      )
+
+    File.read(proving_key_dir)
+  end
 end

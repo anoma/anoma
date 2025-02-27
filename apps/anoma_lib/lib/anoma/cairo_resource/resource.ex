@@ -198,4 +198,27 @@ defmodule Anoma.CairoResource.Resource do
     )
     |> :binary.list_to_bin()
   end
+
+  @spec a_padding_resource() :: t()
+  def a_padding_resource() do
+    aresource = %Resource{
+      # use the trivial logic
+      logic_ref: Constants.cairo_trivial_resource_logic_hash(),
+      label_ref: <<0::256>>,
+      # the quantity must be 0
+      quantity: <<0::256>>,
+      value_ref: <<0::256>>,
+      # the is_ephemeral must be true
+      is_ephemeral: true,
+      # update the nonce if it's an output resource
+      nonce: :crypto.strong_rand_bytes(32),
+      # use the default nk
+      nk_commitment:
+        Resource.get_nk_commitment(Constants.default_cairo_nullifier_key()),
+      # use a random seed
+      rand_seed: :crypto.strong_rand_bytes(32)
+    }
+
+    aresource
+  end
 end
