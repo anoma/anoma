@@ -1,7 +1,7 @@
-defmodule Examples.ECairo.EProofRecord do
+defmodule Anoma.Examples.ECairo.EProofRecord do
   alias Anoma.CairoResource.ProofRecord
   alias Anoma.CairoResource.Tree
-  alias Examples.ECairo.EComplianceWitness
+  alias Anoma.Examples.ECairo.EComplianceWitness
 
   use Memoize
   use TestHelper.TestMacro

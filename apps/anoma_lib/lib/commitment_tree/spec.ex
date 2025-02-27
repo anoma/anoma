@@ -6,7 +6,6 @@ defmodule Anoma.CommitmentTree.Spec do
 
   alias Anoma.CommitmentTree
 
-
   typedstruct enforce: true do
     # the (fixed) depth of the tree
     field(:depth, integer())

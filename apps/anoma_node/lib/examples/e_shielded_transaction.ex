@@ -1,11 +1,12 @@
 defmodule Anoma.Node.Examples.EShieldedTransaction do
+  alias Anoma.Examples
+  alias Anoma.Examples.ECairo.EResource, as: ESResource
+  alias Anoma.Examples.ENock
   alias Anoma.Node
   alias Anoma.Node.Examples.ETransaction
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Storage
-  alias Examples.ECairo.EResource, as: ESResource
-  alias Examples.ENock
 
   require ExUnit.Assertions
 

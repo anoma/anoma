@@ -1,8 +1,9 @@
-defmodule Examples.ENock do
+defmodule Anoma.Examples.ENock do
+  alias Anoma.Examples
+  alias Anoma.Examples.ECrypto
+  alias Anoma.Examples.ETransparent.EAction
   alias Anoma.TransparentResource.Delta
   alias Anoma.TransparentResource.Transaction
-  alias Examples.ECrypto
-  alias Examples.ETransparent.EAction
 
   require ExUnit.Assertions
 

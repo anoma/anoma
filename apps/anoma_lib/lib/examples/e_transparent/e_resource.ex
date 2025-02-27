@@ -1,4 +1,4 @@
-defmodule Examples.ETransparent.EResource do
+defmodule Anoma.Examples.ETransparent.EResource do
   alias Anoma.Crypto.Randomness
   alias Anoma.TransparentResource.Resource
 

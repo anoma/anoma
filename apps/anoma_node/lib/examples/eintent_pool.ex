@@ -8,6 +8,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   alias Anoma.Node.Intents.IntentPool
   alias Anoma.RM.DumbIntent
   alias Anoma.RM.Intent
+  alias Anoma.Examples
 
   require ExUnit.Assertions
   require Node.Event

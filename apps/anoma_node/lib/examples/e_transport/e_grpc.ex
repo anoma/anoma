@@ -14,7 +14,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
   alias Anoma.Protobuf.NodeInfo
-  alias Examples.ETransparent.ETransaction
+  alias Anoma.Examples.ETransparent.ETransaction
 
   require Logger
 

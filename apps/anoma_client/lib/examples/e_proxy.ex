@@ -9,9 +9,9 @@ defmodule Anoma.Client.Examples.EProxy do
 
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Client.Examples.EClient
+  alias Anoma.Examples.ETransparent.ETransaction
   alias Anoma.Protobuf.Intent
   alias Anoma.Protobuf.Intents.Intent
-  alias Examples.ETransparent.ETransaction
   alias Noun.Nounable
 
   require ExUnit.Assertions

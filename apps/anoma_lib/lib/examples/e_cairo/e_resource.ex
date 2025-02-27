@@ -1,4 +1,4 @@
-defmodule Examples.ECairo.EResource do
+defmodule Anoma.Examples.ECairo.EResource do
   alias Anoma.CairoResource.Resource
   alias Anoma.Constants
 

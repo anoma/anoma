@@ -1,8 +1,8 @@
-defmodule Examples.ECommitmentTree do
+defmodule Anoma.Examples.ECommitmentTree do
   alias Anoma.CommitmentTree
+  alias Anoma.Examples.ECairo
+  alias Anoma.Examples.ETransparent.ETransaction
   alias Anoma.TransparentResource.Transaction
-  alias Examples.ECairo
-  alias Examples.ETransparent.ETransaction
 
   require ExUnit.Assertions
 

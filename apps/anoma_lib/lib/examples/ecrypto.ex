@@ -1,4 +1,4 @@
-defmodule Examples.ECrypto do
+defmodule Anoma.Examples.ECrypto do
   alias Anoma.Crypto.Id
   alias Anoma.Crypto.Sign
   alias Anoma.Crypto.Symmetric

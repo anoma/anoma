@@ -1,4 +1,7 @@
 defmodule Anoma.Node.Examples.ETransaction do
+  alias Anoma.Examples
+  alias Anoma.Examples.ENock
+  alias Anoma.Examples.ETransparent.ETransaction
   alias Anoma.Node
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Transaction.Backends
@@ -6,8 +9,6 @@ defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Storage
   alias Anoma.TransparentResource.Transaction
-  alias Examples.ENock
-  alias Examples.ETransparent.ETransaction
 
   require ExUnit.Assertions
 

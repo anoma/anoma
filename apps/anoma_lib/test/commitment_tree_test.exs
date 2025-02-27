@@ -1,6 +1,6 @@
-defmodule CommitmentTreeTest do
+defmodule Anoma.CommitmentTreeTest do
   alias Anoma.CommitmentTree
-  alias Examples.ECommitmentTree
+  alias Anoma.Examples.ECommitmentTree
 
   use ExUnit.Case, async: true
   use TestHelper.TestMacro

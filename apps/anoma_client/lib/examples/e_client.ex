@@ -9,6 +9,7 @@ defmodule Anoma.Client.Examples.EClient do
 
   alias Anoma.Client
   alias Anoma.Client.Examples.EClient
+  alias Anoma.Examples.ETransparent.ETransaction
   alias Anoma.Node.Examples.ENode
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
@@ -22,7 +23,6 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.Nock.Prove
   alias Anoma.Protobuf.NockService
   alias Anoma.Protobuf.NodeInfo
-  alias Examples.ETransparent.ETransaction
   alias Noun.Nounable
 
   import ExUnit.Assertions

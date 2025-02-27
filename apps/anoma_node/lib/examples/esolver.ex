@@ -3,6 +3,7 @@ defmodule Anoma.Node.Examples.ESolver do
   I contain several examples on how to use the solver.
   """
 
+  alias Anoma.Examples
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Intents.IntentPool
   alias Anoma.Node.Intents.Solver

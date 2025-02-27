@@ -1,8 +1,8 @@
-defmodule Examples.ECairo.EResourceLogic do
+defmodule Anoma.Examples.ECairo.EResourceLogic do
   alias Anoma.CairoResource.LogicInstance
   alias Anoma.CairoResource.ProofRecord
-  alias Examples.ECairo.EProofRecord
-  alias Examples.ECairo.EResource
+  alias Anoma.Examples.ECairo.EProofRecord
+  alias Anoma.Examples.ECairo.EResource
 
   use Memoize
   use TestHelper.TestMacro

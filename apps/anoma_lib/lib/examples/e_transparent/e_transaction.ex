@@ -1,6 +1,5 @@
-defmodule Examples.ETransparent.ETransaction do
-  alias Examples.ETransparent.EAction
-
+defmodule Anoma.Examples.ETransparent.ETransaction do
+  alias Anoma.Examples.ETransparent.EAction
   alias Anoma.TransparentResource.Transaction
 
   use TestHelper.TestMacro
