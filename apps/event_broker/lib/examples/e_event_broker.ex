@@ -1,4 +1,4 @@
-defmodule Examples.EEventBroker do
+defmodule EventBroker.Examples.EEventBroker do
   @moduledoc false
 
   alias EventBroker.Event
