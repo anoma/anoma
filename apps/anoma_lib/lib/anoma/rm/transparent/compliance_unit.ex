@@ -15,13 +15,14 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   """
   alias Anoma.RM.Transparent.ProvingSystem.CPS
   alias Anoma.RM.Transparent.ProvingSystem.CPS.Instance
+  alias __MODULE__
 
   use TypedStruct
 
   typedstruct enforce: true do
     field(:proof, <<>>, default: <<>>)
     field(:instance, Instance.t(), default: %Instance{})
-    field(:vk, <<>>, default: CPS.key())
+    field(:vk, binary(), default: CPS.key())
   end
 
   @doc """
@@ -42,7 +43,7 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   """
   @spec created(t()) :: MapSet.t(integer())
   def created(t) do
-    t.insance.created |> Enum.map(&elem(&1, 0)) |> MapSet.new()
+    t.instance.created |> Enum.map(&elem(&1, 0)) |> MapSet.new()
   end
 
   @doc """
@@ -53,7 +54,30 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   """
   @spec consumed(t()) :: MapSet.t(integer())
   def consumed(t) do
-    t.insance.consumed |> Enum.map(&elem(&1, 0)) |> MapSet.new()
+    t.instance.consumed |> Enum.map(&elem(&1, 0)) |> MapSet.new()
+  end
+
+  @doc """
+  I am the function to get roots for a TRM compliance unit.
+
+  I go thtough the consumed field and get the provided roots for
+  non-ephemeral consumed resources.
+  """
+  @spec roots(t()) :: MapSet.t(integer())
+  def roots(t) do
+    for {nlf, root, _} <- t.instance.consumed, reduce: MapSet.new() do
+      acc ->
+        with {:ok, resource} <-
+               Anoma.RM.Transparent.ProvingSystem.RLPS.match_resource(
+                 nlf,
+                 true
+               ),
+             false <- resource.isephemeral do
+          MapSet.put(acc, root)
+        else
+          _ -> acc
+        end
+    end
   end
 
   @doc """
@@ -88,8 +112,10 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [<<>>, Instance.to_noun(t.instance) | <<>>]
+  defimpl Noun.Nounable, for: ComplianceUnit do
+    @impl true
+    def to_noun(t = %ComplianceUnit{}) do
+      [<<>>, Noun.Nounable.to_noun(t.instance) | <<>>]
+    end
   end
 end

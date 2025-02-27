@@ -23,6 +23,7 @@ defmodule Anoma.RM.Transparent.Action do
   alias Anoma.RM.Transparent.ProvingSystem.RLPS
   alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias Anoma.RM.Transparent.ProvingSystem.CPS.Instance
+  alias __MODULE__
 
   require Logger
   use TypedStruct
@@ -55,16 +56,14 @@ defmodule Anoma.RM.Transparent.Action do
   @spec create(
           list({<<_::256>>, Resource.t(), integer()}),
           list(Resource.t()),
-          %{integer => {binary(), boolean()}}
+          %{integer() => list({binary(), boolean()})}
         ) :: t()
   def create(to_nullify, to_commit, app_data) do
     consumed =
       Enum.map(
         to_nullify,
         fn {nfkey, resource, acc} ->
-          {Resource.nullifier_hash(nfkey, resource),
-           Noun.Jam.jam(acc)
-           |> Noun.atom_binary_to_integer(), resource.logicref}
+          {Resource.nullifier_hash(nfkey, resource), acc, resource.logicref}
         end
       )
 
@@ -145,6 +144,31 @@ defmodule Anoma.RM.Transparent.Action do
   end
 
   @doc """
+  I am the root function for the transparent action.
+
+  I go through the roots in the compliance units that are used for non
+  ephemetal resources and collect them in a set
+  """
+  @spec roots(t()) :: MapSet.t(integer())
+  def roots(t) do
+    for cu <- t.compliance_units, reduce: MapSet.new() do
+      acc -> ComplianceUnit.roots(cu) |> MapSet.union(acc)
+    end
+  end
+
+  @doc """
+  I am the app data function.
+
+  I gather all the app data used up in a transparent transaction.
+  """
+  @spec app_data(t()) :: MapSet.t({binary(), bool()})
+  def app_data(t) do
+    for {_key, value} <- t.app_data, reduce: MapSet.new() do
+      acc -> MapSet.put(acc, value)
+    end
+  end
+
+  @doc """
   I am the check for compliance units in a transparent action.
 
   I simply go through the compliance units and verify each one using the
@@ -166,7 +190,7 @@ defmodule Anoma.RM.Transparent.Action do
     Enum.all?(t.created, fn cm ->
       with {:ok, resource} <- RLPS.match_resource(cm, false) do
         RLPS.verify(
-          resource.logicref,
+          Noun.atom_integer_to_binary(resource.logicref),
           %RLPS.Instance{
             tag: cm,
             flag: false,
@@ -193,7 +217,7 @@ defmodule Anoma.RM.Transparent.Action do
     Enum.all?(t.consumed, fn nf ->
       with {:ok, resource} <- RLPS.match_resource(nf, true) do
         RLPS.verify(
-          resource.logicref,
+          Noun.atom_integer_to_binary(resource.logicref),
           %RLPS.Instance{
             tag: nf,
             flag: true,
@@ -242,8 +266,10 @@ defmodule Anoma.RM.Transparent.Action do
         created = ComplianceUnit.created(cu)
         consumed = ComplianceUnit.consumed(cu)
 
-        if MapSet.disjoint?(acc.created, created) and
-             MapSet.disjoint?(acc.consumed, consumed) do
+        if (MapSet.size(acc.created) == 0 or
+              MapSet.disjoint?(acc.created, created)) and
+             (MapSet.size(acc.consumed) == 0 or
+                MapSet.disjoint?(acc.consumed, consumed)) do
           {:cont,
            {:ok,
             %{
@@ -265,7 +291,7 @@ defmodule Anoma.RM.Transparent.Action do
   @spec is_list_unique(list()) :: {:ok, list()} | {:error, String.t()}
   defp is_list_unique(list) do
     Enum.reduce_while(list, {:ok, []}, fn elem, {:ok, acc} ->
-      if Enum.any?(acc, fn x -> x == elem end) do
+      unless Enum.any?(acc, fn x -> x == elem end) do
         {:cont, {:ok, [elem | acc]}}
       else
         {:halt,
@@ -309,19 +335,19 @@ defmodule Anoma.RM.Transparent.Action do
          consumed: list_consumed |> Enum.map(&Noun.atom_binary_to_integer/1),
          resource_logic_proofs:
            proof_map
-           |> Enum.into(%{}, fn {tag, {bin, proof}} ->
+           |> Enum.into(%{}, fn {tag, [bin | proof]} ->
              {Noun.atom_binary_to_integer(tag),
               {Noun.atom_binary_to_integer(bin), proof}}
            end),
          compliance_units:
            cu_map
            |> Enum.into(MapSet.new(), fn x ->
-             {:ok, instance} = Instance.from_noun(x)
-             instance
+             {:ok, cu} = ComplianceUnit.from_noun(x)
+             cu
            end),
          app_data:
            appdata
-           |> Enum.into(%{}, fn {tag, {bin, bool}} ->
+           |> Enum.into(%{}, fn {tag, [bin | bool]} ->
              {Noun.atom_binary_to_integer(tag),
               {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}}
            end)
@@ -331,14 +357,16 @@ defmodule Anoma.RM.Transparent.Action do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [
-      Noun.Nounable.to_noun(t.created),
-      Noun.Nounable.to_noun(t.consumed),
-      Noun.Nounable.to_noun(t.resource_logic_proofs),
-      Noun.Nounable.to_noun(t.compliance_units)
-      | Noun.Nounable.to_noun(t.app_data)
-    ]
+  defimpl Noun.Nounable, for: Action do
+    @impl true
+    def to_noun(t = %Action{}) do
+      [
+        Noun.Nounable.to_noun(t.created),
+        Noun.Nounable.to_noun(t.consumed),
+        Noun.Nounable.to_noun(t.resource_logic_proofs),
+        Noun.Nounable.to_noun(t.compliance_units)
+        | Noun.Nounable.to_noun(t.app_data)
+      ]
+    end
   end
 end

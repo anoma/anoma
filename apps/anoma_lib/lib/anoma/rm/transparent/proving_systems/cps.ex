@@ -52,12 +52,14 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS.Instance do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(instance) do
-    [
-      Noun.Nounable.to_noun(instance.consumed),
-      Noun.Nounable.to_noun(instance.created) | instance.unit_delta
-    ]
+  defimpl Noun.Nounable, for: Instance do
+    @impl true
+    def to_noun(instance = %Instance{}) do
+      [
+        Noun.Nounable.to_noun(instance.consumed),
+        Noun.Nounable.to_noun(instance.created) | instance.unit_delta
+      ]
+    end
   end
 end
 
@@ -85,6 +87,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
   alias Anoma.RM.Transparent.Primitive.CommitmentAccumulator
   alias Anoma.RM.Transparent.Resource
   alias Anoma.RM.Transparent.ProvingSystem.CPS.Instance
+  alias __MODULE__
 
   require Logger
   use TypedStruct
@@ -145,7 +148,8 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
              9,
              2,
              10,
-             [6, 1 | Instance.to_noun(instance)]
+             [6, 1 | Noun.Nounable.to_noun(instance)],
+             0 | 1
            ]) do
       Noun.equal?(res, 0)
     else
@@ -217,8 +221,9 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
   @spec verify_nulfs_compliance(list({integer(), integer()})) ::
           {:ok, MapSet.t(Resource.t())} | {:error, String.t()}
   def verify_nulfs_compliance(consumed) do
-    Enum.reduce_while(consumed, MapSet.new(), fn {nul, rt}, {:ok, acc} ->
-      with <<"NF_", rest::bitstring>> <- nul,
+    Enum.reduce_while(consumed, {:ok, MapSet.new()}, fn {nul, rt},
+                                                        {:ok, acc} ->
+      with <<"NF_", rest::bitstring>> <- nul |> Noun.atom_integer_to_binary(),
            {:ok, noun_resource} <- Noun.Jam.cue(rest),
            {:ok, resource} <- Resource.from_noun(noun_resource),
            true <-
@@ -246,8 +251,8 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
   @spec verify_cms_compliance(list({integer(), integer()})) ::
           {:ok, MapSet.t(Resource.t())} | {:error, String.t()}
   def verify_cms_compliance(consumed) do
-    Enum.reduce_while(consumed, true, fn {cm, _}, {:ok, acc} ->
-      with <<"CM_", rest::bitstring>> <- cm,
+    Enum.reduce_while(consumed, {:ok, MapSet.new()}, fn {cm, _}, {:ok, acc} ->
+      with <<"CM_", rest::bitstring>> <- cm |> Noun.atom_integer_to_binary(),
            {:ok, noun_resource} <- Noun.Jam.cue(rest),
            {:ok, resource} <- Resource.from_noun(noun_resource) do
         {:cont, {:ok, MapSet.put(acc, resource)}}
@@ -312,13 +317,15 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [
-      t.proving_key,
-      t.verifying_key,
-      Instance.to_noun(t.instance),
-      <<>> | <<>>
-    ]
+  defimpl Noun.Nounable, for: CPS do
+    @impl true
+    def to_noun(t = %CPS{}) do
+      [
+        t.proving_key,
+        t.verifying_key,
+        Noun.Nounable.to_noun(t.instance),
+        <<>> | <<>>
+      ]
+    end
   end
 end

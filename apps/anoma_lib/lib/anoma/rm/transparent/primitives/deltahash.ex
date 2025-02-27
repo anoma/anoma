@@ -55,7 +55,7 @@ defmodule Anoma.RM.Transparent.Primitive.DeltaHash do
 
     {:ok, map} = noun_map |> Noun.Nounable.Map.from_noun()
 
-    map
+    Enum.into(map, %{}, fn {k, v} -> {k, Noun.decode_signed(v)} end)
   end
 
   @doc """
@@ -65,6 +65,7 @@ defmodule Anoma.RM.Transparent.Primitive.DeltaHash do
   @spec hash(map()) :: integer()
   def hash(delta) do
     delta
+    |> Enum.into(%{}, fn {k, v} -> {k, Noun.encode_signed(v)} end)
     |> Noun.Nounable.to_noun()
     |> Noun.Jam.jam()
     |> Noun.atom_binary_to_integer()

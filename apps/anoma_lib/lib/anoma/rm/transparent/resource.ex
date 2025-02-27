@@ -23,15 +23,18 @@ defmodule Anoma.RM.Transparent.Resource do
 
   typedstruct enforce: true do
     # the jam of a resource logic
-    field(:logicref, integer(), default: [[1 | 0], 0 | 0] |> Noun.Jam.jam())
+    field(:logicref, integer(),
+      default:
+        [[1 | 0], 0 | 0] |> Noun.Jam.jam() |> Noun.atom_binary_to_integer()
+    )
 
     # jammed
     field(:labelref, integer(), default: 2)
     # jammed
     field(:valueref, integer(), default: 2)
-    field(:quantity, integer(), default: 0)
+    field(:quantity, integer(), default: 1)
     # whether the resource is ephemetal or not
-    field(:isephemeral, boolean(), default: true)
+    field(:isephemeral, boolean(), default: false)
     field(:nonce, <<_::256>>, default: <<0::256>>)
     # a commitment to the nullifier key
     # with the commitment hash being just the identity function
@@ -50,7 +53,7 @@ defmodule Anoma.RM.Transparent.Resource do
   """
   @spec commitment_hash(t()) :: integer()
   def commitment_hash(resource) do
-    binary_resource = resource |> to_noun() |> Noun.Jam.jam()
+    binary_resource = resource |> Noun.Nounable.to_noun() |> Noun.Jam.jam()
     ("CM_" <> binary_resource) |> Noun.atom_binary_to_integer()
   end
 
@@ -62,7 +65,7 @@ defmodule Anoma.RM.Transparent.Resource do
   """
   @spec nullifier_hash(<<_::256>>, t()) :: integer()
   def nullifier_hash(_nullifier_key, resource) do
-    binary_resource = resource |> to_noun() |> Noun.Jam.jam()
+    binary_resource = resource |> Noun.Nounable.to_noun() |> Noun.Jam.jam()
     ("NF_" <> binary_resource) |> Noun.atom_binary_to_integer()
   end
 
@@ -90,18 +93,20 @@ defmodule Anoma.RM.Transparent.Resource do
     :crypto.hash(:sha256, kind)
   end
 
-  @spec to_noun(Resource.t()) :: Noun.t()
-  def to_noun(resource = %Resource{}) do
-    [
-      resource.logicref,
-      resource.labelref,
-      resource.valueref,
-      resource.quantity,
-      Noun.Nounable.to_noun(resource.isephemeral),
-      resource.nonce,
-      resource.nullifierkeycommitment
-      | resource.randseed
-    ]
+  defimpl Noun.Nounable, for: Resource do
+    @impl true
+    def to_noun(resource = %Resource{}) do
+      [
+        resource.logicref,
+        resource.labelref,
+        resource.valueref,
+        resource.quantity,
+        Noun.Nounable.to_noun(resource.isephemeral),
+        resource.nonce,
+        resource.nullifierkeycommitment
+        | resource.randseed
+      ]
+    end
   end
 
   @spec from_noun(Noun.t()) :: :error | {:ok, t()}
@@ -131,5 +136,23 @@ defmodule Anoma.RM.Transparent.Resource do
     else
       _ -> :error
     end
+  end
+
+  @spec commits?(t(), Noun.noun_atom()) :: boolean()
+  def commits?(self = %Resource{}, commitment) when is_binary(commitment) do
+    commits?(self, Noun.atom_binary_to_integer(commitment))
+  end
+
+  def commits?(self = %Resource{}, commitment) when is_integer(commitment) do
+    commitment_hash(self) == commitment
+  end
+
+  @spec nullifies?(t(), Noun.noun_atom()) :: boolean()
+  def nullifies?(self = %Resource{}, nullifier) when is_binary(nullifier) do
+    nullifies?(self, Noun.atom_binary_to_integer(nullifier))
+  end
+
+  def nullifies?(self = %Resource{}, nullifier) when is_integer(nullifier) do
+    nullifier_hash(<<0::256>>, self) == nullifier
   end
 end

@@ -39,9 +39,11 @@ defmodule Anoma.RM.Transparent.ProvingSystem.DPS.Instance do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(instance) do
-    [instance.delta | instance.expected_balance]
+  defimpl Noun.Nounable, for: Instance do
+    @impl true
+    def to_noun(instance = %Instance{}) do
+      [instance.delta | instance.expected_balance]
+    end
   end
 end
 
@@ -63,7 +65,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.DPS do
   - `verify/3`
   """
   alias Anoma.RM.Transparent.ProvingSystem.DPS.Instance
-
+  alias __MODULE__
   use TypedStruct
 
   @type dps_key :: binary()
@@ -132,7 +134,8 @@ defmodule Anoma.RM.Transparent.ProvingSystem.DPS do
              9,
              2,
              10,
-             [6, 1 | Instance.to_noun(instance)]
+             [6, 1 | Noun.Nounable.to_noun(instance)],
+             0 | 1
            ]) do
       Noun.equal?(res, 0)
     else
@@ -164,13 +167,15 @@ defmodule Anoma.RM.Transparent.ProvingSystem.DPS do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [
-      t.proving_key,
-      t.verifying_key,
-      Instance.to_noun(t.instance),
-      <<>> | <<>>
-    ]
+  defimpl Noun.Nounable, for: DPS do
+    @impl true
+    def to_noun(t = %DPS{}) do
+      [
+        t.proving_key,
+        t.verifying_key,
+        Noun.Nounable.to_noun(t.instance),
+        <<>> | <<>>
+      ]
+    end
   end
 end
