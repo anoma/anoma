@@ -17,9 +17,9 @@ defmodule Anoma.Node.Transaction.Backends do
   alias Anoma.Node.Logging
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Storage
-  alias Anoma.TransparentResource
-  alias Anoma.TransparentResource.Resource, as: TResource
-  alias Anoma.TransparentResource.Transaction, as: TTransaction
+  alias Anoma.RM.Transparent.ComplianceUnit, as: TCU
+  alias Anoma.RM.Transparent.Transaction, as: TTransaction
+  alias Anoma.RM.Transparent.Primitive.CommitmentAccumulator, as: TAcc
   alias Anoma.Node.Events
 
   require Node.Event
@@ -200,16 +200,11 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec transparent_resource_tx(String.t(), binary(), Noun.t()) ::
           {:ok, any} | :error
   defp transparent_resource_tx(node_id, id, result) do
-    storage_checks = fn tx -> storage_check?(node_id, id, tx) end
-    verify_tx_root = fn tx -> verify_tx_root(node_id, tx) end
-
-    verify_options = [
-      double_insertion_closure: storage_checks,
-      root_closure: verify_tx_root
-    ]
-
-    with {:ok, tx} <- TransparentResource.Transaction.from_noun(result),
-         true <- TransparentResource.Transaction.verify(tx, verify_options) do
+    with {:ok, tx} <- TTransaction.from_noun(result),
+         true <- TTransaction.verify(tx),
+         # possibly also add check for CU roots
+         true <- storage_check(node_id, id, tx),
+         true <- verify_tx_root(node_id, tx) do
       map =
         for action <- tx.actions,
             reduce: %{
@@ -219,17 +214,23 @@ defmodule Anoma.Node.Transaction.Backends do
             } do
           %{commitments: cms, nullifiers: nlfs, blobs: blobs} ->
             %{
-              commitments: MapSet.union(cms, action.commitments),
-              nullifiers: MapSet.union(nlfs, action.nullifiers),
+              commitments: MapSet.union(cms, MapSet.new(action.created)),
+              nullifiers: MapSet.union(nlfs, MapSet.new(action.consumed)),
               blobs:
-                for {key, {value, bool}} <- action.app_data, reduce: blobs do
+                for {_tag, list} <- action.app_data, reduce: blobs do
                   acc ->
-                    if bool and
-                         :crypto.hash(:sha256, Noun.Jam.jam(value)) == key do
-                      [{key, value} | acc]
-                    else
-                      acc
-                    end
+                    for {binary, bool} <- list, reduce: [] do
+                      local_acc ->
+                        if bool do
+                          [
+                            {["anoma", "blob", :crypto.hash(:sha256, binary)],
+                             binary}
+                            | local_acc
+                          ]
+                        else
+                          local_acc
+                        end
+                    end ++ acc
                 end
             }
         end
@@ -240,19 +241,16 @@ defmodule Anoma.Node.Transaction.Backends do
           {:ok, res} -> res
         end
 
-      writes =
-        for {key, value} <- map.blobs,
-            reduce: [
-              {anoma_keyspace("anchor"),
-               value(
-                 MapSet.union(
-                   map.commitments,
-                   old_cms
-                 )
-               )}
-            ] do
-          acc -> [{["anoma", "blob", key], value} | acc]
-        end
+      writes = [
+        {anoma_keyspace("anchor"),
+         TAcc.value(
+           MapSet.union(
+             map.commitments,
+             old_cms
+           )
+         )}
+        | map.blobs
+      ]
 
       Ordering.add(
         node_id,
@@ -270,15 +268,14 @@ defmodule Anoma.Node.Transaction.Backends do
 
       {:ok, tx}
     else
-      e ->
-        unless e == :error do
-          Logging.log_event(
-            node_id,
-            :error,
-            "Transaction verification failed. Reason: #{inspect(e)}"
-          )
-        end
+      {:error, msg} ->
+        Logging.log_event(
+          node_id,
+          :error,
+          "Transaction verification failed. Reason: #{inspect(msg)}"
+        )
 
+      _ ->
         :error
     end
   end
@@ -286,145 +283,98 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec verify_tx_root(String.t(), TTransaction.t()) ::
           true | {:error, String.t()}
   defp verify_tx_root(node_id, trans = %TTransaction{}) do
-    with true <- commitments_exist_in_roots(node_id, trans) do
+    with true <- roots_exist?(node_id, trans) do
       true
     else
       {:error, msg} ->
-        {:error,
-         "Nullified resources are not committed at latest root: " <> msg}
+        {:error, "Root does not exist: " <> msg}
     end
   end
 
-  @spec storage_check?(String.t(), binary(), TTransaction.t()) ::
+  @spec storage_check(String.t(), binary(), TTransaction.t()) ::
           true | {:error, String.t()}
-  defp storage_check?(node_id, id, trans) do
+  defp storage_check(node_id, id, trans) do
     stored_commitments =
-      Ordering.read(node_id, {id, anoma_keyspace("commitments")})
+      case Ordering.read(node_id, {id, anoma_keyspace("commitments")}) do
+        :absent -> MapSet.new()
+        {:ok, res} -> res
+      end
 
     stored_nullifiers =
-      Ordering.read(node_id, {id, anoma_keyspace("nullifiers")})
+      case Ordering.read(node_id, {id, anoma_keyspace("nullifiers")}) do
+        :absent -> MapSet.new()
+        {:ok, res} -> res
+      end
 
-    # TODO improve error messages
-    cond do
-      any_nullifiers_already_exist?(stored_nullifiers, trans) ->
-        {:error, "A submitted nullifier already exists in storage"}
+    {:ok, precis} = TTransaction.action_precis(trans)
 
-      any_commitments_already_exist?(stored_commitments, trans) ->
-        {:error, "A submitted commitment already exists in storage"}
-
-      true ->
-        true
+    with true <-
+           any_nullifiers_already_exist?(stored_nullifiers, precis.consumed),
+         true <-
+           any_commitments_already_exist?(stored_commitments, precis.created) do
+      true
+    else
+      {:error, msg} -> {:error, msg}
     end
   end
 
   @spec any_nullifiers_already_exist?(
-          {:ok, MapSet.t(TResource.nullifier())} | :absent,
-          TTransaction.t()
-        ) :: boolean()
-  defp any_nullifiers_already_exist?(:absent, _) do
-    false
-  end
-
+          MapSet.t(integer),
+          MapSet.t(integer)
+        ) :: true | {:error, String.t()}
   defp any_nullifiers_already_exist?(
-         {:ok, stored_nulls},
-         trans = %TTransaction{}
+         old_nulfs,
+         new_nulfs
        ) do
-    nullifiers = TTransaction.nullifiers(trans)
-    Enum.any?(nullifiers, &MapSet.member?(stored_nulls, &1))
-  end
-
-  @spec any_commitments_already_exist?(
-          {:ok, MapSet.t(TResource.commitment())} | :absent,
-          TTransaction.t()
-        ) :: boolean()
-  defp any_commitments_already_exist?(:absent, _) do
-    false
-  end
-
-  defp any_commitments_already_exist?(
-         {:ok, stored_comms},
-         trans = %TTransaction{}
-       ) do
-    commitments = TTransaction.commitments(trans)
-    Enum.any?(commitments, &MapSet.member?(stored_comms, &1))
-  end
-
-  @spec commitments_exist_in_roots(String.t(), TTransaction.t()) ::
-          true | {:error, String.t()}
-  defp commitments_exist_in_roots(
-         node_id,
-         trans = %TTransaction{}
-       ) do
-    latest_root_time =
-      for root <- trans.roots, reduce: 0 do
-        time ->
-          with {:atomic, [{_, {height, _}, ^root}]} <-
-                 :mnesia.transaction(fn ->
-                   :mnesia.match_object(
-                     {Storage.values_table(node_id),
-                      {:_, anoma_keyspace("anchor")}, root}
-                   )
-                 end) do
-            if height > time do
-              height
-            else
-              time
-            end
-          else
-            {:atomic, []} -> time
-          end
-      end
-
-    action_nullifiers = TTransaction.nullifiers(trans)
-
-    if latest_root_time > 0 do
-      {:ok, root_coms} =
-        Storage.read(
-          node_id,
-          {latest_root_time, anoma_keyspace("commitments")}
-        )
-
-      commitments =
-        for <<"NF_", rest::binary>> <- action_nullifiers,
-            reduce: MapSet.new([]) do
-          cm_set ->
-            if ephemeral?(rest) do
-              cm_set
-            else
-              MapSet.put(cm_set, "CM_" <> rest)
-            end
-        end
-
-      case commitments |> MapSet.subset?(root_coms) do
-        true ->
-          true
-
-        _ ->
-          {:error,
-           "commitments absent: #{inspect(MapSet.difference(commitments, root_coms) |> Enum.to_list())}"}
-      end
-    else
-      if Enum.all?(action_nullifiers, fn <<"NF_", rest::binary>> ->
-           ephemeral?(rest)
-         end) do
-        true
-      else
-        {:error, "not all resources ephemeral for initiating transaction"}
-      end
+    case MapSet.intersection(old_nulfs, new_nulfs) |> Enum.to_list() do
+      [] -> true
+      lst -> {:error, "Nullifiers #{inspect(lst)} already exist"}
     end
   end
 
-  @spec ephemeral?(Noun.noun_atom()) :: boolean()
-  defp ephemeral?(jammed_transaction) do
-    nock_boolean =
-      Noun.Jam.cue(jammed_transaction)
-      |> elem(1)
-      |> Noun.list_nock_to_erlang_safe()
-      |> elem(1)
-      |> List.pop_at(2)
-      |> elem(0)
+  @spec any_commitments_already_exist?(
+          MapSet.t(integer),
+          MapSet.t(integer())
+        ) :: true | {:error, String.t()}
+  defp any_commitments_already_exist?(
+         old_cms,
+         new_cms
+       ) do
+    case MapSet.intersection(old_cms, new_cms) |> Enum.to_list() do
+      [] -> true
+      lst -> {:error, "Commitments #{inspect(lst)} already exist"}
+    end
+  end
 
-    nock_boolean in [0, <<>>, <<0>>, []]
+  @spec roots_exist?(String.t(), TTransaction.t()) ::
+          true | {:error, String.t()}
+  defp roots_exist?(
+         node_id,
+         trans = %TTransaction{}
+       ) do
+    roots =
+      for action <- trans.actions, reduce: MapSet.new() do
+        acc ->
+          for compliance_unit <- action.compliance_units,
+              reduce: MapSet.new() do
+            l_acc -> TCU.roots(compliance_unit) |> MapSet.union(l_acc)
+          end
+          |> MapSet.union(acc)
+      end
+
+    Enum.reduce_while(roots, true, fn root, acc ->
+      with {:atomic, [{_, {_, _}, ^root}]} <-
+             :mnesia.transaction(fn ->
+               :mnesia.match_object(
+                 {Storage.values_table(node_id),
+                  {:_, anoma_keyspace("anchor")}, root}
+               )
+             end) do
+        {:cont, acc}
+      else
+        {:atomic, []} -> {:halt, {:error, "Root #{inspect(root)} is absent"}}
+      end
+    end)
   end
 
   @spec send_value(Noun.t(), pid(), list()) ::
@@ -568,60 +518,6 @@ defmodule Anoma.Node.Transaction.Backends do
   ############################################################
   #                        Helpers                           #
   ############################################################
-
-  @doc """
-  I am the commitment accumulator add function for the transparent resource
-  machine.
-
-  Given the commitment set, I add a commitment to it.
-  """
-
-  @spec add(MapSet.t(), binary()) :: MapSet.t()
-  def add(acc, cm) do
-    MapSet.put(acc, cm)
-  end
-
-  @doc """
-  I am the commitment accumulator witness function for the transparent
-  resource machine.
-
-  Given the commitment set and a commitment, I return the original set if
-  the commitment is a member of the former. Otherwise, I return nil
-  """
-
-  @spec witness(MapSet.t(), binary()) :: MapSet.t() | nil
-  def witness(acc, cm) do
-    if MapSet.member?(acc, cm) do
-      acc
-    end
-  end
-
-  @doc """
-  I am the commitment accumulator value function for the transparent
-  resource machine.
-
-  Given the commitment set, I turn it to binary and then hash it using
-  sha-256.
-  """
-
-  @spec value(MapSet.t()) :: binary()
-  def value(acc) do
-    :crypto.hash(:sha256, :erlang.term_to_binary(acc))
-  end
-
-  @doc """
-  I am the commitment accumulator verify function for the transparent
-  resource machine.
-
-  Given the commitment, a witness (i.e. a set) and a commitment value, I
-  output true iff the witness's value is the same as the provided value and
-  the commitment is indeed in the set.
-  """
-
-  @spec verify(binary(), MapSet.t(), binary()) :: bool()
-  def verify(cm, w, val) do
-    val == value(w) and MapSet.member?(w, cm)
-  end
 
   @spec anoma_keyspace(String.t()) :: list(String.t())
   defp anoma_keyspace(key) do

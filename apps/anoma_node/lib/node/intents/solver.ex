@@ -267,13 +267,13 @@ defmodule Anoma.Node.Intents.Solver do
 
   ### Pattern-Matching Variations
 
-  - `submit(%TransparentResource.Transaction{}, node_id)` - I wrap a transaction in trivial
+  - `submit(%RM.Transparent.Transaction{}, node_id)` - I wrap a transaction in trivial
                                                             core and send it to the Mempool.
   - `submit(any, node_id)` - I do nothing
   """
 
   @spec submit(Intent.t(), String.t()) :: :ok
-  def submit(tx = %Anoma.TransparentResource.Transaction{}, node_id) do
+  def submit(tx = %Anoma.RM.Transparent.Transaction{}, node_id) do
     tx_noun = tx |> Noun.Nounable.to_noun()
     tx_candidate = [[1, 0, [1 | tx_noun], 0 | 909], 0 | 707]
     tx_filter = [Node.Event.node_filter(node_id), %Mempool.TxFilter{}]

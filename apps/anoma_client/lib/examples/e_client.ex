@@ -22,8 +22,8 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.NockService
   alias Anoma.Protobuf.NodeInfo
   alias Examples.ETransparent.ETransaction
-  alias Anoma.TransparentResource.Action
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Action
+  alias Anoma.RM.Transparent.Transaction
   alias Noun.Nounable
 
   import ExUnit.Assertions
@@ -348,11 +348,8 @@ defmodule Anoma.Client.Examples.EClient do
   def prove_with_internal_scry_call(conn \\ setup()) do
     Anoma.Client.Examples.EStorage.setup()
 
-    blob_key = ["anoma", "blob", <<123>>]
-    blob_value = "i am scried"
-
     action =
-      %Action{app_data: %{blob_key => {blob_value, true}}}
+      %Action{app_data: %{<<123>> => {"i am scried", true}}}
 
     tx =
       %Transaction{actions: MapSet.new([action])} |> Noun.Nounable.to_noun()
@@ -372,7 +369,10 @@ defmodule Anoma.Client.Examples.EClient do
 
     assert res == Noun.Jam.jam(tx)
 
-    assert {:ok, ^blob_value} = Storage.read({System.os_time(), blob_key})
+    assert {:ok, "i am scried"} =
+             Storage.read(
+               {System.os_time(), :crypto.hash(:sha256, "i am scried")}
+             )
 
     res
   end

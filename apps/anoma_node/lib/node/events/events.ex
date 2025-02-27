@@ -5,7 +5,7 @@ defmodule Anoma.Node.Events do
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Storage
   alias Anoma.RM.Intent
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Transaction
 
   use TypedStruct
 

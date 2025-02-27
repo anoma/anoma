@@ -8,7 +8,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Storage
   alias Anoma.Node.Events
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Transaction
   alias Examples.ENock
   alias Examples.ETransparent.ETransaction
 
@@ -404,7 +404,8 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     assert {:ok, cms} == Storage.read(node_id, {1, ["anoma", "commitments"]})
 
-    assert {:ok, Backends.value(cms)} ==
+    assert {:ok,
+            Anoma.RM.Transparent.Primitive.CommitmentAccumulator.value(cms)} ==
              Storage.read(node_id, {1, ["anoma", "anchor"]})
 
     EventBroker.unsubscribe_me([])
@@ -424,12 +425,12 @@ defmodule Anoma.Node.Examples.ETransaction do
       capture_log(fn ->
         Mempool.tx(node_id, code, "id 2")
         Mempool.execute(node_id, Mempool.tx_dump(node_id))
-        recieve_logger_failure(node_id, "nullifier already")
+        recieve_logger_failure(node_id, "already exist")
       end)
 
     # Occasionally, the log might be empty because `Anoma.Node.Logging`
     # hasn't finished writing the log entries yet.
-    assert log =~ "nullifier already" || log == ""
+    assert log =~ "already exist" || log == ""
 
     EventBroker.unsubscribe_me([])
 
@@ -446,12 +447,12 @@ defmodule Anoma.Node.Examples.ETransaction do
       capture_log(fn ->
         Mempool.tx(node_id, code, "id 1")
         Mempool.execute(node_id, Mempool.tx_dump(node_id))
-        recieve_logger_failure(node_id, "not committed")
+        recieve_logger_failure(node_id, "Root does not exist")
       end)
 
     # Occasionally, the log might be empty because `Anoma.Node.Logging`
     # hasn't finished writing the log entries yet.
-    assert log =~ "not committed" || log == ""
+    assert log =~ "Root does not exist" || log == ""
 
     node_id
   end

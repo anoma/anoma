@@ -37,7 +37,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
     {:ok, intent} =
       request.intent.intent
       |> Noun.Jam.cue!()
-      |> Anoma.TransparentResource.Transaction.from_noun()
+      |> Anoma.RM.Transparent.Transaction.from_noun()
 
     IntentPool.new_intent(request.node_info.node_id, intent)
 
