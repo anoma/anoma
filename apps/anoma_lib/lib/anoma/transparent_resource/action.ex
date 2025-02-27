@@ -1,10 +1,10 @@
 defmodule Anoma.TransparentResource.Action do
-  use TypedStruct
-
+  alias __MODULE__
   alias Anoma.TransparentResource.Delta
   alias Anoma.TransparentResource.LogicProof
   alias Anoma.TransparentResource.Resource
-  alias __MODULE__
+
+  use TypedStruct
 
   typedstruct enforce: true do
     field(:commitments, MapSet.t(binary()), default: MapSet.new())
@@ -101,24 +101,27 @@ defmodule Anoma.TransparentResource.Action do
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([commits, nulls, proofs | app_data]) do
     with {:ok, proofs} <- from_noun_proofs(proofs),
-         {:ok, app_data_map} <- Noun.Nounable.Set.from_noun(app_data) do
+         {:ok, app_data_map} <- Noun.Nounable.Map.from_noun(app_data),
+         {:ok, commitments} <- Noun.Nounable.MapSet.from_noun(commits),
+         {:ok, nullifiers} <- Noun.Nounable.MapSet.from_noun(nulls) do
       {:ok,
        %Action{
-         commitments:
-           MapSet.new(
-             Noun.list_nock_to_erlang(commits),
-             &Noun.atom_integer_to_binary/1
-           ),
-         nullifiers:
-           MapSet.new(
-             Noun.list_nock_to_erlang(nulls),
-             &Noun.atom_integer_to_binary/1
-           ),
+         commitments: commitments,
+         nullifiers: nullifiers,
          proofs: proofs,
          app_data:
-           for [key | [value | bool]] <- app_data_map, reduce: %{} do
-             acc -> Map.put(acc, key, {value, bool})
-           end
+           Enum.reduce(app_data_map, %{}, fn {key, [val | bool]}, acc ->
+             Map.put(
+               acc,
+               key,
+               {val,
+                if Noun.equal?(bool, 0) do
+                  true
+                else
+                  false
+                end}
+             )
+           end)
        }}
     end
   end
@@ -131,18 +134,20 @@ defmodule Anoma.TransparentResource.Action do
     @impl true
     def to_noun(trans = %Action{}) do
       [
-        MapSet.to_list(trans.commitments),
-        MapSet.to_list(trans.nullifiers),
-        Enum.map(trans.proofs, &Noun.Nounable.to_noun/1)
-        | Noun.Nounable.Set.to_noun(trans.app_data)
+        Noun.Nounable.to_noun(trans.commitments),
+        Noun.Nounable.to_noun(trans.nullifiers),
+        trans.proofs |> Noun.Nounable.to_noun()
+        | Noun.Nounable.to_noun(trans.app_data)
       ]
     end
   end
 
   @spec from_noun_proofs(Noun.t()) :: {:ok, MapSet.t(LogicProof.t())}
   defp from_noun_proofs(noun) when is_list(noun) do
+    {:ok, set} = Noun.Nounable.MapSet.from_noun(noun)
+
     maybe_proofs =
-      Enum.map(Noun.list_nock_to_erlang(noun), &proof_from_noun/1)
+      Enum.map(set, &proof_from_noun/1)
 
     if Enum.any?(maybe_proofs, &(:error == &1)) do
       :error

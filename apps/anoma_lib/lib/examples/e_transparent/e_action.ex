@@ -1,7 +1,8 @@
 defmodule Examples.ETransparent.EAction do
-  alias Anoma.TransparentResource.Delta
-  alias Anoma.TransparentResource.Action
-  alias Examples.ETransparent.ELogicProof
+  alias Examples.ETransparent.EResource
+  alias Anoma.RM.Transparent.Action
+  alias Anoma.RM.Transparent.Resource
+  alias Anoma.RM.Transparent.Primitive.CommitmentAccumulator
 
   use TestHelper.TestMacro
 
@@ -9,125 +10,72 @@ defmodule Examples.ETransparent.EAction do
   def empty() do
     res = %Action{}
 
-    assert Action.verify_correspondence(res)
-    assert %{} = Action.delta(res)
-    res
-  end
-
-  @spec trivial_action_only_proofs() :: Action.t()
-  def trivial_action_only_proofs() do
-    res = %Action{
-      empty()
-      | proofs: MapSet.new([ELogicProof.trivial_true_swap_proof_commitment()])
-    }
-
-    assert {:error, _} = Action.verify_correspondence(res)
-
-    res
-  end
-
-  @spec trivial_action_proofs_proof_and_commitments() :: Action.t()
-  def trivial_action_proofs_proof_and_commitments() do
-    commitments = ELogicProof.trivial_true_swap_proof_commitment().commitments
-
-    res = %Action{
-      trivial_action_only_proofs()
-      | commitments: commitments
-    }
-
-    assert {:error, _} = Action.verify_correspondence(res)
-
-    res
-  end
-
-  @spec trivial_action_proofs_missing_nullifier_proof() :: Action.t()
-  def trivial_action_proofs_missing_nullifier_proof() do
-    nullifiers = ELogicProof.trivial_true_swap_proof_commitment().nullifiers
-
-    res = %Action{
-      trivial_action_proofs_proof_and_commitments()
-      | nullifiers: nullifiers
-    }
-
-    assert {:error, _} = Action.verify_correspondence(res)
-
+    assert 2 = Action.delta(res)
+    assert Action.verify(res)
     res
   end
 
   @spec trivial_swap_action() :: Action.t()
   def trivial_swap_action() do
-    action = trivial_action_proofs_missing_nullifier_proof()
+    consumed = EResource.trivial_true_resource_2()
+    created = EResource.trivial_true_resource()
+    cm = consumed |> Resource.commitment_hash()
+    root = MapSet.new([cm]) |> CommitmentAccumulator.value()
 
-    res = %Action{
-      trivial_action_proofs_missing_nullifier_proof()
-      | proofs:
-          MapSet.put(
-            action.proofs,
-            ELogicProof.trivial_true_swap_proof_nullifier()
-          )
-    }
+    res =
+      Action.create(
+        [{<<0::256>>, consumed, root}],
+        [created],
+        %{}
+      )
 
-    assert Action.verify_correspondence(res)
-    assert %{} = Action.delta(res)
+    assert 2 = Action.delta(res)
+    assert Action.verify(res)
 
     res
   end
 
   @spec trivial_true_commit_action() :: Action.t()
   def trivial_true_commit_action() do
-    logic_proof = ELogicProof.trivial_true_commitment()
-
-    res = %Action{
-      empty()
-      | proofs: MapSet.new([logic_proof]),
-        commitments: logic_proof.commitments
-    }
-
-    assert Action.verify_correspondence(res)
-
+    created = EResource.trivial_true_resource()
+    # not balanced
+    res = Action.create([], [created], %{})
+    # even if unbalanced, the verify goes through
+    # the action check does not do that
+    assert Action.verify(res)
     res
   end
 
-  @spec trivial_true_commit_delta() :: Delta.t()
+  @spec trivial_true_commit_delta() :: integer()
   def trivial_true_commit_delta() do
-    trivial_true_commit_action() |> Action.delta()
+    res = trivial_true_commit_action() |> Action.delta()
+    assert 2 != res
+    res
   end
 
   @spec trivial_true_2_nullifier_action() :: Action.t()
   def trivial_true_2_nullifier_action() do
-    logic_proof = ELogicProof.trivial_true_2_nullifier()
+    consumed = EResource.trivial_true_resource_2()
+    cm = EResource.trivial_true_resource_2() |> Resource.commitment_hash()
+    root = MapSet.new([cm]) |> CommitmentAccumulator.value()
 
-    res = %Action{
-      empty()
-      | proofs: MapSet.new([logic_proof]),
-        nullifiers: logic_proof.nullifiers
-    }
+    res =
+      Action.create([{<<0::256>>, consumed, root}], [], %{})
 
-    assert Action.verify_correspondence(res)
-
+    assert Action.verify(res)
     res
   end
 
   @spec trivial_true_eph_nullifier_action() :: Action.t()
   def trivial_true_eph_nullifier_action() do
-    logic_proof = ELogicProof.trivial_true_eph_nullifier()
+    consumed = EResource.trivial_true_resource_eph()
+    cm = EResource.trivial_true_resource_eph() |> Resource.commitment_hash()
+    root = MapSet.new([cm]) |> CommitmentAccumulator.value()
 
-    res = %Action{
-      empty()
-      | proofs: MapSet.new([logic_proof]),
-        nullifiers: logic_proof.nullifiers
-    }
+    res =
+      Action.create([{<<0::256>>, consumed, root}], [], %{})
 
-    assert Action.verify_correspondence(res)
-
-    res
-  end
-
-  @spec trivial_true_2_nullifier_delta() :: Delta.t()
-  def trivial_true_2_nullifier_delta() do
-    res = trivial_true_2_nullifier_action() |> Action.delta()
-
-    assert res == Delta.negate(trivial_true_commit_delta())
+    assert Action.verify(res)
 
     res
   end
