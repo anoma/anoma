@@ -43,4 +43,8 @@ defmodule Anoma.Constants do
       <<4, 159, 35, 51, 235, 49, 48, 244, 131, 34, 79, 109, 240, 252, 193, 45,
         153, 168, 38, 144, 4, 120, 15, 77, 11, 26, 82, 221, 66, 229, 253,
         122>>
+
+  @spec default_cairo_nullifier_key() :: binary()
+  def default_cairo_nullifier_key,
+    do: felt_one()
 end
