@@ -3,16 +3,16 @@ defmodule Anoma.Node.Examples.EIntentPool do
   I contain several examples on how to run the intent pool.
   """
 
-  require ExUnit.Assertions
-  import ExUnit.Assertions
-
+  alias Anoma.Node
+  alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Intents.IntentPool
   alias Anoma.RM.DumbIntent
   alias Anoma.RM.Intent
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Node
 
+  require ExUnit.Assertions
   require Node.Event
+
+  import ExUnit.Assertions
 
   ############################################################
   #                           Scenarios                      #
