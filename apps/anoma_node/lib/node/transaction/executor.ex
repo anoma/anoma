@@ -244,7 +244,6 @@ defmodule Anoma.Node.Transaction.Executor do
     EventBroker.event(event)
   end
 
-  q
   @spec task_crash_event(any(), String.t()) :: :ok
   defp task_crash_event(task, node_id) do
     event =
