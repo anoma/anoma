@@ -475,11 +475,6 @@ defmodule Anoma.Node.Transaction.Backends do
          }}
       )
 
-      # Get ciphertext from tx
-      _ciphertext = CTransaction.get_cipher_texts(tx)
-
-      # TODO: Store ciphertext
-
       Events.srm_event(
         MapSet.new(tx.commitments),
         MapSet.new(tx.nullifiers),
