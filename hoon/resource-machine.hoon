@@ -3,6 +3,14 @@
 =>  anoma
 |%
 ::  type definitions
++$  json                            ::  ordered json value for cairo
+  $@  ~                             ::  null
+  $%  [%a p=(list json)]            ::  array
+      [%b p=?]                      ::  boolean
+      [%o p=(list (pair @t json))]  ::  object
+      [%n p=@ta]                    ::  number
+      [%s p=@t]                     ::  string
+  ==                                ::
 +$  resource
   $~  :*
     label=*@t
