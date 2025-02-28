@@ -47,7 +47,7 @@ Download the [Anoma release](https://github.com/anoma/anoma/releases) for your p
 ### Build Dependencies
 
 Dependencies needed regardless of platform.
- - Elixir: consult the installation instructions [here]()
+ - Elixir: consult the installation instructions [here](https://elixir-lang.org/install.html)
  - Rust: consult the installation instructions [here](https://www.rust-lang.org/tools/install).
  - Protobuf: consult the installation instructions [here](https://grpc.io/docs/protoc-installation/)
  - Elixir plugin for protobufs `protoc-gen-elixir`
@@ -113,7 +113,7 @@ To work with Docker images, do the following:
 1. Install [Docker](https://docs.docker.com/engine/install/), this is necessary for both building and running Docker images
 2. Build the Anoma image from the repository root: `docker build -t <IMAGE> .`
     * `<IMAGE>` is your chosen image name
-4. Run the Anoma image: `docker run -it --network host <IMAGE> <SUBCOMMAND>`
+3. Run the Anoma image: `docker run -it --network host <IMAGE> <SUBCOMMAND>`
     * `<IMAGE>` is the name of Anoma Docker image to be run
     * `<SUBCOMMAND>`is interpreted by the Anoma binary
     * `--network host` will enable connections from the host
