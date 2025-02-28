@@ -5,6 +5,7 @@ defmodule Nock.Jets do
 
   alias Anoma.Crypto.Sign
   alias Anoma.RM.Transparent.Action
+  alias Anoma.RM.Transparent.ComplianceUnit
   alias Anoma.RM.Transparent.Resource
   alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias Anoma.RM.Transparent.ProvingSystem.DPS
@@ -819,6 +820,17 @@ defmodule Nock.Jets do
     end
   end
 
+  @spec compliance_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  def compliance_delta(core) do
+    with {:ok, a} <- sample(core),
+         {:ok, action} <- ComplianceUnit.from_noun(a) do
+      res = action |> ComplianceUnit.delta()
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
   @spec action_delta(Noun.t()) :: :error | {:ok, Noun.t()}
   def action_delta(core) do
     with {:ok, a} <- sample(core),
@@ -842,6 +854,38 @@ defmodule Nock.Jets do
         |> Enum.reduce(2, &DeltaHash.delta_sub/2)
 
       {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec action_create(Noun.t()) :: :error | {:ok, Noun.t()}
+  def action_create(core) do
+    with {:ok, [con, cre | data]} <- sample(core),
+         {:ok, con} <- Noun.Nounable.List.from_noun(con),
+         {:ok, cre} <- Noun.Nounable.List.from_noun(cre),
+         {:ok, data} <- Noun.Nounable.Map.from_noun(data),
+         con_res <-
+           con
+           |> Enum.map(fn [key, res | root] ->
+             {:ok, res} = Resource.from_noun(res)
+
+             {Noun.atom_integer_to_binary(key, 32), res,
+              Noun.atom_binary_to_integer(root)}
+           end),
+         cre_res <-
+           cre
+           |> Enum.map(fn res ->
+             {:ok, res} = Resource.from_noun(res)
+             res
+           end),
+         data_res <-
+           data
+           |> Enum.into(%{}, fn {key, [bin | bool]} ->
+             {Noun.atom_binary_to_integer(key),
+              {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}}
+           end) do
+      {:ok, Action.create(con_res, cre_res, data_res)}
     else
       _ -> :error
     end
