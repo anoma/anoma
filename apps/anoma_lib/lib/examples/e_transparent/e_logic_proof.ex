@@ -1,102 +1,142 @@
 defmodule Examples.ETransparent.ELogicProof do
-  alias Anoma.TransparentResource.LogicProof
+  alias Anoma.RM.Transparent.ProvingSystem.RLPS
+  alias Anoma.RM.Transparent.Resource
   alias Examples.ETransparent.EResource
 
   use TestHelper.TestMacro
 
-  @spec trivial_true_commitment() :: LogicProof.t()
+  @spec trivial_true_commitment() :: RLPS.Instance.t()
   def trivial_true_commitment() do
-    res = %LogicProof{
-      resource: EResource.trivial_true_resource(),
-      self_tag: {:committed, EResource.trivial_true_commitment()},
-      commitments: MapSet.new([EResource.trivial_true_commitment()]),
-      committed_plaintexts: MapSet.new([EResource.trivial_true_resource()]),
-      other_private: 0,
-      other_public: 0
+    cm = EResource.trivial_true_commitment()
+
+    res = %RLPS.Instance{
+      tag: EResource.trivial_true_commitment(),
+      created: [EResource.trivial_true_commitment()]
     }
 
-    assert LogicProof.verify(res)
+    {:ok, result} = RLPS.match_resource(cm, false)
+
+    assert RLPS.verify(
+             result.logicref |> Noun.atom_integer_to_binary(),
+             res,
+             <<>>
+           )
 
     # This should not fail
     assert {:ok, _} =
              res
              |> Noun.Nounable.to_noun()
              |> Noun.Jam.jam()
-             |> Noun.Jam.cue()
-             |> elem(1)
-             |> LogicProof.from_noun()
+             |> Noun.Jam.cue!()
+             |> RLPS.Instance.from_noun()
 
     res
   end
 
-  @spec trivial_true_2_nullifier() :: LogicProof.t()
+  @spec trivial_true_2_nullifier() :: RLPS.Instance.t()
   def trivial_true_2_nullifier() do
-    res = %LogicProof{
-      resource: EResource.trivial_true_resource_2(),
-      self_tag: {:nullified, EResource.trivial_true_nullifier_2()},
-      nullifiers: MapSet.new([EResource.trivial_true_nullifier_2()]),
-      nullified_plaintexts: MapSet.new([EResource.trivial_true_resource_2()])
+    nlf =
+      Resource.nullifier_hash(<<0::256>>, EResource.trivial_true_resource_2())
+
+    res = %RLPS.Instance{
+      tag: nlf,
+      flag: true,
+      consumed: [EResource.trivial_true_nullifier_2()]
     }
 
-    assert LogicProof.verify(res)
+    {:ok, result} = RLPS.match_resource(nlf, true)
+
+    assert RLPS.verify(
+             result.logicref |> Noun.atom_integer_to_binary(),
+             res,
+             <<>>
+           )
 
     res
   end
 
-  @spec trivial_true_eph_nullifier() :: LogicProof.t()
+  @spec trivial_true_eph_nullifier() :: RLPS.Instance.t()
   def trivial_true_eph_nullifier() do
-    res = %LogicProof{
-      resource: EResource.trivial_true_resource_eph(),
-      self_tag: {:nullified, EResource.trivial_true_nullifier_eph()},
-      nullifiers: MapSet.new([EResource.trivial_true_nullifier_eph()]),
-      nullified_plaintexts:
-        MapSet.new([EResource.trivial_true_resource_eph()])
+    nlf =
+      Resource.nullifier_hash(
+        <<0::256>>,
+        EResource.trivial_true_resource_eph()
+      )
+
+    res = %RLPS.Instance{
+      tag: nlf,
+      flag: true,
+      consumed: [EResource.trivial_true_nullifier_eph()]
     }
 
-    assert LogicProof.verify(res)
+    {:ok, result} = RLPS.match_resource(nlf, true)
+
+    assert RLPS.verify(
+             result.logicref |> Noun.atom_integer_to_binary(),
+             res,
+             <<>>
+           )
 
     res
   end
 
-  @spec trivial_true_swap_proof_commitment() :: LogicProof.t()
+  @spec trivial_true_swap_proof_commitment() :: RLPS.Instance.t()
   def trivial_true_swap_proof_commitment() do
     nullifier_info = trivial_true_2_nullifier()
 
-    res = %LogicProof{
+    res = %RLPS.Instance{
       trivial_true_commitment()
-      | nullifiers: nullifier_info.nullifiers,
-        nullified_plaintexts: nullifier_info.nullified_plaintexts
+      | consumed: nullifier_info.consumed
     }
 
-    assert LogicProof.verify(res)
+    {:ok, result} = RLPS.match_resource(res.tag, false)
+
+    assert RLPS.verify(
+             result.logicref |> Noun.atom_integer_to_binary(),
+             res,
+             <<>>
+           )
 
     res
   end
 
-  @spec trivial_true_swap_proof_nullifier() :: LogicProof.t()
+  @spec trivial_true_swap_proof_nullifier() :: RLPS.Instance.t()
   def trivial_true_swap_proof_nullifier() do
     commitment_info = trivial_true_commitment()
 
-    res = %LogicProof{
+    res = %RLPS.Instance{
       trivial_true_2_nullifier()
-      | commitments: commitment_info.commitments,
-        committed_plaintexts: commitment_info.committed_plaintexts
+      | created: commitment_info.created
     }
 
-    assert LogicProof.verify(res)
+    {:ok, result} = RLPS.match_resource(res.tag, true)
+
+    assert RLPS.verify(
+             result.logicref |> Noun.atom_integer_to_binary(),
+             res,
+             <<>>
+           )
 
     res
   end
 
-  @spec trivial_false_proof() :: LogicProof.t()
+  @spec trivial_false_proof() :: RLPS.Instance.t()
   def trivial_false_proof() do
     # We don't need much, since the verify just runs the function
-    res = %LogicProof{
-      resource: EResource.trivial_false_resource(),
-      self_tag: {:committed, EResource.trivial_false_commitment()}
+    cm = EResource.trivial_false_resource() |> Resource.commitment_hash()
+
+    res = %RLPS.Instance{
+      tag: cm,
+      flag: false
     }
 
-    refute LogicProof.verify(res)
+    {:ok, result} = RLPS.match_resource(res.tag, false)
+
+    refute RLPS.verify(
+             result.logicref |> Noun.atom_integer_to_binary(),
+             res,
+             <<>>
+           )
 
     res
   end

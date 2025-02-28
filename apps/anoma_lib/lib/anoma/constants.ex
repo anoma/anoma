@@ -24,14 +24,14 @@ defmodule Anoma.Constants do
 
   @doc """
   The hash of the Cairo trivial logic program.
-  The hash hex-string: 0x190b872fb979300555afbdab15fee956aeb133771dc1e290f75a8d7a2eedbe5
+  The hash hex-string: 0x37cca7d1f5a6a17c3ad7df70da9bca10a66078ffc488fbb704b61293a3d52ec
   """
   @spec cairo_trivial_resource_logic_hash() :: binary()
   def cairo_trivial_resource_logic_hash,
     do:
-      <<1, 144, 184, 114, 251, 151, 147, 0, 85, 90, 251, 218, 177, 95, 238,
-        149, 106, 235, 19, 55, 113, 220, 30, 41, 15, 117, 168, 215, 162, 238,
-        219, 229>>
+      <<3, 124, 202, 125, 31, 90, 106, 23, 195, 173, 125, 247, 13, 169, 188,
+        161, 10, 102, 7, 143, 252, 72, 143, 187, 112, 75, 97, 41, 58, 61, 82,
+        236>>
 
   @doc """
   The default merkle root in cairo RM is used when the root set is empty and can
@@ -43,4 +43,8 @@ defmodule Anoma.Constants do
       <<4, 159, 35, 51, 235, 49, 48, 244, 131, 34, 79, 109, 240, 252, 193, 45,
         153, 168, 38, 144, 4, 120, 15, 77, 11, 26, 82, 221, 66, 229, 253,
         122>>
+
+  @spec default_cairo_nullifier_key() :: binary()
+  def default_cairo_nullifier_key,
+    do: felt_one()
 end

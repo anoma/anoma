@@ -19,14 +19,16 @@ defmodule Anoma.Node.Transaction.Executor do
 
   alias __MODULE__
   alias Anoma.Node
-  alias Node.Transaction.{Backends, Mempool, Ordering}
-  alias Node.Registry
-
-  use TypedStruct
-
-  use GenServer
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Backends
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Transaction.Ordering
+  alias Anoma.Node.Events
 
   require Node.Event
+
+  use GenServer
+  use TypedStruct
 
   ############################################################
   #                         State                            #
@@ -49,19 +51,11 @@ defmodule Anoma.Node.Transaction.Executor do
     field(:node_id, String.t())
   end
 
-  typedstruct enforce: true, module: ExecutionEvent do
+  typedstruct enforce: true, module: TaskCrash do
     @typedoc """
-    I am the type of an execution event.
-
-    I am launched when transactions for a specific block have been
-    succesfully processed by their respective workers.
-
-    I hence signal the results with a message containing the result list.
-    The order of the results should coincide with the ordering of the
-    corresponding transactions.
+    I am a crash event for a task that failed.
     """
-
-    field(:result, list({{:ok, any} | :error, binary()}))
+    field(:task, any())
   end
 
   ############################################################
@@ -112,11 +106,12 @@ defmodule Anoma.Node.Transaction.Executor do
   I am the Executor launch function.
 
   Given a transaction in {backend, code} format with specific ID,
-  I launch that transaction as a task.
+  I launch that transaction as a task. If no ID is provided, I generate one
+  randomly.
   """
 
   @spec launch(String.t(), {Backends.backend(), Noun.t()}, binary()) :: :ok
-  def launch(node_id, tw_w_backend, id) do
+  def launch(node_id, tw_w_backend, id \\ :crypto.strong_rand_bytes(16)) do
     GenServer.cast(
       Registry.via(node_id, __MODULE__),
       {:launch, tw_w_backend, id}
@@ -172,10 +167,20 @@ defmodule Anoma.Node.Transaction.Executor do
   #                 Genserver Implementation                 #
   ############################################################
 
+  # @doc """
+  # I launch a transaction in its own Task to execute.
+  # """
   @spec handle_launch({Backends.backend(), Noun.t()}, binary(), t()) :: :ok
   defp handle_launch(tw_w_backend, id, state = %Executor{}) do
-    Task.start(fn ->
-      Backends.execute(state.node_id, tw_w_backend, id)
+    tx_supervisor = Registry.via(state.node_id, TxSupervisor)
+
+    Task.Supervisor.start_child(tx_supervisor, fn ->
+      try do
+        Backends.execute(state.node_id, tw_w_backend, id)
+      rescue
+        _e ->
+          task_crash_event(id, state.node_id)
+      end
     end)
 
     :ok
@@ -191,7 +196,7 @@ defmodule Anoma.Node.Transaction.Executor do
       Enum.map(consensus, &listen_for_worker_finish!/1)
       |> Enum.reverse()
 
-    execution_event(res_list, node_id)
+    Events.execution_event(res_list, node_id)
   end
 
   ############################################################
@@ -204,25 +209,20 @@ defmodule Anoma.Node.Transaction.Executor do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
-          body: %Backends.CompleteEvent{
+          body: %Events.CompleteEvent{
             tx_id: ^id,
             tx_result: res
           }
         }
       } ->
         {res, id}
-    after
-      5000 -> raise "Timeout waiting for #{inspect(id)}"
     end
   end
 
-  @spec execution_event([{{:ok, any()} | :error, binary()}], String.t()) ::
-          :ok
-  defp execution_event(res_list, node_id) do
+  @spec task_crash_event(any(), String.t()) :: :ok
+  defp task_crash_event(task, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.ExecutionEvent{
-        result: res_list
-      })
+      Node.Event.new_with_body(node_id, %__MODULE__.TaskCrash{task: task})
 
     EventBroker.event(event)
   end

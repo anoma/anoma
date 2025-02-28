@@ -1,11 +1,10 @@
 defmodule Examples.ECairo.EResourceLogic do
-  use Memoize
-
+  alias Anoma.CairoResource.LogicInstance
   alias Anoma.CairoResource.ProofRecord
   alias Examples.ECairo.EProofRecord
-  alias Anoma.CairoResource.LogicInstance
   alias Examples.ECairo.EResource
 
+  use Memoize
   use TestHelper.TestMacro
 
   @spec a_input_resource_logic() :: ProofRecord.t()
@@ -15,7 +14,7 @@ defmodule Examples.ECairo.EResourceLogic do
         "params/trivial_input_resource_logic_witness.json"
       )
 
-    instance = res.public_inputs |> LogicInstance.from_public_input()
+    instance = res.instance |> LogicInstance.from_public_input()
 
     assert {:ok, plaintext} =
              LogicInstance.decrypt(instance.cipher, <<1::256>>)
@@ -23,14 +22,14 @@ defmodule Examples.ECairo.EResourceLogic do
     a_resource = EResource.a_fixed_resource()
 
     expected_text = [
-      a_resource.logic,
-      a_resource.label,
+      a_resource.logic_ref,
+      a_resource.label_ref,
       a_resource.quantity,
-      a_resource.data,
+      a_resource.value_ref,
       <<0::256>>,
       a_resource.nonce,
       a_resource.nk_commitment,
-      a_resource.rseed,
+      a_resource.rand_seed,
       <<0::256>>,
       <<0::256>>
     ]
@@ -61,10 +60,10 @@ defmodule Examples.ECairo.EResourceLogic do
     )
   end
 
-  @spec a_resource_logic_invalid_circuit() :: {:error, term()}
-  def a_resource_logic_invalid_circuit() do
+  @spec a_resource_logic_invalid_proving_key() :: {:error, term()}
+  def a_resource_logic_invalid_proving_key() do
     ret =
-      ProofRecord.generate_cairo_proof(
+      ProofRecord.prove(
         "",
         ""
       )
@@ -76,23 +75,23 @@ defmodule Examples.ECairo.EResourceLogic do
 
   @spec a_resource_logic_invalid_input() :: {:error, term()}
   def a_resource_logic_invalid_input() do
-    circuit_dir =
+    proving_key_dir =
       Path.join(
         :code.priv_dir(:anoma_lib),
         "params/trivial_resource_logic.json"
       )
 
-    assert {:ok, circuit} = File.read(circuit_dir)
+    assert {:ok, proving_key} = File.read(proving_key_dir)
 
     assert {:error, "Invalid input JSON"} =
-             ProofRecord.generate_cairo_proof(
-               circuit,
+             ProofRecord.prove(
+               proving_key,
                "xxx"
              )
 
     assert {:error, "Runtime error: The cairo program execution failed"} =
-             ProofRecord.generate_cairo_proof(
-               circuit,
+             ProofRecord.prove(
+               proving_key,
                ""
              )
 
@@ -101,8 +100,8 @@ defmodule Examples.ECairo.EResourceLogic do
     """
 
     ret =
-      ProofRecord.generate_cairo_proof(
-        circuit,
+      ProofRecord.prove(
+        proving_key,
         invalid_input
       )
 
