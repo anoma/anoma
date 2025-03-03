@@ -144,6 +144,9 @@ defmodule Nock.Jets.Mugs do
        :enabled, 10},
     (Jets.calculate_core(374, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"trm-delta-key", 7, @layer_rm, &Nock.Jets.trm_delta_key/1, :enabled,
+       10},
+    (Jets.calculate_core(92, Nock.Lib.stdlib_layers()) |> hd()) =>
+      {"cairo-compose", 7, @layer_rm, &Nock.Jets.cairo_compose/1, :enabled,
        10}
   }
 
