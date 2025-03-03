@@ -32,6 +32,27 @@
     nullifierkeycommitment=@I  ::  nullifer key
     randseed=%fake             ::  fake random seed field
   ==
++$  cairo-resource
+  $~  :*
+    logicref=*@I
+    labelref=*@I
+    valueref=*@I
+    quantity=*@I
+    isephemeral=|
+    nonce=*@I
+    nullifierkeycommitment=*@I
+    randseed=*@I
+  ==
+  $:
+    logicref=@I
+    labelref=@I
+    valueref=@I
+    quantity=@I
+    isephemeral=?
+    nonce=@I
+    nullifierkeycommitment=@I
+    randseed=@I
+  ==
 +$  t-compliance-unit
   $~  :*
     proof=*t-proof
@@ -42,6 +63,17 @@
     proof=t-proof                   ::  compliance proof
     instance=t-compliance-instance  ::  compliance instance
     vk=@                            ::  verification key
+  ==
++$  cairo-compliance-unit
+  $~  :*
+    proof=*@
+    instance=*@
+    vk=*@
+  ==
+  $:
+    proof=@
+    instance=@
+    vk=@
   ==
 +$  t-compliance-instance
   $~  :*
@@ -69,6 +101,21 @@
     compliance-units=(list t-compliance-unit)                     ::  compliance units
     app-data=(map t-tag (list (pair @ ?)))                        ::  tags with blobs
   ==
++$  cairo-action
+  $~  :*
+    created=~
+    consumed=~
+    resource-logic-proofs=~
+    compliance-units=~
+    app-data=~
+  ==
+  $:
+    created=(list cairo-commitment)
+    consumed=(list cairo-nullifier)
+    resource-logic-proofs=(map cairo-tag (pair @ cairo-compliance-unit))
+    compliance-units=(set cairo-compliance-unit)
+    app-data=(map cairo-tag (list (pair @ @I)))
+  ==
 +$  t-transaction
   $~  :*
     roots=~
@@ -80,11 +127,26 @@
     actions=(set t-action)  ::  action set
     delta-proof=t-proof     ::  delta proof (trivial)
   ==
++$  cairo-transaction
+  $~  :*
+    roots=~
+    actions=~
+    delta-proof=*@
+  ==
+  $:
+    roots=(set cairo-root)
+    actions=(set cairo-action)
+    delta-proof=@
+  ==
 +$  t-proof  %fake
 +$  t-tag  $?(t-commitment t-nullifier)
++$  cairo-tag  $?(cairo-commitment cairo-nullifier)
 +$  t-commitment  @
++$  cairo-commitment  @I
 +$  t-nullifier  @
++$  cairo-nullifier  @I
 +$  t-root  @
++$  cairo-root  @
 ++  commit  ::  commit to a resource
   |=  =t-resource
   ^-  t-commitment
@@ -156,4 +218,10 @@
   =(delta expected)
 ++  zero-delta  ::  the value of the zero delta, for convenience
   ~
+++  cairo-compose
+  ~/  %cairo-compose
+  |=  [tx1=cairo-transaction tx2=cairo-transaction]
+  =+  c=%cairo-compose
+  ^-  cairo-transaction
+  !!
 --
