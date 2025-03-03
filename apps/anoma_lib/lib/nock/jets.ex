@@ -10,6 +10,7 @@ defmodule Nock.Jets do
   alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias Anoma.RM.Transparent.ProvingSystem.DPS
   alias Anoma.RM.Transparent.ProvingSystem.CPS
+  alias Anoma.CairoResource
 
   import Bitwise
   import Noun
@@ -913,6 +914,19 @@ defmodule Nock.Jets do
          {:ok, instance} <- DPS.Instance.from_noun(sample) do
       {:ok,
        DPS.verify_jet(instance.delta, instance.expected_balance)
+       |> Noun.Nounable.to_noun()}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec cairo_compose(Noun.t()) :: :error | {:ok, Noun.t()}
+  def cairo_compose(core) do
+    with {:ok, [tx1 | tx2]} <- sample(core),
+         {:ok, cairo_tx1} <- CairoResource.Transaction.from_noun(tx1),
+         {:ok, cairo_tx2} <- CairoResource.Transaction.from_noun(tx2) do
+      {:ok,
+       CairoResource.Transaction.compose(cairo_tx1, cairo_tx2)
        |> Noun.Nounable.to_noun()}
     else
       _ -> :error
