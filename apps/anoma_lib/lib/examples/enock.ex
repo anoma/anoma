@@ -739,6 +739,17 @@ defmodule Examples.ENock do
   ##                  Signed arithmetic                     ##
   ############################################################
 
+  @doc """
+  I represent the abs gate call as a 1-argument gate.
+
+  Can be obtained by defining
+
+  =labs =>  logics  |=  a=@  (abs a)
+
+  and computing
+
+  .*  labs  [0 2]
+  """
   @spec abs_arm() :: Noun.t()
   def abs_arm() do
     layer_depth = example_layer_depth(8)
