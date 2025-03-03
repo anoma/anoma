@@ -318,6 +318,35 @@ defmodule Examples.EExtNock do
   end
 
   @doc """
+  I test the :cell_test constructor (Nock formula 3).
+  """
+  def cell_test_constructor_test() do
+    cell_test_atom1 =
+      ExtNockTerms.sexpr_to_noun!({:cell_test, [{:constant, [1]}]})
+
+    {:ok, result_atom1} = Nock.nock(0, cell_test_atom1)
+    assert result_atom1 == 1
+
+    cell_test_cell1 =
+      ExtNockTerms.sexpr_to_noun!({:cell_test, [{:constant, [[1, 1]]}]})
+
+    {:ok, result_cell1} = Nock.nock(0, cell_test_cell1)
+    # 0 means is a cell
+    assert result_cell1 == 0
+
+    cell_test_slot =
+      ExtNockTerms.sexpr_to_noun!({:cell_test, [{:slot, [1]}]})
+
+    {:ok, result_slot_atom} = Nock.nock(1, cell_test_slot)
+    assert result_slot_atom == 1
+
+    {:ok, result_slot_cell} = Nock.nock([1, 1], cell_test_slot)
+    assert result_slot_cell == 0
+
+    cell_test_slot
+  end
+
+  @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
