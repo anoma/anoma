@@ -2,7 +2,6 @@ defmodule Anoma.Client do
   @moduledoc """
   Documentation for `Client`.
   """
-  use TypedStruct
 
   alias Anoma.Client
   alias Anoma.Client.Connection
@@ -10,7 +9,9 @@ defmodule Anoma.Client do
   alias Anoma.Client.ConnectionSupervisor
   alias Anoma.Client.Runner
   alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Transaction
+
+  use TypedStruct
 
   typedstruct do
     field(:type, :grpc | :tcp)
@@ -93,32 +94,5 @@ defmodule Anoma.Client do
     intent = %Intent{intent: intent_jammed}
     {:ok, result} = GRPCProxy.add_intent(intent)
     result.result
-  end
-
-  @doc """
-  I return the list of intents in the node I'm connected to.
-  """
-  @spec list_nullifiers :: any()
-  def list_nullifiers do
-    {:ok, result} = GRPCProxy.list_nullifiers()
-    result.nullifiers
-  end
-
-  @doc """
-  I return the list of intents in the node I'm connected to.
-  """
-  @spec list_unrevealed_commits :: any()
-  def list_unrevealed_commits do
-    {:ok, result} = GRPCProxy.list_unrevealed_commits()
-    result.commits
-  end
-
-  @doc """
-  I return the list of intents in the node I'm connected to.
-  """
-  @spec list_unspent_resources :: any()
-  def list_unspent_resources do
-    {:ok, result} = GRPCProxy.list_unspent_resources()
-    result.unspent_resources
   end
 end

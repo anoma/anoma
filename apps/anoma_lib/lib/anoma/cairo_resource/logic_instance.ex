@@ -62,6 +62,25 @@ defmodule Anoma.CairoResource.LogicInstance do
     }
   end
 
+  @spec get_tag(binary()) :: binary()
+  def get_tag(public_input) do
+    public_input
+    |> :binary.bin_to_list()
+    |> Cairo.get_output()
+    |> hd()
+    |> :binary.list_to_bin()
+  end
+
+  @spec get_root(binary()) :: binary()
+  def get_root(public_input) do
+    public_input
+    |> :binary.bin_to_list()
+    |> Cairo.get_output()
+    |> tl()
+    |> hd()
+    |> :binary.list_to_bin()
+  end
+
   @spec decrypt(list(binary()), binary()) ::
           {:ok, list(binary())} | {:error, term()}
   def decrypt(cipher, sk) do

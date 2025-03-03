@@ -10,6 +10,8 @@ defmodule CommitmentTree do
 
   Fiats that empty subtrees have a hash of 0 for simplicity.
   """
+  alias Anoma.Node.Tables
+
   use TypedStruct
 
   typedstruct enforce: true do
@@ -24,9 +26,15 @@ defmodule CommitmentTree do
     field(:table, term())
   end
 
-  @spec init_storage(atom()) :: {:atomic, :ok} | {:aborted, reason :: term()}
-  def init_storage(mnesia_table) do
-    :mnesia.create_table(mnesia_table, attributes: [:index, :hash])
+  ############################################################
+  #                         Public Functions                 #
+  ############################################################
+
+  @spec init_storage(String.t()) :: :ok
+  def init_storage(node_id \\ "") do
+    {:ok, _} = Tables.initialize_tables_for_node(node_id)
+
+    :ok
   end
 
   @doc """

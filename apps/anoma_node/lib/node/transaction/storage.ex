@@ -48,16 +48,34 @@ defmodule Anoma.Node.Transaction.Storage do
   """
 
   alias Anoma.Node
-  alias Node.Registry
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Tables
+  alias Anoma.Node.Events
+
+  require Node.Event
 
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
-  require Node.Event
 
   ############################################################
-  #                         State                            #
+  #                       Types                              #
   ############################################################
+
+  @typedoc """
+  Type of the arguments the storage genserver expects
+  """
+  @type args_t ::
+          [
+            node_id: String.t(),
+            uncommitted_height: non_neg_integer()
+          ]
+          | [node_id: String.t()]
+
+  @typedoc """
+  I am the type of an event write.
+  """
+  @type event_write :: {[binary()], binary()}
 
   @typedoc """
   I am the type of the key to be stored.
@@ -73,8 +91,10 @@ defmodule Anoma.Node.Transaction.Storage do
   I am a type of writing options.
   """
   @type write_opts() :: :append | :write | :add
-  @typep startup_options() ::
-           {:node_id, String.t()} | {:uncommitted_height, non_neg_integer()}
+
+  ############################################################
+  #                         State                            #
+  ############################################################
 
   typedstruct enforce: true do
     @typedoc """
@@ -109,22 +129,6 @@ defmodule Anoma.Node.Transaction.Storage do
     )
   end
 
-  typedstruct enforce: true, module: WriteEvent do
-    @typedoc """
-    I am the type of a write event.
-
-    I am sent whenever something has been written at a particular height.
-
-    ### Fields
-
-    - `:height` - The height at which something was just written.
-    - `:writes` - A list of tuples {key, value}
-    """
-
-    field(:height, non_neg_integer())
-    field(:writes, list({Anoma.Node.Transaction.Storage.bare_key(), term()}))
-  end
-
   deffilter HeightFilter, height: non_neg_integer() do
     %EventBroker.Event{body: %Node.Event{body: %{height: ^height}}} -> true
     _ -> false
@@ -142,9 +146,9 @@ defmodule Anoma.Node.Transaction.Storage do
   """
 
   @spec start_link() :: GenServer.on_start()
-  @spec start_link(list(startup_options())) :: GenServer.on_start()
+  @spec start_link(args_t) :: GenServer.on_start()
   def start_link(args \\ []) do
-    args = Keyword.validate!(args, [:node_id, :uncommitted_height, :rocks])
+    args = Keyword.validate!(args, [:node_id, :uncommitted_height])
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
@@ -152,11 +156,7 @@ defmodule Anoma.Node.Transaction.Storage do
   @doc """
   I am the initialization function for the Storage Engine.
 
-  From the specified arguments, I get the node ID, the uncommitted height
-  and the option to make the table Storage uses rocks-backed.
-
-  Given a rocks flag, launch rocks-backed tables, if not, launch usual
-  mnesia tables.
+  From the specified arguments, I get the node ID, and the uncommitted height.
 
   Afterwards I launch the Storage engine with given arguments.
   """
@@ -165,21 +165,23 @@ defmodule Anoma.Node.Transaction.Storage do
   def init(args) do
     Process.set_label(__MODULE__)
 
-    keylist =
+    args =
       args
       |> Keyword.validate!([
         :node_id,
-        uncommitted_height: 0,
-        rocks: false
+        uncommitted_height: 0
       ])
 
-    node_id = keylist[:node_id]
+    # initialize the tables in the mnesia backend
+    case Tables.initialize_tables_for_node(args[:node_id]) do
+      {:ok, _} ->
+        state = struct(__MODULE__, Enum.into(args, %{}))
 
-    init_tables(node_id, args[:rocks])
+        {:ok, state}
 
-    state = struct(__MODULE__, Enum.into(args, %{}))
-
-    {:ok, state}
+      {:error, :failed_to_initialize_tables} ->
+        {:stop, :failed_to_initialize_tables}
+    end
   end
 
   ############################################################
@@ -332,6 +334,24 @@ defmodule Anoma.Node.Transaction.Storage do
     {:ok, state}
   end
 
+  @doc """
+  I am the Storage function for getting current time.
+
+  My main use is to coordinate latest-time reads from the user's side and
+  particularly to aid read-only transactions. Note that evidently there is
+  a possibility of clock desynchronization after the call. Hence it should
+  only be used for approximate-time getting such as require for RO
+  transactions.
+  """
+
+  @spec current_time(String.t()) :: non_neg_integer()
+  def current_time(node_id) do
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      :current_time
+    )
+  end
+
   ############################################################
   #                      Public Filters                      #
   ############################################################
@@ -360,7 +380,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
   @spec blocks_table(String.t()) :: atom()
   def blocks_table(node_id) do
-    String.to_atom("#{__MODULE__.Blocks}_#{:erlang.phash2(node_id)}")
+    Tables.table_blocks(node_id)
   end
 
   @doc """
@@ -371,7 +391,7 @@ defmodule Anoma.Node.Transaction.Storage do
   """
   @spec values_table(String.t()) :: atom()
   def values_table(node_id) do
-    String.to_atom("#{__MODULE__.Values}_#{:erlang.phash2(node_id)}")
+    Tables.table_values(node_id)
   end
 
   @doc """
@@ -382,7 +402,7 @@ defmodule Anoma.Node.Transaction.Storage do
   """
   @spec updates_table(String.t()) :: atom()
   def updates_table(node_id) do
-    String.to_atom("#{__MODULE__.Updates}_#{:erlang.phash2(node_id)}")
+    Tables.table_updates(node_id)
   end
 
   ############################################################
@@ -401,6 +421,10 @@ defmodule Anoma.Node.Transaction.Storage do
 
   def handle_call({:read, {height, key}}, from, state) do
     handle_read({height, key}, from, state)
+  end
+
+  def handle_call(:current_time, _from, state) do
+    {:reply, state.uncommitted_height, state}
   end
 
   def handle_call({write_opt, {height, args}}, from, state)
@@ -512,44 +536,10 @@ defmodule Anoma.Node.Transaction.Storage do
     else
       {new_state, event_writes} = abwrite(write_opt, {height, args}, state)
 
-      write_event =
-        Node.Event.new_with_body(state.node_id, %__MODULE__.WriteEvent{
-          height: height,
-          writes: event_writes
-        })
-
-      EventBroker.event(write_event)
+      Events.write_event(height, event_writes, state.node_id, __MODULE__)
 
       {:reply, :ok, new_state}
     end
-  end
-
-  ############################################################
-  #                           Helpers                        #
-  ############################################################
-
-  ############################################################
-  #                        Initialization                    #
-  ############################################################
-
-  @spec init_tables(String.t(), bool()) :: any()
-  defp init_tables(node_id, rocks) do
-    rocks_opt = Anoma.Utility.rock_opts(rocks)
-
-    :mnesia.create_table(
-      values_table(node_id),
-      rocks_opt ++ [attributes: [:key, :value]]
-    )
-
-    :mnesia.create_table(
-      updates_table(node_id),
-      rocks_opt ++ [attributes: [:key, :value]]
-    )
-
-    :mnesia.create_table(
-      blocks_table(node_id),
-      rocks_opt ++ [attributes: [:round, :block]]
-    )
   end
 
   ############################################################
@@ -729,7 +719,7 @@ defmodule Anoma.Node.Transaction.Storage do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
-          body: %__MODULE__.WriteEvent{height: ^awaited_height}
+          body: %Events.WriteEvent{height: ^awaited_height}
         }
       } ->
         GenServer.reply(from, write(node_id, {height, kvlist}))
@@ -750,7 +740,7 @@ defmodule Anoma.Node.Transaction.Storage do
       # care about, then we already have the value for free
       %EventBroker.Event{
         body: %Node.Event{
-          body: %__MODULE__.WriteEvent{height: ^height, writes: writes}
+          body: %Events.WriteEvent{height: ^height, writes: writes}
         }
       } ->
         case Enum.find(writes, fn {keywrite, _value} -> key == keywrite end) do
