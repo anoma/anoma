@@ -1,6 +1,6 @@
 defmodule Anoma.Node.Transport do
-  alias Anoma.Node.Transport.TCP
   alias Anoma.Node.Transport.EngineProxy
+  alias Anoma.Node.Transport.TCP
 
   ############################################################
   #                    Types                                 #

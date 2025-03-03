@@ -1,4 +1,8 @@
 defmodule Anoma.Client.Runner do
+  alias Anoma.Client.Storage
+  alias Anoma.Client.Connection.GRPCProxy
+  alias Anoma.RM.Transparent.Transaction
+
   @doc """
   I run the given Nock program with its inputs and return the result.
   """
@@ -19,8 +23,23 @@ defmodule Anoma.Client.Runner do
 
     io_sink = open_io_sink()
 
-    case Nock.nock(core, eval_call, %Nock{stdio: io_sink}) do
+    case Nock.nock(core, eval_call, %Nock{
+           stdio: io_sink,
+           scry_function: &client_scry/1
+         }) do
       {:ok, noun} ->
+        try do
+          {:ok, tx} = noun |> Transaction.from_noun()
+
+          for {binary, bool} <- Transaction.app_data(tx) do
+            if bool do
+              Storage.write({:crypto.hash(:sha256, binary), binary})
+            end
+          end
+        rescue
+          _ -> :ok
+        end
+
         {:ok, result} = close_io_sink(io_sink)
 
         {:ok, noun, result}
@@ -80,6 +99,68 @@ defmodule Anoma.Client.Runner do
 
       _ ->
         capture(acc)
+    end
+  end
+
+  @doc """
+  I am the client-side scry function.
+
+  Given a blob keyspace, I look for a value locally at the given ID-related
+  timestamp. If not found, send a read-only transaction to the Node for the
+  same blob.
+
+  For RM-reserved keyspaces, I fetch data from the Node directly.
+  """
+  @spec client_scry(Noun.t()) :: :error | {:ok, Noun.t()}
+  def client_scry([id | space]) do
+    space_list = space |> Noun.list_nock_to_erlang()
+
+    case space_list do
+      ["anoma", "blob" | _ref] ->
+        case Storage.read_with_id({id, space_list}) do
+          {:ok, val} ->
+            {:ok, val |> Noun.Nounable.to_noun()}
+
+          :absent ->
+            case send_candidate(space_list) do
+              :error ->
+                :error
+
+              {:ok, value} ->
+                Storage.write({space_list, value})
+                {:ok, value}
+            end
+        end
+
+      _ ->
+        send_candidate(space_list)
+    end
+  end
+
+  @spec ro_tx_candidate(Noun.t()) :: Noun.t()
+  def ro_tx_candidate(ref) do
+    sample = 0
+    keyspace = 0
+
+    arm = [12, [1], [0 | 6] | [1, ref]]
+
+    [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
+  end
+
+  @spec send_candidate(Noun.t()) :: {:ok, Noun.t()} | :error
+  defp send_candidate(space) do
+    tx_candidate = space |> ro_tx_candidate() |> Noun.Jam.jam()
+
+    with {:ok, reply} <-
+           tx_candidate |> GRPCProxy.add_read_only_transaction() do
+      case reply.result do
+        {:success, res} ->
+          value = res.result |> Noun.Jam.cue!()
+          {:ok, value}
+
+        _ ->
+          :error
+      end
     end
   end
 end

@@ -1,6 +1,7 @@
 defmodule Nock.Cli do
-  import Nock
   require Noun.Format
+
+  import Nock
 
   @spec argument_option() :: list()
   def argument_option() do
