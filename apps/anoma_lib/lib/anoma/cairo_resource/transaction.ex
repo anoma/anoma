@@ -172,38 +172,31 @@ defmodule Anoma.CairoResource.Transaction do
     %Transaction{tx | delta_proof: binding_signature}
   end
 
-  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([
-        actions
-        | delta_proof
-      ]) do
-    actions =
-      actions
-      |> Noun.list_nock_to_erlang()
-      |> Enum.map(&Action.from_noun/1)
-
-    checked = Enum.all?(actions, &(elem(&1, 0) == :ok))
-
-    actions = MapSet.new(Enum.map(actions, fn {:ok, x} -> x end))
-
-    if checked do
+  @spec from_noun(Noun.t()) :: {:ok, Transaction.t()} | :error
+  def from_noun([roots, actions | proof]) do
+    with {:ok, r_set} <- Noun.Nounable.MapSet.from_noun(roots),
+         {:ok, a_set} <- Noun.Nounable.MapSet.from_noun(actions),
+         a_set <-
+           Enum.into(a_set, MapSet.new(), fn a ->
+             {:ok, act} = Action.from_noun(a)
+             act
+           end) do
       {:ok,
-       %Transaction{
-         actions: actions,
-         delta_proof: delta_proof
+       %__MODULE__{
+         roots:
+           Enum.into(r_set, MapSet.new(), &Noun.atom_integer_to_binary/1),
+         actions: a_set,
+         delta_proof: Noun.atom_integer_to_binary(proof)
        }}
     else
-      :error
+      _ -> :error
     end
   end
 
-  defimpl Noun.Nounable, for: __MODULE__ do
+  defimpl Noun.Nounable, for: Transaction do
     @impl true
-    def to_noun(transaction = %Transaction{}) do
-      [
-        Enum.map(transaction.actions, &Noun.Nounable.to_noun/1)
-        | transaction.delta_proof
-      ]
+    def to_noun(t = %Transaction{}) do
+      {t.roots, t.actions, t.delta_proof} |> Noun.Nounable.to_noun()
     end
   end
 
