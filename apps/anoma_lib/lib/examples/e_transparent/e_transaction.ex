@@ -1,7 +1,7 @@
 defmodule Examples.ETransparent.ETransaction do
   alias Examples.ETransparent.EAction
 
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Transaction
 
   use TestHelper.TestMacro
 
@@ -16,33 +16,13 @@ defmodule Examples.ETransparent.ETransaction do
 
   @spec single_swap() :: Transaction.t()
   def single_swap() do
-    res = %{empty() | actions: MapSet.new([EAction.trivial_swap_action()])}
+    res1 = %{empty() | actions: MapSet.new([EAction.trivial_swap_action()])}
+    res2 = %{res1 | roots: Transaction.roots(res1)}
 
-    assert Transaction.verify(res)
-    assert Transaction.compose(res, res) == res
+    assert Transaction.verify(res2)
+    assert Transaction.compose(res2, res2) == res2
 
-    res
-  end
-
-  @spec single_swap_invalid_delta() :: Transaction.t()
-  def single_swap_invalid_delta() do
-    res = %Transaction{single_swap() | delta: %{<<1>> => 1}}
-
-    assert {:error, _} = Transaction.verify(res)
-
-    res
-  end
-
-  @spec invalid_swap() :: Transaction.t()
-  def invalid_swap() do
-    actions =
-      MapSet.new([EAction.trivial_action_proofs_missing_nullifier_proof()])
-
-    res = %Transaction{empty() | actions: actions}
-
-    assert {:error, _} = Transaction.verify(res)
-
-    res
+    res2
   end
 
   @spec commit_intent() :: Transaction.t()
@@ -50,12 +30,11 @@ defmodule Examples.ETransparent.ETransaction do
     actions =
       MapSet.new([EAction.trivial_true_commit_action()])
 
-    delta = EAction.trivial_true_commit_delta()
-    res = %Transaction{empty() | actions: actions, delta: delta}
-
-    assert {:error, _} = Transaction.verify(res)
-
-    res
+    res1 = %Transaction{empty() | actions: actions}
+    res2 = %Transaction{res1 | roots: Transaction.roots(res1)}
+    # unbalanced
+    refute Transaction.verify(res2)
+    res2
   end
 
   @spec nullify_intent_eph() :: Transaction.t()
@@ -63,18 +42,13 @@ defmodule Examples.ETransparent.ETransaction do
     actions =
       MapSet.new([EAction.trivial_true_eph_nullifier_action()])
 
-    delta = EAction.trivial_true_2_nullifier_delta()
-    res = %Transaction{empty() | actions: actions, delta: delta}
+    res1 = %Transaction{empty() | actions: actions}
+    res2 = %Transaction{res1 | roots: Transaction.roots(res1)}
 
-    assert {:error, _} = Transaction.verify(res)
+    # unbalanced
+    refute Transaction.verify(res2)
 
-    # the delta should be negative let's say we can jam and cue this
-    noun = res |> Noun.Nounable.to_noun()
-
-    assert noun |> Noun.Jam.jam() |> Noun.Jam.cue()
-    assert Transaction.from_noun(noun) == {:ok, res}
-
-    res
+    res2
   end
 
   @spec nullify_intent() :: Transaction.t()
@@ -82,15 +56,20 @@ defmodule Examples.ETransparent.ETransaction do
     actions =
       MapSet.new([EAction.trivial_true_2_nullifier_action()])
 
-    delta = EAction.trivial_true_2_nullifier_delta()
-    %Transaction{empty() | actions: actions, delta: delta}
+    res1 = %Transaction{empty() | actions: actions}
+    res2 = %Transaction{res1 | roots: Transaction.roots(res1)}
+
+    # unbalanced
+    refute Transaction.verify(res2)
+
+    res2
   end
 
   @spec swap_from_actions() :: Transaction.t()
   def swap_from_actions() do
     res = Transaction.compose(nullify_intent_eph(), commit_intent())
 
-    assert %{} = res.delta
+    assert 2 == Transaction.delta(res)
     assert Transaction.verify(res)
 
     res
@@ -102,7 +81,7 @@ defmodule Examples.ETransparent.ETransaction do
   def swap_from_actions_non_eph_nullifier() do
     res = Transaction.compose(nullify_intent(), commit_intent())
 
-    assert %{} = res.delta
+    assert 2 = Transaction.delta(res)
     assert Transaction.verify(res)
 
     res

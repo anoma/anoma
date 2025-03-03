@@ -5,8 +5,9 @@ defmodule Anoma.Node.Utility.Consensus do
 
   alias __MODULE__
   alias Anoma.Node
-  alias Node.Transaction.Mempool
-  alias Node.Registry
+  alias Anoma.Node.Events
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Registry
 
   use EventBroker.DefFilter
   use GenServer
@@ -18,7 +19,7 @@ defmodule Anoma.Node.Utility.Consensus do
   end
 
   deffilter BlockFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Events.BlockEvent{}}} ->
       true
 
     _ ->
@@ -92,7 +93,7 @@ defmodule Anoma.Node.Utility.Consensus do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
-          body: %Mempool.BlockEvent{
+          body: %Events.BlockEvent{
             order: ^consensus
           }
         }

@@ -18,6 +18,8 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   alias Anoma.Protobuf.IntentsService
   alias Anoma.Protobuf.Mempool.AddTransaction
   alias Anoma.Protobuf.MempoolService
+  alias Anoma.Protobuf.Executor.AddROTransaction
+  alias Anoma.Protobuf.ExecutorService
   alias Anoma.Protobuf.NodeInfo
   require Logger
 
@@ -57,11 +59,11 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   def init(args) do
     state = struct(__MODULE__, Enum.into(args, %{}))
 
-    case GRPC.Stub.connect("#{state.host}:#{state.port}") do
+    case connect(state.host, state.port) do
       {:ok, channel} ->
         {:ok, %{state | channel: channel}}
 
-      _err ->
+      {:error, :failed_to_connect} ->
         {:stop, :node_unreachable}
     end
   end
@@ -105,6 +107,12 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, {:add_transaction, jammed_nock})
   end
 
+  @spec add_read_only_transaction(binary()) ::
+          {:ok, AddROTransaction.Response.t()}
+  def add_read_only_transaction(jammed_nock) do
+    GenServer.call(__MODULE__, {:add_ro_transaction, jammed_nock})
+  end
+
   @spec get_blocks({:before | :after, non_neg_integer()}) ::
           {:ok, Get.Response.t()}
   def get_blocks({direction, offset}) do
@@ -134,8 +142,11 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   def handle_call({:list_intents}, _from, state) do
     node_info = %NodeInfo{node_id: state.node_id}
     request = %List.Request{node_info: node_info}
-    intents = IntentsService.Stub.list_intents(state.channel, request)
-    {:reply, intents, state}
+
+    {:ok, response} =
+      IntentsService.Stub.list_intents(state.channel, request, timeout: 1000)
+
+    {:reply, {:ok, response}, state}
   end
 
   def handle_call({:add_intent, intent}, _from, state) do
@@ -194,6 +205,18 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     {:reply, :ok, state}
   end
 
+  def handle_call({:add_ro_transaction, jammed_nock}, _from, state) do
+    node_info = %NodeInfo{node_id: state.node_id}
+
+    request = %AddROTransaction.Request{
+      transaction: jammed_nock,
+      node_info: node_info
+    }
+
+    response = ExecutorService.Stub.add(state.channel, request)
+    {:reply, response, state}
+  end
+
   def handle_call({:get_blocks, direction, offset}, _from, state) do
     node_info = %NodeInfo{node_id: state.node_id}
     request = %Get.Request{node_info: node_info, index: {direction, offset}}
@@ -238,5 +261,34 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   @impl true
   def handle_info(_message, state) do
     {:noreply, state}
+  end
+
+  ############################################################
+  #                       Helpers                            #
+  ############################################################
+
+  # @doc """
+  # I try to establish a connection to the remote node.
+  # If I dont succeed after 10 attempts, I stop trying.
+  # """
+  @spec connect(String.t(), String.t(), non_neg_integer()) ::
+          {:ok, any()} | {:error, :failed_to_connect}
+  defp connect(host, port, attempts \\ 5)
+
+  defp connect(host, port, 0) do
+    Logger.error("failed to connect to node at #{host}, port #{port}")
+    {:error, :failed_to_connect}
+  end
+
+  defp connect(host, port, attempts) do
+    Logger.debug("connecting to node at #{host}, port #{port}")
+
+    case GRPC.Stub.connect("#{host}:#{port}") do
+      {:ok, channel} ->
+        {:ok, channel}
+
+      _err ->
+        connect(host, port, attempts - 1)
+    end
   end
 end

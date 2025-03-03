@@ -1,9 +1,8 @@
 defmodule Examples.ETransparent.EResource do
-  use Memoize
-
-  alias Anoma.TransparentResource.Resource
   alias Anoma.Crypto.Randomness
+  alias Anoma.RM.Transparent.Resource
 
+  use Memoize
   use TestHelper.TestMacro
 
   @doc """
@@ -15,7 +14,11 @@ defmodule Examples.ETransparent.EResource do
   def trivial_true_resource_generator() do
     res = %Resource{nonce: Randomness.get_random(32)}
 
-    {:ok, 0} = Nock.nock(res.logic, [9, 2, 0 | 1])
+    {:ok, logic} =
+      res.logicref |> Noun.atom_integer_to_binary() |> Noun.Jam.cue()
+
+    {:ok, result} = Nock.nock(logic, [9, 2, 0 | 1])
+    assert Noun.equal?(result, 0)
     res
   end
 
@@ -27,19 +30,26 @@ defmodule Examples.ETransparent.EResource do
   @spec trivial_false_resource_generator() :: Resource.t()
   def trivial_false_resource_generator() do
     res = %Resource{
-      logic: [[<<1>> | <<1>>], <<>> | <<>>],
+      logicref:
+        [[<<1>> | <<1>>], <<>> | <<>>]
+        |> Noun.Jam.jam()
+        |> Noun.atom_binary_to_integer(),
       nonce: Randomness.get_random(32)
     }
 
     assert {:ok, uncued} =
-             Resource.to_noun(res)
+             Noun.Nounable.to_noun(res)
              |> Noun.Jam.jam()
-             |> Noun.Jam.cue()
-             |> elem(1)
+             |> Noun.Jam.cue!()
              |> Resource.from_noun()
 
     assert uncued == res
-    {:ok, <<1>>} = Nock.nock(res.logic, [9, 2, 0 | 1])
+
+    {:ok, logic} =
+      res.logicref |> Noun.atom_integer_to_binary() |> Noun.Jam.cue()
+
+    {:ok, result} = Nock.nock(logic, [9, 2, 0 | 1])
+    assert Noun.equal?(result, 1)
     res
   end
 
@@ -64,7 +74,7 @@ defmodule Examples.ETransparent.EResource do
     %Resource{
       trivial_true_resource_generator()
       | nonce: Randomness.get_random(32),
-        ephemeral: true
+        isephemeral: true
     }
   end
 
@@ -76,9 +86,9 @@ defmodule Examples.ETransparent.EResource do
     }
   end
 
-  @spec trivial_true_commitment() :: Resource.commitment()
+  @spec trivial_true_commitment() :: integer()
   def trivial_true_commitment() do
-    res = Resource.commitment(trivial_true_resource())
+    res = Resource.commitment_hash(trivial_true_resource())
 
     assert Resource.commits?(trivial_true_resource(), res)
     # The aura of the commitment does not matter
@@ -92,9 +102,9 @@ defmodule Examples.ETransparent.EResource do
     res
   end
 
-  @spec trivial_true_nullifier() :: Resource.nullifier()
+  @spec trivial_true_nullifier() :: integer()
   def trivial_true_nullifier() do
-    res = Resource.nullifier(trivial_true_resource())
+    res = Resource.nullifier_hash(<<0::256>>, trivial_true_resource())
 
     assert Resource.nullifies?(trivial_true_resource(), res)
     # The aura of the commitment does not matter
@@ -108,18 +118,18 @@ defmodule Examples.ETransparent.EResource do
     res
   end
 
-  @spec trivial_true_nullifier_2() :: Resource.nullifier()
+  @spec trivial_true_nullifier_2() :: integer()
   def trivial_true_nullifier_2() do
-    Resource.nullifier(trivial_true_resource_2())
+    Resource.nullifier_hash(<<0::256>>, trivial_true_resource_2())
   end
 
-  @spec trivial_true_nullifier_eph() :: Resource.nullifier()
+  @spec trivial_true_nullifier_eph() :: integer()
   def trivial_true_nullifier_eph() do
-    Resource.nullifier(trivial_true_resource_eph())
+    Resource.nullifier_hash(<<0::256>>, trivial_true_resource_eph())
   end
 
-  @spec trivial_false_commitment() :: Resource.commitment()
+  @spec trivial_false_commitment() :: integer()
   def trivial_false_commitment() do
-    Resource.commitment(trivial_false_resource())
+    Resource.commitment_hash(trivial_false_resource())
   end
 end

@@ -19,7 +19,7 @@ on:
   push:
     tags:
       - v*
-      - !v*-*
+      - '!v*-*'
 
 jobs:
   compile:

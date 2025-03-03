@@ -4,9 +4,10 @@ defmodule Anoma.Client.Connection.Supervisor do
 
   I manage two connections. The GRPC endpoint for this client and the proxy for the remote node.
   """
-  use Supervisor
 
   require Logger
+
+  use Supervisor
 
   @spec child_spec([any()]) :: Supervisor.child_spec()
   def child_spec(args) do
@@ -65,6 +66,6 @@ defmodule Anoma.Client.Connection.Supervisor do
        start_server: true}
     ]
 
-    Supervisor.init(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_all)
   end
 end

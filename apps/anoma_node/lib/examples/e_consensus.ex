@@ -1,5 +1,6 @@
 defmodule Anoma.Node.Examples.EConsensus do
   alias Anoma.Node
+  alias Anoma.Node.Events
   alias Node.Examples
   alias Examples.{ETransaction, ENode}
   alias Node.Transaction.Mempool
@@ -22,7 +23,7 @@ defmodule Anoma.Node.Examples.EConsensus do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.BlockEvent{
+          body: %Events.BlockEvent{
             order: []
           }
         }
@@ -45,7 +46,7 @@ defmodule Anoma.Node.Examples.EConsensus do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.ConsensusEvent{
+          body: %Events.ConsensusEvent{
             order: []
           }
         }
@@ -57,7 +58,7 @@ defmodule Anoma.Node.Examples.EConsensus do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.BlockEvent{
+          body: %Events.BlockEvent{
             order: []
           }
         }
@@ -71,7 +72,7 @@ defmodule Anoma.Node.Examples.EConsensus do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.ConsensusEvent{
+          body: %Events.ConsensusEvent{
             order: ["id 1"]
           }
         }
@@ -83,7 +84,7 @@ defmodule Anoma.Node.Examples.EConsensus do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.BlockEvent{
+          body: %Events.BlockEvent{
             order: ["id 1"]
           }
         }

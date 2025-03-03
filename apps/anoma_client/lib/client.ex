@@ -2,7 +2,6 @@ defmodule Anoma.Client do
   @moduledoc """
   Documentation for `Client`.
   """
-  use TypedStruct
 
   alias Anoma.Client
   alias Anoma.Client.Connection
@@ -10,7 +9,9 @@ defmodule Anoma.Client do
   alias Anoma.Client.ConnectionSupervisor
   alias Anoma.Client.Runner
   alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Transaction
+
+  use TypedStruct
 
   typedstruct do
     field(:type, :grpc | :tcp)
@@ -95,7 +96,7 @@ defmodule Anoma.Client do
     result.result
   end
 
-  @doc """
+    @doc """
   I return the list of intents in the node I'm connected to.
   """
   @spec list_nullifiers :: any()

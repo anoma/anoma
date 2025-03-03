@@ -19,5 +19,6 @@ defmodule Anoma.Node.Transport.GRPC.Endpoint do
   run(Anoma.Node.Transport.GRPC.Servers.Intents)
   run(Anoma.Node.Transport.GRPC.Servers.Indexer)
   run(Anoma.Node.Transport.GRPC.Servers.Mempool)
+  run(Anoma.Node.Transport.GRPC.Servers.Executor)
   run(Anoma.Node.Transport.GRPC.Servers.Blocks)
 end

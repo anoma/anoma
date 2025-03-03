@@ -12,6 +12,9 @@ import "indexer/unrevealed_commits.proto";
 import "indexer/commits.proto";
 import "indexer/unspent_resources.proto";
 import "mempool/add_transaction.proto";
+import "executor/add_ro_transaction.proto";
+import "intents/compose.proto";
+import "intents/verify.proto";
 import "indexer/blocks/get.proto";
 import "indexer/blocks/latest.proto";
 import "indexer/blocks/root.proto";
@@ -31,6 +34,12 @@ service IntentsService {
 
   rpc AddIntent(Anoma.Protobuf.Intents.Add.Request)
       returns (Anoma.Protobuf.Intents.Add.Response) {}
+
+  rpc Compose(Anoma.Protobuf.Intents.Compose.Request)
+      returns (Anoma.Protobuf.Intents.Compose.Response) {}
+
+  rpc Verify(Anoma.Protobuf.Intents.Verify.Request)
+      returns (Anoma.Protobuf.Intents.Verify.Response) {}
 }
 
 service IndexerService {
@@ -50,6 +59,11 @@ service IndexerService {
 service MempoolService {
   rpc Add(Anoma.Protobuf.Mempool.AddTransaction.Request)
       returns (Anoma.Protobuf.Mempool.AddTransaction.Response) {}
+}
+
+service ExecutorService {
+  rpc Add(Anoma.Protobuf.Executor.AddROTransaction.Request)
+      returns (Anoma.Protobuf.Executor.AddROTransaction.Response) {}
 }
 
 service BlockService {

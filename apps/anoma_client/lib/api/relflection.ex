@@ -11,6 +11,7 @@ defmodule Anoma.Client.Api.ReflectionServer do
       Anoma.Protobuf.IndexerService.Service,
       Anoma.Protobuf.BlockService.Service,
       Anoma.Protobuf.MempoolService.Service,
-      Anoma.Protobuf.NockService.Service
+      Anoma.Protobuf.NockService.Service,
+      Anoma.Protobuf.ExecutorService.Service
     ]
 end

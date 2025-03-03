@@ -1,12 +1,13 @@
 defmodule Examples.ECrypto do
-  use Memoize
-
-  require ExUnit.Assertions
-  import ExUnit.Assertions
-
+  alias Anoma.Crypto.Id
   alias Anoma.Crypto.Sign
   alias Anoma.Crypto.Symmetric
-  alias Anoma.Crypto.Id
+
+  require ExUnit.Assertions
+
+  import ExUnit.Assertions
+
+  use Memoize
 
   ####################################################################
   ##                              IDs                               ##
