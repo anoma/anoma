@@ -485,13 +485,11 @@ defmodule Anoma.Node.Transaction.Backends do
       {:ok, tx}
     else
       e ->
-        unless e == :error do
-          Logging.log_event(
-            node_id,
-            :error,
-            "Transaction verification failed. Reason: #{inspect(e)}"
-          )
-        end
+        Logging.log_event(
+          node_id,
+          :error,
+          "Transaction verification failed. Reason: #{inspect(e)}"
+        )
 
         :error
     end

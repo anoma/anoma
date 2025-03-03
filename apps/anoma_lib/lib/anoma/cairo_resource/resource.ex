@@ -221,4 +221,35 @@ defmodule Anoma.CairoResource.Resource do
 
     aresource
   end
+
+  @spec from_noun(Noun.t()) :: {:ok, Resource.t()}
+  def from_noun([log, lab, val, quant, eph, nonce, nk_com | rand]) do
+    {:ok,
+     %__MODULE__{
+       logic_ref: Noun.atom_integer_to_binary(log, 32),
+       label_ref: Noun.atom_integer_to_binary(lab, 32),
+       value_ref: Noun.atom_integer_to_binary(val, 32),
+       quantity: Noun.atom_integer_to_binary(quant, 32),
+       is_ephemeral: Noun.equal?(eph, 0),
+       nonce: Noun.atom_integer_to_binary(nonce, 32),
+       nk_commitment: Noun.atom_integer_to_binary(nk_com, 32),
+       rand_seed: Noun.atom_integer_to_binary(rand, 32)
+     }}
+  end
+
+  defimpl Noun.Nounable, for: __MODULE__ do
+    @impl true
+    def to_noun(res = %Resource{}) do
+      [
+        res.logic_ref,
+        res.label_ref,
+        res.value_ref,
+        res.quantity,
+        res.is_ephemeral |> Noun.Nounable.Bool.to_noun(),
+        res.nonce,
+        res.nk_commitment
+        | res.rand_seed
+      ]
+    end
+  end
 end
