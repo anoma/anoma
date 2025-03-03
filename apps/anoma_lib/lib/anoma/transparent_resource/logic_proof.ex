@@ -1,10 +1,10 @@
 defmodule Anoma.TransparentResource.LogicProof do
-  use TypedStruct
-
   @behaviour Noun.Nounable.Kind
 
-  alias Anoma.TransparentResource.Resource
   alias __MODULE__
+  alias Anoma.TransparentResource.Resource
+
+  use TypedStruct
 
   typedstruct enforce: true do
     # the resource being proven
@@ -77,21 +77,15 @@ defmodule Anoma.TransparentResource.LogicProof do
     with {:ok, self_resource} <- Resource.from_noun(resource),
          {:ok, tag} <- determine_self_tag(self_tag),
          {:ok, nullified_plaintexts} <- from_noun_plaintext(nullified_plain),
-         {:ok, committed_plaintexts} <- from_noun_plaintext(commits_plain) do
+         {:ok, committed_plaintexts} <- from_noun_plaintext(commits_plain),
+         {:ok, commitments} <- Noun.Nounable.MapSet.from_noun(commits),
+         {:ok, nullifiers} <- Noun.Nounable.MapSet.from_noun(nulls) do
       {:ok,
        %LogicProof{
          resource: self_resource,
          # THEY MUST BE BINARY
-         commitments:
-           MapSet.new(
-             Noun.list_nock_to_erlang(commits),
-             &Noun.atom_integer_to_binary/1
-           ),
-         nullifiers:
-           MapSet.new(
-             Noun.list_nock_to_erlang(nulls),
-             &Noun.atom_integer_to_binary/1
-           ),
+         commitments: commitments,
+         nullifiers: nullifiers,
          self_tag: tag,
          other_public: other_public,
          committed_plaintexts: committed_plaintexts,
@@ -128,15 +122,19 @@ defmodule Anoma.TransparentResource.LogicProof do
       end
 
     public_inputs = [
-      MapSet.to_list(proof.commitments),
-      MapSet.to_list(proof.nullifiers),
+      Noun.Nounable.to_noun(proof.commitments),
+      Noun.Nounable.to_noun(proof.nullifiers),
       self_tag
       | proof.other_public
     ]
 
     private_inputs = [
-      Enum.map(proof.committed_plaintexts, &Resource.to_noun/1),
+      Enum.map(proof.committed_plaintexts, &Resource.to_noun/1)
+      |> MapSet.new()
+      |> Noun.Nounable.to_noun(),
       Enum.map(proof.nullified_plaintexts, &Resource.to_noun/1)
+      |> MapSet.new()
+      |> Noun.Nounable.to_noun()
       | proof.other_private
     ]
 
@@ -170,8 +168,10 @@ defmodule Anoma.TransparentResource.LogicProof do
   end
 
   defp from_noun_plaintext(noun) when is_list(noun) do
+    {:ok, set} = Noun.Nounable.MapSet.from_noun(noun)
+
     maybe_resources =
-      Enum.map(Noun.list_nock_to_erlang(noun), &Resource.from_noun/1)
+      Enum.map(set, &Resource.from_noun/1)
 
     if Enum.any?(maybe_resources, &(:error == &1)) do
       :error

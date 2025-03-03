@@ -3,101 +3,96 @@
 =>  anoma
 |%
 ::  type definitions
-+$  resource
++$  json                            ::  ordered json value for cairo
+  $@  ~                             ::  null
+  $%  [%a p=(list json)]            ::  array
+      [%b p=?]                      ::  boolean
+      [%o p=(list (pair @t json))]  ::  object
+      [%n p=@ta]                    ::  number
+      [%s p=@t]                     ::  string
+  ==                                ::
++$  t-resource
   $~  :*
-    label=*@t
-    logic=*resource-logic
-    ephemeral=|
+    logicref=42.693
+    labelref=`@u`2
+    valueref=`@u`2
     quantity=`@u`1
-    data=*[@u @]
-    nullifier-key=*@I
+    isephemeral=|
     nonce=*@I
-    rseed=%fake
+    nullifierkeycommitment=*@I
+    randseed=%fake
   ==
   $:
-    label=@t              ::  the label; some binary, @t for convenience
-    logic=resource-logic  ::  the logic predicate
-    ephemeral=?           ::  the ephemerality flag
-    quantity=@u           ::  quantity; some nonnegative integer
-    data=[len=@u val=@]   ::  arbitrary data; see lengthy comment in
-                          ::  resource.ex. words mean things
-    nullifier-key=@I      ::  npk; 256 bits
-    nonce=@I              ::  nonce for uniqueness; 256 bits
-    rseed=%fake           ::  useless field. meaningless value
+    logicref=@u                ::  jam of logic
+    labelref=@u                ::  label reference
+    valueref=@u                ::  value reference
+    quantity=@u                ::  quanitity
+    isephemeral=?              ::  ephemerality flag
+    nonce=@I                   ::  nonce
+    nullifierkeycommitment=@I  ::  nullifer key
+    randseed=%fake             ::  fake random seed field
   ==
-+$  commitment  @
-+$  nullifier  @
-+$  public-inputs
-  $:
-    commitments=(list commitment)  ::  commitment set
-    nullifiers=(list nullifier)    ::  nullifier set
-    self-tag=@                     ::  exactly one commitment or nullifier
-    other-public=*                 ::  some other public inputs
-  ==
-+$  private-inputs
-  $:
-    committed-resources=(list resource)  ::  committed resource set
-    nullified-resources=(list resource)  ::  nullified resource set
-    other-private=*                      ::  some other private inputs
-  ==
-+$  resource-logic
-  $~  =>(~ |=(* &))
-  $-([public-inputs private-inputs] ?)
-+$  logic-proof
-  [resource=resource inputs=[public-inputs private-inputs]]
-+$  compliance-proof  %compliance
-+$  proof  ?(compliance-proof logic-proof)
-+$  action
++$  t-compliance-unit
   $~  :*
-    commitments=~
-    nullifiers=~
-    proofs=~
+    proof=*t-proof
+    instance=*t-compliance-instance
+    vk=3.561.077.109.446.357.667.049.832.284.909.642.655.530.995.937.367.874.908.225
+  ==
+  $:
+    proof=t-proof                   ::  compliance proof
+    instance=t-compliance-instance  ::  compliance instance
+    vk=@                            ::  verification key
+  ==
++$  t-compliance-instance
+  $~  :*
+    consumed=~
+    created=~
+    unit-delta=`@u`2
+  ==
+  $:
+    consumed=(list [t-nullifier @ @])     ::  nullifiers
+    created=(list (pair t-commitment @))  ::  commitments
+    unit-delta=@                          ::  unit delta
+  ==
++$  t-action
+  $~  :*
+    created=~
+    consumed=~
+    resource-logic-proofs=~
+    compliance-units=~
     app-data=~
   ==
   $:
-    commitments=(list commitment)  ::  commitment set
-    nullifiers=(list nullifier)    ::  nullifier set
-    proofs=(list proof)            ::  proof set
-    app-data=(set [@ [* ?]])       ::  hash-addressed data with storage criteria
+    created=(list t-commitment)                                   ::  commitment list
+    consumed=(list t-nullifier)                                   ::  nullifier list
+    resource-logic-proofs=(map t-tag (pair @ t-compliance-unit))  ::  proof set
+    compliance-units=(list t-compliance-unit)                     ::  compliance units
+    app-data=(map t-tag (list (pair @ ?)))                        ::  tags with blobs
   ==
-+$  cm-root  @                     ::  commitment set root
-+$  resource-kind  @
-+$  delta-element
-  [k=resource-kind v=@s]
-+$  delta  (list delta-element)    ::  delta (opaque)
-+$  transaction
++$  t-transaction
   $~  :*
     roots=~
     actions=~
-    delta=*delta
-    delta-proof=%delta
+    delta-proof=*t-proof
   ==
   $:
-    roots=(list cm-root)   ::  root set for spent resources
-    actions=(list action)  ::  action set
-    delta=delta            ::  delta (opaque)
-    delta-proof=%delta     ::  delta proof (trivial)
+    roots=(set @)           ::  root set for spent resources
+    actions=(set t-action)  ::  action set
+    delta-proof=t-proof     ::  delta proof (trivial)
   ==
-::  provided functions
-++  private  ::  DO NOT USE!
-  |%
-  ++  uncommit
-    |=  =commitment
-    ;;  resource
-    (cue (~(rsh block 3) 3 commitment))
-  ++  unnullify
-    |=  =nullifier
-    ;;  resource
-    (cue (~(rsh block 3) 3 nullifier))
-  --
++$  t-proof  %fake
++$  t-tag  $?(t-commitment t-nullifier)
++$  t-commitment  @
++$  t-nullifier  @
++$  t-root  @
 ++  commit  ::  commit to a resource
-  |=  =resource
-  ^-  commitment
-  (~(cat block 3) 'CM_' (jam resource))
+  |=  =t-resource
+  ^-  t-commitment
+  (~(cat block 3) 'CM_' (jam t-resource))
 ++  nullify  ::  nullify a resource
-  |=  =resource
-  ^-  nullifier
-  (~(cat block 3) 'NF_' (jam resource))
+  |=  =t-resource
+  ^-  t-nullifier
+  (~(cat block 3) 'NF_' (jam t-resource))
 ++  is-commitment  ::  check whether an atom is a commitment
   |=  a=@
   ^-  @
@@ -108,46 +103,57 @@
   =('NF_' (~(end block 3) 3 a))
 ++  kind
   ~/  %kind
-  |=  =resource
-  ^-  resource-kind
-  (shax (jam [label.resource logic.resource]))
-++  prove-logic  ::  prove a resource logic given all inputs
-  |=  =logic-proof
-  (jam logic-proof)
-++  prove-action  ::  prove action compliance, trivially
-  |=  *
-  %compliance
+  |=  =t-resource
+  ^-  @I
+  (shax (jam [labelref.t-resource logicref.t-resource]))
 ++  delta-add
   ~/  %delta-add
-  |=  [d1=delta d2=delta]
+  |=  [d1=@ d2=@]
   =+  c=%delta-add
-  ^-  delta
+  ^-  @
   !!
 ++  delta-sub
   ~/  %delta-sub
-  |=  [d1=delta d2=delta]
+  |=  [d1=@ d2=@]
   =+  c=%delta-sub
-  ^-  delta
+  ^-  @
   !!
-++  resource-delta
-  |=  =resource
-  ^-  delta
-  ~[[(kind resource) (sun quantity.resource)]]
 ++  action-delta
   ~/  %action-delta
-  |=  =action
+  |=  =t-action
   =+  c=%action-delta
-  ^-  delta
+  ^-  @
   !!
-++  make-delta  ::  make delta from actions (to make a transaction)
+++  compliance-unit-delta
+  ~/  %compliance-unit-delta
+  |=  =t-compliance-unit
+  =+  c=%compliance-unit-delta
+  ^-  @
+  !!
+++  make-delta  ::  make delta from actions
   ~/  %make-delta
-  |=  actions=(list action)
+  |=  actions=(set t-action)
   =+  c=%make-delta
-  ^-  delta
+  ^-  @
   !!
-++  prove-delta  ::  prove delta, trivially
-  |=  *
-  %delta
+++  action-create  ::  create interface for actions
+  ~/  %action-create
+  |=  [consumed=(list [@I t-resource t-root]) created=(list t-resource) data=(map t-tag (list (pair @ ?)))]
+  =+  c=%action-create
+  ^-  t-action
+  !!
+++  trm-compliance-key
+  ~/  %trm-compliance-key
+  |=  [nfs=(list t-nullifier) cms=(list t-commitment) delta=@]
+  =+  c=%trm-compliance-key
+  ^-  ?
+  !!
+++  trm-delta-key
+  ~/  %trm-delta-key
+  |=  [delta=@ expected=@]
+  =+  c=%trm-delta-key
+  ^-  ?
+  =(delta expected)
 ++  zero-delta  ::  the value of the zero delta, for convenience
   ~
 --

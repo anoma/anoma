@@ -25,17 +25,17 @@ defmodule Anoma.Node.Logging do
   - `log_event/3`
   """
 
-  alias __MODULE__
   alias Anoma.Node
-  alias Node.{Registry, Transaction}
-  alias Transaction.{Mempool, Storage}
+  alias Anoma.Node.Events
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Tables
+  alias Anoma.Node.Transaction.Mempool
+
+  require Logger
 
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
-
-  require Node.Event
-  require Logger
 
   ############################################################
   #                         State                            #
@@ -52,22 +52,6 @@ defmodule Anoma.Node.Logging do
   @typep startup_options() ::
            {:node_id, String.t()} | {:table, atom()} | {:rocks, bool()}
 
-  typedstruct module: LoggingEvent do
-    @typedoc """
-    I am the type of a logging event.
-
-    I specify the format of any logging message sent.
-
-    ### Fields
-
-    - `:flag` - The level at which the event ought to be logged.
-    - `:msg` - A logging message.
-    """
-
-    field(:flag, Logging.flag())
-    field(:msg, binary())
-  end
-
   typedstruct do
     @typedoc """
     I am the type of the Logging Engine.
@@ -79,28 +63,29 @@ defmodule Anoma.Node.Logging do
 
     - `:node_id` - The ID of the Node to which a Logging Engine
                    instantiation is bound.
-    - `:table` - The name of the table to which all replay events are
-                 written.
-                 Default: __MODULE__.Events
     """
 
     field(:node_id, String.t())
-    field(:table, atom(), default: __MODULE__.Events)
   end
 
   deffilter LoggingFilter do
     %EventBroker.Event{
-      body: %Node.Event{body: %Anoma.Node.Logging.LoggingEvent{}}
+      body: %Node.Event{body: %Events.LoggingEvent{}}
     } ->
       true
 
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.TxEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Events.TxEvent{}}} ->
       true
 
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.ConsensusEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Events.ConsensusEvent{}}} ->
       true
 
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
+    _ ->
+      false
+  end
+
+  deffilter BlocksFilter do
+    %EventBroker.Event{body: %Node.Event{body: %Events.BlockEvent{}}} ->
       true
 
     _ ->
@@ -120,7 +105,7 @@ defmodule Anoma.Node.Logging do
 
   @spec start_link(list(startup_options())) :: term()
   def start_link(args) do
-    args = Keyword.validate!(args, [:node_id, :table, :rocks])
+    args = Keyword.validate!(args, [:node_id])
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
   end
@@ -140,17 +125,10 @@ defmodule Anoma.Node.Logging do
   def init(args) do
     Process.set_label(__MODULE__)
 
-    args =
-      Keyword.validate!(args, [
-        :node_id,
-        rocks: false,
-        table: __MODULE__.Events
-      ])
+    args = Keyword.validate!(args, [:node_id])
 
-    table =
-      String.to_atom("#{args[:table]}_#{:erlang.phash2(args[:node_id])}")
-
-    init_table(table, args[:rocks])
+    # initialize the necessary tables for the logging engine
+    init_table(args[:node_id])
 
     node_id = args[:node_id]
 
@@ -159,7 +137,12 @@ defmodule Anoma.Node.Logging do
       logging_filter()
     ])
 
-    {:ok, %__MODULE__{node_id: node_id, table: table}}
+    EventBroker.subscribe_me([
+      Node.Event.node_filter(node_id),
+      blocks_filter()
+    ])
+
+    {:ok, %__MODULE__{node_id: node_id}}
   end
 
   ############################################################
@@ -177,6 +160,11 @@ defmodule Anoma.Node.Logging do
     %__MODULE__.LoggingFilter{}
   end
 
+  @spec blocks_filter() :: BlocksFilter.t()
+  def blocks_filter() do
+    %__MODULE__.BlocksFilter{}
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -185,7 +173,7 @@ defmodule Anoma.Node.Logging do
   def handle_info(
         e = %EventBroker.Event{
           body: %Node.Event{
-            body: %Logging.LoggingEvent{}
+            body: %Events.LoggingEvent{}
           }
         },
         state
@@ -196,7 +184,7 @@ defmodule Anoma.Node.Logging do
   def handle_info(
         e = %EventBroker.Event{
           body: %Node.Event{
-            body: %Mempool.TxEvent{}
+            body: %Events.TxEvent{}
           }
         },
         state
@@ -207,7 +195,7 @@ defmodule Anoma.Node.Logging do
   def handle_info(
         e = %EventBroker.Event{
           body: %Node.Event{
-            body: %Mempool.ConsensusEvent{}
+            body: %Events.ConsensusEvent{}
           }
         },
         state
@@ -218,7 +206,7 @@ defmodule Anoma.Node.Logging do
   def handle_info(
         e = %EventBroker.Event{
           body: %Node.Event{
-            body: %Mempool.BlockEvent{}
+            body: %Events.BlockEvent{}
           }
         },
         state
@@ -234,7 +222,7 @@ defmodule Anoma.Node.Logging do
   defp handle_logging_event(
          %EventBroker.Event{
            body: %Node.Event{
-             body: %Logging.LoggingEvent{
+             body: %Events.LoggingEvent{
                flag: flag,
                msg: msg
              }
@@ -246,11 +234,15 @@ defmodule Anoma.Node.Logging do
     state
   end
 
+  # @doc """
+  # A TxEvent is fired whenever a transaction is added to the mempool.
+  # The event contains the transaction id and its value.
+  # """
   @spec handle_tx_event(EventBroker.Event.t(), t()) :: t()
   defp handle_tx_event(
          %EventBroker.Event{
            body: %Node.Event{
-             body: %Mempool.TxEvent{
+             body: %Events.TxEvent{
                id: id,
                tx: %Mempool.Tx{backend: backend, code: code}
              }
@@ -259,18 +251,24 @@ defmodule Anoma.Node.Logging do
          state
        ) do
     :mnesia.transaction(fn ->
-      :mnesia.write({state.table, id, {backend, code}})
+      table = Tables.table_events(state.node_id)
+      :mnesia.write({table, id, {backend, code}})
     end)
 
     log_fun({:info, "Transaction Launched. Id: #{inspect(id)}"})
     state
   end
 
+  # @doc """
+  # When a list of transactions is executed by the mempool, there is a partial
+  # order on these transactions.
+  # This will trigger a consensus event.
+  # """
   @spec handle_consensus_event(EventBroker.Event.t(), t()) :: t()
   defp handle_consensus_event(
          %EventBroker.Event{
            body: %Node.Event{
-             body: %Mempool.ConsensusEvent{
+             body: %Events.ConsensusEvent{
                order: list
              }
            }
@@ -278,19 +276,24 @@ defmodule Anoma.Node.Logging do
          state
        ) do
     :mnesia.transaction(fn ->
-      pending = match(:consensus, state.table)
-      :mnesia.write({state.table, :consensus, pending ++ [list]})
+      table = Tables.table_events(state.node_id)
+      pending = match(:consensus, table)
+      :mnesia.write({table, :consensus, pending ++ [list]})
     end)
 
     log_fun({:info, "Consensus provided order. List: #{inspect(list)}"})
     state
   end
 
+  # @doc """
+  # A block event is fired when a list of transactions in a consensus have all
+  # completed.
+  # """
   @spec handle_block_event(EventBroker.Event.t(), t()) :: t()
   defp handle_block_event(
          %EventBroker.Event{
            body: %Node.Event{
-             body: %Mempool.BlockEvent{
+             body: %Events.BlockEvent{
                order: id_list,
                round: round
              }
@@ -298,14 +301,16 @@ defmodule Anoma.Node.Logging do
          },
          state
        ) do
+    table = Tables.table_events(state.node_id)
+
     :mnesia.transaction(fn ->
       for id <- id_list do
-        :mnesia.delete({state.table, id})
+        :mnesia.delete({table, id})
       end
 
-      current_pending = match(:consensus, state.table)
-      :mnesia.write({state.table, :consensus, tl(current_pending)})
-      :mnesia.write({state.table, :round, round})
+      current_pending = match(:consensus, table)
+      :mnesia.write({table, :consensus, tl(current_pending)})
+      :mnesia.write({table, :round, round + 1})
     end)
 
     log_fun({:info, "Block succesfully committed. Round: #{inspect(round)}"})
@@ -329,10 +334,10 @@ defmodule Anoma.Node.Logging do
 
   @spec restart_with_replay(String.t()) :: DynamicSupervisor.on_start_child()
   def restart_with_replay(node_id) do
-    event_table = Logging.table_name(node_id)
-    block_table = Storage.blocks_table(node_id)
-    values_table = Storage.values_table(node_id)
-    updates_table = Storage.updates_table(node_id)
+    event_table = Tables.table_events(node_id)
+    block_table = Tables.table_blocks(node_id)
+    values_table = Tables.table_values(node_id)
+    updates_table = Tables.table_updates(node_id)
 
     setup = replay_setup(event_table, block_table)
     mock_id = Node.prefix_random_id("mock")
@@ -344,7 +349,10 @@ defmodule Anoma.Node.Logging do
 
     case res do
       :ok ->
-        Anoma.Supervisor.start_node(node_id: node_id, tx_args: replay_args)
+        Anoma.Supervisor.start_node(
+          node_id: node_id,
+          transaction: replay_args
+        )
 
       :error ->
         base_args =
@@ -354,7 +362,7 @@ defmodule Anoma.Node.Logging do
             &Keyword.drop(&1, [:transactions, :consensus])
           )
 
-        Anoma.Supervisor.start_node(node_id: node_id, tx_args: base_args)
+        Anoma.Supervisor.start_node(node_id: node_id, transaction: base_args)
     end
   end
 
@@ -375,7 +383,10 @@ defmodule Anoma.Node.Logging do
       EventBroker.subscribe_me([])
 
       {:ok, _pid} =
-        Anoma.Supervisor.start_node(node_id: mock_id, tx_args: replay_args)
+        Anoma.Supervisor.start_node(
+          node_id: mock_id,
+          transaction: replay_args
+        )
 
       final_consensus = List.last(replay_args[:mempool][:consensus])
 
@@ -384,7 +395,7 @@ defmodule Anoma.Node.Logging do
           %EventBroker.Event{
             body: %Node.Event{
               node_id: ^mock_id,
-              body: %Mempool.ConsensusEvent{
+              body: %Events.ConsensusEvent{
                 order: ^final_consensus
               }
             }
@@ -467,10 +478,10 @@ defmodule Anoma.Node.Logging do
       updates = :mnesia.match_object({updates_table, :_, :_})
 
       new_values_table =
-        Storage.values_table(node_id)
+        Tables.table_values(node_id)
 
       new_updates_table =
-        Storage.updates_table(node_id)
+        Tables.table_updates(node_id)
 
       for {var, name} <- [
             {values, new_values_table},
@@ -488,20 +499,6 @@ defmodule Anoma.Node.Logging do
   ############################################################
   #                           Helpers                        #
   ############################################################
-
-  @spec init_table(atom(), bool()) :: {:atomic, :ok}
-  defp init_table(table, rocks) do
-    :mnesia.delete_table(table)
-    rocks_opt = Anoma.Utility.rock_opts(rocks)
-
-    :mnesia.create_table(table, rocks_opt ++ [attributes: [:type, :body]])
-
-    :mnesia.clear_table(table)
-
-    :mnesia.transaction(fn ->
-      :mnesia.write({table, :round, -1})
-    end)
-  end
 
   defp log_fun({:debug, msg}), do: Logger.debug(msg)
 
@@ -522,11 +519,7 @@ defmodule Anoma.Node.Logging do
 
   @spec log_event(String.t(), flag(), binary()) :: :ok
   def log_event(node_id, flag, msg) do
-    Node.Event.new_with_body(node_id, %__MODULE__.LoggingEvent{
-      flag: flag,
-      msg: msg
-    })
-    |> EventBroker.event()
+    Events.logging_event(flag, msg, node_id)
   end
 
   @spec process_mempool(integer(), integer(), atom(), list()) :: list()
@@ -589,14 +582,21 @@ defmodule Anoma.Node.Logging do
     end
   end
 
-  @doc """
-  I am the name of the event table.
+  @spec init_table(String.t()) :: :ok
+  defp init_table(node_id) do
+    # initialize the tables
+    Tables.initialize_tables_for_node(node_id)
 
-  Given a Node ID, I create an appropriately named Event table for it.
-  """
+    # clear the table if it was not empty
+    Tables.clear_table(Tables.table_events(node_id))
 
-  @spec table_name(String.t()) :: atom()
-  def table_name(node_id) do
-    String.to_atom("#{Logging.Events}_#{:erlang.phash2(node_id)}")
+    # insert default record in the events table
+    table = Tables.table_events(node_id)
+
+    :mnesia.transaction(fn ->
+      :mnesia.write({table, :round, 1})
+    end)
+
+    :ok
   end
 end

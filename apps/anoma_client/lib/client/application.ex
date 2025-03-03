@@ -8,9 +8,9 @@ defmodule Anoma.Client.Application do
    - Forwarding requests to the Anoma node.
   """
 
-  use Application
-
   require Logger
+
+  use Application
 
   @impl true
   def start(_type, _args) do
@@ -19,6 +19,18 @@ defmodule Anoma.Client.Application do
     children = [
       {DynamicSupervisor, name: Anoma.Client.ConnectionSupervisor}
     ]
+
+    :mnesia.create_table(Anoma.Client.Storage.Updates,
+      attributes: [:key, :updates]
+    )
+
+    :mnesia.create_table(Anoma.Client.Storage.Values,
+      attributes: [:qualified_key, :value]
+    )
+
+    :mnesia.create_table(Anoma.Client.Storage.Ids,
+      attributes: [:id, :timestamp]
+    )
 
     opts = [strategy: :one_for_one, name: Anoma.Client.Supervisor]
     Supervisor.start_link(children, opts)

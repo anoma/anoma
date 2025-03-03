@@ -3,16 +3,18 @@ defmodule Anoma.Node.Examples.ESolver do
   I contain several examples on how to use the solver.
   """
 
-  require ExUnit.Assertions
-  import ExUnit.Assertions
-
-  use EventBroker.WithSubscription
-
+  alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Intents.IntentPool
   alias Anoma.Node.Intents.Solver
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.RM.DumbIntent
-  alias Anoma.Node.Examples.ENode
+  alias Anoma.Node.Events
+
+  require ExUnit.Assertions
+
+  import ExUnit.Assertions
+
+  use EventBroker.WithSubscription
 
   ############################################################
   #                           Scenarios                      #
@@ -133,7 +135,7 @@ defmodule Anoma.Node.Examples.ESolver do
           %EventBroker.Event{
             body: %Anoma.Node.Event{
               node_id: ^node_id,
-              body: %Mempool.TxEvent{
+              body: %Events.TxEvent{
                 tx: %Mempool.Tx{backend: _, code: ^tx_candidate}
               }
             }

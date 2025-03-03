@@ -5,9 +5,10 @@ defmodule Anoma.Node.Transport.Supervisor do
   My main functionality is to supervise the physical transport connections
   in this node (e.g., TCP connections).
   """
-  use Supervisor
 
   require Logger
+
+  use Supervisor
 
   @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
