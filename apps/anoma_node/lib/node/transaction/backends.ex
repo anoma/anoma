@@ -423,7 +423,7 @@ defmodule Anoma.Node.Transaction.Backends do
           :ok | :error
   defp cairo_resource_tx(node_id, id, result) do
     with {:ok, tx} <- CTransaction.from_noun(result),
-         true <- Anoma.RM.Transaction.verify(tx),
+         true <- CTransaction.verify(tx),
          true <- root_existence_check(tx, node_id, id),
          # No need to check the commitment existence
          true <- nullifier_existence_check(tx, node_id, id) do
@@ -437,29 +437,43 @@ defmodule Anoma.Node.Transaction.Backends do
             {val, MapSet.new()}
         end
 
+      commitments = tx |> CTransaction.commitments()
+      nullifiers = tx |> CTransaction.nullifiers() |> MapSet.new()
+
       {ct_new, anchor} =
-        CommitmentTree.add(ct, tx.commitments)
+        CommitmentTree.add(ct, commitments)
 
       ciphertexts = tx |> CTransaction.get_cipher_texts() |> MapSet.new()
+
+      write_app_data =
+        tx.actions
+        |> Enum.flat_map(fn action ->
+          action.app_data
+          |> Enum.flat_map(fn {_key, value_list} ->
+            value_list
+            |> Enum.filter(fn {_, deletion} ->
+              Noun.equal?(deletion, <<1::256>>)
+            end)
+            |> Enum.map(fn {value, _} ->
+              {["anoma", "blob", "cairo", :crypto.hash(:sha256, value)],
+               value}
+            end)
+          end)
+        end)
 
       Ordering.add(
         node_id,
         {id,
          %{
            append: [
-             {anoma_keyspace("cairo_nullifiers"), MapSet.new(tx.nullifiers)},
+             {anoma_keyspace("cairo_nullifiers"), nullifiers},
              {anoma_keyspace("cairo_roots"),
               MapSet.put(append_roots, anchor)},
              {anoma_keyspace("cairo_ciphertexts"), ciphertexts}
            ],
-           write: [{anoma_keyspace("cairo_ct"), ct_new}]
+           write: [{anoma_keyspace("cairo_ct"), ct_new} | write_app_data]
          }}
       )
-
-      # Get ciphertext from tx
-      _ciphertext = CTransaction.get_cipher_texts(tx)
-
-      # TODO: Store ciphertext
 
       Events.srm_event(
         MapSet.new(tx.commitments),
@@ -489,7 +503,7 @@ defmodule Anoma.Node.Transaction.Backends do
     with {:ok, stored_nullifiers} <-
            Ordering.read(node_id, {id, anoma_keyspace("cairo_nullifiers")}) do
       if Enum.any?(
-           transaction.nullifiers,
+           CTransaction.nullifiers(transaction),
            &MapSet.member?(stored_nullifiers, &1)
          ) do
         {:error, "A submitted nullifier already exists in storage"}

@@ -1,6 +1,6 @@
 defmodule Anoma.CairoResource.LogicInstance do
   @moduledoc """
-  I represent the resource logic's public inputs.
+  I represent the resource logic's instance.
   """
 
   use TypedStruct
@@ -8,12 +8,13 @@ defmodule Anoma.CairoResource.LogicInstance do
   typedstruct enforce: true do
     # nullifier of input resource or commitment of output resource
     field(:tag, <<_::256>>, default: <<0::256>>)
+    # a flag that tells the logic if the resource is consumed or created
+    field(:is_consumed, <<_::256>>, default: <<0::256>>)
     # The merkle root of resources in current action(execution context)
     field(:root, <<_::256>>, default: <<0::256>>)
     # Ciphertext
     field(:cipher, list(<<_::256>>), default: [])
-    # Custom public inputs
-    field(:app_data, list(<<_::256>>), default: [])
+    field(:app_data, list({<<_::256>>, <<_::256>>}), default: [])
   end
 
   @spec from_public_input(binary()) :: t()
@@ -21,6 +22,7 @@ defmodule Anoma.CairoResource.LogicInstance do
     # call cairo api to get output bytes
     [
       tag,
+      is_consumed,
       root,
       cipher_text_elem0,
       cipher_text_elem1,
@@ -41,6 +43,7 @@ defmodule Anoma.CairoResource.LogicInstance do
 
     %__MODULE__{
       tag: tag |> :binary.list_to_bin(),
+      is_consumed: is_consumed |> :binary.list_to_bin(),
       root: root |> :binary.list_to_bin(),
       cipher: [
         cipher_text_elem0 |> :binary.list_to_bin(),
@@ -58,7 +61,8 @@ defmodule Anoma.CairoResource.LogicInstance do
         pk_y |> :binary.list_to_bin(),
         nonce |> :binary.list_to_bin()
       ],
-      app_data: app_data |> Enum.map(&:binary.list_to_bin/1)
+      app_data:
+        app_data |> Enum.map(&:binary.list_to_bin/1) |> Enum.chunk_every(2)
     }
   end
 
@@ -76,8 +80,7 @@ defmodule Anoma.CairoResource.LogicInstance do
     public_input
     |> :binary.bin_to_list()
     |> Cairo.get_output()
-    |> tl()
-    |> hd()
+    |> Enum.at(2)
     |> :binary.list_to_bin()
   end
 
@@ -95,5 +98,22 @@ defmodule Anoma.CairoResource.LogicInstance do
       plain_text ->
         {:ok, plain_text |> Enum.map(&:binary.list_to_bin/1)}
     end
+  end
+
+  def get_app_data_pair(public_input) do
+    output =
+      public_input
+      |> :binary.bin_to_list()
+      |> Cairo.get_output()
+
+    tag = hd(output) |> :binary.list_to_bin()
+
+    app_data =
+      output
+      |> Enum.drop(17)
+      |> Enum.map(&:binary.list_to_bin/1)
+      |> Enum.chunk_every(2)
+
+    {tag, app_data}
   end
 end

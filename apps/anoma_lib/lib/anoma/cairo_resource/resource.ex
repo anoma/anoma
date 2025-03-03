@@ -12,52 +12,53 @@ defmodule Anoma.CairoResource.Resource do
   use TypedStruct
 
   typedstruct enforce: true do
-    # resource logic
-    field(:logic, <<_::256>>, default: <<0::256>>)
-    # fungibility label
-    field(:label, <<_::256>>, default: <<0::256>>)
+    # Hash of the predicate associated with the resource (resource logic)
+    field(:logic_ref, <<_::256>>, default: <<0::256>>)
+    # Hash of the resource label
+    field(:label_ref, <<_::256>>, default: <<0::256>>)
     # quantity
     field(:quantity, <<_::256>>, default: <<0::256>>)
-    # arbitrary data
-    field(:data, <<_::256>>, default: <<0::256>>)
+    # Hash of the resource value
+    field(:value_ref, <<_::256>>, default: <<0::256>>)
     # ephemerality flag
-    field(:eph, bool(), default: false)
+    field(:is_ephemeral, bool(), default: false)
     # resource nonce
     field(:nonce, <<_::256>>, default: <<0::256>>)
     # commitment to nullifier key
     field(:nk_commitment, <<_::256>>, default: <<0::256>>)
     # random seed
-    field(:rseed, <<_::256>>, default: <<0::256>>)
+    field(:rand_seed, <<_::256>>, default: <<0::256>>)
   end
 
   @spec from_json_object(Jason.OrderedObject.t()) ::
           {:ok, t()}
           | {:error, term()}
   def from_json_object(mp) do
-    with {:ok, logic} <-
-           Utils.parse_json_field_to_binary32(mp, "logic"),
-         {:ok, label} <-
-           Utils.parse_json_field_to_binary32(mp, "label"),
+    with {:ok, logic_ref} <-
+           Utils.parse_json_field_to_binary32(mp, "logic_ref"),
+         {:ok, label_ref} <-
+           Utils.parse_json_field_to_binary32(mp, "label_ref"),
          {:ok, quantity} <-
            Utils.parse_json_field_to_binary32(mp, "quantity"),
-         {:ok, data} <-
-           Utils.parse_json_field_to_binary32(mp, "data"),
-         {:ok, eph} <- Utils.parse_json_field_to_boolean(mp, "eph"),
+         {:ok, value_ref} <-
+           Utils.parse_json_field_to_binary32(mp, "value_ref"),
+         {:ok, is_ephemeral} <-
+           Utils.parse_json_field_to_boolean(mp, "is_ephemeral"),
          {:ok, nonce} <-
            Utils.parse_json_field_to_binary32(mp, "nonce"),
          {:ok, nk_commitment} <-
            Utils.parse_json_field_to_binary32(mp, "nk_commitment"),
-         {:ok, rseed} <-
-           Utils.parse_json_field_to_binary32(mp, "rseed") do
+         {:ok, rand_seed} <-
+           Utils.parse_json_field_to_binary32(mp, "rand_seed") do
       %Resource{
-        logic: logic,
-        label: label,
+        logic_ref: logic_ref,
+        label_ref: label_ref,
         quantity: quantity,
-        data: data,
-        eph: eph,
+        value_ref: value_ref,
+        is_ephemeral: is_ephemeral,
         nonce: nonce,
         nk_commitment: nk_commitment,
-        rseed: rseed
+        rand_seed: rand_seed
       }
     else
       {:error, msg} -> {:error, "Error parsing resource JSON: #{msg}"}
@@ -68,23 +69,23 @@ defmodule Anoma.CairoResource.Resource do
   def to_json_object(resource) do
     %Jason.OrderedObject{
       values: [
-        {"logic", Utils.binary_to_hex(resource.logic)},
-        {"label", Utils.binary_to_hex(resource.label)},
+        {"logic_ref", Utils.binary_to_hex(resource.logic_ref)},
+        {"label_ref", Utils.binary_to_hex(resource.label_ref)},
         {"quantity", Utils.binary_to_hex(resource.quantity)},
-        {"data", Utils.binary_to_hex(resource.data)},
-        {"eph", resource.eph},
+        {"value_ref", Utils.binary_to_hex(resource.value_ref)},
+        {"is_ephemeral", resource.is_ephemeral},
         {"nonce", Utils.binary_to_hex(resource.nonce)},
         {"nk_commitment", Utils.binary_to_hex(resource.nk_commitment)},
-        {"rseed", Utils.binary_to_hex(resource.rseed)}
+        {"rand_seed", Utils.binary_to_hex(resource.rand_seed)}
       ]
     }
   end
 
-  @doc "Randomizes the rseed of a resource."
+  @doc "Randomizes the rand_seed of a resource."
   @spec random(t()) :: t()
   def random(r = %Resource{}) do
-    rseed = :crypto.strong_rand_bytes(32)
-    %Resource{r | rseed: rseed}
+    rand_seed = :crypto.strong_rand_bytes(32)
+    %Resource{r | rand_seed: rand_seed}
   end
 
   @doc """
@@ -104,7 +105,7 @@ defmodule Anoma.CairoResource.Resource do
       [
         Constants.prf_expand_personalization_felt(),
         Constants.felt_zero(),
-        resource.rseed,
+        resource.rand_seed,
         resource.nonce
       ]
       |> Enum.map(&:binary.bin_to_list/1)
@@ -115,7 +116,7 @@ defmodule Anoma.CairoResource.Resource do
       [
         Constants.prf_expand_personalization_felt(),
         Constants.felt_one(),
-        resource.rseed,
+        resource.rand_seed,
         resource.nonce
       ]
       |> Enum.map(&:binary.bin_to_list/1)
@@ -123,16 +124,16 @@ defmodule Anoma.CairoResource.Resource do
       |> :binary.list_to_bin()
 
     eph_field =
-      if resource.eph do
+      if resource.is_ephemeral do
         Constants.felt_one()
       else
         Constants.felt_zero()
       end
 
     [
-      resource.logic,
-      resource.label,
-      resource.data,
+      resource.logic_ref,
+      resource.label_ref,
+      resource.value_ref,
       resource.nk_commitment,
       resource.nonce,
       psi,
@@ -154,7 +155,7 @@ defmodule Anoma.CairoResource.Resource do
       [
         Constants.prf_expand_personalization_felt(),
         Constants.felt_zero(),
-        resource.rseed,
+        resource.rand_seed,
         resource.nonce
       ]
       |> Enum.map(&:binary.bin_to_list/1)
@@ -170,14 +171,14 @@ defmodule Anoma.CairoResource.Resource do
   @spec to_bytes(t()) :: [byte()]
   def to_bytes(resource = %Resource{}) do
     binaries =
-      resource.logic <>
-        resource.label <>
+      resource.logic_ref <>
+        resource.label_ref <>
         resource.quantity <>
-        resource.data <>
-        resource.nonce <> resource.nk_commitment <> resource.rseed
+        resource.value_ref <>
+        resource.nonce <> resource.nk_commitment <> resource.rand_seed
 
     binaries =
-      if resource.eph do
+      if resource.is_ephemeral do
         binaries <> <<1>>
       else
         binaries <> <<0>>
@@ -196,5 +197,28 @@ defmodule Anoma.CairoResource.Resource do
       Constants.felt_zero() |> :binary.bin_to_list()
     )
     |> :binary.list_to_bin()
+  end
+
+  @spec a_padding_resource() :: t()
+  def a_padding_resource() do
+    aresource = %Resource{
+      # use the trivial logic
+      logic_ref: Constants.cairo_trivial_resource_logic_hash(),
+      label_ref: <<0::256>>,
+      # the quantity must be 0
+      quantity: <<0::256>>,
+      value_ref: <<0::256>>,
+      # the is_ephemeral must be true
+      is_ephemeral: true,
+      # update the nonce if it's an output resource
+      nonce: :crypto.strong_rand_bytes(32),
+      # use the default nk
+      nk_commitment:
+        Resource.get_nk_commitment(Constants.default_cairo_nullifier_key()),
+      # use a random seed
+      rand_seed: :crypto.strong_rand_bytes(32)
+    }
+
+    aresource
   end
 end

@@ -11,20 +11,21 @@ PRF_EXPAND_PERSONALIZATION_FELT : Field :=
 
 type Resource :=
   mkResource@{
-    logic : Field;
-    label : Field;
+    logic_ref : Field;
+    label_ref : Field;
     quantity : Field;
-    data : Field;
-    eph : Bool;
+    value_ref : Field;
+    is_ephemeral : Bool;
     nonce : Field;
     nk_commitment : Field;
-    rseed : Field;
+    rand_seed : Field;
   };
 
 type LogicResult :=
   mkResult@{
     -- nullifier of input resource or commitment of output resource
-    self_resource_id : Field;
+    tag : Field;
+    is_consumed : Field;
     -- The merkle root of resources
     root : Field;
     cipher_text_elem0 : Field;
@@ -65,7 +66,7 @@ resource_commitment (resource : Resource) : Field :=
         [
           PRF_EXPAND_PERSONALIZATION_FELT;
           0;
-          Resource.rseed resource;
+          Resource.rand_seed resource;
           Resource.nonce resource;
         ];
     rcm :=
@@ -73,18 +74,18 @@ resource_commitment (resource : Resource) : Field :=
         [
           PRF_EXPAND_PERSONALIZATION_FELT;
           1;
-          Resource.rseed resource;
+          Resource.rand_seed resource;
           Resource.nonce resource;
         ];
     eph_field : Field :=
       if
-        | Resource.eph resource := 1
+        | Resource.is_ephemeral resource := 1
         | else := 0;
   in poseidonHashList
     [
-      Resource.logic resource;
-      Resource.label resource;
-      Resource.data resource;
+      Resource.logic_ref resource;
+      Resource.label_ref resource;
+      Resource.value_ref resource;
       Resource.nk_commitment resource;
       Resource.nonce resource;
       psi;
@@ -101,7 +102,7 @@ resource_nullifier
         [
           PRF_EXPAND_PERSONALIZATION_FELT;
           0;
-          Resource.rseed resource;
+          Resource.rand_seed resource;
           Resource.nonce resource;
         ];
   in poseidonHashList [nf_key; Resource.nonce resource; psi; cm];
@@ -222,56 +223,53 @@ encryption
 
 main
   (self_resource : Resource)
+  (is_consumed : Bool)
   (resource_nf_key : Field)
   (merkle_path : List (Pair Field Bool))
   : LogicResult :=
-
-  -- Check the self_resource resource commitment:
-  -- TODO: add a explicit is_input_or_output flag to the resource
+  -- Generate the commitment of self_resource resource
   let
-    is_output_resource :=
-      case merkle_path of
-        -- merkle_path can not be empty
-        | nil := true
-        | (_, is_left) :: t := is_left;
-
-    -- Generate the commitment of self_resource resource
     resource_cm := resource_commitment self_resource;
 
     -- Generate the nullifier of self_resource resource
     resource_nullifier :=
       resource_nullifier resource_nf_key self_resource resource_cm;
 
-    self_resource_id :=
+    tag :=
       if
-        | is_output_resource := resource_cm
-        | else := resource_nullifier;
+        | is_consumed := resource_nullifier
+        | else := resource_cm;
 
-    root := check_merkle_path self_resource_id merkle_path;
+    is_consumed_field :=
+      if
+        | is_consumed := 1
+        | else := 0;
+
+    root := check_merkle_path tag merkle_path;
 
     -- Encryption
     resource_eph_field : Field :=
       if
-        | Resource.eph self_resource := 1
+        | Resource.is_ephemeral self_resource := 1
         | else := 0;
     messages :=
       [
-        Resource.logic self_resource;
-        Resource.label self_resource;
+        Resource.logic_ref self_resource;
+        Resource.label_ref self_resource;
         Resource.quantity self_resource;
-        Resource.data self_resource;
+        Resource.value_ref self_resource;
         resource_eph_field;
         Resource.nonce self_resource;
         Resource.nk_commitment self_resource;
-        Resource.rseed self_resource;
+        Resource.rand_seed self_resource;
         0;
         0;
       ];
 
     cihper := encryption messages Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
-  -- cihper_ := encryption [Resource.logic self_resource; Resource.label self_resource; Resource.quantity self_resource; Resource.data self_resource; Resource.eph self_resource; Resource.nonce self_resource; Resource.nk_commitment self_resource; Resource.rseed self_resource; 0; 0 ] Ec.StarkCurve.GEN_X Ec.StarkCurve.GEN_Y 1 1;
   in mkResult@{
-       self_resource_id := self_resource_id;
+       tag := tag;
+       is_consumed := is_consumed_field;
        root := root;
        cipher_text_elem0 := EncryptionResult.cipher_text_elem0 cihper;
        cipher_text_elem1 := EncryptionResult.cipher_text_elem1 cihper;
