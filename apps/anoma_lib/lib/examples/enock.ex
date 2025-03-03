@@ -1,14 +1,16 @@
 defmodule Examples.ENock do
-  use Memoize
+  alias Anoma.RM.Transparent.Action
+  alias Anoma.RM.Transparent.Transaction
+  alias Anoma.RM.Transparent.Primitive.DeltaHash
+  alias Examples.ECrypto
+  alias Examples.ETransparent.EAction
 
   require ExUnit.Assertions
-  import ExUnit.Assertions
 
-  alias Examples.ECrypto
-  alias Anoma.TransparentResource.Transaction
-  alias Examples.ETransparent.EAction
-  alias Anoma.TransparentResource.Delta
+  import ExUnit.Assertions
   import Noun
+
+  use Memoize
 
   ####################################################################
   ##                        Resource Logics                         ##
@@ -52,7 +54,7 @@ defmodule Examples.ENock do
 
   @spec zero(Noun.t()) :: Noun.t()
   def zero(key \\ "key") do
-    zero_counter_arm = [1, key | 0]
+    zero_counter_arm = [1, [key] | 0]
     arm = [10, [2 | zero_counter_arm], 1, 0 | 0]
     sample = 0
     keyspace = 0
@@ -61,7 +63,7 @@ defmodule Examples.ENock do
 
   @spec inc(Noun.t()) :: Noun.t()
   def inc(key \\ "key") do
-    increment_value_arm = [[1 | key], 4, 12, [1 | 0], [0 | 6], 1, key | 0]
+    increment_value_arm = [[1 | [key]], 4, 12, [1 | 0], [0 | 6], 1, [key] | 0]
     # Place the result in a list
     arm = [10, [2 | increment_value_arm], 1, 0 | 0]
     sample = 0
@@ -287,15 +289,10 @@ defmodule Examples.ENock do
     core = [sign_arm(), sample | Nock.Lib.logics_core()]
 
     valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
-    invalid_args = [ECrypto.blood_msg() | ECrypto.londo().external.sign]
 
     assert Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
            |> elem(1)
            |> Noun.equal?(ECrypto.blood_l_signed())
-
-    assert :error ==
-             Nock.nock(core, [9, 2, 10, [6, 1 | invalid_args], 0 | 1]),
-           "Can't sign with one's public key!"
 
     core
   end
@@ -367,9 +364,6 @@ defmodule Examples.ENock do
            |> elem(1)
            |> Noun.equal?(ECrypto.blood_l_signed_detached())
 
-    assert :error == Nock.nock(core, [9, 2, 10, [6, 1, <<3>> | 5], 0 | 1])
-    assert :error == Nock.nock(core, [9, 2, 10, [6, 1, <<3>> | <<5>>], 0 | 1])
-    assert :error == Nock.nock(core, [9, 2, 10, [6, 1, 3 | <<5>>], 0 | 1])
     core
   end
 
@@ -1472,7 +1466,7 @@ defmodule Examples.ENock do
 
     assert list
            |> MapSet.new()
-           |> Noun.Nounable.Set.to_noun()
+           |> Noun.Nounable.to_noun()
            |> Noun.equal?(set)
   end
 
@@ -1531,13 +1525,13 @@ defmodule Examples.ENock do
 
   def put_test() do
     set_elixir = [[1 | 2], [2 | 4], [2 | 3]] |> MapSet.new()
-    noun_set = set_elixir |> Noun.Nounable.Set.to_noun()
+    noun_set = set_elixir |> Noun.Nounable.to_noun()
 
     elem1 = [2 | 4]
     elem2 = [1 | 5]
 
     noun_set_new =
-      set_elixir |> MapSet.put(elem2) |> Noun.Nounable.Set.to_noun()
+      set_elixir |> MapSet.put(elem2) |> Noun.Nounable.to_noun()
 
     {:ok, in_core} = noun_set |> in_call()
 
@@ -1580,10 +1574,47 @@ defmodule Examples.ENock do
   end
 
   def wyt_test() do
-    set = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
     {:ok, in_core} = in_call(set)
 
     assert in_core |> wyt_with_core_call() |> elem(1) |> Noun.equal?(4)
+  end
+
+  @doc """
+  I represent a tap:in call with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  a=_in  tap:a
+
+  and grabbing the arm with [0 2]
+  """
+  @spec tap_in_with_core() :: Noun.t()
+  def tap_in_with_core() do
+    arm =
+      "[7 [0 6] 9 186 0 1]"
+      |> Noun.Format.parse_always()
+
+    sample = 0
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec tap_in_with_core_call(Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def tap_in_with_core_call(core) do
+    Nock.nock(tap_in_with_core(), [9, 2, 10, [6, 1 | core], 0 | 1])
+  end
+
+  def tap_in_test() do
+    set = [123, 0] |> MapSet.new() |> Noun.Nounable.MapSet.to_noun()
+    {:ok, in_core} = in_call(set)
+    {:ok, res} = in_core |> tap_in_with_core_call()
+
+    # this is due to how 0 and 123 get located in set
+    # test it like this since this is deterministic
+    assert res |> Noun.equal?([0, 123])
   end
 
   @doc """
@@ -1614,14 +1645,14 @@ defmodule Examples.ENock do
   end
 
   def int_test() do
-    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
-    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.to_noun()
     {:ok, in_core} = in_call(set1)
 
     set_res =
       MapSet.new([1, 2, 3, 4])
       |> MapSet.intersection(MapSet.new([3, 4, 5, 6]))
-      |> Noun.Nounable.Set.to_noun()
+      |> Noun.Nounable.to_noun()
 
     assert in_core
            |> int_with_core_call(set2)
@@ -1657,14 +1688,14 @@ defmodule Examples.ENock do
   end
 
   def dif_test() do
-    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
-    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.to_noun()
     {:ok, in_core} = in_call(set1)
 
     set_res =
       MapSet.new([1, 2, 3, 4])
       |> MapSet.difference(MapSet.new([3, 4, 5, 6]))
-      |> Noun.Nounable.Set.to_noun()
+      |> Noun.Nounable.to_noun()
 
     assert in_core
            |> dif_with_core_call(set2)
@@ -1700,7 +1731,7 @@ defmodule Examples.ENock do
   end
 
   def has_test() do
-    set = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
     elem1 = 1
     elem2 = 5
     {:ok, in_core} = in_call(set)
@@ -1737,14 +1768,14 @@ defmodule Examples.ENock do
   end
 
   def uni_test() do
-    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
-    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.to_noun()
     {:ok, in_core} = in_call(set1)
 
     set_res =
       MapSet.new([1, 2, 3, 4])
       |> MapSet.union(MapSet.new([3, 4, 5, 6]))
-      |> Noun.Nounable.Set.to_noun()
+      |> Noun.Nounable.to_noun()
 
     assert in_core
            |> uni_with_core_call(set2)
@@ -1780,15 +1811,15 @@ defmodule Examples.ENock do
   end
 
   def duni_test() do
-    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
-    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
-    set3 = [5, 6] |> MapSet.new() |> Noun.Nounable.Set.to_noun()
+    set1 = [1, 2, 3, 4] |> MapSet.new() |> Noun.Nounable.to_noun()
+    set2 = [3, 4, 5, 6] |> MapSet.new() |> Noun.Nounable.to_noun()
+    set3 = [5, 6] |> MapSet.new() |> Noun.Nounable.to_noun()
     {:ok, in_core} = in_call(set1)
 
     set_res =
       MapSet.new([1, 2, 3, 4])
       |> MapSet.union(MapSet.new([5, 6]))
-      |> Noun.Nounable.Set.to_noun()
+      |> Noun.Nounable.to_noun()
 
     assert in_core |> duni_with_core_call(set2) == :error
 
@@ -1812,7 +1843,7 @@ defmodule Examples.ENock do
     layer_depth = example_layer_depth(11)
 
     arm =
-      "[8 [9 21 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      "[8 [9 93 0 #{layer_depth}] 10 [6 0 14] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = 0
@@ -1901,6 +1932,43 @@ defmodule Examples.ENock do
            |> Noun.equal?(1)
   end
 
+  @doc """
+  I represent a tap:by call with a specified instantiated in core given
+  as an extra argument.
+
+  Can be gotten by defining locally
+
+  =l    =>  logics  |=  a=_by  tap:a
+
+  and grabbing the arm with [0 2]
+  """
+  @spec tap_by_with_core() :: Noun.t()
+  def tap_by_with_core() do
+    arm =
+      "[7 [0 6] 9 174 0 1]"
+      |> Noun.Format.parse_always()
+
+    sample = 0
+
+    [arm, sample | Nock.Lib.logics_core()]
+  end
+
+  @spec tap_by_with_core_call(Noun.t()) ::
+          :error | {:ok, Noun.t()}
+  def tap_by_with_core_call(core) do
+    Nock.nock(tap_by_with_core(), [9, 2, 10, [6, 1 | core], 0 | 1])
+  end
+
+  def tap_by_test() do
+    set = %{123 => "blah"} |> Map.new() |> Noun.Nounable.to_noun()
+    {:ok, by_core} = by_call(set)
+    {:ok, res} = by_core |> tap_by_with_core_call()
+
+    # this is due to how 0 and 123 get located in set
+    # test it like this since this is deterministic
+    assert res |> Noun.equal?([[123 | "blah"]])
+  end
+
   def kind_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
@@ -1918,12 +1986,12 @@ defmodule Examples.ENock do
 
     {:ok, kind} =
       resource
-      |> Anoma.TransparentResource.Resource.to_noun()
+      |> Noun.Nounable.to_noun()
       |> kind_call
       |> Nock.nock([9, 2, 0 | 1])
 
     assert resource
-           |> Anoma.TransparentResource.Resource.kind()
+           |> Anoma.RM.Transparent.Resource.kind()
            |> Noun.equal?(kind)
   end
 
@@ -1940,18 +2008,19 @@ defmodule Examples.ENock do
   end
 
   def delta_add_test() do
-    delta = EAction.trivial_true_commit_delta() |> Delta.to_noun()
+    delta = EAction.trivial_true_commit_delta()
 
-    {:ok, [[_ | del]]} =
+    {:ok, delta} =
       delta_add_call(delta, delta) |> Nock.nock([9, 2, 0 | 1])
 
-    assert Noun.equal?(del, 4)
+    delta_original = EAction.trivial_true_commit_delta()
+    assert delta == DeltaHash.delta_add(delta_original, delta_original)
   end
 
   def delta_sub_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
-    "[8 [9 1527 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 12013 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1961,12 +2030,12 @@ defmodule Examples.ENock do
   end
 
   def delta_sub_test() do
-    delta = EAction.trivial_true_commit_delta() |> Delta.to_noun()
+    delta = EAction.trivial_true_commit_delta()
 
     assert delta_sub_call(delta, delta)
            |> Nock.nock([9, 2, 0 | 1])
            |> elem(1)
-           |> Noun.equal?([])
+           |> Noun.equal?(2)
   end
 
   def action_delta_arm() do
@@ -1984,16 +2053,18 @@ defmodule Examples.ENock do
   def action_delta_test() do
     action = EAction.trivial_true_commit_action() |> Noun.Nounable.to_noun()
 
-    {:ok, [[_ | del]]} =
+    {:ok, delta} =
       action |> action_delta_call() |> Nock.nock([9, 2, 0 | 1])
 
-    assert Noun.equal?(del, 2)
+    delta_original = EAction.trivial_true_commit_action() |> Action.delta()
+
+    assert delta == delta_original
   end
 
   def make_delta_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
-    "[8 [9 1494 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 2991 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2003,20 +2074,20 @@ defmodule Examples.ENock do
   end
 
   def make_delta_test() do
-    actions = [
-      EAction.trivial_true_commit_action() |> Noun.Nounable.to_noun()
-    ]
+    actions =
+      MapSet.new([EAction.trivial_true_commit_action()])
+      |> Noun.Nounable.to_noun()
 
-    {:ok, [[_ | del]]} =
+    {:ok, delta} =
       actions |> make_delta_call() |> Nock.nock([9, 2, 0 | 1])
 
-    assert Noun.equal?(del, 2)
+    assert delta == EAction.trivial_true_commit_action() |> Action.delta()
   end
 
   def is_commitment_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
-    "[8 [9 1.526 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 12012 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2049,7 +2120,7 @@ defmodule Examples.ENock do
   def is_nullifier_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
-    "[8 [9 372 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 1494 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 

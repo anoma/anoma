@@ -22,23 +22,34 @@ defmodule Anoma.Node.Transaction.Ordering do
   - `order/2`
   """
 
+  alias __MODULE__
+  alias Anoma.Node
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Storage
+  alias Anoma.Node.Events
+
+  require Node.Event
+
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
 
-  alias __MODULE__
-  alias Anoma.Node
-  alias Node.Transaction.Storage
-  alias Node.Registry
+  ############################################################
+  #                       Types                              #
+  ############################################################
 
-  require Node.Event
-
+  @typedoc """
+  Type of the arguments the ordering genserver expects
+  """
+  @type args_t ::
+          [
+            node_id: String.t(),
+            next_height: non_neg_integer()
+          ]
+          | [node_id: String.t()]
   ############################################################
   #                         State                            #
   ############################################################
-
-  @typep startup_options() ::
-           {:node_id, String.t()} | {:next_height, integer()}
 
   typedstruct enforce: true do
     @typedoc """
@@ -64,21 +75,6 @@ defmodule Anoma.Node.Transaction.Ordering do
     field(:tx_id_to_height, %{binary() => integer()}, default: %{})
   end
 
-  typedstruct enforce: true, module: OrderEvent do
-    @typedoc """
-    I am the type of an ordering Event.
-
-    I am sent whenever the transaction with which I am associated gets a
-    global timestamp.
-
-    ### Fields
-
-    - `tx_id` - The ID of the transaction which was ordered.
-    """
-
-    field(:tx_id, binary())
-  end
-
   deffilter TxIdFilter, tx_id: binary() do
     %EventBroker.Event{body: %Node.Event{body: %{tx_id: ^tx_id}}} -> true
     _ -> false
@@ -90,7 +86,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   I register the engine with supplied node ID provided by the arguments.
   """
 
-  @spec start_link([startup_options()]) :: GenServer.on_start()
+  @spec start_link(args_t()) :: GenServer.on_start()
   def start_link(args \\ []) do
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
@@ -112,7 +108,9 @@ defmodule Anoma.Node.Transaction.Ordering do
     Process.set_label(__MODULE__)
 
     args = Keyword.validate!(args, [:node_id, next_height: 1])
+
     state = struct(Ordering, Enum.into(args, %{}))
+
     {:ok, state}
   end
 
@@ -349,12 +347,7 @@ defmodule Anoma.Node.Transaction.Ordering do
       for tx_id <- tx_id_list,
           reduce: {state.tx_id_to_height, state.next_height} do
         {map, order} ->
-          order_event =
-            Node.Event.new_with_body(state.node_id, %__MODULE__.OrderEvent{
-              tx_id: tx_id
-            })
-
-          EventBroker.event(order_event)
+          Events.order_event(tx_id, state.node_id, __MODULE__)
           {Map.put(map, tx_id, order), order + 1}
       end
 
@@ -417,7 +410,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   defp block(from, tx_id, call, node_id) do
     receive do
       %EventBroker.Event{
-        body: %Node.Event{body: %__MODULE__.OrderEvent{tx_id: ^tx_id}}
+        body: %Node.Event{body: %Events.OrderEvent{tx_id: ^tx_id}}
       } ->
         result = call.()
         GenServer.reply(from, result)
