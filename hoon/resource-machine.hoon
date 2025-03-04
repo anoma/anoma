@@ -29,15 +29,15 @@
 +$  nullifier  @
 +$  public-inputs
   $:
-    commitments=(list commitment)  ::  commitment set
-    nullifiers=(list nullifier)    ::  nullifier set
+    commitments=(set commitment)   ::  commitment set
+    nullifiers=(set nullifier)     ::  nullifier set
     self-tag=@                     ::  exactly one commitment or nullifier
     other-public=*                 ::  some other public inputs
   ==
 +$  private-inputs
   $:
-    committed-resources=(list resource)  ::  committed resource set
-    nullified-resources=(list resource)  ::  nullified resource set
+    committed-resources=(set resource)   ::  committed resource set
+    nullified-resources=(set resource)   ::  nullified resource set
     other-private=*                      ::  some other private inputs
   ==
 +$  resource-logic
@@ -55,16 +55,14 @@
     app-data=~
   ==
   $:
-    commitments=(list commitment)  ::  commitment set
-    nullifiers=(list nullifier)    ::  nullifier set
-    proofs=(list proof)            ::  proof set
-    app-data=(set [@ [* ?]])       ::  hash-addressed data with storage criteria
+    commitments=(set commitment)   ::  commitment set
+    nullifiers=(set nullifier)     ::  nullifier set
+    proofs=(set proof)             ::  proof set
+    app-data=(map @ [* ?])       ::  hash-addressed data with storage criteria
   ==
 +$  cm-root  @                     ::  commitment set root
 +$  resource-kind  @
-+$  delta-element
-  [k=resource-kind v=@s]
-+$  delta  (list delta-element)    ::  delta (opaque)
++$  delta  (map k=resource-kind v=@s)     ::  delta (opaque)
 +$  transaction
   $~  :*
     roots=~
@@ -73,8 +71,8 @@
     delta-proof=%delta
   ==
   $:
-    roots=(list cm-root)   ::  root set for spent resources
-    actions=(list action)  ::  action set
+    roots=(set cm-root)    ::  root set for spent resources
+    actions=(set action)   ::  action set
     delta=delta            ::  delta (opaque)
     delta-proof=%delta     ::  delta proof (trivial)
   ==
@@ -132,7 +130,7 @@
 ++  resource-delta
   |=  =resource
   ^-  delta
-  ~[[(kind resource) (sun quantity.resource)]]
+  (malt ~[[(kind resource) (sun quantity.resource)]])
 ++  action-delta
   ~/  %action-delta
   |=  =action
@@ -141,7 +139,7 @@
   !!
 ++  make-delta  ::  make delta from actions (to make a transaction)
   ~/  %make-delta
-  |=  actions=(list action)
+  |=  actions=(set action)
   =+  c=%make-delta
   ^-  delta
   !!
@@ -150,4 +148,16 @@
   %delta
 ++  zero-delta  ::  the value of the zero delta, for convenience
   ~
+++  trm-compliance-key
+  ~/  %trm-compliance-key
+  |=  [nfs=(list nullifier) cms=(list commitment) delta=@]
+  =+  c=%trm-compliance-key
+  ^-  ?
+  !!
+++  trm-delta-key
+  ~/  %trm-delta-key
+  |=  [delta=@ expected=@]
+  =+  c=%trm-delta-key
+  ^-  ?
+  =(delta expected)
 --

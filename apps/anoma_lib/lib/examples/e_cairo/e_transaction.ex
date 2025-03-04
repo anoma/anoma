@@ -1,82 +1,84 @@
 defmodule Examples.ECairo.ETransaction do
-  alias Anoma.CairoResource.{LogicInstance, Transaction}
+  use Memoize
+
+  alias Anoma.CairoResource.{LogicInstance, Transaction, Utils}
   alias Examples.ECairo.EAction
 
   use TestHelper.TestMacro
 
   @spec a_shielded_transaction() :: Transaction.t()
-  def a_shielded_transaction do
+  defmemo a_shielded_transaction do
     action = EAction.an_action()
     priv_keys = <<3::256>>
 
     shielded_tx =
       %Transaction{
-        actions: [action],
-        delta: priv_keys
+        actions: MapSet.new([action]),
+        delta_proof: priv_keys
       }
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
-    assert Anoma.RM.Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
   end
 
   @spec a_shielded_transaction_with_intents() :: Transaction.t()
-  def a_shielded_transaction_with_intents do
+  defmemo a_shielded_transaction_with_intents do
     action = EAction.an_action_with_intents()
     priv_keys = <<3::256>>
 
     shielded_tx =
       %Transaction{
-        actions: [action],
-        delta: priv_keys
+        actions: MapSet.new([action]),
+        delta_proof: priv_keys
       }
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
-    assert Anoma.RM.Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
   end
 
   @spec a_shielded_transaction_with_multiple_actions() :: Transaction.t()
-  def a_shielded_transaction_with_multiple_actions do
+  defmemo a_shielded_transaction_with_multiple_actions do
     an_action = EAction.an_action()
     another_action = EAction.an_action_with_intents()
     priv_keys = <<3::256>> <> <<3::256>>
 
     shielded_tx =
       %Transaction{
-        actions: [an_action, another_action],
-        delta: priv_keys
+        actions: MapSet.new([an_action, another_action]),
+        delta_proof: priv_keys
       }
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
-    assert Anoma.RM.Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
   end
 
   @spec a_shielded_transaction_with_multiple_compliance_units() ::
           Transaction.t()
-  def a_shielded_transaction_with_multiple_compliance_units do
+  defmemo a_shielded_transaction_with_multiple_compliance_units do
     an_action = EAction.an_action_with_multiple_compliance_units()
     priv_keys = <<6::256>>
 
     shielded_tx =
       %Transaction{
-        actions: [an_action],
-        delta: priv_keys
+        actions: MapSet.new([an_action]),
+        delta_proof: priv_keys
       }
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
-    assert Anoma.RM.Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
   end
 
   @spec a_shielded_transaction_from_compliance_units() ::
           Transaction.t()
-  def a_shielded_transaction_from_compliance_units do
+  defmemo a_shielded_transaction_from_compliance_units do
     compliance1_inputs =
       File.read!(
         Path.join(
@@ -106,26 +108,45 @@ defmodule Examples.ECairo.ETransaction do
         Path.join(:code.priv_dir(:anoma_lib), "params/default_witness.json")
       )
 
-    compliance_units = [compliance1_inputs, compliance2_inputs]
-    input_logics = [resource_logic, resource_logic]
-    input_witnesses = [witness, witness]
-    output_logics = [resource_logic, resource_logic]
-    output_witnesses = [witness, witness]
+    compliance_units_raw = [compliance1_inputs, compliance2_inputs]
 
-    {:ok, pre_tx} =
-      Transaction.create_from_compliance_units(
-        compliance_units,
-        input_logics,
-        input_witnesses,
-        output_logics,
-        output_witnesses
-      )
+    with {:ok, compliance_units} <-
+           Enum.map(
+             compliance_units_raw,
+             &Jason.decode(&1, objects: :ordered_objects)
+           )
+           |> Utils.check_list(),
+         input_logics = [resource_logic, resource_logic],
+         input_witnesses_raw = [witness, witness],
+         {:ok, input_witnesses} <-
+           Enum.map(
+             input_witnesses_raw,
+             &Jason.decode(&1, objects: :ordered_objects)
+           )
+           |> Utils.check_list(),
+         output_logics = [resource_logic, resource_logic],
+         output_witnesses_raw = [witness, witness],
+         {:ok, output_witnesses} <-
+           Enum.map(
+             output_witnesses_raw,
+             &Jason.decode(&1, objects: :ordered_objects)
+           )
+           |> Utils.check_list(),
+         {:ok, pre_tx} <-
+           Transaction.create_from_compliance_units(
+             compliance_units,
+             input_logics,
+             input_witnesses,
+             output_logics,
+             output_witnesses
+           ),
+         shielded_tx = Transaction.prove_delta(pre_tx) do
+      assert true == Transaction.verify(shielded_tx)
 
-    shielded_tx = Transaction.finalize(pre_tx)
-
-    assert Anoma.RM.Transaction.verify(shielded_tx)
-
-    shielded_tx
+      shielded_tx
+    else
+      _ -> assert False
+    end
   end
 
   @spec a_shielded_transaction_composition() :: Transaction.t()
@@ -134,50 +155,23 @@ defmodule Examples.ECairo.ETransaction do
 
     shielded_tx_1 =
       %Transaction{
-        actions: [EAction.an_action()],
-        delta: priv_keys
+        actions: MapSet.new([EAction.an_action()]),
+        delta_proof: priv_keys
       }
 
     shielded_tx_2 =
       %Transaction{
-        actions: [EAction.an_action_with_intents()],
-        delta: priv_keys
+        actions: MapSet.new([EAction.an_action_with_intents()]),
+        delta_proof: priv_keys
       }
 
     shielded_tx =
-      Anoma.RM.Transaction.compose(shielded_tx_1, shielded_tx_2)
-      |> Transaction.finalize()
+      Transaction.compose(shielded_tx_1, shielded_tx_2)
+      |> Transaction.prove_delta()
 
-    assert Anoma.RM.Transaction.verify(shielded_tx)
+    assert true == Transaction.verify(shielded_tx)
 
     shielded_tx
-  end
-
-  @spec duplicate_nfs_shielded_transaction() :: Transaction.t()
-  def duplicate_nfs_shielded_transaction do
-    action = EAction.an_action()
-    priv_keys = <<3::256>>
-
-    shielded_tx_1 =
-      %Transaction{
-        actions: [action],
-        delta: priv_keys
-      }
-
-    shielded_tx_2 =
-      %Transaction{
-        actions: [action],
-        delta: priv_keys
-      }
-
-    composed_shielded_tx =
-      Anoma.RM.Transaction.compose(shielded_tx_1, shielded_tx_2)
-      |> Transaction.finalize()
-
-    assert {:error, "Duplicate nullifiers error"} ==
-             Anoma.RM.Transaction.verify(composed_shielded_tx)
-
-    composed_shielded_tx
   end
 
   @spec a_invalid_shielded_transaction() :: Transaction.t()
@@ -188,13 +182,13 @@ defmodule Examples.ECairo.ETransaction do
 
     invalid_shielded_tx =
       %Transaction{
-        actions: [action],
-        delta: invalid_priv_keys
+        actions: MapSet.new([action]),
+        delta_proof: invalid_priv_keys
       }
-      |> Transaction.finalize()
+      |> Transaction.prove_delta()
 
     assert {:error, "Delta proof verification failure"} ==
-             Anoma.RM.Transaction.verify(invalid_shielded_tx)
+             Transaction.verify(invalid_shielded_tx)
 
     invalid_shielded_tx
   end

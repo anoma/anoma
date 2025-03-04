@@ -6,7 +6,6 @@ defmodule Anoma.Client.Examples.EProxy do
 
   I then test each public API of the proxy to ensure it works as expected.
   """
-  use TypedStruct
 
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Client.Examples.EClient
@@ -18,6 +17,8 @@ defmodule Anoma.Client.Examples.EProxy do
   require ExUnit.Assertions
 
   import ExUnit.Assertions
+
+  use TypedStruct
 
   ############################################################
   #                    State                                 #
@@ -73,53 +74,5 @@ defmodule Anoma.Client.Examples.EProxy do
     assert Kernel.match?({:ok, %{result: "intent added"}}, result)
 
     client
-  end
-
-  @doc """
-  I ask the node to return its list of intents via the proxy.
-  """
-  @spec list_nullifiers(EClient.t()) :: {EClient.t(), [any()]}
-  def list_nullifiers(client \\ setup()) do
-    expected_nullifiers = ["null", "ifier"]
-
-    # call the proxy
-    {:ok, response} = GRPCProxy.list_nullifiers()
-
-    # assert the result is what was expected
-    assert expected_nullifiers == response.nullifiers
-
-    {client, response.nullifiers}
-  end
-
-  @doc """
-  I ask the node to return its list of intents via the proxy.
-  """
-  @spec list_unrevealed_commits(EClient.t()) :: {EClient.t(), [any()]}
-  def list_unrevealed_commits(client \\ setup()) do
-    expected_commits = ["commit1", "commit2"]
-
-    # call the proxy and assert the result is what was expected
-    {:ok, response} = GRPCProxy.list_unrevealed_commits()
-
-    # assert the result is what was expected
-    assert response.commits == expected_commits
-
-    {client, response.commits}
-  end
-
-  @doc """
-  I ask the node to return its list of intents via the proxy.
-  """
-  @spec list_unspent_resources(EClient.t()) :: {EClient.t(), [any()]}
-  def list_unspent_resources(client \\ setup()) do
-    expected_resources = ["unspent resource 1", "unspent resource 2"]
-
-    # call the proxy
-    {:ok, result} = GRPCProxy.list_unspent_resources()
-
-    # assert the result is what was expected
-    assert expected_resources == result.unspent_resources
-
-    {client, result.unspent_resources}
   end
 end

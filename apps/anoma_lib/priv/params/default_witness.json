@@ -1,5 +1,6 @@
 {
     "self_resource": "",
+    "is_consumed": false,
     "resource_nf_key": "",
     "merkle_path": ""
 }

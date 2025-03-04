@@ -52,7 +52,7 @@ Dependencies needed regardless of platform.
  - Protobuf: consult the installation instructions [here](https://grpc.io/docs/protoc-installation/)
  - Elixir plugin for protobufs `protoc-gen-elixir`
    ```shell
-   mix escript.install hex protobuf
+   mix escript.install hex protobuf 0.11.0
    ```
 
 ----

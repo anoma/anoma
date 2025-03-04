@@ -3,10 +3,15 @@ defmodule Nock.Jets do
   Jets for the Nock interpreter, taking a gate core. Not fully general.
   """
 
-  import Noun
-  import Bitwise
   alias Anoma.Crypto.Sign
-  alias Anoma.TransparentResource.{Delta, Action, Resource}
+  alias Anoma.RM.Transparent.Action
+  alias Anoma.RM.Transparent.Resource
+  alias Anoma.RM.Transparent.Primitive.DeltaHash
+  alias Anoma.RM.Transparent.ProvingSystem.DPS
+  alias Anoma.RM.Transparent.ProvingSystem.CPS
+
+  import Bitwise
+  import Noun
 
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
           non_neg_integer()
@@ -37,8 +42,7 @@ defmodule Nock.Jets do
 
   """
   def calculate_mug_of_core(index_in_core, parent_layer) do
-    {:ok, core} = calculate_core(index_in_core, parent_layer)
-    Noun.mug(hd(core))
+    calculate_core(index_in_core, parent_layer) |> hd() |> Noun.mug()
   end
 
   @doc """
@@ -68,10 +72,18 @@ defmodule Nock.Jets do
   """
   @spec calculate_mug_of_layer(non_neg_integer()) :: non_neg_integer()
   def calculate_mug_of_layer(layer) do
+    layer |> calculate_layer() |> Noun.mug()
+  end
+
+  @doc """
+  I get the layer based on its number.
+  """
+  @spec calculate_layer(non_neg_integer()) :: Noun.t()
+  def calculate_layer(layer) do
     context_axis = layer_offset(layer)
 
     with {:ok, context} <- Noun.axis(context_axis, Nock.Lib.rm_core()) do
-      mug(context)
+      context
     end
   end
 
@@ -92,10 +104,9 @@ defmodule Nock.Jets do
   For our standard library, so far only layer 4 is parameterized
   """
   def calculate_mug_of_param_core(index_in_core, core_index, parent_layer) do
-    with {:ok, val} <-
-           calculate_core_param(core_index, index_in_core, parent_layer) do
-      Noun.mug(hd(val))
-    end
+    calculate_core_param(index_in_core, core_index, parent_layer)
+    |> hd()
+    |> Noun.mug()
   end
 
   @spec calculate_mug_of_param_layer(non_neg_integer(), non_neg_integer()) ::
@@ -107,13 +118,19 @@ defmodule Nock.Jets do
 
       > Nock.Jets.calculate_mug_of_param_layer(10, 4)
       11284470320276584209
-
-  For our standard library, so far only layer 4 is parameterized
   """
   def calculate_mug_of_param_layer(core_index, parent_layer) do
-    with {:ok, core} <- calculate_core_param(core_index, 4, parent_layer),
+    core_index |> calculate_param_layer(parent_layer) |> Noun.mug()
+  end
+
+  @doc """
+  I find the door cores, i.e. parametrized layers.
+  """
+  @spec calculate_param_layer(non_neg_integer(), non_neg_integer) :: Noun.t()
+  def calculate_param_layer(core_index, parent_layer) do
+    with core <- calculate_core_param(core_index, 4, parent_layer),
          {:ok, parent} <- Noun.axis(14, core) do
-      Noun.mug(parent)
+      parent
     end
   end
 
@@ -122,33 +139,39 @@ defmodule Nock.Jets do
           non_neg_integer(),
           non_neg_integer()
         ) ::
-          :error | {:ok, Noun.t()}
-  def calculate_core_param(core_index, gate_index, parent_layer) do
-    nock4k(Nock.Lib.rm_core(), [
-      7,
-      [
-        9,
-        core_index,
-        0 | layer_offset(parent_layer)
-      ],
-      9,
-      gate_index,
-      0 | 1
-    ])
+          Noun.t()
+  def calculate_core_param(gate_index, core_index, parent_layer) do
+    with {:ok, res} <-
+           nock4k(Nock.Lib.rm_core(), [
+             7,
+             [
+               9,
+               core_index,
+               0 | layer_offset(parent_layer)
+             ],
+             9,
+             gate_index,
+             0 | 1
+           ]) do
+      res
+    end
   end
 
   @spec calculate_core(non_neg_integer(), non_neg_integer()) ::
-          :error | {:ok, Noun.t()}
+          Noun.t()
   def calculate_core(index_in_core, layer) do
-    nock4k(Nock.Lib.rm_core(), [
-      8,
-      [
-        9,
-        index_in_core,
-        0 | layer_offset(layer)
-      ],
-      0 | 2
-    ])
+    with {:ok, res} <-
+           nock4k(Nock.Lib.rm_core(), [
+             8,
+             [
+               9,
+               index_in_core,
+               0 | layer_offset(layer)
+             ],
+             0 | 2
+           ]) do
+      res
+    end
   end
 
   @spec layer_offset(non_neg_integer) :: non_neg_integer
@@ -305,9 +328,9 @@ defmodule Nock.Jets do
       when is_noun_atom(a) and is_noun_atom(b) and is_noun_atom(c) ->
         try do
           if Sign.verify_detached(
-               Noun.atom_integer_to_binary(a),
+               Noun.atom_integer_to_binary(a, 64),
                Noun.atom_integer_to_binary(b),
-               Noun.atom_integer_to_binary(c)
+               Noun.atom_integer_to_binary(c, 32)
              ) do
             {:ok, 0}
           else
@@ -331,7 +354,7 @@ defmodule Nock.Jets do
         try do
           case Sign.verify(
                  Noun.atom_integer_to_binary(a),
-                 Noun.atom_integer_to_binary(b)
+                 Noun.atom_integer_to_binary(b, 32)
                ) do
             {:ok, val} -> {:ok, [0 | val]}
             {:error, _} -> {:ok, 0}
@@ -369,7 +392,7 @@ defmodule Nock.Jets do
           {:ok,
            sign_fn.(
              Noun.atom_integer_to_binary(a),
-             Noun.atom_integer_to_binary(b)
+             Noun.atom_integer_to_binary(b, 64)
            )}
         rescue
           _ in ArgumentError -> :error
@@ -649,7 +672,7 @@ defmodule Nock.Jets do
   def silt(core) do
     with {:ok, a} <- sample(core),
          {:ok, list} <- Noun.Nounable.List.from_noun(a) do
-      {:ok, list |> MapSet.new() |> Noun.Nounable.Set.to_noun()}
+      {:ok, list |> MapSet.new() |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -659,8 +682,8 @@ defmodule Nock.Jets do
   def put(core) do
     with {:ok, elem} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set} <- Noun.Nounable.Set.from_noun(door_set) do
-      {:ok, set |> MapSet.put(elem) |> Noun.Nounable.Set.to_noun()}
+         {:ok, set} <- Noun.Nounable.MapSet.from_noun(door_set) do
+      {:ok, set |> MapSet.put(elem) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -670,9 +693,9 @@ defmodule Nock.Jets do
   def uni(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set1} <- Noun.Nounable.Set.from_noun(set_arg),
-         {:ok, set2} <- Noun.Nounable.Set.from_noun(door_set) do
-      {:ok, set1 |> MapSet.union(set2) |> Noun.Nounable.Set.to_noun()}
+         {:ok, set1} <- Noun.Nounable.MapSet.from_noun(set_arg),
+         {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set) do
+      {:ok, set1 |> MapSet.union(set2) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -682,9 +705,9 @@ defmodule Nock.Jets do
   def int(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set1} <- Noun.Nounable.Set.from_noun(set_arg),
-         {:ok, set2} <- Noun.Nounable.Set.from_noun(door_set) do
-      {:ok, set1 |> MapSet.intersection(set2) |> Noun.Nounable.Set.to_noun()}
+         {:ok, set1} <- Noun.Nounable.MapSet.from_noun(set_arg),
+         {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set) do
+      {:ok, set1 |> MapSet.intersection(set2) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -694,9 +717,9 @@ defmodule Nock.Jets do
   def sdif(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set1} <- Noun.Nounable.Set.from_noun(set_arg),
-         {:ok, set2} <- Noun.Nounable.Set.from_noun(door_set) do
-      {:ok, set1 |> MapSet.difference(set2) |> Noun.Nounable.Set.to_noun()}
+         {:ok, set1} <- Noun.Nounable.MapSet.from_noun(set_arg),
+         {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set) do
+      {:ok, set1 |> MapSet.difference(set2) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -706,10 +729,10 @@ defmodule Nock.Jets do
   def duni(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set1} <- Noun.Nounable.Set.from_noun(set_arg),
-         {:ok, set2} <- Noun.Nounable.Set.from_noun(door_set),
+         {:ok, set1} <- Noun.Nounable.MapSet.from_noun(set_arg),
+         {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set),
          true <- MapSet.disjoint?(set1, set2) do
-      {:ok, set1 |> MapSet.union(set2) |> Noun.Nounable.Set.to_noun()}
+      {:ok, set1 |> MapSet.union(set2) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -719,7 +742,7 @@ defmodule Nock.Jets do
   def has(core) do
     with {:ok, elem} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set} <- Noun.Nounable.Set.from_noun(door_set) do
+         {:ok, set} <- Noun.Nounable.MapSet.from_noun(door_set) do
       {:ok, set |> MapSet.member?(elem) |> Noun.bool_to_noun()}
     else
       _ -> :error
@@ -764,9 +787,14 @@ defmodule Nock.Jets do
   @spec delta_add(Noun.t()) :: :error | {:ok, Noun.t()}
   def delta_add(core) do
     with {:ok, [a | b]} <- sample(core),
-         {:ok, delta1} <- Delta.from_noun(a),
-         {:ok, delta2} <- Delta.from_noun(b) do
-      res = Delta.add(delta1, delta2) |> Delta.to_noun()
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(a),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(b) do
+      res =
+        DeltaHash.delta_add(
+          Noun.atom_binary_to_integer(a),
+          Noun.atom_binary_to_integer(b)
+        )
+
       {:ok, res}
     else
       _ ->
@@ -777,9 +805,14 @@ defmodule Nock.Jets do
   @spec delta_sub(Noun.t()) :: :error | {:ok, Noun.t()}
   def delta_sub(core) do
     with {:ok, [a | b]} <- sample(core),
-         {:ok, delta1} <- Delta.from_noun(a),
-         {:ok, delta2} <- Delta.from_noun(b) do
-      res = Delta.sub(delta1, delta2) |> Delta.to_noun()
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(a),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(b) do
+      res =
+        DeltaHash.delta_sub(
+          Noun.atom_binary_to_integer(a),
+          Noun.atom_binary_to_integer(b)
+        )
+
       {:ok, res}
     else
       _ -> :error
@@ -790,7 +823,7 @@ defmodule Nock.Jets do
   def action_delta(core) do
     with {:ok, a} <- sample(core),
          {:ok, action} <- Action.from_noun(a) do
-      res = action |> Action.delta() |> Delta.to_noun()
+      res = action |> Action.delta()
       {:ok, res}
     else
       _ -> :error
@@ -800,16 +833,43 @@ defmodule Nock.Jets do
   @spec make_delta(Noun.t()) :: :error | {:ok, Noun.t()}
   def make_delta(core) do
     with {:ok, a} <- sample(core),
-         {:ok, list} <- Noun.list_nock_to_erlang_safe(a),
-         action_list <- list |> Enum.map(&Action.from_noun/1),
+         {:ok, set} <- Noun.Nounable.MapSet.from_noun(a),
+         action_list <- set |> Enum.map(&Action.from_noun/1),
          false <- action_list |> Enum.any?(&(&1 == :error)) do
       res =
         action_list
         |> Enum.map(&Action.delta(elem(&1, 1)))
-        |> Enum.reduce(%{}, &Delta.sub/2)
-        |> Delta.to_noun()
+        |> Enum.reduce(2, &DeltaHash.delta_sub/2)
 
       {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec trm_compliance_key(Noun.t()) :: :error | {:ok, Noun.t()}
+  def trm_compliance_key(core) do
+    with {:ok, sample} <- sample(core),
+         {:ok, instance} <- CPS.Instance.from_noun(sample) do
+      {:ok,
+       CPS.verify_jet(
+         instance.consumed,
+         instance.created,
+         instance.unit_delta
+       )
+       |> Noun.Nounable.to_noun()}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec trm_delta_key(Noun.t()) :: :error | {:ok, Noun.t()}
+  def trm_delta_key(core) do
+    with {:ok, sample} <- sample(core),
+         {:ok, instance} <- DPS.Instance.from_noun(sample) do
+      {:ok,
+       DPS.verify_jet(instance.delta, instance.expected_balance)
+       |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end

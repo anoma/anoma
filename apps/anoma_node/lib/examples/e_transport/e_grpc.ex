@@ -2,24 +2,23 @@ defmodule Anoma.Node.Examples.EGRPC do
   @moduledoc """
   I contain examples to test the GRPC endpoint of the node.
   """
-  use TypedStruct
 
   alias Anoma.Node.Examples.EGRPC
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Protobuf.Indexer.Nullifiers
-  alias Anoma.Protobuf.Indexer.UnrevealedCommits
-  alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.IndexerService
   alias Anoma.Protobuf.Intents.Add
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.Executor.AddROTransaction
+  alias Anoma.Protobuf.ExecutorService
   alias Anoma.Protobuf.NodeInfo
   alias Examples.ETransparent.ETransaction
 
+  require Logger
+
   import ExUnit.Assertions
 
-  require Logger
+  use TypedStruct
 
   ############################################################
   #                    Context                               #
@@ -113,39 +112,24 @@ defmodule Anoma.Node.Examples.EGRPC do
   end
 
   @doc """
-  I list all nullifiers.
+  I submit a read-only transaction
   """
-  @spec list_nullifiers(EGRPC.t()) :: term()
-  def list_nullifiers(%EGRPC{} = client \\ connect_to_node()) do
+  @spec submit_read_only_tx(EGRPC.t()) :: term()
+  def submit_read_only_tx(%EGRPC{} = client \\ connect_to_node()) do
     node_id = %NodeInfo{node_id: client.node.node_id}
 
-    request = %Nullifiers.Request{node_info: node_id}
+    code =
+      Anoma.Node.Examples.ETransaction.zero() |> elem(1) |> Noun.Jam.jam()
 
-    {:ok, _reply} =
-      IndexerService.Stub.list_nullifiers(client.channel, request)
-  end
+    request = %AddROTransaction.Request{node_info: node_id, transaction: code}
 
-  @doc """
-  I list all unrevealed commits.
-  """
-  @spec list_unrevealed_commits(EGRPC.t()) :: term()
-  def list_unrevealed_commits(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %NodeInfo{node_id: client.node.node_id}
-    request = %UnrevealedCommits.Request{node_info: node_id}
+    {:ok, reply} =
+      ExecutorService.Stub.add(client.channel, request)
 
-    {:ok, _reply} =
-      IndexerService.Stub.list_unrevealed_commits(client.channel, request)
-  end
+    result = [[["key"] | 0] | 0] |> Noun.Jam.jam()
 
-  @doc """
-  I list all unspent resources.
-  """
-  @spec list_unspent_resources(EGRPC.t()) :: term()
-  def list_unspent_resources(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %NodeInfo{node_id: client.node.node_id}
-    request = %UnspentResources.Request{node_info: node_id}
+    {:success, res} = reply.result
 
-    {:ok, _reply} =
-      IndexerService.Stub.list_unspent_resources(client.channel, request)
+    assert res.result == result
   end
 end

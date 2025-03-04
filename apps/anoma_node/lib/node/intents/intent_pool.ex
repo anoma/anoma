@@ -4,48 +4,25 @@ defmodule Anoma.Node.Intents.IntentPool do
   m1dnight still has to write these docs.
   """
 
-  require EventBroker.Event
-  require Logger
-
   alias __MODULE__
   alias Anoma.Node
   alias Node.Registry
-  alias Node.Transaction.Backends
   alias Anoma.RM.Intent
-  alias EventBroker.Broker
+  alias Anoma.Node.Events
+  alias Anoma.Node.Tables
 
+  require EventBroker.Event
+  require Logger
   require Node.Event
+  require Anoma.Node.Events
 
   use EventBroker.DefFilter
-  use TypedStruct
   use GenServer
-
-  typedstruct enforce: true, module: IntentAddSuccess do
-    @typedoc """
-    I am an event specifying that an intent has been submitted succesfully.
-
-    ### Fields
-    - `:intent` - The intent added.
-    """
-    field(:intent, Intent.t())
-  end
-
-  typedstruct enforce: true, module: IntentAddError do
-    @typedoc """
-    I am an event specifying that an intent submission has failed alongside
-    with a reason.
-
-    ### Fields
-    - `:intent` - The intent submitted.
-    - `:reason` - The reason why it was rejected from the pool.
-    """
-    field(:intent, Intent.t())
-    field(:reason, String.t())
-  end
+  use TypedStruct
 
   deffilter IntentAddSuccessFilter do
     %EventBroker.Event{
-      body: %Node.Event{body: %IntentPool.IntentAddSuccess{}}
+      body: %Node.Event{body: %Events.IntentAddSuccess{}}
     } ->
       true
 
@@ -54,7 +31,9 @@ defmodule Anoma.Node.Intents.IntentPool do
   end
 
   deffilter IntentAddErrorFilter do
-    %EventBroker.Event{body: %Node.Event{body: %IntentPool.IntentAddError{}}} ->
+    %EventBroker.Event{
+      body: %Node.Event{body: %Events.IntentAddError{}}
+    } ->
       true
 
     _ ->
@@ -74,13 +53,11 @@ defmodule Anoma.Node.Intents.IntentPool do
     - `:node_id` - The ID of the Node.
     - `:nlfs_set` - The set of known nullifiers.
     - `:cms_set` - The set of known commitments.
-    - `:table` - The table name for storing intents.
     """
     field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
     field(:node_id, String.t())
     field(:nlfs_set, MapSet.t(binary()), default: MapSet.new())
     field(:cms_set, MapSet.t(binary()), default: MapSet.new())
-    field(:table, atom())
   end
 
   ############################################################
@@ -104,15 +81,8 @@ defmodule Anoma.Node.Intents.IntentPool do
         intents: MapSet.new([]),
         nlfs_set: MapSet.new([]),
         cms_set: MapSet.new([]),
-        rocks: false,
-        table: __MODULE__.Intents
+        rocks: false
       ])
-
-    table =
-      String.to_atom("#{args[:table]}_#{:erlang.phash2(args[:node_id])}")
-
-    rocks_opt = args[:rocks] |> Anoma.Utility.rock_opts()
-    :mnesia.create_table(table, rocks_opt ++ [attributes: [:type, :body]])
 
     node_id = args[:node_id]
 
@@ -132,8 +102,7 @@ defmodule Anoma.Node.Intents.IntentPool do
        node_id: node_id,
        intents: intents,
        nlfs_set: args[:nlfs_set],
-       cms_set: args[:cms_set],
-       table: table
+       cms_set: args[:cms_set]
      }}
   end
 
@@ -194,7 +163,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   @impl true
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{body: %Backends.TRMEvent{}}
+          body: %Node.Event{body: %Events.TRMEvent{}}
         },
         state
       ) do
@@ -219,7 +188,7 @@ defmodule Anoma.Node.Intents.IntentPool do
     with :ok <- validate_intent_uniqueness(intent, state),
          :ok <- validate_nullifier_uniqueness(intent, state.nlfs_set),
          :ok <- validate_commitment_uniqueness(intent, state.cms_set) do
-      table = state.table
+      table = Tables.table_intents(state.node_id)
 
       :mnesia.transaction(fn ->
         res =
@@ -256,10 +225,7 @@ defmodule Anoma.Node.Intents.IntentPool do
     if MapSet.member?(state.intents, intent) do
       Logger.debug("intent removed #{inspect(intent)}")
 
-      EventBroker.event(
-        Node.Event.new_with_body(state.node_id, {:intent_removed, intent}),
-        Broker
-      )
+      Events.generic_event({:intent_removed, intent}, state.node_id)
 
       state = Map.update!(state, :intents, &MapSet.delete(&1, intent))
       {:ok, :removed, state}
@@ -273,7 +239,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   @spec handle_new_state(t(), EventBroker.Event.t()) :: t()
   defp handle_new_state(state, %EventBroker.Event{
          body: %Node.Event{
-           body: %Backends.TRMEvent{
+           body: %Events.TRMEvent{
              nullifiers: nlfs_set,
              commitments: cms_set
            }
@@ -333,25 +299,13 @@ defmodule Anoma.Node.Intents.IntentPool do
   defp add_intent!(intent, state) do
     Logger.debug("new intent added #{inspect(intent)}")
 
-    EventBroker.event(
-      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddSuccess{
-        intent: intent
-      }),
-      Broker
-    )
+    Events.intent_add_success(intent, state.node_id)
 
     Map.update!(state, :intents, &MapSet.put(&1, intent))
   end
 
   defp handle_error(intent, reason, state) do
-    EventBroker.event(
-      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddError{
-        intent: intent,
-        reason: reason
-      }),
-      Broker
-    )
-
+    Events.intent_add_error(intent, reason, state.node_id)
     {:ok, reason, state}
   end
 
@@ -368,7 +322,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   deffilter TRMFilter do
     %EventBroker.Event{
-      body: %Anoma.Node.Event{body: %Backends.TRMEvent{}}
+      body: %Anoma.Node.Event{body: %Events.TRMEvent{}}
     } ->
       true
 
@@ -378,16 +332,5 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   defp trm_filter() do
     %__MODULE__.TRMFilter{}
-  end
-
-  @doc """
-  I am the name of the unsolved table.
-  Given a Node ID, I create an appropriately named table for storing
-  unsolved intents.
-  """
-
-  @spec table_name(String.t()) :: atom()
-  def table_name(node_id) do
-    String.to_atom("#{__MODULE__.Intents}_#{:erlang.phash2(node_id)}")
   end
 end

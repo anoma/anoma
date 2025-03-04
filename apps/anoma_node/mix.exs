@@ -21,6 +21,9 @@ defmodule AnomaNode.MixProject do
   end
 
   # Run "mix help compile.app" to learn about applications.
+  # note: included_applications do *not* get started automatically
+  #       extra_applications do get started automatically
+  #       mnesia should *not* be started automatically
   def application do
     [
       mod: {Anoma.Node, []},
@@ -29,10 +32,11 @@ defmodule AnomaNode.MixProject do
         :debugger,
         :enacl,
         :logger,
-        :mnesia,
         :runtime_tools,
-        :tools
-      ]
+        :tools,
+        :ex_unit
+      ],
+      included_applications: [:mnesia]
     ]
   end
 

@@ -4,9 +4,9 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
   alias Anoma.Protobuf.Intents.List
   alias GRPC.Server.Stream
 
-  use GRPC.Server, service: Anoma.Protobuf.IntentsService.Service
-
   require Logger
+
+  use GRPC.Server, service: Anoma.Protobuf.IntentsService.Service
 
   @spec list_intents(List.Request.t(), Stream.t()) :: List.Response.t()
   def list_intents(request, _stream) do
@@ -37,7 +37,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
     {:ok, intent} =
       request.intent.intent
       |> Noun.Jam.cue!()
-      |> Anoma.TransparentResource.Transaction.from_noun()
+      |> Anoma.RM.Transparent.Transaction.from_noun()
 
     IntentPool.new_intent(request.node_info.node_id, intent)
 

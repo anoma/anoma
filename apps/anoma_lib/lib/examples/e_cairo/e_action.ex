@@ -1,13 +1,11 @@
 defmodule Examples.ECairo.EAction do
-  use Memoize
-
   alias Anoma.CairoResource.Action
   alias Examples.ECairo.EProofRecord
   alias Examples.ECairo.EResourceLogic
   alias Examples.ECairo.EResource
   alias Anoma.CairoResource.Tree
-  alias Anoma.CairoResource.Resource
 
+  use Memoize
   use TestHelper.TestMacro
 
   @spec an_action() :: Action.t()
@@ -16,10 +14,13 @@ defmodule Examples.ECairo.EAction do
     input_resource_logic = EResourceLogic.a_input_resource_logic()
     output_resource_logic = EResourceLogic.a_output_resource_logic()
 
-    action = %Action{
-      logic_proofs: [input_resource_logic, output_resource_logic],
-      compliance_proofs: [proof]
-    }
+    action =
+      Action.new(
+        [EResource.a_fixed_output_resource_commitment()],
+        [EResource.a_resource_nullifier()],
+        [input_resource_logic, output_resource_logic],
+        [proof]
+      )
 
     assert Action.verify(action)
 
@@ -32,10 +33,13 @@ defmodule Examples.ECairo.EAction do
     input_resource_logic = EResourceLogic.an_input_intent_resource_logic()
     output_resource_logic = EResourceLogic.an_output_intent_resource_logic()
 
-    action = %Action{
-      logic_proofs: [input_resource_logic, output_resource_logic],
-      compliance_proofs: [proof]
-    }
+    action =
+      Action.new(
+        [EResource.a_trivial_output_intent_resource_commitment()],
+        [EResource.a_trivial_input_intent_resource_nullifier()],
+        [input_resource_logic, output_resource_logic],
+        [proof]
+      )
 
     assert Action.verify(action)
 
@@ -44,24 +48,18 @@ defmodule Examples.ECairo.EAction do
 
   @spec an_action_with_multiple_compliance_units() :: Action.t()
   defmemo an_action_with_multiple_compliance_units do
-    # nf_key is used in the following resources
-    nf_key = <<1::256>>
-
-    # resources for compliance_unit_1
-    input_resource_1 = EResource.a_fixed_resource()
-    output_resource_1 = EResource.a_fixed_output_resource()
     compliance_unit_1 = EProofRecord.a_compliance_proof()
-
-    # resources for compliance_unit_2
-    input_resource_2 = EResource.a_trivial_input_intent_resource()
-    output_resource_2 = EResource.a_trivial_output_intent_resource()
     compliance_unit_2 = EProofRecord.a_compliance_proof_with_intents()
 
     # construct the action tree
-    input_resource_nf_1 = Resource.nullifier(input_resource_1, nf_key)
-    output_resource_cm_1 = Resource.commitment(output_resource_1)
-    input_resource_nf_2 = Resource.nullifier(input_resource_2, nf_key)
-    output_resource_cm_2 = Resource.commitment(output_resource_2)
+    input_resource_nf_1 = EResource.a_resource_nullifier()
+    output_resource_cm_1 = EResource.a_fixed_output_resource_commitment()
+
+    input_resource_nf_2 =
+      EResource.a_trivial_input_intent_resource_nullifier()
+
+    output_resource_cm_2 =
+      EResource.a_trivial_output_intent_resource_commitment()
 
     rt =
       Tree.construct(
@@ -107,15 +105,18 @@ defmodule Examples.ECairo.EAction do
         output_resource_path_2
       )
 
-    action = %Action{
-      logic_proofs: [
-        input_resource_logic_proof_1,
-        output_resource_logic_proof_1,
-        input_resource_logic_proof_2,
-        output_resource_logic_proof_2
-      ],
-      compliance_proofs: [compliance_unit_1, compliance_unit_2]
-    }
+    action =
+      Action.new(
+        [output_resource_cm_1, output_resource_cm_2],
+        [input_resource_nf_1, input_resource_nf_2],
+        [
+          input_resource_logic_proof_1,
+          input_resource_logic_proof_2,
+          output_resource_logic_proof_1,
+          output_resource_logic_proof_2
+        ],
+        [compliance_unit_1, compliance_unit_2]
+      )
 
     assert Action.verify(action)
 

@@ -2,16 +2,15 @@ defmodule Anoma.Node.Transport.Messages do
   alias Anoma.Node.Indexer
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Mempool
-
   alias Anoma.Protobuf.Announce.Announcement
   alias Anoma.Protobuf.Envelope
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.Mempool.Dump
-  alias Anoma.Protobuf.NodeInfo
   alias Anoma.Protobuf.Intents.Add
   alias Anoma.Protobuf.Intents.List
+  alias Anoma.Protobuf.Mempool.Dump
+  alias Anoma.Protobuf.NodeInfo
 
   @doc """
   I create an announcement message for the given node id.
