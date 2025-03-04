@@ -46,8 +46,6 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec create_example_client(ENode.t() | nil) :: EClient.t()
   def create_example_client(enode \\ ENode.start_noded()) do
-    grpc_port = Application.get_env(:anoma_node, :grpc_port)
-
     # kill previous clients (the client only connects to one node at this time)
     DynamicSupervisor.which_children(Anoma.Client.ConnectionSupervisor)
     |> Enum.map(fn {_, pid, _, _} ->
@@ -57,7 +55,13 @@ defmodule Anoma.Client.Examples.EClient do
       )
     end)
 
-    {:ok, client} = Client.connect("localhost", grpc_port, enode.node_config.node_id)
+    {:ok, client} =
+      Client.connect(
+        enode.node_config.instance.node_grpc_host,
+        enode.node_config.instance.node_grpc_port,
+        enode.node_config.node_id
+      )
+
     %EClient{client: client, node: enode, conn: Phoenix.ConnTest.build_conn()}
   end
 

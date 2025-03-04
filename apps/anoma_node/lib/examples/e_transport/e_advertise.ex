@@ -7,7 +7,6 @@ defmodule Anoma.Node.Examples.EAdvertise do
   alias Anoma.Node.Config
   import ExUnit.Assertions
 
-
   @doc """
   I create two nodes, and I advertise the first node to the second node. I do
   this by sending a GRPC request that advertises the first node to the second
@@ -22,7 +21,10 @@ defmodule Anoma.Node.Examples.EAdvertise do
     cfg2 = Config.node()
     node_2 = ENode.start_noded(node_config: cfg2)
 
-    address = %GRPCAddress{host: cfg1.instance.node_grpc_host, port: cfg1.instance.node_grpc_port}
+    address = %GRPCAddress{
+      host: cfg1.instance.node_grpc_host,
+      port: cfg1.instance.node_grpc_port
+    }
 
     Advertise.advertise(cfg1, cfg2.node_id, %Advert{
       node_id: cfg1.node_id,
@@ -47,7 +49,10 @@ defmodule Anoma.Node.Examples.EAdvertise do
     node_1 = ENode.start_noded(node_config: cfg1)
 
     # create an advert for node 1 to store in the seed list of node 2
-    address = %GRPCAddress{host: cfg1.instance.node_grpc_host, port: cfg1.instance.node_grpc_port}
+    address = %GRPCAddress{
+      host: cfg1.instance.node_grpc_host,
+      port: cfg1.instance.node_grpc_port
+    }
 
     node2_info = %Advert{
       node_id: cfg1.node_id,
@@ -56,7 +61,8 @@ defmodule Anoma.Node.Examples.EAdvertise do
     }
 
     # node 2
-    cfg2 = Config.node() |> Map.put(:seed_nodes, %{cfg1.node_id => node2_info})
+    cfg2 =
+      Config.node() |> Map.put(:seed_nodes, %{cfg1.node_id => node2_info})
 
     node_2 = ENode.start_noded(node_config: cfg2)
 

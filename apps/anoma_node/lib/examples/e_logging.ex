@@ -15,7 +15,6 @@ defmodule Anoma.Node.Examples.ELogging do
 
   @spec check_tx_event(String.t()) :: String.t()
   def check_tx_event(node_id \\ Node.example_random_id()) do
-
     ENode.start_noded(node_config: Config.node(node_id))
     table_name = Logging.table_name(node_id)
 

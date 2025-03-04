@@ -37,9 +37,14 @@ defmodule Anoma.Node.Examples.ENode do
   Some meta data (in particular, the GRPC port) is only available when the node is started
   so I fetch that data from the ETS table.
   """
-  @spec start_noded(Keyword.t()) :: ENode.t() | {:error, :failed_to_start_node}
+  @spec start_noded(Keyword.t()) ::
+          ENode.t() | {:error, :failed_to_start_node}
   def start_noded(opts \\ []) do
-    opts = Keyword.validate!(opts, [node_config: Config.node(), tx_args:  [mempool: [], ordering: [], storage: []]])
+    opts =
+      Keyword.validate!(opts,
+        node_config: Config.node(),
+        tx_args: [mempool: [], ordering: [], storage: []]
+      )
 
     enode =
       case Anoma.Supervisor.start_node(opts) do
@@ -75,7 +80,6 @@ defmodule Anoma.Node.Examples.ENode do
   @spec stop_node(ENode.t()) :: :ok
   def stop_node(node) do
     Supervisor.stop(node.pid)
-
     :ok
   end
 

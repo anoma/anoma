@@ -326,10 +326,10 @@ defmodule Anoma.Node.Logging do
 
     res = try_launch(mock_id, replay_args)
 
-    node_config = Anoma.Node.Config.node(node_id)
-
     case res do
       :ok ->
+        node_config = Anoma.Node.Config.node(node_id)
+
         Anoma.Supervisor.start_node(
           node_config: node_config,
           tx_args: replay_args
@@ -342,6 +342,8 @@ defmodule Anoma.Node.Logging do
             :mempool,
             &Keyword.drop(&1, [:transactions, :consensus])
           )
+
+        node_config = Anoma.Node.Config.node(node_id)
 
         Anoma.Supervisor.start_node(
           node_config: node_config,
@@ -363,9 +365,8 @@ defmodule Anoma.Node.Logging do
 
   @spec try_launch(String.t(), any()) :: :ok | :error
   def try_launch(mock_id, replay_args) do
-    node_config = Anoma.Node.Config.node(mock_id)
-
     try do
+      node_config = Anoma.Node.Config.node(mock_id)
       EventBroker.subscribe_me([])
 
       {:ok, _pid} =

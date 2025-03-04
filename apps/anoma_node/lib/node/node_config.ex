@@ -11,7 +11,13 @@ defmodule Anoma.Node.Config do
 
   use TypedStruct
 
-  typedstruct module: Instance do
+  typedstruct enforce: true do
+    field(:node_id, String.t(), required: true)
+    field(:instance, Instance.t(), required: true)
+    field(:seed_nodes, %{String.t() => Advert.t()}, default: %{})
+  end
+
+  typedstruct module: Instance, enforce: true do
     @typedoc """
     I contain the configuration parameters for this Anoma instance.
     These settings are shared between all nodes that run in this instance.
@@ -20,17 +26,6 @@ defmodule Anoma.Node.Config do
     field(:node_grpc_host, String.t(), required: true)
     field(:client_grpc_port, non_neg_integer(), required: true)
     field(:client_grpc_host, String.t(), required: true)
-  end
-
-  typedstruct do
-    @typedoc """
-    I represent the configuration parameters to start a node.
-    I contain information about its id, seed nodes, etc.
-    I also contain a copy of the platform configuration.
-    """
-    field(:node_id, String.t(), required: true)
-    field(:instance, Instance.t(), required: true)
-    field(:seed_nodes, %{String.t() => Advert.t()}, default: [])
   end
 
   @doc """
