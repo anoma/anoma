@@ -212,11 +212,11 @@ defmodule Anoma.CairoResource.Transaction do
     witnesses, output logics, and output witnesses.
   """
   @spec create_from_compliance_units(
+          list(Jason.OrderedObject.t()),
           list(binary()),
+          list(Jason.OrderedObject.t()),
           list(binary()),
-          list(binary()),
-          list(binary()),
-          list(binary())
+          list(Jason.OrderedObject.t())
         ) ::
           {:ok, Transaction.t()} | {:error, term()}
   def create_from_compliance_units(
@@ -226,19 +226,13 @@ defmodule Anoma.CairoResource.Transaction do
         output_logics,
         output_witnesses
       ) do
-    with {:ok, compliance_input_jsons} <-
-           Enum.map(
-             compliance_units,
-             &Jason.decode(&1, objects: :ordered_objects)
-           )
-           |> Utils.check_list(),
-         input_resource_jsons =
-           Enum.map(compliance_input_jsons, & &1["input"]),
+    with input_resource_jsons =
+           Enum.map(compliance_units, & &1["input"]),
          output_resource_jsons =
-           Enum.map(compliance_input_jsons, & &1["output"]),
+           Enum.map(compliance_units, & &1["output"]),
          {:ok, input_nf_keys} <-
            Enum.map(
-             compliance_input_jsons,
+             compliance_units,
              &Utils.parse_json_field_to_binary32(&1, "input_nf_key")
            )
            |> Utils.check_list(),
@@ -299,7 +293,7 @@ defmodule Anoma.CairoResource.Transaction do
            ),
          {:ok, compliance_witness} <-
            Workflow.create_compliance_inputs(
-             compliance_input_jsons,
+             compliance_units,
              input_resources,
              output_resources
            ),
@@ -314,7 +308,7 @@ defmodule Anoma.CairoResource.Transaction do
              compliance_units
            ),
          {:ok, priv_keys} <-
-           Workflow.create_private_keys(compliance_input_jsons) do
+           Workflow.create_private_keys(compliance_units) do
       {:ok,
        %Transaction{
          actions: MapSet.new([action]),

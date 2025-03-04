@@ -254,7 +254,10 @@ defmodule Anoma.CairoResource.Workflow do
     with updated_witness_jsons =
            Enum.zip_with(
              witnesses,
-             Enum.zip(resources, Enum.zip(nf_keys, merkle_paths)),
+             Enum.zip(
+               resources,
+               Enum.zip(is_consumed_flags, Enum.zip(nf_keys, merkle_paths))
+             ),
              fn json, {r, {is_consumed_flag, {nk, p}}} ->
                update_witness_json(json, r, is_consumed_flag, nk, p)
              end
@@ -358,9 +361,9 @@ defmodule Anoma.CairoResource.Workflow do
 
   @spec create_private_keys(list(Jason.OrderedObject.t())) ::
           {:ok, binary()} | {:error, term()}
-  def create_private_keys(compliance_input_jsons) do
+  def create_private_keys(compliance_units) do
     with {:ok, priv_keys} <-
-           Enum.map(compliance_input_jsons, & &1["rcv"])
+           Enum.map(compliance_units, & &1["rcv"])
            |> Enum.map(&Utils.hex_to_n_byte_binary(&1, 32))
            |> Utils.check_list() do
       {:ok, priv_keys |> Enum.reduce(&<>/2)}

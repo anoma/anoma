@@ -141,7 +141,7 @@ defmodule Examples.ECairo.ETransaction do
              output_witnesses
            ),
          shielded_tx = Transaction.prove_delta(pre_tx) do
-      assert Anoma.RM.Transaction.verify(shielded_tx)
+      assert true == Transaction.verify(shielded_tx)
 
       shielded_tx
     else
