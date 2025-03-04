@@ -297,7 +297,7 @@ defmodule Anoma.CairoResource.Transaction do
              input_resources,
              output_resources
            ),
-         {:ok, compliance_units} <-
+         {:ok, compliance_proofs} <-
            Workflow.generate_compliance_proofs(compliance_witness),
          action =
            Workflow.create_action(
@@ -305,7 +305,7 @@ defmodule Anoma.CairoResource.Transaction do
              input_nullifiers,
              input_logic_proofs,
              output_logic_proofs,
-             compliance_units
+             compliance_proofs
            ),
          {:ok, priv_keys} <-
            Workflow.create_private_keys(compliance_units) do
