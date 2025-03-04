@@ -1,6 +1,7 @@
 defmodule Anoma.Node.Examples.EEvent.EDefEvent do
   alias Anoma.Node
   alias Anoma.Node.Examples.ENode
+  alias Anoma.Node.Config
 
   require Node.Event
   require ExUnit.Assertions
@@ -167,7 +168,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
   """
   @spec filtered_event_subscription(String.t()) :: String.t()
   def filtered_event_subscription(node_id \\ Node.example_random_id()) do
-    ENode.start_node(node_id: node_id)
+    ENode.start_noded(node_config: Config.node(node_id))
 
     filter_foo = %EventExample.FooFilter{}
     filter_bar = %EventExample.BarFilter{}

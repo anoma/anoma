@@ -40,21 +40,12 @@ defmodule Anoma.Client.Examples.EClient do
   ############################################################
 
   @doc """
-  I create a new node in the system, and ensure that that is the only node that is running
-  by killing all other nodes.
-  """
-  @spec create_single_example_node() :: ENode.t()
-  def create_single_example_node() do
-    ENode.start_node()
-  end
-
-  @doc """
   I create an instance of the client and connect it to the given node.
 
   If there is already a client started, I kill it and start a new one.
   """
   @spec create_example_client(ENode.t() | nil) :: EClient.t()
-  def create_example_client(enode \\ create_single_example_node()) do
+  def create_example_client(enode \\ ENode.start_noded()) do
     grpc_port = Application.get_env(:anoma_node, :grpc_port)
 
     # kill previous clients (the client only connects to one node at this time)
@@ -66,7 +57,7 @@ defmodule Anoma.Client.Examples.EClient do
       )
     end)
 
-    {:ok, client} = Client.connect("localhost", grpc_port, enode.node_id)
+    {:ok, client} = Client.connect("localhost", grpc_port, enode.node_config.node_id)
     %EClient{client: client, node: enode, conn: Phoenix.ConnTest.build_conn()}
   end
 

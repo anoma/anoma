@@ -61,7 +61,7 @@ defmodule Anoma.Node.Events do
   end
 
   defimpl Jason.Encoder, for: IntentAddSuccess do
-    def encode(event = %IntentAddSuccess{intent: intent}, opts) do
+    def encode(event = %IntentAddSuccess{intent: intent}, _opts) do
       # the intent will be nouned and then encoded
       with noun <- Noun.Nounable.to_noun(intent),
            jammed <- Noun.Jam.jam(noun),
@@ -88,7 +88,7 @@ defmodule Anoma.Node.Events do
   end
 
   defimpl Jason.Encoder, for: IntentAddError do
-    def encode(event = %IntentAddError{}, opts) do
+    def encode(event = %IntentAddError{}, _opts) do
       # the intent will be nouned and then encoded
       with noun <- Noun.Nounable.to_noun(event.intent),
            jammed <- Noun.Jam.jam(noun),

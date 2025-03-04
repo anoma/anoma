@@ -12,6 +12,7 @@ defmodule Anoma.Supervisor do
   use Supervisor
 
   alias Anoma.Node.Transport
+  alias Anoma.Node.Config
 
   @spec start_link(any()) :: Supervisor.on_start()
   def start_link(args) do
@@ -22,12 +23,15 @@ defmodule Anoma.Supervisor do
   def init(_args) do
     Process.set_label(__MODULE__)
 
-    grpc_port = Application.get_env(:anoma_node, :grpc_port)
+    # fetch the configuration paremeters for this vm
+    instance_config = Config.instance()
 
     children = [
       {Elixir.Registry, keys: :unique, name: Anoma.Node.Registry},
       {GRPC.Server.Supervisor,
-       endpoint: Transport.GRPC.Endpoint, port: grpc_port, start_server: true},
+       endpoint: Transport.GRPC.Endpoint,
+       port: instance_config.node_grpc_port,
+       start_server: true},
       {DynamicSupervisor, name: Anoma.Node.NodeSupervisor}
     ]
 
@@ -39,22 +43,17 @@ defmodule Anoma.Supervisor do
   """
   @spec start_node(
           list(
-            {:node_id, String.t()}
+            {:node_config, Config.t()}
             | {:tx_args, any()}
-            | {:node_config, map()}
           )
         ) :: DynamicSupervisor.on_start_child()
   def start_node(args) do
     args =
       Keyword.validate!(args, [
-        :node_id,
-        tx_args: [mempool: [], ordering: [], storage: []],
-        node_config: %{}
+        :node_config,
+        tx_args: [mempool: [], ordering: [], storage: []]
       ])
 
-    # todo: make this more clean by passing in a single config map
-    # for now just use the config map in the transport module
-    # fix the rest later
     DynamicSupervisor.start_child(
       Anoma.Node.NodeSupervisor,
       {Anoma.Node.Supervisor, args}

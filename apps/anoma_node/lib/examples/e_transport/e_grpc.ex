@@ -50,7 +50,7 @@ defmodule Anoma.Node.Examples.EGRPC do
     enode =
       if enode == nil do
         ENode.kill_all_nodes()
-        ENode.start_node()
+        ENode.start_noded()
       else
         enode
       end
@@ -75,7 +75,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   """
   @spec list_intents(EGRPC.t()) :: boolean()
   def list_intents(%EGRPC{} = client \\ connect_to_node()) do
-    node = %Node{id: client.node.node_id}
+    node = %Node{id: client.node.node_config.node_id}
     request = %List.Request{node: node}
 
     {:ok, reply} = IntentpoolService.Stub.list(client.channel, request)
@@ -142,7 +142,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   """
   @spec add_intent(EGRPC.t()) :: boolean()
   def add_intent(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %Node{id: client.node.node_id}
+    node_id = %Node{id: client.node.node_config.node_id}
 
     # create an arbitrary intent and jam it
     intent_jammed =
@@ -173,7 +173,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   I expect an error to occur.
   """
   def add_intent_fail_no_intent(%EGRPC{} = client \\ connect_to_node()) do
-    node = %Node{id: client.node.node_id}
+    node = %Node{id: client.node.node_config.node_id}
     request = %Add.Request{node: node}
 
     assert capture_log(fn ->

@@ -26,7 +26,7 @@ create and destroy them as you please. Every time a node is started it's a clean
 Erlang/OTP 27 [erts-15.0] [source] [64-bit] [smp:10:10] [ds:10:10:10] [async-threads:1] [jit]
 
 Interactive Elixir (1.17.1) - press Ctrl+C to exit (type h() ENTER for help)
-iex(1)> node = Anoma.Node.Examples.ENode.start_node()
+iex(1)> node = Anoma.Node.Examples.ENode.start_noded()
 %Anoma.Node.Examples.ENode{
   grpc_port: 58447,
   pid: #PID<0.318.0>,

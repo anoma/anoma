@@ -22,8 +22,8 @@ defmodule Anoma.Node.Transport.GRPC.Advertise do
       remote_node: %Node{id: node_config.node_id},
       node: %Node{id: remote_node_id},
       grpc_address: %GRPCAddress{
-        host: node_config.grpc_host,
-        port: node_config.grpc_port
+        host: node_config.instance.node_grpc_host,
+        port: node_config.instance.node_grpc_port
       }
     }
 

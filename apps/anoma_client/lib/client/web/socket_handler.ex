@@ -25,7 +25,7 @@ defmodule Anoma.Client.Web.Socket do
   end
 
   @spec handle_info(any(), any()) :: {:push, {:text, String.t()}, any()}
-  def handle_info({:event, {topic, message}}, state) do
+  def handle_info({:event, {_topic, message}}, state) do
     IO.inspect(message, label: "message")
     # the message field is already an encoded json string so i decode it, so I
     # can encode it with the outer topic information

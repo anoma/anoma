@@ -7,16 +7,17 @@ defmodule Anoma.Node.Supervisor do
 
   require Logger
 
-  @args [:node_id, :tx_args, :node_config]
+  alias Anoma.Node.Config
+
+  @args [:tx_args, :node_config]
 
   ############################################################
   #                       Types                              #
   ############################################################
 
   @typep startup_options() :: [
-           {:node_id, String.t()}
-           | {:tx_args, any()}
-           | {:node_config, map()}
+           {:tx_args, any()}
+           | {:node_config, Config.t()}
          ]
 
   ############################################################
@@ -35,7 +36,8 @@ defmodule Anoma.Node.Supervisor do
   @spec start_link(startup_options) :: term()
   def start_link(args) do
     args = Keyword.validate!(args, @args)
-    name = Anoma.Node.Registry.via(args[:node_id], __MODULE__)
+    node_config = args[:node_config]
+    name = Anoma.Node.Registry.via(node_config.node_id, __MODULE__)
     Supervisor.start_link(__MODULE__, args, name: name)
   end
 
@@ -46,13 +48,15 @@ defmodule Anoma.Node.Supervisor do
 
     args = Keyword.validate!(args, @args)
 
+    node_id = args[:node_config].node_id
+
     children = [
       {Anoma.Node.Transport.Supervisor,
-       [node_id: args[:node_id], node_config: args[:node_config]]},
+       [node_id: node_id, node_config: args[:node_config]]},
       {Anoma.Node.Transaction.Supervisor,
-       [node_id: args[:node_id], tx_args: args[:tx_args]]},
-      {Anoma.Node.Intents.Supervisor, node_id: args[:node_id]},
-      {Anoma.Node.Logging, node_id: args[:node_id]}
+       [node_id: node_id, tx_args: args[:tx_args]]},
+      {Anoma.Node.Intents.Supervisor, node_id: node_id},
+      {Anoma.Node.Logging, node_id: node_id}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)

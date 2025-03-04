@@ -324,12 +324,16 @@ defmodule Anoma.Node.Logging do
     replay_table_clone(values_table, updates_table, mock_id)
     replay_args = replay_args(setup)
 
-    res =
-      try_launch(mock_id, replay_args)
+    res = try_launch(mock_id, replay_args)
+
+    node_config = Anoma.Node.Config.node(node_id)
 
     case res do
       :ok ->
-        Anoma.Supervisor.start_node(node_id: node_id, tx_args: replay_args)
+        Anoma.Supervisor.start_node(
+          node_config: node_config,
+          tx_args: replay_args
+        )
 
       :error ->
         base_args =
@@ -339,7 +343,10 @@ defmodule Anoma.Node.Logging do
             &Keyword.drop(&1, [:transactions, :consensus])
           )
 
-        Anoma.Supervisor.start_node(node_id: node_id, tx_args: base_args)
+        Anoma.Supervisor.start_node(
+          node_config: node_config,
+          tx_args: base_args
+        )
     end
   end
 
@@ -356,11 +363,16 @@ defmodule Anoma.Node.Logging do
 
   @spec try_launch(String.t(), any()) :: :ok | :error
   def try_launch(mock_id, replay_args) do
+    node_config = Anoma.Node.Config.node(mock_id)
+
     try do
       EventBroker.subscribe_me([])
 
       {:ok, _pid} =
-        Anoma.Supervisor.start_node(node_id: mock_id, tx_args: replay_args)
+        Anoma.Supervisor.start_node(
+          node_config: node_config,
+          tx_args: replay_args
+        )
 
       final_consensus = List.last(replay_args[:mempool][:consensus])
 

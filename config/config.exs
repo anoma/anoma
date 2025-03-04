@@ -1,7 +1,32 @@
 import Config
 
 # ----------------------------------------------------------------------------
-# Endpoint
+# Environment variables
+
+# port on which the client will listen for http requests
+client_http_port =
+  String.to_integer(System.get_env("CLIENT_HTTP_PORT") || "4000")
+
+# port on which the client will listen for websocket connections
+client_websocket_port =
+  String.to_integer(System.get_env("CLIENT_WEBSOCKET_PORT") || "3000")
+
+# port on which the node will listen for grpc requests
+node_grpc_port =
+  String.to_integer(System.get_env("NODE_GRPC_PORT") || "50052")
+
+# interface at which the node grpc server will listen
+node_grpc_host = System.get_env("NODE_GRPC_HOST") || "localhost"
+
+# grpc port on which the client will listen for grpc requests
+client_grpc_port =
+  String.to_integer(System.get_env("CLIENT_GRPC_PORT") || "50051")
+
+# interface at which this grpc server will listen
+client_grpc_host = System.get_env("CLIENT_GRPC_HOST") || "localhost"
+
+# ----------------------------------------------------------------------------
+# Client
 
 # Configures the endpoint
 config :anoma_client, Anoma.Client.Web.Endpoint,
@@ -9,7 +34,7 @@ config :anoma_client, Anoma.Client.Web.Endpoint,
   adapter: Bandit.PhoenixAdapter,
   http: [
     ip: {127, 0, 0, 1},
-    port: String.to_integer(System.get_env("HTTP_PORT") || "4000")
+    port: client_http_port
   ],
   check_origin: false,
   debug_errors: false,
@@ -17,27 +42,28 @@ config :anoma_client, Anoma.Client.Web.Endpoint,
   code_reloader: false
 
 config :anoma_client, Anoma.Client.Web.SocketHandler,
-  port: 3000,
+  port: client_websocket_port,
   path: "/ws"
 
-# codec: Riverside.Codec.RawBinary,
-# max_connection_age: :infinity,
-# show_debug_logs: true,
-# idle_timeout: 120_000,
-# reuse_port: false
+config :anoma_client,
+  grpc_port: client_grpc_port,
+  grpc_host: client_grpc_host
+
+# ----------------------------------------------------------------------------
+# Logger
 
 config :logger,
   level: :error,
   handle_otp_reports: false,
   handle_sasl_reports: false
 
-config :anoma_client,
-  grpc_port: String.to_integer(System.get_env("CLIENT_GRPC_PORT") || "50052")
+# ----------------------------------------------------------------------------
+# Node
+config :anoma_node,
+  grpc_port: node_grpc_port,
+  grpc_host: node_grpc_host
 
 config :anoma_lib, []
-
-config :anoma_node,
-  grpc_port: String.to_integer(System.get_env("GRPC_PORT") || "50051")
 
 config :anoma_protobuf, []
 config :compile_protoc, []

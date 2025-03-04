@@ -23,8 +23,8 @@ defmodule Anoma.Node.Examples.EIntentPool do
   I check that the intent pool returns an empty map of intents when its started.
   """
   @spec list_intents(ENode.t()) :: ENode.t()
-  def list_intents(enode \\ ENode.start_node()) do
-    assert MapSet.new() == IntentPool.intents(enode.node_id)
+  def list_intents(enode \\ ENode.start_noded()) do
+    assert MapSet.new() == IntentPool.intents(enode.node_config.node_id)
     enode
   end
 
@@ -32,12 +32,12 @@ defmodule Anoma.Node.Examples.EIntentPool do
   I check that when an intent is added to the pool, is is present in the mapset.
   """
   @spec add_intent(ENode.t()) :: ENode.t()
-  def add_intent(enode \\ ENode.start_node()) do
+  def add_intent(enode \\ ENode.start_noded()) do
     intent = %DumbIntent{}
-    IntentPool.new_intent(enode.node_id, intent)
+    IntentPool.new_intent(enode.node_config.node_id, intent)
 
     # the intent will be present in the mapset.
-    assert Enum.count(IntentPool.intents(enode.node_id)) == 1
+    assert Enum.count(IntentPool.intents(enode.node_config.node_id)) == 1
 
     enode
   end
@@ -46,19 +46,19 @@ defmodule Anoma.Node.Examples.EIntentPool do
   I add and remove an intent from the pool and ensure that it's actually gone.
   """
   @spec remove_intent(ENode.t()) :: ENode.t()
-  def remove_intent(enode \\ ENode.start_node()) do
+  def remove_intent(enode \\ ENode.start_noded()) do
     # add an intent to the pool
     intent = %DumbIntent{}
-    IntentPool.new_intent(enode.node_id, intent)
+    IntentPool.new_intent(enode.node_config.node_id, intent)
 
     # the intent will be present in the mapset.
-    assert Enum.count(IntentPool.intents(enode.node_id)) == 1
+    assert Enum.count(IntentPool.intents(enode.node_config.node_id)) == 1
 
     # remove the intent from the pool
-    IntentPool.remove_intent(enode.node_id, intent)
+    IntentPool.remove_intent(enode.node_config.node_id, intent)
 
     # the intent will be removed from the mapset.
-    assert Enum.empty?(IntentPool.intents(enode.node_id))
+    assert Enum.empty?(IntentPool.intents(enode.node_config.node_id))
 
     enode
   end
@@ -68,9 +68,9 @@ defmodule Anoma.Node.Examples.EIntentPool do
   used in a trivial swap transaction.
   """
   @spec add_intent_transaction_nullifier(ENode.t()) :: ENode.t()
-  def add_intent_transaction_nullifier(enode \\ ENode.start_node()) do
+  def add_intent_transaction_nullifier(enode \\ ENode.start_noded()) do
     intent = Examples.ETransparent.ETransaction.nullify_intent_eph()
-    node_id = enode.node_id
+    node_id = enode.node_config.node_id
     IntentPool.new_intent(node_id, intent)
 
     assert IntentPool.intents(node_id) == MapSet.new([intent])
@@ -86,14 +86,14 @@ defmodule Anoma.Node.Examples.EIntentPool do
   intent pool, hence removing the specified intent from the pool.
   """
   @spec remove_intents_with_nulllified_resources(ENode.t()) :: ENode.t()
-  def remove_intents_with_nulllified_resources(enode \\ ENode.start_node()) do
+  def remove_intents_with_nulllified_resources(enode \\ ENode.start_noded()) do
     add_intent_transaction_nullifier(enode)
 
     Anoma.Node.Examples.ETransaction.submit_successful_trivial_swap(
-      enode.node_id
+      enode.node_config.node_id
     )
 
-    assert enode.node_id |> IntentPool.intents() |> Enum.empty?()
+    assert enode.node_config.node_id |> IntentPool.intents() |> Enum.empty?()
 
     enode
   end
@@ -103,13 +103,13 @@ defmodule Anoma.Node.Examples.EIntentPool do
   does not add the intent to the pool.
   """
   @spec add_intent_with_known_nullifiers(ENode.t()) :: ENode.t()
-  def add_intent_with_known_nullifiers(enode \\ ENode.start_node()) do
+  def add_intent_with_known_nullifiers(enode \\ ENode.start_noded()) do
     intent = Examples.ETransparent.ETransaction.nullify_intent_eph()
     nlfs_set = Intent.nullifiers(intent)
 
     new_nullifiers_event(enode, nlfs_set)
 
-    node_id = enode.node_id
+    node_id = enode.node_config.node_id
     IntentPool.new_intent(node_id, intent)
 
     Process.sleep(100)
@@ -125,13 +125,13 @@ defmodule Anoma.Node.Examples.EIntentPool do
   does not add the intent to the pool.
   """
   @spec add_intent_with_submitted_commitments(ENode.t()) :: ENode.t()
-  def add_intent_with_submitted_commitments(enode \\ ENode.start_node()) do
+  def add_intent_with_submitted_commitments(enode \\ ENode.start_noded()) do
     intent = Examples.ETransparent.ETransaction.single_swap()
     cms_set = Intent.commitments(intent)
 
     new_commitments_event(enode, cms_set)
 
-    node_id = enode.node_id
+    node_id = enode.node_config.node_id
     IntentPool.new_intent(node_id, intent)
 
     Process.sleep(100)
@@ -142,12 +142,12 @@ defmodule Anoma.Node.Examples.EIntentPool do
     enode
   end
 
-  def intents_are_written(enode \\ ENode.start_node()) do
+  def intents_are_written(enode \\ ENode.start_noded()) do
     add_intent_transaction_nullifier(enode)
 
-    table = IntentPool.table_name(enode.node_id)
+    table = IntentPool.table_name(enode.node_config.node_id)
 
-    pool = IntentPool.intents(enode.node_id)
+    pool = IntentPool.intents(enode.node_config.node_id)
 
     assert {:atomic, [{^table, "intents", ^pool}]} =
              :mnesia.transaction(fn -> :mnesia.read(table, "intents") end)
@@ -158,10 +158,10 @@ defmodule Anoma.Node.Examples.EIntentPool do
   """
   @spec new_nullifiers_event(ENode.t(), MapSet.t()) :: ENode.t()
   def new_nullifiers_event(
-        enode \\ ENode.start_node(),
+        enode \\ ENode.start_noded(),
         nlfs_set \\ MapSet.new()
       ) do
-    node_id = enode.node_id
+    node_id = enode.node_config.node_id
 
     event =
       Node.Event.new_with_body(
@@ -182,10 +182,10 @@ defmodule Anoma.Node.Examples.EIntentPool do
   """
   @spec new_commitments_event(ENode.t(), MapSet.t()) :: ENode.t()
   def new_commitments_event(
-        enode \\ ENode.start_node(),
+        enode \\ ENode.start_noded(),
         cms_set \\ MapSet.new()
       ) do
-    node_id = enode.node_id
+    node_id = enode.node_config.node_id
 
     event =
       Node.Event.new_with_body(

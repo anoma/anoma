@@ -68,39 +68,39 @@ defmodule Anoma.Node.Examples.ESolver do
   I verify that the transaction is then in the unsolved list.
   """
   @spec solvable_transaction_via_intent_pool(ENode.t()) :: boolean()
-  def solvable_transaction_via_intent_pool(enode \\ ENode.start_node()) do
+  def solvable_transaction_via_intent_pool(enode \\ ENode.start_noded()) do
     # startup
     # the solver does not have solved transactions.
-    assert [] == Solver.get_unsolved(enode.node_id)
+    assert [] == Solver.get_unsolved(enode.node_config.node_id)
 
     # add an intent to the pool
     # note: this is asynchronous, so block this process for a bit
     intent_1 = %DumbIntent{value: -1}
-    IntentPool.new_intent(enode.node_id, intent_1)
+    IntentPool.new_intent(enode.node_config.node_id, intent_1)
     Process.sleep(100)
 
     # the solver does not have solved transactions.
-    assert Solver.get_unsolved(enode.node_id) == [intent_1]
+    assert Solver.get_unsolved(enode.node_config.node_id) == [intent_1]
 
     # --------------------------------------------------------------------------
     # add a second intent to make it solvable
 
     intent_2 = %DumbIntent{value: 1}
-    IntentPool.new_intent(enode.node_id, intent_2)
+    IntentPool.new_intent(enode.node_config.node_id, intent_2)
     Process.sleep(100)
 
     # the solver does not have unsolved transactions.
-    assert Solver.get_unsolved(enode.node_id) == []
+    assert Solver.get_unsolved(enode.node_config.node_id) == []
 
     # --------------------------------------------------------------------------
     # add a third intent to make it unsolvable
 
     intent_3 = %DumbIntent{value: 1000}
-    IntentPool.new_intent(enode.node_id, intent_3)
+    IntentPool.new_intent(enode.node_config.node_id, intent_3)
     Process.sleep(100)
 
     # the solver does not have solved transactions.
-    assert Solver.get_unsolved(enode.node_id) == [intent_3]
+    assert Solver.get_unsolved(enode.node_config.node_id) == [intent_3]
   end
 
   @doc """
@@ -108,8 +108,8 @@ defmodule Anoma.Node.Examples.ESolver do
   by itself and then sent to the Mempool to be executed.
   """
   @spec solvable_transaction_gets_executed(ENode.t()) :: :ok
-  def solvable_transaction_gets_executed(enode \\ ENode.start_node()) do
-    node_id = enode.node_id
+  def solvable_transaction_gets_executed(enode \\ ENode.start_noded()) do
+    node_id = enode.node_config.node_id
     assert [] == Solver.get_unsolved(node_id)
 
     tx = Examples.ETransparent.ETransaction.swap_from_actions()

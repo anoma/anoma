@@ -136,5 +136,4 @@ defmodule Examples.ETransparent.ETransaction do
 
     res
   end
-
 end

@@ -2,6 +2,7 @@ defmodule Anoma.Node.Examples.ENode do
   use TypedStruct
 
   alias __MODULE__
+  alias Anoma.Node.Config
 
   require Logger
 
@@ -16,10 +17,10 @@ defmodule Anoma.Node.Examples.ENode do
     My fields contain information to listen for TCP connection with a remote node.
 
     ### Fields
-    - `:node_id`    - The key of this router. This value is used to announce myself to other
+    - `:node_config`- The configuration of the node.
     - `:pid`        - the pid of the supervision tree.
     """
-    field(:node_id, String.t())
+    field(:node_config, Config.t())
     field(:pid, pid())
   end
 
@@ -36,36 +37,26 @@ defmodule Anoma.Node.Examples.ENode do
   Some meta data (in particular, the GRPC port) is only available when the node is started
   so I fetch that data from the ETS table.
   """
-  @spec start_node(Keyword.t()) :: ENode.t() | {:error, :failed_to_start_node}
-  def start_node(opts \\ []) do
-    node_id = "#{:erlang.phash2(make_ref())}"
-    grpc_port = Application.get_env(:anoma_node, :grpc_port)
-
-    opts =
-      Keyword.validate!(opts,
-        node_config: %{
-          node_id: node_id,
-          grpc_host: "localhost",
-          grpc_port: grpc_port
-        },
-        node_id: node_id
-      )
+  @spec start_noded(Keyword.t()) :: ENode.t() | {:error, :failed_to_start_node}
+  def start_noded(opts \\ []) do
+    opts = Keyword.validate!(opts, [node_config: Config.node(), tx_args:  [mempool: [], ordering: [], storage: []]])
 
     enode =
       case Anoma.Supervisor.start_node(opts) do
         {:ok, pid} ->
           %ENode{
-            node_id: opts[:node_id],
+            node_config: opts[:node_config],
             pid: pid
           }
 
         {:error, {:already_started, pid}} ->
           %ENode{
-            node_id: opts[:node_id],
+            node_config: opts[:node_config],
             pid: pid
           }
 
-        {:error, _} ->
+        {:error, e} ->
+          Logger.error(inspect(e))
           {:error, :failed_to_start_node}
       end
 

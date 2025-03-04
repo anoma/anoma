@@ -2,7 +2,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node
   alias Node.Transaction.{Storage, Ordering, Mempool, Backends}
   alias Anoma.TransparentResource.Transaction
-
+  alias Anoma.Node.Config
   alias Anoma.Node.Events
   alias Examples.{ENock, ETransparent.ETransaction}
 
@@ -295,7 +295,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
   @spec start_tx_module(String.t()) :: ENode.t() | any()
   def start_tx_module(node_id \\ Node.example_random_id()) do
-    ENode.start_node(node_id: node_id)
+    %ENode{} = ENode.start_noded(node_config: Config.node(node_id))
   end
 
   @spec zero(String.t()) :: {Backends.backend(), Noun.t()}

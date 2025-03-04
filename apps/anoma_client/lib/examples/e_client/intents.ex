@@ -23,7 +23,7 @@ defmodule Anoma.Client.Examples.EClient.Intents do
   """
   @spec list_intents_empty :: EClient.t()
   def list_intents_empty do
-    node = ENode.start_node()
+    node = ENode.start_noded()
     client = create_example_client(node)
 
     # make a json call, expect an empty list of intents
