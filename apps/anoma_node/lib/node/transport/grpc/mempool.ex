@@ -14,7 +14,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
 
     tx_noun = request.transaction |> Noun.Jam.cue!()
 
-    Mempool.tx(request.node_info.node_id, {:transparent_resource, tx_noun})
+    Mempool.tx(request.node_info.node_id, {request.transaction_type, tx_noun})
 
     %AddTransaction.Response{}
   end

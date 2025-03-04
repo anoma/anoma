@@ -14,8 +14,10 @@ defmodule Anoma.Node.Examples.EGRPC do
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
   alias Anoma.Protobuf.IntentsService
+  alias Anoma.Protobuf.MempoolService
   alias Anoma.Protobuf.NodeInfo
   alias Examples.ETransparent.ETransaction
+  alias Anoma.Protobuf.Mempool.AddTransaction
 
   import ExUnit.Assertions
 
@@ -147,5 +149,29 @@ defmodule Anoma.Node.Examples.EGRPC do
 
     {:ok, _reply} =
       IndexerService.Stub.list_unspent_resources(client.channel, request)
+  end
+
+  @doc """
+  I add a transaction to the client.
+  """
+  @spec add_transaction(EGRPC.t()) :: EGRPC.t()
+  def add_transaction(%EGRPC{} = client \\ connect_to_node()) do
+    node_id = %NodeInfo{node_id: client.node.node_id}
+
+    # create an arbitrary intent and jam it
+    intent_jammed =
+      ETransaction.nullify_intent()
+      |> Noun.Nounable.to_noun()
+      |> Noun.Jam.jam()
+
+    request = %AddTransaction.Request{
+      node_info: node_id,
+      transaction: intent_jammed
+    }
+
+    {:ok, %AddTransaction.Response{}} =
+      MempoolService.Stub.add(client.channel, request)
+
+    client
   end
 end

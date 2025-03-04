@@ -4,10 +4,15 @@ package Anoma.Protobuf.Mempool.AddTransaction;
 
 import "node_info.proto";
 
+enum TransactionType {
+  transparent_resource = 0;
+  cairo_resource = 1;
+}
+
 message Request {
   NodeInfo node_info = 1;
-
   bytes transaction = 2;
+  TransactionType transaction_type = 3;
 }
 
 message Response {}
