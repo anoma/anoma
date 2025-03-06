@@ -522,6 +522,27 @@ defmodule Examples.EExtNock do
   end
 
   @doc """
+  I test the :invoke constructor (Nock formula 9).
+  """
+  def invoke_constructor_test() do
+    # From Hoon `!=((|=(@ +(a)) 2))`:
+    subject =
+      ExtNockTerms.sexpr_to_noun!([
+        [{:incr, [{:slot, [6]}]}, [0, [0, 1]]],
+        {:slot, [1]}
+      ])
+
+    formula =
+      ExtNockTerms.sexpr_to_noun!(
+        {:invoke, [2, [[0, 4], [7, [[0, 3] | [1, 2]]] | [0, 11]]]}
+      )
+
+    {:ok, result} = Nock.nock(subject, formula)
+    assert result == 3
+    formula
+  end
+
+  @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do

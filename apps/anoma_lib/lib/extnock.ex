@@ -46,6 +46,7 @@ defmodule ExtNock do
             | :ife
             | :compose
             | :push
+            | :invoke
 
     @typedoc """
     I am a constructor for extended Nock terms, which can be either a standard
@@ -77,6 +78,7 @@ defmodule ExtNock do
     def ext_tspec(:ife), do: {:ok, 3}
     def ext_tspec(:compose), do: {:ok, 2}
     def ext_tspec(:push), do: {:ok, 2}
+    def ext_tspec(:invoke), do: {:ok, 2}
     def ext_tspec(ctor), do: {:standard, ctor}
 
     @doc """
@@ -193,6 +195,12 @@ defmodule ExtNock do
           # First evaluates b on subject to get a value
           # Then builds a cell [value subject] and evaluates c on that cell
           {:cell, [{{:atom, 8}, []}, {:cell, [b, c]}]}
+
+        {:invoke, [b, c]} ->
+          # Structure: [9 b c]
+          # This compiles to *[a 9 b c] -> *[*[a c] 2 [0 1] 0 b]
+          # Creates a core (by evaluating c), then pulls arm b from that core
+          {:cell, [{{:atom, 9}, []}, {:cell, [b, c]}]}
 
         # For standard Nock constructors, keep them as-is
         {ctor, children} ->
