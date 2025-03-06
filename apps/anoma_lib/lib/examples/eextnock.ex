@@ -388,6 +388,78 @@ defmodule Examples.EExtNock do
   end
 
   @doc """
+  I test the :ife constructor (Nock formula 6).
+  """
+  def ife_constructor_test() do
+    ife_formula1 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:ife,
+         [
+           {:constant, [0]},
+           {:constant, [8]},
+           {:constant, [9]}
+         ]}
+      )
+
+    {:ok, result1} = Nock.nock([0, 1], ife_formula1)
+    assert result1 == 8
+
+    ife_formula2 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:ife,
+         [
+           {:constant, [1]},
+           {:constant, [8]},
+           {:constant, [9]}
+         ]}
+      )
+
+    {:ok, result2} = Nock.nock([0, 1], ife_formula2)
+    assert result2 == 9
+
+    ife_formula3 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:ife,
+         [
+           {:eq, [{:constant, [1]}, {:constant, [1]}]},
+           {:constant, [8]},
+           {:constant, [9]}
+         ]}
+      )
+
+    {:ok, result3} = Nock.nock([0, 1], ife_formula3)
+    assert result3 == 8
+
+    ife_formula4 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:ife,
+         [
+           {:eq, [{:constant, [1]}, {:constant, [0]}]},
+           {:constant, [8]},
+           {:constant, [9]}
+         ]}
+      )
+
+    {:ok, result4} = Nock.nock([0, 1], ife_formula4)
+    assert result4 == 9
+
+    # Error case: condition is 2 (neither 0 nor 1)
+    ife_formula5 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:ife,
+         [
+           {:constant, [2]},
+           {:constant, [8]},
+           {:constant, [9]}
+         ]}
+      )
+
+    assert Nock.nock([0, 1], ife_formula5) == :error
+
+    ife_formula1
+  end
+
+  @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
