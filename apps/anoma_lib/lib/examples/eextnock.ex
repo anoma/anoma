@@ -491,6 +491,37 @@ defmodule Examples.EExtNock do
   end
 
   @doc """
+  I test the :push constructor (Nock formula 8).
+  """
+  def push_constructor_test() do
+    push_formula1 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:push,
+         [
+           {:incr, [{:slot, [1]}]},
+           {:slot, [1]}
+         ]}
+      )
+
+    {:ok, result1} = Nock.nock(42, push_formula1)
+    assert result1 == [43 | 42]
+
+    push_formula2 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:push,
+         [
+           {:incr, [{:slot, [1]}]},
+           {:incr, [{:slot, [3]}]}
+         ]}
+      )
+
+    {:ok, result2} = Nock.nock(42, push_formula2)
+    assert result2 == 43
+
+    push_formula1
+  end
+
+  @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
