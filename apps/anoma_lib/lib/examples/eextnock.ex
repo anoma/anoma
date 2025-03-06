@@ -543,6 +543,72 @@ defmodule Examples.EExtNock do
   end
 
   @doc """
+  I test the :replace constructor (Nock formula 10).
+  """
+  def replace_constructor_test() do
+    # Create a subject for our tests: [10 [20 30]]
+    subject = Noun.Format.parse_always("[10 [20 30]]")
+
+    # Replace at axis 2 (head) of the subject with value 99
+    replace1 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:replace,
+         [
+           2,
+           {:constant, [99]},
+           {:slot, [1]}
+         ]}
+      )
+
+    {:ok, result1} = Nock.nock(subject, replace1)
+    assert result1 == [99 | [20 | 30]]
+
+    # Replace at axis 3 (tail) of the subject with value 88
+    replace2 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:replace,
+         [
+           3,
+           {:constant, [88]},
+           {:slot, [1]}
+         ]}
+      )
+
+    {:ok, result2} = Nock.nock(subject, replace2)
+    assert result2 == [10 | 88]
+
+    # Replace at axis 6 (head of tail) of the subject with value 77
+    replace3 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:replace,
+         [
+           6,
+           {:constant, [77]},
+           {:slot, [1]}
+         ]}
+      )
+
+    {:ok, result3} = Nock.nock(subject, replace3)
+    assert result3 == [10 | [77 | 30]]
+
+    # Replace at axis 4 (head of head) of the subject with value 42
+    # (we shall give it a subject with no such axis)
+    replace4 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:replace,
+         [
+           4,
+           {:constant, [42]},
+           {:slot, [1]}
+         ]}
+      )
+
+    assert Nock.nock(subject, replace4) == :error
+
+    replace1
+  end
+
+  @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
