@@ -47,6 +47,7 @@ defmodule ExtNock do
             | :compose
             | :push
             | :invoke
+            | :replace
 
     @typedoc """
     I am a constructor for extended Nock terms, which can be either a standard
@@ -79,6 +80,7 @@ defmodule ExtNock do
     def ext_tspec(:compose), do: {:ok, 2}
     def ext_tspec(:push), do: {:ok, 2}
     def ext_tspec(:invoke), do: {:ok, 2}
+    def ext_tspec(:replace), do: {:ok, 3}
     def ext_tspec(ctor), do: {:standard, ctor}
 
     @doc """
@@ -201,6 +203,16 @@ defmodule ExtNock do
           # This compiles to *[a 9 b c] -> *[*[a c] 2 [0 1] 0 b]
           # Creates a core (by evaluating c), then pulls arm b from that core
           {:cell, [{{:atom, 9}, []}, {:cell, [b, c]}]}
+
+        {:replace, [axis, replacement, subject]} ->
+          # Structure: [10 [axis replacement] subject]
+          # This compiles to *[a 10 [b c] d] -> #[b *[a c] *[a d]]
+          # Replaces at axis b in *[a d] with the result of *[a c]
+          {:cell,
+           [
+             {{:atom, 10}, []},
+             {:cell, [{:cell, [axis, replacement]}, subject]}
+           ]}
 
         # For standard Nock constructors, keep them as-is
         {ctor, children} ->
