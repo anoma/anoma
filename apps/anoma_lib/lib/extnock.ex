@@ -36,7 +36,8 @@ defmodule ExtNock do
     As development progresses, I will be expanded to include more constructors
     for all Nock operations and library functions.
     """
-    @type ext_term_ctor :: :slot | :constant | :evaluate | :cell_test | :incr
+    @type ext_term_ctor ::
+            :slot | :constant | :evaluate | :cell_test | :incr | :eq
 
     @typedoc """
     I am a constructor for extended Nock terms, which can be either a standard
@@ -64,6 +65,7 @@ defmodule ExtNock do
     def ext_tspec(:evaluate), do: {:ok, 2}
     def ext_tspec(:cell_test), do: {:ok, 1}
     def ext_tspec(:incr), do: {:ok, 1}
+    def ext_tspec(:eq), do: {:ok, 2}
     def ext_tspec(ctor), do: {:standard, ctor}
 
     @doc """
@@ -151,6 +153,12 @@ defmodule ExtNock do
           # This compiles to *[a 4 b] -> +*[a b]
           # Returns the atom that results from incrementing *[a b] by 1
           {:cell, [{{:atom, 4}, []}, a]}
+
+        {:eq, [a, b]} ->
+          # Structure: [5 a b]
+          # This compiles to *[a 5 b c] -> =(*[a b] *[a c])
+          # Returns 0 if *[a b] equals *[a c], 1 otherwise
+          {:cell, [{{:atom, 5}, []}, {:cell, [a, b]}]}
 
         # For standard Nock constructors, keep them as-is
         {ctor, children} ->

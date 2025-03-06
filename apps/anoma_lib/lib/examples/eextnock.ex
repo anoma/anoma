@@ -366,6 +366,28 @@ defmodule Examples.EExtNock do
   end
 
   @doc """
+  I test the :eq constructor (Nock formula 5).
+  """
+  def eq_constructor_test() do
+    eq_formula =
+      ExtNockTerms.sexpr_to_noun!(
+        {:eq,
+         [
+           {:slot, [2]},
+           {:slot, [3]}
+         ]}
+      )
+
+    {:ok, result1} = Nock.nock([1 | 1], eq_formula)
+    assert result1 == 0
+
+    {:ok, result2} = Nock.nock([0 | 1], eq_formula)
+    assert result2 == 1
+
+    eq_formula
+  end
+
+  @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
