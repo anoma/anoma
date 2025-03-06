@@ -37,7 +37,14 @@ defmodule ExtNock do
     for all Nock operations and library functions.
     """
     @type ext_term_ctor ::
-            :slot | :constant | :evaluate | :cell_test | :incr | :eq | :ife
+            :slot
+            | :constant
+            | :evaluate
+            | :cell_test
+            | :incr
+            | :eq
+            | :ife
+            | :compose
 
     @typedoc """
     I am a constructor for extended Nock terms, which can be either a standard
@@ -67,6 +74,7 @@ defmodule ExtNock do
     def ext_tspec(:incr), do: {:ok, 1}
     def ext_tspec(:eq), do: {:ok, 2}
     def ext_tspec(:ife), do: {:ok, 3}
+    def ext_tspec(:compose), do: {:ok, 2}
     def ext_tspec(ctor), do: {:standard, ctor}
 
     @doc """
@@ -170,6 +178,12 @@ defmodule ExtNock do
              {{:atom, 6}, []},
              {:cell, [test, {:cell, [then_branch, else_branch]}]}
            ]}
+
+        {:compose, [b, c]} ->
+          # Structure: [7 b c]
+          # This compiles to *[a 7 b c] -> *[*[a b] c]
+          # First applies b to the subject (a), then applies c to the result
+          {:cell, [{{:atom, 7}, []}, {:cell, [b, c]}]}
 
         # For standard Nock constructors, keep them as-is
         {ctor, children} ->

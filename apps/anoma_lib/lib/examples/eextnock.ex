@@ -460,6 +460,37 @@ defmodule Examples.EExtNock do
   end
 
   @doc """
+  I test the :compose constructor (Nock formula 7).
+  """
+  def compose_constructor_test() do
+    compose_formula1 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:compose,
+         [
+           {:cell_test, [{:slot, [1]}]},
+           {:incr, [{:slot, [1]}]}
+         ]}
+      )
+
+    {:ok, result1} = Nock.nock(42, compose_formula1)
+    assert result1 == 2
+
+    compose_formula2 =
+      ExtNockTerms.sexpr_to_noun!(
+        {:compose,
+         [
+           {:incr, [{:slot, [1]}]},
+           {:incr, [{:slot, [1]}]}
+         ]}
+      )
+
+    {:ok, result2} = Nock.nock(42, compose_formula2)
+    assert result2 == 44
+
+    compose_formula1
+  end
+
+  @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
