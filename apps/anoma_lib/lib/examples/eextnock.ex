@@ -347,6 +347,25 @@ defmodule Examples.EExtNock do
   end
 
   @doc """
+  I test the :incr constructor (Nock formula 4).
+  """
+  def incr_constructor_test() do
+    incr_formula1 =
+      ExtNockTerms.sexpr_to_noun!({:incr, [{:slot, [1]}]})
+
+    {:ok, result1} = Nock.nock(1, incr_formula1)
+    assert result1 == 2
+
+    incr_formula2 =
+      ExtNockTerms.sexpr_to_noun!({:incr, [{:cell_test, [{:slot, [1]}]}]})
+
+    {:ok, result2} = Nock.nock([1, 1], incr_formula2)
+    assert result2 == 1
+
+    incr_formula1
+  end
+
+  @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
