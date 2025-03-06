@@ -224,4 +224,9 @@
   =+  c=%cairo-compose
   ^-  cairo-transaction
   !!
+++  cairo-create-from-cus
+  ~/  %cairo-create-from-cus
+  |=  [(list json) (list @) (list json) (list @) (list json)]
+  ^-  cairo-transaction
+  !!
 --
