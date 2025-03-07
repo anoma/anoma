@@ -609,6 +609,43 @@ defmodule Examples.EExtNock do
   end
 
   @doc """
+  I test the :hint constructor (Nock formula 11).
+  """
+  def hint_constructor_test() do
+    {:ok, result1} =
+      Nock.nock(
+        [0 | 1],
+        ExtNockTerms.sexpr_to_noun!({:hint, [1, {:constant, [1]}]})
+      )
+
+    assert result1 == 1
+
+    {:ok, result2} =
+      Nock.nock(
+        [132 | 19],
+        ExtNockTerms.sexpr_to_noun!({:hint, [37, {:incr, [[0, 3]]}]})
+      )
+
+    assert result2 == 20
+
+    {:ok, result3} =
+      Nock.nock(
+        [132 | 19],
+        ExtNockTerms.sexpr_to_noun!({:hint, [[37, 1, 0], {:incr, [[0, 3]]}]})
+      )
+
+    assert result3 == 20
+
+    result4 =
+      Nock.nock(
+        [0 | 1],
+        ExtNockTerms.sexpr_to_noun!({:hint, [[1, 0], {:constant, [1]}]})
+      )
+
+    assert result4 == :error
+  end
+
+  @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
