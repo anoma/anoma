@@ -48,6 +48,7 @@ defmodule ExtNock do
             | :push
             | :invoke
             | :replace
+            | :hint
 
     @typedoc """
     I am a constructor for extended Nock terms, which can be either a standard
@@ -81,6 +82,7 @@ defmodule ExtNock do
     def ext_tspec(:push), do: {:ok, 2}
     def ext_tspec(:invoke), do: {:ok, 2}
     def ext_tspec(:replace), do: {:ok, 3}
+    def ext_tspec(:hint), do: {:ok, 2}
     def ext_tspec(ctor), do: {:standard, ctor}
 
     @doc """
@@ -212,6 +214,23 @@ defmodule ExtNock do
            [
              {{:atom, 10}, []},
              {:cell, [{:cell, [axis, replacement]}, subject]}
+           ]}
+
+        {:hint, [hint, formula]} ->
+          # Structure: [11 hint formula]
+          # *[a 11 [b c] d]          -> *[[*[a c] *[a d]] 0 3]
+          # *[a 11 b c], `b` an atom -> *[a c]
+          #
+          # Either way, the visible effect is to ignore the hint and evaluate
+          # the formula against a given subject, but the hint may be used
+          # by the interpreter, and if the hint is a cell, then the second
+          # component of it is evaluated against the subject to produce the
+          # hint which the interpreter may consider -- and that evaluation
+          # might in particular crash!
+          {:cell,
+           [
+             {{:atom, 11}, []},
+             {:cell, [hint, formula]}
            ]}
 
         # For standard Nock constructors, keep them as-is
