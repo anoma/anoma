@@ -136,7 +136,7 @@ defmodule Nock.Jets.Mugs do
       {"action-delta", 7, @layer_rm, &Nock.Jets.action_delta/1, :enabled, 50},
     (Jets.calculate_core(11951, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"make-delta", 7, @layer_rm, &Nock.Jets.make_delta/1, :enabled, 50},
-    (Jets.calculate_core(191, Nock.Lib.stdlib_layers()) |> hd()) =>
+    (Jets.calculate_core(382, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"action-create", 7, @layer_rm, &Nock.Jets.action_create/1, :enabled,
        10},
     (Jets.calculate_core(751, Nock.Lib.stdlib_layers()) |> hd()) =>
