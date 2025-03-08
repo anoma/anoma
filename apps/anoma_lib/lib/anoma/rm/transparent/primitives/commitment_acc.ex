@@ -63,8 +63,10 @@ defmodule Anoma.RM.Transparent.Primitive.CommitmentAccumulator do
   the commitment is indeed in the set.
   """
 
-  @spec verify(integer(), MapSet.t(), binary()) :: boolean()
+  @spec verify(integer(), MapSet.t(), integer()) :: boolean()
   def verify(cm, w, val) do
-    val == value(w) and MapSet.member?(w, cm)
+    val == value(w) and
+      (MapSet.member?(w, Noun.atom_binary_to_integer(cm)) or
+         MapSet.member?(w, Noun.atom_integer_to_binary(cm)))
   end
 end
