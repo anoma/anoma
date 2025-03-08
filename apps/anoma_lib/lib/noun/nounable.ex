@@ -17,6 +17,8 @@ alias Noun.Nounable
 alias Noun.Nounable.Kind
 
 defimpl Nounable, for: List do
+  import Noun
+
   @moduledoc """
   I offer an implementation of Nounable and from_noun for lists
   """
@@ -34,7 +36,6 @@ defimpl Nounable, for: List do
   """
   @spec from_noun(Noun.t()) :: {:ok, list(Noun.t())} | :error
   def from_noun(zero) when is_noun_zero(zero), do: {:ok, []}
-  def from_noun([]), do: {:ok, []}
 
   def from_noun([h | t]) do
     with {:ok, ts} <- from_noun(t) do
