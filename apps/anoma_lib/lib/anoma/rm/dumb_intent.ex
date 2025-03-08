@@ -1,6 +1,7 @@
 defmodule Anoma.RM.DumbIntent do
   use TypedStruct
 
+  @derive {Jason.Encoder, only: [:value]}
   typedstruct do
     @typedoc """
     I hold the state for an intent.

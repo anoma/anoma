@@ -1,5 +1,6 @@
 defmodule Anoma.Node.Events do
   alias Anoma.Node.Event
+  alias Anoma.Node.Events
   alias Anoma.Node.Logging
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Mempool
@@ -12,13 +13,15 @@ defmodule Anoma.Node.Events do
   require Logger
   require Anoma.Node.Event
 
-  @type transaction_result :: {{:ok, any()}, binary()} | {:error, binary()}
+  @type transaction_result ::
+          {{:ok, Transaction.t()}, String.t()} | {:error, String.t()}
 
   ############################################################
   #                       Events                             #
   ############################################################
 
   typedstruct enforce: true, module: ExecutionEvent do
+    @derive {Jason.Encoder, only: [:result]}
     @typedoc """
     I am the type of an execution event.
 
@@ -30,10 +33,11 @@ defmodule Anoma.Node.Events do
     transactions.
     """
 
-    field(:result, [Anoma.Node.Events.transaction_result()])
+    field(:result, [Events.transaction_result()])
   end
 
   typedstruct module: TxEvent do
+    @derive {Jason.Encoder, only: [:id, :tx]}
     @typedoc """
     I am the type of a transaction event.
 
@@ -51,30 +55,18 @@ defmodule Anoma.Node.Events do
   end
 
   typedstruct enforce: true, module: IntentAddSuccess do
+    @derive {Jason.Encoder, only: [:intent]}
     @typedoc """
     I am an event specifying that an intent has been submitted succesfully.
 
     ### Fields
     - `:intent` - The intent added.
     """
-    field(:intent, Intent.t())
-  end
-
-  defimpl Jason.Encoder, for: IntentAddSuccess do
-    def encode(event = %IntentAddSuccess{intent: intent}, _opts) do
-      # the intent will be nouned and then encoded
-      with noun <- Noun.Nounable.to_noun(intent),
-           jammed <- Noun.Jam.jam(noun),
-           encoded <- Base.encode64(jammed),
-           name <- Map.get(event, :__struct__) do
-        event = %{intent: encoded, name: name}
-        IO.inspect(event, label: "event")
-        Jason.encode!(event)
-      end
-    end
+    field(:intent, Transaction.t())
   end
 
   typedstruct enforce: true, module: IntentAddError do
+    @derive {Jason.Encoder, only: [:intent, :reason]}
     @typedoc """
     I am an event specifying that an intent submission has failed alongside with
     a reason.
@@ -87,20 +79,8 @@ defmodule Anoma.Node.Events do
     field(:reason, String.t())
   end
 
-  defimpl Jason.Encoder, for: IntentAddError do
-    def encode(event = %IntentAddError{}, _opts) do
-      # the intent will be nouned and then encoded
-      with noun <- Noun.Nounable.to_noun(event.intent),
-           jammed <- Noun.Jam.jam(noun),
-           encoded <- Base.encode64(jammed),
-           name <- Map.get(event, :__struct__) do
-        event = %{intent: encoded, name: name, reason: event.reason}
-        Jason.encode!(event)
-      end
-    end
-  end
-
   typedstruct enforce: true, module: ResultEvent do
+    @derive {Jason.Encoder, only: [:tx_id, :vm_result]}
     @typedoc """
     I hold the content of the Result Event, which conveys the result of
     the transaction candidate code execution on the Anoma VM to
@@ -116,6 +96,7 @@ defmodule Anoma.Node.Events do
   end
 
   typedstruct enforce: true, module: CompleteEvent do
+    @derive {Jason.Encoder, only: [:tx_id, :tx_result]}
     @typedoc """
     I hold the content of the Complete Event, which communicates the result
     of the transaction candidate execution to the Executor engine.
@@ -130,6 +111,7 @@ defmodule Anoma.Node.Events do
   end
 
   typedstruct enforce: true, module: TRMEvent do
+    @derive {Jason.Encoder, only: [:commitments, :nullifiers]}
     @typedoc """
     I hold the content of the The Resource Machine Event, which
     communicates a set of nullifiers/commitments defined by the actions of the
@@ -301,6 +283,10 @@ defmodule Anoma.Node.Events do
         }
       }
     }
+    |> tap(fn x ->
+      # foo
+      x.body.body |>      Jason.encode() |> IO.inspect(label: "encoded event")
+    end)
     |> EventBroker.event()
   end
 
