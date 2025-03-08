@@ -36,14 +36,14 @@ defmodule Anoma.Node.Transaction.Supervisor do
     Process.set_label(__MODULE__)
 
     children = [
-      {Task.Supervisor, name: Registry.via(args[:node_id], TxSupervisor)},
-      {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]},
       {Anoma.Node.Transaction.Ordering,
        [node_id: args[:node_id]] ++ Keyword.get(args, :ordering, [])},
       {Anoma.Node.Transaction.Storage,
        [node_id: args[:node_id]] ++ Keyword.get(args, :storage, [])},
       {Anoma.Node.Transaction.Mempool,
-       [node_id: args[:node_id]] ++ Keyword.get(args, :mempool, [])}
+       [node_id: args[:node_id]] ++ Keyword.get(args, :mempool, [])},
+      {Task.Supervisor, name: Registry.via(args[:node_id], TxSupervisor)},
+      {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)
