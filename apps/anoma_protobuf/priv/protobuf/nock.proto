@@ -4,6 +4,10 @@ package Anoma.Proto.Nock;
 
 import "node.proto";
 
+/*
+ An input to a Nock program.
+ Can either be jammed or plain-text.
+ */
 message Input {
   oneof input {
     bytes jammed = 1;
@@ -11,6 +15,9 @@ message Input {
   }
 }
 
+/*
+ Proves the given program by running it with the given inputs.
+ */
 message Prove {
   message Request {
     Node node = 1;
@@ -25,14 +32,16 @@ message Prove {
   }
 
   message Response {
-  oneof result {
-    Success success = 1;
-    Error error = 2;
+    oneof result {
+      Success success = 1;
+      Error error = 2;
+    }
   }
 }
 
-}
-
+/*
+ Run the given program by running it with the given inputs.
+ */
 message Run {
   message Request {
     Node node_info = 1;
@@ -52,12 +61,17 @@ message Run {
   }
 }
 
-
+/*
+ A successful run or proof of a program.
+ */
 message Success {
   bytes result = 1;
   repeated bytes output = 2;
 }
 
+/*
+ A failed run or proof of a program.
+ */
 message Error {
   string error = 1;
   repeated bytes output = 2;
