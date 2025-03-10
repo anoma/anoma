@@ -22,16 +22,16 @@ config :event_broker, []
 # data_dir:        the directory where the data will be written,
 #                  if persisted to disk
 #                  default: platform dependent
-#                           linux: `$XDG_DATA_HOME/anoma` or `~/.config/anoma `
+#                           linux: `$XDG_DATA_HOME/anoma` or `~/.config/anoma`
 #                           macos: `~/Library/Application Support/Anoma`
 #
 # rocksdb:         should the rockdb backend be used?
 #                  default: true
 config :anoma_node, :mnesia,
-  persist_to_disk: false,
-  rocksdb: false
+  persist_to_disk: true,  # Fixed: Enabled data persistence to prevent data loss on restart
+  rocksdb: true           # Fixed: Enabled RocksDB for better performance
 
-# Import environment specific config. This must remain at the bottom
+# Import environment-specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 if File.exists?("config/#{config_env()}.exs") do
   import_config "#{config_env()}.exs"
