@@ -191,6 +191,16 @@ defmodule Anoma.Node.Intents.IntentPool do
     {:noreply, handle_new_state(state, e)}
   end
 
+  @impl true
+  def handle_info(
+        e = %EventBroker.Event{
+          body: %Node.Event{body: %Backends.SRMEvent{}}
+        },
+        state
+      ) do
+    {:noreply, handle_new_state(state, e)}
+  end
+
   ############################################################
   #                 Genserver Implementation                 #
   ############################################################
@@ -261,14 +271,10 @@ defmodule Anoma.Node.Intents.IntentPool do
   end
 
   @spec handle_new_state(t(), EventBroker.Event.t()) :: t()
-  defp handle_new_state(state, %EventBroker.Event{
-         body: %Node.Event{
-           body: %Backends.TRMEvent{
-             nullifiers: nlfs_set,
-             commitments: cms_set
-           }
-         }
-       }) do
+  defp handle_new_state(state, e) do
+    nlfs_set = e.body.body.commitments
+    cms_set = e.body.body.nullifiers
+
     new_intents =
       reject_intents(state.intents, MapSet.union(nlfs_set, cms_set))
 
@@ -356,9 +362,14 @@ defmodule Anoma.Node.Intents.IntentPool do
     |> MapSet.new()
   end
 
-  deffilter TRMFilter do
+  deffilter RMFilter do
     %EventBroker.Event{
       body: %Anoma.Node.Event{body: %Backends.TRMEvent{}}
+    } ->
+      true
+
+    %EventBroker.Event{
+      body: %Anoma.Node.Event{body: %Backends.SRMEvent{}}
     } ->
       true
 
@@ -367,6 +378,6 @@ defmodule Anoma.Node.Intents.IntentPool do
   end
 
   defp trm_filter() do
-    %__MODULE__.TRMFilter{}
+    %__MODULE__.RMFilter{}
   end
 end
