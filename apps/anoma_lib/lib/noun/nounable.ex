@@ -25,13 +25,15 @@ defimpl Nounable, for: List do
 
   @behaviour Kind
 
+  import Noun
+
   @doc """
   I convert the given Noun into a list of nouns.
 
   I do not recursively convert the structures in the list.
   """
   @spec from_noun(Noun.t()) :: {:ok, list(Noun.t())} | :error
-  def from_noun(0), do: {:ok, []}
+  def from_noun(zero) when is_noun_zero(zero), do: {:ok, []}
   def from_noun([]), do: {:ok, []}
 
   def from_noun([h | t]) do
