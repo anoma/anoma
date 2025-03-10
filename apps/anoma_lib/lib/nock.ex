@@ -83,15 +83,12 @@ defmodule Nock do
 
           # a jet exists. mug the parent too
           {:ok,
-           {label, parent_axis, parent_mug, jet_function, jet_mode, cost}} ->
+           {label, parent_axis, parent_registry, jet_function, jet_mode, cost}} ->
             maybe_parent = Noun.axis(parent_axis, core)
 
             case maybe_parent do
               {:ok, parent} ->
-                try do
-                  # IO.inspect(Noun.mug(parent), label: "mugged parent")
-                  # elixir syntax for normal erlang =
-                  ^parent_mug = Noun.mug(parent)
+                if Noun.equal?(parent, parent_registry) do
                   # it's all there. use the jet.
                   # note: this is vastly simplified from a full jetting
                   # implementation. in particular, we are only jetting
@@ -138,10 +135,8 @@ defmodule Nock do
                         :error
                       end
                   end
-                rescue
-                  # parent mug didn't match. can't use the jet
-                  _ in MatchError ->
-                    nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
+                else
+                  nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
                 end
 
               # the parent didn't even exist, the jet is bogus
