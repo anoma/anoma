@@ -37,8 +37,7 @@ defmodule Nock.Jets do
 
   """
   def calculate_mug_of_core(index_in_core, parent_layer) do
-    {:ok, core} = calculate_core(index_in_core, parent_layer)
-    Noun.mug(hd(core))
+    calculate_core(index_in_core, parent_layer) |> hd() |> Noun.mug()
   end
 
   @doc """
@@ -100,10 +99,9 @@ defmodule Nock.Jets do
   For our standard library, so far only layer 4 is parameterized
   """
   def calculate_mug_of_param_core(index_in_core, core_index, parent_layer) do
-    with {:ok, val} <-
-           calculate_core_param(core_index, index_in_core, parent_layer) do
-      Noun.mug(hd(val))
-    end
+    calculate_core_param(index_in_core, core_index, parent_layer)
+    |> hd()
+    |> Noun.mug()
   end
 
   @spec calculate_mug_of_param_layer(non_neg_integer(), non_neg_integer()) ::
@@ -125,7 +123,7 @@ defmodule Nock.Jets do
   """
   @spec calculate_param_layer(non_neg_integer(), non_neg_integer) :: Noun.t()
   def calculate_param_layer(core_index, parent_layer) do
-    with {:ok, core} <- calculate_core_param(core_index, 4, parent_layer),
+    with core <- calculate_core_param(core_index, 4, parent_layer),
          {:ok, parent} <- Noun.axis(14, core) do
       parent
     end
@@ -136,33 +134,39 @@ defmodule Nock.Jets do
           non_neg_integer(),
           non_neg_integer()
         ) ::
-          :error | {:ok, Noun.t()}
-  def calculate_core_param(core_index, gate_index, parent_layer) do
-    nock4k(Nock.Lib.rm_core(), [
-      7,
-      [
-        9,
-        core_index,
-        0 | layer_offset(parent_layer)
-      ],
-      9,
-      gate_index,
-      0 | 1
-    ])
+          Noun.t()
+  def calculate_core_param(gate_index, core_index, parent_layer) do
+    with {:ok, res} <-
+           nock4k(Nock.Lib.rm_core(), [
+             7,
+             [
+               9,
+               core_index,
+               0 | layer_offset(parent_layer)
+             ],
+             9,
+             gate_index,
+             0 | 1
+           ]) do
+      res
+    end
   end
 
   @spec calculate_core(non_neg_integer(), non_neg_integer()) ::
-          :error | {:ok, Noun.t()}
+          Noun.t()
   def calculate_core(index_in_core, layer) do
-    nock4k(Nock.Lib.rm_core(), [
-      8,
-      [
-        9,
-        index_in_core,
-        0 | layer_offset(layer)
-      ],
-      0 | 2
-    ])
+    with {:ok, res} <-
+           nock4k(Nock.Lib.rm_core(), [
+             8,
+             [
+               9,
+               index_in_core,
+               0 | layer_offset(layer)
+             ],
+             0 | 2
+           ]) do
+      res
+    end
   end
 
   @spec layer_offset(non_neg_integer) :: non_neg_integer
