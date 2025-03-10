@@ -191,6 +191,7 @@ defmodule Anoma.Node.Intents.Solver do
 
     unsolved = MapSet.filter(state.unsolved, &unsolved_reject(set, &1))
 
+    IO.inspect set, label: "solved"
     unless Enum.empty?(set) do
       set |> Enum.reduce(&Intent.compose/2) |> submit(state.node_id)
     end
@@ -228,6 +229,8 @@ defmodule Anoma.Node.Intents.Solver do
     intents
     |> Enum.reduce(&Intent.compose/2)
     |> Intent.verify()
+    |> tap(fn x -> IO.inspect(x, label: "verify") end)
+
   end
 
   ############################################################

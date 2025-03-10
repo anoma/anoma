@@ -37,7 +37,7 @@ defmodule Anoma.Node.Events do
   end
 
   typedstruct module: TxEvent do
-    @derive {Jason.Encoder, only: [:id, :tx]}
+    @derive {Jason.Encoder, only: []}
     @typedoc """
     I am the type of a transaction event.
 
@@ -52,6 +52,13 @@ defmodule Anoma.Node.Events do
 
     field(:id, binary())
     field(:tx, Mempool.Tx.t())
+  end
+
+  defimpl Jason.Encoder, for: TxEvent do
+    def encode(value, opts) do
+      id_encoded = Base.encode64(value.id)
+      Jason.Encode.map(%{value | id: id_encoded}, opts)
+    end
   end
 
   typedstruct enforce: true, module: IntentAddSuccess do
@@ -285,7 +292,7 @@ defmodule Anoma.Node.Events do
     }
     |> tap(fn x ->
       # foo
-      x.body.body |>      Jason.encode() |> IO.inspect(label: "encoded event")
+      x.body.body |> Jason.encode() |> IO.inspect(label: "encoded event")
     end)
     |> EventBroker.event()
   end

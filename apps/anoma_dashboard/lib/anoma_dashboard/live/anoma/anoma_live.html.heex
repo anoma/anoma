@@ -1,0 +1,61 @@
+
+    <div class="flex h-screen">
+        <!-- Left Sidebar -->
+        <div class="w-64 bg-white shadow-md">
+            <!-- Sidebar Header -->
+            <div class="p-4 border-b">
+                <h1 class="text-xl font-semibold text-gray-800">Dashboard</h1>
+            </div>
+
+            <!-- Nodes Section -->
+            <div class="p-4">
+                <h2 class="text-lg font-medium text-gray-700 mb-2">Nodes</h2>
+                <ul class="space-y-1">
+<%= for node <- @nodes do %>
+                    <li class="px-2 py-1 rounded hover:bg-gray-100 cursor-pointer"  phx-click="inspect" phx-value-node={node.node_id}>
+                        <span class="text-gray-700">
+                            <%= node.node_id %>
+                        </span>
+                    </li>
+<% end %>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 p-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Main Dashboard</h2>
+                <p class="text-gray-600">Select a node from the sidebar to view its details.</p>
+
+                <%= if @active_node do %>
+                <!-- Placeholder for dashboard content -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-gray-50 p-4 rounded border">
+                        <h3 class="font-medium text-gray-700">Status</h3>
+                        <p class="text-gray-500 text-sm mt-1">All systems operational</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded border">
+                        <h3 class="font-medium text-gray-700">Mempool</h3>
+                        <p class="text-gray-500 text-sm mt-1"><%= @active_node.mempool_length %></p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded border">
+                        <h3 class="font-medium text-gray-700">Intentpool</h3>
+                        <p class="text-gray-500 text-sm mt-1"><%= @active_node.intentpool_length %></p>
+                    </div>
+                </div>
+
+                                <!-- Placeholder for dashboard content -->
+                <div class="mt-6 grid grid-cols-1">
+                    <div class="bg-gray-50 p-4 rounded border">
+                        <h3 class="font-medium text-gray-700">Events</h3>
+                        <%= for event <- @active_node.events do %>
+                        <p class="text-gray-500 text-sm mt-1 truncate"><%= String.replace(Jason.encode!(event), "\n", "") %></p>
+                        <% end %>
+                    </div>
+                </div>
+
+                <% end %>
+            </div>
+        </div>
+    </div>

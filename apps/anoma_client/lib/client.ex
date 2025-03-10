@@ -9,6 +9,8 @@ defmodule Anoma.Client do
   alias Anoma.Client.ConnectionSupervisor
   alias Anoma.Client.Node.GRPCProxy
   alias Anoma.Client.Nock.Runner
+  alias Anoma.Client.Transactions
+
 
   typedstruct do
     field(:pid, pid())
@@ -122,6 +124,16 @@ defmodule Anoma.Client do
   def subscribe(topic) do
     GRPCProxy.subscribe(topic)
   end
+
+
+  def verify(tx) do
+    Transactions.verify(tx)
+  end
+
+  def compose(transactions) do
+    Transactions.compose(transactions)
+  end
+
 
   # @doc """
   # I return the list of intents in the node I'm connected to.

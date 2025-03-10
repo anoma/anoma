@@ -9,6 +9,8 @@ defmodule EventBroker.Event do
   use TypedStruct
 
   typedstruct enforce: true do
+    @derive {Jason.Encoder, only: [:source_module, :body]}
+
     @typedoc """
     I am the Event type for the Event Broker.
 

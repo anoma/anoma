@@ -57,6 +57,7 @@ defmodule Anoma.Node.Transaction.Mempool do
            | {:round, non_neg_integer()}
 
   typedstruct module: Tx do
+    @derive {Jason.Encoder, only: [:tx_result]}
     @typedoc """
     I am the type of a transaction as stores in the Mempool.
 
@@ -231,7 +232,8 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @spec tx(String.t(), {Backends.backend(), Noun.t()}) :: :ok
   def tx(node_id, tx_w_backend) do
-    tx(node_id, tx_w_backend, :crypto.strong_rand_bytes(16))
+    random_id = Base.encode64(:crypto.strong_rand_bytes(16))
+    tx(node_id, tx_w_backend, random_id)
   end
 
   @doc """
