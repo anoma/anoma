@@ -19,14 +19,15 @@ defmodule Anoma.Node.Transaction.Executor do
 
   alias __MODULE__
   alias Anoma.Node
-  alias Node.Transaction.{Backends, Mempool, Ordering}
-  alias Node.Registry
-
-  use TypedStruct
-
-  use GenServer
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Backends
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Transaction.Ordering
 
   require Node.Event
+
+  use GenServer
+  use TypedStruct
 
   ############################################################
   #                         State                            #
@@ -62,6 +63,13 @@ defmodule Anoma.Node.Transaction.Executor do
     """
 
     field(:result, list({{:ok, any} | :error, binary()}))
+  end
+
+  typedstruct enforce: true, module: TaskCrash do
+    @typedoc """
+    I am a crash event for a task that failed.
+    """
+    field(:task, any())
   end
 
   ############################################################
@@ -112,11 +120,12 @@ defmodule Anoma.Node.Transaction.Executor do
   I am the Executor launch function.
 
   Given a transaction in {backend, code} format with specific ID,
-  I launch that transaction as a task.
+  I launch that transaction as a task. If no ID is provided, I generate one
+  randomly.
   """
 
   @spec launch(String.t(), {Backends.backend(), Noun.t()}, binary()) :: :ok
-  def launch(node_id, tw_w_backend, id) do
+  def launch(node_id, tw_w_backend, id \\ :crypto.strong_rand_bytes(16)) do
     GenServer.cast(
       Registry.via(node_id, __MODULE__),
       {:launch, tw_w_backend, id}
@@ -172,10 +181,20 @@ defmodule Anoma.Node.Transaction.Executor do
   #                 Genserver Implementation                 #
   ############################################################
 
+  # @doc """
+  # I launch a transaction in its own Task to execute.
+  # """
   @spec handle_launch({Backends.backend(), Noun.t()}, binary(), t()) :: :ok
   defp handle_launch(tw_w_backend, id, state = %Executor{}) do
-    Task.start(fn ->
-      Backends.execute(state.node_id, tw_w_backend, id)
+    tx_supervisor = Registry.via(state.node_id, TxSupervisor)
+
+    Task.Supervisor.start_child(tx_supervisor, fn ->
+      try do
+        Backends.execute(state.node_id, tw_w_backend, id)
+      rescue
+        _e ->
+          task_crash_event(id, state.node_id)
+      end
     end)
 
     :ok
@@ -211,8 +230,6 @@ defmodule Anoma.Node.Transaction.Executor do
         }
       } ->
         {res, id}
-    after
-      5000 -> raise "Timeout waiting for #{inspect(id)}"
     end
   end
 
@@ -223,6 +240,14 @@ defmodule Anoma.Node.Transaction.Executor do
       Node.Event.new_with_body(node_id, %__MODULE__.ExecutionEvent{
         result: res_list
       })
+
+    EventBroker.event(event)
+  end
+
+  @spec task_crash_event(any(), String.t()) :: :ok
+  defp task_crash_event(task, node_id) do
+    event =
+      Node.Event.new_with_body(node_id, %__MODULE__.TaskCrash{task: task})
 
     EventBroker.event(event)
   end

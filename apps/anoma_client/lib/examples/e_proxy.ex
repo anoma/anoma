@@ -6,7 +6,6 @@ defmodule Anoma.Client.Examples.EProxy do
 
   I then test each public API of the proxy to ensure it works as expected.
   """
-  use TypedStruct
 
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Client.Examples.EClient
@@ -18,6 +17,8 @@ defmodule Anoma.Client.Examples.EProxy do
   require ExUnit.Assertions
 
   import ExUnit.Assertions
+
+  use TypedStruct
 
   ############################################################
   #                    State                                 #

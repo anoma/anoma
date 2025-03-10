@@ -1,8 +1,12 @@
 defmodule Examples.EEventBroker do
   @moduledoc false
 
+  alias EventBroker.Event
+  alias EventBroker.Filters
+  alias EventBroker.Registry
+  alias EventBroker.Supervisor
+
   use ExUnit.Case
-  alias EventBroker.{Supervisor, Registry, Filters, Event}
 
   @doc """
   I start the broker-registry duo.
@@ -177,21 +181,11 @@ defmodule Examples.EEventBroker do
   def unsub_all() do
     start_broker()
 
-    registered = :sys.get_state(Registry).registered_filters
-
-    for {spec, pid} <- registered, reduce: [] do
-      acc ->
-        if :sys.get_state(pid).subscribers |> MapSet.member?(self()) do
-          acc ++ [spec]
-        else
-          acc
-        end
-    end
+    # unsubscribe from all my current subscriptions
+    EventBroker.my_subscriptions()
     |> Enum.each(&EventBroker.unsubscribe_me(&1))
 
-    assert [[]] ==
-             :sys.get_state(Registry).registered_filters
-             |> Map.keys()
+    assert EventBroker.my_subscriptions() == []
 
     :sys.get_state(Registry)
   end
@@ -219,7 +213,7 @@ defmodule Examples.EEventBroker do
 
     assert Process.alive?(agent)
 
-    assert MapSet.new([self()]) == :sys.get_state(agent).subscribers
+    assert self() in :sys.get_state(agent).subscribers
 
     {:sys.get_state(Registry), agent}
   end

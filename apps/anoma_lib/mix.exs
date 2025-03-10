@@ -20,9 +20,12 @@ defmodule AnomaLib.MixProject do
     ]
   end
 
+  # note: included_applications do *not* get started automatically
+  #       extra_applications do get started automatically
+  #       mnesia should *not* be started automatically
   def application do
     [
-      extra_applications: [:mnesia]
+      included_applications: [:mnesia]
     ]
   end
 

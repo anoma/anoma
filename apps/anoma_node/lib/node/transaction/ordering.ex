@@ -22,23 +22,33 @@ defmodule Anoma.Node.Transaction.Ordering do
   - `order/2`
   """
 
+  alias __MODULE__
+  alias Anoma.Node
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Storage
+
+  require Node.Event
+
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
 
-  alias __MODULE__
-  alias Anoma.Node
-  alias Node.Transaction.Storage
-  alias Node.Registry
+  ############################################################
+  #                       Types                              #
+  ############################################################
 
-  require Node.Event
-
+  @typedoc """
+  Type of the arguments the ordering genserver expects
+  """
+  @type args_t ::
+          [
+            node_id: String.t(),
+            next_height: non_neg_integer()
+          ]
+          | [node_id: String.t()]
   ############################################################
   #                         State                            #
   ############################################################
-
-  @typep startup_options() ::
-           {:node_id, String.t()} | {:next_height, integer()}
 
   typedstruct enforce: true do
     @typedoc """
@@ -90,7 +100,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   I register the engine with supplied node ID provided by the arguments.
   """
 
-  @spec start_link([startup_options()]) :: GenServer.on_start()
+  @spec start_link(args_t()) :: GenServer.on_start()
   def start_link(args \\ []) do
     name = Registry.via(args[:node_id], __MODULE__)
     GenServer.start_link(__MODULE__, args, name: name)
@@ -112,7 +122,9 @@ defmodule Anoma.Node.Transaction.Ordering do
     Process.set_label(__MODULE__)
 
     args = Keyword.validate!(args, [:node_id, next_height: 1])
+
     state = struct(Ordering, Enum.into(args, %{}))
+
     {:ok, state}
   end
 

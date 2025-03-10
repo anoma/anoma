@@ -1,13 +1,12 @@
 defmodule Examples.ECairo.EAction do
-  use Memoize
-
   alias Anoma.CairoResource.Action
-  alias Examples.ECairo.EProofRecord
-  alias Examples.ECairo.EResourceLogic
-  alias Examples.ECairo.EResource
-  alias Anoma.CairoResource.Tree
   alias Anoma.CairoResource.Resource
+  alias Anoma.CairoResource.Tree
+  alias Examples.ECairo.EProofRecord
+  alias Examples.ECairo.EResource
+  alias Examples.ECairo.EResourceLogic
 
+  use Memoize
   use TestHelper.TestMacro
 
   @spec an_action() :: Action.t()
@@ -16,10 +15,8 @@ defmodule Examples.ECairo.EAction do
     input_resource_logic = EResourceLogic.a_input_resource_logic()
     output_resource_logic = EResourceLogic.a_output_resource_logic()
 
-    action = %Action{
-      logic_proofs: [input_resource_logic, output_resource_logic],
-      compliance_proofs: [proof]
-    }
+    action =
+      Action.new([input_resource_logic, output_resource_logic], [proof])
 
     assert Action.verify(action)
 
@@ -32,10 +29,8 @@ defmodule Examples.ECairo.EAction do
     input_resource_logic = EResourceLogic.an_input_intent_resource_logic()
     output_resource_logic = EResourceLogic.an_output_intent_resource_logic()
 
-    action = %Action{
-      logic_proofs: [input_resource_logic, output_resource_logic],
-      compliance_proofs: [proof]
-    }
+    action =
+      Action.new([input_resource_logic, output_resource_logic], [proof])
 
     assert Action.verify(action)
 
@@ -107,15 +102,16 @@ defmodule Examples.ECairo.EAction do
         output_resource_path_2
       )
 
-    action = %Action{
-      logic_proofs: [
-        input_resource_logic_proof_1,
-        output_resource_logic_proof_1,
-        input_resource_logic_proof_2,
-        output_resource_logic_proof_2
-      ],
-      compliance_proofs: [compliance_unit_1, compliance_unit_2]
-    }
+    action =
+      Action.new(
+        [
+          input_resource_logic_proof_1,
+          input_resource_logic_proof_2,
+          output_resource_logic_proof_1,
+          output_resource_logic_proof_2
+        ],
+        [compliance_unit_1, compliance_unit_2]
+      )
 
     assert Action.verify(action)
 

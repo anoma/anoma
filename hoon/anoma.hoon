@@ -1078,6 +1078,12 @@
 ++  fall
   |*  [a=(unit) b=*]
   ?~(a b u.a)
+++  malt  ::  map from list
+  |*  a=(list)
+  (molt `(list [p=_-<.a q=_->.a])`a)
+++  molt
+  |*  a=(list (pair))
+  (~(gas by `(tree [p=_p.i.-.a q=_q.i.-.a])`~) a)
 ++  by
   ~/  %by
   =|  a=(tree (pair))  ::  (map)

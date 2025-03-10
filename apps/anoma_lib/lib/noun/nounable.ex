@@ -17,6 +17,8 @@ alias Noun.Nounable
 alias Noun.Nounable.Kind
 
 defimpl Nounable, for: List do
+  import Noun
+
   @moduledoc """
   I offer an implementation of Nounable and from_noun for lists
   """
@@ -25,14 +27,15 @@ defimpl Nounable, for: List do
 
   @behaviour Kind
 
+  import Noun
+
   @doc """
   I convert the given Noun into a list of nouns.
 
   I do not recursively convert the structures in the list.
   """
   @spec from_noun(Noun.t()) :: {:ok, list(Noun.t())} | :error
-  def from_noun(0), do: {:ok, []}
-  def from_noun([]), do: {:ok, []}
+  def from_noun(zero) when is_noun_zero(zero), do: {:ok, []}
 
   def from_noun([h | t]) do
     with {:ok, ts} <- from_noun(t) do
@@ -43,6 +46,27 @@ defimpl Nounable, for: List do
   def from_noun(_) do
     :error
   end
+end
+
+defimpl Nounable, for: Bool do
+  import Noun
+  @behaviour Kind
+
+  def to_noun(bool) when bool in [true, false] do
+    Nounable.to_noun(bool)
+  end
+
+  def to_noun(), do: :error
+
+  @doc """
+  I convert the given Nock boolean to Elixir boolean.
+  """
+  @spec from_noun(Noun.t()) :: {:ok, bool()} | :error
+  def from_noun(zero) when is_noun_zero(zero), do: {:ok, true}
+
+  def from_noun(one) when one in [1, <<1>>], do: {:ok, false}
+
+  def from_noun(_), do: :error
 end
 
 defimpl Nounable, for: Integer do
@@ -98,7 +122,7 @@ defimpl Nounable, for: Tuple do
   def from_noun_internal(x), do: [x]
 end
 
-defimpl Nounable, for: Set do
+defimpl Nounable, for: MapSet do
   import Noun
 
   @doc """
@@ -106,9 +130,9 @@ defimpl Nounable, for: Set do
   """
   @spec to_noun(MapSet.t()) :: Noun.t()
   def to_noun(set) do
-    with [hd | tail] <- set |> Enum.to_list() do
-      for elem <- tail, reduce: [hd, 0 | 0] do
-        acc -> noun_set_put(acc, elem)
+    with [hd | tail] <- set |> MapSet.to_list() do
+      for elem <- tail, reduce: [Nounable.to_noun(hd), 0 | 0] do
+        acc -> noun_set_put(acc, Nounable.to_noun(elem))
       end
     else
       _ -> 0
@@ -171,13 +195,12 @@ defimpl Nounable, for: Set do
 end
 
 defimpl Nounable, for: Map do
-  # use nock map once it exists
   def to_noun(map) do
     for {k, v} <- map do
       [Nounable.to_noun(k) | Nounable.to_noun(v)]
     end
     |> MapSet.new()
-    |> Nounable.Set.to_noun()
+    |> Nounable.to_noun()
   end
 
   # ditto here
@@ -190,7 +213,7 @@ defimpl Nounable, for: Map do
 
   @spec from_noun(Noun.t()) :: {:ok, %{Noun.t() => Noun.t()}} | :error
   def from_noun(noun) do
-    with {:ok, value} <- Nounable.Set.from_noun(noun) do
+    with {:ok, value} <- Nounable.MapSet.from_noun(noun) do
       {:ok, Map.new(value, fn [x | y] -> {x, y} end)}
     end
   end

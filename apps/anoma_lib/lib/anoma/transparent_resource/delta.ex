@@ -50,31 +50,26 @@ defmodule Anoma.TransparentResource.Delta do
     Map.reject(d, fn {_k, v} -> v == 0 end)
   end
 
-  # This would be automated by Noun.Nounable.Map.from_noun/1
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun(noun) do
-    maybe_record =
-      Noun.list_nock_to_erlang(noun)
-      |> Enum.map(fn
-        [x | y] ->
-          {x, Noun.atom_binary_to_signed_integer(y)}
+    with {:ok, map} <- Noun.Nounable.Map.from_noun(noun) do
+      res =
+        map
+        |> Enum.map(fn {key, value} -> {key, Noun.decode_signed(value)} end)
+        |> Map.new()
 
-        _ ->
-          :error
-      end)
-
-    if Enum.any?(maybe_record, &(:error == &1)) do
-      :error
+      {:ok, res}
     else
-      {:ok, Map.new(maybe_record)}
+      _ -> :error
     end
   end
 
   @spec to_noun(t()) :: Noun.t()
   def to_noun(delta) do
-    delta
-    |> Enum.map(fn {binary, integer} ->
-      [binary | Noun.encode_signed(integer)]
+    Enum.map(delta, fn {k, signed_integer} ->
+      {k, Noun.encode_signed(signed_integer)}
     end)
+    |> Map.new(fn x -> x end)
+    |> Noun.Nounable.to_noun()
   end
 end

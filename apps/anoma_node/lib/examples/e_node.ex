@@ -1,12 +1,12 @@
 defmodule Anoma.Node.Examples.ENode do
-  use TypedStruct
-
-  import ExUnit.Assertions
-
   alias __MODULE__
   alias Anoma.Node.Examples.ERegistry
 
   require Logger
+
+  import ExUnit.Assertions
+
+  use TypedStruct
 
   ############################################################
   #                    Context                               #
@@ -33,6 +33,14 @@ defmodule Anoma.Node.Examples.ENode do
   ############################################################
   #                  Public API                              #
   ############################################################
+
+  @doc """
+  I return a random node id.
+  """
+  @spec random_node_id() :: String.t()
+  def random_node_id() do
+    Base.encode64(:crypto.strong_rand_bytes(8))
+  end
 
   @table_name :enode_table
 

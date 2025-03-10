@@ -3,12 +3,12 @@ defmodule Nock do
   Nock, a universal function on nouns.
   """
 
+  alias __MODULE__
+
   require Noun
   require Logger
 
   use TypedStruct
-
-  alias __MODULE__
 
   @typedoc """
   I contain environmental information on how Nock shall be evaluated.
@@ -24,7 +24,7 @@ defmodule Nock do
 
     field(:meter_pid, pid() | nil, default: nil)
     field(:gas_limit, non_neg_integer() | nil, default: nil)
-    field(:stdio, any(), default: :stdio)
+    field(:stdio, any(), default: :logger)
   end
 
   @dialyzer :no_improper_lists
@@ -37,7 +37,12 @@ defmodule Nock do
             non_neg_integer()}}
           | :error
   def get_jet(battery_mug) do
-    Map.fetch(Nock.Jets.Mugs.jet_registry(), battery_mug)
+    case Enum.find(Nock.Jets.Mugs.jet_registry(), fn {head, _etc} ->
+           Noun.equal?(head, battery_mug)
+         end) do
+      nil -> :error
+      {_hd, tail} -> {:ok, tail}
+    end
   end
 
   @spec put_jet(Noun.t(), any()) :: any()
@@ -58,102 +63,81 @@ defmodule Nock do
       when nine in [9, <<9>>] do
     {:ok, core} = nock(subject, core_formula, env)
 
-    maybe_battery_mug =
-      try do
-        {:ok, Noun.mug(hd(core))}
-      rescue
-        _ in ArgumentError -> :error
-      end
+    # IO.inspect(battery, label: "battery")
+    maybe_jet = get_jet(hd(core))
 
-    case maybe_battery_mug do
-      {:ok, battery_mug} ->
-        # IO.inspect(battery_mug, label: "mugged battery")
-        maybe_jet = get_jet(battery_mug)
+    case maybe_jet do
+      # there's no jet. just use naive nock
+      :error ->
+        nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
 
-        case maybe_jet do
-          # there's no jet. just use naive nock
+      # a jet exists but it's disabled, use naive nock
+      {:ok,
+       {_label, _parent_axis, _parent_mug, _jet_function, :disabled, _cost}} ->
+        nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
+
+      # a jet exists. mug the parent too
+      {:ok,
+       {label, parent_axis, parent_registry, jet_function, jet_mode, cost}} ->
+        maybe_parent = Noun.axis(parent_axis, core)
+
+        case maybe_parent do
+          {:ok, parent} ->
+            if Noun.equal?(parent, parent_registry) do
+              # it's all there. use the jet.
+              # note: this is vastly simplified from a full jetting
+              # implementation. in particular, we are only jetting
+              # gates; we ignore which formula 9 used, assuming
+              # that it's at axis 2.
+              case jet_mode do
+                :enabled ->
+                  if env.meter_pid != nil do
+                    send(env.meter_pid, {:gas, cost})
+                  end
+
+                  jet_function.(core)
+
+                :check ->
+                  {jet_usecs, jet_result} =
+                    :timer.tc(fn -> jet_function.(core) end)
+
+                  {naive_usecs, naive_result} =
+                    :timer.tc(fn ->
+                      nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
+                    end)
+
+                  validity = jet_result === naive_result
+
+                  check_result = %{
+                    jet_usecs: jet_usecs,
+                    naive_usecs: naive_usecs,
+                    result: jet_result,
+                    valid:
+                      if validity do
+                        validity
+                      else
+                        {validity, jet_result, naive_result}
+                      end
+                  }
+
+                  Logger.info(
+                    "jet #{label} check result: #{inspect(check_result)}"
+                  )
+
+                  if validity do
+                    jet_result
+                  else
+                    :error
+                  end
+              end
+            else
+              nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
+            end
+
+          # the parent didn't even exist, the jet is bogus
           :error ->
             nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
-
-          # a jet exists but it's disabled, use naive nock
-          {:ok,
-           {_label, _parent_axis, _parent_mug, _jet_function, :disabled,
-            _cost}} ->
-            nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
-
-          # a jet exists. mug the parent too
-          {:ok,
-           {label, parent_axis, parent_mug, jet_function, jet_mode, cost}} ->
-            maybe_parent = Noun.axis(parent_axis, core)
-
-            case maybe_parent do
-              {:ok, parent} ->
-                try do
-                  # IO.inspect(Noun.mug(parent), label: "mugged parent")
-                  # elixir syntax for normal erlang =
-                  ^parent_mug = Noun.mug(parent)
-                  # it's all there. use the jet.
-                  # note: this is vastly simplified from a full jetting
-                  # implementation. in particular, we are only jetting
-                  # gates; we ignore which formula 9 used, assuming
-                  # that it's at axis 2.
-                  case jet_mode do
-                    :enabled ->
-                      if env.meter_pid != nil do
-                        send(env.meter_pid, {:gas, cost})
-                      end
-
-                      jet_function.(core)
-
-                    :check ->
-                      {jet_usecs, jet_result} =
-                        :timer.tc(fn -> jet_function.(core) end)
-
-                      {naive_usecs, naive_result} =
-                        :timer.tc(fn ->
-                          nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
-                        end)
-
-                      validity = jet_result === naive_result
-
-                      check_result = %{
-                        jet_usecs: jet_usecs,
-                        naive_usecs: naive_usecs,
-                        result: jet_result,
-                        valid:
-                          if validity do
-                            validity
-                          else
-                            {validity, jet_result, naive_result}
-                          end
-                      }
-
-                      Logger.info(
-                        "jet #{label} check result: #{inspect(check_result)}"
-                      )
-
-                      if validity do
-                        jet_result
-                      else
-                        :error
-                      end
-                  end
-                rescue
-                  # parent mug didn't match. can't use the jet
-                  _ in MatchError ->
-                    nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
-                end
-
-              # the parent didn't even exist, the jet is bogus
-              :error ->
-                nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
-            end
         end
-
-      :error ->
-        # an atom is not a valid formula, this can only crash.
-        # however, i don't want to introduce elisions of the spec yet
-        nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
     end
   end
 
@@ -414,12 +398,17 @@ defmodule Nock do
     # if the output is not stdio, then the hint is jammed.
     # right now there is no way to reliably turn a noun into a string and read it back
     # if it has binaries. So this is a temporary workaround.
-    if environment.stdio == :stdio do
-      IO.write(environment.stdio, "#{inspect(hint_result)}\n")
-    else
-      # hint_str = Noun.Format.print(hint_result)
-      hint_str = Noun.Jam.jam(hint_result) |> Base.encode64()
-      IO.write(environment.stdio, hint_str)
+    case environment.stdio do
+      :logger ->
+        Logger.debug("nock hint: #{inspect(hint_result)}")
+
+      :stdio ->
+        IO.write(environment.stdio, "#{inspect(hint_result)}\n")
+
+      _ ->
+        # hint_str = Noun.Format.print(hint_result)
+        hint_str = Noun.Jam.jam(hint_result) |> Base.encode64()
+        IO.write(environment.stdio, hint_str)
     end
   end
 

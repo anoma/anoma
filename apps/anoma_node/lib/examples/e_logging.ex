@@ -1,12 +1,15 @@
 defmodule Anoma.Node.Examples.ELogging do
   alias Anoma.Node
-  alias Node.Logging
-  alias Node.Transaction.{Mempool, Storage, Backends}
-  alias Node.Examples.ENode
-
-  require Node.Event
+  alias Anoma.Node.Examples.ENode
+  alias Anoma.Node.Logging
+  alias Anoma.Node.Tables
+  alias Anoma.Node.Transaction.Backends
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Transaction.Storage
 
   require ExUnit.Assertions
+  require Node.Event
+
   import ExUnit.Assertions
 
   use EventBroker.WithSubscription
@@ -14,7 +17,7 @@ defmodule Anoma.Node.Examples.ELogging do
   @spec check_tx_event(String.t()) :: String.t()
   def check_tx_event(node_id \\ Node.example_random_id()) do
     ENode.start_node(node_id: node_id)
-    table_name = Logging.table_name(node_id)
+    table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
 
@@ -40,7 +43,7 @@ defmodule Anoma.Node.Examples.ELogging do
   def check_multiple_tx_events(node_id \\ Node.example_random_id()) do
     ENode.start_node(node_id: node_id)
 
-    table_name = Logging.table_name(node_id)
+    table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
 
@@ -85,7 +88,7 @@ defmodule Anoma.Node.Examples.ELogging do
         |> Base.url_encode64()
       ) do
     check_tx_event(node_id)
-    table_name = Logging.table_name(node_id)
+    table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
 
@@ -113,7 +116,7 @@ defmodule Anoma.Node.Examples.ELogging do
         |> Base.url_encode64()
       ) do
     check_multiple_tx_events(node_id)
-    table_name = Logging.table_name(node_id)
+    table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
 
@@ -146,7 +149,7 @@ defmodule Anoma.Node.Examples.ELogging do
         |> Base.url_encode64()
       ) do
     check_consensus_event(node_id)
-    table_name = Logging.table_name(node_id)
+    table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
 
@@ -178,7 +181,7 @@ defmodule Anoma.Node.Examples.ELogging do
         |> Base.url_encode64()
       ) do
     check_consensus_event_multiple(node_id)
-    table_name = Logging.table_name(node_id)
+    table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
     block_event(["id 1"], 0, node_id)
@@ -226,7 +229,7 @@ defmodule Anoma.Node.Examples.ELogging do
         |> Base.url_encode64()
       ) do
     check_consensus_event_multiple(node_id)
-    table_name = Logging.table_name(node_id)
+    table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
     block_event(["id 1"], 0, node_id)
@@ -530,7 +533,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
   @spec create_event_table(String.t()) :: atom()
   defp create_event_table(node_id) do
-    table = Logging.table_name(node_id)
+    table = Tables.table_events(node_id)
     :mnesia.create_table(table, attributes: [:type, :body])
 
     :mnesia.transaction(fn ->

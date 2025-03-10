@@ -10,21 +10,22 @@ defmodule EventBroker.WithSubscription do
   end
 
   defmacro with_subscription(filter_spec_lists \\ [], do: logic) do
-    Task.async(fn ->
-      quote do
-        for filter <- unquote(filter_spec_lists) do
-          EventBroker.subscribe_me(filter)
-        end
+    quote do
+      # only subscribe to non-existing subscriptions
+      current_subscriptions = EventBroker.my_subscriptions()
+      new_subscriptions = unquote(filter_spec_lists) -- current_subscriptions
 
-        res = unquote(logic)
-
-        for filter <- unquote(filter_spec_lists) do
-          EventBroker.unsubscribe_me(filter)
-        end
-
-        res
+      for filter <- new_subscriptions do
+        EventBroker.subscribe_me(filter)
       end
-    end)
-    |> Task.await()
+
+      res = unquote(logic)
+
+      for filter <- new_subscriptions do
+        EventBroker.unsubscribe_me(filter)
+      end
+
+      res
+    end
   end
 end

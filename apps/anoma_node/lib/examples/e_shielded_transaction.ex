@@ -1,10 +1,14 @@
 defmodule Anoma.Node.Examples.EShieldedTransaction do
   alias Anoma.Node
-  alias Node.Transaction.{Storage, Mempool, Backends}
-  alias Examples.{ENock, ETransparent.ETransaction}
-  alias Examples.ECairo.EResource, as: ESResource
   alias Anoma.Node.Examples.ETransaction
+  alias Anoma.Node.Transaction.Backends
+  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Transaction.Storage
+  alias Examples.ECairo.EResource, as: ESResource
+  alias Examples.ENock
+
   require ExUnit.Assertions
+
   import ExUnit.Assertions
 
   @spec submit_successful_trivial_cairo_tx(String.t()) :: String.t()

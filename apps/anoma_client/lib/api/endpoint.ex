@@ -20,5 +20,6 @@ defmodule Anoma.Client.Api.Endpoint do
   run(Anoma.Client.Api.Servers.Nock)
   run(Anoma.Client.Api.Servers.Mempool)
   run(Anoma.Client.Api.Servers.Blocks)
+  run(Anoma.Client.Api.Servers.Executor)
   run(Anoma.Client.Api.ReflectionServer)
 end

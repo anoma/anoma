@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package Anoma.Protobuf.Intents.Compose;
+
+import "node_info.proto";
+import "intents/intent.proto";
+
+message Request {
+  NodeInfo node_info = 1;
+  repeated Anoma.Protobuf.Intents.Intent intents = 2;
+}
+
+message Response {
+  Anoma.Protobuf.Intents.Intent intent = 1; // a list of intents.
+}

@@ -8,7 +8,6 @@ defmodule Anoma.Utility do
   I possess the following public API:
 
   - message_label/1
-  - rocks_opts/1
   """
 
   @doc """
@@ -41,21 +40,6 @@ defmodule Anoma.Utility do
   defp label_from_value(ref) when is_reference(ref), do: inspect(ref)
   defp label_from_value(tuple) when is_tuple(tuple), do: "tuple"
   defp label_from_value(_), do: "term"
-
-  @doc """
-  If I receive true, I give a list with a rocksdb option.
-
-  Else I give an empty list.
-  """
-
-  @spec rock_opts(bool()) :: list()
-  def rock_opts(rocks) do
-    if rocks do
-      [{:rocksdb_copies, [node()]}]
-    else
-      []
-    end
-  end
 
   @doc """
   I am the function definition macro for debugging.

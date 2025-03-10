@@ -6,15 +6,16 @@ defmodule Anoma.Client.Examples.EClient do
 
   I test the public GRPC interface of the client to ensure it works as expected.
   """
-  use TypedStruct
 
   alias Anoma.Client
+  alias Anoma.Client.Storage
   alias Anoma.Client.Examples.EClient
   alias Anoma.Node.Examples.ENode
   alias Anoma.Protobuf.Indexer.Nullifiers
   alias Anoma.Protobuf.Indexer.UnrevealedCommits
   alias Anoma.Protobuf.Indexer.Commits
   alias Anoma.Protobuf.Indexer.UnspentResources
+  alias Anoma.Protobuf.Indexer.Blocks
   alias Anoma.Protobuf.IndexerService
   alias Anoma.Protobuf.Intents.Add
   alias Anoma.Protobuf.Intents.Intent
@@ -30,10 +31,14 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Node.Utility.Indexer
   alias Anoma.TransparentResource.Resource
   alias Examples.ETransparent.ETransaction
+  alias Anoma.TransparentResource.Action
   alias Anoma.TransparentResource.Resource
+  alias Anoma.TransparentResource.Transaction
   alias Noun.Nounable
 
   import ExUnit.Assertions
+
+  use TypedStruct
 
   ############################################################
   #                    Context                               #
@@ -291,11 +296,11 @@ defmodule Anoma.Client.Examples.EClient do
     assert Enum.count(response.blocks) == 2
 
     # check the first block
-    request = %Blocks.Get.Request{node_info: node_id, index: {:before, 1}}
+    request = %Blocks.Get.Request{node_info: node_id, index: {:before, 2}}
     {:ok, response} = BlockService.Stub.get(conn.channel, request)
     assert Enum.count(response.blocks) == 1
     [block] = response.blocks
-    assert block.height == 0
+    assert block.height == 1
     conn
   end
 
@@ -607,6 +612,69 @@ defmodule Anoma.Client.Examples.EClient do
     assert {:ok, <<>>} == Noun.Jam.cue(success.result)
 
     success.result
+  end
+
+  @spec prove_with_internal_scry_call(EConnection.t()) :: Prove.Response.t()
+  def prove_with_internal_scry_call(conn \\ setup()) do
+    Anoma.Client.Examples.EStorage.setup()
+
+    blob_key = ["anoma", "blob", <<123>>]
+    blob_value = "i am scried"
+
+    action =
+      %Action{app_data: %{blob_key => {blob_value, true}}}
+
+    tx =
+      %Transaction{actions: MapSet.new([action])} |> Noun.Nounable.to_noun()
+
+    key = ["anoma", "blob", "key"]
+    Storage.write({key, tx})
+    program = [[12, [1], 1 | ["id" | key]]] |> Noun.Jam.jam()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
+
+    res = response.result |> elem(1) |> Map.get(:result)
+
+    assert res == Noun.Jam.jam(tx)
+
+    assert {:ok, ^blob_value} = Storage.read({System.os_time(), blob_key})
+
+    res
+  end
+
+  @spec prove_with_external_scry_call(EConnection.t()) :: Prove.Response.t()
+  def prove_with_external_scry_call(conn \\ setup()) do
+    Anoma.Client.Examples.EStorage.setup()
+    key = ["anoma", "blob", "key"]
+
+    Anoma.Node.Transaction.Storage.write(
+      conn.client.node.node_id,
+      {1, [{key, 123}]}
+    )
+
+    program = [[12, [1], 1 | ["id" | key]]] |> Noun.Jam.jam()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
+
+    res = response.result |> elem(1) |> Map.get(:result)
+
+    assert 123 |> Noun.Jam.jam() == res
+
+    assert Storage.read({System.os_time(), key})
+           |> elem(1)
+           |> Noun.equal?(123)
+
+    res
   end
 
   ############################################################

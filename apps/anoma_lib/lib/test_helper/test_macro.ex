@@ -7,28 +7,26 @@ defmodule TestHelper.TestMacro do
 
   Use me in order to define various macros to be used in tests.
   """
-  require ExUnit.Case
 
   alias __MODULE__
 
+  require ExUnit.Case
+
   defmacro __using__(opts) do
     quote do
-      require TestMacro
       require ExUnit.Assertions
+      require ExUnit.Assertions
+      require TestMacro
 
+      import ExUnit.Assertions, only: [flunk: 1]
+      import ExUnit.Callbacks
+      import ExUnit.Case, only: [describe: 2, test: 1, test: 2, test: 3]
+      import ExUnit.DocTest
       import TestMacro
 
       unless ExUnit.Case.__register__(__MODULE__, unquote(opts)) do
         use ExUnit.Callbacks
       end
-
-      import ExUnit.Callbacks
-      import ExUnit.Case, only: [describe: 2, test: 1, test: 2, test: 3]
-      import ExUnit.DocTest
-
-      require ExUnit.Assertions
-
-      import ExUnit.Assertions, only: [flunk: 1]
     end
   end
 

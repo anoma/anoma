@@ -1,11 +1,11 @@
 defmodule Anoma.TransparentResource.Transaction do
-  use TypedStruct
-
   @behaviour Noun.Nounable.Kind
 
+  alias __MODULE__
   alias Anoma.TransparentResource.Action
   alias Anoma.TransparentResource.Delta
-  alias __MODULE__
+
+  use TypedStruct
 
   typedstruct enforce: true do
     field(:roots, MapSet.t(binary()), default: MapSet.new())
@@ -148,10 +148,11 @@ defmodule Anoma.TransparentResource.Transaction do
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([roots, actions, delta | delta_proof]) do
     with {:ok, actions} <- from_noun_actions(actions),
-         {:ok, delta} <- Delta.from_noun(delta) do
+         {:ok, delta} <- Delta.from_noun(delta),
+         {:ok, roots} <- Noun.Nounable.MapSet.from_noun(roots) do
       {:ok,
        %Transaction{
-         roots: MapSet.new(Noun.list_nock_to_erlang(roots)),
+         roots: roots,
          actions: actions,
          delta: delta,
          delta_proof: delta_proof
@@ -167,10 +168,9 @@ defmodule Anoma.TransparentResource.Transaction do
     @impl true
     def to_noun(trans = %Transaction{}) do
       [
-        MapSet.to_list(trans.roots),
-        Enum.map(trans.actions, &Noun.Nounable.to_noun/1),
-        Map.to_list(trans.delta)
-        |> Enum.map(fn {x, y} -> [x | Noun.encode_signed(y)] end)
+        Noun.Nounable.to_noun(trans.roots),
+        Noun.Nounable.to_noun(trans.actions),
+        Delta.to_noun(trans.delta)
         # Consider better provinance value
         | trans.delta_proof
       ]
@@ -179,8 +179,10 @@ defmodule Anoma.TransparentResource.Transaction do
 
   @spec from_noun_actions(Noun.t()) :: {:ok, MapSet.t(Action.t())}
   defp from_noun_actions(noun) when is_list(noun) do
+    {:ok, set} = Noun.Nounable.MapSet.from_noun(noun)
+
     maybe_actions =
-      Enum.map(Noun.list_nock_to_erlang(noun), &Action.from_noun/1)
+      Enum.map(set, &Action.from_noun/1)
 
     if Enum.any?(maybe_actions, &(:error == &1)) do
       :error
@@ -226,6 +228,14 @@ defmodule Anoma.TransparentResource.Transaction do
     self.actions
     |> Stream.map(&Action.nullified_resources/1)
     |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+  end
+
+  @spec app_data(t()) :: %{binary() => {any(), bool()}}
+  def app_data(self = %Transaction{}) do
+    self.actions
+    |> Enum.reduce(%{}, fn action, acc ->
+      action.app_data |> Map.merge(acc)
+    end)
   end
 end
 

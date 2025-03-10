@@ -6,7 +6,7 @@ defmodule Anoma.Node.Examples.EIndexer do
   alias Anoma.TransparentResource.{Resource, Transaction}
 
   def indexer_reads_height(node_id \\ Node.example_random_id()) do
-    ETransaction.inc_counter_submit_after_read(node_id)
+    ETransaction.zero_counter_submit(node_id)
     Indexer.start_link(node_id: node_id)
     1 = Indexer.get(node_id, :height)
 
@@ -20,19 +20,19 @@ defmodule Anoma.Node.Examples.EIndexer do
 
     [
       [
-        0,
+        1,
         [
           %Mempool.Tx{
             code: ^zero,
             backend: ^back,
-            vm_result: {:ok, [["key" | 0] | 0]},
-            tx_result: {:ok, [["key" | 0]]}
+            vm_result: {:ok, [[["key"] | 0] | 0]},
+            tx_result: {:ok, [[["key"] | 0]]}
           }
         ]
       ]
-    ] = Indexer.get(node_id, {:before, 1})
+    ] = Indexer.get(node_id, {:before, 2})
 
-    [] = Indexer.get(node_id, {:before, 0})
+    [] = Indexer.get(node_id, {:before, 1})
   end
 
   def indexer_reads_after(node_id \\ Node.example_random_id()) do
@@ -42,19 +42,19 @@ defmodule Anoma.Node.Examples.EIndexer do
 
     [
       [
-        1,
+        2,
         [
           %Mempool.Tx{
             code: ^inc,
             backend: ^back,
-            vm_result: {:ok, [["key" | 1] | 0]},
-            tx_result: {:ok, [["key" | 1]]}
+            vm_result: {:ok, [[["key"] | 1] | 0]},
+            tx_result: {:ok, [[["key"] | 1]]}
           }
         ]
       ]
-    ] = Indexer.get(node_id, {:after, 0})
+    ] = Indexer.get(node_id, {:after, 1})
 
-    [] = Indexer.get(node_id, {:after, 1})
+    [] = Indexer.get(node_id, {:after, 2})
   end
 
   def indexer_reads_latest(node_id \\ Node.example_random_id()) do
@@ -64,13 +64,13 @@ defmodule Anoma.Node.Examples.EIndexer do
 
     [
       [
-        1,
+        2,
         [
           %Mempool.Tx{
             code: ^inc,
             backend: ^back,
-            vm_result: {:ok, [["key" | 1] | 0]},
-            tx_result: {:ok, [["key" | 1]]}
+            vm_result: {:ok, [[["key"] | 1] | 0]},
+            tx_result: {:ok, [[["key"] | 1]]}
           }
         ]
       ]
