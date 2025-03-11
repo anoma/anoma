@@ -14,6 +14,7 @@ defmodule Anoma.Supervisor do
   alias Anoma.Node
   alias Anoma.Node.Replay.State
   alias Anoma.Node.Tables
+  alias Anoma.Node.Config
   alias Anoma.Node.Transport
 
   ############################################################
@@ -50,19 +51,17 @@ defmodule Anoma.Supervisor do
   @doc """
   I start a new node with the given `node_id`.
   """
-  @spec start_node(Node.Supervisor.args_t()) ::
-          DynamicSupervisor.on_start_child()
-  def start_node(args) do
-    node_id = args[:node_id]
-
-    with {:ok, init_args} <- State.startup_arguments_or_default(node_id),
-         {:ok, _} <- initialize_storage(node_id) do
+  @spec start_node(Config.t()) :: DynamicSupervisor.on_start_child()
+  def start_node(config) do
+    with {:ok, init_args} <-
+           State.startup_arguments_or_default(config.node_id),
+         {:ok, _} <- initialize_storage(config.node_id) do
       # put the arguments in the given arguments
-      args = Keyword.put_new(args, :transaction, init_args)
+      config = Map.put(config, :startup_arguments, init_args)
 
       DynamicSupervisor.start_child(
         Anoma.Node.NodeSupervisor,
-        {Anoma.Node.Supervisor, args}
+        {Anoma.Node.Supervisor, config}
       )
     else
       {:error, :failed_to_initialize_storage} ->

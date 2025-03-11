@@ -1,15 +1,38 @@
 import Config
 
+# ----------------------------------------------------------------------------
+# Environment variables
+# port on which the node will listen for grpc requests
+node_grpc_port =
+  String.to_integer(System.get_env("NODE_GRPC_PORT") || "50052")
+
+# interface at which the node grpc server will listen
+node_grpc_host = System.get_env("NODE_GRPC_HOST") || "localhost"
+
+# grpc port on which the client will listen for grpc requests
+client_grpc_port =
+  String.to_integer(System.get_env("CLIENT_GRPC_PORT") || "50051")
+
+# interface at which this grpc server will listen
+client_grpc_host = System.get_env("CLIENT_GRPC_HOST") || "localhost"
+
+# ----------------------------------------------------------------------------
+# Logger
+
 config :logger,
   level: :error,
   handle_otp_reports: false,
   handle_sasl_reports: false
 
-config :anoma_client, []
 config :anoma_lib, []
 
+config :anoma_client,
+  grpc_port: node_grpc_port,
+  grpc_host: node_grpc_host
+
 config :anoma_node,
-  grpc_port: String.to_integer(System.get_env("GRPC_PORT") || "50051")
+  grpc_port: node_grpc_port,
+  grpc_host: node_grpc_host
 
 config :anoma_protobuf, []
 config :compile_protoc, []

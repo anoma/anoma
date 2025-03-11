@@ -37,7 +37,7 @@ defmodule Anoma.Node.Examples.EEvent do
     event =
       new_tx_event({transaction.backend, transaction.noun}, transaction.id)
 
-    Event.new_with_body(enode.node_id, event)
+    Event.new_with_body(enode.node_config.node_id, event)
   end
 
   @doc """
@@ -48,7 +48,7 @@ defmodule Anoma.Node.Examples.EEvent do
     # create a transaction event
     event = new_consensus_event(transaction_ids)
 
-    Event.new_with_body(enode.node_id, event)
+    Event.new_with_body(enode.node_config.node_id, event)
   end
 
   @doc """
@@ -66,7 +66,7 @@ defmodule Anoma.Node.Examples.EEvent do
     # create a transaction event
     event = new_order_event(transaction_id)
 
-    Event.new_with_body(enode.node_id, event)
+    Event.new_with_body(enode.node_config.node_id, event)
   end
 
   @doc """
@@ -86,7 +86,7 @@ defmodule Anoma.Node.Examples.EEvent do
     # create a transaction event
     event = new_execution_event([{transaction.result, transaction.id}])
 
-    Event.new_with_body(enode.node_id, event)
+    Event.new_with_body(enode.node_config.node_id, event)
   end
 
   @doc """
@@ -106,7 +106,7 @@ defmodule Anoma.Node.Examples.EEvent do
     # create a transaction event
     event = new_block_event([transaction.id], order)
 
-    Event.new_with_body(enode.node_id, event)
+    Event.new_with_body(enode.node_config.node_id, event)
   end
 
   ############################################################

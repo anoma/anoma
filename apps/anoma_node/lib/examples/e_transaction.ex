@@ -10,6 +10,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.TransparentResource.Transaction
   alias Examples.ENock
   alias Examples.ETransparent.ETransaction
+  alias Anoma.Node.Config
 
   require ExUnit.Assertions
 
@@ -313,7 +314,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
   @spec start_tx_module(String.t()) :: ENode.t() | any()
   def start_tx_module(node_id \\ Node.example_random_id()) do
-    ENode.start_node(node_id: node_id)
+    ENode.start_node(Config.node(%{node_id: node_id}))
   end
 
   @spec zero(String.t()) :: {Backends.backend(), Noun.t()}

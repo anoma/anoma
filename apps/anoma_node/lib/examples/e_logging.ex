@@ -6,6 +6,7 @@ defmodule Anoma.Node.Examples.ELogging do
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Storage
+  alias Anoma.Node.Config
 
   require ExUnit.Assertions
   require Node.Event
@@ -16,7 +17,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
   @spec check_tx_event(String.t()) :: String.t()
   def check_tx_event(node_id \\ Node.example_random_id()) do
-    ENode.start_node(node_id: node_id)
+    ENode.start_node(Config.node(%{node_id: node_id}))
     table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
@@ -41,7 +42,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
   @spec check_multiple_tx_events(String.t()) :: String.t()
   def check_multiple_tx_events(node_id \\ Node.example_random_id()) do
-    ENode.start_node(node_id: node_id)
+    ENode.start_node(Config.node(%{node_id: node_id}))
 
     table_name = Tables.table_events(node_id)
 
