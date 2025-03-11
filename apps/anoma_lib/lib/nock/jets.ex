@@ -839,7 +839,7 @@ defmodule Nock.Jets do
       res =
         action_list
         |> Enum.map(&Action.delta(elem(&1, 1)))
-        |> Enum.reduce(2, &DeltaHash.delta_sub/2)
+        |> Enum.reduce(2, &DeltaHash.delta_add/2)
 
       {:ok, res}
     else
