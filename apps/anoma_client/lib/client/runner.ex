@@ -119,7 +119,7 @@ defmodule Anoma.Client.Runner do
       ["anoma", "blob" | _ref] ->
         case Storage.read_with_id({id, space_list}) do
           {:ok, val} ->
-            {:ok, val}
+            {:ok, val |> Noun.Nounable.to_noun()}
 
           :absent ->
             case send_candidate(space_list) do
