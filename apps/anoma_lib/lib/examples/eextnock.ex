@@ -646,6 +646,59 @@ defmodule Examples.EExtNock do
   end
 
   @doc """
+  I test core production and activation.
+  """
+  def core_production_activation_test() do
+    inc_sexpr = {:incr, [{:slot, [1]}]}
+    inc_formula = ExtNockTerms.sexpr_to_noun!(inc_sexpr)
+    {:ok, inc_result} = Nock.nock(100, inc_formula)
+    assert inc_result == 101
+
+    # The decrement formula from
+    # https://docs.urbit.org/language/nock/examples/decrement .
+    dec_sexpr = [
+      8,
+      [1, 0],
+      8,
+      [1, 6, [5, [0, 7], 4, 0, 6], [0, 6], 9, 2, [0, 2], [4, 0, 6], 0, 7],
+      9,
+      2,
+      0,
+      1
+    ]
+
+    dec_formula =
+      ExtNockTerms.sexpr_to_noun!(dec_sexpr)
+
+    {:ok, dec_result} = Nock.nock(100, dec_formula)
+    assert dec_result == 99
+
+    # Commonly, the payload will be a library or chain of libraries.
+    # In the following example we don't use it, so we provide some
+    # random* payload.
+    inc_core_payload = 1729
+    inc_core_default_arg = {:constant, [0]}
+
+    inc_core_sexpr =
+      {:create_core_1,
+       [{:incr, [{:slot, [6]}]}, inc_core_default_arg, inc_core_payload]}
+
+    inc_core_formula = ExtNockTerms.sexpr_to_noun!(inc_core_sexpr)
+
+    assert inc_core_formula == [
+             [[1, 4, 0 | 6], [1 | 0], 0 | 2] | inc_core_payload
+           ]
+
+    inc_call_arg = 123
+
+    inc_call_formula =
+      ExtNockTerms.sexpr_to_noun!({:call_core_1, [inc_call_arg]})
+
+    {:ok, inc_core_result} = Nock.nock(inc_core_formula, inc_call_formula)
+    assert inc_core_result == inc_call_arg + 1
+  end
+
+  @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
