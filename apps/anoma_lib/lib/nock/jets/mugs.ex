@@ -129,10 +129,16 @@ defmodule Nock.Jets.Mugs do
       {"delta-add", 7, @layer_rm, &Nock.Jets.delta_add/1, :enabled, 50},
     (Jets.calculate_core(12013, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"delta-sub", 7, @layer_rm, &Nock.Jets.delta_sub/1, :enabled, 50},
+    (Jets.calculate_core(174, Nock.Lib.stdlib_layers()) |> hd()) =>
+      {"compliance-unit-delta", 7, @layer_rm, &Nock.Jets.compliance_delta/1,
+       :enabled, 10},
     (Jets.calculate_core(4, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"action-delta", 7, @layer_rm, &Nock.Jets.action_delta/1, :enabled, 50},
     (Jets.calculate_core(2991, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"make-delta", 7, @layer_rm, &Nock.Jets.make_delta/1, :enabled, 50},
+    (Jets.calculate_core(191, Nock.Lib.stdlib_layers()) |> hd()) =>
+      {"action-create", 7, @layer_rm, &Nock.Jets.action_create/1, :enabled,
+       10},
     (Jets.calculate_core(751, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"trm-compliance-key", 7, @layer_rm, &Nock.Jets.trm_compliance_key/1,
        :enabled, 10},
