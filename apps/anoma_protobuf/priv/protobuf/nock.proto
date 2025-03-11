@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package Anoma.Proto.Nock;
+
+import "node.proto";
+
+message Input {
+  oneof input {
+    bytes jammed = 1;
+    string text = 2;
+  }
+}
+
+message Prove {
+  message Request {
+    Node node = 1;
+
+    oneof program {
+      bytes jammed_program = 2;
+      string text_program = 3;
+    }
+
+    repeated Input public_inputs = 4;
+    repeated Input private_inputs = 5;
+  }
+
+  message Response {
+  oneof result {
+    Success success = 1;
+    Error error = 2;
+  }
+}
+
+}
+
+message Run {
+  message Request {
+    Node node_info = 1;
+    oneof program {
+      bytes jammed_program = 2;
+      string text_program = 3;
+    }
+
+    repeated Input inputs = 4;
+  }
+
+  message Response {
+    oneof result {
+      Success success = 1;
+      Error error = 2;
+    }
+  }
+}
+
+
+message Success {
+  bytes result = 1;
+  repeated bytes output = 2;
+}
+
+message Error {
+  string error = 1;
+  repeated bytes output = 2;
+}

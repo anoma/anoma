@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-package Anoma.Protobuf.Intents;
-
-message Intent { bytes intent = 1; }

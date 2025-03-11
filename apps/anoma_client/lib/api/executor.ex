@@ -1,9 +1,9 @@
 defmodule Anoma.Client.Api.Servers.Executor do
   alias Anoma.Client.Connection.GRPCProxy
-  alias Anoma.Protobuf.Executor.AddROTransaction
+  alias Anoma.Proto.Executor.AddROTransaction
   alias GRPC.Server.Stream
 
-  use GRPC.Server, service: Anoma.Protobuf.ExecutorService.Service
+  use GRPC.Server, service: Anoma.Proto.ExecutorService.Service
 
   require Logger
 
