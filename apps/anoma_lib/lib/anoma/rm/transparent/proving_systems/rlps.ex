@@ -131,7 +131,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
              9,
              2,
              10,
-             [6, 1 | Noun.Nounable.to_noun(instance)],
+             [6, 1 | to_noun_rl_args(instance)],
              0 | 1
            ]) do
       Noun.equal?(res, 0)
