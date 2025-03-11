@@ -127,16 +127,16 @@ defmodule Nock.Jets.Mugs do
       {"kind", 7, @layer_rm, &Nock.Jets.kind/1, :enabled, 100},
     (Jets.calculate_core(92, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"delta-add", 7, @layer_rm, &Nock.Jets.delta_add/1, :enabled, 50},
-    (Jets.calculate_core(1527, Nock.Lib.stdlib_layers()) |> hd()) =>
+    (Jets.calculate_core(12013, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"delta-sub", 7, @layer_rm, &Nock.Jets.delta_sub/1, :enabled, 50},
     (Jets.calculate_core(4, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"action-delta", 7, @layer_rm, &Nock.Jets.action_delta/1, :enabled, 50},
-    (Jets.calculate_core(1494, Nock.Lib.stdlib_layers()) |> hd()) =>
+    (Jets.calculate_core(2991, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"make-delta", 7, @layer_rm, &Nock.Jets.make_delta/1, :enabled, 50},
-    (Jets.calculate_core(382, Nock.Lib.stdlib_layers()) |> hd()) =>
+    (Jets.calculate_core(751, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"trm-compliance-key", 7, @layer_rm, &Nock.Jets.trm_compliance_key/1,
        :enabled, 10},
-    (Jets.calculate_core(94, Nock.Lib.stdlib_layers()) |> hd()) =>
+    (Jets.calculate_core(374, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"trm-delta-key", 7, @layer_rm, &Nock.Jets.trm_delta_key/1, :enabled,
        10}
   }

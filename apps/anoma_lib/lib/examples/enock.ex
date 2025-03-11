@@ -2020,7 +2020,7 @@ defmodule Examples.ENock do
   def delta_sub_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
-    "[8 [9 1527 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 12013 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2064,7 +2064,7 @@ defmodule Examples.ENock do
   def make_delta_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
-    "[8 [9 1494 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 2991 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2087,7 +2087,7 @@ defmodule Examples.ENock do
   def is_commitment_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
-    "[8 [9 6.102 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 12012 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2120,7 +2120,7 @@ defmodule Examples.ENock do
   def is_nullifier_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
-    "[8 [9 372 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 1494 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
