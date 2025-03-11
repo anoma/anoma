@@ -147,7 +147,10 @@ defmodule Nock.Jets.Mugs do
        10},
     (Jets.calculate_core(92, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"cairo-compose", 7, @layer_rm, &Nock.Jets.cairo_compose/1, :enabled,
-       10}
+       10},
+    (Jets.calculate_core(1406, Nock.Lib.stdlib_layers()) |> hd()) =>
+      {"cairo-create_from_cus", 7, @layer_rm,
+       &Nock.Jets.cairo_create_from_cus/1, :enabled, 10}
   }
 
   @doc """
