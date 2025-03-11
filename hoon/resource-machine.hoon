@@ -124,11 +124,23 @@
   =+  c=%action-delta
   ^-  @
   !!
+++  compliance-unit-delta
+  ~/  %compliance-unit-delta
+  |=  =t-compliance-unit
+  =+  c=%compliance-unit-delta
+  ^-  @
+  !!
 ++  make-delta  ::  make delta from actions
   ~/  %make-delta
   |=  actions=(set t-action)
   =+  c=%make-delta
   ^-  @
+  !!
+++  action-create  ::  create interface for actions
+  ~/  %action-create
+  |=  [consumed=(list [@I t-resource t-root]) created=(list t-resource) data=(map t-tag (list (pair @ ?)))]
+  =+  c=%action-create
+  ^-  t-action
   !!
 ++  trm-compliance-key
   ~/  %trm-compliance-key
