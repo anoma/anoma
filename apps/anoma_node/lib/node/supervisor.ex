@@ -3,32 +3,30 @@ defmodule Anoma.Node.Supervisor do
   I am the top level supervisor for the Anoma node.
   """
 
-  require Logger
-
   use Supervisor
-
   alias Anoma.Node.Intents
   alias Anoma.Node.Logging
   alias Anoma.Node.Transaction
   alias Anoma.Node.Transport
 
-  @typedoc """
-  The type of the arguments that the supervisor expects.
-  """
-  @type args_t :: [
-          node_id: String.t(),
-          replay: boolean(),
-          transaction: [mempool: any()]
-        ]
+  require Logger
 
-  @doc """
-  The default arguments for the supervisor.
-  """
-  @args [
-    :node_id,
-    replay: true,
-    transaction: [mempool: []]
-  ]
+  @args [:node_id, :tx_args, :node_config,
+  transaction: [mempool: []]]
+
+  ############################################################
+  #                       Types                              #
+  ############################################################
+
+  @typep startup_options() :: [
+           {:node_id, String.t()}
+           | {:tx_args, any()}
+           | {:node_config, map()}
+         ]
+
+  ############################################################
+  #                      Supervisor Callbacks                #
+  ############################################################
 
   @spec child_spec(any()) :: map()
   def child_spec(args) do
@@ -39,7 +37,7 @@ defmodule Anoma.Node.Supervisor do
     }
   end
 
-  @spec start_link(args_t) :: any()
+  @spec start_link(startup_options) :: term()
   def start_link(args) do
     args = Keyword.validate!(args, @args)
     name = Anoma.Node.Registry.via(args[:node_id], __MODULE__)
@@ -47,22 +45,19 @@ defmodule Anoma.Node.Supervisor do
   end
 
   @impl true
-  @spec init(args_t) :: any()
   def init(args) do
-    Logger.info("starting node with #{inspect(args)}")
+    Logger.debug("starting node with #{inspect(args)}")
     Process.set_label(__MODULE__)
 
-    # validate arguments
     args = Keyword.validate!(args, @args)
-
     node_id = args[:node_id]
     transaction = args[:transaction]
 
     children = [
-      {Transport.Supervisor, node_id: node_id},
-      {Transaction.Supervisor, [node_id: node_id] ++ transaction},
-      {Intents.Supervisor, node_id: node_id},
-      {Logging, node_id: node_id}
+      {Anoma.Node.Transport.Supervisor, [node_id: args[:node_id], node_config: args[:node_config]]},
+       {Transaction.Supervisor, [node_id: node_id] ++ transaction},
+      {Anoma.Node.Intents.Supervisor, node_id: args[:node_id]},
+      {Anoma.Node.Logging, node_id: args[:node_id]}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)

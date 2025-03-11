@@ -2,8 +2,8 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
   alias Anoma.Node.Intents.IntentPool
   alias Anoma.Node.Registry
   alias Anoma.Proto.Intentpool.Add
-  alias Anoma.Proto.Intentpool.Intent
   alias Anoma.Proto.Intentpool.List
+  alias Anoma.Proto.Intentpool.Intent
   alias Anoma.TransparentResource.Transaction
   alias GRPC.Server.Stream
   alias Noun.Jam

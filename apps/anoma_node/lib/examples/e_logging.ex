@@ -262,6 +262,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
   @spec replay_corrects_result(String.t()) :: String.t()
   def replay_corrects_result(node_id \\ Node.example_random_id()) do
+    with_subscription [[]] do
     replay_ensure_created_tables(node_id)
     table = Storage.blocks_table(node_id)
 
@@ -289,6 +290,7 @@ defmodule Anoma.Node.Examples.ELogging do
     1 = state.round
 
     node_id
+  end
   end
 
   @spec replay_consensus_leave_one_out(String.t()) :: String.t()

@@ -11,7 +11,6 @@ defmodule Anoma.Supervisor do
 
   use Supervisor
 
-  alias Anoma.Node
   alias Anoma.Node.Replay.State
   alias Anoma.Node.Tables
   alias Anoma.Node.Transport
@@ -50,8 +49,13 @@ defmodule Anoma.Supervisor do
   @doc """
   I start a new node with the given `node_id`.
   """
-  @spec start_node(Node.Supervisor.args_t()) ::
-          DynamicSupervisor.on_start_child()
+  @spec start_node(
+          list(
+            {:node_id, String.t()}
+            | {:tx_args, any()}
+            | {:node_config, map()}
+          )
+        ) :: DynamicSupervisor.on_start_child()
   def start_node(args) do
     node_id = args[:node_id]
 
