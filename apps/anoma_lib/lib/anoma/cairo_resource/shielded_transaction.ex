@@ -18,10 +18,9 @@ defmodule Anoma.CairoResource.Transaction do
   use TypedStruct
 
   typedstruct enforce: true do
-    # TODO: The roots, commitments, and nullifiers can be eliminated. We can
-    # obtain them from public inputs. Then we can make the same improvement for
-    # transparent transactions. However, they are used in the executor atm.
-    field(:roots, list(<<_::256>>), default: [])
+    # roots: A set of valid commitment tree roots used to prove the existence of the
+    # resources being consumed in the transaction.
+    field(:roots, MapSet.t(binary()), default: MapSet.new())
     field(:commitments, list(<<_::256>>), default: [])
     field(:nullifiers, list(<<_::256>>), default: [])
     field(:actions, list(Action.t()), default: [])
@@ -33,7 +32,6 @@ defmodule Anoma.CairoResource.Transaction do
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
-        roots,
         commitments,
         nullifiers,
         actions
@@ -46,13 +44,17 @@ defmodule Anoma.CairoResource.Transaction do
 
     checked = Enum.all?(actions, &(elem(&1, 0) == :ok))
 
+    actions = Enum.map(actions, fn {:ok, x} -> x end)
+    compliance_instances = get_compliance_instances(actions)
+    roots = Enum.map(compliance_instances, & &1.root)
+
     if checked do
       {:ok,
        %Transaction{
-         roots: roots |> Noun.list_nock_to_erlang(),
+         roots: MapSet.new(roots),
          commitments: commitments |> Noun.list_nock_to_erlang(),
          nullifiers: nullifiers |> Noun.list_nock_to_erlang(),
-         actions: Enum.map(actions, &elem(&1, 1)),
+         actions: actions,
          delta: delta
        }}
     else
@@ -64,7 +66,6 @@ defmodule Anoma.CairoResource.Transaction do
     @impl true
     def to_noun(transaction = %Transaction{}) do
       {
-        transaction.roots,
         transaction.commitments,
         transaction.nullifiers,
         transaction.actions,
@@ -91,7 +92,7 @@ defmodule Anoma.CairoResource.Transaction do
         nil
       else
         %Transaction{
-          roots: tx1.roots ++ tx2.roots,
+          roots: MapSet.union(tx1.roots, tx2.roots),
           commitments: tx1.commitments ++ tx2.commitments,
           nullifiers: tx1.nullifiers ++ tx2.nullifiers,
           actions: tx1.actions ++ tx2.actions,
@@ -169,9 +170,10 @@ defmodule Anoma.CairoResource.Transaction do
     end
   end
 
-  @spec get_compliance_instances(t()) :: list(ComplianceInstance.t())
-  def get_compliance_instances(transaction) do
-    transaction.actions
+  @spec get_compliance_instances(list(Action.t())) ::
+          list(ComplianceInstance.t())
+  def get_compliance_instances(actions) do
+    actions
     |> Enum.flat_map(fn action ->
       action.compliance_proofs
       |> Enum.map(fn proof_record ->
@@ -204,14 +206,14 @@ defmodule Anoma.CairoResource.Transaction do
   # complete and sign the tx
   @spec finalize(Transaction.t()) :: Transaction.t()
   def finalize(tx = %Transaction{}) do
-    compliance_instances = get_compliance_instances(tx)
+    compliance_instances = get_compliance_instances(tx.actions)
     roots = Enum.map(compliance_instances, & &1.root)
     commitments = Enum.map(compliance_instances, & &1.output_cm)
     nullifiers = Enum.map(compliance_instances, & &1.nullifier)
 
     %Transaction{
       tx
-      | roots: roots,
+      | roots: MapSet.new(roots),
         commitments: commitments,
         nullifiers: nullifiers
     }
