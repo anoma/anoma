@@ -49,6 +49,8 @@ defmodule ExtNock do
             | :invoke
             | :replace
             | :hint
+            | :create_core_1
+            | :call_core_1
 
     @typedoc """
     I am a constructor for extended Nock terms, which can be either a standard
@@ -83,6 +85,8 @@ defmodule ExtNock do
     def ext_tspec(:invoke), do: {:ok, 2}
     def ext_tspec(:replace), do: {:ok, 3}
     def ext_tspec(:hint), do: {:ok, 2}
+    def ext_tspec(:create_core_1), do: {:ok, 3}
+    def ext_tspec(:call_core_1), do: {:ok, 1}
     def ext_tspec(ctor), do: {:standard, ctor}
 
     @doc """
@@ -232,6 +236,166 @@ defmodule ExtNock do
              {{:atom, 11}, []},
              {:cell, [hint, formula]}
            ]}
+
+        # This is the simplest core-creation instruction we define.
+        # It is a core which, when invoked, generates a core, with a battery
+        # consisting of a formula passed in to the instruction, a default
+        # argument (also passed in to the instruction) and the battery of the
+        # core-creating core, and a payload which is also passed in to the
+        # instruction.  In its use by the `:call_core_1` instruction defined
+        # below, it pushes all of that onto the stack and then the core that
+        # it creates is invoked (with the default argument substituted into).
+        {:create_core_1, [formula, default_arg, payload]} ->
+          {:cell,
+           [
+             # This is the battery.  It is a list of length three, so
+             # when invoked it produces a list of length three, with each
+             # element produced by invocation of the corresponding element
+             # of the battery against the subject.
+             #
+             # The element simply uses the constant instruction (ignoring the
+             # subject).  That constant is code-valued, and is passed in to
+             # the instruction as an argument.
+             {:cell,
+              [
+                {:cell,
+                 [
+                   {{:atom, 1}, []},
+                   formula
+                 ]},
+                {:cell,
+                 [
+                   default_arg,
+                   {:cell, [{{:atom, 0}, []}, {{:atom, 2}, []}]}
+                   # The result of evaluating this battery against a subject
+                   # is `[(formula) (default arg) (slot 2 of the subject)]`.
+                   # Since, when invoked by :call_core_1, the core itself is
+                   # the subject, slot 2 will be this battery itself.
+                 ]}
+              ]},
+             # payload
+             payload
+           ]}
+
+        {:call_core_1, [arg_value]} ->
+          {:cell,
+           [
+             # The "call" as a whole is a push -- it uses the subject to
+             # build a formula, then pushes that formula onto the subject,
+             # thus extending the subject before calling a formula on it.
+             {{:atom, 8}, []},
+             {:cell,
+              [
+                cell: [
+                  # The first argument to the push is the formula which acts
+                  # on the subject to produce the noun to push onto the subject.
+                  # That formula is a core creation and invocation; the core
+                  # is made from slot 1 -- i.e. the entire subject -- and the
+                  # arm pulled from it is axis 2 (which is the entire battery,
+                  # so the expected subject is a one-arm core). Thus, the effect of
+                  # the :push is to extend the subject by the result of treating it as
+                  # a one-armed core and firing it, then calling the next formula
+                  # below.  We have seen the result of firing the arm of the
+                  # core created by `create_core_1` which will be used as the
+                  # subject, and when we invoke it as a core, its subject is
+                  # itself, so the noun pushed onto the subject by the :push
+                  # is `[(formula) (default argument) (battery of subject core)]`.
+                  {{:atom, 9}, []},
+                  {:cell,
+                   [
+                     {{:atom, 2}, []},
+                     {:cell, [{{:atom, 0}, []}, {{:atom, 1}, []}]}
+                   ]}
+                ],
+                cell: [
+                  # Below is the formula invoked by the :push instruction after
+                  # extending the subject.  Like the formula which extends the
+                  # subject above, it creates a core and fires it, meaning it
+                  # evaluates its battery against the whole core itself.
+                  # However, its core creation is more involved than simply
+                  # "take the whole subject".
+                  {{:atom, 9}, []},
+                  {:cell,
+                   [
+                     {{:atom, 2}, []},
+                     {:cell,
+                      [
+                        {{:atom, 10}, []},
+                        {:cell,
+                         [
+                           # This code creates the core invoked by the :push instruction.
+                           # It is a replacement of axis 6 of slot 2 of the subject; because
+                           # we just extended the subject, its slot 2 is precisely the
+                           # extension that we created.  That extension, in turn, as
+                           # described above, is the result of treating the subject as a
+                           # one-armed core and firing it.
+                           #
+                           # Consequently, we expect the subject to be a one-armed core
+                           # which creates something at axis 6 which we intend to replace.
+                           # That is the sample -- the placeholder where the arguments
+                           # will be plugged in.
+                           cell: [
+                             {{:atom, 6}, []},
+                             # And this is how we generate the arguments which we plug in to
+                             # the sample:  we take slot 3 of the subject, which, since we
+                             # just extended the subject, is the _original_ subject, before
+                             # the push.  Then we operate on that subject with some formula.
+                             # In this specific case, as it turns out, we ignore the
+                             # subject -- the formula just produces a constant atom whose
+                             # value is `inc_call_arg`.  That is, we are presuming the
+                             # subject to be a one-armed core with one argument, which
+                             # has a sample at axis 6 to be replaced with the value of
+                             # the argument for a particular invocation.
+                             {:cell,
+                              [
+                                {{:atom, 7}, []},
+                                {:cell,
+                                 [
+                                   cell: [{{:atom, 0}, []}, {{:atom, 3}, []}],
+                                   cell: [
+                                     {{:atom, 1}, []},
+                                     arg_value
+                                   ]
+                                 ]}
+                              ]}
+                           ],
+                           cell: [{{:atom, 0}, []}, {{:atom, 2}, []}]
+                         ]}
+                      ]}
+                   ]}
+                ]
+              ]}
+           ]}
+
+        # When we put together our descriptions of :create_core_1 and
+        # :call_core_1, we find that the overall effect of evaluating
+        # a :call_core_1 (the formula) against a :create_core_1 (the subject)
+        # is as follows:
+        #
+        # - The push instruction extends the subject simply by treating
+        #   it as a core and firing it.  The subject _is_ a core, and its
+        #   battery, as we have seen, produces
+        #   `[(formula) (default argument) (slot 2 of the subject)]`.
+        #   When firing a core, the subject is the core itself, so this becomes
+        #   `[(formula) (default argument) (battery of the subject core)]`.
+        #   Thus that list is pushed onto the subject, which is, again, a
+        #   core, so the new subject is
+        #   `[[(formula) (default argument) (battery of subject core)] (subject core)]`.
+        # - The push instruction, having extended the subject, calls a
+        #   formula, which is also a creation and invocation of a core.
+        #   This core is generated by a replacement of axis 6 of
+        #   slot 2 of the new subject resulting from the push.  Slot 2 of
+        #   the new subject is what we just pushed, which is quoted above.
+        #   Slot 6 of that is the default argument produced by the constant 0 operation
+        #   in the battery of the subject core.  It is the
+        #   argument that will be used if not replaced (although :call_core_1
+        #   always replaces it, other invocations of the core might not).
+        #   So the core produced by the replacement is
+        #   `[[(formula) (replacement value) (battery of subject core)] (subject core)]`.
+        #   When that core is activated, the battery -- which is the code
+        #   provided as the formula to :create_core_1 -- is invoked with the entire
+        #   core as the subject, with slot 6 of that entire core being the
+        #   replacement value.
 
         # For standard Nock constructors, keep them as-is
         {ctor, children} ->
