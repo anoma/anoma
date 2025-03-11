@@ -1,14 +1,13 @@
 defmodule Anoma.Node.Examples.EIntentPool do
   @moduledoc """
-  I contain several examples on how to run the intent pool.
+  I contain several examples on how to run the transaction pool.
   """
 
   alias Anoma.Node
+  alias Anoma.Node.Examples.DumbTransaction
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Intents.IntentPool
-  alias Anoma.Node.Tables
-  alias Anoma.RM.DumbIntent
-  alias Anoma.RM.Intent
+  alias Anoma.RM.Transaction
 
   require ExUnit.Assertions
   require Node.Event
@@ -20,7 +19,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   ############################################################
 
   @doc """
-  I check that the intent pool returns an empty map of intents when its started.
+  I check that the transaction pool returns an empty map of intents when its started.
   """
   @spec list_intents(ENode.t()) :: ENode.t()
   def list_intents(enode \\ ENode.start_node()) do
@@ -29,35 +28,35 @@ defmodule Anoma.Node.Examples.EIntentPool do
   end
 
   @doc """
-  I check that when an intent is added to the pool, is is present in the mapset.
+  I check that when an transaction is added to the pool, is is present in the mapset.
   """
   @spec add_intent(ENode.t()) :: ENode.t()
   def add_intent(enode \\ ENode.start_node()) do
-    intent = %DumbIntent{}
-    IntentPool.new_intent(enode.node_id, intent)
+    transaction = %DumbTransaction{}
+    IntentPool.new_intent(enode.node_id, transaction)
 
-    # the intent will be present in the mapset.
+    # the transaction will be present in the mapset.
     assert Enum.count(IntentPool.intents(enode.node_id)) == 1
 
     enode
   end
 
   @doc """
-  I add and remove an intent from the pool and ensure that it's actually gone.
+  I add and remove an transaction from the pool and ensure that it's actually gone.
   """
   @spec remove_intent(ENode.t()) :: ENode.t()
   def remove_intent(enode \\ ENode.start_node()) do
-    # add an intent to the pool
-    intent = %DumbIntent{}
-    IntentPool.new_intent(enode.node_id, intent)
+    # add an transaction to the pool
+    transaction = %DumbTransaction{}
+    IntentPool.new_intent(enode.node_id, transaction)
 
-    # the intent will be present in the mapset.
+    # the transaction will be present in the mapset.
     assert Enum.count(IntentPool.intents(enode.node_id)) == 1
 
-    # remove the intent from the pool
-    IntentPool.remove_intent(enode.node_id, intent)
+    # remove the transaction from the pool
+    IntentPool.remove_intent(enode.node_id, transaction)
 
-    # the intent will be removed from the mapset.
+    # the transaction will be removed from the mapset.
     assert Enum.empty?(IntentPool.intents(enode.node_id))
 
     enode
@@ -69,11 +68,11 @@ defmodule Anoma.Node.Examples.EIntentPool do
   """
   @spec add_intent_transaction_nullifier(ENode.t()) :: ENode.t()
   def add_intent_transaction_nullifier(enode \\ ENode.start_node()) do
-    intent = Examples.ETransparent.ETransaction.nullify_intent_eph()
+    transaction = Examples.ETransparent.ETransaction.nullify_intent_eph()
     node_id = enode.node_id
-    IntentPool.new_intent(node_id, intent)
+    IntentPool.new_intent(node_id, transaction)
 
-    assert IntentPool.intents(node_id) == MapSet.new([intent])
+    assert IntentPool.intents(node_id) == MapSet.new([transaction])
 
     enode
   end
@@ -83,7 +82,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   swap.
 
   The nullifier of the ephemeral resource used gets trasmitted to the
-  intent pool, hence removing the specified intent from the pool.
+  transaction pool, hence removing the specified transaction from the pool.
   """
   @spec remove_intents_with_nulllified_resources(ENode.t()) :: ENode.t()
   def remove_intents_with_nulllified_resources(enode \\ ENode.start_node()) do
@@ -99,20 +98,20 @@ defmodule Anoma.Node.Examples.EIntentPool do
   end
 
   @doc """
-  I check that adding an intent with nullifiers already known in the nlfs_set
-  does not add the intent to the pool.
+  I check that adding an transaction with nullifiers already known in the nlfs_set
+  does not add the transaction to the pool.
   """
   @spec add_intent_with_known_nullifiers(ENode.t()) :: ENode.t()
   def add_intent_with_known_nullifiers(enode \\ ENode.start_node()) do
-    intent = Examples.ETransparent.ETransaction.nullify_intent_eph()
-    nlfs_set = Intent.nullifiers(intent)
+    transaction = Examples.ETransparent.ETransaction.nullify_intent_eph()
+    nlfs_set = Transaction.nullifiers(transaction)
 
     new_nullifiers_event(enode, nlfs_set)
 
     Process.sleep(100)
 
     node_id = enode.node_id
-    IntentPool.new_intent(node_id, intent)
+    IntentPool.new_intent(node_id, transaction)
 
     # the intent will not be present in the mapset
     assert IntentPool.intents(node_id) == MapSet.new([])
@@ -121,20 +120,20 @@ defmodule Anoma.Node.Examples.EIntentPool do
   end
 
   @doc """
-  I check that adding an intent with commitments already known in the state
-  does not add the intent to the pool.
+  I check that adding an transaction with commitments already known in the state
+  does not add the transaction to the pool.
   """
   @spec add_intent_with_submitted_commitments(ENode.t()) :: ENode.t()
   def add_intent_with_submitted_commitments(enode \\ ENode.start_node()) do
-    intent = Examples.ETransparent.ETransaction.single_swap()
-    cms_set = Intent.commitments(intent)
+    transaction = Examples.ETransparent.ETransaction.single_swap()
+    cms_set = Transaction.commitments(transaction)
 
     new_commitments_event(enode, cms_set)
 
     Process.sleep(100)
 
     node_id = enode.node_id
-    IntentPool.new_intent(node_id, intent)
+    IntentPool.new_intent(node_id, transaction)
 
     # the intent will not be present in the mapset
     assert IntentPool.intents(node_id) == MapSet.new([])

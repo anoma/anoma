@@ -1,6 +1,6 @@
 defmodule Anoma.Node.Intents.Solver do
   @moduledoc """
-  I am a strawman intent solver for testing purposes.
+  I am a strawman transaction solver for testing purposes.
 
   ### Public API
 
@@ -11,11 +11,11 @@ defmodule Anoma.Node.Intents.Solver do
 
   alias __MODULE__
   alias Anoma.Node
-  alias Anoma.Node.Intents.IntentPool
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.RM.Intent
+  alias Anoma.RM.Transaction
   alias EventBroker.Event
+  alias Node.Intents.IntentPool
+  alias Node.Registry
+  alias Node.Transaction.Mempool
 
   require Logger
 
@@ -36,7 +36,7 @@ defmodule Anoma.Node.Intents.Solver do
                     Default: MapSet.new()
     - `:node_id` - The ID of the Node to which the Solver is connected.
     """
-    field(:unsolved, MapSet.t(Intent.t()), default: MapSet.new())
+    field(:unsolved, MapSet.t(Transaction.t()), default: MapSet.new())
     field(:node_id, String.t())
   end
 
@@ -66,7 +66,7 @@ defmodule Anoma.Node.Intents.Solver do
   I dump the state of the solver converting the set of the unsolved intents
   into a list.
   """
-  @spec get_unsolved(String.t()) :: [Intent.t()]
+  @spec get_unsolved(String.t()) :: [Transaction.t()]
   def get_unsolved(node_id) do
     name = Registry.via(node_id, __MODULE__)
     GenServer.call(name, :get_unsolved)
@@ -83,10 +83,10 @@ defmodule Anoma.Node.Intents.Solver do
 
     node_id = args[:node_id]
 
-    # subscribe to all new intent pool messages
+    # subscribe to all new transaction pool messages
     subscribe_to_new_intents(node_id)
 
-    # fetch the unsolved intents from the intent pool
+    # fetch the unsolved intents from the transaction pool
     unsolved_intents =
       Enum.to_list(IntentPool.intents(node_id))
 
@@ -124,10 +124,10 @@ defmodule Anoma.Node.Intents.Solver do
       %Event{
         source_module: IntentPool,
         body: %Anoma.Node.Event{
-          body: %IntentPool.IntentAddSuccess{intent: intent}
+          body: %IntentPool.IntentAddSuccess{transaction: transaction}
         }
       } ->
-        handle_new_intent(intent, state)
+        handle_new_intent(transaction, state)
 
       _ ->
         Logger.warning("unexpected event in solver: #{inspect(event)}")
@@ -138,25 +138,25 @@ defmodule Anoma.Node.Intents.Solver do
   # @doc """
   # I return a list of all unsolved intents.
   # """
-  @spec handle_get_unsolved(t()) :: [Intent.t()]
+  @spec handle_get_unsolved(t()) :: [Transaction.t()]
   defp handle_get_unsolved(state) do
     Enum.to_list(state.unsolved)
   end
 
   # @doc """
-  # I handle adding a new intent.
-  # I add the intent to the list of unsolved intents, and then attempt to solve.
+  # I handle adding a new transaction.
+  # I add the transaction to the list of unsolved intents, and then attempt to solve.
   # """
-  @spec handle_new_intent(Intent.t(), t()) :: t()
-  defp handle_new_intent(intent, state) do
-    Logger.debug("solver received new intent: #{inspect(intent)}")
-    unsolved? = intent in state.unsolved
+  @spec handle_new_intent(Transaction.t(), t()) :: t()
+  defp handle_new_intent(transaction, state) do
+    Logger.debug("solver received new transaction: #{inspect(transaction)}")
+    unsolved? = transaction in state.unsolved
 
     unless unsolved? do
-      new_state = %{state | unsolved: MapSet.put(state.unsolved, intent)}
+      new_state = %{state | unsolved: MapSet.put(state.unsolved, transaction)}
       do_solve(new_state)
     else
-      Logger.debug("ignoring intent; unsolved: #{unsolved?}")
+      Logger.debug("ignoring transaction; unsolved: #{unsolved?}")
 
       state
     end
@@ -173,7 +173,7 @@ defmodule Anoma.Node.Intents.Solver do
   of intents from those given in the state. Then filter out whichever ones
   are present in the result and return the remaining ones.
 
-  Given a proper intent structure, I also submit it to the mempool using
+  Given a proper transaction structure, I also submit it to the mempool using
   an appropriate wrapper.
   """
 
@@ -185,7 +185,7 @@ defmodule Anoma.Node.Intents.Solver do
     unsolved = MapSet.filter(state.unsolved, &unsolved_reject(set, &1))
 
     unless Enum.empty?(set) do
-      set |> Enum.reduce(&Intent.compose/2) |> submit(state.node_id)
+      set |> Enum.reduce(&Transaction.compose/2) |> submit(state.node_id)
     end
 
     %{state | unsolved: unsolved}
@@ -198,8 +198,8 @@ defmodule Anoma.Node.Intents.Solver do
   I assume that the composition of intents is associative and commutative.
   """
 
-  @spec solve([Intent.t()]) ::
-          MapSet.t(Intent.t())
+  @spec solve([Transaction.t()]) ::
+          MapSet.t(Transaction.t())
   def solve(intents) do
     intents
     |> subsets()
@@ -211,16 +211,16 @@ defmodule Anoma.Node.Intents.Solver do
 
   @doc """
   I check if a list of intents is valid by composing them and verifying if they satisfy
-  the Intent.valid? predicate.
+  the Transaction.valid? predicate.
   """
 
-  @spec valid?([Intent.t()]) :: true | {:error, any()}
+  @spec valid?([Transaction.t()]) :: true | {:error, any()}
   def valid?([]), do: {:error, :error}
 
   def valid?(intents) do
     intents
-    |> Enum.reduce(&Intent.compose/2)
-    |> Intent.verify()
+    |> Enum.reduce(&Transaction.compose/2)
+    |> Transaction.verify()
   end
 
   ############################################################
@@ -228,7 +228,7 @@ defmodule Anoma.Node.Intents.Solver do
   ############################################################
 
   # @doc """
-  # I subscribe this process to the intent pool events.
+  # I subscribe this process to the transaction pool events.
   # """
   @spec subscribe_to_new_intents(String.t()) :: :ok | String.t()
   defp subscribe_to_new_intents(node_id) do
@@ -243,7 +243,7 @@ defmodule Anoma.Node.Intents.Solver do
   @doc """
   I generate all possible subsets of a given list of elements as a stream.
   """
-  @spec subsets([Intent.t()]) :: Enumerable.t()
+  @spec subsets([Transaction.t()]) :: Enumerable.t()
   def subsets([]), do: [[]]
 
   def subsets([x | xs]) do
@@ -265,7 +265,7 @@ defmodule Anoma.Node.Intents.Solver do
   - `submit(any, node_id)` - I do nothing
   """
 
-  @spec submit(Intent.t(), String.t()) :: :ok
+  @spec submit(Transaction.t(), String.t()) :: :ok
   def submit(tx = %Anoma.TransparentResource.Transaction{}, node_id) do
     tx_noun = tx |> Noun.Nounable.to_noun()
     tx_candidate = [[1, 0, [1 | tx_noun], 0 | 909], 0 | 707]
@@ -294,12 +294,15 @@ defmodule Anoma.Node.Intents.Solver do
   def submit(_, _) do
   end
 
-  @spec unsolved_reject(MapSet.t(Intent.t()), Intent.t()) :: bool()
-  defp unsolved_reject(solved, intent) do
-    not MapSet.member?(solved, intent) and
+  @spec unsolved_reject(MapSet.t(Transaction.t()), Transaction.t()) :: bool()
+  defp unsolved_reject(solved, transaction) do
+    not MapSet.member?(solved, transaction) and
       MapSet.disjoint?(
         solved,
-        MapSet.union(Intent.nullifiers(intent), Intent.commitments(intent))
+        MapSet.union(
+          Transaction.nullifiers(transaction),
+          Transaction.commitments(transaction)
+        )
       )
   end
 end

@@ -81,13 +81,8 @@ defmodule Anoma.CairoResource.Transaction do
     def nullifiers(%Transaction{nullifiers: nf}), do: nf
 
     @impl true
-    def storage_commitments(tx), do: commitments(tx)
-    @impl true
-    def storage_nullifiers(tx), do: nullifiers(tx)
-
-    @impl true
     def compose(tx1, tx2) do
-      unless Anoma.RM.Trans.compose_pre_check(tx1, tx2) do
+      unless Anoma.RM.Transaction.compose_pre_check(tx1, tx2) do
         nil
       else
         %Transaction{
@@ -98,6 +93,20 @@ defmodule Anoma.CairoResource.Transaction do
           delta: tx1.delta <> tx2.delta
         }
       end
+    end
+
+    @impl true
+    def compose_pre_check(tx1, tx2) do
+      {cm1, cm2} =
+        {Anoma.RM.Transaction.commitments(tx1),
+         Anoma.RM.Transaction.commitments(tx2)}
+
+      {nf1, nf2} =
+        {Anoma.RM.Transaction.nullifiers(tx1),
+         Anoma.RM.Transaction.nullifiers(tx2)}
+
+      not (Enum.any?(cm1, fn x -> x in cm2 end) ||
+             Enum.any?(nf1, fn x -> x in nf2 end))
     end
 
     # TODO: We can return roots, commitments, and nullifiers instead of just a

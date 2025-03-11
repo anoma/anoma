@@ -1,16 +1,16 @@
 defmodule Anoma.Node.Intents.IntentPool do
   @moduledoc """
-  I am the intent pool for the Anoma node.
+  I am the transaction pool for the Anoma node.
   m1dnight still has to write these docs.
   """
 
   alias __MODULE__
   alias Anoma.Node
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Backends
-  alias Anoma.RM.Intent
-  alias EventBroker.Broker
   alias Anoma.Node.Tables
+  alias Anoma.RM.Transaction
+  alias EventBroker.Broker
+  alias Node.Registry
+  alias Node.Transaction.Backends
 
   require EventBroker.Event
   require Logger
@@ -22,24 +22,24 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   typedstruct enforce: true, module: IntentAddSuccess do
     @typedoc """
-    I am an event specifying that an intent has been submitted succesfully.
+    I am an event specifying that an transaction has been submitted succesfully.
 
     ### Fields
-    - `:intent` - The intent added.
+    - `:transaction` - The transaction added.
     """
-    field(:intent, Intent.t())
+    field(:transaction, Transaction.t())
   end
 
   typedstruct enforce: true, module: IntentAddError do
     @typedoc """
-    I am an event specifying that an intent submission has failed alongside
+    I am an event specifying that an transaction submission has failed alongside
     with a reason.
 
     ### Fields
-    - `:intent` - The intent submitted.
+    - `:transaction` - The transaction submitted.
     - `:reason` - The reason why it was rejected from the pool.
     """
-    field(:intent, Intent.t())
+    field(:transaction, Transaction.t())
     field(:reason, String.t())
   end
 
@@ -67,7 +67,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   typedstruct do
     @typedoc """
-    I am the state of the intent pool.
+    I am the state of the transaction pool.
 
     ### Fields
     - `:intents` - The intents in the pool.
@@ -75,7 +75,7 @@ defmodule Anoma.Node.Intents.IntentPool do
     - `:nlfs_set` - The set of known nullifiers.
     - `:cms_set` - The set of known commitments.
     """
-    field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
+    field(:intents, MapSet.t(Transaction.t()), default: MapSet.new())
     field(:node_id, String.t())
     field(:nlfs_set, MapSet.t(binary()), default: MapSet.new())
     field(:cms_set, MapSet.t(binary()), default: MapSet.new())
@@ -93,7 +93,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   @impl true
   def init(args) do
-    Logger.debug("starting intent pool with #{inspect(args)}")
+    Logger.debug("starting transaction pool with #{inspect(args)}")
 
     args =
       args
@@ -141,22 +141,22 @@ defmodule Anoma.Node.Intents.IntentPool do
   end
 
   @doc """
-  I add a new intent to the intent pool.
+  I add a new transaction to the transaction pool.
   """
   @spec new_intent(String.t(), any()) :: :ok
-  def new_intent(node_id, intent) do
+  def new_intent(node_id, transaction) do
     name = Registry.via(node_id, __MODULE__)
-    GenServer.cast(name, {:new_intent, intent})
+    GenServer.cast(name, {:new_intent, transaction})
   end
 
   @doc """
-  I remove an intent from the intent pool.
-  If the intent does not exist nothing happens.
+  I remove an transaction from the transaction pool.
+  If the transaction does not exist nothing happens.
   """
   @spec remove_intent(String.t(), any()) :: :ok
-  def remove_intent(node_id, intent) do
+  def remove_intent(node_id, transaction) do
     name = Registry.via(node_id, __MODULE__)
-    GenServer.cast(name, {:remove_intent, intent})
+    GenServer.cast(name, {:remove_intent, transaction})
   end
 
   ############################################################
@@ -164,14 +164,14 @@ defmodule Anoma.Node.Intents.IntentPool do
   ############################################################
 
   @impl true
-  def handle_cast({:new_intent, intent}, state) do
-    {:ok, _, state} = handle_new_intent(intent, state)
+  def handle_cast({:new_intent, transaction}, state) do
+    {:ok, _, state} = handle_new_intent(transaction, state)
     {:noreply, state}
   end
 
   @impl true
-  def handle_cast({:remove_intent, intent}, state) do
-    {:ok, _, state} = handle_remove_intent(intent, state)
+  def handle_cast({:remove_intent, transaction}, state) do
+    {:ok, _, state} = handle_remove_intent(transaction, state)
     {:noreply, state}
   end
 
@@ -196,20 +196,20 @@ defmodule Anoma.Node.Intents.IntentPool do
   ############################################################
 
   # @doc """
-  # I insert a new intent into the local state and return the updated state.
-  # I return the current state if the intent is already present.
-  # I return the current state if any nullifier of the intent is already known.
+  # I insert a new transaction into the local state and return the updated state.
+  # I return the current state if the transaction is already present.
+  # I return the current state if any nullifier of the transaction is already known.
   # """
   @spec handle_new_intent(any(), t()) ::
           {:ok, :inserted, t()}
           | {:ok,
              :already_present | :nullifiers_present | :commitments_present,
              t()}
-  defp handle_new_intent(intent, state) do
-    with :ok <- validate_intent_uniqueness(intent, state),
-         :ok <- validate_nullifier_uniqueness(intent, state.nlfs_set),
-         :ok <- validate_commitment_uniqueness(intent, state.cms_set) do
-      table = Tables.table_intents(state.node_id)
+  defp handle_new_intent(transaction, state) do
+    with :ok <- validate_intent_uniqueness(transaction, state),
+         :ok <- validate_nullifier_uniqueness(transaction, state.nlfs_set),
+         :ok <- validate_commitment_uniqueness(transaction, state.cms_set) do
+      table = state.table
 
       :mnesia.transaction(fn ->
         res =
@@ -218,12 +218,12 @@ defmodule Anoma.Node.Intents.IntentPool do
             [{^table, "intents", res}] -> res
           end
 
-        :mnesia.write({table, "intents", MapSet.put(res, intent)})
+        :mnesia.write({table, "intents", MapSet.put(res, transaction)})
       end)
 
-      {:ok, :inserted, add_intent!(intent, state)}
+      {:ok, :inserted, add_intent!(transaction, state)}
     else
-      {:error, reason} -> handle_error(intent, reason, state)
+      {:error, reason} -> handle_error(transaction, reason, state)
     end
   end
 
@@ -237,24 +237,29 @@ defmodule Anoma.Node.Intents.IntentPool do
   end
 
   # @doc """
-  # I remove an intent from the local state if it exists.
-  # I return the updated state and a status indicating whether the intent was removed.
+  # I remove an transaction from the local state if it exists.
+  # I return the updated state and a status indicating whether the transaction was removed.
   # """
   @spec handle_remove_intent(any(), t()) ::
           {:ok, :removed, t()} | {:ok, :not_present, t()}
-  defp handle_remove_intent(intent, state) do
-    if MapSet.member?(state.intents, intent) do
-      Logger.debug("intent removed #{inspect(intent)}")
+  defp handle_remove_intent(transaction, state) do
+    if MapSet.member?(state.intents, transaction) do
+      Logger.debug("transaction removed #{inspect(transaction)}")
 
       EventBroker.event(
-        Node.Event.new_with_body(state.node_id, {:intent_removed, intent}),
+        Node.Event.new_with_body(
+          state.node_id,
+          {:intent_removed, transaction}
+        ),
         Broker
       )
 
-      state = Map.update!(state, :intents, &MapSet.delete(&1, intent))
+      state = Map.update!(state, :intents, &MapSet.delete(&1, transaction))
       {:ok, :removed, state}
     else
-      Logger.debug("intent not removed; intent missing #{inspect(intent)}")
+      Logger.debug(
+        "transaction not removed; transaction missing #{inspect(transaction)}"
+      )
 
       {:ok, :not_present, state}
     end
@@ -287,19 +292,22 @@ defmodule Anoma.Node.Intents.IntentPool do
   #                         Helpers                          #
   ############################################################
 
-  defp validate_intent_uniqueness(intent, state) do
-    if MapSet.member?(state.intents, intent) do
-      Logger.debug("intent ignored; already present #{inspect(intent)}")
+  defp validate_intent_uniqueness(transaction, state) do
+    if MapSet.member?(state.intents, transaction) do
+      Logger.debug(
+        "transaction ignored; already present #{inspect(transaction)}"
+      )
+
       {:error, :already_present}
     else
       :ok
     end
   end
 
-  defp validate_nullifier_uniqueness(intent, nlfs_set) do
-    unless MapSet.disjoint?(Intent.nullifiers(intent), nlfs_set) do
+  defp validate_nullifier_uniqueness(transaction, nlfs_set) do
+    unless MapSet.disjoint?(Transaction.nullifiers(transaction), nlfs_set) do
       Logger.debug(
-        "intent ignored; uses already nullified resources #{inspect(intent)}"
+        "transaction ignored; uses already nullified resources #{inspect(transaction)}"
       )
 
       {:error, :nullifiers_present}
@@ -308,10 +316,10 @@ defmodule Anoma.Node.Intents.IntentPool do
     end
   end
 
-  defp validate_commitment_uniqueness(intent, cms_set) do
-    unless MapSet.disjoint?(Intent.commitments(intent), cms_set) do
+  defp validate_commitment_uniqueness(transaction, cms_set) do
+    unless MapSet.disjoint?(Transaction.commitments(transaction), cms_set) do
       Logger.debug(
-        "intent ignored; uses already created resources #{inspect(intent)}"
+        "transaction ignored; uses already created resources #{inspect(transaction)}"
       )
 
       {:error, :commitments_present}
@@ -320,23 +328,23 @@ defmodule Anoma.Node.Intents.IntentPool do
     end
   end
 
-  defp add_intent!(intent, state) do
-    Logger.debug("new intent added #{inspect(intent)}")
+  defp add_intent!(transaction, state) do
+    Logger.debug("new transaction added #{inspect(transaction)}")
 
     EventBroker.event(
       Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddSuccess{
-        intent: intent
+        transaction: transaction
       }),
       Broker
     )
 
-    Map.update!(state, :intents, &MapSet.put(&1, intent))
+    Map.update!(state, :intents, &MapSet.put(&1, transaction))
   end
 
-  defp handle_error(intent, reason, state) do
+  defp handle_error(transaction, reason, state) do
     EventBroker.event(
       Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddError{
-        intent: intent,
+        transaction: transaction,
         reason: reason
       }),
       Broker
@@ -350,7 +358,7 @@ defmodule Anoma.Node.Intents.IntentPool do
     |> Enum.filter(
       &MapSet.disjoint?(
         set,
-        MapSet.union(Intent.nullifiers(&1), Intent.commitments(&1))
+        MapSet.union(Transaction.nullifiers(&1), Transaction.commitments(&1))
       )
     )
     |> MapSet.new()

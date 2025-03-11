@@ -3,6 +3,7 @@ defmodule Anoma.Node.Examples.ESolver do
   I contain several examples on how to use the solver.
   """
 
+  alias Anoma.Node.Examples.DumbTransaction
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Intents.IntentPool
   alias Anoma.Node.Intents.Solver
@@ -27,7 +28,7 @@ defmodule Anoma.Node.Examples.ESolver do
   @spec solve_transaction() :: boolean()
   def solve_transaction() do
     # create an empty intent
-    intent = %DumbIntent{}
+    intent = %DumbTransaction{}
 
     # solve the transaction
     assert Solver.solve([intent]) == MapSet.new([intent])
@@ -39,8 +40,8 @@ defmodule Anoma.Node.Examples.ESolver do
   @spec solve_transactions() :: boolean()
   def solve_transactions() do
     # create an empty intent
-    intent_1 = %DumbIntent{value: -1}
-    intent_2 = %DumbIntent{value: 1}
+    intent_1 = %DumbTransaction{value: -1}
+    intent_2 = %DumbTransaction{value: 1}
 
     # solve the transaction
     expected = Enum.sort([intent_1, intent_2])
@@ -54,9 +55,9 @@ defmodule Anoma.Node.Examples.ESolver do
   @spec solve_transactions_with_remainder() :: boolean()
   def solve_transactions_with_remainder() do
     # create an empty intent
-    intent_1 = %DumbIntent{value: -1}
-    intent_2 = %DumbIntent{value: 1}
-    intent_3 = %DumbIntent{value: 100}
+    intent_1 = %DumbTransaction{value: -1}
+    intent_2 = %DumbTransaction{value: 1}
+    intent_3 = %DumbTransaction{value: 100}
 
     # solve the intents. only the first two can be solved.
     assert Enum.sort(Solver.solve([intent_1, intent_2, intent_3])) ==
@@ -75,7 +76,7 @@ defmodule Anoma.Node.Examples.ESolver do
 
     # add an intent to the pool
     # note: this is asynchronous, so block this process for a bit
-    intent_1 = %DumbIntent{value: -1}
+    intent_1 = %DumbTransaction{value: -1}
     IntentPool.new_intent(enode.node_id, intent_1)
     Process.sleep(100)
 
@@ -85,7 +86,7 @@ defmodule Anoma.Node.Examples.ESolver do
     # --------------------------------------------------------------------------
     # add a second intent to make it solvable
 
-    intent_2 = %DumbIntent{value: 1}
+    intent_2 = %DumbTransaction{value: 1}
     IntentPool.new_intent(enode.node_id, intent_2)
     Process.sleep(100)
 
@@ -95,7 +96,7 @@ defmodule Anoma.Node.Examples.ESolver do
     # --------------------------------------------------------------------------
     # add a third intent to make it unsolvable
 
-    intent_3 = %DumbIntent{value: 1000}
+    intent_3 = %DumbTransaction{value: 1000}
     IntentPool.new_intent(enode.node_id, intent_3)
     Process.sleep(100)
 
