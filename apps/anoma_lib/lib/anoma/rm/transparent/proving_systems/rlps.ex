@@ -146,6 +146,41 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
   end
 
   @doc """
+  I am function for turning a resource logic proving system instance to
+  a resource logic format for transparent RM.
+
+  Instead of the pure instance, I supply to the logic underlying resource
+  plaintexts which we can get as we are dealing with commitments and
+  nullifiers transparently.
+  """
+  @spec to_noun_rl_args(Instance.t()) :: Noun.t()
+  def to_noun_rl_args(instance) do
+    {:ok, res} = instance.tag |> match_resource(instance.flag)
+
+    consumed =
+      instance.consumed
+      |> Enum.map(fn nlf ->
+        {:ok, res} = match_resource(nlf, true)
+        Noun.Nounable.to_noun(res)
+      end)
+
+    created =
+      instance.created
+      |> Enum.map(fn cm ->
+        {:ok, res} = match_resource(cm, false)
+        Noun.Nounable.to_noun(res)
+      end)
+
+    [
+      Noun.Nounable.to_noun(res),
+      Noun.Nounable.Bool.to_noun(instance.flag),
+      consumed,
+      created
+      | Noun.Nounable.to_noun(instance.app_data)
+    ]
+  end
+
+  @doc """
   I am a function to matching the resource form the tag provided.
 
   In particular, given a flag I try to un-match the jammed resource from
