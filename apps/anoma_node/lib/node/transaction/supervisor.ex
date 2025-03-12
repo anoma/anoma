@@ -35,15 +35,20 @@ defmodule Anoma.Node.Transaction.Supervisor do
   def init(args) do
     Process.set_label(__MODULE__)
 
+    # note: the mempool should be started last because it is the only engine
+    #       that can communicate with other engines. for example, it will send
+    #       off transactions if there are any in the replay arguments. if the
+    #       mempool is started first, it might try and send transactions to a
+    #       non-existing executor.
     children = [
       {Anoma.Node.Transaction.Ordering,
        [node_id: args[:node_id]] ++ Keyword.get(args, :ordering, [])},
       {Anoma.Node.Transaction.Storage,
        [node_id: args[:node_id]] ++ Keyword.get(args, :storage, [])},
-      {Anoma.Node.Transaction.Mempool,
-       [node_id: args[:node_id]] ++ Keyword.get(args, :mempool, [])},
+      {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]},
       {Task.Supervisor, name: Registry.via(args[:node_id], TxSupervisor)},
-      {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]}
+      {Anoma.Node.Transaction.Mempool,
+       [node_id: args[:node_id]] ++ Keyword.get(args, :mempool, [])}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)

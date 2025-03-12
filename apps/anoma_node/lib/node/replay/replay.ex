@@ -23,6 +23,8 @@ defmodule Anoma.Node.Replay do
   alias Anoma.Node.Tables
   alias Anoma.Node.Replay.State
 
+  use EventBroker.WithSubscription
+
   require Logger
 
   ############################################################
@@ -42,10 +44,16 @@ defmodule Anoma.Node.Replay do
         ]
   @type ordering_args :: [next_height: non_neg_integer()]
   @type storage_args :: [uncommitted_height: non_neg_integer()]
+
   ############################################################
   #                       Public                             #
   ############################################################
 
+  @doc """
+  Waiting for a consensus to be confirmed means that the mempool has submitted
+  the transaction, and that transaction execution event is fired.
+  When this event is received, the replay is considered successful.
+  """
   def wait_for_confirm(_temp_node_id, nil) do
     {:ok, :confirmed}
   end
@@ -59,7 +67,7 @@ defmodule Anoma.Node.Replay do
         %{body: %{node_id: ^temp_node_id, body: %{task: _}}} ->
           {:error, :confirm_failed}
       after
-        10000 ->
+        5000 ->
           {:error, :confirm_failed}
       end
 
@@ -74,38 +82,36 @@ defmodule Anoma.Node.Replay do
   def replay_for(node_id) do
     temp_node_id = temporary_node_id()
 
-    with {:ok, _} <- init_tables_node(node_id, temp_node_id),
-         {:ok, args} <- State.startup_arguments(node_id) do
-      EventBroker.subscribe_me([])
+    with_subscription [[]] do
+      with {:ok, _} <- init_tables_node(node_id, temp_node_id),
+           {:ok, args} <- State.startup_arguments(node_id) do
+        Anoma.Supervisor.start_node(
+          node_id: temp_node_id,
+          replay: false,
+          transaction: args
+        )
 
-      Anoma.Supervisor.start_node(
-        node_id: temp_node_id,
-        replay: false,
-        transaction: args
-      )
+        final_consensus = List.last(args[:mempool][:consensus])
 
-      final_consensus = List.last(args[:mempool][:consensus])
+        case wait_for_confirm(temp_node_id, final_consensus) do
+          {:ok, :confirmed} ->
+            Anoma.Supervisor.stop_node(temp_node_id)
+            {:ok, :replay_succeeded}
 
-      case wait_for_confirm(temp_node_id, final_consensus) do
-        {:ok, :confirmed} ->
-          Anoma.Supervisor.stop_node(temp_node_id)
-          EventBroker.unsubscribe_me([])
-          {:ok, :replay_succeeded}
+          _ ->
+            Anoma.Supervisor.stop_node(temp_node_id)
+            {:error, :replay_failed}
+        end
+      else
+        {:error, :target_node_existed} ->
+          {:error, :replay_failed}
 
-        _ ->
-          Anoma.Supervisor.stop_node(temp_node_id)
-          EventBroker.unsubscribe_me([])
+        {:error, :failed_to_create_replay_node} ->
+          {:error, :replay_failed}
+
+        {:error, :startup_arguments_failed} ->
           {:error, :replay_failed}
       end
-    else
-      {:error, :target_node_existed} ->
-        {:error, :replay_failed}
-
-      {:error, :failed_to_create_replay_node} ->
-        {:error, :replay_failed}
-
-      {:error, :startup_arguments_failed} ->
-        {:error, :replay_failed}
     end
   end
 

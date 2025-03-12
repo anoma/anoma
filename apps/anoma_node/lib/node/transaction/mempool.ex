@@ -230,7 +230,11 @@ defmodule Anoma.Node.Transaction.Mempool do
   Afterwards, I initialize the Mempool with round and node ID specified.
   """
 
-  @spec init([args_t()]) :: {:ok, Mempool.t()}
+  @spec init([args_t()]) ::
+          {:ok, Mempool.t(),
+           {:continue,
+            {:rebuild_state, [[binary()]],
+             [{binary, {Backends.backend(), Noun.t()}}]}}}
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -255,18 +259,22 @@ defmodule Anoma.Node.Transaction.Mempool do
       filter_for_mempool_execution_events()
     ])
 
-    for {id, tx_w_backend} <- args[:transactions] do
-      tx(args[:node_id], tx_w_backend, id)
-    end
+    {:ok, %__MODULE__{round: args[:round], node_id: node_id},
+     {:continue, {:rebuild_state, args[:consensus], args[:transactions]}}}
+  end
 
-    consensus = args[:consensus]
-    round = args[:round]
+  @impl true
+  def handle_continue({:rebuild_state, consensus, transactions}, state) do
+    # Process.sleep(500)
+    for {id, tx_w_backend} <- transactions do
+      tx(state.node_id, tx_w_backend, id)
+    end
 
     for list <- consensus do
-      execute(node_id, list)
+      execute(state.node_id, list)
     end
 
-    {:ok, %__MODULE__{round: round, node_id: node_id}}
+    {:noreply, state}
   end
 
   ############################################################
