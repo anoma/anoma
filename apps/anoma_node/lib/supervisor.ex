@@ -112,5 +112,3 @@ defmodule Anoma.Supervisor do
     end
   end
 end
-
-# Anoma.Node.Examples.Mempool.complete_transaction ; Anoma.Node.Examples.EReplay.replay_with_faulty_transaction
