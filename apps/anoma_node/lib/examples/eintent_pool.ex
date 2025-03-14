@@ -24,7 +24,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   """
   @spec list_intents(ENode.t()) :: ENode.t()
   def list_intents(enode \\ ENode.start_node()) do
-    assert MapSet.new() == IntentPool.intents(enode.node_id)
+    assert MapSet.new() == IntentPool.intents(enode.node_config.node_id)
     enode
   end
 
@@ -34,10 +34,10 @@ defmodule Anoma.Node.Examples.EIntentPool do
   @spec add_intent(ENode.t()) :: ENode.t()
   def add_intent(enode \\ ENode.start_node()) do
     intent = %DumbIntent{}
-    IntentPool.new_intent(enode.node_id, intent)
+    IntentPool.new_intent(enode.node_config.node_id, intent)
 
     # the intent will be present in the mapset.
-    assert Enum.count(IntentPool.intents(enode.node_id)) == 1
+    assert Enum.count(IntentPool.intents(enode.node_config.node_id)) == 1
 
     enode
   end
@@ -49,16 +49,16 @@ defmodule Anoma.Node.Examples.EIntentPool do
   def remove_intent(enode \\ ENode.start_node()) do
     # add an intent to the pool
     intent = %DumbIntent{}
-    IntentPool.new_intent(enode.node_id, intent)
+    IntentPool.new_intent(enode.node_config.node_id, intent)
 
     # the intent will be present in the mapset.
-    assert Enum.count(IntentPool.intents(enode.node_id)) == 1
+    assert Enum.count(IntentPool.intents(enode.node_config.node_id)) == 1
 
     # remove the intent from the pool
-    IntentPool.remove_intent(enode.node_id, intent)
+    IntentPool.remove_intent(enode.node_config.node_id, intent)
 
     # the intent will be removed from the mapset.
-    assert Enum.empty?(IntentPool.intents(enode.node_id))
+    assert Enum.empty?(IntentPool.intents(enode.node_config.node_id))
 
     enode
   end
@@ -70,7 +70,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   @spec add_intent_transaction_nullifier(ENode.t()) :: ENode.t()
   def add_intent_transaction_nullifier(enode \\ ENode.start_node()) do
     intent = Examples.ETransparent.ETransaction.nullify_intent_eph()
-    node_id = enode.node_id
+    node_id = enode.node_config.node_id
     IntentPool.new_intent(node_id, intent)
 
     assert IntentPool.intents(node_id) == MapSet.new([intent])
@@ -90,10 +90,10 @@ defmodule Anoma.Node.Examples.EIntentPool do
     add_intent_transaction_nullifier(enode)
 
     Anoma.Node.Examples.ETransaction.submit_successful_trivial_swap(
-      enode.node_id
+      enode.node_config.node_id
     )
 
-    assert enode.node_id |> IntentPool.intents() |> Enum.empty?()
+    assert enode.node_config.node_id |> IntentPool.intents() |> Enum.empty?()
 
     enode
   end
@@ -111,7 +111,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
 
     Process.sleep(100)
 
-    node_id = enode.node_id
+    node_id = enode.node_config.node_id
     IntentPool.new_intent(node_id, intent)
 
     # the intent will not be present in the mapset
@@ -133,7 +133,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
 
     Process.sleep(100)
 
-    node_id = enode.node_id
+    node_id = enode.node_config.node_id
     IntentPool.new_intent(node_id, intent)
 
     # the intent will not be present in the mapset
@@ -145,9 +145,9 @@ defmodule Anoma.Node.Examples.EIntentPool do
   def intents_are_written(enode \\ ENode.start_node()) do
     add_intent_transaction_nullifier(enode)
 
-    table = Tables.table_intents(enode.node_id)
+    table = Tables.table_intents(enode.node_config.node_id)
 
-    pool = IntentPool.intents(enode.node_id)
+    pool = IntentPool.intents(enode.node_config.node_id)
 
     assert {:atomic, [{^table, "intents", ^pool}]} =
              :mnesia.transaction(fn -> :mnesia.read(table, "intents") end)
@@ -161,7 +161,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
         enode \\ ENode.start_node(),
         nlfs_set \\ MapSet.new()
       ) do
-    node_id = enode.node_id
+    node_id = enode.node_config.node_id
 
     event =
       Node.Event.new_with_body(
@@ -185,7 +185,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
         enode \\ ENode.start_node(),
         cms_set \\ MapSet.new()
       ) do
-    node_id = enode.node_id
+    node_id = enode.node_config.node_id
 
     event =
       Node.Event.new_with_body(

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package Anoma.Proto.Mempool;
+
+import "node.proto";
+
+/*
+ A transaction
+ */
+message Transaction { bytes transaction = 1; }
+
+/*
+ Adding transactions to the mempool.
+ */
+message Add {
+  message Request {
+    Node node = 1;
+    Transaction transaction = 2;
+  }
+
+  message Response { string result = 1; }
+}

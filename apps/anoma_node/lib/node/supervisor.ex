@@ -11,26 +11,7 @@ defmodule Anoma.Node.Supervisor do
   alias Anoma.Node.Logging
   alias Anoma.Node.Transaction
   alias Anoma.Node.Transport
-
-  @typedoc """
-  The type of the arguments that the supervisor expects.
-  """
-  @type args_t :: [
-          node_id: String.t(),
-          grpc_port: non_neg_integer(),
-          replay: boolean(),
-          transaction: [mempool: any()]
-        ]
-
-  @doc """
-  The default arguments for the supervisor.
-  """
-  @args [
-    :node_id,
-    grpc_port: 0,
-    replay: true,
-    transaction: [mempool: []]
-  ]
+  alias Anoma.Node.Config
 
   @spec child_spec(any()) :: map()
   def child_spec(args) do
@@ -41,28 +22,25 @@ defmodule Anoma.Node.Supervisor do
     }
   end
 
-  @spec start_link(args_t) :: any()
-  def start_link(args) do
-    args = Keyword.validate!(args, @args)
-    name = Anoma.Node.Registry.via(args[:node_id], __MODULE__)
-    Supervisor.start_link(__MODULE__, args, name: name)
+  @spec start_link(Config.t()) :: any()
+  def start_link(config) do
+    name = Anoma.Node.Registry.via(config.node_id, __MODULE__)
+    Supervisor.start_link(__MODULE__, config, name: name)
   end
 
   @impl true
-  @spec init(args_t) :: any()
-  def init(args) do
-    Logger.info("starting node with #{inspect(args)}")
+  @spec init(Config.t()) :: any()
+  def init(config) do
+    Logger.info("starting node with #{inspect(config)}")
     Process.set_label(__MODULE__)
 
-    # validate arguments
-    args = Keyword.validate!(args, @args)
+    node_id = config.node_id
+    grpc_port = config.runtime_system_config.node_grpc_port
+    transaction = config.startup_arguments
 
-    node_id = args[:node_id]
-    grpc_port = args[:grpc_port]
-    transaction = args[:transaction]
-
+    IO.inspect transaction
     children = [
-      {Transport.Supervisor, node_id: node_id, grpc_port: grpc_port},
+      {Transport.Supervisor, node_id: node_id},
       {Transaction.Supervisor, [node_id: node_id] ++ transaction},
       {Intents.Supervisor, node_id: node_id},
       {Logging, node_id: node_id}

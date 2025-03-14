@@ -32,12 +32,12 @@ defmodule Anoma.Node.Examples.Mempool do
   def add_transaction(enode, transaction) do
     # subscribe to mnesia events to capture when the transaction
     # is written to the mempool.
-    events_table = Tables.table_events(enode.node_id)
+    events_table = Tables.table_events(enode.node_config.node_id)
     :mnesia.subscribe({:table, events_table, :simple})
 
     # submit the transaction to the mempool.
     Mempool.tx(
-      enode.node_id,
+      enode.node_config.node_id,
       {transaction.backend, transaction.noun},
       transaction.id
     )
@@ -45,7 +45,7 @@ defmodule Anoma.Node.Examples.Mempool do
     # assert that the transaction is in the mempool.
     # note: we cannot assert that it is the only transaction, because
     # this example is reused below.
-    transactions = Mempool.tx_dump(enode.node_id)
+    transactions = Mempool.tx_dump(enode.node_config.node_id)
 
     # wait for the transaction to be present in the events table, too.
     wait_for_transaction_in_table(enode, transaction)
@@ -92,7 +92,7 @@ defmodule Anoma.Node.Examples.Mempool do
     Enum.each(transactions, &add_transaction(enode, &1))
 
     # assert all the transactions are in the mempool.
-    mempool_transactions = Mempool.tx_dump(enode.node_id)
+    mempool_transactions = Mempool.tx_dump(enode.node_config.node_id)
 
     for transaction <- transactions do
       assert transaction.id in mempool_transactions
@@ -205,7 +205,7 @@ defmodule Anoma.Node.Examples.Mempool do
       # The executor will order the transactions in the consensus
       # and then wait for all transactions to complete.
       # After this, an execution event is sent.
-      Mempool.execute(enode.node_id, [transaction.id])
+      Mempool.execute(enode.node_config.node_id, [transaction.id])
 
       {enode, transaction}
     end
@@ -236,7 +236,7 @@ defmodule Anoma.Node.Examples.Mempool do
     # subscribe to events here to be sure the events are caught
     with_subscription [[]] do
       # subscribe to mnesia events as well. see below.
-      events_table = Tables.table_events(enode.node_id)
+      events_table = Tables.table_events(enode.node_config.node_id)
       :mnesia.subscribe({:table, events_table, :simple})
 
       {enode, transaction} = make_block(enode, transaction)
@@ -312,7 +312,7 @@ defmodule Anoma.Node.Examples.Mempool do
   """
   @spec wait_for_consensus_write(ENode.t(), ETransaction.t()) :: ENode.t()
   def wait_for_consensus_write(enode \\ ENode.start_node(), transaction) do
-    events_table = Tables.table_events(enode.node_id)
+    events_table = Tables.table_events(enode.node_config.node_id)
     transaction_id = transaction.id
 
     assert_receive {:mnesia_table_event,
@@ -330,7 +330,7 @@ defmodule Anoma.Node.Examples.Mempool do
   @spec wait_for_transaction_in_table(ENode.t(), ETransaction.t()) ::
           ENode.t()
   def wait_for_transaction_in_table(enode \\ ENode.start_node(), transaction) do
-    events_table = Tables.table_events(enode.node_id)
+    events_table = Tables.table_events(enode.node_config.node_id)
     transaction_id = transaction.id
     transaction_backend = transaction.backend
     transaction_noun = transaction.noun
@@ -351,7 +351,7 @@ defmodule Anoma.Node.Examples.Mempool do
   @spec wait_for_transaction_removed(ENode.t(), ETransaction.t()) ::
           ENode.t()
   def wait_for_transaction_removed(enode \\ ENode.start_node(), transaction) do
-    events_table = Tables.table_events(enode.node_id)
+    events_table = Tables.table_events(enode.node_config.node_id)
     transaction_id = transaction.id
 
     assert_receive {:mnesia_table_event,
