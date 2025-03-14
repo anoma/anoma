@@ -66,7 +66,7 @@ defmodule Anoma.Node.Examples.ENode do
           }
 
         {:error, e} ->
-          IO.inspect e
+          IO.inspect(e)
           {:error, :failed_to_start_node}
       end
 

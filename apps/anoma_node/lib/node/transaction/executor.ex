@@ -192,7 +192,7 @@ defmodule Anoma.Node.Transaction.Executor do
     # process. when the task is terminated (e.g., stop_node()) it will send a
     # message to the executor (see handle_info above)
     # Task.Supervisor.start_child(tx_supervisor, fn ->
-      spawn(fn ->
+    spawn(fn ->
       # Task.Supervisor.start_child(tx_supervisor, fn ->
       try do
         Backends.execute(state.node_id, tw_w_backend, id)

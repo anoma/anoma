@@ -57,12 +57,19 @@ defmodule Anoma.Supervisor do
           )
         ) :: DynamicSupervisor.on_start_child()
   def start_node(args) do
+    args =
+      Keyword.validate!(args, [
+        :node_id,
+        tx_args: [mempool: [], ordering: [], storage: []],
+        node_config: %{}
+      ])
+
     node_id = args[:node_id]
 
     with {:ok, init_args} <- State.startup_arguments_or_default(node_id),
          {:ok, _} <- initialize_storage(node_id) do
       # put the arguments in the given arguments
-      args = Keyword.put_new(args, :transaction, init_args)
+      args = Keyword.put_new(args, :tx_args, init_args)
 
       DynamicSupervisor.start_child(
         Anoma.Node.NodeSupervisor,

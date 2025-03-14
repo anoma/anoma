@@ -14,6 +14,10 @@ defmodule Anoma.Node.Transport.Supervisor do
 
   require Logger
 
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transport.NetworkRegister
+  alias Anoma.Node.Transport
+
   @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
     args = Keyword.validate!(args, [:node_id, :node_config])
