@@ -40,10 +40,10 @@ defmodule Anoma.Node.Transaction.Supervisor do
        [node_id: args[:node_id]] ++ Keyword.get(args, :ordering, [])},
       {Anoma.Node.Transaction.Storage,
        [node_id: args[:node_id]] ++ Keyword.get(args, :storage, [])},
+      {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]},
       {Anoma.Node.Transaction.Mempool,
        [node_id: args[:node_id]] ++ Keyword.get(args, :mempool, [])},
-      {Task.Supervisor, name: Registry.via(args[:node_id], TxSupervisor)},
-      {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]}
+      {Task.Supervisor, name: Registry.via(args[:node_id], TxSupervisor)}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)

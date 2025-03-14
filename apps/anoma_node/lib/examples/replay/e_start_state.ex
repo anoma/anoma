@@ -13,8 +13,11 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   alias Anoma.Node.Examples.EEvent
   alias Anoma.Node.Examples.ETransaction
   alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Examples.Helpers
 
   import ExUnit.Assertions
+
+  use EventBroker.WithSubscription
 
   # -----------------------------------------------------------
   # Table states
@@ -186,37 +189,51 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   """
   @spec mempool_todo_consensus(ENode.t()) :: {ENode.t(), ETransaction.t()}
   def mempool_todo_consensus(enode \\ ENode.start_node()) do
-    # stop the logging engine from processing block events.
-    mempool_engine = Registry.whereis(enode.node_id, Mempool)
+    with_subscription [[]] do
+      {:ok, mnesia_events} =
+        Helpers.table_events_logger(Tables.table_events(enode.node_id))
 
-    filter = [
-      Event.node_filter(enode.node_id),
-      Mempool.filter_for_mempool_execution_events()
-    ]
+      # stop the logging engine from processing block events.
+      mempool_engine = Registry.whereis(enode.node_id, Mempool)
 
-    EventBroker.unsubscribe(mempool_engine, filter)
+      filter = [
+        Event.node_filter(enode.node_id),
+        Mempool.filter_for_mempool_execution_events()
+      ]
 
-    # create a block from a transaction
-    # this call does not wait for any events, so its async.
-    # to be sure the block is created, I wait for the block event here myself.
-    {_enode, transaction} = EMempool.make_block(enode)
+      # unsubscribe the mempool from execution events. This ensures that no
+      # commits happen, and no block event is generated.
+      EventBroker.unsubscribe(mempool_engine, filter)
 
-    # wait for the block event
-    order_event = EEvent.order_event(enode, transaction.id)
-    EEvent.wait_for_event(order_event)
+      # create a block from a transaction
+      # this call does not wait for any events, so its async.
+      # to be sure the block is created, I wait for the block event here myself.
+      {_enode, transaction} = EMempool.make_block(enode)
 
-    # compute the mempool arguments.
-    {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
+      # wait for the block event
+      order_event = EEvent.order_event(enode, transaction.id)
+      EEvent.wait_for_event(order_event)
 
-    # assert values in the arguments
-    assert mempool_start_args[:transactions] == [
-             {transaction.id, {transaction.backend, transaction.noun}}
-           ]
+      # ensure that the transaction is written into the events table
+      assert Helpers.seen_event?(
+               mnesia_events,
+               {Tables.table_events(enode.node_id), transaction.id,
+                {transaction.backend, transaction.noun}}
+             )
 
-    assert mempool_start_args[:round] == 1
-    assert mempool_start_args[:consensus] == [[transaction.id]]
+      # compute the mempool arguments.
+      {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
 
-    {enode, transaction}
+      # assert values in the arguments
+      assert mempool_start_args[:transactions] == [
+               {transaction.id, {transaction.backend, transaction.noun}}
+             ]
+
+      assert mempool_start_args[:round] == 1
+      assert mempool_start_args[:consensus] == [[transaction.id]]
+
+      {enode, transaction}
+    end
   end
 
   @doc """
@@ -242,39 +259,41 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   We make sure that this not happen by mocking this behaviour.
   """
   def mempool_obsolete_consensus(enode \\ ENode.start_node()) do
-    # create ten blocks
-    {_enode, transactions} = EMempool.complete_ten_transactions(enode)
+    with_subscription [[]] do
+      # create ten blocks
+      {_enode, transactions} = EMempool.complete_ten_transactions(enode)
 
-    # the next round is the total amount of transactions (starts counting from 0)
-    next_round = Enum.count(transactions) + 1
+      # the next round is the total amount of transactions (starts counting from 0)
+      next_round = Enum.count(transactions) + 1
 
-    # the highest round for a block is 9
-    # events is at round 9
-    # consensus is empty
+      # the highest round for a block is 9
+      # events is at round 9
+      # consensus is empty
 
-    # stop the logging engine from processing block events.
-    logging_engine = Registry.whereis(enode.node_id, Logging)
-    filter = [Event.node_filter(enode.node_id), Logging.blocks_filter()]
-    EventBroker.unsubscribe(logging_engine, filter)
+      # stop the logging engine from processing block events.
+      logging_engine = Registry.whereis(enode.node_id, Logging)
+      filter = [Event.node_filter(enode.node_id), Logging.blocks_filter()]
+      EventBroker.unsubscribe(logging_engine, filter)
 
-    # create a block from a transaction
-    # this call does not wait for any events, so its async.
-    # to be sure the block is created, I wait for the block event here myself.
-    {_enode, transaction} = EMempool.make_block(enode)
+      # create a block from a transaction
+      # this call does not wait for any events, so its async.
+      # to be sure the block is created, I wait for the block event here myself.
+      {_enode, transaction} = EMempool.make_block(enode)
 
-    # wait for the block event
-    block_event = EEvent.block_event(enode, transaction, next_round)
-    EEvent.wait_for_event(block_event)
+      # wait for the block event
+      block_event = EEvent.block_event(enode, transaction, next_round)
+      EEvent.wait_for_event(block_event)
 
-    # compute the mempool arguments.
-    {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
+      # compute the mempool arguments.
+      {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
 
-    # assert values in the arguments
-    assert mempool_start_args[:transactions] == []
-    assert mempool_start_args[:round] == next_round + 1
-    assert mempool_start_args[:consensus] == []
+      # assert values in the arguments
+      assert mempool_start_args[:transactions] == []
+      assert mempool_start_args[:round] == next_round + 1
+      assert mempool_start_args[:consensus] == []
 
-    enode
+      enode
+    end
   end
 
   def mempool_obsolete_consensi(enode \\ ENode.start_node()) do
@@ -293,27 +312,31 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
     filter = [Event.node_filter(enode.node_id), Logging.blocks_filter()]
     EventBroker.unsubscribe(logging_engine, filter)
 
-    # create 5 blocks, creating 5 stale consensi in the logging engine.
-    for block <- 0..4 do
-      # create a block from a transaction
-      # this call does not wait for any events, so its async.
-      # to be sure the block is created, I wait for the block event here myself.
-      {_enode, transaction} = EMempool.make_block(enode)
+    with_subscription [[]] do
+      # create 5 blocks, creating 5 stale consensi in the logging engine.
+      for block <- 0..4 do
+        # create a block from a transaction
+        # this call does not wait for any events, so its async.
+        # to be sure the block is created, I wait for the block event here myself.
+        {_enode, transaction} = EMempool.make_block(enode)
 
-      # wait for the block event
-      block_event = EEvent.block_event(enode, transaction, next_round + block)
-      EEvent.wait_for_event(block_event)
+        # wait for the block event
+        block_event =
+          EEvent.block_event(enode, transaction, next_round + block)
+
+        EEvent.wait_for_event(block_event)
+      end
+
+      # compute the mempool arguments.
+      {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
+
+      # assert values in the arguments
+      assert mempool_start_args[:transactions] == []
+      assert mempool_start_args[:round] == next_round + 5
+      assert mempool_start_args[:consensus] == []
+
+      enode
     end
-
-    # compute the mempool arguments.
-    {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
-
-    # assert values in the arguments
-    assert mempool_start_args[:transactions] == []
-    assert mempool_start_args[:round] == next_round + 5
-    assert mempool_start_args[:consensus] == []
-
-    enode
   end
 
   # -----------------------------------------------------------
