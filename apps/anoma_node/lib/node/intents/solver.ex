@@ -269,7 +269,7 @@ defmodule Anoma.Node.Intents.Solver do
   def submit(tx = %Anoma.TransparentResource.Transaction{}, node_id) do
     tx_noun = tx |> Noun.Nounable.to_noun()
     tx_candidate = [[1, 0, [1 | tx_noun], 0 | 909], 0 | 707]
-    tx_filter = [Node.Event.node_filter(node_id), %Mempool.TxFilter{}]
+    tx_filter = [Node.Event.node_filter(node_id), %Mempool.Events.TxFilter{}]
 
     with_subscription [tx_filter] do
       Mempool.tx(

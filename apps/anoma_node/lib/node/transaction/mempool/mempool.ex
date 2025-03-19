@@ -28,7 +28,6 @@ defmodule Anoma.Node.Transaction.Mempool do
   alias Anoma.Node
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Backends.ResultEvent
   alias Anoma.Node.Transaction.Executor
   alias Anoma.Node.Transaction.Executor.ExecutionEvent
   alias Anoma.Node.Transaction.Storage
@@ -155,32 +154,6 @@ defmodule Anoma.Node.Transaction.Mempool do
     )
 
     field(:round, non_neg_integer(), default: 0)
-  end
-
-  deffilter TxFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Events.TxEvent{}}} ->
-      true
-
-    _ ->
-      false
-  end
-
-  deffilter ConsensusFilter do
-    %EventBroker.Event{
-      body: %Node.Event{body: %Mempool.Events.ConsensusEvent{}}
-    } ->
-      true
-
-    _ ->
-      false
-  end
-
-  deffilter BlockFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.Events.BlockEvent{}}} ->
-      true
-
-    _ ->
-      false
   end
 
   ############################################################
@@ -342,13 +315,13 @@ defmodule Anoma.Node.Transaction.Mempool do
   I am a filter spec which filters for Mempool-related messages.
   """
 
-  @spec filter_for_mempool() :: Backends.ForMempoolFilter.t()
+  @spec filter_for_mempool() :: Backends.Events.ForMempoolFilter.t()
   def filter_for_mempool() do
-    %Backends.ForMempoolFilter{}
+    %Backends.Events.ForMempoolFilter{}
   end
 
   def filter_for_mempool_execution_events() do
-    %Backends.ForMempoolExecutionFilter{}
+    %Backends.Events.ForMempoolExecutionFilter{}
   end
 
   ############################################################
@@ -380,7 +353,9 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @impl true
   def handle_info(
-        e = %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}},
+        e = %EventBroker.Event{
+          body: %Node.Event{body: %Backends.Events.ResultEvent{}}
+        },
         state
       ) do
     {:noreply, handle_result_event(e, state)}

@@ -184,7 +184,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   @impl true
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{body: %Backends.TRMEvent{}}
+          body: %Node.Event{body: %Backends.Events.TRMEvent{}}
         },
         state
       ) do
@@ -263,7 +263,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   @spec handle_new_state(t(), EventBroker.Event.t()) :: t()
   defp handle_new_state(state, %EventBroker.Event{
          body: %Node.Event{
-           body: %Backends.TRMEvent{
+           body: %Backends.Events.TRMEvent{
              nullifiers: nlfs_set,
              commitments: cms_set
            }
@@ -358,7 +358,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   deffilter TRMFilter do
     %EventBroker.Event{
-      body: %Anoma.Node.Event{body: %Backends.TRMEvent{}}
+      body: %Anoma.Node.Event{body: %Backends.Events.TRMEvent{}}
     } ->
       true
 
