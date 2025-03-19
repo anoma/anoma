@@ -260,9 +260,9 @@ defmodule Anoma.Node.Examples.EEvent do
         {"id 1", [error: "id 1"]}
   """
   @spec new_execution_event([{any(), String.t()}]) ::
-          Executor.ExecutionEvent.t()
+          Executor.Events.ExecutionEvent.t()
   def new_execution_event(results) do
-    %Executor.ExecutionEvent{
+    %Executor.Events.ExecutionEvent{
       result: results
     }
   end
