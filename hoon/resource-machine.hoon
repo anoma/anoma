@@ -235,4 +235,10 @@
   |=  [(list json) (list @) (list json) (list @) (list json)]
   ^-  cairo-transaction
   !!
+++  cairo-prove-delta
+  ~/  %cairo-prove-delta
+  |=  tx=cairo-transaction
+  =+  c=%cairo-prove-delta
+  ^-  cairo-transaction
+  !!
 --
