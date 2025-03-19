@@ -9,6 +9,7 @@ defmodule Anoma.Node.Transaction.Storage.Events do
 
   use EventBroker.DefFilter
   use TypedStruct
+
   ############################################################
   #                           Events                         #
   ############################################################
