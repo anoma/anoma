@@ -50,6 +50,7 @@ defmodule Anoma.Node.Transaction.Storage do
   alias Anoma.Node
   alias Anoma.Node.Tables
   alias Anoma.Node.Registry
+  alias Anoma.Node.Transaction.Storage.Events
 
   require Node.Event
 
@@ -121,27 +122,6 @@ defmodule Anoma.Node.Transaction.Storage do
     field(:uncommitted_updates, %{bare_key() => list(integer())},
       default: %{}
     )
-  end
-
-  typedstruct enforce: true, module: WriteEvent do
-    @typedoc """
-    I am the type of a write event.
-
-    I am sent whenever something has been written at a particular height.
-
-    ### Fields
-
-    - `:height` - The height at which something was just written.
-    - `:writes` - A list of tuples {key, value}
-    """
-
-    field(:height, non_neg_integer())
-    field(:writes, list({Anoma.Node.Transaction.Storage.bare_key(), term()}))
-  end
-
-  deffilter HeightFilter, height: non_neg_integer() do
-    %EventBroker.Event{body: %Node.Event{body: %{height: ^height}}} -> true
-    _ -> false
   end
 
   ############################################################
@@ -363,21 +343,6 @@ defmodule Anoma.Node.Transaction.Storage do
   end
 
   ############################################################
-  #                      Public Filters                      #
-  ############################################################
-
-  @doc """
-  I am the height filter.
-
-  Given a height, I provide a filter for for messages of a particular
-  height.
-  """
-  @spec height_filter(non_neg_integer()) :: HeightFilter.t()
-  def height_filter(height) do
-    %__MODULE__.HeightFilter{height: height}
-  end
-
-  ############################################################
   #                       User Calling API                   #
   ############################################################
 
@@ -547,7 +512,7 @@ defmodule Anoma.Node.Transaction.Storage do
       {new_state, event_writes} = abwrite(write_opt, {height, args}, state)
 
       write_event =
-        Node.Event.new_with_body(state.node_id, %__MODULE__.WriteEvent{
+        Node.Event.new_with_body(state.node_id, %Events.WriteEvent{
           height: height,
           writes: event_writes
         })
@@ -725,7 +690,7 @@ defmodule Anoma.Node.Transaction.Storage do
     EventBroker.subscribe(pid, [
       Node.Event.node_filter(node_id),
       this_module_filter(),
-      height_filter(height)
+      %Events.HeightFilter{height: height}
     ])
   end
 
@@ -735,7 +700,7 @@ defmodule Anoma.Node.Transaction.Storage do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
-          body: %__MODULE__.WriteEvent{height: ^awaited_height}
+          body: %Events.WriteEvent{height: ^awaited_height}
         }
       } ->
         GenServer.reply(from, write(node_id, {height, kvlist}))
@@ -744,7 +709,7 @@ defmodule Anoma.Node.Transaction.Storage do
     EventBroker.unsubscribe_me([
       Node.Event.node_filter(node_id),
       this_module_filter(),
-      height_filter(awaited_height)
+      %Events.HeightFilter{height: awaited_height}
     ])
   end
 
@@ -756,7 +721,7 @@ defmodule Anoma.Node.Transaction.Storage do
       # care about, then we already have the value for free
       %EventBroker.Event{
         body: %Node.Event{
-          body: %__MODULE__.WriteEvent{height: ^height, writes: writes}
+          body: %Events.WriteEvent{height: ^height, writes: writes}
         }
       } ->
         case Enum.find(writes, fn {keywrite, _value} -> key == keywrite end) do
@@ -776,7 +741,7 @@ defmodule Anoma.Node.Transaction.Storage do
     EventBroker.unsubscribe_me([
       Node.Event.node_filter(node_id),
       this_module_filter(),
-      height_filter(height)
+      %Events.HeightFilter{height: height}
     ])
   end
 end
