@@ -5,9 +5,15 @@ defmodule Anoma.Node.Transaction.Mempool.Events do
   I also define the filters that can be used to subscribe to these events.
   """
 
+  alias Anoma.Node.Event
   alias Anoma.Node.Transaction.Mempool
 
+  use EventBroker.DefFilter
   use TypedStruct
+
+  ############################################################
+  #                           Events                         #
+  ############################################################
 
   typedstruct module: TxEvent do
     @derive Jason.Encoder
@@ -41,7 +47,7 @@ defmodule Anoma.Node.Transaction.Mempool.Events do
                  specified order.
     """
 
-    field(:order, list(binary()), default: [])
+    field(:order, [binary()], default: [])
   end
 
   typedstruct module: BlockEvent do
@@ -58,7 +64,35 @@ defmodule Anoma.Node.Transaction.Mempool.Events do
     - `:round` - The block number committed.
     """
 
-    field(:order, list(binary()), default: [])
+    field(:order, [binary()], default: [])
     field(:round, non_neg_integer())
+  end
+
+  ############################################################
+  #                           Filters                        #
+  ############################################################
+
+  deffilter TxFilter do
+    %EventBroker.Event{body: %Event{body: %TxEvent{}}} ->
+      true
+
+    _ ->
+      false
+  end
+
+  deffilter ConsensusFilter do
+    %EventBroker.Event{body: %Event{body: %ConsensusEvent{}}} ->
+      true
+
+    _ ->
+      false
+  end
+
+  deffilter BlockFilter do
+    %EventBroker.Event{body: %Event{body: %BlockEvent{}}} ->
+      true
+
+    _ ->
+      false
   end
 end

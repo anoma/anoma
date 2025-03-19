@@ -166,7 +166,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
     event =
       Node.Event.new_with_body(
         node_id,
-        %Anoma.Node.Transaction.Backends.TRMEvent{
+        %Anoma.Node.Transaction.Backends.Events.TRMEvent{
           nullifiers: nlfs_set,
           commitments: MapSet.new([])
         }
@@ -190,7 +190,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
     event =
       Node.Event.new_with_body(
         node_id,
-        %Anoma.Node.Transaction.Backends.TRMEvent{
+        %Anoma.Node.Transaction.Backends.Events.TRMEvent{
           nullifiers: MapSet.new([]),
           commitments: cms_set
         }

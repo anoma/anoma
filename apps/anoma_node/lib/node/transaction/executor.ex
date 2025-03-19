@@ -157,9 +157,9 @@ defmodule Anoma.Node.Transaction.Executor do
   I am a filter for completion messages from workers.
   """
 
-  @spec complete_filter() :: Backends.CompleteFilter.t()
+  @spec complete_filter() :: Backends.Events.CompleteFilter.t()
   def complete_filter() do
-    %Backends.CompleteFilter{}
+    %Backends.Events.CompleteFilter{}
   end
 
   ############################################################
@@ -221,7 +221,7 @@ defmodule Anoma.Node.Transaction.Executor do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
-          body: %Backends.CompleteEvent{
+          body: %Backends.Events.CompleteEvent{
             tx_id: ^id,
             tx_result: res
           }
