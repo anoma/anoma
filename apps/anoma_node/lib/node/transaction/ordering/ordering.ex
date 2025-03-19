@@ -26,6 +26,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   alias Anoma.Node
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Storage
+  alias Anoma.Node.Transaction.Ordering.Events
 
   require Node.Event
 
@@ -72,26 +73,6 @@ defmodule Anoma.Node.Transaction.Ordering do
     # maps tx ids to their height for writing.
     # the previous height is used for reading.
     field(:tx_id_to_height, %{binary() => integer()}, default: %{})
-  end
-
-  typedstruct enforce: true, module: OrderEvent do
-    @typedoc """
-    I am the type of an ordering Event.
-
-    I am sent whenever the transaction with which I am associated gets a
-    global timestamp.
-
-    ### Fields
-
-    - `tx_id` - The ID of the transaction which was ordered.
-    """
-
-    field(:tx_id, binary())
-  end
-
-  deffilter TxIdFilter, tx_id: binary() do
-    %EventBroker.Event{body: %Node.Event{body: %{tx_id: ^tx_id}}} -> true
-    _ -> false
   end
 
   @doc """
@@ -260,9 +241,9 @@ defmodule Anoma.Node.Transaction.Ordering do
   matches iff the ID stored is the one supplied.
   """
 
-  @spec tx_id_filter(binary()) :: TxIdFilter.t()
+  @spec tx_id_filter(binary()) :: Events.TxIdFilter.t()
   def tx_id_filter(tx_id) do
-    %__MODULE__.TxIdFilter{tx_id: tx_id}
+    %Events.TxIdFilter{tx_id: tx_id}
   end
 
   ############################################################
@@ -362,7 +343,7 @@ defmodule Anoma.Node.Transaction.Ordering do
           reduce: {state.tx_id_to_height, state.next_height} do
         {map, order} ->
           order_event =
-            Node.Event.new_with_body(state.node_id, %__MODULE__.OrderEvent{
+            Node.Event.new_with_body(state.node_id, %Events.OrderEvent{
               tx_id: tx_id
             })
 
@@ -429,7 +410,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   defp block(from, tx_id, call, node_id) do
     receive do
       %EventBroker.Event{
-        body: %Node.Event{body: %__MODULE__.OrderEvent{tx_id: ^tx_id}}
+        body: %Node.Event{body: %Events.OrderEvent{tx_id: ^tx_id}}
       } ->
         result = call.()
         GenServer.reply(from, result)

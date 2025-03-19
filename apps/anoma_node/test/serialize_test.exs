@@ -10,4 +10,7 @@ defmodule Examples.SerializeTest do
 
   use TestHelper.GenerateExampleTests,
     for: Anoma.Node.Examples.Serializing.Events.Backends
+
+  use TestHelper.GenerateExampleTests,
+    for: Anoma.Node.Examples.Serializing.Events.Ordering
 end
