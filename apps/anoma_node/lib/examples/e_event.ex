@@ -244,9 +244,9 @@ defmodule Anoma.Node.Examples.EEvent do
   @doc """
   I create a new order event.
   """
-  @spec new_order_event(String.t()) :: Ordering.OrderEvent.t()
+  @spec new_order_event(String.t()) :: Ordering.Events.OrderEvent.t()
   def new_order_event(transaction_id) do
-    %Ordering.OrderEvent{
+    %Ordering.Events.OrderEvent{
       tx_id: transaction_id
     }
   end

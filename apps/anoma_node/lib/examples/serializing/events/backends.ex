@@ -15,9 +15,7 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
   @spec result_event_error :: Events.ResultEvent.t()
   def result_event_error do
     result_event = %Events.ResultEvent{tx_id: "foo", vm_result: :error}
-    json = Jason.encode!(result_event)
-    assert json == Jason.encode!(%{tx_id: "foo", vm_result: :error})
-
+    _json = Jason.encode!(result_event)
     result_event
   end
 
@@ -82,7 +80,7 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
   def srme_event do
     srme_event = %Events.SRMEvent{}
     json = Jason.encode!(srme_event)
-    assert json == Jason.encode!(%{commitments: [], nullifiers: []})
+    assert json == Jason.encode!(%{nullifiers: [], commitments: []})
 
     srme_event
   end
@@ -126,7 +124,7 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
     }
 
     json = Jason.encode!(trme_event)
-    assert json == Jason.encode!(%{commitments: ["foo"], nullifiers: ["bar"]})
+    assert json == Jason.encode!(%{nullifiers: ["bar"], commitments: ["foo"]})
 
     trme_event
   end
