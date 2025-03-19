@@ -134,7 +134,7 @@ defmodule Anoma.Node.Examples.ESolver do
           %EventBroker.Event{
             body: %Anoma.Node.Event{
               node_id: ^node_id,
-              body: %Mempool.TxEvent{
+              body: %Mempool.Events.TxEvent{
                 tx: %Mempool.Tx{backend: _, code: ^tx_candidate}
               }
             }

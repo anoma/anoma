@@ -32,6 +32,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   alias Anoma.Node.Transaction.Executor
   alias Anoma.Node.Transaction.Executor.ExecutionEvent
   alias Anoma.Node.Transaction.Storage
+  alias Anoma.Node.Transaction.Mempool.Events
 
   require Logger
   require Node.Event
@@ -52,7 +53,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @typedoc """
   I am the type of the transaction result.
   """
-  @type tx_result :: {:ok, any()} | :error | :in_progress
+  @type tx_result :: {:ok, Noun.t()} | :error | :in_progress
 
   @typedoc """
   Type of the arguments the mempool genserver expects
@@ -93,54 +94,37 @@ defmodule Anoma.Node.Transaction.Mempool do
     field(:code, Noun.t())
   end
 
-  typedstruct module: TxEvent do
-    @typedoc """
-    I am the type of a transaction event.
+  defimpl Jason.Encoder, for: Tx do
+    defp encode_maybe_noun(noun) when is_atom(noun) do
+      noun
+    end
 
-    I am sent upon a launch of a transaction, signaling that a specific
-    transaction has been launched.
+    defp encode_maybe_noun({:ok, noun}) do
+      encode_maybe_noun(noun)
+    end
 
-    ### Fileds
+    defp encode_maybe_noun(noun) do
+      with jammed <- Noun.Jam.jam(noun),
+           encoded <- Base.encode64(jammed) do
+        encoded
+      end
+    end
 
-    - `:id` - The ID of a launched transaction.
-    - `:tx` - The transaction info as stored in Mempool state.
-    """
-
-    field(:id, binary())
-    field(:tx, Mempool.Tx.t())
-  end
-
-  typedstruct module: ConsensusEvent do
-    @typedoc """
-    I am the type of a consensus event.
-
-    I am sent upon receiving a consensus, signaling that ordering has been
-    assigned to a specific subset of pending transactions.
-
-    ### Fileds
-
-    - `:order` - The list of transaction IDs in apporpriate consensus
-                 specified order.
-    """
-
-    field(:order, list(binary()))
-  end
-
-  typedstruct module: BlockEvent do
-    @typedoc """
-    I am the type of a block execition event.
-
-    I am sent upon a completion of all transactions submitted by consensus
-    and subsequent creation of a table-backed block.
-
-    ### Fileds
-
-    - `:order` - The consensus info executed, a list of transaction IDs.
-    - `:round` - The block number committed.
-    """
-
-    field(:order, list(binary()))
-    field(:round, non_neg_integer())
+    def encode(%Tx{} = tx, opts) do
+      with vm_result <- encode_maybe_noun(tx.vm_result),
+           tx_result <- encode_maybe_noun(tx.tx_result),
+           code <- encode_maybe_noun(tx.code) do
+        Jason.Encode.map(
+          %{
+            code: code,
+            tx_result: tx_result,
+            backend: nil,
+            vm_result: vm_result
+          },
+          opts
+        )
+      end
+    end
   end
 
   typedstruct do
@@ -174,7 +158,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   deffilter TxFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.TxEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Events.TxEvent{}}} ->
       true
 
     _ ->
@@ -182,7 +166,9 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   deffilter ConsensusFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.ConsensusEvent{}}} ->
+    %EventBroker.Event{
+      body: %Node.Event{body: %Mempool.Events.ConsensusEvent{}}
+    } ->
       true
 
     _ ->
@@ -190,7 +176,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   deffilter BlockFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.Events.BlockEvent{}}} ->
       true
 
     _ ->
@@ -474,7 +460,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @spec block_event(list(binary), non_neg_integer(), String.t()) :: :ok
   defp block_event(id_list, round, node_id) do
     block_event =
-      Node.Event.new_with_body(node_id, %__MODULE__.BlockEvent{
+      Node.Event.new_with_body(node_id, %Events.BlockEvent{
         order: id_list,
         round: round
       })
@@ -485,7 +471,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @spec tx_event(binary(), Mempool.Tx.t(), String.t()) :: :ok
   defp tx_event(tx_id, value, node_id) do
     tx_event =
-      Node.Event.new_with_body(node_id, %__MODULE__.TxEvent{
+      Node.Event.new_with_body(node_id, %Events.TxEvent{
         id: tx_id,
         tx: value
       })
@@ -496,7 +482,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @spec consensus_event(list(binary()), String.t()) :: :ok
   defp consensus_event(id_list, node_id) do
     consensus_event =
-      Node.Event.new_with_body(node_id, %__MODULE__.ConsensusEvent{
+      Node.Event.new_with_body(node_id, %Events.ConsensusEvent{
         order: id_list
       })
 

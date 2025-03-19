@@ -502,7 +502,7 @@ defmodule Anoma.Node.Examples.ELogging do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.ConsensusEvent{
+          body: %Mempool.Events.ConsensusEvent{
             order: ^consensus
           }
         }
@@ -519,7 +519,7 @@ defmodule Anoma.Node.Examples.ELogging do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.TxEvent{
+          body: %Mempool.Events.TxEvent{
             id: ^id,
             tx: %Mempool.Tx{backend: _, code: ^code}
           }
@@ -563,7 +563,7 @@ defmodule Anoma.Node.Examples.ELogging do
   @spec tx_event(binary(), Backends.backend(), Noun.t(), String.t()) :: :ok
   def tx_event(id, backend, code, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %Mempool.TxEvent{
+      Node.Event.new_with_body(node_id, %Mempool.Events.TxEvent{
         id: id,
         tx: %Mempool.Tx{backend: backend, code: code}
       })
@@ -574,7 +574,7 @@ defmodule Anoma.Node.Examples.ELogging do
   @spec consensus_event(list(binary()), String.t()) :: :ok
   def consensus_event(order, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %Mempool.ConsensusEvent{
+      Node.Event.new_with_body(node_id, %Mempool.Events.ConsensusEvent{
         order: order
       })
 
@@ -584,7 +584,7 @@ defmodule Anoma.Node.Examples.ELogging do
   @spec block_event(list(binary()), non_neg_integer(), String.t()) :: :ok
   def block_event(order, round, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %Mempool.BlockEvent{
+      Node.Event.new_with_body(node_id, %Mempool.Events.BlockEvent{
         order: order,
         round: round
       })

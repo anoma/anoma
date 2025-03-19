@@ -281,7 +281,7 @@ defmodule Anoma.Node.Intents.Solver do
         %EventBroker.Event{
           body: %Node.Event{
             node_id: ^node_id,
-            body: %Mempool.TxEvent{
+            body: %Mempool.Events.TxEvent{
               tx: %Mempool.Tx{backend: _, code: ^tx_candidate}
             }
           }
