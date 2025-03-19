@@ -29,7 +29,6 @@ defmodule Anoma.Node.Transaction.Mempool do
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Executor
-  alias Anoma.Node.Transaction.Executor.ExecutionEvent
   alias Anoma.Node.Transaction.Storage
   alias Anoma.Node.Transaction.Mempool.Events
 
@@ -363,7 +362,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{body: %ExecutionEvent{}}
+          body: %Node.Event{body: %Executor.Events.ExecutionEvent{}}
         },
         state
       ) do

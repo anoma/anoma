@@ -162,7 +162,7 @@ defmodule Anoma.Node.Transaction.Backends.Events do
   end
 
   deffilter ForMempoolExecutionFilter do
-    %EventBroker.Event{body: %Event{body: %Executor.ExecutionEvent{}}} ->
+    %EventBroker.Event{body: %Event{body: %Executor.Events.ExecutionEvent{}}} ->
       true
 
     _ ->
