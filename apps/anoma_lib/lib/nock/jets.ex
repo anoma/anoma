@@ -987,6 +987,16 @@ defmodule Nock.Jets do
     end
   end
 
+  @spec cairo_prove_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  def cairo_prove_delta(core) do
+    with {:ok, sample} <- sample(core),
+         {:ok, cairo_tx} <- CairoResource.Transaction.from_noun(sample) do
+      {:ok, CairoResource.Transaction.prove_delta(cairo_tx)}
+    else
+      _ -> :error
+    end
+  end
+
   ############################################################
   #                   Arithmetic Helpers                     #
   ############################################################
