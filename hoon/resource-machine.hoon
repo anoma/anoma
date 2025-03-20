@@ -180,6 +180,11 @@
   =+  c=%delta-sub
   ^-  @
   !!
+++  resource-delta
+  ~/  %resource-delta
+  |=  r=t-resource
+  ^-  @
+  (jam (malt ~[[(kind r) quantity.r]]))
 ++  action-delta
   ~/  %action-delta
   |=  =t-action
@@ -217,7 +222,7 @@
   ^-  ?
   =(delta expected)
 ++  zero-delta  ::  the value of the zero delta, for convenience
-  ~
+  2
 ++  t-compose
   ~/  %t-compose
   |=  [tx1=t-transaction tx2=t-transaction]

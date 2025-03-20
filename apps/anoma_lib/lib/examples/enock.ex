@@ -1,5 +1,6 @@
 defmodule Examples.ENock do
   alias Anoma.RM.Transparent.Action
+  alias Anoma.RM.Transparent.Resource
   alias Anoma.RM.Transparent.Transaction
   alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias Examples.ECrypto
@@ -2047,6 +2048,46 @@ defmodule Examples.ENock do
       |> Nock.nock([9, 2, 0 | 1])
 
     assert Noun.equal?(res2, delta)
+  end
+
+  def zero_delta_arm() do
+    "[9 174 0 7]" |> Noun.Format.parse_always()
+  end
+
+  def zero_delta_call() do
+    [zero_delta_arm(), 0 | Nock.Lib.rm_core()]
+    |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def zero_delta_test() do
+    {:ok, res} = zero_delta_call()
+
+    {:ok, res1} = delta_sub_call(res, res) |> Nock.nock([9, 2, 0 | 1])
+    {:ok, res2} = delta_add_call(res, res) |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal?(res1, res2)
+  end
+
+  def resource_delta_arm() do
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 701 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def resource_delta_call(res) do
+    sample = res
+
+    [resource_delta_arm(), sample | Nock.Lib.logics_core()]
+    |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def resource_delta_test(n \\ :rand.uniform(100_000)) do
+    res = %Resource{quantity: n}
+
+    {:ok, delta} = res |> Noun.Nounable.to_noun() |> resource_delta_call()
+
+    assert delta == Resource.delta(res)
   end
 
   def action_delta_arm() do
