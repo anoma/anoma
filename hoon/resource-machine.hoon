@@ -180,6 +180,11 @@
   =+  c=%delta-sub
   ^-  @
   !!
+++  resource-delta
+  ~/  %resource-delta
+  |=  r=t-resource
+  ^-  @
+  (jam (malt ~[[(kind r) quantity.r]]))
 ++  action-delta
   ~/  %action-delta
   |=  =t-action
