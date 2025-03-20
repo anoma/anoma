@@ -129,6 +129,9 @@ defmodule Nock.Jets.Mugs do
       {"delta-add", 7, @layer_rm, &Nock.Jets.delta_add/1, :enabled, 50},
     (Jets.calculate_core(12013, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"delta-sub", 7, @layer_rm, &Nock.Jets.delta_sub/1, :enabled, 50},
+    (Jets.calculate_core(701, Nock.Lib.stdlib_layers()) |> hd()) =>
+      {"resource-delta", 7, @layer_rm, &Nock.Jets.resource_delta/1, :enabled,
+       50},
     (Jets.calculate_core(702, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"compliance-unit-delta", 7, @layer_rm, &Nock.Jets.compliance_delta/1,
        :enabled, 10},

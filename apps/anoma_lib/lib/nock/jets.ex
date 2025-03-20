@@ -826,6 +826,17 @@ defmodule Nock.Jets do
     end
   end
 
+  @spec resource_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  def resource_delta(core) do
+    with {:ok, a} <- sample(core),
+         {:ok, action} <- Resource.from_noun(a) do
+      res = action |> Resource.delta()
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
   @spec compliance_delta(Noun.t()) :: :error | {:ok, Noun.t()}
   def compliance_delta(core) do
     with {:ok, a} <- sample(core),
