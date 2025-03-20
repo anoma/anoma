@@ -58,6 +58,29 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   end
 
   @doc """
+  I am the function to get roots for a TRM compliance unit.
+
+  I go thtough the consumed field and get the provided roots for
+  non-ephemeral consumed resources.
+  """
+  @spec roots(t()) :: MapSet.t(integer())
+  def roots(t) do
+    for {nlf, root, _} <- t.instance.consumed, reduce: MapSet.new() do
+      acc ->
+        with {:ok, resource} <-
+               Anoma.RM.Transparent.ProvingSystem.RLPS.match_resource(
+                 nlf,
+                 true
+               ),
+             false <- resource.isephemeral do
+          MapSet.put(acc, root)
+        else
+          _ -> acc
+        end
+    end
+  end
+
+  @doc """
   I am the creation API for the compliance unit of the TRM.
 
   Given a key, instance, and proof for the unit, I put them as appropriate

@@ -103,6 +103,53 @@ defmodule Anoma.RM.Transparent.Transaction do
   end
 
   @doc """
+  I am the root function for the transparent transaction.
+
+  I collect the roots for non-ephemeral consumed resources that are
+  kept in the underlying actions.
+  """
+  @spec roots(t()) :: MapSet.t(integer())
+  def roots(t) do
+    for action <- t.actions, reduce: MapSet.new() do
+      acc -> Action.roots(action) |> MapSet.union(acc)
+    end
+  end
+
+  @doc """
+  I am a function for getting the commitments out of a transparent
+  transaction
+  """
+  @spec commitments(t()) :: MapSet.t(integer())
+  def commitments(t) do
+    {:ok, precis} = Transaction.action_precis(t)
+    precis.created
+  end
+
+  @doc """
+  I am a function for getting the nullifiers out of a transparent
+  transaction
+  """
+  @spec nullifiers(t()) :: MapSet.t(integer())
+  def nullifiers(t) do
+    {:ok, precis} = Transaction.action_precis(t)
+    precis.consumed
+  end
+
+  @doc """
+  I am a function for getting the app data out of a transparent
+  transaction.
+
+  I go through the list of actions inside the transaction and gather their
+  app data
+  """
+  @spec app_data(t()) :: MapSet.t({binary(), bool()})
+  def app_data(t) do
+    for action <- t.actions, reduce: MapSet.new() do
+      acc -> Action.app_data(action) |> MapSet.union(acc)
+    end
+  end
+
+  @doc """
   I am the actions check for the transparent transaction.
 
   I verify each action in the approprite field using the provided interface.
@@ -201,5 +248,29 @@ defmodule Anoma.RM.Transparent.Transaction do
         Noun.Nounable.to_noun(t.actions) | <<>>
       ]
     end
+  end
+end
+
+defimpl Anoma.RM.Intent, for: Anoma.RM.Transparent.Transaction do
+  alias Anoma.RM.Transparent.Transaction
+
+  @impl true
+  def compose(t1 = %Transaction{}, t2 = %Transaction{}) do
+    Transaction.compose(t1, t2)
+  end
+
+  @impl true
+  def verify(tx = %Transaction{}) do
+    Transaction.verify(tx)
+  end
+
+  @impl true
+  def nullifiers(tx = %Transaction{}) do
+    Transaction.nullifiers(tx)
+  end
+
+  @impl true
+  def commitments(tx = %Transaction{}) do
+    Transaction.commitments(tx)
   end
 end
