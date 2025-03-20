@@ -20,6 +20,7 @@ defmodule Anoma.RM.Transparent.Transaction do
   alias Anoma.RM.Transparent.ProvingSystem.DPS
   alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias Anoma.RM.Transparent.Action
+  alias __MODULE__
 
   require Logger
   use TypedStruct
@@ -192,11 +193,13 @@ defmodule Anoma.RM.Transparent.Transaction do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [
-      Noun.Nounable.to_noun(t.roots),
-      Noun.Nounable.to_noun(t.actions) | <<>>
-    ]
+  defimpl Noun.Nounable, for: Transaction do
+    @impl true
+    def to_noun(t) do
+      [
+        Noun.Nounable.to_noun(t.roots),
+        Noun.Nounable.to_noun(t.actions) | <<>>
+      ]
+    end
   end
 end
