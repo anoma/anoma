@@ -2010,11 +2010,15 @@ defmodule Examples.ENock do
   def delta_add_test() do
     delta = EAction.trivial_true_commit_delta()
 
-    {:ok, delta} =
+    {:ok, delta_res} =
       delta_add_call(delta, delta) |> Nock.nock([9, 2, 0 | 1])
 
-    delta_original = EAction.trivial_true_commit_delta()
-    assert delta == DeltaHash.delta_add(delta_original, delta_original)
+    assert Noun.equal?(delta_res, DeltaHash.delta_add(delta, delta))
+
+    {:ok, delta_res2} =
+      delta_add_call(delta, 2) |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal?(delta, delta_res2)
   end
 
   def delta_sub_arm() do
@@ -2032,10 +2036,17 @@ defmodule Examples.ENock do
   def delta_sub_test() do
     delta = EAction.trivial_true_commit_delta()
 
-    assert delta_sub_call(delta, delta)
-           |> Nock.nock([9, 2, 0 | 1])
-           |> elem(1)
-           |> Noun.equal?(2)
+    {:ok, res1} =
+      delta_sub_call(delta, delta)
+      |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal?(res1, 2)
+
+    {:ok, res2} =
+      delta_sub_call(delta, 2)
+      |> Nock.nock([9, 2, 0 | 1])
+
+    assert Noun.equal?(res2, delta)
   end
 
   def action_delta_arm() do
