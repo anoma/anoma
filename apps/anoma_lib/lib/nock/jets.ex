@@ -4,9 +4,9 @@ defmodule Nock.Jets do
   """
 
   alias Anoma.Crypto.Sign
-  alias Anoma.TransparentResource.Action
-  alias Anoma.TransparentResource.Delta
-  alias Anoma.TransparentResource.Resource
+  alias Anoma.RM.Transparent.Action
+  alias Anoma.RM.Transparent.Resource
+  alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias Anoma.RM.Transparent.ProvingSystem.DPS
   alias Anoma.RM.Transparent.ProvingSystem.CPS
 
@@ -787,9 +787,14 @@ defmodule Nock.Jets do
   @spec delta_add(Noun.t()) :: :error | {:ok, Noun.t()}
   def delta_add(core) do
     with {:ok, [a | b]} <- sample(core),
-         {:ok, delta1} <- Delta.from_noun(a),
-         {:ok, delta2} <- Delta.from_noun(b) do
-      res = Delta.add(delta1, delta2) |> Delta.to_noun()
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(a),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(b) do
+      res =
+        DeltaHash.delta_add(
+          Noun.atom_binary_to_integer(a),
+          Noun.atom_binary_to_integer(b)
+        )
+
       {:ok, res}
     else
       _ ->
@@ -800,9 +805,14 @@ defmodule Nock.Jets do
   @spec delta_sub(Noun.t()) :: :error | {:ok, Noun.t()}
   def delta_sub(core) do
     with {:ok, [a | b]} <- sample(core),
-         {:ok, delta1} <- Delta.from_noun(a),
-         {:ok, delta2} <- Delta.from_noun(b) do
-      res = Delta.sub(delta1, delta2) |> Delta.to_noun()
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(a),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(b) do
+      res =
+        DeltaHash.delta_sub(
+          Noun.atom_binary_to_integer(a),
+          Noun.atom_binary_to_integer(b)
+        )
+
       {:ok, res}
     else
       _ -> :error
@@ -813,7 +823,7 @@ defmodule Nock.Jets do
   def action_delta(core) do
     with {:ok, a} <- sample(core),
          {:ok, action} <- Action.from_noun(a) do
-      res = action |> Action.delta() |> Delta.to_noun()
+      res = action |> Action.delta()
       {:ok, res}
     else
       _ -> :error
@@ -829,8 +839,7 @@ defmodule Nock.Jets do
       res =
         action_list
         |> Enum.map(&Action.delta(elem(&1, 1)))
-        |> Enum.reduce(%{}, &Delta.sub/2)
-        |> Delta.to_noun()
+        |> Enum.reduce(2, &DeltaHash.delta_sub/2)
 
       {:ok, res}
     else
@@ -842,11 +851,13 @@ defmodule Nock.Jets do
   def trm_compliance_key(core) do
     with {:ok, sample} <- sample(core),
          {:ok, instance} <- CPS.Instance.from_noun(sample) do
-      CPS.verify_jet(
-        instance.consumed,
-        instance.created,
-        instance.unit_delta
-      )
+      {:ok,
+       CPS.verify_jet(
+         instance.consumed,
+         instance.created,
+         instance.unit_delta
+       )
+       |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -856,7 +867,9 @@ defmodule Nock.Jets do
   def trm_delta_key(core) do
     with {:ok, sample} <- sample(core),
          {:ok, instance} <- DPS.Instance.from_noun(sample) do
-      DPS.verify_jet(instance.delta, instance.expected_balance)
+      {:ok,
+       DPS.verify_jet(instance.delta, instance.expected_balance)
+       |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end

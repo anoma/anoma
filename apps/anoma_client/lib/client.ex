@@ -9,7 +9,7 @@ defmodule Anoma.Client do
   alias Anoma.Client.ConnectionSupervisor
   alias Anoma.Client.Runner
   alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Transaction
 
   use TypedStruct
 
