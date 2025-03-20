@@ -15,11 +15,12 @@ defmodule Anoma.CairoResource.ProofRecord do
   end
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([proof | instance]) do
+  def from_noun([proof, instance | verifying_key]) do
     {:ok,
      %ProofRecord{
-       proof: proof,
-       instance: instance
+       proof: Noun.atom_integer_to_binary(proof),
+       instance: Noun.atom_integer_to_binary(instance),
+       verifying_key: Noun.atom_integer_to_binary(verifying_key)
      }}
   end
 
@@ -28,11 +29,11 @@ defmodule Anoma.CairoResource.ProofRecord do
   defimpl Noun.Nounable, for: __MODULE__ do
     @impl true
     def to_noun(proof_record = %ProofRecord{}) do
-      {
+      [
         proof_record.proof,
         proof_record.instance
-      }
-      |> Noun.Nounable.to_noun()
+        | proof_record.verifying_key
+      ]
     end
   end
 

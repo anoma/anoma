@@ -10,6 +10,7 @@ defmodule Nock.Jets do
   alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias Anoma.RM.Transparent.ProvingSystem.DPS
   alias Anoma.RM.Transparent.ProvingSystem.CPS
+  alias Anoma.CairoResource
 
   import Bitwise
   import Noun
@@ -915,6 +916,58 @@ defmodule Nock.Jets do
       {:ok,
        DPS.verify_jet(instance.delta, instance.expected_balance)
        |> Noun.Nounable.to_noun()}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec cairo_compose(Noun.t()) :: :error | {:ok, Noun.t()}
+  def cairo_compose(core) do
+    with {:ok, [tx1 | tx2]} <- sample(core),
+         {:ok, cairo_tx1} <- CairoResource.Transaction.from_noun(tx1),
+         {:ok, cairo_tx2} <- CairoResource.Transaction.from_noun(tx2) do
+      {:ok,
+       CairoResource.Transaction.compose(cairo_tx1, cairo_tx2)
+       |> Noun.Nounable.to_noun()}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec cairo_create_from_cus(Noun.t()) :: :error | {:ok, Noun.t()}
+  def cairo_create_from_cus(core) do
+    with {:ok, [json1, bin1, json2, bin2 | json3]} <- sample(core),
+         {:ok, json1_list} <- Noun.Nounable.List.from_noun(json1),
+         {:ok, bin1_list} <- Noun.Nounable.List.from_noun(bin1),
+         {:ok, json2_list} <- Noun.Nounable.List.from_noun(json2),
+         {:ok, bin2_list} <- Noun.Nounable.List.from_noun(bin2),
+         {:ok, json3_list} <- Noun.Nounable.List.from_noun(json3),
+         jason1_res <-
+           Enum.map(json1_list, fn x ->
+             {:ok, res} = Noun.Nounable.Jason.OrderedObject.from_noun(x)
+             res
+           end),
+         bin1_res <- Enum.map(bin1_list, &Noun.atom_integer_to_binary/1),
+         jason2_res <-
+           Enum.map(json2_list, fn x ->
+             {:ok, res} = Noun.Nounable.Jason.OrderedObject.from_noun(x)
+             res
+           end),
+         bin2_res <- Enum.map(bin2_list, &Noun.atom_integer_to_binary/1),
+         jason3_res <-
+           Enum.map(json3_list, fn x ->
+             {:ok, res} = Noun.Nounable.Jason.OrderedObject.from_noun(x)
+             res
+           end),
+         {:ok, tx} <-
+           CairoResource.Transaction.create_from_compliance_units(
+             jason1_res,
+             bin1_res,
+             jason2_res,
+             bin2_res,
+             jason3_res
+           ) do
+      {:ok, Noun.Nounable.to_noun(tx)}
     else
       _ -> :error
     end

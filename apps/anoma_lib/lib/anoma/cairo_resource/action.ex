@@ -68,54 +68,6 @@ defmodule Anoma.CairoResource.Action do
     }
   end
 
-  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([
-        created_commitments,
-        consumed_nullifiers,
-        logic_proofs
-        | compliance_units
-      ]) do
-    to_noun_list = fn xs ->
-      xs
-      |> Noun.list_nock_to_erlang()
-      |> Enum.map(&ProofRecord.from_noun/1)
-    end
-
-    logic = to_noun_list.(logic_proofs)
-    compliance = to_noun_list.(compliance_units)
-    checked = Enum.all?(logic ++ compliance, &(elem(&1, 0) == :ok))
-
-    compliance_list = Enum.map(compliance, &elem(&1, 1))
-
-    logic_map =
-      Enum.into(logic, %{}, fn {:ok, proof} ->
-        {proof.instance |> LogicInstance.get_tag(),
-         {ProofRecord.get_cairo_program_hash(proof), proof}}
-      end)
-
-    app_data =
-      Enum.map(logic, fn {:ok, proof} ->
-        proof.instance |> LogicInstance.get_app_data_pair()
-      end)
-      |> Enum.filter(fn {_, app_data} -> app_data != [] end)
-      |> Enum.into(%{})
-
-    with true <- checked do
-      {:ok,
-       %Action{
-         created_commitments:
-           created_commitments |> Noun.list_nock_to_erlang(),
-         consumed_nullifiers:
-           consumed_nullifiers |> Noun.list_nock_to_erlang(),
-         logic_proofs: logic_map,
-         compliance_units: MapSet.new(compliance_list),
-         app_data: app_data
-       }}
-    else
-      false -> :error
-    end
-  end
-
   @spec verify(t()) :: boolean()
   def verify(action) do
     with true <-
@@ -229,15 +181,57 @@ defmodule Anoma.CairoResource.Action do
     )
   end
 
+  @spec from_noun(Noun.t()) :: {:ok, Action.t()} | :error
+  def from_noun([created, consumed, proofs, cus | data]) do
+    with {:ok, cm_list} <- Noun.Nounable.List.from_noun(created),
+         {:ok, nlf_list} <- Noun.Nounable.List.from_noun(consumed),
+         {:ok, proof_map} <- Noun.Nounable.Map.from_noun(proofs),
+         {:ok, cus} <- Noun.Nounable.MapSet.from_noun(cus),
+         {:ok, data} <- Noun.Nounable.Map.from_noun(data),
+         cus_proper <-
+           cus
+           |> Enum.into(MapSet.new(), fn x ->
+             {:ok, cu} = ProofRecord.from_noun(x)
+             cu
+           end),
+         app_data <-
+           data
+           |> Enum.into(%{}, fn {tag, [bin | bool]} ->
+             {Noun.atom_integer_to_binary(tag, 32),
+              {Noun.atom_integer_to_binary(bin),
+               Noun.atom_integer_to_binary(bool, 32)}}
+           end) do
+      {:ok,
+       %__MODULE__{
+         created_commitments:
+           Enum.map(cm_list, &Noun.atom_integer_to_binary(&1, 32)),
+         consumed_nullifiers:
+           Enum.map(nlf_list, &Noun.atom_integer_to_binary(&1, 32)),
+         logic_proofs:
+           proof_map
+           |> Enum.into(%{}, fn {tag, [bin | proof]} ->
+             {:ok, pr} = ProofRecord.from_noun(proof)
+
+             {Noun.atom_integer_to_binary(tag, 32),
+              {Noun.atom_integer_to_binary(bin), pr}}
+           end),
+         compliance_units: cus_proper,
+         app_data: app_data
+       }}
+    else
+      _ -> :error
+    end
+  end
+
   defimpl Noun.Nounable, for: __MODULE__ do
     @impl true
     def to_noun(action = %Action{}) do
       {
         action.created_commitments,
         action.consumed_nullifiers,
-        action.logic_proofs
-        |> Enum.map(fn {_tag, {_hash, proof}} -> proof end),
-        action.compliance_units |> MapSet.to_list()
+        action.logic_proofs,
+        action.compliance_units,
+        action.app_data
       }
       |> Noun.Nounable.to_noun()
     end
