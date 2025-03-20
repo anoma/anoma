@@ -3,8 +3,11 @@ defmodule Examples.ENock do
   alias Anoma.RM.Transparent.Resource
   alias Anoma.RM.Transparent.Transaction
   alias Anoma.RM.Transparent.Primitive.DeltaHash
+  alias Anoma.RM.Transparent.Primitive.CommitmentAccumulator
   alias Examples.ECrypto
   alias Examples.ETransparent.EAction
+  alias Examples.ETransparent.EResource
+  alias Examples.ETransparent.ETransaction
 
   require ExUnit.Assertions
 
@@ -2136,6 +2139,28 @@ defmodule Examples.ENock do
     assert delta == EAction.trivial_true_commit_action() |> Action.delta()
   end
 
+  def commitment_arm() do
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 3002 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def make_commitment_call(res) do
+    sample = res
+
+    [commitment_arm(), sample | Nock.Lib.logics_core()]
+    |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def commitment_test(n \\ :rand.uniform(10000)) do
+    res = %Resource{quantity: n} |> Noun.Nounable.to_noun()
+
+    {:ok, res} = make_commitment_call(res)
+
+    <<"CM_", _rest::bitstring>> = Noun.atom_integer_to_binary(res)
+  end
+
   def is_commitment_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
@@ -2169,6 +2194,28 @@ defmodule Examples.ENock do
     assert Noun.equal?(res3, 1)
   end
 
+  def nullifier_arm() do
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 2815 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def make_nullifier_call(res) do
+    sample = res
+
+    [nullifier_arm(), sample | Nock.Lib.logics_core()]
+    |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def nullifier_test(n \\ :rand.uniform(10000)) do
+    res = %Resource{quantity: n} |> Noun.Nounable.to_noun()
+
+    {:ok, res} = make_nullifier_call(res)
+
+    <<"NF_", _rest::bitstring>> = Noun.atom_integer_to_binary(res)
+  end
+
   def is_nullifier_arm() do
     layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
 
@@ -2200,6 +2247,61 @@ defmodule Examples.ENock do
     assert Noun.equal?(res1, 0)
     assert Noun.equal?(res2, 1)
     assert Noun.equal?(res3, 1)
+  end
+
+  def action_create_arm() do
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 382 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def action_create_call(created, consumed, appdata) do
+    sample = [created, consumed | appdata]
+
+    [action_create_arm(), sample | Nock.Lib.logics_core()]
+    |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def action_create_test() do
+    consumed = EResource.trivial_true_resource_2()
+    created = EResource.trivial_true_resource()
+    cm = consumed |> Resource.commitment_hash()
+    root = MapSet.new([cm]) |> CommitmentAccumulator.value()
+
+    {:ok, res} =
+      action_create_call(
+        Noun.Nounable.to_noun([{<<0::256>>, consumed, root}]),
+        Noun.Nounable.to_noun([created]),
+        Noun.Nounable.to_noun(%{})
+      )
+
+    {:ok, action} = Action.from_noun(res)
+
+    assert EAction.trivial_swap_action() == action
+  end
+
+  def t_compose_arm() do
+    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+
+    "[8 [9 383 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def t_compose_call(tx1, tx2) do
+    sample = [tx1 | tx2]
+
+    [t_compose_arm(), sample | Nock.Lib.logics_core()]
+    |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def t_compose_test() do
+    tx1 = ETransaction.nullify_intent_eph() |> Noun.Nounable.to_noun()
+    tx2 = ETransaction.commit_intent() |> Noun.Nounable.to_noun()
+    {:ok, res} = t_compose_call(tx1, tx2)
+    {:ok, tx} = Transaction.from_noun(res)
+
+    assert ETransaction.swap_from_actions() == tx
   end
 
   ############################################################
