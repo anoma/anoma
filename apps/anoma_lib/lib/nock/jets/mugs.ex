@@ -139,7 +139,7 @@ defmodule Nock.Jets.Mugs do
     (Jets.calculate_core(382, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"action-create", 7, @layer_rm, &Nock.Jets.action_create/1, :enabled,
        10},
-    (Jets.calculate_core(751, Nock.Lib.stdlib_layers()) |> hd()) =>
+    (Jets.calculate_core(1502, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"trm-compliance-key", 7, @layer_rm, &Nock.Jets.trm_compliance_key/1,
        :enabled, 10},
     (Jets.calculate_core(374, Nock.Lib.stdlib_layers()) |> hd()) =>
@@ -152,7 +152,10 @@ defmodule Nock.Jets.Mugs do
        10},
     (Jets.calculate_core(1406, Nock.Lib.stdlib_layers()) |> hd()) =>
       {"cairo-create_from_cus", 7, @layer_rm,
-       &Nock.Jets.cairo_create_from_cus/1, :enabled, 10}
+       &Nock.Jets.cairo_create_from_cus/1, :enabled, 10},
+    (Jets.calculate_core(1503, Nock.Lib.stdlib_layers()) |> hd()) =>
+      {"cairo-prove-delta", 7, @layer_rm, &Nock.Jets.cairo_prove_delta/1,
+       :enabled, 10}
   }
 
   @doc """
