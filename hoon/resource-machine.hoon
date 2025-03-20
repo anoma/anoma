@@ -152,9 +152,9 @@
   ^-  t-commitment
   (~(cat block 3) 'CM_' (jam t-resource))
 ++  nullify  ::  nullify a resource
-  |=  =t-resource
+  |=  [key=@I resource=t-resource]
   ^-  t-nullifier
-  (~(cat block 3) 'NF_' (jam t-resource))
+  (~(cat block 3) 'NF_' (jam resource))
 ++  is-commitment  ::  check whether an atom is a commitment
   |=  a=@
   ^-  @
@@ -218,6 +218,12 @@
   =(delta expected)
 ++  zero-delta  ::  the value of the zero delta, for convenience
   ~
+++  t-compose
+  ~/  %t-compose
+  |=  [tx1=t-transaction tx2=t-transaction]
+  =+  c=%t-compose
+  ^-  t-transaction
+  !!
 ++  cairo-compose
   ~/  %cairo-compose
   |=  [tx1=cairo-transaction tx2=cairo-transaction]
