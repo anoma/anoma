@@ -28,7 +28,6 @@ defmodule Anoma.Client.CLI do
   iex(1)> Anoma.Node.Examples.ENode.start_node(grpc_port: 8181)
   %Anoma.Node.Examples.ENode{
     grpc_port: 8181,
-    tcp_ports: [],
     pid: #PID<0.353.0>,
     node_id: "110532251"
   }

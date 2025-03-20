@@ -14,7 +14,7 @@ defmodule Anoma.Client do
   use TypedStruct
 
   typedstruct do
-    field(:type, :grpc | :tcp)
+    field(:type, :grpc)
     field(:supervisor, pid())
     field(:grpc_port, integer())
   end
