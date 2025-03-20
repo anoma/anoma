@@ -131,7 +131,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
              9,
              2,
              10,
-             [6, 1 | Noun.Nounable.to_noun(instance)],
+             [6, 1 | to_noun_rl_args(instance)],
              0 | 1
            ]) do
       Noun.equal?(res, 0)
@@ -143,6 +143,41 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
       _ ->
         false
     end
+  end
+
+  @doc """
+  I am function for turning a resource logic proving system instance to
+  a resource logic format for transparent RM.
+
+  Instead of the pure instance, I supply to the logic underlying resource
+  plaintexts which we can get as we are dealing with commitments and
+  nullifiers transparently.
+  """
+  @spec to_noun_rl_args(Instance.t()) :: Noun.t()
+  def to_noun_rl_args(instance) do
+    {:ok, res} = instance.tag |> match_resource(instance.flag)
+
+    consumed =
+      instance.consumed
+      |> Enum.map(fn nlf ->
+        {:ok, res} = match_resource(nlf, true)
+        Noun.Nounable.to_noun(res)
+      end)
+
+    created =
+      instance.created
+      |> Enum.map(fn cm ->
+        {:ok, res} = match_resource(cm, false)
+        Noun.Nounable.to_noun(res)
+      end)
+
+    [
+      Noun.Nounable.to_noun(res),
+      Noun.Nounable.Bool.to_noun(instance.flag),
+      consumed,
+      created
+      | Noun.Nounable.to_noun(instance.app_data)
+    ]
   end
 
   @doc """
