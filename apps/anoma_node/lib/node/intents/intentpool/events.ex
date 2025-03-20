@@ -6,6 +6,7 @@ defmodule Anoma.Node.Intents.IntentPool.Events do
   """
 
   alias Anoma.Node.Event
+  alias Anoma.RM.Intent
 
   use EventBroker.DefFilter
   use TypedStruct
