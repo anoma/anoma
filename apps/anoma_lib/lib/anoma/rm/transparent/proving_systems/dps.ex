@@ -69,7 +69,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.DPS do
   use TypedStruct
 
   @type dps_key :: binary()
-  @dps_key "[8 [9 94 0 7] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+  @dps_key "[8 [9 374 0 7] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
            |> Noun.Format.parse_always()
            |> Noun.Jam.jam()
 
