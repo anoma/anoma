@@ -90,13 +90,18 @@ defmodule Anoma.RM.Transparent.Action do
       unit_delta: DeltaHash.delta_sub(consumed_delta, created_delta)
     }
 
-    cu = ComplianceUnit.create(CPS.key(), cu_instance, <<>>)
+    cu_set =
+      if cu_instance == %Instance{} do
+        MapSet.new()
+      else
+        MapSet.new([ComplianceUnit.create(CPS.key(), cu_instance, <<>>)])
+      end
 
     %__MODULE__{
       created: created |> Enum.map(&elem(&1, 0)),
       consumed: consumed |> Enum.map(&elem(&1, 0)),
       resource_logic_proofs: generate_proofs(to_nullify, to_commit),
-      compliance_units: MapSet.new([cu]),
+      compliance_units: cu_set,
       app_data: app_data
     }
   end
