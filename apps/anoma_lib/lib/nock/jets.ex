@@ -787,8 +787,10 @@ defmodule Nock.Jets do
   @spec delta_add(Noun.t()) :: :error | {:ok, Noun.t()}
   def delta_add(core) do
     with {:ok, [a | b]} <- sample(core),
-         {:ok, _map} <- Noun.Nounable.Map.from_noun(a),
-         {:ok, _map} <- Noun.Nounable.Map.from_noun(b) do
+         {:ok, cue_a} <- Noun.atom_integer_to_binary(a) |> Noun.Jam.cue(),
+         {:ok, cue_b} <- Noun.atom_integer_to_binary(b) |> Noun.Jam.cue(),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(cue_a),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(cue_b) do
       res =
         DeltaHash.delta_add(
           Noun.atom_binary_to_integer(a),
@@ -805,8 +807,10 @@ defmodule Nock.Jets do
   @spec delta_sub(Noun.t()) :: :error | {:ok, Noun.t()}
   def delta_sub(core) do
     with {:ok, [a | b]} <- sample(core),
-         {:ok, _map} <- Noun.Nounable.Map.from_noun(a),
-         {:ok, _map} <- Noun.Nounable.Map.from_noun(b) do
+         {:ok, cue_a} <- Noun.atom_integer_to_binary(a) |> Noun.Jam.cue(),
+         {:ok, cue_b} <- Noun.atom_integer_to_binary(b) |> Noun.Jam.cue(),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(cue_a),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(cue_b) do
       res =
         DeltaHash.delta_sub(
           Noun.atom_binary_to_integer(a),
