@@ -147,7 +147,7 @@
   |=  *
   %delta
 ++  zero-delta  ::  the value of the zero delta, for convenience
-  ~
+  2
 ++  trm-compliance-key
   ~/  %trm-compliance-key
   |=  [nfs=(list nullifier) cms=(list commitment) delta=@]
