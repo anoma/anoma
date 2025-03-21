@@ -15,7 +15,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Ordering do
   def order_event do
     order_event = %Ordering.Events.OrderEvent{tx_id: "foobar"}
     json = Jason.encode!(order_event)
-    assert json == Jason.encode!(%{tx_id: "foobar"})
+
+    assert Jason.decode(json) ==
+             %{tx_id: "foobar"}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     order_event
   end
