@@ -1,7 +1,7 @@
 defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Proto.Intentpool.Add
+  alias Anoma.Proto.Mempool.Add
   alias GRPC.Server.Stream
   alias Noun.Jam
 
@@ -19,17 +19,16 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
     validate_request!(request)
 
     # ensure the node id exists
-    if Registry.whereis(request.node_info.node_id, Mempool) == nil do
+    if Registry.whereis(request.node.id, Mempool) == nil do
       raise_grpc_error!(:invalid_node_id)
     end
 
     # create the transaction from the noun
-    noun = Jam.cue!(request.transaction)
-    transaction = {:transparent_resource, noun}
+    noun = Jam.cue!(request.transaction.transaction)
 
     # submit the transaction to the mempool
-    node_id = request.node_info.node_id
-    :ok = Mempool.tx(node_id, transaction)
+    node_id = request.node.id
+    :ok = Mempool.tx(node_id, {request.transaction_type, noun})
 
     # return an empty response
     %Add.Response{}

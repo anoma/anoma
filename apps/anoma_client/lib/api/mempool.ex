@@ -12,7 +12,10 @@ defmodule Anoma.Client.Api.Servers.Mempool do
   @spec add(Add.Request.t(), Stream.t()) :: Add.Response.t()
   def add(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
-    {:ok, response} = GRPCProxy.add_transaction(request.transaction)
+
+    {:ok, response} =
+      GRPCProxy.add_transaction(request.transaction, request.transaction_type)
+
     response
   end
 end

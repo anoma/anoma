@@ -74,9 +74,12 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, {:add_intent, intent})
   end
 
-  @spec add_transaction(binary()) :: {:ok, Mempool.Add.Response.t()}
-  def add_transaction(jammed_nock) do
-    GenServer.call(__MODULE__, {:add_transaction, jammed_nock})
+  @spec add_transaction(binary(), atom()) :: {:ok, Mempool.Add.Response.t()}
+  def add_transaction(jammed_nock, transaction_type) do
+    GenServer.call(
+      __MODULE__,
+      {:add_transaction, jammed_nock, transaction_type}
+    )
   end
 
   @spec add_read_only_transaction(binary()) ::
@@ -105,12 +108,13 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     {:reply, result, state}
   end
 
-  def handle_call({:add_transaction, jammed_nock}, _from, state) do
+  def handle_call({:add_transaction, jammed_nock, type}, _from, state) do
     node_info = %Node{id: state.node_id}
 
     request = %Mempool.Add.Request{
-      transaction: jammed_nock,
-      node: node_info
+      transaction: %Transaction{transaction: jammed_nock},
+      node: node_info,
+      transaction_type: type
     }
 
     result = MempoolService.Stub.add(state.channel, request)

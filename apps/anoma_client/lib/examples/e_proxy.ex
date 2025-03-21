@@ -10,6 +10,7 @@ defmodule Anoma.Client.Examples.EProxy do
   alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.Client.Examples.EClient
   alias Anoma.Proto.Intentpool.Intent
+  alias Anoma.Proto.Mempool
   alias Examples.ETransparent.ETransaction
   alias Noun.Nounable
 
@@ -71,6 +72,27 @@ defmodule Anoma.Client.Examples.EProxy do
 
     # assert the call succeeded
     assert Kernel.match?({:ok, %{result: "intent added"}}, result)
+
+    client
+  end
+
+  @doc """
+  I add a transaction to the client.
+  """
+  @spec add_transaction(EClient.t()) :: EClient.t()
+  def add_transaction(%EClient{} = client \\ setup()) do
+    # create an arbitrary intent and jam it
+    intent_jammed =
+      ETransaction.nullify_intent()
+      |> Nounable.to_noun()
+      |> Noun.Jam.jam()
+
+    # call the proxy
+    result = GRPCProxy.add_transaction(intent_jammed, :cairo_resource)
+
+    # assert the call succeeded
+    assert {:ok, %Mempool.Add.Response{result: "", __unknown_fields__: []}} ==
+             result
 
     client
   end

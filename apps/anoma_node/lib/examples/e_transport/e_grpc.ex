@@ -9,6 +9,9 @@ defmodule Anoma.Node.Examples.EGRPC do
   alias Anoma.Proto.Intentpool.Intent
   alias Anoma.Proto.Intentpool.List
   alias Anoma.Proto.IntentpoolService
+  alias Anoma.Proto.Mempool
+  alias Anoma.Proto.Mempool.Transaction
+  alias Anoma.Proto.MempoolService
   alias Anoma.Proto.Node
   alias Examples.ETransparent.ETransaction
 
@@ -185,5 +188,30 @@ defmodule Anoma.Node.Examples.EGRPC do
 
              Process.sleep(100)
            end) =~ "intent can not be nil"
+  end
+
+  @doc """
+  I add a transaction to the client.
+  """
+  @spec add_transaction(EGRPC.t()) :: EGRPC.t()
+  def add_transaction(%EGRPC{} = client \\ connect_to_node()) do
+    node_id = %Node{id: client.node.node_id}
+
+    # create an arbitrary intent and jam it
+    intent_jammed =
+      ETransaction.nullify_intent()
+      |> Noun.Nounable.to_noun()
+      |> Noun.Jam.jam()
+
+    request = %Mempool.Add.Request{
+      node: node_id,
+      transaction: %Transaction{transaction: intent_jammed},
+      transaction_type: :transparent_resource
+    }
+
+    {:ok, %Mempool.Add.Response{}} =
+      MempoolService.Stub.add(client.channel, request)
+
+    client
   end
 end
