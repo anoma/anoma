@@ -414,7 +414,7 @@ defmodule Examples.EEventBroker do
     unsub_all()
 
     assert "[Nock] do not export filtering functions" ==
-             EventBroker.subscribe_me([%{__struct__: Nock}])
+             EventBroker.subscribe_me([%{__struct__: :"Elixir.Nock"}])
   end
 
   @doc """

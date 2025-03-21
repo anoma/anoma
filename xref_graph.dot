@@ -1,0 +1,852 @@
+digraph "xref graph" {
+  "lib/anoma/cairo_resource/action.ex"
+  "lib/anoma/cairo_resource/action.ex" -> "lib/anoma/cairo_resource/compliance_instance.ex"
+  "lib/anoma/cairo_resource/action.ex" -> "lib/anoma/cairo_resource/logic_instance.ex"
+  "lib/anoma/cairo_resource/action.ex" -> "lib/anoma/cairo_resource/proof_record.ex"
+  "lib/anoma/cairo_resource/proof_record.ex" -> "lib/noun/nounable.ex" [label="(compile)"]
+  "lib/noun/nounable.ex" -> "lib/noun.ex" [label="(compile)"]
+  "lib/noun.ex" -> "lib/nock/lib.ex"
+  "lib/nock/lib.ex" -> "lib/noun/format.ex" [label="(compile)"]
+  "lib/noun.ex" -> "lib/noun/nounable.ex"
+  "lib/noun/nounable.ex" -> "lib/noun/order.ex"
+  "lib/noun/order.ex" -> "lib/noun.ex" [label="(compile)"]
+  "lib/anoma/cairo_resource/action.ex" -> "lib/anoma/cairo_resource/tree.ex"
+  "lib/anoma/cairo_resource/tree.ex" -> "lib/commitment_tree.ex"
+  "lib/commitment_tree.ex" -> "lib/commitment_tree/node.ex"
+  "lib/commitment_tree.ex" -> "lib/commitment_tree/proof.ex"
+  "lib/commitment_tree.ex" -> "lib/tables.ex"
+  "lib/tables.ex" -> "lib/commitment_tree.ex"
+  "lib/anoma/cairo_resource/action.ex" -> "lib/anoma/constants.ex"
+  "lib/anoma/cairo_resource/action.ex" -> "lib/commitment_tree/spec.ex"
+  "lib/anoma/cairo_resource/action.ex" -> "lib/noun.ex"
+  "lib/anoma/cairo_resource/action.ex" -> "lib/noun/nounable.ex" [label="(compile)"]
+  "lib/anoma/cairo_resource/compliance_instance.ex"
+  "lib/anoma/cairo_resource/compliance_witness.ex"
+  "lib/anoma/cairo_resource/compliance_witness.ex" -> "lib/anoma/cairo_resource/resource.ex"
+  "lib/anoma/cairo_resource/resource.ex" -> "lib/anoma/cairo_resource/utils.ex"
+  "lib/anoma/cairo_resource/resource.ex" -> "lib/anoma/constants.ex"
+  "lib/anoma/cairo_resource/logic_instance.ex"
+  "lib/anoma/cairo_resource/proof_record.ex"
+  "lib/anoma/cairo_resource/resource.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/anoma/cairo_resource/action.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/anoma/cairo_resource/compliance_instance.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/anoma/cairo_resource/logic_instance.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/anoma/cairo_resource/resource.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/anoma/cairo_resource/utils.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/anoma/cairo_resource/workflow.ex"
+  "lib/anoma/cairo_resource/workflow.ex" -> "lib/anoma/cairo_resource/action.ex"
+  "lib/anoma/cairo_resource/workflow.ex" -> "lib/anoma/cairo_resource/proof_record.ex"
+  "lib/anoma/cairo_resource/workflow.ex" -> "lib/anoma/cairo_resource/resource.ex"
+  "lib/anoma/cairo_resource/workflow.ex" -> "lib/anoma/cairo_resource/tree.ex"
+  "lib/anoma/cairo_resource/workflow.ex" -> "lib/anoma/cairo_resource/utils.ex"
+  "lib/anoma/cairo_resource/workflow.ex" -> "lib/commitment_tree/spec.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/anoma/rm/transaction.ex" [label="(compile)"]
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/commitment_tree.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/commitment_tree/spec.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/noun.ex"
+  "lib/anoma/cairo_resource/shielded_transaction.ex" -> "lib/noun/nounable.ex" [label="(compile)"]
+  "lib/anoma/cairo_resource/tree.ex"
+  "lib/anoma/cairo_resource/utils.ex"
+  "lib/anoma/cairo_resource/workflow.ex"
+  "lib/anoma/constants.ex"
+  "lib/anoma/crypto/encrypt.ex"
+  "lib/anoma/crypto/id.ex"
+  "lib/anoma/crypto/id.ex" -> "lib/anoma/crypto/encrypt.ex"
+  "lib/anoma/crypto/id.ex" -> "lib/anoma/crypto/sign.ex"
+  "lib/anoma/crypto/id.ex" -> "lib/anoma/crypto/symmetric.ex"
+  "lib/anoma/crypto/symmetric.ex" -> "lib/anoma/crypto/randomness.ex"
+  "lib/anoma/crypto/id.ex" -> "lib/noun/nounable.ex" [label="(compile)"]
+  "lib/anoma/crypto/randomness.ex"
+  "lib/anoma/crypto/sign.ex"
+  "lib/anoma/crypto/symmetric.ex"
+  "lib/anoma/protobuf/anoma/protobuf/announce/announcement.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/announce/announcement.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/announce/announcement.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/nullifiers/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/indexer/nullifiers/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/nullifiers/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unrevealed_commits/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/indexer/unrevealed_commits/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unrevealed_commits/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unspent_resources/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/indexer/unspent_resources/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unspent_resources/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/add/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents/add/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/intent.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents/add/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/add/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/list/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents/list/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/list/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool/dump/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/mempool/dump/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool/dump/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/executor/add_ro_transaction/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/executor/add_ro_transaction/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/executor/add_ro_transaction/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/executor/add_ro_transaction/response.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/error.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/executor/add_ro_transaction/response.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/success.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/executor_service.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/executor_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/executor/add_ro_transaction/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/executor_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/executor/add_ro_transaction/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/indexer/nullifiers/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/indexer/nullifiers/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/indexer/unrevealed_commits/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/indexer/unrevealed_commits/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/indexer/unspent_resources/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/indexer/unspent_resources/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/indexer_service.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/indexer_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/nullifiers/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/indexer_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/nullifiers/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/indexer_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unrevealed_commits/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/indexer_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unrevealed_commits/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/indexer_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unspent_resources/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/indexer_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unspent_resources/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents/add/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/intents/add/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/intents/compose/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/intents/compose/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/intent.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents/compose/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents/compose/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/intents/compose/response.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/intent.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents/intent.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/intents/list/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/intents/list/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/intents/verify/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/intents/verify/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/intent.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents/verify/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents/verify/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/add/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/add/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/compose/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/compose/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/list/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/list/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/verify/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/verify/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/mempool/add_transaction/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/mempool/add_transaction/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/mempool/add_transaction/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/mempool/dump/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/mempool/dump/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/mempool_service.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/mempool_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool/add_transaction/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/mempool_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool/add_transaction/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock/error.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/nock/input.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/nock/prove/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/nock/prove/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/input.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock/prove/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock/prove/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/nock/prove/response.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/error.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock/prove/response.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/success.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock/run/request.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/nock/run/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/input.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock/run/request.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock/run/response.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/nock/run/response.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/error.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock/run/response.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/success.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock/success.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/nock_service.pb.ex"
+  "lib/anoma/protobuf/anoma/protobuf/nock_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/prove/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/prove/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/run/request.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/nock_service.pb.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/run/response.pb.ex" [label="(compile)"]
+  "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex"
+  "lib/anoma/rm/dumb_intent.ex"
+  "lib/anoma/rm/intent.ex"
+  "lib/anoma/rm/intent.ex" -> "lib/anoma/rm/dumb_intent.ex" [label="(export)"]
+  "lib/anoma/rm/transaction.ex"
+  "lib/anoma/rm/transparent/action.ex"
+  "lib/anoma/rm/transparent/action.ex" -> "lib/anoma/rm/transparent/compliance_unit.ex"
+  "lib/anoma/rm/transparent/compliance_unit.ex" -> "lib/anoma/rm/transparent/proving_systems/cps.ex" [label="(compile)"]
+  "lib/anoma/rm/transparent/proving_systems/cps.ex" -> "lib/anoma/rm/transparent/primitives/commitment_acc.ex"
+  "lib/anoma/rm/transparent/primitives/commitment_acc.ex" -> "lib/noun.ex"
+  "lib/anoma/rm/transparent/primitives/commitment_acc.ex" -> "lib/noun/jam.ex"
+  "lib/noun/jam.ex" -> "lib/noun.ex" [label="(compile)"]
+  "lib/noun/jam.ex" -> "lib/noun/bits.ex"
+  "lib/noun/bits.ex" -> "lib/noun.ex"
+  "lib/anoma/rm/transparent/primitives/commitment_acc.ex" -> "lib/noun/nounable.ex"
+  "lib/anoma/rm/transparent/proving_systems/cps.ex" -> "lib/anoma/rm/transparent/primitives/deltahash.ex"
+  "lib/anoma/rm/transparent/primitives/deltahash.ex" -> "lib/noun.ex"
+  "lib/anoma/rm/transparent/primitives/deltahash.ex" -> "lib/noun/jam.ex"
+  "lib/anoma/rm/transparent/primitives/deltahash.ex" -> "lib/noun/nounable.ex"
+  "lib/anoma/rm/transparent/proving_systems/cps.ex" -> "lib/anoma/rm/transparent/resource.ex"
+  "lib/anoma/rm/transparent/resource.ex" -> "lib/anoma/rm/transparent/primitives/deltahash.ex"
+  "lib/anoma/rm/transparent/resource.ex" -> "lib/noun.ex" [label="(compile)"]
+  "lib/anoma/rm/transparent/resource.ex" -> "lib/noun/jam.ex" [label="(compile)"]
+  "lib/anoma/rm/transparent/resource.ex" -> "lib/noun/nounable.ex"
+  "lib/anoma/rm/transparent/proving_systems/cps.ex" -> "lib/nock.ex"
+  "lib/nock.ex" -> "lib/nock/jets/mugs.ex"
+  "lib/nock/jets/mugs.ex" -> "lib/nock/jets.ex" [label="(compile)"]
+  "lib/nock/jets.ex" -> "lib/anoma/crypto/sign.ex"
+  "lib/nock/jets.ex" -> "lib/anoma/rm/transparent/proving_systems/cps.ex"
+  "lib/nock/jets.ex" -> "lib/anoma/rm/transparent/proving_systems/dps.ex"
+  "lib/anoma/rm/transparent/proving_systems/dps.ex" -> "lib/nock.ex"
+  "lib/anoma/rm/transparent/proving_systems/dps.ex" -> "lib/nock/lib.ex"
+  "lib/anoma/rm/transparent/proving_systems/dps.ex" -> "lib/noun.ex"
+  "lib/anoma/rm/transparent/proving_systems/dps.ex" -> "lib/noun/format.ex" [label="(compile)"]
+  "lib/anoma/rm/transparent/proving_systems/dps.ex" -> "lib/noun/jam.ex" [label="(compile)"]
+  "lib/nock/jets.ex" -> "lib/anoma/transparent_resource/action.ex"
+  "lib/anoma/transparent_resource/action.ex" -> "lib/anoma/transparent_resource/delta.ex"
+  "lib/anoma/transparent_resource/delta.ex" -> "lib/noun.ex"
+  "lib/anoma/transparent_resource/delta.ex" -> "lib/noun/nounable.ex"
+  "lib/anoma/transparent_resource/action.ex" -> "lib/anoma/transparent_resource/logic_proof.ex" [label="(export)"]
+  "lib/anoma/transparent_resource/logic_proof.ex" -> "lib/anoma/transparent_resource/resource.ex"
+  "lib/anoma/transparent_resource/resource.ex" -> "lib/noun.ex"
+  "lib/anoma/transparent_resource/resource.ex" -> "lib/noun/jam.ex"
+  "lib/anoma/transparent_resource/logic_proof.ex" -> "lib/nock.ex"
+  "lib/anoma/transparent_resource/logic_proof.ex" -> "lib/noun.ex"
+  "lib/anoma/transparent_resource/logic_proof.ex" -> "lib/noun/nounable.ex" [label="(compile)"]
+  "lib/anoma/transparent_resource/action.ex" -> "lib/anoma/transparent_resource/resource.ex"
+  "lib/anoma/transparent_resource/action.ex" -> "lib/noun.ex"
+  "lib/anoma/transparent_resource/action.ex" -> "lib/noun/nounable.ex" [label="(compile)"]
+  "lib/nock/jets.ex" -> "lib/anoma/transparent_resource/delta.ex"
+  "lib/nock/jets.ex" -> "lib/anoma/transparent_resource/resource.ex"
+  "lib/nock/jets.ex" -> "lib/nock.ex" [label="(export)"]
+  "lib/nock/jets.ex" -> "lib/nock/lib.ex"
+  "lib/nock/jets.ex" -> "lib/noun.ex" [label="(compile)"]
+  "lib/nock/jets.ex" -> "lib/noun/bits.ex"
+  "lib/nock/jets.ex" -> "lib/noun/jam.ex"
+  "lib/nock/jets.ex" -> "lib/noun/nounable.ex"
+  "lib/nock/jets.ex" -> "lib/noun/order.ex"
+  "lib/nock/jets/mugs.ex" -> "lib/nock/lib.ex" [label="(compile)"]
+  "lib/nock.ex" -> "lib/noun.ex" [label="(compile)"]
+  "lib/nock.ex" -> "lib/noun/jam.ex"
+  "lib/anoma/rm/transparent/proving_systems/cps.ex" -> "lib/nock/lib.ex"
+  "lib/anoma/rm/transparent/proving_systems/cps.ex" -> "lib/noun.ex"
+  "lib/anoma/rm/transparent/proving_systems/cps.ex" -> "lib/noun/format.ex" [label="(compile)"]
+  "lib/anoma/rm/transparent/proving_systems/cps.ex" -> "lib/noun/jam.ex" [label="(compile)"]
+  "lib/anoma/rm/transparent/proving_systems/cps.ex" -> "lib/noun/nounable.ex"
+  "lib/anoma/rm/transparent/compliance_unit.ex" -> "lib/noun.ex"
+  "lib/anoma/rm/transparent/action.ex" -> "lib/anoma/rm/transparent/primitives/deltahash.ex"
+  "lib/anoma/rm/transparent/action.ex" -> "lib/anoma/rm/transparent/proving_systems/cps.ex" [label="(export)"]
+  "lib/anoma/rm/transparent/action.ex" -> "lib/anoma/rm/transparent/proving_systems/rlps.ex" [label="(export)"]
+  "lib/anoma/rm/transparent/proving_systems/rlps.ex" -> "lib/anoma/rm/transparent/resource.ex" [label="(compile)"]
+  "lib/anoma/rm/transparent/proving_systems/rlps.ex" -> "lib/nock.ex"
+  "lib/anoma/rm/transparent/proving_systems/rlps.ex" -> "lib/noun.ex"
+  "lib/anoma/rm/transparent/proving_systems/rlps.ex" -> "lib/noun/jam.ex" [label="(compile)"]
+  "lib/anoma/rm/transparent/proving_systems/rlps.ex" -> "lib/noun/nounable.ex"
+  "lib/anoma/rm/transparent/action.ex" -> "lib/anoma/rm/transparent/resource.ex"
+  "lib/anoma/rm/transparent/action.ex" -> "lib/noun.ex"
+  "lib/anoma/rm/transparent/action.ex" -> "lib/noun/nounable.ex"
+  "lib/anoma/rm/transparent/compliance_unit.ex"
+  "lib/anoma/rm/transparent/primitives/commitment_acc.ex"
+  "lib/anoma/rm/transparent/primitives/deltahash.ex"
+  "lib/anoma/rm/transparent/primitives/fixed_size.ex"
+  "lib/anoma/rm/transparent/proving_systems/cps.ex"
+  "lib/anoma/rm/transparent/proving_systems/dps.ex"
+  "lib/anoma/rm/transparent/proving_systems/rlps.ex"
+  "lib/anoma/rm/transparent/resource.ex"
+  "lib/anoma/rm/transparent/transaction.ex"
+  "lib/anoma/rm/transparent/transaction.ex" -> "lib/anoma/rm/transparent/action.ex"
+  "lib/anoma/rm/transparent/transaction.ex" -> "lib/anoma/rm/transparent/primitives/deltahash.ex"
+  "lib/anoma/rm/transparent/transaction.ex" -> "lib/anoma/rm/transparent/proving_systems/dps.ex" [label="(export)"]
+  "lib/anoma/rm/transparent/transaction.ex" -> "lib/noun.ex"
+  "lib/anoma/rm/transparent/transaction.ex" -> "lib/noun/nounable.ex"
+  "lib/anoma/system/directories.ex"
+  "lib/anoma/transparent_resource.ex"
+  "lib/anoma/transparent_resource/action.ex"
+  "lib/anoma/transparent_resource/delta.ex"
+  "lib/anoma/transparent_resource/logic_proof.ex"
+  "lib/anoma/transparent_resource/resource.ex"
+  "lib/anoma/transparent_resource/transaction.ex"
+  "lib/anoma/transparent_resource/transaction.ex" -> "lib/anoma/rm/intent.ex" [label="(compile)"]
+  "lib/anoma/transparent_resource/transaction.ex" -> "lib/anoma/transparent_resource/action.ex"
+  "lib/anoma/transparent_resource/transaction.ex" -> "lib/anoma/transparent_resource/delta.ex"
+  "lib/anoma/transparent_resource/transaction.ex" -> "lib/anoma/transparent_resource/logic_proof.ex"
+  "lib/anoma/transparent_resource/transaction.ex" -> "lib/noun/nounable.ex" [label="(compile)"]
+  "lib/anoma/utility.ex"
+  "lib/anoma_glossary.ex"
+  "lib/anoma_glossary.ex" -> "lib/glossary.ex" [label="(compile)"]
+  "lib/api/endpoint.ex"
+  "lib/api/endpoint.ex" -> "lib/api/executor.ex" [label="(compile)"]
+  "lib/api/executor.ex" -> "lib/anoma/protobuf/anoma/protobuf/executor_service.pb.ex" [label="(compile)"]
+  "lib/api/executor.ex" -> "lib/client/client_connection/grpc_proxy.ex"
+  "lib/client/client_connection/grpc_proxy.ex" -> "lib/anoma/protobuf/anoma/protobuf/executor/add_ro_transaction/request.pb.ex" [label="(export)"]
+  "lib/client/client_connection/grpc_proxy.ex" -> "lib/anoma/protobuf/anoma/protobuf/executor_service.pb.ex"
+  "lib/client/client_connection/grpc_proxy.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/add/request.pb.ex" [label="(export)"]
+  "lib/client/client_connection/grpc_proxy.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/list/request.pb.ex" [label="(export)"]
+  "lib/client/client_connection/grpc_proxy.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex"
+  "lib/client/client_connection/grpc_proxy.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool/add_transaction/request.pb.ex" [label="(export)"]
+  "lib/client/client_connection/grpc_proxy.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool_service.pb.ex"
+  "lib/client/client_connection/grpc_proxy.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(export)"]
+  "lib/api/endpoint.ex" -> "lib/api/intents.ex" [label="(compile)"]
+  "lib/api/intents.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/compose/response.pb.ex" [label="(export)"]
+  "lib/api/intents.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/intent.pb.ex" [label="(export)"]
+  "lib/api/intents.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/verify/response.pb.ex" [label="(export)"]
+  "lib/api/intents.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex" [label="(compile)"]
+  "lib/api/intents.ex" -> "lib/anoma/rm/intent.ex"
+  "lib/api/intents.ex" -> "lib/anoma/transparent_resource/transaction.ex"
+  "lib/api/intents.ex" -> "lib/client/client_connection/grpc_proxy.ex"
+  "lib/api/intents.ex" -> "lib/noun/jam.ex"
+  "lib/api/intents.ex" -> "lib/noun/nounable.ex"
+  "lib/api/endpoint.ex" -> "lib/api/mempool.ex" [label="(compile)"]
+  "lib/api/mempool.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool/add_transaction/response.pb.ex" [label="(export)"]
+  "lib/api/mempool.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool_service.pb.ex" [label="(compile)"]
+  "lib/api/mempool.ex" -> "lib/client/client_connection/grpc_proxy.ex"
+  "lib/api/endpoint.ex" -> "lib/api/nock.ex" [label="(compile)"]
+  "lib/api/nock.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/error.pb.ex" [label="(export)"]
+  "lib/api/nock.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/prove/response.pb.ex" [label="(export)"]
+  "lib/api/nock.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/run/response.pb.ex" [label="(export)"]
+  "lib/api/nock.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/success.pb.ex" [label="(export)"]
+  "lib/api/nock.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock_service.pb.ex" [label="(compile)"]
+  "lib/api/nock.ex" -> "lib/client/runner.ex"
+  "lib/client/runner.ex" -> "lib/anoma/transparent_resource/transaction.ex"
+  "lib/client/runner.ex" -> "lib/client/client_connection/grpc_proxy.ex"
+  "lib/client/runner.ex" -> "lib/client/storage.ex"
+  "lib/client/runner.ex" -> "lib/nock.ex" [label="(export)"]
+  "lib/client/runner.ex" -> "lib/nock/lib.ex"
+  "lib/client/runner.ex" -> "lib/noun.ex"
+  "lib/client/runner.ex" -> "lib/noun/jam.ex"
+  "lib/api/nock.ex" -> "lib/noun/format.ex"
+  "lib/api/nock.ex" -> "lib/noun/jam.ex"
+  "lib/api/endpoint.ex" -> "lib/api/relflection.ex" [label="(compile)"]
+  "lib/api/relflection.ex" -> "lib/anoma/protobuf/anoma/protobuf/executor_service.pb.ex"
+  "lib/api/relflection.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex"
+  "lib/api/relflection.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock_service.pb.ex"
+  "lib/api/executor.ex"
+  "lib/api/intents.ex"
+  "lib/api/mempool.ex"
+  "lib/api/nock.ex"
+  "lib/api/relflection.ex"
+  "lib/cli.ex"
+  "lib/cli.ex" -> "lib/client.ex"
+  "lib/client.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/intent.pb.ex" [label="(export)"]
+  "lib/client.ex" -> "lib/client/client_connection/grpc_proxy.ex"
+  "lib/client.ex" -> "lib/client/client_connection/supervisor.ex"
+  "lib/client/client_connection/supervisor.ex" -> "lib/api/endpoint.ex"
+  "lib/client/client_connection/supervisor.ex" -> "lib/client/client_connection/grpc_proxy.ex"
+  "lib/client.ex" -> "lib/client/runner.ex"
+  "lib/client.ex" -> "lib/noun/jam.ex"
+  "lib/client.ex" -> "lib/noun/nounable.ex"
+  "lib/client.ex"
+  "lib/client/application.ex"
+  "lib/client/client_connection/connection.ex"
+  "lib/client/client_connection/connection.ex" -> "lib/anoma/protobuf/anoma/protobuf/announce/announcement.pb.ex" [label="(export)"]
+  "lib/client/client_connection/connection.ex" -> "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" [label="(export)"]
+  "lib/client/client_connection/connection.ex" -> "lib/node/transport/messages.ex"
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/announce/announcement.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/nullifiers/request.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/nullifiers/response.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unrevealed_commits/request.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unrevealed_commits/response.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unspent_resources/request.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/indexer/unspent_resources/response.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/add/request.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/add/response.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/list/request.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/list/response.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool/dump/request.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool/dump/response.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(export)"]
+  "lib/node/transport/messages.ex" -> "lib/node/registry.ex"
+  "lib/node/registry.ex" -> "lib/node/intents/intent_pool.ex"
+  "lib/node/intents/intent_pool.ex" -> "lib/anoma/rm/intent.ex"
+  "lib/node/intents/intent_pool.ex" -> "lib/event_broker.ex"
+  "lib/event_broker.ex" -> "lib/event_broker/broker.ex"
+  "lib/event_broker/broker.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/event_broker.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/event_broker.ex" -> "lib/event_broker/registry.ex"
+  "lib/event_broker/registry.ex" -> "lib/event_broker/filter_agent.ex"
+  "lib/event_broker/filter_agent.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/event_broker.ex" -> "lib/event_broker/supervisor.ex"
+  "lib/event_broker/supervisor.ex" -> "lib/event_broker/broker.ex"
+  "lib/event_broker/supervisor.ex" -> "lib/event_broker/registry.ex"
+  "lib/node/intents/intent_pool.ex" -> "lib/event_broker/broker.ex"
+  "lib/node/intents/intent_pool.ex" -> "lib/event_broker/def_filter.ex" [label="(compile)"]
+  "lib/node/intents/intent_pool.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/node/intents/intent_pool.ex" -> "lib/event_broker/filter.ex" [label="(compile)"]
+  "lib/node/intents/intent_pool.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/node/event.ex" -> "lib/event_broker/def_filter.ex" [label="(compile)"]
+  "lib/node/event.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/node/event.ex" -> "lib/event_broker/filter.ex" [label="(compile)"]
+  "lib/node/intents/intent_pool.ex" -> "lib/node/registry.ex"
+  "lib/node/intents/intent_pool.ex" -> "lib/node/transaction/backends.ex" [label="(export)"]
+  "lib/node/transaction/backends.ex" -> "lib/anoma/cairo_resource/shielded_transaction.ex"
+  "lib/node/transaction/backends.ex" -> "lib/anoma/constants.ex"
+  "lib/node/transaction/backends.ex" -> "lib/anoma/rm/transaction.ex"
+  "lib/node/transaction/backends.ex" -> "lib/anoma/transparent_resource/transaction.ex" [label="(export)"]
+  "lib/node/transaction/backends.ex" -> "lib/commitment_tree.ex"
+  "lib/node/transaction/backends.ex" -> "lib/event_broker.ex"
+  "lib/node/transaction/backends.ex" -> "lib/event_broker/def_filter.ex" [label="(compile)"]
+  "lib/node/transaction/backends.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/node/transaction/backends.ex" -> "lib/event_broker/filter.ex" [label="(compile)"]
+  "lib/node/transaction/backends.ex" -> "lib/nock.ex" [label="(export)"]
+  "lib/node/transaction/backends.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/node/transaction/backends.ex" -> "lib/node/logging.ex"
+  "lib/node/logging.ex" -> "lib/event_broker.ex"
+  "lib/node/logging.ex" -> "lib/event_broker/def_filter.ex" [label="(compile)"]
+  "lib/node/logging.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/node/logging.ex" -> "lib/event_broker/filter.ex" [label="(compile)"]
+  "lib/node/logging.ex" -> "lib/node.ex"
+  "lib/node.ex" -> "lib/supervisor.ex"
+  "lib/supervisor.ex" -> "lib/node/registry.ex"
+  "lib/supervisor.ex" -> "lib/node/replay/start_state.ex"
+  "lib/node/replay/start_state.ex" -> "lib/tables.ex"
+  "lib/supervisor.ex" -> "lib/node/supervisor.ex"
+  "lib/node/supervisor.ex" -> "lib/node/intents/supervisor.ex"
+  "lib/node/intents/supervisor.ex" -> "lib/node/intents/intent_pool.ex"
+  "lib/node/intents/supervisor.ex" -> "lib/node/intents/solver.ex"
+  "lib/node/intents/solver.ex" -> "lib/anoma/rm/intent.ex"
+  "lib/node/intents/solver.ex" -> "lib/anoma/transparent_resource/transaction.ex" [label="(export)"]
+  "lib/node/intents/solver.ex" -> "lib/event_broker.ex"
+  "lib/node/intents/solver.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/node/intents/solver.ex" -> "lib/event_broker/with_subscription.ex" [label="(compile)"]
+  "lib/node/intents/solver.ex" -> "lib/node/event.ex" [label="(export)"]
+  "lib/node/intents/solver.ex" -> "lib/node/intents/intent_pool.ex" [label="(export)"]
+  "lib/node/intents/solver.ex" -> "lib/node/registry.ex"
+  "lib/node/intents/solver.ex" -> "lib/node/transaction/mempool.ex" [label="(export)"]
+  "lib/node/transaction/mempool.ex" -> "lib/event_broker.ex"
+  "lib/node/transaction/mempool.ex" -> "lib/event_broker/def_filter.ex" [label="(compile)"]
+  "lib/node/transaction/mempool.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/node/transaction/mempool.ex" -> "lib/event_broker/filter.ex" [label="(compile)"]
+  "lib/node/transaction/mempool.ex" -> "lib/event_broker/filters.ex" [label="(export)"]
+  "lib/event_broker/filters.ex" -> "lib/event_broker/def_filter.ex" [label="(compile)"]
+  "lib/event_broker/filters.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/event_broker/filters.ex" -> "lib/event_broker/filter.ex" [label="(compile)"]
+  "lib/node/transaction/mempool.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/node/transaction/mempool.ex" -> "lib/node/registry.ex"
+  "lib/node/transaction/mempool.ex" -> "lib/node/transaction/backends.ex" [label="(export)"]
+  "lib/node/transaction/mempool.ex" -> "lib/node/transaction/executor.ex" [label="(export)"]
+  "lib/node/transaction/executor.ex" -> "lib/event_broker.ex"
+  "lib/node/transaction/executor.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/node/transaction/executor.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/node/transaction/executor.ex" -> "lib/node/registry.ex"
+  "lib/node/transaction/executor.ex" -> "lib/node/transaction/backends.ex" [label="(export)"]
+  "lib/node/transaction/executor.ex" -> "lib/node/transaction/mempool.ex"
+  "lib/node/transaction/executor.ex" -> "lib/node/transaction/ordering.ex"
+  "lib/node/transaction/ordering.ex" -> "lib/event_broker.ex"
+  "lib/node/transaction/ordering.ex" -> "lib/event_broker/def_filter.ex" [label="(compile)"]
+  "lib/node/transaction/ordering.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/node/transaction/ordering.ex" -> "lib/event_broker/filter.ex" [label="(compile)"]
+  "lib/node/transaction/ordering.ex" -> "lib/event_broker/filters.ex" [label="(export)"]
+  "lib/node/transaction/ordering.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/node/transaction/ordering.ex" -> "lib/node/registry.ex"
+  "lib/node/transaction/ordering.ex" -> "lib/node/transaction/storage.ex"
+  "lib/node/transaction/storage.ex" -> "lib/event_broker.ex"
+  "lib/node/transaction/storage.ex" -> "lib/event_broker/def_filter.ex" [label="(compile)"]
+  "lib/node/transaction/storage.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/node/transaction/storage.ex" -> "lib/event_broker/filter.ex" [label="(compile)"]
+  "lib/node/transaction/storage.ex" -> "lib/event_broker/filters.ex" [label="(export)"]
+  "lib/node/transaction/storage.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/node/transaction/storage.ex" -> "lib/node/registry.ex"
+  "lib/node/transaction/storage.ex" -> "lib/tables.ex"
+  "lib/node/transaction/mempool.ex" -> "lib/node/transaction/storage.ex"
+  "lib/node/intents/solver.ex" -> "lib/noun/nounable.ex"
+  "lib/node/supervisor.ex" -> "lib/node/logging.ex"
+  "lib/node/supervisor.ex" -> "lib/node/registry.ex"
+  "lib/node/supervisor.ex" -> "lib/node/transaction/supervisor.ex"
+  "lib/node/transaction/supervisor.ex" -> "lib/node/registry.ex"
+  "lib/node/transaction/supervisor.ex" -> "lib/node/transaction/executor.ex"
+  "lib/node/transaction/supervisor.ex" -> "lib/node/transaction/mempool.ex"
+  "lib/node/transaction/supervisor.ex" -> "lib/node/transaction/ordering.ex"
+  "lib/node/transaction/supervisor.ex" -> "lib/node/transaction/storage.ex"
+  "lib/node/supervisor.ex" -> "lib/node/transport/supervisor.ex"
+  "lib/node/transport/supervisor.ex" -> "lib/node/registry.ex"
+  "lib/node/transport/supervisor.ex" -> "lib/node/transport/grpc/endpoint.ex"
+  "lib/node/transport/grpc/endpoint.ex" -> "lib/node/transport/grpc/executor.ex" [label="(compile)"]
+  "lib/node/transport/grpc/executor.ex" -> "lib/anoma/protobuf/anoma/protobuf/executor/add_ro_transaction/response.pb.ex" [label="(export)"]
+  "lib/node/transport/grpc/executor.ex" -> "lib/anoma/protobuf/anoma/protobuf/executor_service.pb.ex" [label="(compile)"]
+  "lib/node/transport/grpc/executor.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/error.pb.ex" [label="(export)"]
+  "lib/node/transport/grpc/executor.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/success.pb.ex" [label="(export)"]
+  "lib/node/transport/grpc/executor.ex" -> "lib/node/transaction/executor.ex"
+  "lib/node/transport/grpc/executor.ex" -> "lib/noun/jam.ex"
+  "lib/node/transport/grpc/endpoint.ex" -> "lib/node/transport/grpc/intents.ex" [label="(compile)"]
+  "lib/node/transport/grpc/intents.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/add/response.pb.ex" [label="(export)"]
+  "lib/node/transport/grpc/intents.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/list/response.pb.ex" [label="(export)"]
+  "lib/node/transport/grpc/intents.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex" [label="(compile)"]
+  "lib/node/transport/grpc/intents.ex" -> "lib/anoma/transparent_resource/transaction.ex"
+  "lib/node/transport/grpc/intents.ex" -> "lib/node/intents/intent_pool.ex"
+  "lib/node/transport/grpc/intents.ex" -> "lib/noun/jam.ex"
+  "lib/node/transport/grpc/intents.ex" -> "lib/noun/nounable.ex"
+  "lib/node/transport/grpc/endpoint.ex" -> "lib/node/transport/grpc/mempool.ex" [label="(compile)"]
+  "lib/node/transport/grpc/mempool.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool/add_transaction/response.pb.ex" [label="(export)"]
+  "lib/node/transport/grpc/mempool.ex" -> "lib/anoma/protobuf/anoma/protobuf/mempool_service.pb.ex" [label="(compile)"]
+  "lib/node/transport/grpc/mempool.ex" -> "lib/node/transaction/mempool.ex"
+  "lib/node/transport/grpc/mempool.ex" -> "lib/noun/jam.ex"
+  "lib/supervisor.ex" -> "lib/tables.ex"
+  "lib/node/logging.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/node/logging.ex" -> "lib/node/registry.ex"
+  "lib/node/logging.ex" -> "lib/node/transaction/mempool.ex" [label="(export)"]
+  "lib/node/logging.ex" -> "lib/supervisor.ex"
+  "lib/node/logging.ex" -> "lib/tables.ex"
+  "lib/node/transaction/backends.ex" -> "lib/node/transaction/executor.ex" [label="(export)"]
+  "lib/node/transaction/backends.ex" -> "lib/node/transaction/ordering.ex"
+  "lib/node/transaction/backends.ex" -> "lib/node/transaction/storage.ex"
+  "lib/node/transaction/backends.ex" -> "lib/noun.ex" [label="(compile)"]
+  "lib/node/transaction/backends.ex" -> "lib/noun/jam.ex"
+  "lib/node/intents/intent_pool.ex" -> "lib/tables.ex"
+  "lib/node/registry.ex" -> "lib/node/transaction/mempool.ex"
+  "lib/client/client_connection/grpc_proxy.ex"
+  "lib/client/client_connection/supervisor.ex"
+  "lib/client/runner.ex"
+  "lib/client/storage.ex"
+  "lib/commitment_tree.ex"
+  "lib/commitment_tree/node.ex"
+  "lib/commitment_tree/proof.ex"
+  "lib/commitment_tree/spec.ex"
+  "lib/event_broker.ex"
+  "lib/event_broker/broker.ex"
+  "lib/event_broker/def_filter.ex"
+  "lib/event_broker/event.ex"
+  "lib/event_broker/filter.ex"
+  "lib/event_broker/filter_agent.ex"
+  "lib/event_broker/filters.ex"
+  "lib/event_broker/registry.ex"
+  "lib/event_broker/supervisor.ex"
+  "lib/event_broker/with_subscription.ex"
+  "lib/examples/e_cairo/e_action.ex"
+  "lib/examples/e_cairo/e_action.ex" -> "lib/anoma/cairo_resource/action.ex"
+  "lib/examples/e_cairo/e_action.ex" -> "lib/anoma/cairo_resource/resource.ex"
+  "lib/examples/e_cairo/e_action.ex" -> "lib/anoma/cairo_resource/tree.ex"
+  "lib/examples/e_cairo/e_action.ex" -> "lib/commitment_tree/spec.ex"
+  "lib/examples/e_cairo/e_action.ex" -> "lib/examples/e_cairo/e_proof_record.ex"
+  "lib/examples/e_cairo/e_proof_record.ex" -> "lib/anoma/cairo_resource/proof_record.ex"
+  "lib/examples/e_cairo/e_proof_record.ex" -> "lib/anoma/cairo_resource/tree.ex"
+  "lib/examples/e_cairo/e_proof_record.ex" -> "lib/examples/e_cairo/e_compliance_witness.ex"
+  "lib/examples/e_cairo/e_compliance_witness.ex" -> "lib/anoma/cairo_resource/compliance_witness.ex" [label="(export)"]
+  "lib/examples/e_cairo/e_compliance_witness.ex" -> "lib/anoma/cairo_resource/proof_record.ex"
+  "lib/examples/e_cairo/e_compliance_witness.ex" -> "lib/anoma/constants.ex"
+  "lib/examples/e_cairo/e_compliance_witness.ex" -> "lib/examples/e_cairo/e_resource.ex"
+  "lib/examples/e_cairo/e_resource.ex" -> "lib/anoma/cairo_resource/resource.ex" [label="(export)"]
+  "lib/examples/e_cairo/e_resource.ex" -> "lib/anoma/constants.ex"
+  "lib/examples/e_cairo/e_compliance_witness.ex" -> "lib/examples/ecommitment_tree.ex"
+  "lib/examples/ecommitment_tree.ex" -> "lib/anoma/transparent_resource/transaction.ex"
+  "lib/examples/ecommitment_tree.ex" -> "lib/commitment_tree.ex"
+  "lib/examples/ecommitment_tree.ex" -> "lib/commitment_tree/proof.ex"
+  "lib/examples/ecommitment_tree.ex" -> "lib/commitment_tree/spec.ex"
+  "lib/examples/ecommitment_tree.ex" -> "lib/examples/e_cairo/e_resource.ex"
+  "lib/examples/ecommitment_tree.ex" -> "lib/examples/e_transparent/e_transaction.ex"
+  "lib/examples/e_transparent/e_transaction.ex" -> "lib/anoma/transparent_resource/transaction.ex" [label="(export)"]
+  "lib/examples/e_transparent/e_transaction.ex" -> "lib/examples/e_transparent/e_action.ex"
+  "lib/examples/e_transparent/e_action.ex" -> "lib/anoma/transparent_resource/action.ex" [label="(export)"]
+  "lib/examples/e_transparent/e_action.ex" -> "lib/anoma/transparent_resource/delta.ex"
+  "lib/examples/e_transparent/e_action.ex" -> "lib/examples/e_transparent/e_logic_proof.ex"
+  "lib/examples/e_transparent/e_logic_proof.ex" -> "lib/anoma/transparent_resource/logic_proof.ex" [label="(export)"]
+  "lib/examples/e_transparent/e_logic_proof.ex" -> "lib/examples/e_transparent/e_resource.ex"
+  "lib/examples/e_transparent/e_resource.ex" -> "lib/anoma/crypto/randomness.ex"
+  "lib/examples/e_transparent/e_resource.ex" -> "lib/anoma/transparent_resource/resource.ex" [label="(export)"]
+  "lib/examples/e_transparent/e_resource.ex" -> "lib/nock.ex"
+  "lib/examples/e_transparent/e_resource.ex" -> "lib/noun.ex"
+  "lib/examples/e_transparent/e_resource.ex" -> "lib/noun/jam.ex"
+  "lib/examples/e_transparent/e_resource.ex" -> "lib/test_helper/test_macro.ex" [label="(compile)"]
+  "lib/examples/e_transparent/e_logic_proof.ex" -> "lib/noun/jam.ex"
+  "lib/examples/e_transparent/e_logic_proof.ex" -> "lib/noun/nounable.ex"
+  "lib/examples/e_transparent/e_logic_proof.ex" -> "lib/test_helper/test_macro.ex" [label="(compile)"]
+  "lib/examples/e_transparent/e_action.ex" -> "lib/test_helper/test_macro.ex" [label="(compile)"]
+  "lib/examples/e_transparent/e_transaction.ex" -> "lib/noun/jam.ex"
+  "lib/examples/e_transparent/e_transaction.ex" -> "lib/noun/nounable.ex"
+  "lib/examples/e_transparent/e_transaction.ex" -> "lib/test_helper/test_macro.ex" [label="(compile)"]
+  "lib/examples/ecommitment_tree.ex" -> "lib/tables.ex"
+  "lib/examples/e_cairo/e_compliance_witness.ex" -> "lib/test_helper/test_macro.ex" [label="(compile)"]
+  "lib/examples/e_cairo/e_proof_record.ex" -> "lib/test_helper/test_macro.ex" [label="(compile)"]
+  "lib/examples/e_cairo/e_action.ex" -> "lib/examples/e_cairo/e_resource.ex"
+  "lib/examples/e_cairo/e_action.ex" -> "lib/examples/e_cairo/e_resource_logic.ex"
+  "lib/examples/e_cairo/e_resource_logic.ex" -> "lib/anoma/cairo_resource/logic_instance.ex"
+  "lib/examples/e_cairo/e_resource_logic.ex" -> "lib/anoma/cairo_resource/proof_record.ex"
+  "lib/examples/e_cairo/e_resource_logic.ex" -> "lib/examples/e_cairo/e_proof_record.ex"
+  "lib/examples/e_cairo/e_resource_logic.ex" -> "lib/examples/e_cairo/e_resource.ex"
+  "lib/examples/e_cairo/e_resource_logic.ex" -> "lib/test_helper/test_macro.ex" [label="(compile)"]
+  "lib/examples/e_cairo/e_action.ex" -> "lib/test_helper/test_macro.ex" [label="(compile)"]
+  "lib/examples/e_cairo/e_compliance_witness.ex"
+  "lib/examples/e_cairo/e_proof_record.ex"
+  "lib/examples/e_cairo/e_resource.ex"
+  "lib/examples/e_cairo/e_resource_logic.ex"
+  "lib/examples/e_cairo/e_transaction.ex"
+  "lib/examples/e_cairo/e_transaction.ex" -> "lib/anoma/cairo_resource/logic_instance.ex"
+  "lib/examples/e_cairo/e_transaction.ex" -> "lib/anoma/cairo_resource/shielded_transaction.ex" [label="(export)"]
+  "lib/examples/e_cairo/e_transaction.ex" -> "lib/anoma/rm/transaction.ex"
+  "lib/examples/e_cairo/e_transaction.ex" -> "lib/examples/e_cairo/e_action.ex"
+  "lib/examples/e_cairo/e_transaction.ex" -> "lib/test_helper/test_macro.ex" [label="(compile)"]
+  "lib/examples/e_client.ex"
+  "lib/examples/e_client.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/add/request.pb.ex" [label="(export)"]
+  "lib/examples/e_client.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/intent.pb.ex" [label="(export)"]
+  "lib/examples/e_client.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/list/request.pb.ex" [label="(export)"]
+  "lib/examples/e_client.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex"
+  "lib/examples/e_client.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/input.pb.ex" [label="(export)"]
+  "lib/examples/e_client.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock/prove/request.pb.ex" [label="(export)"]
+  "lib/examples/e_client.ex" -> "lib/anoma/protobuf/anoma/protobuf/nock_service.pb.ex"
+  "lib/examples/e_client.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(export)"]
+  "lib/examples/e_client.ex" -> "lib/anoma/transparent_resource/action.ex" [label="(export)"]
+  "lib/examples/e_client.ex" -> "lib/anoma/transparent_resource/transaction.ex" [label="(export)"]
+  "lib/examples/e_client.ex" -> "lib/client.ex"
+  "lib/examples/e_client.ex" -> "lib/client/storage.ex"
+  "lib/examples/e_client.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/e_node.ex" -> "lib/examples/e_registry.ex"
+  "lib/examples/e_registry.ex" -> "lib/node/intents/intent_pool.ex"
+  "lib/examples/e_registry.ex" -> "lib/node/registry.ex" [label="(export)"]
+  "lib/examples/e_registry.ex" -> "lib/node/transaction/mempool.ex"
+  "lib/examples/e_node.ex" -> "lib/supervisor.ex"
+  "lib/examples/e_client.ex" -> "lib/examples/e_storage.ex"
+  "lib/examples/e_storage.ex" -> "lib/client/storage.ex"
+  "lib/examples/e_client.ex" -> "lib/examples/e_transparent/e_transaction.ex"
+  "lib/examples/e_client.ex" -> "lib/node/transaction/storage.ex"
+  "lib/examples/e_client.ex" -> "lib/noun.ex"
+  "lib/examples/e_client.ex" -> "lib/noun/format.ex"
+  "lib/examples/e_client.ex" -> "lib/noun/jam.ex"
+  "lib/examples/e_client.ex" -> "lib/noun/nounable.ex"
+  "lib/examples/e_event.ex"
+  "lib/examples/e_event.ex" -> "lib/event_broker.ex"
+  "lib/examples/e_event.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/examples/e_event.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/e_event.ex" -> "lib/examples/e_transaction.ex"
+  "lib/examples/e_transaction.ex" -> "lib/anoma/transparent_resource/transaction.ex"
+  "lib/examples/e_transaction.ex" -> "lib/event_broker.ex"
+  "lib/examples/e_transaction.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/examples/e_transaction.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/e_transaction.ex" -> "lib/examples/e_transparent/e_transaction.ex"
+  "lib/examples/e_transaction.ex" -> "lib/examples/enock.ex"
+  "lib/examples/enock.ex" -> "lib/anoma/transparent_resource/action.ex"
+  "lib/examples/enock.ex" -> "lib/anoma/transparent_resource/delta.ex"
+  "lib/examples/enock.ex" -> "lib/anoma/transparent_resource/resource.ex"
+  "lib/examples/enock.ex" -> "lib/anoma/transparent_resource/transaction.ex"
+  "lib/examples/enock.ex" -> "lib/examples/e_transparent/e_action.ex"
+  "lib/examples/enock.ex" -> "lib/examples/e_transparent/e_resource.ex"
+  "lib/examples/enock.ex" -> "lib/examples/e_transparent/e_transaction.ex"
+  "lib/examples/enock.ex" -> "lib/examples/ecrypto.ex"
+  "lib/examples/ecrypto.ex" -> "lib/anoma/crypto/id.ex"
+  "lib/examples/ecrypto.ex" -> "lib/anoma/crypto/sign.ex"
+  "lib/examples/ecrypto.ex" -> "lib/anoma/crypto/symmetric.ex"
+  "lib/examples/enock.ex" -> "lib/nock.ex" [label="(export)"]
+  "lib/examples/enock.ex" -> "lib/nock/lib.ex"
+  "lib/examples/enock.ex" -> "lib/noun.ex" [label="(export)"]
+  "lib/examples/enock.ex" -> "lib/noun/format.ex"
+  "lib/examples/enock.ex" -> "lib/noun/jam.ex"
+  "lib/examples/enock.ex" -> "lib/noun/nounable.ex"
+  "lib/examples/e_transaction.ex" -> "lib/node.ex"
+  "lib/examples/e_transaction.ex" -> "lib/node/event.ex" [label="(export)"]
+  "lib/examples/e_transaction.ex" -> "lib/node/logging.ex" [label="(export)"]
+  "lib/examples/e_transaction.ex" -> "lib/node/transaction/backends.ex"
+  "lib/examples/e_transaction.ex" -> "lib/node/transaction/executor.ex"
+  "lib/examples/e_transaction.ex" -> "lib/node/transaction/mempool.ex" [label="(export)"]
+  "lib/examples/e_transaction.ex" -> "lib/node/transaction/ordering.ex"
+  "lib/examples/e_transaction.ex" -> "lib/node/transaction/storage.ex"
+  "lib/examples/e_transaction.ex" -> "lib/tables.ex"
+  "lib/examples/e_event.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/examples/e_event.ex" -> "lib/node/transaction/executor.ex" [label="(export)"]
+  "lib/examples/e_event.ex" -> "lib/node/transaction/mempool.ex" [label="(export)"]
+  "lib/examples/e_event.ex" -> "lib/node/transaction/ordering.ex" [label="(export)"]
+  "lib/examples/e_event/e_def_event.ex"
+  "lib/examples/e_event/e_def_event.ex" -> "lib/event_broker.ex"
+  "lib/examples/e_event/e_def_event.ex" -> "lib/event_broker/def_filter.ex" [label="(compile)"]
+  "lib/examples/e_event/e_def_event.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/examples/e_event/e_def_event.ex" -> "lib/event_broker/filter.ex" [label="(compile)"]
+  "lib/examples/e_event/e_def_event.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/e_event/e_def_event.ex" -> "lib/node.ex"
+  "lib/examples/e_event/e_def_event.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/examples/e_event/e_def_event.ex" -> "lib/node/event/def_event.ex" [label="(compile)"]
+  "lib/examples/e_event_broker.ex"
+  "lib/examples/e_event_broker.ex" -> "lib/event_broker.ex"
+  "lib/examples/e_event_broker.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/examples/e_event_broker.ex" -> "lib/event_broker/filters.ex" [label="(export)"]
+  "lib/examples/e_event_broker.ex" -> "lib/event_broker/registry.ex"
+  "lib/examples/e_event_broker.ex" -> "lib/event_broker/supervisor.ex"
+  "lib/examples/e_filter.ex"
+  "lib/examples/e_filter.ex" -> "lib/event_broker/def_filter.ex" [label="(compile)"]
+  "lib/examples/e_filter.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/examples/e_filter.ex" -> "lib/event_broker/filter.ex" [label="(compile)"]
+  "lib/examples/e_logging.ex"
+  "lib/examples/e_logging.ex" -> "lib/event_broker.ex"
+  "lib/examples/e_logging.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/examples/e_logging.ex" -> "lib/event_broker/with_subscription.ex" [label="(compile)"]
+  "lib/examples/e_logging.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/e_logging.ex" -> "lib/node.ex"
+  "lib/examples/e_logging.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/examples/e_logging.ex" -> "lib/node/logging.ex"
+  "lib/examples/e_logging.ex" -> "lib/node/registry.ex"
+  "lib/examples/e_logging.ex" -> "lib/node/transaction/mempool.ex" [label="(export)"]
+  "lib/examples/e_logging.ex" -> "lib/node/transaction/storage.ex"
+  "lib/examples/e_logging.ex" -> "lib/tables.ex"
+  "lib/examples/e_mempool.ex"
+  "lib/examples/e_mempool.ex" -> "lib/event_broker.ex"
+  "lib/examples/e_mempool.ex" -> "lib/event_broker/with_subscription.ex" [label="(compile)"]
+  "lib/examples/e_mempool.ex" -> "lib/examples/e_event.ex"
+  "lib/examples/e_mempool.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/e_mempool.ex" -> "lib/examples/e_transaction.ex"
+  "lib/examples/e_mempool.ex" -> "lib/node/transaction/mempool.ex"
+  "lib/examples/e_mempool.ex" -> "lib/tables.ex"
+  "lib/examples/e_node.ex"
+  "lib/examples/e_prove.ex"
+  "lib/examples/e_prove.ex" -> "lib/client/runner.ex"
+  "lib/examples/e_prove.ex" -> "lib/nock/lib.ex"
+  "lib/examples/e_prove.ex" -> "lib/noun.ex"
+  "lib/examples/e_prove.ex" -> "lib/noun/format.ex"
+  "lib/examples/e_prove.ex" -> "lib/noun/jam.ex"
+  "lib/examples/e_proxy.ex"
+  "lib/examples/e_proxy.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/intent.pb.ex" [label="(export)"]
+  "lib/examples/e_proxy.ex" -> "lib/client/client_connection/grpc_proxy.ex"
+  "lib/examples/e_proxy.ex" -> "lib/examples/e_client.ex"
+  "lib/examples/e_proxy.ex" -> "lib/examples/e_transparent/e_transaction.ex"
+  "lib/examples/e_proxy.ex" -> "lib/noun/jam.ex"
+  "lib/examples/e_proxy.ex" -> "lib/noun/nounable.ex"
+  "lib/examples/e_registry.ex"
+  "lib/examples/e_shielded_transaction.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/anoma/cairo_resource/resource.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/anoma/cairo_resource/shielded_transaction.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/anoma/constants.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/event_broker.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/examples/e_cairo/e_resource.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/examples/e_cairo/e_transaction.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/examples/e_transaction.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/examples/ecommitment_tree.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/examples/enock.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/node.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/node/transaction/mempool.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/node/transaction/storage.ex"
+  "lib/examples/e_shielded_transaction.ex" -> "lib/noun/nounable.ex"
+  "lib/examples/e_storage.ex"
+  "lib/examples/e_subscribe.ex"
+  "lib/examples/e_subscribe.ex" -> "lib/event_broker.ex"
+  "lib/examples/e_subscribe.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/examples/e_subscribe.ex" -> "lib/examples/e_filter.ex" [label="(export)"]
+  "lib/examples/e_transaction.ex"
+  "lib/examples/e_transparent/e_action.ex"
+  "lib/examples/e_transparent/e_logic_proof.ex"
+  "lib/examples/e_transparent/e_resource.ex"
+  "lib/examples/e_transparent/e_transaction.ex"
+  "lib/examples/e_transport.ex"
+  "lib/examples/e_transport/e_grpc.ex"
+  "lib/examples/e_transport/e_grpc.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/add/request.pb.ex" [label="(export)"]
+  "lib/examples/e_transport/e_grpc.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/intent.pb.ex" [label="(export)"]
+  "lib/examples/e_transport/e_grpc.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents/list/request.pb.ex" [label="(export)"]
+  "lib/examples/e_transport/e_grpc.ex" -> "lib/anoma/protobuf/anoma/protobuf/intents_service.pb.ex"
+  "lib/examples/e_transport/e_grpc.ex" -> "lib/anoma/protobuf/anoma/protobuf/node_info.pb.ex" [label="(export)"]
+  "lib/examples/e_transport/e_grpc.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/e_transport/e_grpc.ex" -> "lib/examples/e_transparent/e_transaction.ex"
+  "lib/examples/e_transport/e_grpc.ex" -> "lib/noun/jam.ex"
+  "lib/examples/e_transport/e_grpc.ex" -> "lib/noun/nounable.ex"
+  "lib/examples/e_transport/e_tcp.ex"
+  "lib/examples/e_transport/e_tcp.ex" -> "lib/event_broker.ex"
+  "lib/examples/e_transport/e_tcp.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/e_transport/e_tcp.ex" -> "lib/node/registry.ex"
+  "lib/examples/e_transport/e_tcp.ex" -> "lib/node/transport/transport.ex"
+  "lib/node/transport/transport.ex" -> "lib/node/registry.ex"
+  "lib/node/transport/transport.ex" -> "lib/node/transport/engine_proxy.ex"
+  "lib/node/transport/engine_proxy.ex" -> "lib/node/registry.ex"
+  "lib/node/transport/engine_proxy.ex" -> "lib/node/transport/messages.ex"
+  "lib/node/transport/transport.ex" -> "lib/node/transport/tcp/tcp_connection.ex"
+  "lib/node/transport/tcp/tcp_connection.ex" -> "lib/anoma/protobuf/anoma/protobuf/announce/announcement.pb.ex" [label="(export)"]
+  "lib/node/transport/tcp/tcp_connection.ex" -> "lib/anoma/protobuf/anoma/protobuf/envelope.pb.ex" [label="(export)"]
+  "lib/node/transport/tcp/tcp_connection.ex" -> "lib/event_broker.ex"
+  "lib/node/transport/tcp/tcp_connection.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/node/transport/tcp/tcp_connection.ex" -> "lib/node/registry.ex"
+  "lib/node/transport/tcp/tcp_connection.ex" -> "lib/node/transport/messages.ex"
+  "lib/node/transport/tcp/tcp_connection.ex" -> "lib/node/transport/transport.ex"
+  "lib/node/transport/transport.ex" -> "lib/node/transport/tcp/tcp_listener.ex"
+  "lib/node/transport/tcp/tcp_listener.ex" -> "lib/node/registry.ex"
+  "lib/node/transport/tcp/tcp_listener.ex" -> "lib/node/transport/tcp/tcp_connection.ex"
+  "lib/examples/e_with_subscription.ex"
+  "lib/examples/e_with_subscription.ex" -> "lib/event_broker.ex"
+  "lib/examples/e_with_subscription.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/examples/e_with_subscription.ex" -> "lib/event_broker/with_subscription.ex" [label="(compile)"]
+  "lib/examples/e_with_subscription.ex" -> "lib/examples/e_filter.ex" [label="(export)"]
+  "lib/examples/e_with_subscription.ex" -> "lib/examples/e_subscribe.ex" [label="(export)"]
+  "lib/examples/ecommitment_tree.ex"
+  "lib/examples/ecrypto.ex"
+  "lib/examples/eintent_pool.ex"
+  "lib/examples/eintent_pool.ex" -> "lib/anoma/rm/dumb_intent.ex" [label="(export)"]
+  "lib/examples/eintent_pool.ex" -> "lib/anoma/rm/intent.ex"
+  "lib/examples/eintent_pool.ex" -> "lib/event_broker.ex"
+  "lib/examples/eintent_pool.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/examples/eintent_pool.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/eintent_pool.ex" -> "lib/examples/e_transaction.ex"
+  "lib/examples/eintent_pool.ex" -> "lib/examples/e_transparent/e_transaction.ex"
+  "lib/examples/eintent_pool.ex" -> "lib/node/event.ex" [label="(compile)"]
+  "lib/examples/eintent_pool.ex" -> "lib/node/intents/intent_pool.ex"
+  "lib/examples/eintent_pool.ex" -> "lib/node/transaction/backends.ex" [label="(export)"]
+  "lib/examples/eintent_pool.ex" -> "lib/tables.ex"
+  "lib/examples/enock.ex"
+  "lib/examples/esolver.ex"
+  "lib/examples/esolver.ex" -> "lib/anoma/rm/dumb_intent.ex" [label="(export)"]
+  "lib/examples/esolver.ex" -> "lib/event_broker.ex"
+  "lib/examples/esolver.ex" -> "lib/event_broker/event.ex" [label="(export)"]
+  "lib/examples/esolver.ex" -> "lib/event_broker/with_subscription.ex" [label="(compile)"]
+  "lib/examples/esolver.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/esolver.ex" -> "lib/examples/e_transparent/e_transaction.ex"
+  "lib/examples/esolver.ex" -> "lib/node/event.ex" [label="(export)"]
+  "lib/examples/esolver.ex" -> "lib/node/intents/intent_pool.ex"
+  "lib/examples/esolver.ex" -> "lib/node/intents/solver.ex"
+  "lib/examples/esolver.ex" -> "lib/node/transaction/mempool.ex" [label="(export)"]
+  "lib/examples/esolver.ex" -> "lib/noun/nounable.ex"
+  "lib/examples/replay/e_replay.ex"
+  "lib/examples/replay/e_replay.ex" -> "lib/event_broker.ex"
+  "lib/examples/replay/e_replay.ex" -> "lib/event_broker/with_subscription.ex" [label="(compile)"]
+  "lib/examples/replay/e_replay.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/replay/e_replay.ex" -> "lib/examples/replay/e_start_state.ex"
+  "lib/examples/replay/e_start_state.ex" -> "lib/event_broker.ex"
+  "lib/examples/replay/e_start_state.ex" -> "lib/examples/e_event.ex"
+  "lib/examples/replay/e_start_state.ex" -> "lib/examples/e_mempool.ex"
+  "lib/examples/replay/e_start_state.ex" -> "lib/examples/e_node.ex"
+  "lib/examples/replay/e_start_state.ex" -> "lib/node/event.ex"
+  "lib/examples/replay/e_start_state.ex" -> "lib/node/logging.ex"
+  "lib/examples/replay/e_start_state.ex" -> "lib/node/registry.ex"
+  "lib/examples/replay/e_start_state.ex" -> "lib/node/replay/start_state.ex"
+  "lib/examples/replay/e_start_state.ex" -> "lib/node/transaction/mempool.ex"
+  "lib/examples/replay/e_start_state.ex" -> "lib/tables.ex"
+  "lib/examples/replay/e_replay.ex" -> "lib/node/replay/replay.ex"
+  "lib/node/replay/replay.ex" -> "lib/event_broker.ex"
+  "lib/node/replay/replay.ex" -> "lib/node/replay/start_state.ex"
+  "lib/node/replay/replay.ex" -> "lib/supervisor.ex"
+  "lib/node/replay/replay.ex" -> "lib/tables.ex"
+  "lib/examples/replay/e_replay.ex" -> "lib/node/transaction/backends.ex"
+  "lib/examples/replay/e_start_state.ex"
+  "lib/glossary.ex"
+  "lib/identitymap.ex"
+  "lib/livebook.ex"
+  "lib/mapsetmap.ex"
+  "lib/mapsetmap.ex" -> "lib/identitymap.ex"
+  "lib/mix/tasks/compile/protoc.ex"
+  "lib/mix/tasks/format.ex"
+  "lib/mix/tasks/toc.ex"
+  "lib/mix/tasks/toc.ex" -> "lib/livebook.ex"
+  "lib/nock.ex"
+  "lib/nock/cli.ex"
+  "lib/nock/cli.ex" -> "lib/nock.ex" [label="(export)"]
+  "lib/nock/cli.ex" -> "lib/noun/format.ex" [label="(export)"]
+  "lib/nock/jets.ex"
+  "lib/nock/jets/mugs.ex"
+  "lib/nock/lib.ex"
+  "lib/node.ex"
+  "lib/node/event.ex"
+  "lib/node/event/def_event.ex"
+  "lib/node/intents/intent_pool.ex"
+  "lib/node/intents/solver.ex"
+  "lib/node/intents/supervisor.ex"
+  "lib/node/logging.ex"
+  "lib/node/registry.ex"
+  "lib/node/replay/replay.ex"
+  "lib/node/replay/start_state.ex"
+  "lib/node/supervisor.ex"
+  "lib/node/transaction/backends.ex"
+  "lib/node/transaction/executor.ex"
+  "lib/node/transaction/mempool.ex"
+  "lib/node/transaction/ordering.ex"
+  "lib/node/transaction/storage.ex"
+  "lib/node/transaction/supervisor.ex"
+  "lib/node/transport/engine_proxy.ex"
+  "lib/node/transport/grpc/endpoint.ex"
+  "lib/node/transport/grpc/executor.ex"
+  "lib/node/transport/grpc/intents.ex"
+  "lib/node/transport/grpc/mempool.ex"
+  "lib/node/transport/messages.ex"
+  "lib/node/transport/supervisor.ex"
+  "lib/node/transport/tcp/tcp_connection.ex"
+  "lib/node/transport/tcp/tcp_listener.ex"
+  "lib/node/transport/transport.ex"
+  "lib/noun.ex"
+  "lib/noun/bits.ex"
+  "lib/noun/format.ex"
+  "lib/noun/jam.ex"
+  "lib/noun/nounable.ex"
+  "lib/noun/order.ex"
+  "lib/supervisor.ex"
+  "lib/tables.ex"
+  "lib/test_helper/generate_example_tests.ex"
+  "lib/test_helper/test_macro.ex"
+}
