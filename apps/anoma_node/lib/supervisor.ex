@@ -14,6 +14,7 @@ defmodule Anoma.Supervisor do
   alias Anoma.Node
   alias Anoma.Node.Replay.State
   alias Anoma.Node.Tables
+  alias Anoma.Node.Transport
 
   ############################################################
   #                       Supervisor Implementation          #
@@ -28,10 +29,14 @@ defmodule Anoma.Supervisor do
   def init(_args) do
     Process.set_label(__MODULE__)
 
+    grpc_port = Application.get_env(:anoma_node, :grpc_port)
+
     :ok = Anoma.Node.Tables.initialize_storage()
 
     children = [
       {Elixir.Registry, keys: :unique, name: Anoma.Node.Registry},
+      {GRPC.Server.Supervisor,
+       endpoint: Transport.GRPC.Endpoint, port: grpc_port, start_server: true},
       {DynamicSupervisor, name: Anoma.Node.NodeSupervisor}
     ]
 

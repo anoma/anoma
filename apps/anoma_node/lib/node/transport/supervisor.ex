@@ -12,7 +12,7 @@ defmodule Anoma.Node.Transport.Supervisor do
 
   @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
-    args = Keyword.validate!(args, [:node_id, grpc_port: 0])
+    args = Keyword.validate!(args, [:node_id])
     Supervisor.start_link(__MODULE__, args)
   end
 
@@ -27,17 +27,7 @@ defmodule Anoma.Node.Transport.Supervisor do
   def init(args) do
     Logger.debug("starting transport supervisor #{inspect(args)}")
     Process.set_label(__MODULE__)
-
-    # validate args and set defaults
-    args = Keyword.validate!(args, [:node_id, grpc_port: 0])
-
-    # start the supervisor
-    children = [
-      {GRPC.Server.Supervisor,
-       endpoint: Anoma.Node.Transport.GRPC.Endpoint,
-       port: args[:grpc_port],
-       start_server: true}
-    ]
+    children = []
 
     Supervisor.init(children, strategy: :one_for_one)
   end

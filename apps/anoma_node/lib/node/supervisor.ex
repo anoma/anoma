@@ -17,7 +17,6 @@ defmodule Anoma.Node.Supervisor do
   """
   @type args_t :: [
           node_id: String.t(),
-          grpc_port: non_neg_integer(),
           replay: boolean(),
           transaction: [mempool: any()]
         ]
@@ -27,7 +26,6 @@ defmodule Anoma.Node.Supervisor do
   """
   @args [
     :node_id,
-    grpc_port: 0,
     replay: true,
     transaction: [mempool: []]
   ]
@@ -58,11 +56,10 @@ defmodule Anoma.Node.Supervisor do
     args = Keyword.validate!(args, @args)
 
     node_id = args[:node_id]
-    grpc_port = args[:grpc_port]
     transaction = args[:transaction]
 
     children = [
-      {Transport.Supervisor, node_id: node_id, grpc_port: grpc_port},
+      {Transport.Supervisor, node_id: node_id},
       {Transaction.Supervisor, [node_id: node_id] ++ transaction},
       {Intents.Supervisor, node_id: node_id},
       {Logging, node_id: node_id}
