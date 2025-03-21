@@ -17,7 +17,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Mempool do
   def tx_event do
     tx_event = %Mempool.Events.TxEvent{}
     json = Jason.encode!(tx_event)
-    assert json == Jason.encode!(%{id: nil, tx: nil})
+
+    assert Jason.decode(json) ==
+             %{id: nil, tx: nil}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     tx_event
   end
@@ -50,8 +54,8 @@ defmodule Anoma.Node.Examples.Serializing.Events.Mempool do
     expected_result =
       transaction.result |> elem(1) |> Noun.Jam.jam() |> Base.encode64()
 
-    assert json ==
-             Jason.encode!(%{
+    assert Jason.decode(json) ==
+             %{
                id: transaction.id,
                tx: %{
                  backend: nil,
@@ -59,7 +63,9 @@ defmodule Anoma.Node.Examples.Serializing.Events.Mempool do
                  tx_result: expected_result,
                  vm_result: expected_result
                }
-             })
+             }
+             |> Jason.encode!()
+             |> Jason.decode()
 
     tx_event
   end
@@ -71,7 +77,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Mempool do
   def consensus_event do
     consensus_event = %Mempool.Events.ConsensusEvent{}
     json = Jason.encode!(consensus_event)
-    assert json == Jason.encode!(%{order: []})
+
+    assert Jason.decode(json) ==
+             %{order: []}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     consensus_event
   end
@@ -83,7 +93,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Mempool do
   def consensus_event_with_ids do
     consensus_event = %{consensus_event() | order: ["foo", "bar"]}
     json = Jason.encode!(consensus_event)
-    assert json == Jason.encode!(%{order: ["foo", "bar"]})
+
+    assert Jason.decode(json) ==
+             %{order: ["foo", "bar"]}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     consensus_event
   end
@@ -95,7 +109,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Mempool do
   def block_event do
     block_event = %Mempool.Events.BlockEvent{}
     json = Jason.encode!(block_event)
-    assert json == Jason.encode!(%{order: [], round: nil})
+
+    assert Jason.decode(json) ==
+             %{order: [], round: nil}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     block_event
   end
@@ -108,7 +126,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Mempool do
     block_event = %{block_event() | round: 123, order: ["foo", "bar"]}
 
     json = Jason.encode!(block_event)
-    assert json == Jason.encode!(%{order: ["foo", "bar"], round: 123})
+
+    assert Jason.decode(json) ==
+             %{order: ["foo", "bar"], round: 123}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     block_event
   end

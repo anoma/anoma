@@ -29,13 +29,17 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
       vm_result: {:ok, [1 | 2]}
     }
 
+    # this will fail if the encoding doesnt work.
     json = Jason.encode!(result_event)
 
     # assert the result is what we expect
     expected_result =
       {:ok, [1 | 2]} |> elem(1) |> Noun.Jam.jam() |> Base.encode64()
 
-    assert json == Jason.encode!(%{tx_id: "foo", vm_result: expected_result})
+    assert Jason.decode(json) ==
+             %{tx_id: "foo", vm_result: expected_result}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     result_event
   end
@@ -47,7 +51,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
   def complete_event_error do
     complete_event = %Events.CompleteEvent{tx_id: "foo", tx_result: :error}
     json = Jason.encode!(complete_event)
-    assert json == Jason.encode!(%{tx_id: "foo", tx_result: :error})
+
+    assert Jason.decode(json) ==
+             %{tx_id: "foo", tx_result: :error}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     complete_event
   end
@@ -68,7 +76,10 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
     expected_result =
       {:ok, [1 | 2]} |> elem(1) |> Noun.Jam.jam() |> Base.encode64()
 
-    assert json == Jason.encode!(%{tx_id: "foo", tx_result: expected_result})
+    assert Jason.decode(json) ==
+             %{tx_id: "foo", tx_result: expected_result}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     complete_event
   end
@@ -80,7 +91,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
   def srme_event do
     srme_event = %Events.SRMEvent{}
     json = Jason.encode!(srme_event)
-    assert json == Jason.encode!(%{nullifiers: [], commitments: []})
+
+    assert Jason.decode(json) ==
+             %{nullifiers: [], commitments: []}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     srme_event
   end
@@ -96,7 +111,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
     }
 
     json = Jason.encode!(srme_event)
-    assert json == Jason.encode!(%{commitments: ["foo"], nullifiers: ["bar"]})
+
+    assert Jason.decode(json) ==
+             %{commitments: ["foo"], nullifiers: ["bar"]}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     srme_event
   end
@@ -108,7 +127,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
   def trme_event do
     trme_event = %Events.TRMEvent{}
     json = Jason.encode!(trme_event)
-    assert json == Jason.encode!(%{commitments: [], nullifiers: []})
+
+    assert Jason.decode(json) ==
+             %{commitments: [], nullifiers: []}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     trme_event
   end
@@ -124,7 +147,11 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
     }
 
     json = Jason.encode!(trme_event)
-    assert json == Jason.encode!(%{nullifiers: ["bar"], commitments: ["foo"]})
+
+    assert Jason.decode(json) ==
+             %{nullifiers: ["bar"], commitments: ["foo"]}
+             |> Jason.encode!()
+             |> Jason.decode()
 
     trme_event
   end
