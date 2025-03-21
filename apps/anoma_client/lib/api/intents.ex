@@ -1,28 +1,28 @@
 defmodule Anoma.Client.Api.Servers.Intents do
   alias Anoma.Client.Connection.GRPCProxy
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.Intents.List
-  alias GRPC.Server.Stream
-  alias Anoma.Protobuf.Intents.Compose
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.Verify
+  alias Anoma.Proto.Intentpool.Add
+  alias Anoma.Proto.Intentpool.List
+  alias Anoma.Proto.Intentpool.Compose
+  alias Anoma.Proto.Intentpool.Intent
+  alias Anoma.Proto.Intentpool.Verify
   alias Anoma.RM.Transparent.Transaction
+  alias GRPC.Server.Stream
 
   require Logger
 
-  use GRPC.Server, service: Anoma.Protobuf.IntentsService.Service
+  use GRPC.Server, service: Anoma.Proto.IntentpoolService.Service
 
-  @spec list_intents(List.Request.t(), Stream.t()) ::
+  @spec list(List.Request.t(), Stream.t()) ::
           List.Response.t()
-  def list_intents(request, _stream) do
+  def list(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
     {:ok, intents} = GRPCProxy.list_intents()
     intents
   end
 
-  @spec add_intent(Add.Request.t(), Stream.t()) ::
+  @spec add(Add.Request.t(), Stream.t()) ::
           Add.Response.t()
-  def add_intent(request, _stream) do
+  def add(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
     {:ok, response} = GRPCProxy.add_intent(request.intent)

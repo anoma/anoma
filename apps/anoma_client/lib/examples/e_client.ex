@@ -8,20 +8,20 @@ defmodule Anoma.Client.Examples.EClient do
   """
 
   alias Anoma.Client
-  alias Anoma.Client.Storage
   alias Anoma.Client.Examples.EClient
+  alias Anoma.Client.Storage
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.List
-  alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.Nock.Input
-  alias Anoma.Protobuf.Nock.Prove
-  alias Anoma.Protobuf.NockService
-  alias Anoma.Protobuf.NodeInfo
-  alias Examples.ETransparent.ETransaction
+  alias Anoma.Proto.Intentpool.Add
+  alias Anoma.Proto.Intentpool.Intent
+  alias Anoma.Proto.Intentpool.List
+  alias Anoma.Proto.IntentpoolService
+  alias Anoma.Proto.Nock.Input
+  alias Anoma.Proto.Nock.Prove
+  alias Anoma.Proto.NockService
+  alias Anoma.Proto.Node
   alias Anoma.RM.Transparent.Action
   alias Anoma.RM.Transparent.Transaction
+  alias Examples.ETransparent.ETransaction
   alias Noun.Nounable
 
   import ExUnit.Assertions
@@ -133,10 +133,10 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_intents(EConnection.t()) :: EConnection.t()
   def list_intents(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %List.Request{node_info: node_id}
+    node_id = %Node{id: conn.client.node.node_id}
+    request = %List.Request{node: node_id}
 
-    {:ok, _reply} = IntentsService.Stub.list_intents(conn.channel, request)
+    {:ok, _reply} = IntentpoolService.Stub.list(conn.channel, request)
     conn
   end
 
@@ -151,21 +151,21 @@ defmodule Anoma.Client.Examples.EClient do
       |> Nounable.to_noun()
       |> Noun.Jam.jam()
 
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    node_id = %Node{id: conn.client.node.node_id}
 
     request = %Add.Request{
-      node_info: node_id,
+      node: node_id,
       intent: %Intent{intent: intent_jammed}
     }
 
-    {:ok, _reply} = IntentsService.Stub.add_intent(conn.channel, request)
+    {:ok, _reply} = IntentpoolService.Stub.add(conn.channel, request)
 
     # fetch the intents to ensure it was added
     request = %List.Request{}
 
-    {:ok, reply} = IntentsService.Stub.list_intents(conn.channel, request)
+    {:ok, reply} = IntentpoolService.Stub.list(conn.channel, request)
 
-    assert reply.intents == [intent_jammed]
+    assert reply.intents == [%Intent{intent: intent_jammed}]
 
     conn
   end

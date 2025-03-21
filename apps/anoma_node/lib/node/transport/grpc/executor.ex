@@ -1,11 +1,11 @@
 defmodule Anoma.Node.Transport.GRPC.Servers.Executor do
-  alias Anoma.Protobuf.Executor.AddROTransaction
-  alias GRPC.Server.Stream
   alias Anoma.Node.Transaction.Executor
-  alias Anoma.Protobuf.Nock.Success
-  alias Anoma.Protobuf.Nock.Error
+  alias Anoma.Proto.Executor.AddROTransaction
+  alias Anoma.Proto.Nock.Error
+  alias Anoma.Proto.Nock.Success
+  alias GRPC.Server.Stream
 
-  use GRPC.Server, service: Anoma.Protobuf.ExecutorService.Service
+  use GRPC.Server, service: Anoma.Proto.ExecutorService.Service
 
   require Logger
 
@@ -14,10 +14,10 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Executor do
   def add(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
-    tx_noun = request.transaction |> Noun.Jam.cue!()
+    tx_noun = request.transaction.transaction |> Noun.Jam.cue!()
 
     Executor.launch(
-      request.node_info.node_id,
+      request.node.id,
       {{:read_only, self()}, tx_noun}
     )
 
