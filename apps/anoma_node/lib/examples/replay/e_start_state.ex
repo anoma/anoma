@@ -13,6 +13,7 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   alias Anoma.Node.Examples.EEvent
   alias Anoma.Node.Examples.ETransaction
   alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Examples.Helpers
 
   import ExUnit.Assertions
 
@@ -189,6 +190,9 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   @spec mempool_todo_consensus(ENode.t()) :: {ENode.t(), ETransaction.t()}
   def mempool_todo_consensus(enode \\ ENode.start_node()) do
     with_subscription [[]] do
+      {:ok, mnesia_events} =
+        Helpers.table_events_logger(Tables.table_events(enode.node_id))
+
       # stop the logging engine from processing block events.
       mempool_engine = Registry.whereis(enode.node_id, Mempool)
 
@@ -197,6 +201,8 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
         Mempool.filter_for_mempool_execution_events()
       ]
 
+      # unsubscribe the mempool from execution events. This ensures that no
+      # commits happen, and no block event is generated.
       EventBroker.unsubscribe(mempool_engine, filter)
 
       # create a block from a transaction
@@ -207,6 +213,13 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
       # wait for the block event
       order_event = EEvent.order_event(enode, transaction.id)
       EEvent.wait_for_event(order_event)
+
+      # ensure that the transaction is written into the events table
+      assert Helpers.seen_event?(
+               mnesia_events,
+               {Tables.table_events(enode.node_id), transaction.id,
+                {transaction.backend, transaction.noun}}
+             )
 
       # compute the mempool arguments.
       {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
@@ -300,6 +313,7 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
       filter = [Event.node_filter(enode.node_id), Logging.blocks_filter()]
       EventBroker.unsubscribe(logging_engine, filter)
 
+    with_subscription [[]] do
       # create 5 blocks, creating 5 stale consensi in the logging engine.
       for block <- 0..4 do
         # create a block from a transaction
@@ -324,6 +338,7 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
 
       enode
     end
+  end
   end
 
   # -----------------------------------------------------------

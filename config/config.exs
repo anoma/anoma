@@ -2,8 +2,8 @@ import Config
 
 config :logger,
   level: :error,
-  handle_otp_reports: true,
-  handle_sasl_reports: true
+  handle_otp_reports: false,
+  handle_sasl_reports: false
 
 config :anoma_client, []
 config :anoma_lib, []
