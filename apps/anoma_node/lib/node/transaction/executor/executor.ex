@@ -23,6 +23,7 @@ defmodule Anoma.Node.Transaction.Executor do
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Ordering
+  alias Anoma.Node.Transaction.Executor.Events
 
   require Node.Event
 
@@ -48,28 +49,6 @@ defmodule Anoma.Node.Transaction.Executor do
     """
 
     field(:node_id, String.t())
-  end
-
-  typedstruct enforce: true, module: ExecutionEvent do
-    @typedoc """
-    I am the type of an execution event.
-
-    I am launched when transactions for a specific block have been
-    succesfully processed by their respective workers.
-
-    I hence signal the results with a message containing the result list.
-    The order of the results should coincide with the ordering of the
-    corresponding transactions.
-    """
-
-    field(:result, list({{:ok, any} | :error, binary()}))
-  end
-
-  typedstruct enforce: true, module: TaskCrash do
-    @typedoc """
-    I am a crash event for a task that failed.
-    """
-    field(:task, any())
   end
 
   ############################################################
@@ -105,7 +84,7 @@ defmodule Anoma.Node.Transaction.Executor do
     EventBroker.subscribe_me([
       Node.Event.node_filter(args[:node_id]),
       Mempool.worker_module_filter(),
-      complete_filter()
+      %Backends.Events.CompleteFilter{}
     ])
 
     state = struct(__MODULE__, Enum.into(args, %{}))
@@ -147,19 +126,6 @@ defmodule Anoma.Node.Transaction.Executor do
   @spec execute(String.t(), [binary()]) :: :ok
   def execute(node_id, consensus) do
     GenServer.cast(Registry.via(node_id, __MODULE__), {:execute, consensus})
-  end
-
-  ############################################################
-  #                      Public Filters                      #
-  ############################################################
-
-  @doc """
-  I am a filter for completion messages from workers.
-  """
-
-  @spec complete_filter() :: Backends.CompleteFilter.t()
-  def complete_filter() do
-    %Backends.CompleteFilter{}
   end
 
   ############################################################
@@ -221,7 +187,7 @@ defmodule Anoma.Node.Transaction.Executor do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
-          body: %Backends.CompleteEvent{
+          body: %Backends.Events.CompleteEvent{
             tx_id: ^id,
             tx_result: res
           }
@@ -235,7 +201,7 @@ defmodule Anoma.Node.Transaction.Executor do
           :ok
   defp execution_event(res_list, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.ExecutionEvent{
+      Node.Event.new_with_body(node_id, %Events.ExecutionEvent{
         result: res_list
       })
 
@@ -245,7 +211,7 @@ defmodule Anoma.Node.Transaction.Executor do
   @spec task_crash_event(any(), String.t()) :: :ok
   defp task_crash_event(task, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.TaskCrash{task: task})
+      Node.Event.new_with_body(node_id, %Events.TaskCrash{task: task})
 
     EventBroker.event(event)
   end

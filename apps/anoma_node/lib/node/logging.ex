@@ -90,10 +90,12 @@ defmodule Anoma.Node.Logging do
     } ->
       true
 
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.TxEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.Events.TxEvent{}}} ->
       true
 
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.ConsensusEvent{}}} ->
+    %EventBroker.Event{
+      body: %Node.Event{body: %Mempool.Events.ConsensusEvent{}}
+    } ->
       true
 
     _ ->
@@ -101,7 +103,7 @@ defmodule Anoma.Node.Logging do
   end
 
   deffilter BlocksFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.Events.BlockEvent{}}} ->
       true
 
     _ ->
@@ -200,7 +202,7 @@ defmodule Anoma.Node.Logging do
   def handle_info(
         e = %EventBroker.Event{
           body: %Node.Event{
-            body: %Mempool.TxEvent{}
+            body: %Mempool.Events.TxEvent{}
           }
         },
         state
@@ -211,7 +213,7 @@ defmodule Anoma.Node.Logging do
   def handle_info(
         e = %EventBroker.Event{
           body: %Node.Event{
-            body: %Mempool.ConsensusEvent{}
+            body: %Mempool.Events.ConsensusEvent{}
           }
         },
         state
@@ -222,7 +224,7 @@ defmodule Anoma.Node.Logging do
   def handle_info(
         e = %EventBroker.Event{
           body: %Node.Event{
-            body: %Mempool.BlockEvent{}
+            body: %Mempool.Events.BlockEvent{}
           }
         },
         state
@@ -258,7 +260,7 @@ defmodule Anoma.Node.Logging do
   defp handle_tx_event(
          %EventBroker.Event{
            body: %Node.Event{
-             body: %Mempool.TxEvent{
+             body: %Mempool.Events.TxEvent{
                id: id,
                tx: %Mempool.Tx{backend: backend, code: code}
              }
@@ -284,7 +286,7 @@ defmodule Anoma.Node.Logging do
   defp handle_consensus_event(
          %EventBroker.Event{
            body: %Node.Event{
-             body: %Mempool.ConsensusEvent{
+             body: %Mempool.Events.ConsensusEvent{
                order: list
              }
            }
@@ -309,7 +311,7 @@ defmodule Anoma.Node.Logging do
   defp handle_block_event(
          %EventBroker.Event{
            body: %Node.Event{
-             body: %Mempool.BlockEvent{
+             body: %Mempool.Events.BlockEvent{
                order: id_list,
                round: round
              }
@@ -411,7 +413,7 @@ defmodule Anoma.Node.Logging do
           %EventBroker.Event{
             body: %Node.Event{
               node_id: ^mock_id,
-              body: %Mempool.ConsensusEvent{
+              body: %Mempool.Events.ConsensusEvent{
                 order: ^final_consensus
               }
             }
