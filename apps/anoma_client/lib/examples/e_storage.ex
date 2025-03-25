@@ -1,17 +1,8 @@
 defmodule Anoma.Client.Examples.EStorage do
   alias Anoma.Client.Storage
+  alias Anoma.Node.Tables
 
   @type storage_result :: list({:key, any()} | {:value, any()})
-
-  ############################################################
-  #                    Helpers                               #
-  ############################################################
-
-  def setup() do
-    :mnesia.clear_table(Storage.Updates)
-    :mnesia.clear_table(Storage.Values)
-    :mnesia.clear_table(Storage.Ids)
-  end
 
   ############################################################
   #                    Examples                              #
@@ -19,7 +10,8 @@ defmodule Anoma.Client.Examples.EStorage do
 
   @spec write_value(any(), any()) :: storage_result
   def write_value(key \\ "key", value \\ "value") do
-    setup()
+    :ok = Tables.reset_tables_for_client()
+
     Storage.write({key, value})
 
     [key: key, value: value]
@@ -51,7 +43,7 @@ defmodule Anoma.Client.Examples.EStorage do
 
   @spec read_absent(any()) :: storage_result
   def read_absent(key \\ "key") do
-    setup()
+    :ok = Tables.reset_tables_for_client()
 
     :absent = Storage.read({System.os_time(), key})
     [key: key, value: :absent]
@@ -59,7 +51,7 @@ defmodule Anoma.Client.Examples.EStorage do
 
   @spec read_in_future_and_fail(any()) :: storage_result
   def read_in_future_and_fail(key \\ "key") do
-    setup()
+    :ok = Tables.reset_tables_for_client()
 
     :error = Storage.read({System.os_time() * 2, key})
     [key: key, value: :error]
@@ -76,7 +68,7 @@ defmodule Anoma.Client.Examples.EStorage do
 
   @spec read_absent_with_new_id(any(), any()) :: storage_result
   def read_absent_with_new_id(id \\ "id", key \\ "key") do
-    setup()
+    :ok = Tables.reset_tables_for_client()
 
     :absent = Storage.read_with_id({id, key})
 

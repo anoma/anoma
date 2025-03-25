@@ -8,9 +8,10 @@ defmodule Anoma.Client.Examples.EClient do
   """
 
   alias Anoma.Client
-  alias Anoma.Client.Storage
   alias Anoma.Client.Examples.EClient
+  alias Anoma.Client.Storage
   alias Anoma.Node.Examples.ENode
+  alias Anoma.Node.Tables
   alias Anoma.Protobuf.Intents.Add
   alias Anoma.Protobuf.Intents.Intent
   alias Anoma.Protobuf.Intents.List
@@ -19,9 +20,9 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Protobuf.Nock.Prove
   alias Anoma.Protobuf.NockService
   alias Anoma.Protobuf.NodeInfo
-  alias Examples.ETransparent.ETransaction
   alias Anoma.TransparentResource.Action
   alias Anoma.TransparentResource.Transaction
+  alias Examples.ETransparent.ETransaction
   alias Noun.Nounable
 
   import ExUnit.Assertions
@@ -320,7 +321,7 @@ defmodule Anoma.Client.Examples.EClient do
 
   @spec prove_with_internal_scry_call(EConnection.t()) :: Prove.Response.t()
   def prove_with_internal_scry_call(conn \\ setup()) do
-    Anoma.Client.Examples.EStorage.setup()
+    :ok = Tables.reset_tables_for_client()
 
     blob_key = ["anoma", "blob", <<123>>]
     blob_value = "i am scried"
@@ -353,7 +354,7 @@ defmodule Anoma.Client.Examples.EClient do
 
   @spec prove_with_external_scry_call(EConnection.t()) :: Prove.Response.t()
   def prove_with_external_scry_call(conn \\ setup()) do
-    Anoma.Client.Examples.EStorage.setup()
+    :ok = Tables.reset_tables_for_client()
     key = ["anoma", "blob", "key"]
 
     Anoma.Node.Transaction.Storage.write(
