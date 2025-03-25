@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package Anoma.Proto.Indexer;
+
+import "node.proto";
+
+/*
+ * A block struct to hold information for a block from the indexer.
+ */
+message Block {
+  repeated Transaction transactions = 1;
+  uint32 height = 2;
+}
+
+/*
+ * A filter struct to holder filter information for resources.
+ */
+message Filter {
+  oneof filter {
+    bytes owner = 1;
+    bytes kind = 2;
+  }
+}
+
+/*
+ * A struct to hold information to represent a transaction that is part of a
+ * block.
+ */
+message Transaction {
+  bytes code = 1;
+
+  oneof result {
+    string error = 2;
+    bytes success = 3;
+  }
+}
+
+/*
+ * Returns the list of nullifiers in the indexer.
+ */
+message Nullifiers {
+  message Request { Node node = 1; }
+
+  message Response { repeated bytes nullifiers = 1; }
+}
+
+/*
+ * Returns the list of commits in the indexer.
+ */
+message Commits {
+  message Request { Node node = 1; }
+
+  message Response { repeated bytes commits = 1; }
+}
+
+/*
+ * Returns the list of unrevealed commits in the indexer.
+ */
+message UnrevealedCommits {
+  message Request { Node node = 1; }
+
+  message Response { repeated bytes commits = 1; }
+}
+
+/*
+ * Returns the list of unrevealed commits in the indexer.
+ */
+message UnspentResources {
+  message Request { Node node = 1; }
+
+  message Response { repeated bytes unspent_resources = 1; }
+}
+
+/*
+ * Filter resources via the indexer.
+ */
+message FilterResource {
+  message Request {
+    Node node = 1;
+    repeated Filter filters = 2;
+  }
+
+  message Response { repeated bytes resources = 1; }
+}
+
+/*
+ * Retrieve the blocks before or after a specific index.
+ */
+message GetBlock {
+  message Request {
+    Node node = 1;
+    oneof index {
+      uint32 after = 2;
+      uint32 before = 3;
+    }
+  }
+
+  message Response { repeated Block blocks = 1; }
+}
+
+/*
+ * Get the latest block.
+ */
+message LatestBlock {
+  message Request { Node node = 1; }
+
+  message Response { optional Block block = 1; }
+}
+
+/*
+ *  Get the root block.
+ */
+message RootBlock {
+  message Request { Node node = 1; }
+
+  message Response { bytes root = 1; }
+}

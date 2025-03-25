@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package Anoma.Proto.Intentpool;
+
+import "node.proto";
+
+/*
+ * An intent
+ */
+message Intent { bytes intent = 1; }
+
+/*
+ * Adding intents to the intentpool.
+ */
+message Add {
+  message Request {
+    Node node = 1;
+    Intent intent = 2;
+  }
+
+  message Response { string result = 1; }
+}
+
+/*
+ * Retrieve all intents currently in the intentpool.
+ */
+message List {
+  message Request { Node node = 1; }
+
+  message Response {
+    repeated Intent intents = 1; // a list of intents.
+  }
+}
+
+/*
+ * Compose a list of intents.
+ */
+message Compose {
+  message Request {
+    Node node = 1;
+    repeated Intent intents = 2;
+  }
+
+  message Response {
+    Intent intent = 1; // a list of intents.
+  }
+}
+
+
+/*
+ * Verify an intent.
+ */
+message Verify {
+  message Request {
+    Node node = 1;
+    Intent intent = 2;
+  }
+
+  message Response {
+    bool valid = 1;
+  }
+}

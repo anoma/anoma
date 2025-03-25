@@ -39,6 +39,7 @@ defmodule Anoma.Protobuf.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:anoma_lib, in_umbrella: true},
       {:compile_protoc, in_umbrella: true},
       {:grpc, "~> 0.9"},
       {:protobuf, "~> 0.11.0"}

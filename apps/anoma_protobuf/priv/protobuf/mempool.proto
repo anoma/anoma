@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package Anoma.Proto.Mempool;
+
+import "node.proto";
+
+/* The type of the transaction that is being submitted. */
+enum TransactionType {
+  transparent_resource = 0;
+  cairo_resource = 1;
+}
+
+/*
+ A transaction
+ */
+message Transaction { bytes transaction = 1; }
+
+/*
+ Adding transactions to the mempool.
+ */
+message Add {
+  message Request {
+    Node node = 1;
+    Transaction transaction = 2;
+    TransactionType transaction_type = 3;
+  }
+
+  message Response { string result = 1; }
+}

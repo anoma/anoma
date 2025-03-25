@@ -1,27 +1,27 @@
 defmodule Anoma.Client.Connection.GRPCProxy do
+  alias Anoma.Client.Examples.EClient.Mempool
+  alias Anoma.Proto.Executor.AddROTransaction
+  alias Anoma.Proto.ExecutorService
+  alias Anoma.Proto.Intentpool
+  alias Anoma.Proto.Intentpool.Intent
+  alias Anoma.Proto.IntentpoolService
+  alias Anoma.Proto.Mempool
+  alias Anoma.Proto.MempoolService
+  alias Anoma.Proto.IndexerService
+  alias Anoma.Proto.Node
+  alias Anoma.Proto.Indexer.Commits
+  alias Anoma.Proto.Indexer.FilterResource
+  alias Anoma.Proto.Indexer.GetBlock
+  alias Anoma.Proto.Indexer.LatestBlock
+  alias Anoma.Proto.Indexer.Nullifiers
+  alias Anoma.Proto.Indexer.RootBlock
+  alias Anoma.Proto.Indexer.UnrevealedCommits
+  alias Anoma.Proto.Indexer.UnspentResources
+
+  require Logger
+
   use GenServer
   use TypedStruct
-
-  alias Anoma.Protobuf.BlockService
-  alias Anoma.Protobuf.Indexer.Blocks.Get
-  alias Anoma.Protobuf.Indexer.Blocks.Latest
-  alias Anoma.Protobuf.Indexer.Blocks.Root
-  alias Anoma.Protobuf.Indexer.Blocks.Filtered
-  alias Anoma.Protobuf.Indexer.Nullifiers
-  alias Anoma.Protobuf.Indexer.UnrevealedCommits
-  alias Anoma.Protobuf.Indexer.Commits
-  alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.IndexerService
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.List
-  alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.Mempool.AddTransaction
-  alias Anoma.Protobuf.MempoolService
-  alias Anoma.Protobuf.Executor.AddROTransaction
-  alias Anoma.Protobuf.ExecutorService
-  alias Anoma.Protobuf.NodeInfo
-  require Logger
 
   ############################################################
   #                    State                                 #
@@ -72,12 +72,12 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   #                      Public RPC API                      #
   ############################################################
 
-  @spec list_intents() :: {:ok, List.Response.t()}
+  @spec list_intents() :: {:ok, Intentpool.List.Response.t()}
   def list_intents() do
     GenServer.call(__MODULE__, {:list_intents})
   end
 
-  @spec add_intent(Intent.t()) :: {:ok, Add.Response.t()}
+  @spec add_intent(Intent.t()) :: {:ok, Intentpool.Add.Response.t()}
   def add_intent(intent) do
     GenServer.call(__MODULE__, {:add_intent, intent})
   end
@@ -102,9 +102,12 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, {:list_unspent_resources})
   end
 
-  @spec add_transaction(binary()) :: :ok
-  def add_transaction(jammed_nock) do
-    GenServer.call(__MODULE__, {:add_transaction, jammed_nock})
+  @spec add_transaction(binary(), atom()) :: {:ok, Mempool.Add.Response.t()}
+  def add_transaction(jammed_nock, transaction_type) do
+    GenServer.call(
+      __MODULE__,
+      {:add_transaction, jammed_nock, transaction_type}
+    )
   end
 
   @spec add_read_only_transaction(binary()) ::
@@ -114,22 +117,22 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   end
 
   @spec get_blocks({:before | :after, non_neg_integer()}) ::
-          {:ok, Get.Response.t()}
+          {:ok, GetBlock.Response.t()}
   def get_blocks({direction, offset}) do
     GenServer.call(__MODULE__, {:get_blocks, direction, offset})
   end
 
-  @spec get_latest_block() :: {:ok, Latest.Response.t()}
+  @spec get_latest_block() :: {:ok, LatestBlock.Response.t()}
   def get_latest_block() do
     GenServer.call(__MODULE__, :get_latest_block)
   end
 
-  @spec root() :: {:ok, Root.Response.t()}
+  @spec root() :: {:ok, RootBlock.Response.t()}
   def root() do
     GenServer.call(__MODULE__, :get_root)
   end
 
-  @spec filter([{atom, any()}]) :: {:ok, Filtered.Response.t()}
+  @spec filter([{atom, any()}]) :: {:ok, FilterResource.Response.t()}
   def filter(filters) do
     GenServer.call(__MODULE__, {:filter, filters})
   end
@@ -140,33 +143,31 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
   @impl true
   def handle_call({:list_intents}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
-    request = %List.Request{node_info: node_info}
-
-    {:ok, response} =
-      IntentsService.Stub.list_intents(state.channel, request, timeout: 1000)
-
-    {:reply, {:ok, response}, state}
+    node_info = %Node{id: state.node_id}
+    request = %Intentpool.List.Request{node: node_info}
+    intents = IntentpoolService.Stub.list(state.channel, request)
+    {:reply, intents, state}
   end
 
   def handle_call({:add_intent, intent}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
-    request = %Add.Request{node_info: node_info, intent: intent}
-    result = IntentsService.Stub.add_intent(state.channel, request)
+    node_info = %Node{id: state.node_id}
+    request = %Intentpool.Add.Request{node: node_info, intent: intent}
+
+    result = IntentpoolService.Stub.add(state.channel, request)
     {:reply, result, state}
   end
 
   def handle_call({:list_nullifiers}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
+    node_info = %Node{id: state.node_id}
 
-    request = %Nullifiers.Request{node_info: node_info}
+    request = %Nullifiers.Request{node: node_info}
     nullifiers = IndexerService.Stub.list_nullifiers(state.channel, request)
     {:reply, nullifiers, state}
   end
 
   def handle_call({:list_unrevealed_commits}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
-    request = %UnrevealedCommits.Request{node_info: node_info}
+    node_info = %Node{id: state.node_id}
+    request = %UnrevealedCommits.Request{node: node_info}
 
     commits =
       IndexerService.Stub.list_unrevealed_commits(state.channel, request)
@@ -175,8 +176,8 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   end
 
   def handle_call({:list_commits}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
-    request = %Commits.Request{node_info: node_info}
+    node_info = %Node{id: state.node_id}
+    request = %Commits.Request{node: node_info}
 
     commits = IndexerService.Stub.list_commits(state.channel, request)
 
@@ -184,8 +185,8 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   end
 
   def handle_call({:list_unspent_resources}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
-    request = %UnspentResources.Request{node_info: node_info}
+    node_info = %Node{id: state.node_id}
+    request = %UnspentResources.Request{node: node_info}
 
     resources =
       IndexerService.Stub.list_unspent_resources(state.channel, request)
@@ -193,24 +194,25 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     {:reply, resources, state}
   end
 
-  def handle_call({:add_transaction, jammed_nock}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
+  def handle_call({:add_transaction, jammed_nock, type}, _from, state) do
+    node_info = %Node{id: state.node_id}
 
-    request = %AddTransaction.Request{
-      transaction: jammed_nock,
-      node_info: node_info
+    request = %Mempool.Add.Request{
+      transaction: %Mempool.Transaction{transaction: jammed_nock},
+      node: node_info,
+      transaction_type: type
     }
 
-    MempoolService.Stub.add(state.channel, request)
-    {:reply, :ok, state}
+    result = MempoolService.Stub.add(state.channel, request)
+    {:reply, result, state}
   end
 
   def handle_call({:add_ro_transaction, jammed_nock}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
+    node_info = %Node{id: state.node_id}
 
     request = %AddROTransaction.Request{
-      transaction: jammed_nock,
-      node_info: node_info
+      transaction: %Mempool.Transaction{transaction: jammed_nock},
+      node: node_info
     }
 
     response = ExecutorService.Stub.add(state.channel, request)
@@ -218,38 +220,38 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   end
 
   def handle_call({:get_blocks, direction, offset}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
-    request = %Get.Request{node_info: node_info, index: {direction, offset}}
-    blocks = BlockService.Stub.get(state.channel, request)
+    node_info = %Node{id: state.node_id}
+    request = %GetBlock.Request{node: node_info, index: {direction, offset}}
+    blocks = IndexerService.Stub.get_block(state.channel, request)
     {:reply, blocks, state}
   end
 
   def handle_call(:get_latest_block, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
+    node_info = %Node{id: state.node_id}
 
-    request = %Latest.Request{
-      node_info: node_info
+    request = %LatestBlock.Request{
+      node: node_info
     }
 
-    latest_block = BlockService.Stub.latest(state.channel, request)
+    latest_block = IndexerService.Stub.latest_block(state.channel, request)
     {:reply, latest_block, state}
   end
 
   def handle_call(:get_root, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
+    node_info = %Node{id: state.node_id}
 
-    request = %Root.Request{node_info: node_info}
+    request = %RootBlock.Request{node: node_info}
 
-    root = BlockService.Stub.root(state.channel, request)
+    root = IndexerService.Stub.root_block(state.channel, request)
     {:reply, root, state}
   end
 
   def handle_call({:filter, filters}, _from, state) do
-    node_info = %NodeInfo{node_id: state.node_id}
+    node_info = %Node{id: state.node_id}
 
-    request = %Filtered.Request{node_info: node_info, filters: filters}
+    request = %FilterResource.Request{node: node_info, filters: filters}
 
-    resources = BlockService.Stub.filter(state.channel, request)
+    resources = IndexerService.Stub.filter_resource(state.channel, request)
     {:reply, resources, state}
   end
 

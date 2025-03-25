@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package Anoma.Proto.Executor;
+
+import "node.proto";
+import "nock.proto";
+import "mempool.proto";
+
+/*
+ * Add a read-only transaction to the executor.
+*/
+message AddROTransaction {
+  message Request {
+    Node node = 1;
+    Mempool.Transaction transaction = 2;
+  }
+
+  message Response {
+    oneof result {
+      Nock.Success success = 1;
+      Nock.Error error = 2;
+    }
+  }
+}

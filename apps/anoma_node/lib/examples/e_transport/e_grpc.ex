@@ -5,16 +5,20 @@ defmodule Anoma.Node.Examples.EGRPC do
 
   alias Anoma.Node.Examples.EGRPC
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.List
-  alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.NodeInfo
+  alias Anoma.Proto.Intentpool.Add
+  alias Anoma.Proto.Intentpool.Intent
+  alias Anoma.Proto.Intentpool.List
+  alias Anoma.Proto.IntentpoolService
+  alias Anoma.Proto.Mempool
+  alias Anoma.Proto.Mempool.Transaction
+  alias Anoma.Proto.MempoolService
+  alias Anoma.Proto.Node
   alias Examples.ETransparent.ETransaction
 
   require Logger
 
   import ExUnit.Assertions
+  import ExUnit.CaptureLog
 
   use TypedStruct
 
@@ -45,16 +49,18 @@ defmodule Anoma.Node.Examples.EGRPC do
   def connect_to_node(enode \\ nil) do
     # if no node was given, this ran in a unit test.
     # we kill all nodes since we can only have a local node for this test.
+    grpc_port = Application.get_env(:anoma_node, :grpc_port)
+
     enode =
       if enode == nil do
         ENode.kill_all_nodes()
-        ENode.start_node(grpc_port: 0)
+        ENode.start_node()
       else
         enode
       end
 
     result =
-      case GRPC.Stub.connect("localhost:#{enode.grpc_port}") do
+      case GRPC.Stub.connect("localhost:#{grpc_port}") do
         {:ok, channel} ->
           %EGRPC{channel: channel, node: enode}
 
@@ -73,12 +79,62 @@ defmodule Anoma.Node.Examples.EGRPC do
   """
   @spec list_intents(EGRPC.t()) :: boolean()
   def list_intents(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %NodeInfo{node_id: client.node.node_id}
-    request = %List.Request{node_info: node_id}
+    node = %Node{id: client.node.node_id}
+    request = %List.Request{node: node}
 
-    {:ok, reply} = IntentsService.Stub.list_intents(client.channel, request)
+    {:ok, reply} = IntentpoolService.Stub.list(client.channel, request)
 
     assert reply.intents == []
+  end
+
+  @doc """
+  I list the intents over grpc on the client and expect a failure by not
+  providing a node id.
+  """
+  @spec list_intents_fail(EGRPC.t()) :: boolean()
+  def list_intents_fail(%EGRPC{} = client \\ connect_to_node()) do
+    request = %List.Request{}
+
+    expected =
+      {:error, %GRPC.RPCError{status: 3, message: "node can not be nil"}}
+
+    assert capture_log(fn ->
+             assert expected ==
+                      IntentpoolService.Stub.list(
+                        client.channel,
+                        request
+                      )
+
+             Process.sleep(100)
+           end) =~ "node can not be nil"
+  end
+
+  @doc """
+  I list the intents over grpc on the client, but I provide a wrong node id.
+  """
+  @spec list_intents_invalid_node(EGRPC.t()) :: boolean()
+  def list_intents_invalid_node(%EGRPC{} = client \\ connect_to_node()) do
+    # we assume here that nodeid deadbeef does not exist.
+    node = %Node{id: "wrong"}
+    request = %List.Request{node: node}
+
+    expected =
+      {:error,
+       %GRPC.RPCError{
+         __exception__: true,
+         message: "node id does not exist",
+         status: 3
+       }}
+
+    assert capture_log(fn ->
+             assert expected ==
+                      IntentpoolService.Stub.list(
+                        client.channel,
+                        request
+                      )
+
+             Process.sleep(100)
+           end) =~ "node id does not exist"
   end
 
   @doc """
@@ -86,7 +142,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   """
   @spec add_intent(EGRPC.t()) :: boolean()
   def add_intent(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %NodeInfo{node_id: client.node.node_id}
+    node_id = %Node{id: client.node.node_id}
 
     # create an arbitrary intent and jam it
     intent_jammed =
@@ -95,17 +151,67 @@ defmodule Anoma.Node.Examples.EGRPC do
       |> Noun.Jam.jam()
 
     request = %Add.Request{
-      node_info: node_id,
+      node: node_id,
       intent: %Intent{intent: intent_jammed}
     }
 
-    {:ok, _reply} = IntentsService.Stub.add_intent(client.channel, request)
+    {:ok, _reply} = IntentpoolService.Stub.add(client.channel, request)
 
     # fetch the intents to ensure it was added
-    request = %List.Request{node_info: node_id}
+    request = %List.Request{node: node_id}
 
-    {:ok, reply} = IntentsService.Stub.list_intents(client.channel, request)
+    {:ok, reply} = IntentpoolService.Stub.list(client.channel, request)
 
-    assert reply.intents == [intent_jammed]
+    intents = Enum.map(reply.intents, &Map.get(&1, :intent))
+
+    assert intents == [intent_jammed]
+  end
+
+  @doc """
+  I make a request to add an intent, but without an intent.
+
+  I expect an error to occur.
+  """
+  def add_intent_fail_no_intent(%EGRPC{} = client \\ connect_to_node()) do
+    node = %Node{id: client.node.node_id}
+    request = %Add.Request{node: node}
+
+    assert capture_log(fn ->
+             result = IntentpoolService.Stub.add(client.channel, request)
+
+             assert result ==
+                      {:error,
+                       %GRPC.RPCError{
+                         status: 2,
+                         message: "intent can not be nil"
+                       }}
+
+             Process.sleep(100)
+           end) =~ "intent can not be nil"
+  end
+
+  @doc """
+  I add a transaction to the client.
+  """
+  @spec add_transaction(EGRPC.t()) :: EGRPC.t()
+  def add_transaction(%EGRPC{} = client \\ connect_to_node()) do
+    node_id = %Node{id: client.node.node_id}
+
+    # create an arbitrary intent and jam it
+    intent_jammed =
+      ETransaction.nullify_intent()
+      |> Noun.Nounable.to_noun()
+      |> Noun.Jam.jam()
+
+    request = %Mempool.Add.Request{
+      node: node_id,
+      transaction: %Transaction{transaction: intent_jammed},
+      transaction_type: :transparent_resource
+    }
+
+    {:ok, %Mempool.Add.Response{}} =
+      MempoolService.Stub.add(client.channel, request)
+
+    client
   end
 end

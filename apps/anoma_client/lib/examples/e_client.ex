@@ -8,33 +8,34 @@ defmodule Anoma.Client.Examples.EClient do
   """
 
   alias Anoma.Client
-  alias Anoma.Client.Storage
   alias Anoma.Client.Examples.EClient
+  alias Anoma.Client.Storage
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Protobuf.Indexer.Nullifiers
-  alias Anoma.Protobuf.Indexer.UnrevealedCommits
-  alias Anoma.Protobuf.Indexer.Commits
-  alias Anoma.Protobuf.Indexer.UnspentResources
-  alias Anoma.Protobuf.Indexer.Blocks
-  alias Anoma.Protobuf.IndexerService
-  alias Anoma.Protobuf.Intents.Add
-  alias Anoma.Protobuf.Intents.Intent
-  alias Anoma.Protobuf.Intents.List
-  alias Anoma.Protobuf.IntentsService
-  alias Anoma.Protobuf.BlockService
-  alias Anoma.Protobuf.Indexer.Blocks
-  alias Anoma.Protobuf.Nock.Input
-  alias Anoma.Protobuf.Nock.Prove
-  alias Anoma.Protobuf.NockService
-  alias Anoma.Protobuf.NodeInfo
-  alias Anoma.Node.Examples.EIndexer
-  alias Anoma.Node.Utility.Indexer
-  alias Anoma.TransparentResource.Resource
-  alias Examples.ETransparent.ETransaction
+  alias Anoma.Proto.Indexer.Commits
+  alias Anoma.Proto.Indexer.Filter
+  alias Anoma.Proto.Indexer.FilterResource
+  alias Anoma.Proto.Indexer.GetBlock
+  alias Anoma.Proto.Indexer.LatestBlock
+  alias Anoma.Proto.Indexer.Nullifiers
+  alias Anoma.Proto.Indexer.RootBlock
+  alias Anoma.Proto.Indexer.UnrevealedCommits
+  alias Anoma.Proto.Indexer.UnspentResources
+  alias Anoma.Proto.IndexerService
+  alias Anoma.Proto.Intentpool.Add
+  alias Anoma.Proto.Intentpool.Intent
+  alias Anoma.Proto.Intentpool.List
+  alias Anoma.Proto.IntentpoolService
+  alias Anoma.Proto.Nock.Input
+  alias Anoma.Proto.Nock.Prove
+  alias Anoma.Proto.NockService
+  alias Anoma.Proto.Node
   alias Anoma.TransparentResource.Action
   alias Anoma.TransparentResource.Resource
   alias Anoma.TransparentResource.Transaction
+  alias Examples.ETransparent.ETransaction
+  alias Anoma.Node.Examples.EIndexer
   alias Noun.Nounable
+  alias Anoma.Node.Utility.Indexer
 
   import ExUnit.Assertions
 
@@ -86,7 +87,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec create_single_example_node() :: ENode.t()
   def create_single_example_node() do
     ENode.kill_all_nodes()
-    ENode.start_node(grpc_port: 0)
+    ENode.start_node()
   end
 
   @doc """
@@ -108,8 +109,9 @@ defmodule Anoma.Client.Examples.EClient do
   def create_example_client(enode \\ create_single_example_node()) do
     kill_existing_client()
 
-    {:ok, client} =
-      Client.connect("localhost", enode.grpc_port, 0, enode.node_id)
+    grpc_port = Application.get_env(:anoma_node, :grpc_port)
+
+    {:ok, client} = Client.connect("localhost", grpc_port, 0, enode.node_id)
 
     %EClient{supervisor: nil, client: client, node: enode}
   end
@@ -145,10 +147,10 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_intents(EConnection.t()) :: EConnection.t()
   def list_intents(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %List.Request{node_info: node_id}
+    node_id = %Node{id: conn.client.node.node_id}
+    request = %List.Request{node: node_id}
 
-    {:ok, _reply} = IntentsService.Stub.list_intents(conn.channel, request)
+    {:ok, _reply} = IntentpoolService.Stub.list(conn.channel, request)
     conn
   end
 
@@ -163,21 +165,21 @@ defmodule Anoma.Client.Examples.EClient do
       |> Nounable.to_noun()
       |> Noun.Jam.jam()
 
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    node_id = %Node{id: conn.client.node.node_id}
 
     request = %Add.Request{
-      node_info: node_id,
+      node: node_id,
       intent: %Intent{intent: intent_jammed}
     }
 
-    {:ok, _reply} = IntentsService.Stub.add_intent(conn.channel, request)
+    {:ok, _reply} = IntentpoolService.Stub.add(conn.channel, request)
 
     # fetch the intents to ensure it was added
     request = %List.Request{}
 
-    {:ok, reply} = IntentsService.Stub.list_intents(conn.channel, request)
+    {:ok, reply} = IntentpoolService.Stub.list(conn.channel, request)
 
-    assert reply.intents == [intent_jammed]
+    assert reply.intents == [%Intent{intent: intent_jammed}]
 
     conn
   end
@@ -194,8 +196,8 @@ defmodule Anoma.Client.Examples.EClient do
     expected_nullifier = Resource.nullifier(%Resource{})
 
     # request the nullifiers from the client
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %Nullifiers.Request{node_info: node_id}
+    node_id = %Node{id: conn.client.node.node_id}
+    request = %Nullifiers.Request{node: node_id}
 
     {:ok, response} =
       IndexerService.Stub.list_nullifiers(conn.channel, request)
@@ -218,8 +220,8 @@ defmodule Anoma.Client.Examples.EClient do
       conn.client.node.node_id |> Indexer.get(:unrevealed) |> Enum.to_list()
 
     # create the request to obtain the commits
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %UnrevealedCommits.Request{node_info: node_id}
+    node_id = %Node{id: conn.client.node.node_id}
+    request = %UnrevealedCommits.Request{node: node_id}
 
     {:ok, response} =
       IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
@@ -243,8 +245,8 @@ defmodule Anoma.Client.Examples.EClient do
     expected_commits = conn.client.node.node_id |> Indexer.get(:cms)
 
     # create the request to obtain the commits
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %Commits.Request{node_info: node_id}
+    node_id = %Node{id: conn.client.node.node_id}
+    request = %Commits.Request{node: node_id}
 
     {:ok, response} =
       IndexerService.Stub.list_commits(conn.channel, request)
@@ -268,8 +270,8 @@ defmodule Anoma.Client.Examples.EClient do
       |> Enum.map(&Noun.Jam.jam/1)
 
     # create the request to obtain the unspent resources
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
-    request = %UnspentResources.Request{node_info: node_id}
+    node_id = %Node{id: conn.client.node.node_id}
+    request = %UnspentResources.Request{node: node_id}
 
     {:ok, reply} =
       IndexerService.Stub.list_unspent_resources(conn.channel, request)
@@ -288,16 +290,16 @@ defmodule Anoma.Client.Examples.EClient do
     # After this call, there should be two blocks present.
     Anoma.Node.Examples.EIndexer.indexer_reads_after(conn.client.node.node_id)
 
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    node_id = %Node{id: conn.client.node.node_id}
 
     # check for all blocks.
-    request = %Blocks.Get.Request{node_info: node_id, index: {:before, 100}}
-    {:ok, response} = BlockService.Stub.get(conn.channel, request)
+    request = %GetBlock.Request{node: node_id, index: {:before, 100}}
+    {:ok, response} = IndexerService.Stub.get_block(conn.channel, request)
     assert Enum.count(response.blocks) == 2
 
     # check the first block
-    request = %Blocks.Get.Request{node_info: node_id, index: {:before, 2}}
-    {:ok, response} = BlockService.Stub.get(conn.channel, request)
+    request = %GetBlock.Request{node: node_id, index: {:before, 2}}
+    {:ok, response} = IndexerService.Stub.get_block(conn.channel, request)
     assert Enum.count(response.blocks) == 1
     [block] = response.blocks
     assert block.height == 1
@@ -309,12 +311,12 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec get_latest_block_empty_index(EConnection.t()) :: EConnection.t()
   def get_latest_block_empty_index(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    node_id = %Node{id: conn.client.node.node_id}
 
     # check for all blocks.
-    request = %Blocks.Latest.Request{node_info: node_id}
+    request = %LatestBlock.Request{node: node_id}
 
-    {:ok, response} = BlockService.Stub.latest(conn.channel, request)
+    {:ok, response} = IndexerService.Stub.latest_block(conn.channel, request)
     assert response.block == nil
 
     conn
@@ -329,12 +331,12 @@ defmodule Anoma.Client.Examples.EClient do
     # After this call, there should be two blocks present.
     Anoma.Node.Examples.EIndexer.indexer_reads_after(conn.client.node.node_id)
 
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    node_id = %Node{id: conn.client.node.node_id}
 
     # check for all blocks.
-    request = %Blocks.Latest.Request{node_info: node_id}
+    request = %LatestBlock.Request{node: node_id}
 
-    {:ok, response} = BlockService.Stub.latest(conn.channel, request)
+    {:ok, response} = IndexerService.Stub.latest_block(conn.channel, request)
     assert response.block != nil
 
     conn
@@ -345,12 +347,12 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec get_root_unpopulated_index(EConnection.t()) :: EConnection.t()
   def get_root_unpopulated_index(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    node_id = %Node{id: conn.client.node.node_id}
 
     # check for all blocks.
-    request = %Blocks.Root.Request{node_info: node_id}
+    request = %RootBlock.Request{node: node_id}
 
-    {:ok, response} = BlockService.Stub.root(conn.channel, request)
+    {:ok, response} = IndexerService.Stub.root_block(conn.channel, request)
     assert response.root == <<>>
 
     conn
@@ -366,12 +368,12 @@ defmodule Anoma.Client.Examples.EClient do
       conn.client.node.node_id
     )
 
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    node_id = %Node{id: conn.client.node.node_id}
 
     # check for all blocks.
-    request = %Blocks.Root.Request{node_info: node_id}
+    request = %RootBlock.Request{node: node_id}
 
-    {:ok, response} = BlockService.Stub.root(conn.channel, request)
+    {:ok, response} = IndexerService.Stub.root_block(conn.channel, request)
     assert response.root == "I am a root at height 1"
 
     conn
@@ -388,24 +390,28 @@ defmodule Anoma.Client.Examples.EClient do
       conn.client.node.node_id
     )
 
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    node_id = %Node{id: conn.client.node.node_id}
 
     # check for all blocks.
-    request = %Blocks.Filtered.Request{node_info: node_id, filters: []}
+    request = %FilterResource.Request{node: node_id, filters: []}
 
-    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    {:ok, response} =
+      IndexerService.Stub.filter_resource(conn.channel, request)
+
     assert Enum.count(response.resources) == 2
 
     # filter out where the owner is jeremy
     # see apps/anoma_node/lib/examples/e_indexer.ex:231 for the example
     jeremy = "jeremy" |> Noun.pad_trailing(32)
 
-    request = %Blocks.Filtered.Request{
-      node_info: node_id,
-      filters: [%Blocks.Filtered.Filter{filter: {:owner, jeremy}}]
+    request = %FilterResource.Request{
+      node: node_id,
+      filters: [%Filter{filter: {:owner, jeremy}}]
     }
 
-    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    {:ok, response} =
+      IndexerService.Stub.filter_resource(conn.channel, request)
+
     assert Enum.count(response.resources) == 1
 
     conn
@@ -416,12 +422,14 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec get_filtered_no_resources_exist(EConnection.t()) :: EConnection.t()
   def get_filtered_no_resources_exist(conn \\ setup()) do
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    node_id = %Node{id: conn.client.node.node_id}
 
     # check for all blocks.
-    request = %Blocks.Filtered.Request{node_info: node_id, filters: []}
+    request = %FilterResource.Request{node: node_id, filters: []}
 
-    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    {:ok, response} =
+      IndexerService.Stub.filter_resource(conn.channel, request)
+
     assert Enum.count(response.resources) == 0
 
     conn
@@ -437,30 +445,34 @@ defmodule Anoma.Client.Examples.EClient do
       conn.client.node.node_id
     )
 
-    node_id = %NodeInfo{node_id: conn.client.node.node_id}
+    node_id = %Node{id: conn.client.node.node_id}
 
     # filter that matches two resources
-    request = %Blocks.Filtered.Request{
-      node_info: node_id,
+    request = %FilterResource.Request{
+      node: node_id,
       filters: [
-        %Blocks.Filtered.Filter{
+        %Filter{
           filter: {:kind, %Resource{} |> Resource.kind()}
         }
       ]
     }
 
-    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    {:ok, response} =
+      IndexerService.Stub.filter_resource(conn.channel, request)
+
     assert Enum.count(response.resources) == 2
 
     # filter that doesnt match any
-    request = %Blocks.Filtered.Request{
-      node_info: node_id,
+    request = %FilterResource.Request{
+      node: node_id,
       filters: [
-        %Blocks.Filtered.Filter{filter: {:kind, <<>>}}
+        %Filter{filter: {:kind, <<>>}}
       ]
     }
 
-    {:ok, response} = BlockService.Stub.filter(conn.channel, request)
+    {:ok, response} =
+      IndexerService.Stub.filter_resource(conn.channel, request)
+
     assert Enum.count(response.resources) == 0
 
     conn

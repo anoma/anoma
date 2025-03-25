@@ -7,11 +7,10 @@ defmodule Anoma.Client.Api.ReflectionServer do
   use GrpcReflection.Server,
     version: :v1alpha,
     services: [
-      Anoma.Protobuf.IntentsService.Service,
-      Anoma.Protobuf.IndexerService.Service,
-      Anoma.Protobuf.BlockService.Service,
-      Anoma.Protobuf.MempoolService.Service,
-      Anoma.Protobuf.NockService.Service,
-      Anoma.Protobuf.ExecutorService.Service
+      Anoma.Proto.IntentpoolService,
+      Anoma.Proto.NockService.Service,
+      Anoma.Proto.MempoolService.Service,
+      Anoma.Proto.ExecutorService.Service,
+      Anoma.Proto.IndexerService.Service
     ]
 end
