@@ -7,6 +7,7 @@ defmodule Anoma.Client.Application do
    - Proving (todo: explain this a bit better)
    - Forwarding requests to the Anoma node.
   """
+  alias Anoma.Node.Tables
 
   require Logger
 
@@ -16,21 +17,13 @@ defmodule Anoma.Client.Application do
   def start(_type, _args) do
     Logger.debug("starting client")
 
+    # initialize the mnesia tables for the client
+    :ok = Anoma.Node.Tables.initialize_storage()
+    {:ok, _} = Tables.initialize_tables_for_client()
+
     children = [
       {DynamicSupervisor, name: Anoma.Client.ConnectionSupervisor}
     ]
-
-    :mnesia.create_table(Anoma.Client.Storage.Updates,
-      attributes: [:key, :updates]
-    )
-
-    :mnesia.create_table(Anoma.Client.Storage.Values,
-      attributes: [:qualified_key, :value]
-    )
-
-    :mnesia.create_table(Anoma.Client.Storage.Ids,
-      attributes: [:id, :timestamp]
-    )
 
     opts = [strategy: :one_for_one, name: Anoma.Client.Supervisor]
     Supervisor.start_link(children, opts)

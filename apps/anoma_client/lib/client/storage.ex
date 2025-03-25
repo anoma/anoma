@@ -19,8 +19,15 @@ defmodule Anoma.Client.Storage do
   - write/2
   """
 
-  alias __MODULE__
+  alias Anoma.Node.Tables
+
   use TypedStruct
+
+  require Logger
+
+  @updates_table Tables.table_client_updates()
+  @values_table Tables.table_client_values()
+  @ids_table Tables.table_client_ids()
 
   @doc """
   I am the Client Storage write function.
@@ -32,16 +39,20 @@ defmodule Anoma.Client.Storage do
     time = System.os_time()
 
     case :mnesia.transaction(fn ->
-           case :mnesia.read({Storage.Updates, key}) do
-             [{Storage.Updates, ^key, list}] ->
+           case :mnesia.read({@updates_table, key}) do
+             [{@updates_table, ^key, list}] ->
                write_to_tables(time, key, value, list)
 
              _ ->
                write_to_tables(time, key, value)
            end
          end) do
-      {:atomic, :ok} -> :ok
-      {:aborted, _} -> :error
+      {:atomic, :ok} ->
+        :ok
+
+      {:aborted, e} ->
+        Logger.error(inspect(e))
+        :error
     end
   end
 
@@ -54,16 +65,17 @@ defmodule Anoma.Client.Storage do
   """
   @spec read_with_id({any(), any()}) :: {:ok, any()} | :absent | :error
   def read_with_id({id, key}) do
-    case :mnesia.transaction(fn -> :mnesia.read({Storage.Ids, id}) end) do
+    case :mnesia.transaction(fn -> :mnesia.read({@ids_table, id}) end) do
       {:atomic, []} ->
         time = System.os_time()
-        :mnesia.transaction(fn -> :mnesia.write({Storage.Ids, id, time}) end)
+        :mnesia.transaction(fn -> :mnesia.write({@ids_table, id, time}) end)
         read({time, key})
 
-      {:atomic, [{Storage.Ids, ^id, old_time}]} ->
+      {:atomic, [{@ids_table, ^id, old_time}]} ->
         read({old_time, key})
 
-      {:aborted, _} ->
+      {:aborted, e} ->
+        Logger.error(e)
         :error
     end
   end
@@ -84,15 +96,15 @@ defmodule Anoma.Client.Storage do
       :error
     else
       case :mnesia.transaction(fn ->
-             case :mnesia.read({Storage.Updates, key}) do
-               [{Storage.Updates, ^key, list}] ->
+             case :mnesia.read({@updates_table, key}) do
+               [{@updates_table, ^key, list}] ->
                  case list |> Enum.find(fn a -> a <= time end) do
                    nil ->
                      :absent
 
                    closest_time ->
                      [{_, _, value}] =
-                       :mnesia.read({Storage.Values, {closest_time, key}})
+                       :mnesia.read({@values_table, {closest_time, key}})
 
                      value
                  end
@@ -101,16 +113,22 @@ defmodule Anoma.Client.Storage do
                  :absent
              end
            end) do
-        {:atomic, :absent} -> :absent
-        {:atomic, val} -> {:ok, val}
-        {:aborted, _} -> :error
+        {:atomic, :absent} ->
+          :absent
+
+        {:atomic, val} ->
+          {:ok, val}
+
+        {:aborted, e} ->
+          Logger.error(inspect(e))
+          :error
       end
     end
   end
 
   @spec write_to_tables(non_neg_integer(), any(), any(), list()) :: :ok
   defp write_to_tables(time, key, value, list \\ []) do
-    :mnesia.write({Storage.Updates, key, [time | list]})
-    :mnesia.write({Storage.Values, {time, key}, value})
+    :mnesia.write({@updates_table, key, [time | list]})
+    :mnesia.write({@values_table, {time, key}, value})
   end
 end
