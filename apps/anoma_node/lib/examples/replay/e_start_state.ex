@@ -313,32 +313,32 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
       filter = [Event.node_filter(enode.node_id), Logging.blocks_filter()]
       EventBroker.unsubscribe(logging_engine, filter)
 
-    with_subscription [[]] do
-      # create 5 blocks, creating 5 stale consensi in the logging engine.
-      for block <- 0..4 do
-        # create a block from a transaction
-        # this call does not wait for any events, so its async.
-        # to be sure the block is created, I wait for the block event here myself.
-        {_enode, transaction} = EMempool.make_block(enode)
+      with_subscription [[]] do
+        # create 5 blocks, creating 5 stale consensi in the logging engine.
+        for block <- 0..4 do
+          # create a block from a transaction
+          # this call does not wait for any events, so its async.
+          # to be sure the block is created, I wait for the block event here myself.
+          {_enode, transaction} = EMempool.make_block(enode)
 
-        # wait for the block event
-        block_event =
-          EEvent.block_event(enode, transaction, next_round + block)
+          # wait for the block event
+          block_event =
+            EEvent.block_event(enode, transaction, next_round + block)
 
-        EEvent.wait_for_event(block_event)
+          EEvent.wait_for_event(block_event)
+        end
+
+        # compute the mempool arguments.
+        {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
+
+        # assert values in the arguments
+        assert mempool_start_args[:transactions] == []
+        assert mempool_start_args[:round] == next_round + 5
+        assert mempool_start_args[:consensus] == []
+
+        enode
       end
-
-      # compute the mempool arguments.
-      {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
-
-      # assert values in the arguments
-      assert mempool_start_args[:transactions] == []
-      assert mempool_start_args[:round] == next_round + 5
-      assert mempool_start_args[:consensus] == []
-
-      enode
     end
-  end
   end
 
   # -----------------------------------------------------------

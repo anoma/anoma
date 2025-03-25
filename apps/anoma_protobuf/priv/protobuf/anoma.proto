@@ -2,10 +2,13 @@ syntax = "proto3";
 
 package Anoma.Proto;
 
+import "advertisement.proto";
 import "executor.proto";
 import "intents.proto";
+import "intranode.proto";
 import "mempool.proto";
 import "nock.proto";
+import "pubsub.proto";
 
 /*
  The intents service allows adding intents to the intent pool,
@@ -29,7 +32,8 @@ service IntentpoolService {
  The mempool service allows adding intents to the mempool.
  */
 service MempoolService {
-  rpc Add(Anoma.Proto.Mempool.Add.Request) returns (Anoma.Proto.Mempool.Add.Response) {}
+  rpc Add(Anoma.Proto.Mempool.Add.Request)
+      returns (Anoma.Proto.Mempool.Add.Response) {}
 }
 
 /*
@@ -44,8 +48,44 @@ service NockService {
 }
 
 /*
- * Add a read-only transaction to the executor.
+ Intranode sends messages between nodes' engines.
+ This is a high level api for sending any message between any two engines.
+ */
+service IntraNodeService {
+  rpc Call(Anoma.Proto.IntraNode.Call.Request)
+      returns (Anoma.Proto.IntraNode.Call.Response) {}
+
+  rpc Cast(Anoma.Proto.IntraNode.Cast.Request)
+      returns (Anoma.Proto.IntraNode.Cast.Response) {}
+}
+
+/*
+ The advertisement service is used to send advertisements from one node to
+ another.
 */
+service AdvertisementService {
+  rpc Advertise(Anoma.Proto.Advertisement.Advertise.Request)
+      returns (Anoma.Proto.Advertisement.Advertise.Response) {}
+}
+
+/*
+ The PubSub service allows nodes to subscribe and unsubscribe to topics,
+ as well as sending events to another node.
+*/
+service PubSubService {
+  rpc Subscribe(Anoma.Proto.PubSub.Subscribe.Request)
+      returns (Anoma.Proto.PubSub.Subscribe.Response) {}
+
+  rpc Unsubscribe(Anoma.Proto.PubSub.Unsubscribe.Request)
+      returns (Anoma.Proto.PubSub.Unsubscribe.Response) {}
+
+  rpc Publish(Anoma.Proto.PubSub.Event.Request)
+      returns (Anoma.Proto.PubSub.Event.Response) {}
+}
+
+/*
+ * Add a read-only transaction to the executor.
+ */
 service ExecutorService {
   rpc Add(Anoma.Proto.Executor.AddROTransaction.Request)
       returns (Anoma.Proto.Executor.AddROTransaction.Response) {}

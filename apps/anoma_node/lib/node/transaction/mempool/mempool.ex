@@ -244,8 +244,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   Given a node ID, I give all the transactions as currently stored in the
   corresponding Mempool state.
   """
-
-  @spec tx_dump(String.t()) :: [Mempool.Tx.t()]
+  @spec tx_dump(String.t()) :: [binary()]
   def tx_dump(node_id) do
     GenServer.call(Registry.via(node_id, __MODULE__), :dump)
   end

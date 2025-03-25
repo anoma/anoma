@@ -6,13 +6,17 @@ defmodule Anoma.Node.Transport.Supervisor do
   in this node (e.g., TCP connections).
   """
 
-  require Logger
-
   use Supervisor
+
+  alias Anoma.Node.Registry
+  alias Anoma.Node.Transport
+  alias Anoma.Node.Transport.NetworkRegister
+
+  require Logger
 
   @spec start_link([any()]) :: GenServer.on_start()
   def start_link(args) do
-    args = Keyword.validate!(args, [:node_id])
+    args = Keyword.validate!(args, [:node_id, :node_config])
     Supervisor.start_link(__MODULE__, args)
   end
 
@@ -27,7 +31,16 @@ defmodule Anoma.Node.Transport.Supervisor do
   def init(args) do
     Logger.debug("starting transport supervisor #{inspect(args)}")
     Process.set_label(__MODULE__)
-    children = []
+
+    # validate args and set defaults
+    args = Keyword.validate!(args, [:node_id, :node_config])
+    node_id = args[:node_id]
+
+    children = [
+      {DynamicSupervisor,
+       name: Registry.via(node_id, Transport.ProxySupervisor)},
+      {NetworkRegister, [node_id: node_id, node_config: args[:node_config]]}
+    ]
 
     Supervisor.init(children, strategy: :one_for_one)
   end

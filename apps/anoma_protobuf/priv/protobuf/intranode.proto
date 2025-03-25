@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package Anoma.Proto.IntraNode;
+
+import "node.proto";
+
+/*
+Send a cast message.
+
+A cast message is a fire-and-forget message. No response is expected.
+*/
+message Cast {
+  message Request {
+    Node node = 1;
+    Node from = 2;
+    string engine = 3;
+    string message = 4;
+  }
+
+  message Response {}
+}
+
+/*
+Send a call message.
+
+A cast message is a message that expects a result back.
+*/
+message Call {
+  message Request {
+    Node node = 1;
+    Node from = 2;
+    string engine = 3;
+    string message = 4;
+  }
+
+  message Response { bytes message = 1; }
+}
