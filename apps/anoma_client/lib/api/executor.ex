@@ -1,5 +1,5 @@
 defmodule Anoma.Client.Api.Servers.Executor do
-  alias Anoma.Client.Connection.GRPCProxy
+  alias Anoma.Client.Node.GRPCProxy
   alias Anoma.Proto.Executor.AddROTransaction
   alias GRPC.Server.Stream
 

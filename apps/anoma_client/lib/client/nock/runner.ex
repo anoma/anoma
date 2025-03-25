@@ -1,6 +1,9 @@
 defmodule Anoma.Client.Runner do
+  @moduledoc """
+  I
+  """
   alias Anoma.Client.Storage
-  alias Anoma.Client.Connection.GRPCProxy
+  alias Anoma.Client.Node.GRPCProxy
   alias Anoma.TransparentResource.Transaction
 
   @doc """
