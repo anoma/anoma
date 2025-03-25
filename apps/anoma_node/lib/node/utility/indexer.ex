@@ -96,13 +96,8 @@ defmodule Anoma.Node.Utility.Indexer do
   end
 
   def handle_call(:root, _from, state) do
-    case read_set(:anchor, state.node_id) do
-      hash when is_binary(hash) ->
-        {:reply, hash, state}
-
-      _ ->
-        {:reply, nil, state}
-    end
+    res = read_key_with_default(:anchor, state.node_id, <<>>)
+    {:reply, Noun.atom_integer_to_binary(res), state}
   end
 
   def handle_call(:resources, _from, state) do
@@ -169,24 +164,9 @@ defmodule Anoma.Node.Utility.Indexer do
   end
 
   @spec read_set(:commitments | :nullifiers | :anchor, String.t()) ::
-          MapSet.t(binary()) | binary()
+          MapSet.t(binary())
   defp read_set(key, id) do
-    values = Storage.values_table(id)
-    updates = Storage.updates_table(id)
-    key = ["anoma", key |> Atom.to_string()]
-
-    {:atomic, set} =
-      :mnesia.transaction(fn ->
-        case :mnesia.read(updates, key) do
-          [] ->
-            MapSet.new([])
-
-          [{^updates, key, list}] ->
-            :mnesia.read(values, {hd(list), key}) |> hd() |> elem(2)
-        end
-      end)
-
-    set
+    read_key_with_default(key, id, MapSet.new([]))
   end
 
   @spec get_height(String.t()) :: non_neg_integer() | :absent
@@ -198,6 +178,26 @@ defmodule Anoma.Node.Utility.Indexer do
         case :mnesia.all_keys(table) |> Enum.sort(:desc) do
           [] -> :absent
           [hd | _tl] -> hd
+        end
+      end)
+
+    res
+  end
+
+  @spec read_key_with_default(atom(), String.t(), any()) :: any()
+  defp read_key_with_default(key, id, sample) do
+    values = Storage.values_table(id)
+    updates = Storage.updates_table(id)
+    key = ["anoma", key |> Atom.to_string()]
+
+    {:atomic, res} =
+      :mnesia.transaction(fn ->
+        case :mnesia.read(updates, key) do
+          [] ->
+            sample
+
+          [{^updates, key, list}] ->
+            :mnesia.read(values, {hd(list), key}) |> hd() |> elem(2)
         end
       end)
 
