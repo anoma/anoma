@@ -73,7 +73,7 @@ defmodule Anoma.Node.Tables do
   """
   @spec table_updates(String.t()) :: atom()
   def table_updates(node_id) do
-    node_table_name(node_id, Values)
+    node_table_name(node_id, Updates)
   end
 
   @doc """
