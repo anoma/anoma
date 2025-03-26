@@ -324,7 +324,7 @@ defmodule Anoma.Client.Examples.EClient do
     Anoma.Client.Examples.EStorage.setup()
 
     action =
-      %Action{app_data: %{<<123>> => {"i am scried", true}}}
+      %Action{app_data: %{<<123>> => [{"i am scried", true}]}}
 
     tx =
       %Transaction{actions: MapSet.new([action])} |> Noun.Nounable.to_noun()
