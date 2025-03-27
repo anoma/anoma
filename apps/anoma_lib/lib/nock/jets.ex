@@ -898,9 +898,13 @@ defmodule Nock.Jets do
            end),
          data_res <-
            data
-           |> Enum.into(%{}, fn {key, [bin | bool]} ->
-             {Noun.atom_binary_to_integer(key),
-              {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}}
+           |> Enum.into(%{}, fn {key, list_noun} ->
+             with {:ok, list} <- Noun.Nounable.List.from_noun(list_noun) do
+               {Noun.atom_binary_to_integer(key),
+                Enum.map(list, fn [bin | bool] ->
+                  {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}
+                end)}
+             end
            end) do
       {:ok,
        Action.create(con_res, cre_res, data_res) |> Noun.Nounable.to_noun()}

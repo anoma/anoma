@@ -35,6 +35,26 @@ defmodule Examples.ETransparent.EAction do
     res
   end
 
+  @spec trivial_swap_action_with_extra_data() :: Action.t()
+  def trivial_swap_action_with_extra_data() do
+    consumed = EResource.trivial_true_resource_2()
+    created = EResource.trivial_true_resource()
+    cm = consumed |> Resource.commitment_hash()
+    root = MapSet.new([cm]) |> CommitmentAccumulator.value()
+
+    res =
+      Action.create(
+        [{<<0::256>>, consumed, root}],
+        [created],
+        %{Resource.commitment_hash(created) => [{"blah", true}]}
+      )
+
+    assert 2 = Action.delta(res)
+    assert Action.verify(res)
+
+    res
+  end
+
   @spec trivial_true_commit_action() :: Action.t()
   def trivial_true_commit_action() do
     created = EResource.trivial_true_resource()
