@@ -2269,16 +2269,32 @@ defmodule Examples.ENock do
     cm = consumed |> Resource.commitment_hash()
     root = MapSet.new([cm]) |> CommitmentAccumulator.value()
 
+    consumed_list = Noun.Nounable.to_noun([{<<0::256>>, consumed, root}])
+    created_list = Noun.Nounable.to_noun([created])
+
     {:ok, res} =
       action_create_call(
-        Noun.Nounable.to_noun([{<<0::256>>, consumed, root}]),
-        Noun.Nounable.to_noun([created]),
+        consumed_list,
+        created_list,
         Noun.Nounable.to_noun(%{})
       )
 
     {:ok, action} = Action.from_noun(res)
 
     assert EAction.trivial_swap_action() == action
+
+    {:ok, res2} =
+      action_create_call(
+        consumed_list,
+        created_list,
+        Noun.Nounable.to_noun(
+          EAction.trivial_swap_action_with_extra_data().app_data
+        )
+      )
+
+    {:ok, action2} = Action.from_noun(res2)
+
+    assert EAction.trivial_swap_action_with_extra_data() == action2
   end
 
   def t_compose_arm() do
