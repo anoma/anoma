@@ -161,10 +161,10 @@ defmodule Anoma.RM.Transparent.Action do
 
   I gather all the app data used up in a transparent transaction.
   """
-  @spec app_data(t()) :: MapSet.t({binary(), bool()})
+  @spec app_data(t()) :: [{binary(), bool()}]
   def app_data(t) do
-    for {_key, value} <- t.app_data, reduce: MapSet.new() do
-      acc -> MapSet.put(acc, value)
+    for {_key, value} <- t.app_data, reduce: [] do
+      acc -> value ++ acc
     end
   end
 
@@ -328,7 +328,8 @@ defmodule Anoma.RM.Transparent.Action do
          {:ok, list_consumed} <- Noun.Nounable.List.from_noun(consumed),
          {:ok, proof_map} <- Noun.Nounable.Map.from_noun(rl_proofs),
          {:ok, cu_map} <- Noun.Nounable.MapSet.from_noun(cus),
-         {:ok, appdata} <- Noun.Nounable.Map.from_noun(app_data) do
+         {:ok, appdata} <- Noun.Nounable.Map.from_noun(app_data),
+         lst <- match_appdata(appdata) do
       {:ok,
        %__MODULE__{
          created: list_created |> Enum.map(&Noun.atom_binary_to_integer/1),
@@ -345,12 +346,7 @@ defmodule Anoma.RM.Transparent.Action do
              {:ok, cu} = ComplianceUnit.from_noun(x)
              cu
            end),
-         app_data:
-           appdata
-           |> Enum.into(%{}, fn {tag, [bin | bool]} ->
-             {Noun.atom_binary_to_integer(tag),
-              {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}}
-           end)
+         app_data: lst
        }}
     else
       _ -> :error
@@ -368,5 +364,18 @@ defmodule Anoma.RM.Transparent.Action do
         | Noun.Nounable.to_noun(t.app_data)
       ]
     end
+  end
+
+  defp match_appdata(appdata) do
+    Enum.into(appdata, %{}, fn {tag, list} ->
+      {:ok, list_data} = Noun.Nounable.List.from_noun(list)
+
+      list_of_appdata =
+        Enum.map(list_data, fn [bin | bool] ->
+          {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}
+        end)
+
+      {Noun.atom_binary_to_integer(tag), list_of_appdata}
+    end)
   end
 end

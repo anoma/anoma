@@ -142,10 +142,10 @@ defmodule Anoma.RM.Transparent.Transaction do
   I go through the list of actions inside the transaction and gather their
   app data
   """
-  @spec app_data(t()) :: MapSet.t({binary(), bool()})
+  @spec app_data(t()) :: [{binary(), bool()}]
   def app_data(t) do
-    for action <- t.actions, reduce: MapSet.new() do
-      acc -> Action.app_data(action) |> MapSet.union(acc)
+    for action <- t.actions, reduce: [] do
+      acc -> Action.app_data(action) ++ acc
     end
   end
 
