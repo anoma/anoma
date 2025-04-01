@@ -33,7 +33,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS.Instance do
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([tag, flag, consumed, created | app_data]) do
-    with {:ok, bool} <- Noun.Nounable.Bool.from_noun(flag),
+    with {:ok, bool} <- Noun.Nounable.Atom.from_noun(flag),
          {:ok, list_consumed} <- Noun.Nounable.List.from_noun(consumed),
          {:ok, list_created} <- Noun.Nounable.List.from_noun(created),
          {:ok, list_app_data} <- Noun.Nounable.List.from_noun(app_data) do
@@ -58,7 +58,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS.Instance do
   def to_noun(instance) do
     [
       instance.tag,
-      Noun.Nounable.Bool.to_noun(instance.flag),
+      Noun.Nounable.Atom.to_noun(instance.flag),
       instance.consumed,
       instance.created
       | Noun.Nounable.to_noun(instance.app_data)

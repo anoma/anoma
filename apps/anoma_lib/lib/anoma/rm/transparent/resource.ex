@@ -118,7 +118,7 @@ defmodule Anoma.RM.Transparent.Resource do
         nullifierkeycm
         | rseed
       ]) do
-    with {:ok, boolean} <- Noun.Nounable.Bool.from_noun(ephemerality) do
+    with {:ok, boolean} <- Noun.Nounable.Atom.from_noun(ephemerality) do
       {:ok,
        %__MODULE__{
          logicref: Noun.atom_binary_to_integer(logicref),
