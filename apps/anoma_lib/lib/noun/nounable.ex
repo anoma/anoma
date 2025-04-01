@@ -48,27 +48,6 @@ defimpl Nounable, for: List do
   end
 end
 
-defimpl Nounable, for: Bool do
-  import Noun
-  @behaviour Kind
-
-  def to_noun(bool) when bool in [true, false] do
-    Nounable.to_noun(bool)
-  end
-
-  def to_noun(), do: :error
-
-  @doc """
-  I convert the given Nock boolean to Elixir boolean.
-  """
-  @spec from_noun(Noun.t()) :: {:ok, bool()} | :error
-  def from_noun(zero) when is_noun_zero(zero), do: {:ok, true}
-
-  def from_noun(one) when one in [1, <<1>>], do: {:ok, false}
-
-  def from_noun(_), do: :error
-end
-
 defimpl Nounable, for: Integer do
   def to_noun(x) when x >= 0, do: x
   # We should support this in time?
@@ -81,9 +60,21 @@ defimpl Nounable, for: BitString do
 end
 
 defimpl Nounable, for: Atom do
+  import Noun
+
   def to_noun(true), do: 0
   def to_noun(false), do: 1
   def to_noun(atom), do: Atom.to_string(atom)
+
+  @doc """
+  I convert the given Nock boolean to Elixir boolean.
+  """
+  @spec from_noun(Noun.t()) :: {:ok, bool()} | :error
+  def from_noun(zero) when is_noun_zero(zero), do: {:ok, true}
+
+  def from_noun(one) when one in [1, <<1>>], do: {:ok, false}
+
+  def from_noun(_), do: :error
 end
 
 defimpl Nounable, for: Tuple do
