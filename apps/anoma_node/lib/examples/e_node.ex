@@ -75,7 +75,8 @@ defmodule Anoma.Node.Examples.ENode do
     opts =
       Keyword.validate!(opts,
         node_id: "#{:erlang.phash2(make_ref())}",
-        grpc_port: 0
+        grpc_port: 0,
+        transaction: []
       )
 
     enode =

@@ -11,6 +11,7 @@ defmodule Anoma.Node.Supervisor do
   alias Anoma.Node.Logging
   alias Anoma.Node.Transaction
   alias Anoma.Node.Transport
+  alias Anoma.Node.Transaction.ShardSupervisor
 
   @typedoc """
   The type of the arguments that the supervisor expects.
@@ -19,7 +20,10 @@ defmodule Anoma.Node.Supervisor do
           node_id: String.t(),
           grpc_port: non_neg_integer(),
           replay: boolean(),
-          transaction: [mempool: any()]
+          transaction: [
+            mempool: any(),
+            shards: ShardSupervisor.supervisor_args_t() | nil
+          ]
         ]
 
   @doc """
@@ -29,7 +33,7 @@ defmodule Anoma.Node.Supervisor do
     :node_id,
     grpc_port: 0,
     replay: true,
-    transaction: [mempool: []]
+    transaction: [mempool: [], shards: nil]
   ]
 
   @spec child_spec(any()) :: map()
