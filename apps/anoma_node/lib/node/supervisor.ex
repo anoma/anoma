@@ -11,6 +11,7 @@ defmodule Anoma.Node.Supervisor do
   alias Anoma.Node.Logging
   alias Anoma.Node.Transaction
   alias Anoma.Node.Transport
+  alias Anoma.Node.Utility.Consensus
 
   @doc """
   The default arguments for the supervisor.
@@ -71,7 +72,8 @@ defmodule Anoma.Node.Supervisor do
        node_id: node_id, node_config: args[:node_config]},
       {Transaction.Supervisor, [node_id: node_id] ++ transaction},
       {Intents.Supervisor, node_id: node_id},
-      {Logging, node_id: node_id}
+      {Logging, node_id: node_id},
+      {Consensus, node_id: node_id}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)
