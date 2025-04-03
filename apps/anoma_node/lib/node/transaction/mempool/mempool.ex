@@ -30,7 +30,6 @@ defmodule Anoma.Node.Transaction.Mempool do
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Executor
   alias Anoma.Node.Transaction.Storage
-  alias Anoma.Node.Transaction.Mempool.Events
 
   require Logger
   require Node.Event
@@ -51,7 +50,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @typedoc """
   I am the type of the transaction result.
   """
-  @type tx_result :: {:ok, Noun.t()} | :error | :in_progress
+  @type tx_result :: {:ok, any()} | :error | :in_progress
 
   @typedoc """
   Type of the arguments the mempool genserver expects
@@ -92,38 +91,6 @@ defmodule Anoma.Node.Transaction.Mempool do
     field(:code, Noun.t())
   end
 
-  defimpl Jason.Encoder, for: Tx do
-    defp encode_maybe_noun(noun) when is_atom(noun) do
-      noun
-    end
-
-    defp encode_maybe_noun({:ok, noun}) do
-      encode_maybe_noun(noun)
-    end
-
-    defp encode_maybe_noun(noun) do
-      with jammed <- Noun.Jam.jam(noun),
-           encoded <- Base.encode64(jammed) do
-        encoded
-      end
-    end
-
-    def encode(%Tx{} = tx, opts) do
-      with vm_result <- encode_maybe_noun(tx.vm_result),
-           tx_result <- encode_maybe_noun(tx.tx_result),
-           code <- encode_maybe_noun(tx.code) do
-        Jason.Encode.map(
-          %{
-            code: code,
-            tx_result: tx_result,
-            backend: nil,
-            vm_result: vm_result
-          },
-          opts
-        )
-      end
-    end
-  end
 
   typedstruct do
     @typedoc """
@@ -141,6 +108,11 @@ defmodule Anoma.Node.Transaction.Mempool do
                         transactions and values the corresponding
                         transaction data. See `Tx.t()`
                         Default: %{}
+    - `:id_order` - A list of ids of submitted transaction candidates.
+                    Should be in exact correspondence with the keys of
+                    the :transactions field. Keeps track of the exact
+                    order in which new candidates get added to the pool.
+                    Default: []
     - `:round` - The round of the next block to be created.
                  Default: 0
     """
@@ -152,7 +124,33 @@ defmodule Anoma.Node.Transaction.Mempool do
       default: %{}
     )
 
+    field(:id_order, list(binary), default: [])
+
     field(:round, non_neg_integer(), default: 0)
+  end
+
+  deffilter TxFilter do
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.Events.TxEvent{}}} ->
+      true
+
+    _ ->
+      false
+  end
+
+  deffilter ConsensusFilter do
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.Events.ConsensusEvent{}}} ->
+      true
+
+    _ ->
+      false
+  end
+
+  deffilter BlockFilter do
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.Events.BlockEvent{}}} ->
+      true
+
+    _ ->
+      false
   end
 
   ############################################################
@@ -188,7 +186,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   Afterwards, I initialize the Mempool with round and node ID specified.
   """
 
-  @spec init([args_t()]) :: {:ok, t(), {:continue, any()}}
+  @spec init([args_t()]) :: {:ok, Mempool.t()}
   def init(args) do
     Process.set_label(__MODULE__)
 
@@ -213,25 +211,18 @@ defmodule Anoma.Node.Transaction.Mempool do
       filter_for_mempool_execution_events()
     ])
 
-    state = %__MODULE__{round: args[:round], node_id: node_id}
-
-    {:ok, state,
-     {:continue, {:load_state, args[:transactions], args[:consensus]}}}
-  end
-
-  @impl true
-  def handle_continue({:load_state, transactions, consensus}, state) do
-    node_id = state.node_id
-
-    for {id, tx_w_backend} <- transactions do
-      tx(node_id, tx_w_backend, id)
+    for {id, tx_w_backend} <- args[:transactions] do
+      tx(args[:node_id], tx_w_backend, id)
     end
+
+    consensus = args[:consensus]
+    round = args[:round]
 
     for list <- consensus do
       execute(node_id, list)
     end
 
-    {:noreply, state}
+    {:ok, %__MODULE__{round: round, node_id: node_id}}
   end
 
   ############################################################
@@ -242,9 +233,10 @@ defmodule Anoma.Node.Transaction.Mempool do
   I am a function to dump transactions.
 
   Given a node ID, I give all the transactions as currently stored in the
-  corresponding Mempool state.
+  corresponding Mempool state in the order in which they were submitted.
   """
-  @spec tx_dump(String.t()) :: [binary()]
+
+  @spec tx_dump(String.t()) :: [Mempool.Tx.t()]
   def tx_dump(node_id) do
     GenServer.call(Registry.via(node_id, __MODULE__), :dump)
   end
@@ -320,7 +312,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   I am a filter spec which filters for Mempool-related messages.
   """
 
-  @spec filter_for_mempool() :: Backends.Events.ForMempoolFilter.t()
+  @spec filter_for_mempool() :: Backends.ForMempoolFilter.t()
   def filter_for_mempool() do
     %Backends.Events.ForMempoolFilter{}
   end
@@ -335,7 +327,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @impl true
   def handle_call(:dump, _from, state) do
-    {:reply, state.transactions |> Map.keys(), state}
+    {:reply, state.id_order |> Enum.reverse(), state}
   end
 
   def handle_call(_, _, state) do
@@ -358,9 +350,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @impl true
   def handle_info(
-        e = %EventBroker.Event{
-          body: %Node.Event{body: %Backends.Events.ResultEvent{}}
-        },
+        e = %EventBroker.Event{body: %Node.Event{body: %Anoma.Node.Transaction.Backends.Events.ResultEvent{}}},
         state
       ) do
     {:noreply, handle_result_event(e, state)}
@@ -368,7 +358,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{body: %Executor.Events.ExecutionEvent{}}
+          body: %Node.Event{body: %Anoma.Node.Transaction.Executor.Events.ExecutionEvent{}}
         },
         state
       ) do
@@ -394,7 +384,8 @@ defmodule Anoma.Node.Transaction.Mempool do
 
     %Mempool{
       state
-      | transactions: Map.put(state.transactions, tx_id, value)
+      | transactions: Map.put(state.transactions, tx_id, value),
+        id_order: [tx_id | state.id_order]
     }
   end
 
@@ -430,7 +421,12 @@ defmodule Anoma.Node.Transaction.Mempool do
 
     block_event(Enum.map(execution_list, &elem(&1, 1)), round, node_id)
 
-    %Mempool{state | transactions: map, round: round + 1}
+    %Mempool{
+      state
+      | transactions: map,
+        id_order: Enum.filter(state.id_order, fn x -> x in Map.keys(map) end),
+        round: round + 1
+    }
   end
 
   ############################################################
@@ -440,7 +436,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @spec block_event(list(binary), non_neg_integer(), String.t()) :: :ok
   defp block_event(id_list, round, node_id) do
     block_event =
-      Node.Event.new_with_body(node_id, %Events.BlockEvent{
+      Node.Event.new_with_body(node_id, %Mempool.Events.BlockEvent{
         order: id_list,
         round: round
       })
@@ -451,7 +447,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @spec tx_event(binary(), Mempool.Tx.t(), String.t()) :: :ok
   defp tx_event(tx_id, value, node_id) do
     tx_event =
-      Node.Event.new_with_body(node_id, %Events.TxEvent{
+      Node.Event.new_with_body(node_id, %Mempool.Events.TxEvent{
         id: tx_id,
         tx: value
       })
@@ -462,7 +458,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @spec consensus_event(list(binary()), String.t()) :: :ok
   defp consensus_event(id_list, node_id) do
     consensus_event =
-      Node.Event.new_with_body(node_id, %Events.ConsensusEvent{
+      Node.Event.new_with_body(node_id, %Mempool.Events.ConsensusEvent{
         order: id_list
       })
 

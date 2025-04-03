@@ -151,6 +151,8 @@ defmodule EventBroker do
   @spec subscribe(pid(), filter_spec_list) :: :ok | String.t()
   @spec subscribe(pid(), filter_spec_list, atom()) :: :ok | String.t()
   def subscribe(pid, filter_spec_list, registry \\ EventBroker.Registry) do
+    IO.puts "subscribe"
+
     GenServer.call(registry, {:subscribe, pid, filter_spec_list})
   end
 
@@ -163,6 +165,7 @@ defmodule EventBroker do
   @spec subscribe_me(filter_spec_list) :: :ok | String.t()
   @spec subscribe_me(filter_spec_list, atom()) :: :ok | String.t()
   def subscribe_me(filter_spec_list, registry \\ EventBroker.Registry) do
+    IO.puts "subscribe"
     subscribe(self(), filter_spec_list, registry)
   end
 

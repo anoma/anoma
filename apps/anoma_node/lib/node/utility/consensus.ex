@@ -77,7 +77,7 @@ defmodule Anoma.Node.Utility.Consensus do
   end
 
   def execute(node_id, interval) do
-    consensus = Mempool.tx_dump(node_id) |> Enum.take(1000)
+    {consensus, _} = Mempool.tx_dump(node_id) |> Enum.split(5000)
     IO.inspect consensus, label: "consensus"
 
     Mempool.execute(node_id, consensus)
@@ -88,7 +88,7 @@ defmodule Anoma.Node.Utility.Consensus do
   end
 
   def wait_for_block(consensus) do
-    # consensus = Enum.reverse(consensus)
+    consensus = Enum.reverse(consensus)
     receive do
       %EventBroker.Event{
         body: %Anoma.Node.Event{

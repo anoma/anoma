@@ -419,10 +419,10 @@ defmodule Anoma.Node.Transaction.Ordering do
         IO.puts("this should be unreachable")
     end
 
-    EventBroker.unsubscribe_me([
-      Node.Event.node_filter(node_id),
-      this_module_filter(),
-      tx_id_filter(tx_id)
-    ])
+    # EventBroker.unsubscribe_me([
+    #   Node.Event.node_filter(node_id),
+    #   this_module_filter(),
+    #   tx_id_filter(tx_id)
+    # ])
   end
 end

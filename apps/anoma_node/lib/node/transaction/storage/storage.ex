@@ -706,11 +706,11 @@ defmodule Anoma.Node.Transaction.Storage do
         GenServer.reply(from, write(node_id, {height, kvlist}))
     end
 
-    EventBroker.unsubscribe_me([
-      Node.Event.node_filter(node_id),
-      this_module_filter(),
-      %Events.HeightFilter{height: awaited_height}
-    ])
+    # EventBroker.unsubscribe_me([
+    #   Node.Event.node_filter(node_id),
+    #   this_module_filter(),
+    #   %Events.HeightFilter{height: awaited_height}
+    # ])
   end
 
   @spec blocking_read(String.t(), non_neg_integer(), any(), GenServer.from()) ::
@@ -738,10 +738,10 @@ defmodule Anoma.Node.Transaction.Storage do
         IO.puts("this should be unreachable")
     end
 
-    EventBroker.unsubscribe_me([
-      Node.Event.node_filter(node_id),
-      this_module_filter(),
-      %Events.HeightFilter{height: height}
-    ])
+    # EventBroker.unsubscribe_me([
+    #   Node.Event.node_filter(node_id),
+    #   this_module_filter(),
+    #   %Events.HeightFilter{height: height}
+    # ])
   end
 end
