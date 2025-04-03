@@ -91,6 +91,7 @@ defmodule EventBroker.Registry do
 
   @impl true
   def handle_call({:subscribe, pid, filter_spec_list}, _from, state) do
+    Agent.update(:global.whereis_name(:agent), fn c -> c + 1 end)
     registered = state.registered_filters
 
     # a filter is valid if it a module that exports a `&filter/2` function.
@@ -154,6 +155,7 @@ defmodule EventBroker.Registry do
   end
 
   def handle_call({:unsubscribe, pid, filter_spec_list}, _from, state) do
+    Agent.update(:global.whereis_name(:agent), fn c -> c + 1 end)
     new_registered_filters =
       do_unsubscribe(pid, filter_spec_list, state.registered_filters)
 

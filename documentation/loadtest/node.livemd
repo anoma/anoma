@@ -1,0 +1,212 @@
+<!-- livebook:{"app_settings":{"slug":"livebook"}} -->
+
+# Anoma Node
+
+```elixir
+Mix.install([
+  {:vega_lite, "~> 0.1.6"},
+  {:kino_vega_lite, "~> 0.1.11"}
+])
+```
+
+## Introduction
+
+### What's in the Livebook
+
+This Livebook serves as a tool to measure the performance of the `Node`.
+
+It has three sections, each answering one question.
+
+* **How many transactions per second can the node handle?** How many transactions per second can a node process before failing.
+
+### Running the tests
+
+To run the experiments, a version of the Anoma application must be running on your local machine. Start the application in distributed mode as follows.
+
+```shell
+iex --name node@127.0.0.1 --cookie monster -S mix
+```
+
+**🚨 If you use another node name or another cookie, change the values in the cell below.**
+
+Then run each cell in this livebook against that node.
+
+```elixir
+node_name = :"node@127.0.0.1"
+node_cookie = :monster
+
+:erlang.set_cookie(:monster)
+```
+
+```elixir
+# spawn(fn -> Anoma.Node.Loadtest.Run.run() end)
+:rpc.block_call(node(), Anoma.Node.Loadtest.Run, :run, [])
+```
+
+## Helpers
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJmb28iLCJjb2RlIjoic3Bhd24oZm4gLT5cbiAgQW5vbWEuTm9kZS5Mb2FkdGVzdC5SdW4ucnVuKClcbmVuZClcblxubmlsIiwiY29va2llX3NvdXJjZSI6InZhcmlhYmxlIiwiY29va2llX3ZhcmlhYmxlIjoibm9kZV9jb29raWUiLCJub2RlX3NvdXJjZSI6InZhcmlhYmxlIiwibm9kZV92YXJpYWJsZSI6Im5vZGVfbmFtZSJ9","chunks":null,"kind":"Elixir.Kino.RemoteExecutionCell","livebook_object":"smart_cell"} -->
+
+```elixir
+
+```
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiIiLCJjb2RlIjoiZGVmbW9kdWxlIEludHJvc3BlY3QgZG9cbiAgQG1vZHVsZWRvYyBcIlwiXCJcbiAgRnVuY3Rpb25zIHRoYXQgcmV0dXJuIGluZm9ybWF0aW9uIGFib3V0IHRoZSBydW5uaW5nIHN5c3RlbS5cbiAgXCJcIlwiXG5cbiAgQHNwZWMgbWVtcG9vbCgle25vZGVfaWQ6IGJpbmFyeSgpLCBuYW1lOiBhdG9tKCl9KSA6OiA6b2tcbiAgZGVmIG1lbXBvb2wobm9kZSkgZG9cbiAgICAjIGdldCB0aGUgdG90YWwgdHJhbnNhY3Rpb25zIGluIHRoZSBtZW1wb29sXG4gICAgTm9kZS5zcGF3bihub2RlLm5hbWUsIGZuIC0+XG4gICAgICBwaWQgPSBBbm9tYS5Ob2RlLlJlZ2lzdHJ5LndoZXJlaXMobm9kZS5ub2RlX2lkLCBBbm9tYS5Ob2RlLlRyYW5zYWN0aW9uLk1lbXBvb2wpXG4gICAgICBzdGF0ZSA9IDpzeXMuZ2V0X3N0YXRlKHBpZClcblxuICAgICAgSU8ucHV0cyhcIlwiXCJcbiAgICAgICAgICAgICAgICAgIHJvdW5kOiAje2luc3BlY3Qoc3RhdGUucm91bmQpfVxuICAgICAgdHJhbnNhY3Rpb24gY291bnQ6ICN7aW5zcGVjdChFbnVtLmNvdW50KHN0YXRlLnRyYW5zYWN0aW9ucykpfVxuICAgICAgXCJcIlwiKVxuICAgIGVuZClcbiAgZW5kXG5lbmQiLCJjb29raWVfc291cmNlIjoidmFyaWFibGUiLCJjb29raWVfdmFyaWFibGUiOiJub2RlX2Nvb2tpZSIsIm5vZGVfc291cmNlIjoidmFyaWFibGUiLCJub2RlX3ZhcmlhYmxlIjoibm9kZV9uYW1lIn0","chunks":null,"kind":"Elixir.Kino.RemoteExecutionCell","livebook_object":"smart_cell"} -->
+
+```elixir
+
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Submit transaction latency
+
+The test below creates a number of subscribers, and measures how long it takes for a subscriber to become subscribed.
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiIiLCJjb2RlIjoiZGVmbW9kdWxlIFExIGRvXG4gIGFsaWFzIEV4YW1wbGVzLkVUcmFuc3BhcmVudC5FVHJhbnNhY3Rpb25cbiAgYWxpYXMgQW5vbWEuQ2xpZW50XG5cbiAgZGVmIHJ1bihjbGllbnQpIGRvXG4gICAgIyBzdWJtaXQgYSB0cmFuc2FjdGlvblxuICAgICMgcnVuIHRoZSBhY3Rpb24gb24gdGhlIGNsaWVudCBub2RlXG4gICAgTm9kZS5zcGF3bihjbGllbnQubmFtZSwgZm4gLT5cbiAgICAgIHRyYW5zYWN0aW9uID0gRVRyYW5zYWN0aW9uLnN3YXBfZnJvbV9hY3Rpb25zX3JhbmRvbSgpXG4gICAgICBDbGllbnQuYWRkX3RyYW5zYWN0aW9uKEVUcmFuc2FjdGlvbi5zd2FwX2Zyb21fYWN0aW9uc19yYW5kb20oKSlcbiAgICBlbmQpXG4gIGVuZFxuZW5kIiwiY29va2llX3NvdXJjZSI6InZhcmlhYmxlIiwiY29va2llX3ZhcmlhYmxlIjoibm9kZV9jb29raWUiLCJub2RlX3NvdXJjZSI6InZhcmlhYmxlIiwibm9kZV92YXJpYWJsZSI6Im5vZGVfbmFtZSJ9","chunks":null,"kind":"Elixir.Kino.RemoteExecutionCell","livebook_object":"smart_cell"} -->
+
+```elixir
+
+```
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiIiLCJjb2RlIjoiTm9kZS5zcGF3bihhbm9tYV9ub2RlLm5hbWUsIGZuIC0+IElPLnB1dHMgXCJ5ZWV0XCIgZW5kKSIsImNvb2tpZV9zb3VyY2UiOiJ2YXJpYWJsZSIsImNvb2tpZV92YXJpYWJsZSI6Im5vZGVfY29va2llIiwibm9kZV9zb3VyY2UiOiJ2YXJpYWJsZSIsIm5vZGVfdmFyaWFibGUiOiJub2RlX25hbWUifQ","chunks":null,"kind":"Elixir.Kino.RemoteExecutionCell","livebook_object":"smart_cell"} -->
+
+```elixir
+
+```
+
+```elixir
+plots = fn data ->
+  VegaLite.new()
+  |> VegaLite.data_from_values(data, only: ["subscribers", "time"])
+  |> VegaLite.mark(:line, point: [fill: "red"])
+  |> VegaLite.encode_field(:x, "subscribers", type: :quantitative)
+  |> VegaLite.encode_field(:y, "time", type: :quantitative, title: "Time (μs)")
+end
+
+# the first measurement makes the chart unreadable, so its dropped
+no_filters = plots.(Enum.drop(elem(subscribes, 0), 1))
+one_filters = plots.(Enum.drop(elem(subscribes, 1), 1))
+two_filters = plots.(Enum.drop(elem(subscribes, 2), 1))
+three_filters = plots.(Enum.drop(elem(subscribes, 3), 1))
+
+VegaLite.new(width: 700)
+|> VegaLite.layers([
+  no_filters,
+  one_filters,
+  two_filters,
+  three_filters
+])
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Unsubscribe Latency
+
+The test below creates a number of subscribers, and measures how long it takes for a subscriber to become unsubscribed.
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJzdWJzY3JpYmVzIiwiY29kZSI6ImltcG9ydCBIZWxwZXJzXG5pbXBvcnQgRXhhbXBsZXNcblxuaXRlcmF0aW9ucyA9IDEwXG5zdGVwX3NpemUgPSAxMDBcblxuIyB0aGUgdGVzdCB0byBydW4gZm9yIGEgZ2l2ZW4gc3Vic2NyaWJlciBjb3VudCBhbmQgYSBnaXZlbiBsaXN0IG9mIGZpbHRlcnMuXG50ZXN0X3N1YnNjcmliZXJzID0gZm4gc3Vic2NyaWJlcl9jb3VudCwgZmlsdGVycyAtPlxuICAjIGNyZWF0ZSB0aGUgc3Vic2NyaWJlcnMgXG4gIHN1YnNjcmliZXJzID0gZG9fbl90aW1lcyhmbiAtPiBjcmVhdGVfc3Vic2NyaWJlcigpIHw+IHN1YnNjcmliZShmaWx0ZXJzKSBlbmQsIHN1YnNjcmliZXJfY291bnQpXG5cbiAgIyB1bnN1YnNjcmliZSBhbGwgb2YgdGhlbSBhbmQgbWVhc3VyZVxuICB7zrxzLCByZXN1bHRzfSA9IG1lYXN1cmUoZm4gLT4gRW51bS5tYXAoc3Vic2NyaWJlcnMsICZ1bnN1YnNjcmliZS8xKSBlbmQpXG5cbiAgIyBkZWxldGUgdGhlIHN1YnNjcmliZXJzIGFnYWluIFxuICBFbnVtLmVhY2gocmVzdWx0cywgJnRlcm1pbmF0ZV9zdWJzY3JpYmVyLzEpXG5cbiAgJXtzdWJzY3JpYmVyczogc3Vic2NyaWJlcl9jb3VudCwgdGltZTogzrxzfVxuZW5kXG5cbiMgdGVzdCB3aXRoIG5vIGZpbHRlcnMgXG5ub19maWx0ZXIgPVxuICBmb3IgaXRlcmF0aW9uIDwtIDEuLml0ZXJhdGlvbnMgZG9cbiAgICBzdWJzY3JpYmVyX2NvdW50ID0gaXRlcmF0aW9uICogc3RlcF9zaXplXG4gICAgZmlsdGVycyA9IFtdXG5cbiAgICB0ZXN0X3N1YnNjcmliZXJzLihzdWJzY3JpYmVyX2NvdW50LCBmaWx0ZXJzKVxuICBlbmRcblxuIyB0ZXN0IHdpdGggMSBmaWx0ZXJcbm9uZV9maWx0ZXIgPVxuICBmb3IgaXRlcmF0aW9uIDwtIDEuLml0ZXJhdGlvbnMgZG9cbiAgICBzdWJzY3JpYmVyX2NvdW50ID0gaXRlcmF0aW9uICogc3RlcF9zaXplXG4gICAgZmlsdGVycyA9IFslRmlsdGVycy5GaWx0ZXJBe3ZhbHVlOiAxfV1cblxuICAgIHRlc3Rfc3Vic2NyaWJlcnMuKHN1YnNjcmliZXJfY291bnQsIGZpbHRlcnMpXG4gIGVuZFxuXG4jIHRlc3Qgd2l0aCAyIGZpbHRlcnNcbnR3b19maWx0ZXIgPVxuICBmb3IgaXRlcmF0aW9uIDwtIDEuLml0ZXJhdGlvbnMgZG9cbiAgICBzdWJzY3JpYmVyX2NvdW50ID0gaXRlcmF0aW9uICogc3RlcF9zaXplXG4gICAgZmlsdGVycyA9IFslRmlsdGVycy5GaWx0ZXJBe3ZhbHVlOiAxfSwgJUZpbHRlcnMuRmlsdGVyQnt2YWx1ZTogMX1dXG5cbiAgICB0ZXN0X3N1YnNjcmliZXJzLihzdWJzY3JpYmVyX2NvdW50LCBmaWx0ZXJzKVxuICBlbmRcblxuIyB0ZXN0IHdpdGggMyBmaWx0ZXJzXG50aHJlZV9maWx0ZXIgPVxuICBmb3IgaXRlcmF0aW9uIDwtIDEuLml0ZXJhdGlvbnMgZG9cbiAgICBzdWJzY3JpYmVyX2NvdW50ID0gaXRlcmF0aW9uICogc3RlcF9zaXplXG4gICAgZmlsdGVycyA9IFslRmlsdGVycy5GaWx0ZXJBe3ZhbHVlOiAxfSwgJUZpbHRlcnMuRmlsdGVyQnt2YWx1ZTogMX0sICVGaWx0ZXJzLkZpbHRlckN7dmFsdWU6IDF9XVxuXG4gICAgdGVzdF9zdWJzY3JpYmVycy4oc3Vic2NyaWJlcl9jb3VudCwgZmlsdGVycylcbiAgZW5kXG5cbntub19maWx0ZXIsIG9uZV9maWx0ZXIsIHR3b19maWx0ZXIsIHRocmVlX2ZpbHRlcn0iLCJjb29raWVfc291cmNlIjoidmFyaWFibGUiLCJjb29raWVfdmFyaWFibGUiOiJub2RlX2Nvb2tpZSIsIm5vZGVfc291cmNlIjoidmFyaWFibGUiLCJub2RlX3ZhcmlhYmxlIjoibm9kZV9uYW1lIn0","chunks":null,"kind":"Elixir.Kino.RemoteExecutionCell","livebook_object":"smart_cell"} -->
+
+```elixir
+
+```
+
+### Interpretation
+
+The chart below shows that the time to unsubscribe increases exponentially with the number of nodes.
+
+The red line is the actual execution time for the unsubscribe operation. The green line is the same line, but logarithmized.
+
+The log line is flat, hence the execution time for unsubscribe is exponential.
+
+```elixir
+plots = fn data ->
+  VegaLite.new()
+  |> VegaLite.data_from_values(data, only: ["subscribers", "time"])
+  |> VegaLite.mark(:line, point: [fill: "red"])
+  |> VegaLite.encode_field(:x, "subscribers", type: :quantitative)
+  |> VegaLite.encode_field(:y, "time", type: :quantitative, title: "Time (μs)")
+end
+
+# the first measurement makes the chart unreadable, so its dropped
+no_filters = plots.(Enum.drop(elem(subscribes, 0), 1))
+one_filters = plots.(Enum.drop(elem(subscribes, 1), 1))
+two_filters = plots.(Enum.drop(elem(subscribes, 2), 1))
+three_filters = plots.(Enum.drop(elem(subscribes, 3), 1))
+
+VegaLite.new(width: 700)
+|> VegaLite.layers([
+  no_filters,
+  one_filters,
+  two_filters,
+  three_filters
+])
+```
+
+## Subscribes per second
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJzdWJzY3JpYmVzX3Blcl9zZWNvbmQiLCJjb2RlIjoiaW1wb3J0IEhlbHBlcnNcbmltcG9ydCBFeGFtcGxlc1xuXG5cbml0ZXJhdGlvbnMgPSAxMFxuc3RlcF9zaXplID0gMTAwXG5cbm1ha2Vfbl9zdWJzY3JpcHRpb25zID0gZm4gY291bnQgLT5cbiAge3RpbWUsIHN1YnNjcmliZXJzfSA9XG4gICAgbWVhc3VyZShmbiAtPlxuICAgICAgZm9yIF8gPC0gMS4uY291bnQgZG9cbiAgICAgICAgY3JlYXRlX3N1YnNjcmliZXIoKVxuICAgICAgICB8PiBzdWJzY3JpYmUoKVxuICAgICAgZW5kXG4gICAgZW5kKVxuXG4gICMgZGVsZXRlIHRoZSBzdWJzY3JpYmVycyBhZ2FpbiBcbiAgRW51bS5lYWNoKHN1YnNjcmliZXJzLCAmdGVybWluYXRlX3N1YnNjcmliZXIvMSlcblxuICAjIHJldHVybiB0aGUgdG90YWwgdGltZVxuICB0aW1lXG5lbmRcblxuIyB3YXJtdXAgXG5tYWtlX25fc3Vic2NyaXB0aW9ucy4oMTAwKVxuXG4jIG1lYXN1cmVcbmZvciBpIDwtIDEuLml0ZXJhdGlvbnMgZG9cbiAgc3Vic2NyaXB0aW9uX2NvdW50ID0gaSAqIHN0ZXBfc2l6ZVxuXG4gICMgdGltZSBpcyBpbiDOvHNcbiAgdGltZSA9IG1ha2Vfbl9zdWJzY3JpcHRpb25zLihzdWJzY3JpcHRpb25fY291bnQpXG5cbiAgIyBpZiBgc3Vic2NyaXB0aW9uX2NvdW50YCBzdWJzY3JpcHRpb25zIHRha2VzIGB0aW1lYCDOvHNcbiAgIyB0aGVuIG9uIGF2ZXJhZ2UgYSBzaW5nbGUgc3Vic2NyaXB0aW9uIHRha2VzIGB0aW1lIC8gc3Vic2NyaXB0aW9uX2NvdW50YCDOvHMuXG4gIGF2ZXJhZ2VfdGltZSA9IHRpbWUgLyBzdWJzY3JpcHRpb25fY291bnRcbiAgXG4gICMgaWYgdGhlIGF2ZXJhZ2UgdGltZSBmb3IgYSBzdWJzY3JpcHRpb24gaXMgYHRpbWUgLyBzdWJzY3JpcHRpb25fY291bnRgXG4gICMgdGhlbiB0aGUgYEV2ZW50QnJva2VyYCBjYW4gaGFuZGxlIGAxXzAwMF8wMDAgLyAodGltZSAvIHN1YnNjcmlwdGlvbl9jb3VudClgIFxuICAjIHN1YnNjcmlwdGlvbnMgcGVyIHNlY29uZC5cbiAgcmF0ZSA9IDFfMDAwXzAwMCAvIGF2ZXJhZ2VfdGltZVxuICBcbiAgJXtcbiAgICB0b3RhbF90aW1lOiB0aW1lLFxuICAgIHN1YnNjcmlwdGlvbl9jb3VudDogc3Vic2NyaXB0aW9uX2NvdW50LFxuICAgIGF2ZXJhZ2VfdGltZTogYXZlcmFnZV90aW1lLFxuICAgIHJhdGU6IHJhdGVcbiAgfVxuZW5kIiwiY29va2llX3NvdXJjZSI6InZhcmlhYmxlIiwiY29va2llX3ZhcmlhYmxlIjoibm9kZV9jb29raWUiLCJub2RlX3NvdXJjZSI6InZhcmlhYmxlIiwibm9kZV92YXJpYWJsZSI6Im5vZGVfbmFtZSJ9","chunks":null,"kind":"Elixir.Kino.RemoteExecutionCell","livebook_object":"smart_cell"} -->
+
+```elixir
+
+```
+
+```elixir
+# chart plotting the total exeuction time for the amount of subscribers
+total_time =
+  VegaLite.new()
+  |> VegaLite.mark(:line, point: [fill: "red"], stroke: "red")
+  |> VegaLite.encode_field(:y, "total_time",
+    type: :quantitative,
+    title: "Total Time (μs)",
+    axis: [title_color: "red"]
+  )
+
+# chart plotting the average time it takes 1 subscription
+average_time =
+  VegaLite.new()
+  |> VegaLite.mark(:line, point: [fill: "green"], stroke: "green", axis: [title_color: "green"])
+  |> VegaLite.encode_field(:y, "average_time",
+    type: :quantitative,
+    title: "Average per subscription (μs)",
+    axis: [title_color: "green"]
+  )
+
+# create plots
+VegaLite.new(width: 700)
+|> VegaLite.encode_field(:x, "subscription_count", type: :quantitative)
+|> VegaLite.data_from_values(subscribes_per_second)
+|> VegaLite.layers([average_time, total_time])
+|> VegaLite.resolve(:scale, y: :independent)
+```
+
+```elixir
+# chart plotting the average time it takes 1 subscription
+average_time =
+  VegaLite.new()
+  |> VegaLite.mark(:line, point: [fill: "green"], stroke: "green", axis: [title_color: "green"])
+  |> VegaLite.encode_field(:y, "rate",
+    type: :quantitative,
+    title: "Subscriptions per second",
+    axis: [title_color: "green"]
+  )
+
+# create plots
+VegaLite.new(width: 700)
+|> VegaLite.encode_field(:x, "subscription_count", type: :quantitative)
+|> VegaLite.data_from_values(subscribes_per_second)
+|> VegaLite.layers([average_time])
+|> VegaLite.resolve(:scale, y: :independent)
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Profiling
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiIiLCJjb2RlIjoiaW1wb3J0IEhlbHBlcnNcbmltcG9ydCBFeGFtcGxlc1xuXG5cbnN1YnNjcmliZXJfY291bnQgPSA1MDAwMFxuXG4jIGNyZWF0ZSB0aGUgc3Vic2NyaWJlcnMgXG5zdWJzY3JpYmVycyA9IGRvX25fdGltZXMoZm4gLT4gY3JlYXRlX3N1YnNjcmliZXIoKSB8PiBzdWJzY3JpYmUoKSBlbmQsIHN1YnNjcmliZXJfY291bnQpXG5cbiMgcHJvZmlsZSB0aGUgdW5zdWJzY3JpYmVcbjplcHJvZi5zdGFydF9wcm9maWxpbmcoW1Byb2Nlc3Mud2hlcmVpcyhFdmVudEJyb2tlci5SZWdpc3RyeSldKVxuXG4jIHVuc3Vic2NyaWJlIGFsbCBvZiB0aGVtIGFuZCBtZWFzdXJlXG57zrxzLCByZXN1bHRzfSA9IG1lYXN1cmUoZm4gLT4gRW51bS5tYXAoc3Vic2NyaWJlcnMsICZ1bnN1YnNjcmliZS8xKSBlbmQpXG5cbiMgc3RvcCBwcm9maWxpbmdcbjplcHJvZi5zdG9wX3Byb2ZpbGluZygpXG5cbiMgZGVsZXRlIHRoZSBzdWJzY3JpYmVycyBhZ2FpbiBcbkVudW0uZWFjaChyZXN1bHRzLCAmdGVybWluYXRlX3N1YnNjcmliZXIvMSlcblxuXG46ZXByb2YuYW5hbHl6ZSgpXG7OvHMgIiwiY29va2llX3NvdXJjZSI6InZhcmlhYmxlIiwiY29va2llX3ZhcmlhYmxlIjoibm9kZV9jb29raWUiLCJub2RlX3NvdXJjZSI6InZhcmlhYmxlIiwibm9kZV92YXJpYWJsZSI6Im5vZGVfbmFtZSJ9","chunks":null,"kind":"Elixir.Kino.RemoteExecutionCell","livebook_object":"smart_cell"} -->
+
+```elixir
+
+```
+
+<!-- livebook:{"offset":12877,"stamp":{"token":"XCP.NgVEnS1S76eyj0doUyEDdjJlxGX8QIfdGS8gOsSLyq69vAe2Cz_3cwjXrBKdIfJuttZJoaC_omQAXzHl4gv3bXVaSuBES4pUz9pUgSX0U4JVTQjnaojjRTKa","version":2}} -->
