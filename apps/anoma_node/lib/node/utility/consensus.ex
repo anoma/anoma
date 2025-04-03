@@ -77,7 +77,7 @@ defmodule Anoma.Node.Utility.Consensus do
   end
 
   def execute(node_id, interval) do
-    {consensus, _} = Mempool.tx_dump(node_id) |> Enum.split(5000)
+    {consensus, _} = Mempool.tx_dump(node_id) |> Enum.split(500)
     IO.inspect consensus, label: "consensus"
 
     Mempool.execute(node_id, consensus)
