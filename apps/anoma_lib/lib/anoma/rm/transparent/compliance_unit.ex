@@ -15,6 +15,7 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   """
   alias Anoma.RM.Transparent.ProvingSystem.CPS
   alias Anoma.RM.Transparent.ProvingSystem.CPS.Instance
+  alias __MODULE__
 
   use TypedStruct
 
@@ -57,6 +58,29 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   end
 
   @doc """
+  I am the function to get roots for a TRM compliance unit.
+
+  I go thtough the consumed field and get the provided roots for
+  non-ephemeral consumed resources.
+  """
+  @spec roots(t()) :: MapSet.t(integer())
+  def roots(t) do
+    for {nlf, root, _} <- t.instance.consumed, reduce: MapSet.new() do
+      acc ->
+        with {:ok, resource} <-
+               Anoma.RM.Transparent.ProvingSystem.RLPS.match_resource(
+                 nlf,
+                 true
+               ),
+             false <- resource.isephemeral do
+          MapSet.put(acc, root)
+        else
+          _ -> acc
+        end
+    end
+  end
+
+  @doc """
   I am the creation API for the compliance unit of the TRM.
 
   Given a key, instance, and proof for the unit, I put them as appropriate
@@ -88,8 +112,10 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [<<>>, Instance.to_noun(t.instance) | <<>>]
+  defimpl Noun.Nounable, for: ComplianceUnit do
+    @impl true
+    def to_noun(t = %ComplianceUnit{}) do
+      [<<>>, Noun.Nounable.to_noun(t.instance) | <<>>]
+    end
   end
 end

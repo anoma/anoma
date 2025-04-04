@@ -3,7 +3,7 @@ defmodule Anoma.Node.Examples.EIndexer do
   alias Node.Examples.{ETransaction, ENode}
   alias Node.Transaction.{Storage, Mempool}
   alias Node.Utility.Indexer
-  alias Anoma.TransparentResource.{Resource, Transaction}
+  alias Anoma.RM.Transparent.{Resource, Transaction}
 
   def indexer_reads_height(node_id \\ Node.example_random_id()) do
     ETransaction.zero_counter_submit(node_id)
@@ -83,8 +83,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     updates = Storage.updates_table(node_id)
     values = Storage.values_table(node_id)
 
-    nlf = %Resource{} |> Resource.nullifier()
-    set = MapSet.new([nlf])
+    nlf = Resource.nullifier_hash(<<0::256>>, %Resource{})
+    set = MapSet.new([Noun.atom_integer_to_binary(nlf)])
 
     write_new(updates, values, [1], set, nil)
 
@@ -100,14 +100,17 @@ defmodule Anoma.Node.Examples.EIndexer do
     values = Storage.values_table(node_id)
 
     nlf1 =
-      %Resource{nonce: :crypto.hash(:sha256, "random1")}
-      |> Resource.nullifier()
+      Resource.nullifier_hash(<<0::256>>, %Resource{
+        nonce: :crypto.hash(:sha256, "random1")
+      })
 
     nlf2 =
-      %Resource{nonce: :crypto.hash(:sha256, "random2")}
-      |> Resource.nullifier()
+      Resource.nullifier_hash(<<0::256>>, %Resource{
+        nonce: :crypto.hash(:sha256, "random2")
+      })
 
-    set = MapSet.new([nlf1, nlf2])
+    set =
+      [nlf1, nlf2] |> Enum.into(MapSet.new(), &Noun.atom_integer_to_binary/1)
 
     write_new(updates, values, [1], set, nil)
 
@@ -123,14 +126,18 @@ defmodule Anoma.Node.Examples.EIndexer do
     values = Storage.values_table(node_id)
 
     resource1 =
-      %Resource{nonce: :crypto.hash(:sha256, "random1")}
-      |> Resource.nullifier()
+      Resource.nullifier_hash(<<0::256>>, %Resource{
+        nonce: :crypto.hash(:sha256, "random1")
+      })
 
     resource2 =
-      %Resource{nonce: :crypto.hash(:sha256, "random2")}
-      |> Resource.nullifier()
+      Resource.nullifier_hash(<<0::256>>, %Resource{
+        nonce: :crypto.hash(:sha256, "random2")
+      })
 
-    set = MapSet.new([resource1, resource2])
+    set =
+      [resource1, resource2]
+      |> Enum.into(MapSet.new(), &Noun.atom_integer_to_binary/1)
 
     write_new(updates, values, [1], nil, set)
 
@@ -146,8 +153,8 @@ defmodule Anoma.Node.Examples.EIndexer do
     values = Storage.values_table(node_id)
 
     resource = %Resource{nonce: :crypto.hash(:sha256, "random1")}
-    nul1 = resource |> Resource.nullifier()
-    com1 = resource |> Resource.commitment()
+    nul1 = Resource.nullifier_hash(<<0::256>>, resource)
+    com1 = resource |> Resource.commitment_hash()
     nulfs = MapSet.new([nul1])
     coms = MapSet.new([com1])
 
@@ -166,19 +173,19 @@ defmodule Anoma.Node.Examples.EIndexer do
     values = Storage.values_table(node_id)
 
     resource = %Resource{nonce: :crypto.hash(:sha256, "random1")}
-    nul1 = resource |> Resource.nullifier()
-    com1 = resource |> Resource.commitment()
+    nul1 = Resource.nullifier_hash(<<0::256>>, resource)
+    com1 = resource |> Resource.commitment_hash()
 
     com2 =
       %Resource{nonce: :crypto.hash(:sha256, "random2")}
-      |> Resource.commitment()
+      |> Resource.commitment_hash()
 
     nulfs = MapSet.new([nul1])
     coms = MapSet.new([com1, com2])
 
     write_new(updates, values, [1], nulfs, coms)
 
-    newset = MapSet.new([com2])
+    newset = MapSet.new([Noun.atom_integer_to_binary(com2)])
     ^newset = Indexer.get(node_id, :unrevealed)
 
     node_id
@@ -232,7 +239,7 @@ defmodule Anoma.Node.Examples.EIndexer do
   def jeremy_resource do
     %Resource{
       nonce: :crypto.hash(:sha256, "random1"),
-      nullifier_key: Noun.pad_trailing("jeremy", 32)
+      nullifierkeycommitment: Noun.pad_trailing("jeremy", 32)
     }
   end
 
@@ -243,7 +250,7 @@ defmodule Anoma.Node.Examples.EIndexer do
   def michael_resource do
     %Resource{
       nonce: :crypto.hash(:sha256, "random2"),
-      nullifier_key: Noun.pad_trailing("michael", 32)
+      nullifierkeycommitment: Noun.pad_trailing("michael", 32)
     }
   end
 
@@ -262,17 +269,17 @@ defmodule Anoma.Node.Examples.EIndexer do
       values,
       [1],
       nil,
-      list |> Enum.map(&Resource.commitment/1) |> MapSet.new()
+      list |> Enum.map(&Resource.commitment_hash/1) |> MapSet.new()
     )
 
     2 = Indexer.get(node_id, {:filter, []}) |> MapSet.size()
 
     1 =
-      Indexer.get(node_id, {:filter, [{:owner, res1.nullifier_key}]})
+      Indexer.get(node_id, {:filter, [{:owner, res1.nullifierkeycommitment}]})
       |> MapSet.size()
 
     1 =
-      Indexer.get(node_id, {:filter, [{:owner, res2.nullifier_key}]})
+      Indexer.get(node_id, {:filter, [{:owner, res2.nullifierkeycommitment}]})
       |> MapSet.size()
 
     node_id
@@ -283,8 +290,15 @@ defmodule Anoma.Node.Examples.EIndexer do
 
     base_swap = Examples.ETransparent.ETransaction.swap_from_actions()
 
-    nulfs = base_swap |> Transaction.nullifiers()
-    coms = base_swap |> Transaction.commitments()
+    nulfs =
+      base_swap
+      |> Transaction.nullifiers()
+      |> Enum.into(MapSet.new(), &Noun.atom_integer_to_binary/1)
+
+    coms =
+      base_swap
+      |> Transaction.commitments()
+      |> Enum.into(MapSet.new(), &Noun.atom_integer_to_binary/1)
 
     ^nulfs = Indexer.get(node_id, :nlfs)
     ^coms = Indexer.get(node_id, :cms)

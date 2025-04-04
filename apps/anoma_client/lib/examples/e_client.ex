@@ -29,9 +29,9 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Proto.Nock.Prove
   alias Anoma.Proto.NockService
   alias Anoma.Proto.Node
-  alias Anoma.TransparentResource.Action
-  alias Anoma.TransparentResource.Resource
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Action
+  alias Anoma.RM.Transparent.Resource
+  alias Anoma.RM.Transparent.Transaction
   alias Examples.ETransparent.ETransaction
   alias Anoma.Node.Examples.EIndexer
   alias Noun.Nounable
@@ -193,7 +193,9 @@ defmodule Anoma.Client.Examples.EClient do
     EIndexer.indexer_reads_nullifier(conn.client.node.node_id)
 
     # expected nullifier
-    expected_nullifier = Resource.nullifier(%Resource{})
+    expected_nullifier =
+      Resource.nullifier_hash(<<0::256>>, %Resource{})
+      |> Noun.atom_integer_to_binary()
 
     # request the nullifiers from the client
     node_id = %Node{id: conn.client.node.node_id}
@@ -227,8 +229,10 @@ defmodule Anoma.Client.Examples.EClient do
       IndexerService.Stub.list_unrevealed_commits(conn.channel, request)
 
     # assert the right commits are returned
-    assert response.commits ==
-             expected_commits
+    assert Noun.equal?(
+             Noun.Nounable.to_noun(response.commits),
+             Noun.Nounable.to_noun(expected_commits)
+           )
 
     conn
   end
@@ -630,11 +634,8 @@ defmodule Anoma.Client.Examples.EClient do
   def prove_with_internal_scry_call(conn \\ setup()) do
     Anoma.Client.Examples.EStorage.setup()
 
-    blob_key = ["anoma", "blob", <<123>>]
-    blob_value = "i am scried"
-
     action =
-      %Action{app_data: %{blob_key => {blob_value, true}}}
+      %Action{app_data: %{<<123>> => [{"i am scried", true}]}}
 
     tx =
       %Transaction{actions: MapSet.new([action])} |> Noun.Nounable.to_noun()
@@ -654,7 +655,10 @@ defmodule Anoma.Client.Examples.EClient do
 
     assert res == Noun.Jam.jam(tx)
 
-    assert {:ok, ^blob_value} = Storage.read({System.os_time(), blob_key})
+    assert {:ok, "i am scried"} =
+             Storage.read(
+               {System.os_time(), :crypto.hash(:sha256, "i am scried")}
+             )
 
     res
   end
@@ -685,6 +689,43 @@ defmodule Anoma.Client.Examples.EClient do
     assert Storage.read({System.os_time(), key})
            |> elem(1)
            |> Noun.equal?(123)
+
+    res
+  end
+
+  @spec prove_with_external_scry_call_nounify(EConnection.t()) ::
+          Prove.Response.t()
+  def prove_with_external_scry_call_nounify(conn \\ setup()) do
+    Anoma.Client.Examples.EStorage.setup()
+
+    val = MapSet.new(["i am a set"])
+    key = ["anoma", "blob", "key"]
+
+    Anoma.Node.Transaction.Storage.write(
+      conn.client.node.node_id,
+      {1, [{key, val}]}
+    )
+
+    program = [[12, [1], 1 | ["id" | key]]] |> Noun.Jam.jam()
+
+    request = %Prove.Request{
+      program: {:jammed_program, program},
+      public_inputs: []
+    }
+
+    {:ok, response} = NockService.Stub.prove(conn.channel, request)
+
+    {:success, int_res} = response.result
+
+    res = int_res.result
+
+    noun_val = val |> Noun.Nounable.to_noun()
+
+    assert Noun.Jam.jam(noun_val) == res
+
+    {:ok, read_res} = Storage.read({System.os_time(), key})
+
+    assert Noun.equal?(read_res, noun_val)
 
     res
   end

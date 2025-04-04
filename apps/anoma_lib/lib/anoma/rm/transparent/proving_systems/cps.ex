@@ -52,12 +52,14 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS.Instance do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(instance) do
-    [
-      Noun.Nounable.to_noun(instance.consumed),
-      Noun.Nounable.to_noun(instance.created) | instance.unit_delta
-    ]
+  defimpl Noun.Nounable, for: Instance do
+    @impl true
+    def to_noun(instance = %Instance{}) do
+      [
+        Noun.Nounable.to_noun(instance.consumed),
+        Noun.Nounable.to_noun(instance.created) | instance.unit_delta
+      ]
+    end
   end
 end
 
@@ -85,12 +87,13 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
   alias Anoma.RM.Transparent.Primitive.CommitmentAccumulator
   alias Anoma.RM.Transparent.Resource
   alias Anoma.RM.Transparent.ProvingSystem.CPS.Instance
+  alias __MODULE__
 
   require Logger
   use TypedStruct
 
   @type cps_key :: binary()
-  @cps_key "[8 [9 382 0 7] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+  @cps_key "[8 [9 1502 0 7] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
            |> Noun.Format.parse_always()
            |> Noun.Jam.jam()
 
@@ -145,7 +148,8 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
              9,
              2,
              10,
-             [6, 1 | Instance.to_noun(instance)]
+             [6, 1 | Noun.Nounable.to_noun(instance)],
+             0 | 1
            ]) do
       Noun.equal?(res, 0)
     else
@@ -313,13 +317,15 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [
-      t.proving_key,
-      t.verifying_key,
-      Instance.to_noun(t.instance),
-      <<>> | <<>>
-    ]
+  defimpl Noun.Nounable, for: CPS do
+    @impl true
+    def to_noun(t = %CPS{}) do
+      [
+        t.proving_key,
+        t.verifying_key,
+        Noun.Nounable.to_noun(t.instance),
+        <<>> | <<>>
+      ]
+    end
   end
 end

@@ -1,7 +1,7 @@
 defmodule Anoma.Client.Runner do
   alias Anoma.Client.Storage
   alias Anoma.Client.Connection.GRPCProxy
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Transaction
 
   @doc """
   I run the given Nock program with its inputs and return the result.
@@ -31,9 +31,9 @@ defmodule Anoma.Client.Runner do
         try do
           {:ok, tx} = noun |> Transaction.from_noun()
 
-          for {key, {value, bool}} <- Transaction.app_data(tx) do
+          for {binary, bool} <- Transaction.app_data(tx) do
             if bool do
-              Storage.write({key |> Noun.list_nock_to_erlang(), value})
+              Storage.write({:crypto.hash(:sha256, binary), binary})
             end
           end
         rescue

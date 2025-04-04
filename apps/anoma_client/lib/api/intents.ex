@@ -5,7 +5,7 @@ defmodule Anoma.Client.Api.Servers.Intents do
   alias Anoma.Proto.Intentpool.Intent
   alias Anoma.Proto.Intentpool.List
   alias Anoma.Proto.Intentpool.Verify
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Transaction
   alias GRPC.Server.Stream
 
   require Logger
@@ -44,7 +44,7 @@ defmodule Anoma.Client.Api.Servers.Intents do
       # cue the jammed intents into nouns
       |> Enum.map(&Noun.Jam.cue!(&1))
       # nouns to transactions
-      |> Enum.map(&Anoma.TransparentResource.Transaction.from_noun(&1))
+      |> Enum.map(&Transaction.from_noun(&1))
       # unpack {:ok, tx} tuples
       |> Enum.map(fn {:ok, x} -> x end)
 

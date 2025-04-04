@@ -23,6 +23,7 @@ defmodule Anoma.RM.Transparent.Action do
   alias Anoma.RM.Transparent.ProvingSystem.RLPS
   alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias Anoma.RM.Transparent.ProvingSystem.CPS.Instance
+  alias __MODULE__
 
   require Logger
   use TypedStruct
@@ -90,13 +91,18 @@ defmodule Anoma.RM.Transparent.Action do
       unit_delta: DeltaHash.delta_sub(consumed_delta, created_delta)
     }
 
-    cu = ComplianceUnit.create(CPS.key(), cu_instance, <<>>)
+    cu_set =
+      if cu_instance == %Instance{} do
+        MapSet.new()
+      else
+        MapSet.new([ComplianceUnit.create(CPS.key(), cu_instance, <<>>)])
+      end
 
     %__MODULE__{
       created: created |> Enum.map(&elem(&1, 0)),
       consumed: consumed |> Enum.map(&elem(&1, 0)),
       resource_logic_proofs: generate_proofs(to_nullify, to_commit),
-      compliance_units: MapSet.new([cu]),
+      compliance_units: cu_set,
       app_data: app_data
     }
   end
@@ -139,6 +145,31 @@ defmodule Anoma.RM.Transparent.Action do
     else
       {:error, msg} -> Logger.error(msg)
       _ -> false
+    end
+  end
+
+  @doc """
+  I am the root function for the transparent action.
+
+  I go through the roots in the compliance units that are used for non
+  ephemetal resources and collect them in a set
+  """
+  @spec roots(t()) :: MapSet.t(integer())
+  def roots(t) do
+    for cu <- t.compliance_units, reduce: MapSet.new() do
+      acc -> ComplianceUnit.roots(cu) |> MapSet.union(acc)
+    end
+  end
+
+  @doc """
+  I am the app data function.
+
+  I gather all the app data used up in a transparent transaction.
+  """
+  @spec app_data(t()) :: [{binary(), bool()}]
+  def app_data(t) do
+    for {_key, value} <- t.app_data, reduce: [] do
+      acc -> value ++ acc
     end
   end
 
@@ -302,7 +333,8 @@ defmodule Anoma.RM.Transparent.Action do
          {:ok, list_consumed} <- Noun.Nounable.List.from_noun(consumed),
          {:ok, proof_map} <- Noun.Nounable.Map.from_noun(rl_proofs),
          {:ok, cu_map} <- Noun.Nounable.MapSet.from_noun(cus),
-         {:ok, appdata} <- Noun.Nounable.Map.from_noun(app_data) do
+         {:ok, appdata} <- Noun.Nounable.Map.from_noun(app_data),
+         lst <- match_appdata(appdata) do
       {:ok,
        %__MODULE__{
          created: list_created |> Enum.map(&Noun.atom_binary_to_integer/1),
@@ -319,26 +351,36 @@ defmodule Anoma.RM.Transparent.Action do
              {:ok, cu} = ComplianceUnit.from_noun(x)
              cu
            end),
-         app_data:
-           appdata
-           |> Enum.into(%{}, fn {tag, [bin | bool]} ->
-             {Noun.atom_binary_to_integer(tag),
-              {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}}
-           end)
+         app_data: lst
        }}
     else
       _ -> :error
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [
-      Noun.Nounable.to_noun(t.created),
-      Noun.Nounable.to_noun(t.consumed),
-      Noun.Nounable.to_noun(t.resource_logic_proofs),
-      Noun.Nounable.to_noun(t.compliance_units)
-      | Noun.Nounable.to_noun(t.app_data)
-    ]
+  defimpl Noun.Nounable, for: Action do
+    @impl true
+    def to_noun(t = %Action{}) do
+      [
+        Noun.Nounable.to_noun(t.created),
+        Noun.Nounable.to_noun(t.consumed),
+        Noun.Nounable.to_noun(t.resource_logic_proofs),
+        Noun.Nounable.to_noun(t.compliance_units)
+        | Noun.Nounable.to_noun(t.app_data)
+      ]
+    end
+  end
+
+  defp match_appdata(appdata) do
+    Enum.into(appdata, %{}, fn {tag, list} ->
+      {:ok, list_data} = Noun.Nounable.List.from_noun(list)
+
+      list_of_appdata =
+        Enum.map(list_data, fn [bin | bool] ->
+          {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}
+        end)
+
+      {Noun.atom_binary_to_integer(tag), list_of_appdata}
+    end)
   end
 end

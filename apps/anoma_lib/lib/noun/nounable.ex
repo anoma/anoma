@@ -218,3 +218,108 @@ defimpl Nounable, for: Map do
     end
   end
 end
+
+defimpl Nounable, for: Jason.OrderedObject do
+  import Noun
+
+  @moduledoc """
+  I offer an implementation of Nounable and from_noun for Jason.OrderedObject
+  struct represented as json in the standard library
+  """
+  def to_noun(%Jason.OrderedObject{values: []}) do
+    0
+  end
+
+  def to_noun(a = %Jason.OrderedObject{}) do
+    to_noun_jason(a)
+  end
+
+  defp to_noun_jason(%Jason.OrderedObject{values: list}) do
+    [
+      "o"
+      | Enum.map(list, fn {string, elem} -> [string | to_noun_jason(elem)] end)
+    ]
+  end
+
+  defp to_noun_jason(boolean) when is_boolean(boolean) do
+    ["b" | Noun.Nounable.to_noun(boolean)]
+  end
+
+  defp to_noun_jason(string) when is_binary(string) do
+    ["s" | string]
+  end
+
+  defp to_noun_jason(number) when is_integer(number) do
+    ["n" | number]
+  end
+
+  defp to_noun_jason(list) do
+    ["a" | Enum.map(list, &to_noun_jason/1)]
+  end
+
+  @behaviour Kind
+
+  import Noun
+
+  @doc """
+  I convert the given Noun into a Jason.OrderedObject.
+  """
+  @spec from_noun(Noun.t()) :: {:ok, Jason.OrderedObject.t()} | :error
+  def from_noun(zero) when is_noun_zero(zero),
+    do: {:ok, %Jason.OrderedObject{}}
+
+  def from_noun(o) do
+    from_json_noun(o)
+  end
+
+  defp from_json_noun(["o" | list]) do
+    with {:ok, list} <- Noun.Nounable.List.from_noun(list),
+         tuples_list <-
+           Enum.map(list, fn [x | y] ->
+             {Noun.atom_integer_to_binary(x), from_json_noun(y)}
+           end),
+         false <-
+           Enum.any?(tuples_list, fn
+             {_, :error} -> true
+             _ -> false
+           end) do
+      %Jason.OrderedObject{values: tuples_list}
+    else
+      _ -> :error
+    end
+  end
+
+  defp from_json_noun(["a" | list]) do
+    with {:ok, list} <- Noun.Nounable.List.from_noun(list),
+         new_list <- Enum.map(list, &from_json_noun/1),
+         false <-
+           Enum.any?(new_list, fn
+             :error -> true
+             _ -> false
+           end) do
+      new_list
+    else
+      _ -> :error
+    end
+  end
+
+  defp from_json_noun(["b" | bool]) do
+    with {:ok, boolean} <- Noun.Nounable.Bool.from_noun(bool) do
+      boolean
+    else
+      _ -> :error
+    end
+  end
+
+  defp from_json_noun(["n" | number]) do
+    Noun.atom_binary_to_integer(number)
+  end
+
+  defp from_json_noun(["s" | text]) do
+    Noun.atom_integer_to_binary(text)
+  end
+
+  defp from_json_noun(_) do
+    :error
+  end
+end

@@ -4,11 +4,14 @@ defmodule Nock.Jets do
   """
 
   alias Anoma.Crypto.Sign
-  alias Anoma.TransparentResource.Action
-  alias Anoma.TransparentResource.Delta
-  alias Anoma.TransparentResource.Resource
+  alias Anoma.RM.Transparent.Action
+  alias Anoma.RM.Transparent.ComplianceUnit
+  alias Anoma.RM.Transparent.Resource
+  alias Anoma.RM.Transparent.Transaction
+  alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias Anoma.RM.Transparent.ProvingSystem.DPS
   alias Anoma.RM.Transparent.ProvingSystem.CPS
+  alias Anoma.CairoResource
 
   import Bitwise
   import Noun
@@ -787,9 +790,16 @@ defmodule Nock.Jets do
   @spec delta_add(Noun.t()) :: :error | {:ok, Noun.t()}
   def delta_add(core) do
     with {:ok, [a | b]} <- sample(core),
-         {:ok, delta1} <- Delta.from_noun(a),
-         {:ok, delta2} <- Delta.from_noun(b) do
-      res = Delta.add(delta1, delta2) |> Delta.to_noun()
+         {:ok, cue_a} <- Noun.atom_integer_to_binary(a) |> Noun.Jam.cue(),
+         {:ok, cue_b} <- Noun.atom_integer_to_binary(b) |> Noun.Jam.cue(),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(cue_a),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(cue_b) do
+      res =
+        DeltaHash.delta_add(
+          Noun.atom_binary_to_integer(a),
+          Noun.atom_binary_to_integer(b)
+        )
+
       {:ok, res}
     else
       _ ->
@@ -800,9 +810,38 @@ defmodule Nock.Jets do
   @spec delta_sub(Noun.t()) :: :error | {:ok, Noun.t()}
   def delta_sub(core) do
     with {:ok, [a | b]} <- sample(core),
-         {:ok, delta1} <- Delta.from_noun(a),
-         {:ok, delta2} <- Delta.from_noun(b) do
-      res = Delta.sub(delta1, delta2) |> Delta.to_noun()
+         {:ok, cue_a} <- Noun.atom_integer_to_binary(a) |> Noun.Jam.cue(),
+         {:ok, cue_b} <- Noun.atom_integer_to_binary(b) |> Noun.Jam.cue(),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(cue_a),
+         {:ok, _map} <- Noun.Nounable.Map.from_noun(cue_b) do
+      res =
+        DeltaHash.delta_sub(
+          Noun.atom_binary_to_integer(a),
+          Noun.atom_binary_to_integer(b)
+        )
+
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec resource_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  def resource_delta(core) do
+    with {:ok, a} <- sample(core),
+         {:ok, action} <- Resource.from_noun(a) do
+      res = action |> Resource.delta()
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec compliance_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  def compliance_delta(core) do
+    with {:ok, a} <- sample(core),
+         {:ok, action} <- ComplianceUnit.from_noun(a) do
+      res = action |> ComplianceUnit.delta()
       {:ok, res}
     else
       _ -> :error
@@ -813,7 +852,7 @@ defmodule Nock.Jets do
   def action_delta(core) do
     with {:ok, a} <- sample(core),
          {:ok, action} <- Action.from_noun(a) do
-      res = action |> Action.delta() |> Delta.to_noun()
+      res = action |> Action.delta()
       {:ok, res}
     else
       _ -> :error
@@ -829,10 +868,46 @@ defmodule Nock.Jets do
       res =
         action_list
         |> Enum.map(&Action.delta(elem(&1, 1)))
-        |> Enum.reduce(%{}, &Delta.sub/2)
-        |> Delta.to_noun()
+        |> Enum.reduce(2, &DeltaHash.delta_add/2)
 
       {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec action_create(Noun.t()) :: :error | {:ok, Noun.t()}
+  def action_create(core) do
+    with {:ok, [con, cre | data]} <- sample(core),
+         {:ok, con} <- Noun.Nounable.List.from_noun(con),
+         {:ok, cre} <- Noun.Nounable.List.from_noun(cre),
+         {:ok, data} <- Noun.Nounable.Map.from_noun(data),
+         con_res <-
+           con
+           |> Enum.map(fn [key, res | root] ->
+             {:ok, res} = Resource.from_noun(res)
+
+             {Noun.atom_integer_to_binary(key, 32), res,
+              Noun.atom_binary_to_integer(root)}
+           end),
+         cre_res <-
+           cre
+           |> Enum.map(fn res ->
+             {:ok, res} = Resource.from_noun(res)
+             res
+           end),
+         data_res <-
+           data
+           |> Enum.into(%{}, fn {key, list_noun} ->
+             with {:ok, list} <- Noun.Nounable.List.from_noun(list_noun) do
+               {Noun.atom_binary_to_integer(key),
+                Enum.map(list, fn [bin | bool] ->
+                  {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}
+                end)}
+             end
+           end) do
+      {:ok,
+       Action.create(con_res, cre_res, data_res) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -842,11 +917,13 @@ defmodule Nock.Jets do
   def trm_compliance_key(core) do
     with {:ok, sample} <- sample(core),
          {:ok, instance} <- CPS.Instance.from_noun(sample) do
-      CPS.verify_jet(
-        instance.consumed,
-        instance.created,
-        instance.unit_delta
-      )
+      {:ok,
+       CPS.verify_jet(
+         instance.consumed,
+         instance.created,
+         instance.unit_delta
+       )
+       |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end
@@ -856,7 +933,84 @@ defmodule Nock.Jets do
   def trm_delta_key(core) do
     with {:ok, sample} <- sample(core),
          {:ok, instance} <- DPS.Instance.from_noun(sample) do
-      DPS.verify_jet(instance.delta, instance.expected_balance)
+      {:ok,
+       DPS.verify_jet(instance.delta, instance.expected_balance)
+       |> Noun.Nounable.to_noun()}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec t_compose(Noun.t()) :: :error | {:ok, Noun.t()}
+  def t_compose(core) do
+    with {:ok, [tx1 | tx2]} <- sample(core),
+         {:ok, cairo_tx1} <- Transaction.from_noun(tx1),
+         {:ok, cairo_tx2} <- Transaction.from_noun(tx2) do
+      {:ok,
+       Transaction.compose(cairo_tx1, cairo_tx2)
+       |> Noun.Nounable.to_noun()}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec cairo_compose(Noun.t()) :: :error | {:ok, Noun.t()}
+  def cairo_compose(core) do
+    with {:ok, [tx1 | tx2]} <- sample(core),
+         {:ok, cairo_tx1} <- CairoResource.Transaction.from_noun(tx1),
+         {:ok, cairo_tx2} <- CairoResource.Transaction.from_noun(tx2) do
+      {:ok,
+       CairoResource.Transaction.compose(cairo_tx1, cairo_tx2)
+       |> Noun.Nounable.to_noun()}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec cairo_create_from_cus(Noun.t()) :: :error | {:ok, Noun.t()}
+  def cairo_create_from_cus(core) do
+    with {:ok, [json1, bin1, json2, bin2 | json3]} <- sample(core),
+         {:ok, json1_list} <- Noun.Nounable.List.from_noun(json1),
+         {:ok, bin1_list} <- Noun.Nounable.List.from_noun(bin1),
+         {:ok, json2_list} <- Noun.Nounable.List.from_noun(json2),
+         {:ok, bin2_list} <- Noun.Nounable.List.from_noun(bin2),
+         {:ok, json3_list} <- Noun.Nounable.List.from_noun(json3),
+         jason1_res <-
+           Enum.map(json1_list, fn x ->
+             {:ok, res} = Noun.Nounable.Jason.OrderedObject.from_noun(x)
+             res
+           end),
+         bin1_res <- Enum.map(bin1_list, &Noun.atom_integer_to_binary/1),
+         jason2_res <-
+           Enum.map(json2_list, fn x ->
+             {:ok, res} = Noun.Nounable.Jason.OrderedObject.from_noun(x)
+             res
+           end),
+         bin2_res <- Enum.map(bin2_list, &Noun.atom_integer_to_binary/1),
+         jason3_res <-
+           Enum.map(json3_list, fn x ->
+             {:ok, res} = Noun.Nounable.Jason.OrderedObject.from_noun(x)
+             res
+           end),
+         {:ok, tx} <-
+           CairoResource.Transaction.create_from_compliance_units(
+             jason1_res,
+             bin1_res,
+             jason2_res,
+             bin2_res,
+             jason3_res
+           ) do
+      {:ok, Noun.Nounable.to_noun(tx)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec cairo_prove_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  def cairo_prove_delta(core) do
+    with {:ok, sample} <- sample(core),
+         {:ok, cairo_tx} <- CairoResource.Transaction.from_noun(sample) do
+      {:ok, CairoResource.Transaction.prove_delta(cairo_tx)}
     else
       _ -> :error
     end

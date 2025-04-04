@@ -1,6 +1,6 @@
 defmodule Examples.ECommitmentTree do
   alias Anoma.Node.Tables
-  alias Anoma.TransparentResource.Transaction
+  alias Anoma.RM.Transparent.Transaction
   alias Examples.ECairo
   alias Examples.ETransparent.ETransaction
 
@@ -51,7 +51,11 @@ defmodule Examples.ECommitmentTree do
 
     commits = Transaction.commitments(transaction)
 
-    {tree, anchor} = CommitmentTree.add(tree, commits |> Enum.to_list())
+    {tree, anchor} =
+      CommitmentTree.add(
+        tree,
+        commits |> Enum.map(&Noun.atom_integer_to_binary/1)
+      )
 
     assert tree.size == MapSet.size(commits)
 

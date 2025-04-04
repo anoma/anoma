@@ -3,12 +3,14 @@ defmodule Anoma.Node.Utility.Indexer do
   A trivial indexer querying the node tables.
   """
 
-  alias Anoma.TransparentResource.Resource
+  alias Anoma.RM.Transparent.Resource
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Storage
 
   use GenServer
   use TypedStruct
+
+  import Noun
 
   typedstruct do
     field(:node_id, String.t())
@@ -27,7 +29,7 @@ defmodule Anoma.Node.Utility.Indexer do
           | {:filter, [{:owner, any()} | {:kind, binary()}]}
 
   def start_link(args) do
-    owner_filter = fn res, owner -> res.nullifier_key == owner end
+    owner_filter = fn res, owner -> res.nullifierkeycommitment == owner end
     kind_filter = fn res, kind -> Resource.kind(res) == kind end
 
     args =
@@ -85,7 +87,7 @@ defmodule Anoma.Node.Utility.Indexer do
           filter = Map.get(state.filters, atom)
           unfiltered |> Enum.filter(fn x -> filter.(x, arg) end)
       end
-      |> Enum.map(&Resource.to_noun/1)
+      |> Enum.map(&Noun.Nounable.to_noun/1)
       |> MapSet.new()
 
     {:reply, filtered, state}
@@ -157,13 +159,15 @@ defmodule Anoma.Node.Utility.Indexer do
   @spec get_jam_info(MapSet.t(binary()), :commitments | :nullifiers) ::
           Enumerable.t()
   defp get_jam_info(set, :commitments) do
-    Stream.map(set, fn <<"CM_", rest::binary>> ->
+    Stream.map(set, &Noun.atom_integer_to_binary/1)
+    |> Stream.map(fn <<"CM_", rest::binary>> ->
       rest
     end)
   end
 
   defp get_jam_info(set, :nullifiers) do
-    Stream.map(set, fn <<"NF_", rest::binary>> ->
+    Stream.map(set, &Noun.atom_integer_to_binary/1)
+    |> Stream.map(fn <<"NF_", rest::binary>> ->
       rest
     end)
   end
@@ -175,7 +179,7 @@ defmodule Anoma.Node.Utility.Indexer do
     updates = Storage.updates_table(id)
     key = ["anoma", key |> Atom.to_string()]
 
-    {:atomic, set} =
+    {:atomic, res} =
       :mnesia.transaction(fn ->
         case :mnesia.read(updates, key) do
           [] ->
@@ -186,7 +190,11 @@ defmodule Anoma.Node.Utility.Indexer do
         end
       end)
 
-    set
+    if is_noun_atom(res) do
+      Noun.atom_integer_to_binary(res)
+    else
+      Enum.into(res, MapSet.new([]), &Noun.atom_integer_to_binary/1)
+    end
   end
 
   @spec get_height(String.t()) :: non_neg_integer() | :absent

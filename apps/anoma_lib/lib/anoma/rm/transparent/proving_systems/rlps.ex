@@ -54,15 +54,17 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS.Instance do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(instance) do
-    [
-      instance.tag,
-      Noun.Nounable.Bool.to_noun(instance.flag),
-      instance.consumed,
-      instance.created
-      | Noun.Nounable.to_noun(instance.app_data)
-    ]
+  defimpl Noun.Nounable, for: Instance do
+    @impl true
+    def to_noun(instance = %Instance{}) do
+      [
+        instance.tag,
+        Noun.Nounable.Bool.to_noun(instance.flag),
+        instance.consumed,
+        instance.created
+        | Noun.Nounable.to_noun(instance.app_data)
+      ]
+    end
   end
 end
 
@@ -83,6 +85,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
   """
   alias Anoma.RM.Transparent.Resource
   alias Anoma.RM.Transparent.ProvingSystem.RLPS.Instance
+  alias __MODULE__
 
   require Logger
   use TypedStruct
@@ -128,7 +131,8 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
              9,
              2,
              10,
-             [6, 1 | Instance.to_noun(instance)]
+             [6, 1 | to_noun_rl_args(instance)],
+             0 | 1
            ]) do
       Noun.equal?(res, 0)
     else
@@ -139,6 +143,41 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
       _ ->
         false
     end
+  end
+
+  @doc """
+  I am function for turning a resource logic proving system instance to
+  a resource logic format for transparent RM.
+
+  Instead of the pure instance, I supply to the logic underlying resource
+  plaintexts which we can get as we are dealing with commitments and
+  nullifiers transparently.
+  """
+  @spec to_noun_rl_args(Instance.t()) :: Noun.t()
+  def to_noun_rl_args(instance) do
+    {:ok, res} = instance.tag |> match_resource(instance.flag)
+
+    consumed =
+      instance.consumed
+      |> Enum.map(fn nlf ->
+        {:ok, res} = match_resource(nlf, true)
+        Noun.Nounable.to_noun(res)
+      end)
+
+    created =
+      instance.created
+      |> Enum.map(fn cm ->
+        {:ok, res} = match_resource(cm, false)
+        Noun.Nounable.to_noun(res)
+      end)
+
+    [
+      Noun.Nounable.to_noun(res),
+      Noun.Nounable.Bool.to_noun(instance.flag),
+      consumed,
+      created
+      | Noun.Nounable.to_noun(instance.app_data)
+    ]
   end
 
   @doc """
@@ -172,7 +211,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
   end
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([pk, vk, instance, witness, proof]) do
+  def from_noun([pk, vk, instance, witness | proof]) do
     with true <-
            Noun.atom_integer_to_binary(pk) == Noun.atom_integer_to_binary(vk),
          {:ok, instance} <- Instance.from_noun(instance),
@@ -184,13 +223,15 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
     end
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(t) do
-    [
-      t.proving_key,
-      t.verifying_key,
-      Instance.to_noun(t.instance),
-      <<>> | <<>>
-    ]
+  defimpl Noun.Nounable, for: RLPS do
+    @impl true
+    def to_noun(t = %RLPS{}) do
+      [
+        t.proving_key,
+        t.verifying_key,
+        Noun.Nounable.to_noun(t.instance),
+        <<>> | <<>>
+      ]
+    end
   end
 end

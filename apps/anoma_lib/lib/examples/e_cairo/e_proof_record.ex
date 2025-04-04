@@ -8,11 +8,11 @@ defmodule Examples.ECairo.EProofRecord do
 
   @spec a_compliance_proof() :: ProofRecord.t()
   defmemo a_compliance_proof do
-    compliance_private_inputs =
-      EComplianceWitness.a_compliance_private_input()
+    compliance_witness =
+      EComplianceWitness.a_compliance_witness()
 
     assert {:ok, proof} =
-             ProofRecord.generate_compliance_proof(compliance_private_inputs)
+             ProofRecord.generate_compliance_proof(compliance_witness)
 
     proof
   end
@@ -25,13 +25,13 @@ defmodule Examples.ECairo.EProofRecord do
         input_file
       )
 
-    circuit_dir =
+    proving_key_dir =
       Path.join(
         :code.priv_dir(:anoma_lib),
         "params/trivial_resource_logic.json"
       )
 
-    assert {:ok, circuit} = File.read(circuit_dir)
+    assert {:ok, proving_key} = File.read(proving_key_dir)
     assert {:ok, witness} = File.read(witness_dir)
 
     updated_witness =
@@ -43,8 +43,8 @@ defmodule Examples.ECairo.EProofRecord do
       end
 
     assert {:ok, input_resource_logic_proof} =
-             ProofRecord.generate_cairo_proof(
-               circuit,
+             ProofRecord.prove(
+               proving_key,
                updated_witness
              )
 
@@ -55,11 +55,11 @@ defmodule Examples.ECairo.EProofRecord do
 
   @spec a_compliance_proof_with_intents() :: ProofRecord.t()
   defmemo a_compliance_proof_with_intents do
-    compliance_private_inputs =
-      EComplianceWitness.a_compliance_private_input_for_intents()
+    compliance_witness =
+      EComplianceWitness.a_compliance_witness_for_intents()
 
     assert {:ok, proof} =
-             ProofRecord.generate_compliance_proof(compliance_private_inputs)
+             ProofRecord.generate_compliance_proof(compliance_witness)
 
     proof
   end
