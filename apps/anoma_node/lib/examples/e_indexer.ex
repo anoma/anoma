@@ -293,12 +293,10 @@ defmodule Anoma.Node.Examples.EIndexer do
     nulfs =
       base_swap
       |> Transaction.nullifiers()
-      |> Enum.into(MapSet.new(), &Noun.atom_integer_to_binary/1)
 
     coms =
       base_swap
       |> Transaction.commitments()
-      |> Enum.into(MapSet.new(), &Noun.atom_integer_to_binary/1)
 
     ^nulfs = Indexer.get(node_id, :nlfs)
     ^coms = Indexer.get(node_id, :cms)
