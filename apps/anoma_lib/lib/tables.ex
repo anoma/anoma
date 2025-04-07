@@ -27,6 +27,24 @@ defmodule Anoma.Node.Tables do
     {Intents, [:type, :body]}
   ]
 
+  @client_tables [
+    {:client_updates, [:key, :updates]},
+    {:client_values, [:qualified_key, :value]},
+    {:client_ids, [:id, :timestamp]}
+  ]
+
+  @doc "I return the name of the client's update table."
+  @spec table_client_updates :: atom()
+  def table_client_updates, do: :client_updates
+
+  @doc "I return the name of the client's values table."
+  @spec table_client_values :: atom()
+  def table_client_values, do: :client_values
+
+  @doc "I return the name of the client's id table."
+  @spec table_client_ids :: atom()
+  def table_client_ids, do: :client_ids
+
   @doc """
   I return the table name for the intents table.
   """
@@ -90,6 +108,55 @@ defmodule Anoma.Node.Tables do
     |> Enum.map(fn {table, fields} ->
       {node_table_name(node_id, table), fields}
     end)
+    |> create_tables()
+    |> case do
+      {:error, :failed_to_create_table, _table, _fields, _err} ->
+        {:error, :failed_to_initialize_tables}
+
+      {:ok, {created, existing}} ->
+        case :mnesia.wait_for_tables(created ++ existing, 60_000) do
+          :ok ->
+            case {created, existing} do
+              {_, []} ->
+                {:ok, :created}
+
+              _ ->
+                {:ok, :existing}
+            end
+
+          {:timeout, error} ->
+            Logger.error(error)
+            {:error, :failed_to_initialize_tables}
+        end
+    end
+  end
+
+  @doc """
+  I reset the tables for the client.
+  Resetting means creating them if they dont exist, and clearing them if they do.
+  """
+  @spec reset_tables_for_client :: :ok
+  def reset_tables_for_client() do
+    {:ok, _} = initialize_tables_for_client()
+
+    for {table, _keys} <- @client_tables do
+      :ok = clear_table(table)
+    end
+
+    :ok
+  end
+
+  @doc """
+  I initialize the tables for the client. There is only one client in the virtual machine.
+  I do this by creating all tables in the mnesia storage.
+
+  I return information whether these tables did not exist, were created,
+  or when I failed to create them.
+  """
+  @spec initialize_tables_for_client() ::
+          {:ok, :existing | :created} | {:error, :failed_to_initialize_tables}
+  def initialize_tables_for_client() do
+    @client_tables
     |> create_tables()
     |> case do
       {:error, :failed_to_create_table, _table, _fields, _err} ->
@@ -181,7 +248,8 @@ defmodule Anoma.Node.Tables do
       {:atomic, _} ->
         :ok
 
-      _ ->
+      e ->
+        Logger.error(inspect(e))
         {:error, :failed_to_clear_table}
     end
   end
