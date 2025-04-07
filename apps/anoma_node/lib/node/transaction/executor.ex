@@ -186,9 +186,7 @@ defmodule Anoma.Node.Transaction.Executor do
   # """
   @spec handle_launch({Backends.backend(), Noun.t()}, binary(), t()) :: :ok
   defp handle_launch(tw_w_backend, id, state = %Executor{}) do
-    tx_supervisor = Registry.via(state.node_id, TxSupervisor)
-
-    Task.Supervisor.start_child(tx_supervisor, fn ->
+    spawn(fn ->
       try do
         Backends.execute(state.node_id, tw_w_backend, id)
       rescue
