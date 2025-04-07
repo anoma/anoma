@@ -121,7 +121,10 @@ defmodule Anoma.Node.Examples.ESolver do
       0 | 707
     ]
 
-    tx_filter = [Anoma.Node.Event.node_filter(node_id), %Mempool.TxFilter{}]
+    tx_filter = [
+      Anoma.Node.Event.node_filter(node_id),
+      %Mempool.Events.TxFilter{}
+    ]
 
     with_subscription [tx_filter] do
       Mempool.tx(
@@ -134,7 +137,7 @@ defmodule Anoma.Node.Examples.ESolver do
           %EventBroker.Event{
             body: %Anoma.Node.Event{
               node_id: ^node_id,
-              body: %Mempool.TxEvent{
+              body: %Mempool.Events.TxEvent{
                 tx: %Mempool.Tx{backend: _, code: ^tx_candidate}
               }
             }

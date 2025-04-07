@@ -11,6 +11,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   alias Anoma.RM.Intent
   alias EventBroker.Broker
   alias Anoma.Node.Tables
+  alias Anoma.Node.Intents.IntentPool.Events
 
   require EventBroker.Event
   require Logger
@@ -19,47 +20,6 @@ defmodule Anoma.Node.Intents.IntentPool do
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
-
-  typedstruct enforce: true, module: IntentAddSuccess do
-    @typedoc """
-    I am an event specifying that an intent has been submitted succesfully.
-
-    ### Fields
-    - `:intent` - The intent added.
-    """
-    field(:intent, Intent.t())
-  end
-
-  typedstruct enforce: true, module: IntentAddError do
-    @typedoc """
-    I am an event specifying that an intent submission has failed alongside
-    with a reason.
-
-    ### Fields
-    - `:intent` - The intent submitted.
-    - `:reason` - The reason why it was rejected from the pool.
-    """
-    field(:intent, Intent.t())
-    field(:reason, String.t())
-  end
-
-  deffilter IntentAddSuccessFilter do
-    %EventBroker.Event{
-      body: %Node.Event{body: %IntentPool.IntentAddSuccess{}}
-    } ->
-      true
-
-    _ ->
-      false
-  end
-
-  deffilter IntentAddErrorFilter do
-    %EventBroker.Event{body: %Node.Event{body: %IntentPool.IntentAddError{}}} ->
-      true
-
-    _ ->
-      false
-  end
 
   ############################################################
   #                           State                          #
@@ -184,7 +144,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   @impl true
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{body: %Backends.TRMEvent{}}
+          body: %Node.Event{body: %Backends.Events.TRMEvent{}}
         },
         state
       ) do
@@ -263,7 +223,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   @spec handle_new_state(t(), EventBroker.Event.t()) :: t()
   defp handle_new_state(state, %EventBroker.Event{
          body: %Node.Event{
-           body: %Backends.TRMEvent{
+           body: %Backends.Events.TRMEvent{
              nullifiers: nlfs_set,
              commitments: cms_set
            }
@@ -324,7 +284,7 @@ defmodule Anoma.Node.Intents.IntentPool do
     Logger.debug("new intent added #{inspect(intent)}")
 
     EventBroker.event(
-      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddSuccess{
+      Node.Event.new_with_body(state.node_id, %Events.IntentAddSuccess{
         intent: intent
       }),
       Broker
@@ -335,7 +295,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   defp handle_error(intent, reason, state) do
     EventBroker.event(
-      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddError{
+      Node.Event.new_with_body(state.node_id, %Events.IntentAddError{
         intent: intent,
         reason: reason
       }),
@@ -358,7 +318,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   deffilter TRMFilter do
     %EventBroker.Event{
-      body: %Anoma.Node.Event{body: %Backends.TRMEvent{}}
+      body: %Anoma.Node.Event{body: %Backends.Events.TRMEvent{}}
     } ->
       true
 
