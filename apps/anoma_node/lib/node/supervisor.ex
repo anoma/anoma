@@ -12,23 +12,31 @@ defmodule Anoma.Node.Supervisor do
   alias Anoma.Node.Transaction
   alias Anoma.Node.Transport
 
-  @typedoc """
-  The type of the arguments that the supervisor expects.
-  """
-  @type args_t :: [
-          node_id: String.t(),
-          replay: boolean(),
-          transaction: [mempool: any()]
-        ]
-
   @doc """
   The default arguments for the supervisor.
   """
   @args [
     :node_id,
+    :transaction,
+    :node_config,
     replay: true,
     transaction: [mempool: []]
   ]
+
+  ############################################################
+  #                       Types                              #
+  ############################################################
+
+  @type args_t() :: [
+          {:node_id, String.t()}
+          | {:replay, boolean()}
+          | {:node_config, map()}
+          | {:transaction, any()}
+        ]
+
+  ############################################################
+  #                      Supervisor Callbacks                #
+  ############################################################
 
   @spec child_spec(any()) :: map()
   def child_spec(args) do
@@ -59,7 +67,8 @@ defmodule Anoma.Node.Supervisor do
     transaction = args[:transaction]
 
     children = [
-      {Transport.Supervisor, node_id: node_id},
+      {Transport.Supervisor,
+       node_id: node_id, node_config: args[:node_config]},
       {Transaction.Supervisor, [node_id: node_id] ++ transaction},
       {Intents.Supervisor, node_id: node_id},
       {Logging, node_id: node_id}

@@ -181,6 +181,44 @@ defimpl Validate, for: Anoma.Proto.Mempool.Transaction do
   end
 end
 
+############################################################
+#                       Intranode                          #
+############################################################
+
+defimpl Validate,
+  for: [Anoma.Proto.IntraNode.Call, Anoma.Proto.IntraNode.Cast] do
+  @not_nil [:engine, :node, :from, :message]
+
+  def valid?(request) do
+    Validate.Helpers.validate(request, non_nil: @not_nil)
+  end
+end
+
+############################################################
+#                       Advertising                          #
+############################################################
+
+defimpl Validate,
+  for: [Anoma.Proto.Advertisement.Advertise.Request] do
+  @not_nil [:node, :remote_node]
+
+  def valid?(request) do
+    Validate.Helpers.validate(request, non_nil: @not_nil)
+  end
+end
+
+############################################################
+#                       Pubsub                             #
+############################################################
+
+defimpl Validate, for: [Anoma.Proto.PubSub.Unsubscribe.Request] do
+  @not_nil [:node, :topic, :subscriber]
+
+  def valid?(request) do
+    Validate.Helpers.validate(request, non_nil: @not_nil)
+  end
+end
+
 # catch all for other types
 defimpl Validate, for: Any do
   def valid?(_value) do
