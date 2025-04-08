@@ -5013,17 +5013,4 @@ defmodule Nock.Lib do
   def rm_core do
     @rm_core_val
   end
-
-  # temporarily stubbed out
-  logics_string = """
-  [123 456]
-  """
-
-  # evaluated at compile time.
-  @logics_core_val [Noun.Format.parse_always(logics_string) | @rm_core_val]
-
-  @spec logics_core :: Noun.t()
-  def logics_core do
-    @logics_core_val
-  end
 end
