@@ -112,26 +112,16 @@ defmodule Nock.Jets do
     |> Noun.mug()
   end
 
-  @spec calculate_mug_of_param_layer(non_neg_integer(), non_neg_integer()) ::
-          non_neg_integer()
-  @doc """
-  Like `calculate_mug_of_layer/1` except we work over a parameterized core.
-
-  ### Example
-
-      > Nock.Jets.calculate_mug_of_param_layer(10, 4)
-      11284470320276584209
-  """
-  def calculate_mug_of_param_layer(core_index, parent_layer) do
-    core_index |> calculate_param_layer(parent_layer) |> Noun.mug()
-  end
-
   @doc """
   I find the door cores, i.e. parametrized layers.
   """
-  @spec calculate_param_layer(non_neg_integer(), non_neg_integer) :: Noun.t()
-  def calculate_param_layer(core_index, parent_layer) do
-    with core <- calculate_core_param(core_index, 4, parent_layer),
+  @spec calculate_param_layer(
+          non_neg_integer(),
+          non_neg_integer(),
+          non_neg_integer
+        ) :: Noun.t()
+  def calculate_param_layer(core_index, door_index, parent_layer) do
+    with core <- calculate_core_param(core_index, door_index, parent_layer),
          {:ok, parent} <- Noun.axis(14, core) do
       parent
     end
@@ -175,6 +165,54 @@ defmodule Nock.Jets do
            ]) do
       res
     end
+  end
+
+  @spec generate_registry(
+          %{
+            atom() => %{
+              :index => non_neg_integer(),
+              :label => non_neg_integer,
+              optional(:door) => non_neg_integer
+            }
+          },
+          list(
+            {atom(), (Noun.t() -> {:ok, Noun.t()} | :error),
+             :enabled | :disabled | :check, non_neg_integer()}
+          )
+        ) :: map()
+  def generate_registry(index_map, list) do
+    Enum.into(list, %{}, fn {name, jet, status, gas} ->
+      map_value = Map.get(index_map, name)
+
+      core_calculations =
+        if Map.has_key?(map_value, :door) do
+          %{
+            :logic =>
+              calculate_core_param(
+                map_value.index,
+                map_value.door,
+                map_value.layer
+              ),
+            :parent =>
+              calculate_param_layer(
+                map_value.index,
+                map_value.door,
+                map_value.layer
+              ),
+            :parent_index => 14
+          }
+        else
+          %{
+            :logic => calculate_core(map_value.index, map_value.layer),
+            :parent => calculate_layer(map_value.layer),
+            :parent_index => 7
+          }
+        end
+
+      {core_calculations.logic |> hd(),
+       {Atom.to_string(name), core_calculations.parent_index,
+        core_calculations.parent, jet, status, gas}}
+    end)
   end
 
   @spec layer_offset(non_neg_integer) :: non_neg_integer
