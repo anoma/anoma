@@ -1,14 +1,138 @@
 defmodule Anoma.Client.Web.IndexerController do
   use Anoma.Client.Web, :controller
-  # use OpenApiSpex.ControllerSpecs
+  use OpenApiSpex.ControllerSpecs
 
   action_fallback(Anoma.Client.Web.FallbackController)
 
   alias Anoma.Client.Node.GRPCProxy
+  alias Anoma.Client.Web.IndexerController.Spec
+  alias OpenApiSpex.Schema
 
   ############################################################
   #                           OpenAPI Spec                   #
   ############################################################
+
+  tags(["Indexer"])
+
+  operation(:list_nullifiers,
+    summary: "List all nullifiers",
+    parameters: [],
+    request_body: {},
+    responses: [
+      ok: {"List of all nullifiers", "application/json", Spec.Nullifiers}
+    ]
+  )
+
+  operation(:list_unrevealed_commits,
+    summary: "List all unrevealed commits",
+    parameters: [],
+    request_body: {},
+    responses: [
+      ok:
+        {"List of all unrevealed commits", "application/json",
+         Spec.UnrevealedCommits}
+    ]
+  )
+
+  operation(:list_commits,
+    summary: "List all commits",
+    parameters: [],
+    request_body: {},
+    responses: [
+      ok: {"List of all unrevealed commits", "application/json", Spec.Commits}
+    ]
+  )
+
+  operation(:list_unspent_resources,
+    summary: "List all unspent resources",
+    parameters: [],
+    request_body: {},
+    responses: [
+      ok:
+        {"List of unspent resources", "application/json",
+         Spec.UnspentResources}
+    ]
+  )
+
+  operation(:get_blocks,
+    summary: "List all blocks",
+    parameters: [],
+    request_body:
+      {"The parameters for the blocks", "application/json",
+       %Schema{
+         type: :object,
+         properties: %{
+           direction: %Schema{
+             type: :string,
+             description: "before or after offset",
+             default: "before",
+             enum: ["before", "after"]
+           },
+           offset: %Schema{
+             type: :integer,
+             description: "offset of blocks",
+             default: 0,
+             minimum: 0
+           }
+         }
+       }},
+    responses: [
+      ok: {"List of blocks", "application/json", Spec.Blocks}
+    ]
+  )
+
+  operation(:get_latest_block,
+    summary: "List latest block",
+    parameters: [],
+    request_body: {},
+    responses: [
+      ok:
+        {"A block", "application/json",
+         %Schema{
+           type: :object,
+           properties: %{
+             block: Spec.Block
+           }
+         }}
+    ]
+  )
+
+  operation(:root,
+    summary: "Get root",
+    parameters: [],
+    request_body: {},
+    responses: [
+      ok:
+        {"The root hash of the chain", "application/json",
+         %Schema{
+           type: :object,
+           properties: %{
+             root: %Schema{
+               type: :string
+             }
+           }
+         }}
+    ]
+  )
+
+  operation(:filter_resource,
+    summary: "Filter resources",
+    parameters: [],
+    request_body: {},
+    responses: [
+      ok:
+        {"List of filters to apply", "application/json",
+         %Schema{
+           type: :object,
+           properties: %{
+             filters: %Schema{
+               type: :array,
+               items: Spec.Filter
+             }
+           }
+         }}
+    ]
+  )
 
   ############################################################
   #                          Actions                         #
@@ -79,7 +203,7 @@ defmodule Anoma.Client.Web.IndexerController do
 
   @doc """
   """
-  def filter_resource(conn,  %{"filters" => filters}) do
+  def filter_resource(conn, %{"filters" => filters}) do
     with filters <- parse_filters(filters),
          {:ok, resources} <- GRPCProxy.filter(filters) do
       render(conn, "binaries.json", resources: resources)

@@ -171,7 +171,8 @@ defmodule Anoma.Client.Node.GRPCProxy do
   end
 
   @spec get_latest_block() ::
-  {:ok, RPC.block() | nil} | {:error, :failed_to_get_block, String.t()}
+          {:ok, RPC.block() | nil}
+          | {:error, :failed_to_get_block, String.t()}
   def get_latest_block() do
     GenServer.call(__MODULE__, :get_latest_block)
   end
