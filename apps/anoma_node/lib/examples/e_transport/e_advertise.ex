@@ -217,15 +217,21 @@ defmodule Anoma.Node.Examples.EAdvertise do
       end
     end
 
-    # set the grpc port to our port + 1
+    # set the grpc ports and http ports of the remote node to be 1 higher than ours.
     my_grpc_port = Application.get_env(:anoma_node, :grpc_port)
 
-    :rpc.block_call(node, Application, :put_env, [
-      :anoma_node,
-      :grpc_port,
-      my_grpc_port + 1
+    :rpc.block_call(node, Application, :put_all_env, [
+      [
+        anoma_node: [grpc_port: my_grpc_port + 1],
+        anoma_client: [
+          {:grpc_port, 40052},
+          {Anoma.Client.Web.Endpoint, [http: [port: 4001]]},
+          {Anoma.Client.Web.SocketHandler, [port: 3001]}
+        ]
+      ]
     ])
 
+    #
     # ensure mix is started
     :rpc.block_call(node, Application, :ensure_all_started, [:mix])
 

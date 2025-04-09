@@ -25,7 +25,6 @@ defmodule Anoma.Node.Examples.EReplay do
     ENode.start_node(node_id: enode.node_id)
   end
 
-
   @doc """
   I execute replay on a node that has a transaction in its mempool.
   """

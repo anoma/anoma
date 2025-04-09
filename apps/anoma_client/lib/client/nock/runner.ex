@@ -1,6 +1,9 @@
 defmodule Anoma.Client.Runner do
+  @moduledoc """
+  I contain logic to run nock code.
+  """
+  alias Anoma.Client.Node.GRPCProxy
   alias Anoma.Client.Storage
-  alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.RM.Transparent.Transaction
 
   @doc """
@@ -151,16 +154,15 @@ defmodule Anoma.Client.Runner do
   defp send_candidate(space) do
     tx_candidate = space |> ro_tx_candidate() |> Noun.Jam.jam()
 
-    with {:ok, reply} <-
-           tx_candidate |> GRPCProxy.add_read_only_transaction() do
-      case reply.result do
-        {:success, res} ->
-          value = res.result |> Noun.Jam.cue!()
-          {:ok, value}
+    case GRPCProxy.add_read_only_transaction(tx_candidate) do
+      {:ok, noun} ->
+        {:ok, noun}
 
-        _ ->
-          :error
-      end
+      {:error, _, _} ->
+        :error
+
+      {:error, :absent} ->
+        :error
     end
   end
 end

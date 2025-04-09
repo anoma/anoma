@@ -182,6 +182,18 @@ defimpl Validate, for: Anoma.Proto.Mempool.Transaction do
 end
 
 ############################################################
+#                       Read-Only Transaction              #
+############################################################
+
+defimpl Validate, for: [Anoma.Proto.Executor.AddROTransaction] do
+  @not_nil [:node, :transaction]
+
+  def valid?(request) do
+    Validate.Helpers.validate(request, non_nil: @not_nil)
+  end
+end
+
+############################################################
 #                       Intranode                          #
 ############################################################
 
