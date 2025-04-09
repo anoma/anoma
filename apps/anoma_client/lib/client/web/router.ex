@@ -46,4 +46,17 @@ defmodule Anoma.Client.Web.Router do
 
     post("/", SubscribeController, :subscribe)
   end
+
+  scope "/indexer", Anoma.Client.Web do
+    pipe_through(:api)
+
+    get("/nullifiers", IndexerController, :list_nullifiers)
+    get("/unrevealed-commits", IndexerController, :list_unrevealed_commits)
+    get("/commits", IndexerController, :list_commits)
+    get("/unspent-resources", IndexerController, :list_unspent_resources)
+    get("/blocks", IndexerController, :get_blocks)
+    get("/latest-block", IndexerController, :get_latest_block)
+    get("/root", IndexerController, :root)
+    get("/filter-resources", IndexerController, :filter_resource)
+  end
 end

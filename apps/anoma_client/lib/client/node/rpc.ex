@@ -19,6 +19,17 @@ defmodule Anoma.Client.Node.RPC do
   alias Anoma.Proto.PubSub.Topic
   alias Anoma.Proto.PubSubService
 
+  alias Anoma.Proto.Indexer.Commits
+  alias Anoma.Proto.Indexer.Filter
+  alias Anoma.Proto.Indexer.FilterResource
+  alias Anoma.Proto.Indexer.GetBlock
+  alias Anoma.Proto.Indexer.LatestBlock
+  alias Anoma.Proto.Indexer.Nullifiers
+  alias Anoma.Proto.Indexer.RootBlock
+  alias Anoma.Proto.Indexer.UnrevealedCommits
+  alias Anoma.Proto.Indexer.UnspentResources
+  alias Anoma.Proto.IndexerService
+
   @doc """
   I advertise to a remote node about my existence, and how it can reach me.
   """
@@ -169,6 +180,180 @@ defmodule Anoma.Client.Node.RPC do
 
       {:error, %{status: _, message: err}} ->
         {:error, :subscribe_failed, err}
+    end
+  end
+
+  # ----------------------------------------------------------------------------
+  # Testnet
+
+  @type block :: %{
+          height: non_neg_integer,
+          transactions: [transaction()]
+        }
+
+  @type transaction :: %{code: binary(), result: {:success, binary()}}
+
+  @spec list_nullifiers(any(), String.t()) ::
+          {:ok, [binary()]} | {:error, :failed_to_list_nullifiers, String.t()}
+  def list_nullifiers(channel, node_id) do
+    node_info = %Node{id: node_id}
+
+    request = %Nullifiers.Request{node: node_info}
+
+    case IndexerService.Stub.list_nullifiers(channel, request) do
+      {:ok, %{nullifiers: nullifiers}} ->
+        {:ok, nullifiers}
+
+      {:error, %{status: _, message: err}} ->
+        {:error, :failed_to_list_nullifiers, err}
+    end
+  end
+
+  @spec list_unrevealed_commits(any(), String.t()) ::
+          {:ok, [binary()]}
+          | {:error, :failed_to_list_unrevealed_commits, String.t()}
+  def list_unrevealed_commits(channel, node_id) do
+    node_info = %Node{id: node_id}
+
+    request = %UnrevealedCommits.Request{node: node_info}
+
+    case IndexerService.Stub.list_unrevealed_commits(channel, request) do
+      {:ok, %{commits: commits}} ->
+        {:ok, commits}
+
+      {:error, %{status: _, message: err}} ->
+        {:error, :failed_to_list_unrevealed_commits, err}
+    end
+  end
+
+  @spec list_commits(any(), String.t()) ::
+          {:ok, [non_neg_integer()]}
+          | {:error, :failed_to_list_commits, String.t()}
+  def list_commits(channel, node_id) do
+    node_info = %Node{id: node_id}
+
+    request = %Commits.Request{node: node_info}
+
+    case IndexerService.Stub.list_commits(channel, request) do
+      {:ok, %{commits: commits}} ->
+        commits = Enum.map(commits, &:binary.decode_unsigned(&1))
+        {:ok, commits}
+
+      {:error, %{status: _, message: err}} ->
+        {:error, :failed_to_list_commits, err}
+    end
+  end
+
+  @spec list_unspent_resources(any(), String.t()) ::
+          {:ok, [binary()]}
+          | {:error, :failed_to_list_unspent_resources, String.t()}
+  def list_unspent_resources(channel, node_id) do
+    node_info = %Node{id: node_id}
+
+    request = %UnspentResources.Request{node: node_info}
+
+    case IndexerService.Stub.list_unspent_resources(channel, request) do
+      {:ok, %{unspent_resources: unspent_resources}} ->
+        {:ok, unspent_resources}
+
+      {:error, %{status: _, message: err}} ->
+        {:error, :failed_to_list_unspent_resources, err}
+    end
+  end
+
+  @spec get_blocks(any(), String.t(), :before | :after, non_neg_integer()) ::
+          {:ok, [block()]} | {:error, :failed_to_get_blocks, String.t()}
+  def get_blocks(channel, node_id, direction, offset) do
+    node_info = %Node{id: node_id}
+
+    request = %GetBlock.Request{node: node_info, index: {direction, offset}}
+
+    case IndexerService.Stub.get_block(channel, request) do
+      {:ok, %{blocks: blocks}} ->
+        blocks =
+          blocks
+          |> Enum.map(fn block ->
+            %{
+              height: block.height,
+              transactions:
+                Enum.map(block.transactions, fn t ->
+                  %{code: t.code, result: t.result}
+                end)
+            }
+          end)
+
+        {:ok, blocks}
+
+      {:error, %{status: _, message: err}} ->
+        {:error, :failed_to_get_blocks, err}
+    end
+  end
+
+  @spec latest_block(any(), String.t()) ::
+          {:ok, block() | nil} | {:error, :failed_to_get_block, String.t()}
+
+  def latest_block(channel, node_id) do
+    node_info = %Node{id: node_id}
+    request = %LatestBlock.Request{node: node_info}
+
+    case IndexerService.Stub.latest_block(channel, request) do
+      {:ok, %{block: nil}} ->
+        {:ok, nil}
+
+      {:ok, %{block: block}} ->
+        block = %{
+          height: block.height,
+          transactions:
+            Enum.map(block.transactions, fn t ->
+              %{code: t.code, result: t.result}
+            end)
+        }
+
+        {:ok, block}
+
+      {:error, %{status: _, message: err}} ->
+        {:error, :failed_to_get_block, err}
+    end
+  end
+
+  @spec root_block(any(), String.t()) ::
+          {:ok, binary()} | {:error, :failed_to_get_root, String.t()}
+  def root_block(channel, node_id) do
+    node_info = %Node{id: node_id}
+    request = %RootBlock.Request{node: node_info}
+
+    case IndexerService.Stub.root_block(channel, request) do
+      {:ok, %{root: root}} ->
+        {:ok, root}
+
+      {:error, %{status: _, message: err}} ->
+        {:error, :failed_to_get_root, err}
+    end
+  end
+
+  @spec filter(any(), String.t(), [{:owner | :kind, binary()}]) ::
+          {:ok, [binary()]}
+          | {:error, :failed_to_filter_resources, String.t()}
+  def filter(channel, node_id, filters) do
+    # encode the filters
+    filters =
+      Enum.map(filters, fn
+        {:owner, owner} ->
+          %Filter{filter: {:owner, owner}}
+
+        {:kind, kind} ->
+          %Filter{filter: {:kind, kind}}
+      end)
+
+    node_info = %Node{id: node_id}
+    request = %FilterResource.Request{node: node_info, filters: filters}
+
+    case IndexerService.Stub.filter_resource(channel, request) do
+      {:ok, %{resources: resources}} ->
+        {:ok, resources}
+
+      {:error, %{status: _, message: err}} ->
+        {:error, :failed_to_filter_resources, err}
     end
   end
 end
