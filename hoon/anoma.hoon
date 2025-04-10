@@ -1367,4 +1367,23 @@
   $(a r.a, b [q.n.a $(a l.a)])
   --
 --
+::  layer 12: cryptographic hashes
+~%  %twelve  +  ~
+|%
+++  secp256k1-sign
+  ~/  %secp256k1-sign
+  |=  [a=@I b=@I]
+  =+  c=%secp256k1-sign
+  ^?  [@ @ @]
+++  secp256k1-verify
+  ~/  %secp256k1-verify
+  |=  [@I @I @I]
+  =+  c=%secp256k1-verify
+  ^?  ?
+++  secp256k1-pub-key
+  ~/  %secp256k1-pub-key
+  |=  @I
+  =+  c=%secp256k1-pub-key
+  ^?  @I
+--
 ==
