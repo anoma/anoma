@@ -196,4 +196,10 @@ defmodule Nock.Jets.Mugs do
   """
   @spec jet_registry() :: map()
   def jet_registry, do: @jet_registry
+
+  @doc """
+  I provide the index map
+  """
+  @spec index_map() :: map()
+  def index_map, do: @index_map
 end
