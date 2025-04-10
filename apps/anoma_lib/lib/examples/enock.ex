@@ -8,6 +8,7 @@ defmodule Examples.ENock do
   alias Examples.ETransparent.EAction
   alias Examples.ETransparent.EResource
   alias Examples.ETransparent.ETransaction
+  alias Nock.Jets.Mugs
 
   require ExUnit.Assertions
 
@@ -197,9 +198,11 @@ defmodule Examples.ENock do
   """
   @spec dec_arm() :: Noun.t()
   def dec_arm() do
-    layer_depth = example_layer_depth(1)
+    arm_info = Mugs.index_map().dec
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 342 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -234,9 +237,11 @@ defmodule Examples.ENock do
 
   @spec cue_arm() :: Noun.t()
   def cue_arm() do
-    layer_depth = example_layer_depth(5)
+    arm_info = Mugs.index_map().cue
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 94 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -260,9 +265,11 @@ defmodule Examples.ENock do
 
   @spec jam_arm() :: Noun.t()
   def jam_arm() do
-    layer_depth = example_layer_depth(5)
+    arm_info = Mugs.index_map().jam
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -286,9 +293,11 @@ defmodule Examples.ENock do
 
   @spec sign_arm() :: Noun.t()
   def sign_arm() do
-    layer_depth = example_layer_depth(6)
+    arm_info = Mugs.index_map().sign
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 10 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -318,9 +327,11 @@ defmodule Examples.ENock do
 
   @spec verify_arm() :: Noun.t()
   def verify_arm() do
-    layer_depth = example_layer_depth(6)
+    arm_info = Mugs.index_map().verify
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -356,9 +367,11 @@ defmodule Examples.ENock do
 
   @spec sign_detatched_arm() :: Noun.t()
   def sign_detatched_arm() do
-    layer_depth = example_layer_depth(6)
+    arm_info = Mugs.index_map().sign_detatched
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 23 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -388,9 +401,11 @@ defmodule Examples.ENock do
 
   @spec verify_detatched_arm() :: Noun.t()
   def verify_detatched_arm() do
-    layer_depth = example_layer_depth(6)
+    arm_info = Mugs.index_map().verify_detatched
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -449,9 +464,11 @@ defmodule Examples.ENock do
 
   @spec bex_arm() :: Noun.t()
   def bex_arm() do
-    layer_depth = example_layer_depth(4)
+    arm_info = Mugs.index_map().bex
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -487,9 +504,11 @@ defmodule Examples.ENock do
 
   @spec mix_arm() :: Noun.t()
   def mix_arm() do
-    layer_depth = example_layer_depth(5)
+    arm_info = Mugs.index_map().mix
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -521,9 +540,11 @@ defmodule Examples.ENock do
 
   @spec mat_arm() :: Noun.t()
   def mat_arm() do
-    layer_depth = example_layer_depth(5)
+    arm_info = Mugs.index_map().mat
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 43 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -548,9 +569,11 @@ defmodule Examples.ENock do
 
   @spec shax_arm() :: Noun.t()
   def shax_arm() do
-    layer_depth = example_layer_depth(7)
+    arm_info = Mugs.index_map().shax
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -588,10 +611,13 @@ defmodule Examples.ENock do
 
   @spec raw_arm() :: Noun.t()
   def raw_arm() do
-    layer_depth = example_layer_depth(7)
+    arm_info = Mugs.index_map().raw
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+    door_index = arm_info.door
 
     arm =
-      "[8 [8 [9 47 0 #{layer_depth}] 9 23 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 #{door_index} 0 #{layer_depth}] 9 #{arm_index} 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
@@ -627,10 +653,13 @@ defmodule Examples.ENock do
 
   @spec raws_arm() :: Noun.t()
   def raws_arm() do
-    layer_depth = example_layer_depth(7)
+    arm_info = Mugs.index_map().raws
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+    door_index = arm_info.door
 
     arm =
-      "[8 [8 [9 47 0 #{layer_depth}] 9 4 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 #{door_index} 0 #{layer_depth}] 9 #{arm_index} 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
@@ -667,10 +696,13 @@ defmodule Examples.ENock do
 
   @spec rad_arm() :: Noun.t()
   def rad_arm() do
-    layer_depth = example_layer_depth(7)
+    arm_info = Mugs.index_map().rad
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+    door_index = arm_info.door
 
     arm =
-      "[8 [8 [9 47 0 #{layer_depth}] 9 20 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 #{door_index} 0 #{layer_depth}] 9 #{arm_index} 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
@@ -708,10 +740,13 @@ defmodule Examples.ENock do
 
   @spec rads_arm() :: Noun.t()
   def rads_arm() do
-    layer_depth = example_layer_depth(7)
+    arm_info = Mugs.index_map().rads
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+    door_index = arm_info.door
 
     arm =
-      "[8 [8 [9 47 0 #{layer_depth}] 9 22 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 #{door_index} 0 #{layer_depth}] 9 #{arm_index} 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
@@ -744,9 +779,11 @@ defmodule Examples.ENock do
 
   @spec abs_arm() :: Noun.t()
   def abs_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().abs
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 1.515 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -787,9 +824,11 @@ defmodule Examples.ENock do
   """
   @spec dif_arm() :: Noun.t()
   def dif_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().dif_8
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 759 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -825,9 +864,11 @@ defmodule Examples.ENock do
   """
   @spec dul_arm() :: Noun.t()
   def dul_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().dul
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -868,9 +909,11 @@ defmodule Examples.ENock do
   """
   @spec fra_arm() :: Noun.t()
   def fra_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().fra
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 190 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -916,9 +959,11 @@ defmodule Examples.ENock do
   """
   @spec new_arm() :: Noun.t()
   def new_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().new
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 758 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -954,9 +999,11 @@ defmodule Examples.ENock do
   """
   @spec old_arm() :: Noun.t()
   def old_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().old
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 756 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -992,9 +1039,11 @@ defmodule Examples.ENock do
   """
   @spec pro_arm() :: Noun.t()
   def pro_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().pro
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 46 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1030,9 +1079,11 @@ defmodule Examples.ENock do
   """
   @spec rem_arm() :: Noun.t()
   def rem_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().rem
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 6.058 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1078,9 +1129,11 @@ defmodule Examples.ENock do
   """
   @spec sum_arm() :: Noun.t()
   def sum_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().sum
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1105,9 +1158,11 @@ defmodule Examples.ENock do
 
   @spec sun_arm() :: Noun.t()
   def sun_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().sun
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 10 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1127,9 +1182,11 @@ defmodule Examples.ENock do
 
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().syn
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 188 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1170,9 +1227,11 @@ defmodule Examples.ENock do
   """
   @spec cmp_arm() :: Noun.t()
   def cmp_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().cmp
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 191 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1218,9 +1277,11 @@ defmodule Examples.ENock do
   """
   @spec mug_arm() :: Noun.t()
   def mug_arm() do
-    layer_depth = example_layer_depth(9)
+    arm_info = Mugs.index_map().mug
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 189 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1273,9 +1334,11 @@ defmodule Examples.ENock do
   """
   @spec dor_arm() :: Noun.t()
   def dor_arm() do
-    layer_depth = example_layer_depth(9)
+    arm_info = Mugs.index_map().dor
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 765 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1324,9 +1387,11 @@ defmodule Examples.ENock do
   """
   @spec gor_arm() :: Noun.t()
   def gor_arm() do
-    layer_depth = example_layer_depth(9)
+    arm_info = Mugs.index_map().gor
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 190 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1370,9 +1435,11 @@ defmodule Examples.ENock do
   """
   @spec mor_arm() :: Noun.t()
   def mor_arm() do
-    layer_depth = example_layer_depth(9)
+    arm_info = Mugs.index_map().mor
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 10 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1416,9 +1483,11 @@ defmodule Examples.ENock do
   """
   @spec lte_arm() :: Noun.t()
   def lte_arm() do
-    layer_depth = example_layer_depth(1)
+    arm_info = Mugs.index_map().lte
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 84 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1453,9 +1522,11 @@ defmodule Examples.ENock do
   """
   @spec silt_arm() :: Noun.t()
   def silt_arm() do
-    layer_depth = example_layer_depth(10)
+    arm_info = Mugs.index_map().silt
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1490,10 +1561,13 @@ defmodule Examples.ENock do
   """
   @spec in_arm() :: Noun.t()
   def in_arm() do
-    layer_depth = example_layer_depth(10)
+    # just get the index of any arm in the door, e.g. put
+    arm_info = Mugs.index_map().put_10
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.door
 
     arm =
-      "[8 [9 21 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      "[8 [9 #{arm_index} 0 #{layer_depth}] 10 [6 0 14] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = 0
@@ -1517,8 +1591,11 @@ defmodule Examples.ENock do
   """
   @spec put_with_core() :: Noun.t()
   def put_with_core() do
+    arm_info = Mugs.index_map().put_10
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 84 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
@@ -1567,8 +1644,11 @@ defmodule Examples.ENock do
   """
   @spec wyt_with_core() :: Noun.t()
   def wyt_with_core() do
+    arm_info = Mugs.index_map().wyt
+    arm_index = arm_info.index
+
     arm =
-      "[7 [0 6] 9 92 0 1]"
+      "[7 [0 6] 9 #{arm_index} 0 1]"
       |> Noun.Format.parse_always()
 
     sample = 0
@@ -1601,8 +1681,11 @@ defmodule Examples.ENock do
   """
   @spec tap_in_with_core() :: Noun.t()
   def tap_in_with_core() do
+    arm_info = Mugs.index_map().tap
+    arm_index = arm_info.index
+
     arm =
-      "[7 [0 6] 9 186 0 1]"
+      "[7 [0 6] 9 #{arm_index} 0 1]"
       |> Noun.Format.parse_always()
 
     sample = 0
@@ -1638,8 +1721,11 @@ defmodule Examples.ENock do
   """
   @spec int_with_core() :: Noun.t()
   def int_with_core() do
+    arm_info = Mugs.index_map().int
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 85 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
@@ -1681,8 +1767,11 @@ defmodule Examples.ENock do
   """
   @spec dif_with_core() :: Noun.t()
   def dif_with_core() do
+    arm_info = Mugs.index_map().dif_10
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 175 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
@@ -1724,8 +1813,11 @@ defmodule Examples.ENock do
   """
   @spec has_with_core() :: Noun.t()
   def has_with_core() do
+    arm_info = Mugs.index_map().has
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 762 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
@@ -1761,8 +1853,11 @@ defmodule Examples.ENock do
   """
   @spec uni_with_core() :: Noun.t()
   def uni_with_core() do
+    arm_info = Mugs.index_map().uni
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 174 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
@@ -1804,8 +1899,11 @@ defmodule Examples.ENock do
   """
   @spec duni_with_core() :: Noun.t()
   def duni_with_core() do
+    arm_info = Mugs.index_map().duni
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 763 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
@@ -1849,10 +1947,13 @@ defmodule Examples.ENock do
   """
   @spec by_arm() :: Noun.t()
   def by_arm() do
-    layer_depth = example_layer_depth(11)
+    # just take any arm in the foor, e.g. put
+    arm_info = Mugs.index_map().put_11
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.door
 
     arm =
-      "[8 [9 93 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      "[8 [9 #{arm_index} 0 #{layer_depth}] 10 [6 0 14] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = 0
@@ -1876,8 +1977,11 @@ defmodule Examples.ENock do
   """
   @spec mput_with_core() :: Noun.t()
   def mput_with_core() do
+    arm_info = Mugs.index_map().put_11
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 340 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
@@ -1916,8 +2020,11 @@ defmodule Examples.ENock do
   """
   @spec got_with_core() :: Noun.t()
   def got_with_core() do
+    arm_info = Mugs.index_map().got
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 701 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
@@ -1979,9 +2086,11 @@ defmodule Examples.ENock do
   end
 
   def kind_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().kind
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 11956 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2005,9 +2114,11 @@ defmodule Examples.ENock do
   end
 
   def delta_add_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().delta_add
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 746 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2031,9 +2142,11 @@ defmodule Examples.ENock do
   end
 
   def delta_sub_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().delta_sub
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 12013 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2059,7 +2172,10 @@ defmodule Examples.ENock do
   end
 
   def zero_delta_arm() do
-    "[9 348 0 7]" |> Noun.Format.parse_always()
+    arm_info = Mugs.index_map().zero_delta
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+    "[9 #{arm_index} 0 #{layer_depth}]" |> Noun.Format.parse_always()
   end
 
   def zero_delta_call() do
@@ -2077,9 +2193,11 @@ defmodule Examples.ENock do
   end
 
   def resource_delta_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().resource_delta
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 1397 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2099,9 +2217,11 @@ defmodule Examples.ENock do
   end
 
   def action_delta_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().action_delta
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2122,9 +2242,11 @@ defmodule Examples.ENock do
   end
 
   def make_delta_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().make_delta
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 23919 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2145,9 +2267,11 @@ defmodule Examples.ENock do
   end
 
   def commitment_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().commitment
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 3002 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2167,9 +2291,11 @@ defmodule Examples.ENock do
   end
 
   def is_commitment_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().is_commitment
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 12012 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2200,9 +2326,11 @@ defmodule Examples.ENock do
   end
 
   def nullifier_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().nullifier
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 5599 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2222,9 +2350,11 @@ defmodule Examples.ENock do
   end
 
   def is_nullifier_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().is_nullifier
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 11958 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2255,9 +2385,11 @@ defmodule Examples.ENock do
   end
 
   def action_create_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().action_create
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 766 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2303,9 +2435,11 @@ defmodule Examples.ENock do
   end
 
   def t_compose_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().t_compose
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 767 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2326,9 +2460,11 @@ defmodule Examples.ENock do
   end
 
   def secp_sign_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().secp256k1_sign
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 190 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2350,9 +2486,11 @@ defmodule Examples.ENock do
   end
 
   def secp_public_key_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().secp256k1_pub_key
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 372 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2371,9 +2509,11 @@ defmodule Examples.ENock do
   end
 
   def secp_verify_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().secp256k1_verify
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 175 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -2408,7 +2548,9 @@ defmodule Examples.ENock do
 
   @spec lsh(Noun.t()) :: Noun.t()
   def lsh(value) do
-    block_calling_biop(value, 90)
+    arm_info = Mugs.index_map().lsh
+    arm_index = arm_info.index
+    block_calling_biop(value, arm_index)
   end
 
   @doc """
@@ -2420,7 +2562,9 @@ defmodule Examples.ENock do
 
   @spec met(Noun.t()) :: Noun.t()
   def met(value) do
-    block_calling_mono(value, 190)
+    arm_info = Mugs.index_map().met
+    arm_index = arm_info.index
+    block_calling_mono(value, arm_index)
   end
 
   @doc """
@@ -2432,7 +2576,9 @@ defmodule Examples.ENock do
 
   @spec uend(Noun.t()) :: Noun.t()
   def uend(value) do
-    block_calling_biop(value, 367)
+    arm_info = Mugs.index_map().end
+    arm_index = arm_info.index
+    block_calling_biop(value, arm_index)
   end
 
   @doc """
@@ -2444,7 +2590,9 @@ defmodule Examples.ENock do
 
   @spec rsh(Noun.t()) :: Noun.t()
   def rsh(value) do
-    block_calling_biop(value, 767)
+    arm_info = Mugs.index_map().rsh
+    arm_index = arm_info.index
+    block_calling_biop(value, arm_index)
   end
 
   @doc """
@@ -2677,10 +2825,13 @@ defmodule Examples.ENock do
   """
   @spec og_arm() :: Noun.t()
   def og_arm() do
-    layer_depth = example_layer_depth(7)
+    # get a random arm inside the door, e.g. raw
+    arm_info = Mugs.index_map().raw
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.door
 
     arm =
-      "[8 [9 47 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      "[8 [9 #{arm_index} 0 #{layer_depth}] 10 [6 0 14] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = 0
@@ -2704,8 +2855,11 @@ defmodule Examples.ENock do
   """
   @spec raws_with_core() :: Noun.t()
   def raws_with_core() do
+    arm_info = Mugs.index_map().raws
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 4 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
@@ -2738,7 +2892,9 @@ defmodule Examples.ENock do
   """
   @spec split_arm() :: Noun.t()
   def split_arm() do
-    arm = "[7 [0 6] 9 21 0 1]" |> Noun.Format.parse_always()
+    arm_info = Mugs.index_map().split
+    arm_index = arm_info.index
+    arm = "[7 [0 6] 9 #{arm_index} 0 1]" |> Noun.Format.parse_always()
     sample = 0
     [arm, sample | Nock.Lib.rm_core()]
   end
@@ -2829,11 +2985,15 @@ defmodule Examples.ENock do
     # finally check how the door inputs its block-size by evaluating
     # =>  resource-machine  !=(~(gate block val))
     # with different values
-    layer_depth = example_layer_depth(4)
+
+    # take an arbitrary arm in the door e.g. met
+    arm_info = Mugs.index_map().met
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.door
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 #{layer_depth}] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
+        "[8 [8 [9 #{arm_index} 0 #{layer_depth}] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
       )
 
     sample = [999 | 888]
@@ -2852,11 +3012,15 @@ defmodule Examples.ENock do
     # finally check how the door inputs its block-size by evaluating
     # =>  resource-machine  !=(~(gate block val))
     # with different values
-    layer_depth = example_layer_depth(4)
+
+    # take an arbitrary arm in the door e.g. met
+    arm_info = Mugs.index_map().met
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.door
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 #{layer_depth}] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
+        "[8 [8 [9 #{arm_index} 0 #{layer_depth}] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
       )
 
     sample = 999
