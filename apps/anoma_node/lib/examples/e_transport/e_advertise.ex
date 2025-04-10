@@ -10,6 +10,28 @@ defmodule Anoma.Node.Examples.EAdvertise do
 
   require Logger
 
+  use TypedStruct
+
+  ############################################################
+  #                    Context                               #
+  ############################################################
+
+  typedstruct module: Peer do
+    @typedoc """
+    I am a peer node.
+
+    ### Fields
+    - `:name`       - The name of the remote node.
+    - `:server_ref` - The server ref pid of this node.
+    """
+    field(:name, atom())
+    field(:server_ref, pid())
+  end
+
+  ############################################################
+  #                  Public API                              #
+  ############################################################
+
   # @doc """
   # I create a config for a node based on its node id.
   #
@@ -84,7 +106,7 @@ defmodule Anoma.Node.Examples.EAdvertise do
 
   I work but i break other tests, so I'm disabled in apps/anoma_node/test/advertise_test.exs
   """
-  @spec seed_nodes_distributed(Keyword.t()) :: {map(), map(), atom()}
+  @spec seed_nodes_distributed(Keyword.t()) :: {map(), map(), Peer.t()}
   def seed_nodes_distributed(opts \\ [stop_slave: true]) do
     cfg_local = node_config()
 
@@ -97,14 +119,14 @@ defmodule Anoma.Node.Examples.EAdvertise do
     cfg_remote =
       node_config(%{seed_nodes: %{cfg_local.node_id => local_info}})
       # the grpc port of the slave is ours + 1 (see start_slave())
-      |> Map.update!(:grpc_port, &(&1 + 1))
+      |> Map.update!(:grpc_port, &(&1 + 1500))
 
     # start a second vm
-    slave = start_slave()
+    peer = start_slave()
 
     # start a node on the second vm
     args = [node_config: cfg_remote, node_id: cfg_remote.node_id]
-    :rpc.block_call(slave, ENode, :start_node, [args])
+    :rpc.block_call(peer.name, ENode, :start_node, [args])
 
     # assert that the local node knows about the remote node
     assert_eventually(fn ->
@@ -122,7 +144,7 @@ defmodule Anoma.Node.Examples.EAdvertise do
     # assert that the other node knows this node
     assert_eventually(fn ->
       remote_register =
-        :rpc.block_call(slave, NetworkRegister, :dump_register, [
+        :rpc.block_call(peer.name, NetworkRegister, :dump_register, [
           cfg_remote.node_id
         ])
 
@@ -136,11 +158,11 @@ defmodule Anoma.Node.Examples.EAdvertise do
     end)
 
     if Keyword.get(opts, :stop_slave, true) do
-      stop_slave(slave)
+      stop_slave(peer)
     end
 
     # return the nodes
-    {cfg_local, cfg_remote, slave}
+    {cfg_local, cfg_remote, peer}
   end
 
   @doc """
@@ -149,13 +171,14 @@ defmodule Anoma.Node.Examples.EAdvertise do
   Stopping the slave means disabling distribution, stopping the net kernel, and
   restarting mnesia.
   """
-  def stop_slave(name) do
+  @spec stop_slave(Peer.t()) :: :ok
+  def stop_slave(%Peer{} = peer) do
     # delete the slave from the system
     {:ok, ipv4} = :inet.parse_ipv4_address(to_charlist("127.0.0.1"))
     :erl_boot_server.delete_slave(ipv4)
 
     # stop the slave vm
-    :slave.stop(name)
+    :peer.stop(peer.server_ref)
 
     # stop distribution
     :net_kernel.stop()
@@ -163,13 +186,15 @@ defmodule Anoma.Node.Examples.EAdvertise do
     # restart mnesia (it will break because distribution is disabled above)
     :mnesia.stop()
     :mnesia.start()
+
+    :ok
   end
 
   # @doc """
   # I start a second erlang vm as a slave to test distributed pub sub.
   # """
-  @spec start_slave(atom()) :: atom()
-  defp start_slave(name \\ :slave) do
+  @spec start_slave(charlist()) :: Peer.t()
+  defp start_slave(name \\ :peer.random_name()) do
     # if this is a test run, the node will not be distributed, so start that here
     :ok =
       case :net_kernel.start([:"primary@127.0.0.1"]) do
@@ -200,42 +225,54 @@ defmodule Anoma.Node.Examples.EAdvertise do
       |> Enum.at(1)
       |> to_charlist()
 
-    {:ok, node} =
-      case :slave.start(my_hostname, name) do
-        {:ok, node} -> {:ok, node}
-        {:error, {:already_running, node}} -> {:ok, node}
-        err -> err
-      end
+    # the cookie in use by this beam
+    current_cookie = :erlang.get_cookie()
 
+    # start up the node
+    {:ok, pid, node} =
+      :peer.start(%{
+        name: name,
+        longnames: true,
+        host: my_hostname,
+        args: [~c"-setcookie", to_charlist(current_cookie)]
+      })
+
+    peer_node = %Peer{name: node, server_ref: pid}
     # add my code path to the slave
-    :rpc.block_call(node, :code, :add_paths, [:code.get_path()])
+    :rpc.block_call(peer_node.name, :code, :add_paths, [:code.get_path()])
 
     # copy over our configuration to the remote node
     for {app_name, _, _} <- Application.loaded_applications() do
       for {key, val} <- Application.get_all_env(app_name) do
-        :rpc.block_call(node, Application, :put_env, [app_name, key, val])
+        :rpc.block_call(peer_node.name, Application, :put_env, [
+          app_name,
+          key,
+          val
+        ])
       end
     end
 
     # set the grpc port to our port + 1
     my_grpc_port = Application.get_env(:anoma_node, :grpc_port)
 
-    :rpc.block_call(node, Application, :put_env, [
+    :rpc.block_call(peer_node.name, Application, :put_env, [
       :anoma_node,
       :grpc_port,
-      my_grpc_port + 1
+      my_grpc_port + 1500
     ])
 
     # ensure mix is started
-    :rpc.block_call(node, Application, :ensure_all_started, [:mix])
+    :rpc.block_call(peer_node.name, Application, :ensure_all_started, [:mix])
 
     # ensure all other applications are started as well
-    :rpc.block_call(node, Mix, :env, [:prod])
+    :rpc.block_call(peer_node.name, Mix, :env, [:prod])
 
     for {app_name, _, _} <- Application.loaded_applications() do
-      :rpc.block_call(node, Application, :ensure_all_started, [app_name])
+      :rpc.block_call(peer_node.name, Application, :ensure_all_started, [
+        app_name
+      ])
     end
 
-    node
+    peer_node
   end
 end

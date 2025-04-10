@@ -51,7 +51,8 @@ defmodule Anoma.Node.Registry do
   @doc """
   I generate the :via stanza for a process with the given node_id and engine name.
   """
-  @spec via(String.t(), atom(), atom()) :: {:via, Registry, {atom(), Address.t()}}
+  @spec via(String.t(), atom(), atom()) ::
+          {:via, Registry, {atom(), Address.t()}}
   @spec via(Address.t()) :: {:via, Registry, {atom(), Address.t()}}
   def via(node_id, engine, label \\ nil) do
     address = address(node_id, engine, label)

@@ -10,9 +10,10 @@ defmodule Anoma.Node.Examples.EPubSub do
   @doc """
   I start two nodes that advertise to eachother.
   """
+  @spec subscribe :: {map(), map(), EAdvertise.Peer.t()}
   def subscribe do
     # create two nodes in a distributed setting and advertise them to eachother.
-    {local, remote, slave} =
+    {local, remote, peer} =
       EAdvertise.seed_nodes_distributed(stop_slave: false)
 
     # the node proxy by default subscribes to all external events.
@@ -24,7 +25,7 @@ defmodule Anoma.Node.Examples.EPubSub do
     #       this is temporary workaround.
     this_proc = self()
 
-    Node.spawn(slave, fn ->
+    Node.spawn(peer.name, fn ->
       with_subscription [[]] do
         receive do
           %{body: %{body: "hello, world"}} ->
@@ -52,9 +53,9 @@ defmodule Anoma.Node.Examples.EPubSub do
     # ensure we received ack from other VM
     assert_receive :ok, 1000
 
-    EAdvertise.stop_slave(slave)
+    EAdvertise.stop_slave(peer)
 
     # ensure the remote node received this event
-    {local, remote, slave}
+    {local, remote, peer}
   end
 end
