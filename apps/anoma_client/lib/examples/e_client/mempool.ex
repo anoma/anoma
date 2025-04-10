@@ -33,7 +33,10 @@ defmodule Anoma.Client.Examples.EClient.Mempool do
     transaction = example_transaction()
 
     # the json payload the endpoint expects
-    payload = %{"transaction" => transaction}
+    payload = %{
+      "transaction" => transaction,
+      "transaction_type" => "transparent_resource"
+    }
 
     data =
       client.conn
@@ -50,7 +53,10 @@ defmodule Anoma.Client.Examples.EClient.Mempool do
   """
   @spec add_transaction_faulty_nock(EClient.t()) :: EClient.t()
   def add_transaction_faulty_nock(client \\ setup()) do
-    payload = %{"transaction" => ""}
+    payload = %{
+      "transaction" => "",
+      "transaction_type" => "transparent_resource"
+    }
 
     assert capture_log(fn ->
              data =

@@ -89,7 +89,8 @@ defmodule Anoma.Client do
   @doc """
   I add a transaction to the mempool of the node I'm connected to.
   """
-  @spec add_transaction(Noun.t(), atom()) :: {:ok, :added} | {:error, String.t()}
+  @spec add_transaction(Noun.t(), atom()) ::
+          {:ok, :added} | {:error, String.t()}
   def add_transaction(transaction, transaction_type) do
     transaction =
       transaction
