@@ -14,7 +14,7 @@ config :anoma_client, Anoma.Client.Web.Endpoint,
   adapter: Bandit.PhoenixAdapter,
   http: [
     ip: {127, 0, 0, 1},
-    port: String.to_integer(System.get_env("HTTP_PORT") || "4000")
+    port: String.to_integer(System.get_env("CLIENT_HTTP_PORT") || "4000")
   ],
   check_origin: false,
   debug_errors: false,
@@ -26,7 +26,7 @@ config :anoma_client,
 config :anoma_lib, []
 
 config :anoma_node,
-  grpc_port: String.to_integer(System.get_env("GRPC_PORT") || "50051")
+  grpc_port: String.to_integer(System.get_env("NODE_GRPC_PORT") || "50051")
 
 config :anoma_protobuf, []
 config :compile_protoc, []
