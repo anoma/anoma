@@ -1385,5 +1385,11 @@
   |=  @I
   =+  c=%secp256k1-pub-key
   ^?  @I
+++  keccak256
+  ~/  %keccak256
+  |=  @
+  =+  c=%keccak256
+  ^-  @I
+  !!
 --
 ==
