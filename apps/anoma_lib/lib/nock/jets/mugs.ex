@@ -65,7 +65,7 @@ defmodule Nock.Jets.Mugs do
     :has => %{:index => 762, :layer => 10, :door => 21},
     :put_11 => %{:index => 340, :layer => 11, :door => 93},
     :got => %{:index => 701, :layer => 11, :door => 93},
-    :secp256k1_sign => %{:index => 11, :layer => 12},
+    :secp256k1_sign => %{:index => 23, :layer => 12},
     :secp256k1_verify => %{:index => 10, :layer => 12},
     :secp256k1_pub_key => %{:index => 4, :layer => 12},
     :kind => %{:index => 5972, :layer => Nock.Lib.stdlib_layers()},
