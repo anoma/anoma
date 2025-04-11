@@ -2535,6 +2535,26 @@ defmodule Examples.ENock do
     assert Noun.equal?(bool, 0)
   end
 
+  def keccak_arm() do
+    arm_info = Mugs.index_map().keccak256
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def keccak_call(msg) do
+    [keccak_arm(), msg | Nock.Lib.rm_core()]
+    |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def keccak_test(msg \\ :crypto.strong_rand_bytes(32)) do
+    {:ok, res} = keccak_call(msg)
+
+    assert ExKeccak.hash_256(msg) |> Noun.equal?(res)
+  end
+
   ############################################################
   ##                      Block Cores                       ##
   ############################################################
