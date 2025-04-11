@@ -68,6 +68,7 @@ defmodule Nock.Jets.Mugs do
     :secp256k1_sign => %{:index => 23, :layer => 12},
     :secp256k1_verify => %{:index => 10, :layer => 12},
     :secp256k1_pub_key => %{:index => 4, :layer => 12},
+    :keccak256 => %{:index => 22, :layer => 12},
     :kind => %{:index => 5972, :layer => Nock.Lib.stdlib_layers()},
     :delta_add => %{:index => 372, :layer => Nock.Lib.stdlib_layers()},
     :delta_sub => %{:index => 12013, :layer => Nock.Lib.stdlib_layers()},
@@ -184,7 +185,8 @@ defmodule Nock.Jets.Mugs do
                     {:secp256k1_verify, &Nock.Jets.secp256k1_verify/1,
                      :enabled, 10},
                     {:secp256k1_pub_key, &Nock.Jets.secp256k1_public_key/1,
-                     :enabled, 10}
+                     :enabled, 10},
+                    {:keccak256, &Nock.Jets.keccak256/1, :enabled, 10}
                   ]
                 )
 
