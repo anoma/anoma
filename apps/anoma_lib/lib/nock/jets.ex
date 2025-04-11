@@ -1104,6 +1104,15 @@ defmodule Nock.Jets do
     end
   end
 
+  @spec keccak256(Noun.t()) :: :error | {:ok, Noun.t()}
+  def keccak256(core) do
+    with {:ok, msg} when is_noun_atom(msg) <- sample(core) do
+      {:ok, msg |> Noun.atom_integer_to_binary() |> ExKeccak.hash_256()}
+    else
+      _ -> :error
+    end
+  end
+
   ############################################################
   #                   Arithmetic Helpers                     #
   ############################################################
