@@ -287,7 +287,7 @@
 
 ## Bug Fixes
 - [Fixed a bug with keys<->binary in the nulifier public key](https://github.com/anoma/anoma/pull/292)
-- [Remove Node.Storage.Ordering from subscribining to an Mnesia table](https://github.com/anoma/anoma/pull/304)
+- [Remove Node.Storage.Ordering from subscribing to an Mnesia table](https://github.com/anoma/anoma/pull/304)
   + This caused random CI failures as it would get a message it was
     not prepared for.
 - [Fix potential race condition of put](https://github.com/anoma/anoma/pull/323)
