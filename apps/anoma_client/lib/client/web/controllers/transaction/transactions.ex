@@ -65,6 +65,9 @@ defmodule Anoma.Client.Web.TransactionController do
     else
       :error ->
         {:error, :invalid_transaction}
+
+      {:error, _} ->
+        {:error, :invalid_transaction}
     end
   end
 
