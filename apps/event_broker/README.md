@@ -1,6 +1,6 @@
 # EventBroker
 
-I am the EventBroker application. I contain an implemenentation of a
+I am the EventBroker application. I contain an implementation of a
 general PubSub system using the notion of filters.
 
 ## Installation
