@@ -156,8 +156,8 @@
 ## Major Features
 - [We now have a new `debug` mode that makes tests pry on failure!](https://github.com/anoma/anoma/pull/525)
 - [Resources kinds are now computed with the standard nock jam algorithm](https://github.com/anoma/anoma/pull/497)
-- [Nullifiers now use a detatched signature](https://github.com/anoma/anoma/pull/503)
-  + The format is now  `jam([jammed-nullified-resource detatched-signature])`.
+- [Nullifiers now use a detached signature](https://github.com/anoma/anoma/pull/503)
+  + The format is now  `jam([jammed-nullified-resource detached-signature])`.
     * I.E. jamming the resource and signing over the
       nullified-resource, and jamming both together
 - [submit-rm client command](https://github.com/anoma/anoma/pull/519)
@@ -265,7 +265,7 @@
 - RocksDB tables are now threaded throughout configuration, being
   turned on by default in the *prod* and *dev* environments
 - An initial implementation of Jam is added to the Anoma standard library
-- Storage is now properly namspaced by the router's id
+- Storage is now properly namespaced by the router's id
 
 
 ## Internal Changes
