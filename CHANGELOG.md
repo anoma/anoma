@@ -2,7 +2,7 @@
 
 - [Normalize values going into storage](https://github.com/anoma/anoma/pull/791)
 - [Added Shielded resource existence check](https://github.com/anoma/anoma/pull/788)
-- [Have the TCP client preform exponential backoff](https://github.com/anoma/anoma/pull/802)
+- [Have the TCP client perform exponential backoff](https://github.com/anoma/anoma/pull/802)
 - [Bump the Cairo dependency such that dialyzer does not error](https://github.com/anoma/anoma/pull/825)
 
 ## CLI Changes
@@ -230,7 +230,7 @@
     * [shutdown](https://github.com/anoma/anoma/pull/456)
     * [snapshot](https://github.com/anoma/anoma/pull/462)
     * [delete-dump](https://github.com/anoma/anoma/pull/462)
-- [Add a Liscense to the project: MIT](https://github.com/anoma/anoma/pull/417)
+- [Add a License to the project: MIT](https://github.com/anoma/anoma/pull/417)
 - [Remove the suffix _dev, _prod to the anoma home directory (this may change again in the futrue)](https://github.com/anoma/anoma/pull/447)
 - [Add a warning message and a command a user should run, if rocksdb grows out of sync](https://github.com/anoma/anoma/pull/452)
 - [Configuration files are now loaded on startup and so is the default dump](https://github.com/anoma/anoma/pull/449)
