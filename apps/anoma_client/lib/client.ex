@@ -103,7 +103,8 @@ defmodule Anoma.Client do
   @doc """
   I run a Nock program with its inputs, and return the result.
   """
-  @spec run(Noun.t(), [Noun.t()]) :: {:ok, Noun.t()} | {:error, any()}
+  @spec run(Noun.t(), [Noun.t()]) ::
+          {:ok, Noun.t(), [Noun.t()]} | {:error, any(), [Noun.t()]}
   def run(program, inputs) do
     Runner.prove(program, inputs)
   end
@@ -112,7 +113,7 @@ defmodule Anoma.Client do
   I prove a Nock program with its public and private inputs, and return the result.
   """
   @spec prove(Noun.t(), [Noun.t()], [Noun.t()]) ::
-          {:ok, Noun.t()} | {:error, any()}
+          {:ok, Noun.t(), [Noun.t()]} | {:error, any(), [Noun.t()]}
   def prove(program, public_inputs, private_inputs) do
     Runner.prove(program, public_inputs ++ private_inputs)
   end

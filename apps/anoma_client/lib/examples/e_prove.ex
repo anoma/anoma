@@ -10,6 +10,41 @@ defmodule Anoma.Client.Examples.EProve do
   import ExUnit.Assertions
 
   @doc """
+  I run the Juvix program "DivByZero" using the prove function.
+
+  This program fails to run.
+  """
+  @spec run_div_by_zero() :: {:ok, :error, []}
+  def run_div_by_zero() do
+    {:ok, program} =
+      :code.priv_dir(:anoma_client)
+      |> Path.join("test_juvix/DivByZero.nockma")
+      |> File.read!()
+      |> Noun.Jam.cue()
+
+    assert {:error, :failed_to_prove, []} == Runner.prove(program, [])
+    {:ok, :error, []}
+  end
+
+  @doc """
+  I run the Juvix program "DivByZero" using the prove function.
+
+  This program returns traces before failing and these traces should be returned.
+  """
+  @spec run_div_by_zero_with_trace() :: {:ok, :error, [binary()]}
+  def run_div_by_zero_with_trace() do
+    {:ok, program} =
+      :code.priv_dir(:anoma_client)
+      |> Path.join("test_juvix/DivByZeroTrace.nockma")
+      |> File.read!()
+      |> Noun.Jam.cue()
+
+    assert {:error, :failed_to_prove, ["A"]} == Runner.prove(program, [])
+
+    {:ok, :error, ["A"]}
+  end
+
+  @doc """
   I run the Juvix program "Squared" using the prove function.
   """
   @spec prove_squared() :: {:ok, Noun.t()} | :error

@@ -108,4 +108,50 @@ defmodule Anoma.Client.Examples.EClient.Nock.Prove do
 
     client
   end
+
+  @doc """
+  I run a siple nock program that is supposed to return some io.
+  """
+  @spec run_nock_error(EClient.t()) :: {EClient.t(), String.t()}
+  def run_nock_error(client \\ setup()) do
+    program = Base.encode64(div_by_zero())
+    # the json payload the endpoint expects
+    payload = %{"inputs" => [], "program" => program}
+
+    data =
+      client.conn
+      |> post(~p"/nock/prove", payload)
+      |> json_response(200)
+
+    expected_io = []
+
+    expected_result = "error"
+
+    assert data == %{"io" => expected_io, "result" => expected_result}
+
+    client
+  end
+
+  @doc """
+  I run a siple nock program that is supposed to return some io.
+  """
+  @spec run_nock_error_with_io(EClient.t()) :: {EClient.t(), String.t()}
+  def run_nock_error_with_io(client \\ setup()) do
+    program = Base.encode64(div_by_zero_with_hint())
+    # the json payload the endpoint expects
+    payload = %{"inputs" => [], "program" => program}
+
+    data =
+      client.conn
+      |> post(~p"/nock/prove", payload)
+      |> json_response(200)
+
+    expected_io = ["QQ=="]
+
+    expected_result = "error"
+
+    assert data == %{"io" => expected_io, "result" => expected_result}
+
+    client
+  end
 end

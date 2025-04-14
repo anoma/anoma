@@ -54,18 +54,14 @@ defmodule Anoma.Client.Web.NockController do
          jammed <- Noun.Jam.jam(result) do
       render(conn, "run.json", result: jammed, io: io)
     else
+      {:error, :failed_to_prove, hints} ->
+        render(conn, "error.json", io: hints)
+
       e ->
         e
     end
   end
 
-  @spec prove(any(), map()) ::
-          :error
-          | {:error | [binary() | maybe_improper_list() | non_neg_integer()],
-             :failed_to_prove
-             | :invalid_program
-             | [binary() | maybe_improper_list() | non_neg_integer(), ...]}
-          | Plug.Conn.t()
   @doc """
   I execute the given Nock program locally.
   """
@@ -83,6 +79,9 @@ defmodule Anoma.Client.Web.NockController do
          jammed <- Noun.Jam.jam(result) do
       render(conn, "prove.json", result: jammed, io: io)
     else
+      {:error, :failed_to_prove, hints} ->
+        render(conn, "error.json", io: hints)
+
       e ->
         e
     end
