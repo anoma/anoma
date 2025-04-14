@@ -86,7 +86,7 @@ defmodule Anoma.Node.Transport.GRPC.Behavior do
         engine: "#{engine}"
       })
 
-    {:ok, %Cast.Request{}} = IntraNodeService.Stub.cast(channel, request)
+    {:ok, %Cast.Response{}} = IntraNodeService.Stub.cast(channel, request)
     :ok
   end
 end

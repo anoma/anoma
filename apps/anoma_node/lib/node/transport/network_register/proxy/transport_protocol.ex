@@ -112,7 +112,7 @@ defmodule Anoma.Node.Transport.Proxy.TransportProtocol do
 
   @impl true
   def handle_call({:call, message}, _from, state) do
-    result = make_call(state.address, message)
+    {:ok, result} = make_call(state.address, message)
     {:reply, result, state}
   end
 

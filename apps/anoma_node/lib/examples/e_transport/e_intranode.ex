@@ -11,7 +11,7 @@ defmodule Anoma.Node.Examples.IntraNode do
   @spec intranode_tx_dump :: :ok
   def intranode_tx_dump do
     # create two nodes in a distributed setting and advertise them to eachother.
-    {_local, remote, _slave} =
+    {_local, remote, slave} =
       EAdvertise.seed_nodes_distributed(stop_slave: false)
 
     # at this point, the remote node is known, and we should be able to get information from its mempool.
@@ -29,6 +29,8 @@ defmodule Anoma.Node.Examples.IntraNode do
     # assert that the transaction is in the node
     assert Mempool.tx_dump(remote.node_id) == [transaction.id]
 
+    # stop the slave
+    EAdvertise.stop_slave(slave)
     :ok
   end
 end
