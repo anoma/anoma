@@ -84,7 +84,6 @@ defmodule Anoma.Client.Web.NockController do
       render(conn, "prove.json", result: jammed, io: io)
     else
       e ->
-        IO.inspect(e, label: "else")
         e
     end
   end

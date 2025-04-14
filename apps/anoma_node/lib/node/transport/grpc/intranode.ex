@@ -16,7 +16,7 @@ defmodule Anoma.Node.Transport.GRPC.Behavior do
   @spec publish(
           GRPCAddress.t() | TCPAddress.t(),
           String.t(),
-          %EventBroker.Event{}
+          EventBroker.Event.t()
         ) :: :ok
   def publish(address, topic, event) do
     %{host: host, port: port} = address

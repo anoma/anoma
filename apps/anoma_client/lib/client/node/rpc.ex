@@ -85,9 +85,6 @@ defmodule Anoma.Client.Node.RPC do
 
       {:error, %{status: _, message: err}} ->
         {:error, :add_intent_failed, err}
-
-      e ->
-        IO.inspect(e)
     end
   end
 

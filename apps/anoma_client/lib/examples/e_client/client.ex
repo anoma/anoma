@@ -59,7 +59,7 @@ defmodule Anoma.Client.Examples.EClient do
 
     # kill previous clients (the client only connects to one node at this time)
     DynamicSupervisor.which_children(Anoma.Client.ConnectionSupervisor)
-    |> Enum.map(fn {_, pid, _, _} ->
+    |> Enum.each(fn {_, pid, _, _} ->
       DynamicSupervisor.terminate_child(
         Anoma.Client.ConnectionSupervisor,
         pid
