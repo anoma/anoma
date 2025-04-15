@@ -2,7 +2,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Executor
+  alias Anoma.Node.Transaction.Backends.Events.ROEvent
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Storage
@@ -16,6 +16,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   import ExUnit.Assertions
   import ExUnit.CaptureLog
 
+  use EventBroker.WithSubscription
   use TypedStruct
 
   ############################################################
@@ -462,9 +463,11 @@ defmodule Anoma.Node.Examples.ETransaction do
     start_tx_module(node_id)
     {back, zero} = zero(key)
 
-    Mempool.tx(node_id, {back, zero})
+    id = Mempool.tx(node_id, {back, zero})
     :mnesia.subscribe({:table, Storage.blocks_table(node_id), :simple})
     dump = Mempool.tx_dump(node_id)
+
+    assert dump == [id]
     Mempool.execute(node_id, dump)
 
     blocks_table = Storage.blocks_table(node_id)
@@ -625,9 +628,21 @@ defmodule Anoma.Node.Examples.ETransaction do
     start_tx_module(node_id)
     {_backend, code} = zero(key)
 
-    Executor.launch(node_id, {{:read_only, self()}, code})
+    with_subscription [[]] do
+      id = Mempool.tx(node_id, {:read_only, code})
 
-    assert_receive({0, [[[^key] | 0] | 0]}, 5000)
+      res = [[[key] | 0] | 0]
+
+      assert_receive(
+        %EventBroker.Event{
+          body: %Node.Event{
+            node_id: ^node_id,
+            body: %ROEvent{tx_id: ^id, read_result: {:ok, ^res}}
+          }
+        },
+        5000
+      )
+    end
 
     [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
     [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
@@ -643,9 +658,20 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     zero_counter_submit(node_id)
 
-    Executor.launch(node_id, {{:read_only, self()}, code})
+    with_subscription [[]] do
+      id = Mempool.tx(node_id, {:read_only, code})
+      res = [[[key] | 1] | 0]
 
-    assert_receive({1, [[[^key] | 1] | 0]}, 5000)
+      assert_receive(
+        %EventBroker.Event{
+          body: %Node.Event{
+            node_id: ^node_id,
+            body: %ROEvent{tx_id: ^id, read_result: {:ok, ^res}}
+          }
+        },
+        5000
+      )
+    end
 
     node_id
   end
@@ -659,9 +685,20 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     inc_counter_submit_with_zero(node_id)
 
-    Executor.launch(node_id, {{:read_only, self()}, code})
+    with_subscription [[]] do
+      id = Mempool.tx(node_id, {:read_only, code})
+      res = [[[key] | 2] | 0]
 
-    assert_receive({2, [[[^key] | 2] | 0]}, 5000)
+      assert_receive(
+        %EventBroker.Event{
+          body: %Node.Event{
+            node_id: ^node_id,
+            body: %ROEvent{tx_id: ^id, read_result: {:ok, ^res}}
+          }
+        },
+        5000
+      )
+    end
 
     node_id
   end

@@ -5,6 +5,9 @@ defmodule Anoma.Client.Runner do
   alias Anoma.Client.Node.GRPCProxy
   alias Anoma.Client.Storage
   alias Anoma.RM.Transparent.Transaction
+  alias Anoma.Node
+
+  alias Anoma.Node.Transaction.Backends.Events
 
   @doc """
   I run the given Nock program with its inputs and return the result.
@@ -167,16 +170,31 @@ defmodule Anoma.Client.Runner do
 
   @spec send_candidate(Noun.t()) :: {:ok, Noun.t()} | :error
   defp send_candidate(space) do
+    # subscribe to local events coming from the node on this process
+    # to catch the result event from the transaction.
+
     tx_candidate = space |> ro_tx_candidate() |> Noun.Jam.jam()
 
-    case GRPCProxy.add_read_only_transaction(tx_candidate) do
-      {:ok, noun} ->
-        {:ok, noun}
+    # wait for the event of the transaction result
+    {:ok, :added, id} = GRPCProxy.add_transaction(tx_candidate, :read_only)
 
-      {:error, _, _} ->
-        :error
+    receive do
+      {:event,
+       {_,
+        %EventBroker.Event{
+          body: %Node.Event{
+            body: %Events.ROEvent{tx_id: ^id, read_result: {:ok, res}}
+          }
+        }}} ->
+        {:ok, res}
 
-      {:error, :absent} ->
+      {:event,
+       {_,
+        %EventBroker.Event{
+          body: %Node.Event{
+            body: %Events.ROEvent{tx_id: ^id, read_result: :error}
+          }
+        }}} ->
         :error
     end
   end

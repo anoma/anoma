@@ -7,6 +7,7 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
   use Anoma.Client.Web.ConnCase
   use TypedStruct
 
+  alias Anoma.Client
   alias Anoma.Client.Examples.EClient
   alias Anoma.Client.Storage
   alias Anoma.Node.Tables
@@ -21,6 +22,7 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
 
   @spec prove_with_internal_scry_call(EClient.t()) :: EClient.t()
   def prove_with_internal_scry_call(client \\ setup()) do
+    Client.subscribe("*")
     :ok = Tables.reset_tables_for_client()
 
     string = "i am scried"
@@ -60,6 +62,7 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
 
   @spec prove_with_external_scry_call(EClient.t()) :: EClient.t()
   def prove_with_external_scry_call(client \\ setup()) do
+    Client.subscribe("*")
     :ok = Tables.reset_tables_for_client()
 
     key = ["anoma", "blob", "key"]
@@ -91,6 +94,7 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
 
   @spec prove_with_external_scry_call_nounify(EClient.t()) :: EClient.t()
   def prove_with_external_scry_call_nounify(client \\ setup()) do
+    Client.subscribe("*")
     :ok = Tables.reset_tables_for_client()
 
     val = MapSet.new(["i am a set"])

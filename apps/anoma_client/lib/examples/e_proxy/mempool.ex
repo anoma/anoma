@@ -20,7 +20,7 @@ defmodule Anoma.Client.Examples.EProxy.Mempool do
 
     transaction = Noun.Jam.jam(transaction)
 
-    {:ok, :added} =
+    {:ok, :added, _tx_id} =
       GRPCProxy.add_transaction(transaction, :transparent_resource)
 
     client
