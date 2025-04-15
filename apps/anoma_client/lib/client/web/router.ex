@@ -24,11 +24,6 @@ defmodule Anoma.Client.Web.Router do
     post("/", IntentsController, :add_intent)
   end
 
-  scope "/executor", Anoma.Client.Web do
-    pipe_through(:api)
-    post("/", ExecutorController, :add_read_only_transaction)
-  end
-
   scope "/nock", Anoma.Client.Web do
     pipe_through(:api)
     post("/run", NockController, :run)
