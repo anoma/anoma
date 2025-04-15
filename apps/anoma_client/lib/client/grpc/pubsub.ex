@@ -17,7 +17,6 @@ defmodule Anoma.Client.GRPC.PubSub do
   @spec publish(Event.Request.t(), Stream.t()) :: Event.Response.t()
   def publish(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
-    IO.puts("got an event: #{inspect(request)}")
     topic = request.topic.topic
     event = :erlang.binary_to_term(request.message.message)
 

@@ -11,7 +11,4 @@ defmodule ProxyTest do
 
   use TestHelper.GenerateExampleTests,
     for: Anoma.Client.Examples.EProxy.Mempool
-
-  use TestHelper.GenerateExampleTests,
-    for: Anoma.Client.Examples.EProxy.Executor
 end

@@ -93,7 +93,8 @@ defmodule Anoma.Client.Node.RPC do
   node.
   """
   @spec add_transaction(any(), String.t(), binary(), atom()) ::
-          {:ok, :added} | {:error, :add_transaction_failed, String.t()}
+          {:ok, :added, binary()}
+          | {:error, :add_transaction_failed, String.t()}
   def add_transaction(channel, node_id, transaction, transaction_type) do
     node = %Node{id: node_id}
 
@@ -106,8 +107,8 @@ defmodule Anoma.Client.Node.RPC do
     }
 
     case MempoolService.Stub.add(channel, request) do
-      {:ok, _} ->
-        {:ok, :added}
+      {:ok, %{result: tx_id}} ->
+        {:ok, :added, tx_id}
 
       {:error, %{status: _, message: err}} ->
         {:error, :add_transaction_failed, err}

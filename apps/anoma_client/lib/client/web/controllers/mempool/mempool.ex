@@ -42,7 +42,7 @@ defmodule Anoma.Client.Web.MempoolController do
     with %{"transaction" => tx} <- params,
          type <- String.to_existing_atom(params["transaction_type"]),
          {:ok, transaction} <- Base.decode64(tx),
-         {:ok, :added} <-
+         {:ok, :added, _tx_id} <-
            GRPCProxy.add_transaction(transaction, type) do
       render(conn, "add_transaction.json")
     end
