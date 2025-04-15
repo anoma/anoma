@@ -387,6 +387,13 @@ defmodule Anoma.Node.Transaction.Mempool do
   ############################################################
 
   @spec handle_tx({Backends.backend(), Noun.t()}, binary(), t()) :: t()
+  defp handle_tx(tx = {:read_only, _code}, tx_id, state = %Mempool{}) do
+    node_id = state.node_id
+    Executor.launch(node_id, tx, tx_id)
+
+    state
+  end
+
   defp handle_tx(tx = {backend, code}, tx_id, state = %Mempool{}) do
     value = %Tx{backend: backend, code: code}
     node_id = state.node_id
