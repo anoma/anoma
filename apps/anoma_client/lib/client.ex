@@ -4,11 +4,12 @@ defmodule Anoma.Client do
   """
 
   alias Anoma.Client
-  alias Anoma.Client.Node.Connection
   alias Anoma.Client.ConnectionSupervisor
+  alias Anoma.Client.Node.Connection
   alias Anoma.Client.Node.GRPCProxy
   alias Anoma.Client.Runner
   alias Anoma.Client.Transactions
+  alias Phoenix.PubSub
 
   use TypedStruct
 
@@ -124,6 +125,9 @@ defmodule Anoma.Client do
   @spec subscribe(String.t()) ::
           {:ok, :subscribed} | {:error, :subscribe_failed, any()}
   def subscribe(topic) do
+    # subscribe to the phoenix pubsub to receive events from the remote node
+    PubSub.subscribe(:client_pubsub, "node_events")
+    # subscribe on the remote node itself
     GRPCProxy.subscribe(topic)
   end
 
