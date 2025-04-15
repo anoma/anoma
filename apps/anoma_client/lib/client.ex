@@ -21,7 +21,7 @@ defmodule Anoma.Client do
   """
   @spec connect(String.t(), integer(), String.t()) ::
           {:ok, Client.t()}
-          | {:error, :node_unreacable}
+          | {:error, :node_unreachable}
           | {:error, :unknown_error, any()}
   def connect(host, port, node_id) do
     # generate a unique client id

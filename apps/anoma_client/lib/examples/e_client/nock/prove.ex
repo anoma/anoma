@@ -146,7 +146,7 @@ defmodule Anoma.Client.Examples.EClient.Nock.Prove do
       |> post(~p"/nock/prove", payload)
       |> json_response(200)
 
-    expected_io = [Noun.Jam.jam("A") |> Base.encode64]
+    expected_io = [Noun.Jam.jam("A") |> Base.encode64()]
 
     expected_result = "error"
 

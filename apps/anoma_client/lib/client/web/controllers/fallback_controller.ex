@@ -66,6 +66,17 @@ defmodule Anoma.Client.Web.FallbackController do
     })
   end
 
+  # generic error with additional message
+  def call(conn, {:error, _error, err}) do
+    conn
+    |> put_status(503)
+    |> put_view(json: Anoma.Client.Web.ErrorJSON)
+    |> json(%{
+      error: "operation failed",
+      reason: err
+    })
+  end
+
   def call(conn, _err) do
     conn
     |> put_status(503)
