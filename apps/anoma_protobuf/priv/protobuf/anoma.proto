@@ -3,7 +3,6 @@ syntax = "proto3";
 package Anoma.Proto;
 
 import "advertisement.proto";
-import "executor.proto";
 import "intents.proto";
 import "intranode.proto";
 import "mempool.proto";
@@ -81,12 +80,4 @@ service PubSubService {
 
   rpc Publish(Anoma.Proto.PubSub.Event.Request)
       returns (Anoma.Proto.PubSub.Event.Response) {}
-}
-
-/*
- * Add a read-only transaction to the executor.
- */
-service ExecutorService {
-  rpc Add(Anoma.Proto.Executor.AddROTransaction.Request)
-      returns (Anoma.Proto.Executor.AddROTransaction.Response) {}
 }

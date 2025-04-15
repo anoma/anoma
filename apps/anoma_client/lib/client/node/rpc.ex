@@ -6,8 +6,6 @@ defmodule Anoma.Client.Node.RPC do
   alias Anoma.Proto.Advertisement.Advertise
   alias Anoma.Proto.Advertisement.GRPCAddress
   alias Anoma.Proto.AdvertisementService
-  alias Anoma.Proto.Executor.AddROTransaction
-  alias Anoma.Proto.ExecutorService
   alias Anoma.Proto.Intentpool
   alias Anoma.Proto.Intentpool.Intent
   alias Anoma.Proto.IntentpoolService
@@ -112,41 +110,6 @@ defmodule Anoma.Client.Node.RPC do
 
       {:error, %{status: _, message: err}} ->
         {:error, :add_transaction_failed, err}
-    end
-  end
-
-  @doc """
-  I make a call to a GRPC endpoint to add a read-only transaction to the mempool of the
-  node.
-
-  The result of this call is either an error, or a jammed noun.
-  """
-  @spec add_read_only_transaction(any(), String.t(), binary()) ::
-          {:ok, Noun.t()}
-          | {:error, :add_read_only_transaction_failed, String.t()}
-          | {:error, :absent}
-  def add_read_only_transaction(channel, node_id, transaction) do
-    node = %Node{id: node_id}
-
-    transaction = %Transaction{transaction: transaction}
-
-    request = %AddROTransaction.Request{
-      node: node,
-      transaction: transaction
-    }
-
-    case ExecutorService.Stub.add(channel, request) do
-      {:ok, %AddROTransaction.Response{result: result}} ->
-        case result do
-          {:success, %{result: jammed_nock}} ->
-            {:ok, Noun.Jam.cue!(jammed_nock)}
-
-          {:error, %{error: "absent"}} ->
-            {:error, :absent}
-        end
-
-      {:error, %{status: _, message: err}} ->
-        {:error, :add_read_only_transaction_failed, err}
     end
   end
 
