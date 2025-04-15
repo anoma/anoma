@@ -90,10 +90,11 @@ defmodule Anoma.Client.Runner do
 
   @spec close_io_sink(pid()) :: {:error, :timeout} | {:ok, term()}
   def close_io_sink(io) do
-    send(io, {:quit, self()})
+    ref = make_ref()
+    send(io, {:quit, self(), ref})
 
     receive do
-      output ->
+      {^ref, output} ->
         {:ok, output}
     after
       10 ->
@@ -110,9 +111,9 @@ defmodule Anoma.Client.Runner do
         noun = Base.decode64!(noun_str) |> Noun.Jam.cue!()
         capture([noun | acc])
 
-      {:quit, from} ->
+      {:quit, from, ref} ->
         output = acc |> Enum.reverse()
-        send(from, output)
+        send(from, {ref, output})
 
       _ ->
         capture(acc)
