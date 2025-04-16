@@ -10,6 +10,7 @@ defmodule Anoma.Node.Event do
   use TypedStruct
 
   typedstruct enforce: true do
+    @derive Jason.Encoder
     @typedoc """
     I am the Event type for the Node events.
     My fields determine the overall structure of the Node messages.

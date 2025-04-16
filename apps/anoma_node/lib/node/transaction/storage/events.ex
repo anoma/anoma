@@ -38,4 +38,22 @@ defmodule Anoma.Node.Transaction.Storage.Events do
     %EventBroker.Event{body: %Event{body: %{height: ^height}}} -> true
     _ -> false
   end
+
+  ############################################################
+  #                           Json Encoding                  #
+  ############################################################
+
+  defimpl Jason.Encoder, for: WriteEvent do
+    def encode(%WriteEvent{} = event, opts) do
+      event
+      |> Map.update(
+        :writes,
+        [],
+        &Enum.map(&1, fn {key, value} ->
+          %{key: key, value: value}
+        end)
+      )
+      |> Jason.Encode.map(opts)
+    end
+  end
 end

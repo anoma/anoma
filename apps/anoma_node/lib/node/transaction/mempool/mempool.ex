@@ -264,7 +264,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @spec tx(String.t(), {Backends.backend(), Noun.t()}) :: :ok
   def tx(node_id, tx_w_backend) do
-    tx(node_id, tx_w_backend, :crypto.strong_rand_bytes(16))
+    tx(node_id, tx_w_backend, Base.encode64(:crypto.strong_rand_bytes(16)))
   end
 
   @doc """
