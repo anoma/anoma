@@ -23,10 +23,10 @@ defmodule Anoma.Node.Examples.ETransaction do
   ############################################################
 
   typedstruct do
-    field(:id, String.t())
-    field(:backend, atom())
+    field(:id, binary())
+    field(:backend, Backends.backend())
     field(:noun, Noun.t())
-    field(:result, any())
+    field(:result, Mempool.vm_result())
   end
 
   ############################################################
@@ -724,7 +724,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.BlockEvent{round: ^round}
+          body: %Mempool.Events.BlockEvent{round: ^round}
         }
       } ->
         :ok

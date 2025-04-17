@@ -124,7 +124,7 @@ defmodule Anoma.Node.Intents.Solver do
       %Event{
         source_module: IntentPool,
         body: %Anoma.Node.Event{
-          body: %IntentPool.IntentAddSuccess{intent: intent}
+          body: %IntentPool.Events.IntentAddSuccess{intent: intent}
         }
       } ->
         handle_new_intent(intent, state)
@@ -232,7 +232,7 @@ defmodule Anoma.Node.Intents.Solver do
   # """
   @spec subscribe_to_new_intents(String.t()) :: :ok | String.t()
   defp subscribe_to_new_intents(node_id) do
-    filter = %IntentPool.IntentAddSuccessFilter{}
+    filter = %IntentPool.Events.IntentAddSuccessFilter{}
 
     EventBroker.subscribe_me([
       Node.Event.node_filter(node_id),
@@ -269,7 +269,7 @@ defmodule Anoma.Node.Intents.Solver do
   def submit(tx = %Anoma.RM.Transparent.Transaction{}, node_id) do
     tx_noun = tx |> Noun.Nounable.to_noun()
     tx_candidate = [[1, 0, [1 | tx_noun], 0 | 909], 0 | 707]
-    tx_filter = [Node.Event.node_filter(node_id), %Mempool.TxFilter{}]
+    tx_filter = [Node.Event.node_filter(node_id), %Mempool.Events.TxFilter{}]
 
     with_subscription [tx_filter] do
       Mempool.tx(
@@ -281,7 +281,7 @@ defmodule Anoma.Node.Intents.Solver do
         %EventBroker.Event{
           body: %Node.Event{
             node_id: ^node_id,
-            body: %Mempool.TxEvent{
+            body: %Mempool.Events.TxEvent{
               tx: %Mempool.Tx{backend: _, code: ^tx_candidate}
             }
           }

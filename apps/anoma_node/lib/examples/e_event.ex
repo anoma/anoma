@@ -223,9 +223,9 @@ defmodule Anoma.Node.Examples.EEvent do
   Given a transaction and an id, I create a transaction event.
   """
   @spec new_tx_event({Backends.backend(), Noun.t()}, String.t()) ::
-          Mempool.TxEvent.t()
+          Mempool.Events.TxEvent.t()
   def new_tx_event({backend, noun}, id) do
-    %Mempool.TxEvent{
+    %Mempool.Events.TxEvent{
       id: id,
       tx: %Mempool.Tx{backend: backend, code: noun}
     }
@@ -234,9 +234,9 @@ defmodule Anoma.Node.Examples.EEvent do
   @doc """
   I create a new consensus event.
   """
-  @spec new_consensus_event([String.t()]) :: Mempool.ConsensusEvent.t()
+  @spec new_consensus_event([String.t()]) :: Mempool.Events.ConsensusEvent.t()
   def new_consensus_event(transaction_ids) do
-    %Mempool.ConsensusEvent{
+    %Mempool.Events.ConsensusEvent{
       order: transaction_ids
     }
   end
@@ -244,9 +244,9 @@ defmodule Anoma.Node.Examples.EEvent do
   @doc """
   I create a new order event.
   """
-  @spec new_order_event(String.t()) :: Ordering.OrderEvent.t()
+  @spec new_order_event(String.t()) :: Ordering.Events.OrderEvent.t()
   def new_order_event(transaction_id) do
-    %Ordering.OrderEvent{
+    %Ordering.Events.OrderEvent{
       tx_id: transaction_id
     }
   end
@@ -260,9 +260,9 @@ defmodule Anoma.Node.Examples.EEvent do
         {"id 1", [error: "id 1"]}
   """
   @spec new_execution_event([{any(), String.t()}]) ::
-          Executor.ExecutionEvent.t()
+          Executor.Events.ExecutionEvent.t()
   def new_execution_event(results) do
-    %Executor.ExecutionEvent{
+    %Executor.Events.ExecutionEvent{
       result: results
     }
   end
@@ -272,9 +272,9 @@ defmodule Anoma.Node.Examples.EEvent do
   For this I need the round of the block as well as the order of the transactions in that block.
   """
   @spec new_block_event([String.t()], non_neg_integer()) ::
-          Mempool.BlockEvent.t()
+          Mempool.Events.BlockEvent.t()
   def new_block_event(transaction_ids, round) do
-    %Mempool.BlockEvent{
+    %Mempool.Events.BlockEvent{
       order: transaction_ids,
       round: round
     }
