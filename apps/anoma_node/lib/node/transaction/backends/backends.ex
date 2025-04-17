@@ -32,7 +32,6 @@ defmodule Anoma.Node.Transaction.Backends do
   @type backend() ::
           :debug_term_storage
           | {:read_only, pid}
-          | :debug_bloblike
           | :transparent_resource
           | :cairo_resource
 
@@ -144,10 +143,6 @@ defmodule Anoma.Node.Transaction.Backends do
 
   defp backend_logic({:read_only, pid}, _node_id, _id, vm_res, opts) do
     send_value(vm_res, pid, opts)
-  end
-
-  defp backend_logic(:debug_bloblike, node_id, id, vm_res, _opts) do
-    blob_store(node_id, id, vm_res)
   end
 
   defp backend_logic(:transparent_resource, node_id, id, vm_res, _opts) do
@@ -343,13 +338,6 @@ defmodule Anoma.Node.Transaction.Backends do
   defp send_value(result, reply_to, opts) do
     send(reply_to, {opts[:time], result})
     {:ok, result}
-  end
-
-  @spec blob_store(String.t(), binary(), Noun.t()) :: {:ok, any} | :error
-  def blob_store(node_id, id, result) do
-    key = :crypto.hash(:sha256, :erlang.term_to_binary(result))
-    Ordering.write(node_id, {id, [{key, result}]})
-    {:ok, key}
   end
 
   @spec store_value(String.t(), binary(), Noun.t()) :: {:ok, any} | :error
