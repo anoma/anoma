@@ -7,7 +7,6 @@ defmodule Anoma.Client.CLI do
 
   The executable expects the following arguments:
 
-  - `--listen-port` - The port on which the client will listen for incoming connections.
   - `--node-host`   - The host of the remote node.
   - `--node-port`   - The port of the remote node.
   - `--node-id`     - The id of the remote node.
@@ -16,7 +15,7 @@ defmodule Anoma.Client.CLI do
   with the following command.
 
   ```shell
-  ./anoma_client --listen-port 4001 --node-host localhost --node-port 4000 --node-id 123456
+  ./anoma_client --node-host localhost --node-port 4000 --node-id 123456
   ```
 
   ## Running a node
@@ -36,7 +35,7 @@ defmodule Anoma.Client.CLI do
   Use the value of `grpc_port` to point your client to the node.
 
   The client will connect to the remote node and start listening for incoming connections on port
-  4001.
+  4000.
 
   ## Building
 
@@ -66,23 +65,24 @@ defmodule Anoma.Client.CLI do
   Given a list of arguments, I start a new connection to a remote node.
 
   ## Options
-  - `:listen_port` - The port on which the client will listen for incoming connections.
   - `:node_host` - The host of the remote node.
   - `:node_port` - The port of the remote node.
+  - `:node_id`   - The node id of the node to connect to.
   """
   @spec start_node(Keyword.t()) :: any()
   def start_node(args) do
-    case Client.connect(
-           args[:node_host],
-           args[:node_port],
-           args[:listen_port],
-           args[:node_id]
-         ) do
+    case Client.connect(args[:node_host], args[:node_port], args[:node_id]) do
       {:error, :node_unreachable} ->
         terminate(show_error({:error, :node_unreachable}))
 
-      {:ok, client} ->
-        IO.puts("Connected to node. Listening on port #{client.grpc_port}")
+      {:error, :unknown_error, err} ->
+        terminate(show_error({:error, err}))
+
+      {:ok, _client} ->
+        IO.puts(
+          "Connected to node. Listening on #{Anoma.Client.Web.Endpoint.url()}"
+        )
+
         Process.sleep(:infinity)
     end
   end
@@ -96,9 +96,9 @@ defmodule Anoma.Client.CLI do
           | {:error, {:missing_args, [atom()]}}
   def parse_args(args) do
     arg_spec = [
-      listen_port: :integer,
       node_host: :string,
-      node_port: :integer
+      node_port: :integer,
+      node_id: :string
     ]
 
     case OptionParser.parse(args, strict: arg_spec) do
@@ -117,7 +117,7 @@ defmodule Anoma.Client.CLI do
   @spec validate_args(Keyword.t()) ::
           {:ok, Keyword.t()} | {:error, {:missing_args, [atom()]}}
   def validate_args(args) do
-    required_args = [:listen_port, :node_host, :node_port]
+    required_args = [:node_host, :node_port, :node_id]
 
     case Enum.group_by(required_args, &Keyword.has_key?(args, &1)) do
       %{false: missing} ->
@@ -164,6 +164,10 @@ defmodule Anoma.Client.CLI do
 
   defp show_error({:error, :node_unreachable}) do
     "The remote node is unreachable. Are the hostname and port for the node correct?"
+  end
+
+  defp show_error({:error, term}) do
+    "Could not connect to node due to unexpected error: #{inspect(term)}"
   end
 
   @spec terminate(term()) :: no_return()

@@ -38,9 +38,16 @@ defmodule Anoma.Node.Examples.ENode do
   """
   @spec start_node(Keyword.t()) :: ENode.t() | {:error, :failed_to_start_node}
   def start_node(opts \\ []) do
+    node_id = Base.encode16(:crypto.strong_rand_bytes(32))
+
     opts =
       Keyword.validate!(opts,
-        node_id: "#{:erlang.phash2(make_ref())}"
+        node_config: %{
+          node_id: node_id,
+          grpc_host: "localhost",
+          grpc_port: Application.get_env(:anoma_node, :grpc_port)
+        },
+        node_id: node_id
       )
 
     enode =
@@ -57,7 +64,8 @@ defmodule Anoma.Node.Examples.ENode do
             pid: pid
           }
 
-        {:error, _} ->
+        {:error, e} ->
+          Logger.error(e)
           {:error, :failed_to_start_node}
       end
 
