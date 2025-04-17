@@ -769,7 +769,7 @@ defmodule Nock.Jets do
          {:ok, door_map} <- Noun.axis(30, core),
          {:ok, map} <- Noun.Nounable.Map.from_noun(door_map),
          res <- Map.get(map, key) do
-      {:ok, Noun.Nounable.Map.to_noun(res)}
+      {:ok, Noun.Nounable.to_noun(res)}
     else
       _ -> :error
     end
