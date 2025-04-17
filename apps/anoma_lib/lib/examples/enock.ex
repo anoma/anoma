@@ -2209,11 +2209,15 @@ defmodule Examples.ENock do
   end
 
   def nullifier_test(n \\ :rand.uniform(10000)) do
-    res = %Resource{quantity: n} |> Noun.Nounable.to_noun()
+    resource = %Resource{quantity: n}
 
-    {:ok, res} = make_nullifier_call(res)
+    {:ok, res} = make_nullifier_call([0 | Noun.Nounable.to_noun(resource)])
 
-    <<"NF_", _rest::bitstring>> = Noun.atom_integer_to_binary(res)
+    <<"NF_", rest::bitstring>> = Noun.atom_integer_to_binary(res)
+
+    {:ok, unnouned} = rest |> Noun.Jam.cue!() |> Resource.from_noun()
+
+    assert unnouned == resource
   end
 
   def is_nullifier_arm() do
