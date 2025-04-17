@@ -203,7 +203,7 @@ Since most (if not all!) tests are composed from examples. One can simply run th
 
 <!-- livebook:{"break_markdown":true} -->
 
-If we take `AnomaTest.LiveBook.Example` as our exmaple, then we can run the individual tests like the following.
+If we take `AnomaTest.LiveBook.Example` as our example, then we can run the individual tests like the following.
 
 <!-- livebook:{"break_markdown":true} -->
 
