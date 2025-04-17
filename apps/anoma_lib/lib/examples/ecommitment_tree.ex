@@ -170,4 +170,32 @@ defmodule Examples.ECommitmentTree do
 
     {tree, anchor}
   end
+
+  @spec nouned_tree_info(
+          {CommitmentTree.t(), CommitmentTree.Proof.t(), binary()}
+        ) :: {Noun.t(), Noun.t(), binary()}
+  def nouned_tree_info({ct, proof, anchor} \\ a_merkle_proof()) do
+    noun_ct = Noun.Nounable.to_noun(ct)
+    noun_proof = Noun.Nounable.to_noun(proof)
+
+    {:ok, unnouned_ct} = CommitmentTree.from_noun(noun_ct)
+    {:ok, unnouned_proof} = CommitmentTree.Proof.from_noun(noun_proof)
+
+    assert ct == unnouned_ct
+    assert proof == unnouned_proof
+
+    {noun_ct, noun_proof, anchor}
+  end
+
+  @spec nouned_empty_tree() :: Noun.t()
+  def nouned_empty_tree() do
+    tree = new_ct()
+    noun_ct = tree |> Noun.Nounable.to_noun()
+
+    {:ok, unnouned_ct} = noun_ct |> CommitmentTree.from_noun()
+
+    assert tree == unnouned_ct
+
+    noun_ct
+  end
 end

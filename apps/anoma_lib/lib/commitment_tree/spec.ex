@@ -2,6 +2,8 @@ defmodule CommitmentTree.Spec do
   @moduledoc """
   A specification for a commitment tree.
   """
+  alias __MODULE__
+
   use TypedStruct
 
   @typedoc """
@@ -69,6 +71,39 @@ defmodule CommitmentTree.Spec do
     fn {x, y} ->
       Cairo.poseidon(:binary.bin_to_list(x), :binary.bin_to_list(y))
       |> :binary.list_to_bin()
+    end
+  end
+
+  defimpl Noun.Nounable, for: Spec do
+    @impl true
+    def to_noun(spec = %Spec{}) do
+      [
+        spec.depth,
+        spec.splay,
+        spec.key_size,
+        Noun.Nounable.to_noun(spec.hash),
+        spec.key_zero
+        | spec.splay_suff_prod
+      ]
+    end
+  end
+
+  @spec from_noun(Noun.t()) :: :error | {:ok, t()} | :error
+  def from_noun([depth, splay, key_size, hash, zero | prod]) do
+    with {:ok, list} <- Noun.Nounable.List.from_noun(prod) do
+      size = Noun.atom_binary_to_integer(key_size)
+
+      {:ok,
+       %__MODULE__{
+         depth: Noun.atom_binary_to_integer(depth),
+         splay: Noun.atom_binary_to_integer(splay),
+         key_size: size,
+         hash: hash |> Noun.atom_integer_to_binary() |> String.to_atom(),
+         key_zero: <<Noun.atom_binary_to_integer(zero)::size(size)>>,
+         splay_suff_prod: Enum.map(list, &Noun.atom_binary_to_integer/1)
+       }}
+    else
+      _ -> :error
     end
   end
 end

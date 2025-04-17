@@ -1,4 +1,7 @@
 defmodule CommitmentTree.Node do
+  alias __MODULE__
+
+  import Noun
   use TypedStruct
 
   typedstruct enforce: true do
@@ -101,4 +104,64 @@ defmodule CommitmentTree.Node do
     |> Enum.map(f)
     |> List.to_tuple()
   end
+
+  defimpl Noun.Nounable, for: Node do
+    @impl true
+    def to_noun(node = %Node{}) do
+      [
+        [:erlang.byte_size(node.hash) | node.hash]
+        | children_nounify(node.children)
+      ]
+    end
+
+    defp children_nounify({a, b}) do
+      left = children_nounify(a)
+      right = children_nounify(b)
+
+      [left | right]
+    end
+
+    defp children_nounify(bin) when is_binary(bin) do
+      size = :erlang.byte_size(bin)
+      [size | bin]
+    end
+
+    defp children_nounify(node = %Node{}) do
+      to_noun(node)
+    end
+  end
+
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
+  def from_noun([[size | hash], left_child_noun | right_child_noun]) do
+    with {:ok, left_child} <- children_from_noun(left_child_noun),
+         {:ok, right_child} <- children_from_noun(right_child_noun) do
+      size = Noun.atom_binary_to_integer(size)
+
+      {:ok,
+       %Node{
+         hash: Noun.atom_integer_to_binary(hash, size),
+         children: {left_child, right_child}
+       }}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec children_from_noun(Noun.t()) :: {:ok, t() | binary()} | :error
+  defp children_from_noun(
+         node = [[_size | _hash], _left_child | _right_child]
+       ) do
+    with {:ok, node} <- from_noun(node) do
+      {:ok, node}
+    else
+      _ -> :error
+    end
+  end
+
+  defp children_from_noun([size | bin])
+       when is_noun_atom(size) and is_noun_atom(bin) do
+    {:ok, Noun.atom_integer_to_binary(bin, Noun.atom_binary_to_integer(size))}
+  end
+
+  defp children_from_noun(_), do: :error
 end

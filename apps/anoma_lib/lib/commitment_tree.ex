@@ -182,4 +182,43 @@ defmodule CommitmentTree do
       CommitmentTree.Node.new(spec, children)
     end
   end
+
+  defimpl Noun.Nounable, for: CommitmentTree do
+    @impl true
+    def to_noun(tree = %CommitmentTree{}) do
+      [
+        Noun.Nounable.to_noun(tree.spec),
+        Noun.Nounable.to_noun(tree.root),
+        tree.size
+        | Enum.into(tree.map, %{}, fn {key, int} ->
+            {[:erlang.byte_size(key) | key], int}
+          end)
+          |> Noun.Nounable.to_noun()
+      ]
+    end
+  end
+
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
+  def from_noun([spec, root, size | map]) do
+    with {:ok, spec} <- CommitmentTree.Spec.from_noun(spec),
+         {:ok, root} <- CommitmentTree.Node.from_noun(root),
+         {:ok, map} <- Noun.Nounable.Map.from_noun(map),
+         final_map <-
+           Enum.into(map, %{}, fn {[size | data], value} ->
+             {Noun.atom_integer_to_binary(
+                data,
+                Noun.atom_binary_to_integer(size)
+              ), Noun.atom_binary_to_integer(value)}
+           end) do
+      {:ok,
+       %__MODULE__{
+         spec: spec,
+         root: root,
+         size: Noun.atom_binary_to_integer(size),
+         map: final_map
+       }}
+    else
+      _ -> :error
+    end
+  end
 end
