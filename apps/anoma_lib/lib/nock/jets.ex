@@ -720,8 +720,8 @@ defmodule Nock.Jets do
   def sdif(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
-         {:ok, set1} <- Noun.Nounable.MapSet.from_noun(set_arg),
-         {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set) do
+         {:ok, set1} <- Noun.Nounable.MapSet.from_noun(door_set),
+         {:ok, set2} <- Noun.Nounable.MapSet.from_noun(set_arg) do
       {:ok, set1 |> MapSet.difference(set2) |> Noun.Nounable.to_noun()}
     else
       _ -> :error
