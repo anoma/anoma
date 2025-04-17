@@ -44,8 +44,10 @@ defmodule CommitmentTree.Proof do
           binary()
         ) :: {binary(), boolean()}
   def verifyx(spec, depth, path, proof, cm) do
+    hash_fun = CommitmentTree.Spec.hash_ref_to_hash(spec.hash)
+
     if depth == 0 do
-      {spec.hash.(proof), cm == elem(proof, path)}
+      {hash_fun.(proof), cm == elem(proof, path)}
     else
       i = Integer.mod(path, spec.splay)
 
@@ -58,7 +60,7 @@ defmodule CommitmentTree.Proof do
           cm
         )
 
-      {spec.hash.(put_elem(proof, i, hash)), valid}
+      {hash_fun.(put_elem(proof, i, hash)), valid}
     end
   end
 end

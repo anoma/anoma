@@ -16,10 +16,12 @@ defmodule CommitmentTree.Node do
   """
   @spec new(CommitmentTree.Spec.t(), tuple()) :: CommitmentTree.Node.t()
   def new(spec, children) do
+    hash = CommitmentTree.Spec.hash_ref_to_hash(spec.hash)
+
     %CommitmentTree.Node{
       children: children,
       hash:
-        spec.hash.(
+        hash.(
           map_tuple(children, fn x ->
             if is_binary(x) do
               x
