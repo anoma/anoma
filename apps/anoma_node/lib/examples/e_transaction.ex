@@ -474,7 +474,8 @@ defmodule Anoma.Node.Examples.ETransaction do
       5000
     )
 
-    :mnesia.unsubscribe({:table, Storage.blocks_table(node_id), :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, Storage.blocks_table(node_id), :simple})
 
     {:atomic, block} =
       :mnesia.transaction(fn ->
@@ -515,7 +516,8 @@ defmodule Anoma.Node.Examples.ETransaction do
       5000
     )
 
-    :mnesia.unsubscribe({:table, blocks_table, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     {:atomic, block} =
       :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
@@ -556,7 +558,8 @@ defmodule Anoma.Node.Examples.ETransaction do
       5000
     )
 
-    :mnesia.unsubscribe({:table, blocks_table, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     {:atomic, block} =
       :mnesia.transaction(fn -> :mnesia.read({blocks_table, 2}) end)
@@ -596,7 +599,8 @@ defmodule Anoma.Node.Examples.ETransaction do
       5000
     )
 
-    :mnesia.unsubscribe({:table, blocks_table, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     {:atomic, block} =
       :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
@@ -681,7 +685,8 @@ defmodule Anoma.Node.Examples.ETransaction do
       5000
     )
 
-    :mnesia.unsubscribe({:table, blocks_table, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     [
       {^blocks_table, 2,

@@ -40,7 +40,7 @@ defmodule Anoma.Node.Examples.ENode do
   def start_node(opts \\ []) do
     opts =
       Keyword.validate!(opts,
-        node_id: "#{:erlang.phash2(make_ref())}"
+        node_id: "#{Base.encode16(:crypto.strong_rand_bytes(32))}"
       )
 
     enode =

@@ -14,7 +14,6 @@
   {:mnesia_rocksdb,
    git: "https://github.com/m1dnight/mnesia_rocksdb",
    branch: "upgrade-rocksdb"},
-  {:mock, "~> 0.3.0"},
   {:msgpack, "~> 0.8.1"},
   {:murmur, "~> 2.0"},
   {:optimus, "~> 0.2"},
