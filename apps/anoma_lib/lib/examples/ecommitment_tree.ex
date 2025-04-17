@@ -120,7 +120,25 @@ defmodule Examples.ECommitmentTree do
       refute CommitmentTree.Proof.verify(spec, wrong, anchor, hash)
     end
 
+    for hash <- hashes do
+      prove = CommitmentTree.prove(ct, hash)
+      assert CommitmentTree.Proof.verify(spec, prove, anchor, hash)
+    end
+
     ct
+  end
+
+  @spec babylon_ct_new_hash(CommitmentTree.Spec.t()) :: CommitmentTree.t()
+  def babylon_ct_new_hash(spec \\ sha256_32_spec()) do
+    ct = babylon_mnesia_ct(spec)
+    new_hash = :crypto.hash(:sha256, "nice")
+
+    {new_ct, anchor} = CommitmentTree.add(ct, [new_hash])
+
+    path = CommitmentTree.prove(new_ct, new_hash)
+    assert CommitmentTree.Proof.verify(spec, path, anchor, new_hash)
+
+    new_ct
   end
 
   @spec lots_of_inserts_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
@@ -166,6 +184,9 @@ defmodule Examples.ECommitmentTree do
     {ct, anchor} = CommitmentTree.add(cm_tree, [input_resource_cm])
     # Get the merkle proof of the input resource
     merkle_proof = CommitmentTree.prove(ct, 0)
+    merkle_proof_2 = CommitmentTree.prove(ct, input_resource_cm)
+
+    assert merkle_proof == merkle_proof_2
 
     {ct, merkle_proof, anchor}
   end

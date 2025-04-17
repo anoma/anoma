@@ -24,6 +24,9 @@ defmodule CommitmentTree do
 
     # the name of the mnesia table where the commitments will be stored.  may be nil
     field(:table, term())
+
+    # map from commitments to their indices
+    field(:map, %{binary() => non_neg_integer()}, default: %{})
   end
 
   ############################################################
@@ -103,6 +106,7 @@ defmodule CommitmentTree do
 
   defp add_mem(tree, cms, n) do
     new_size = tree.size + n
+    map = Enum.with_index(cms, tree.size) |> Map.new(fn x -> x end)
 
     tree = %CommitmentTree{
       tree
@@ -115,14 +119,16 @@ defmodule CommitmentTree do
             tree.spec.splay_suff_prod,
             cms,
             n
-          )
+          ),
+        map: Map.merge(tree.map, map)
     }
 
     {tree, tree.root.hash}
   end
 
-  @spec prove(CommitmentTree.t(), integer()) :: CommitmentTree.Proof.t()
-  def prove(tree, i) do
+  @spec prove(CommitmentTree.t(), integer() | binary()) ::
+          CommitmentTree.Proof.t()
+  def prove(tree, i) when is_integer(i) do
     # cannot use Integer.digits because we need to pad this out to depth digits
     {_, path} =
       Enum.reduce(1..tree.spec.depth, {i, []}, fn _, {i, acc} ->
@@ -136,6 +142,10 @@ defmodule CommitmentTree do
       path,
       CommitmentTree.Node.prove(tree.spec, tree.root, i)
     )
+  end
+
+  def prove(tree, bin) when is_binary(bin) do
+    prove(tree, Map.get(tree.map, bin, 1))
   end
 
   # missing from standard library for some reason?
