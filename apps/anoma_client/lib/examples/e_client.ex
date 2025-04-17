@@ -11,6 +11,7 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Client.Examples.EClient
   alias Anoma.Client.Storage
   alias Anoma.Node.Examples.ENode
+  alias Anoma.Node.Tables
   alias Anoma.Proto.Intentpool.Add
   alias Anoma.Proto.Intentpool.Intent
   alias Anoma.Proto.Intentpool.List
@@ -321,7 +322,7 @@ defmodule Anoma.Client.Examples.EClient do
 
   @spec prove_with_internal_scry_call(EConnection.t()) :: Prove.Response.t()
   def prove_with_internal_scry_call(conn \\ setup()) do
-    Anoma.Client.Examples.EStorage.setup()
+    :ok = Tables.reset_tables_for_client()
 
     action =
       %Action{app_data: %{<<123>> => [{"i am scried", true}]}}
@@ -354,7 +355,7 @@ defmodule Anoma.Client.Examples.EClient do
 
   @spec prove_with_external_scry_call(EConnection.t()) :: Prove.Response.t()
   def prove_with_external_scry_call(conn \\ setup()) do
-    Anoma.Client.Examples.EStorage.setup()
+    :ok = Tables.reset_tables_for_client()
     key = ["anoma", "blob", "key"]
 
     Anoma.Node.Transaction.Storage.write(
@@ -385,7 +386,7 @@ defmodule Anoma.Client.Examples.EClient do
   @spec prove_with_external_scry_call_nounify(EConnection.t()) ::
           Prove.Response.t()
   def prove_with_external_scry_call_nounify(conn \\ setup()) do
-    Anoma.Client.Examples.EStorage.setup()
+    :ok = Tables.reset_tables_for_client()
 
     val = MapSet.new(["i am a set"])
     key = ["anoma", "blob", "key"]
