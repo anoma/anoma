@@ -1,5 +1,4 @@
 defmodule Examples.ECommitmentTree do
-  alias Anoma.Node.Tables
   alias Anoma.RM.Transparent.Transaction
   alias Examples.ECairo
   alias Examples.ETransparent.ETransaction
@@ -30,12 +29,11 @@ defmodule Examples.ECommitmentTree do
     tree
   end
 
-  @spec memory_backed_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
-  def memory_backed_ct(spec \\ sha256_32_spec()) do
-    tree = CommitmentTree.new(spec, nil)
+  @spec new_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
+  def new_ct(spec \\ sha256_32_spec()) do
+    tree = CommitmentTree.new(spec)
 
     assert tree.size == 0
-    assert tree.table == nil
 
     tree
   end
@@ -43,10 +41,10 @@ defmodule Examples.ECommitmentTree do
   @doc """
   A commitment tree with commits from ETransaction.swap_from_actions/1
   """
-  @spec memory_backed_ct_with_trivial_swap(term()) ::
+  @spec ct_with_trivial_swap(term()) ::
           {CommitmentTree.t(), binary()}
-  def memory_backed_ct_with_trivial_swap(spec \\ sha256_32_spec()) do
-    tree = memory_backed_ct(spec)
+  def ct_with_trivial_swap(spec \\ sha256_32_spec()) do
+    tree = new_ct(spec)
     transaction = ETransaction.swap_from_actions()
 
     commits = Transaction.commitments(transaction)
@@ -62,40 +60,10 @@ defmodule Examples.ECommitmentTree do
     {tree, anchor}
   end
 
-  @spec empty_mnesia_backed_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
-  def empty_mnesia_backed_ct(spec \\ sha256_32_spec()) do
-    CommitmentTree.init_storage("no_node")
-
-    table_name = Tables.table_commitment_tree()
-    Tables.clear_table(Tables.table_commitment_tree())
-    tree = CommitmentTree.new(spec, table_name)
-
-    assert tree.size == 0
-    assert tree.table == table_name
-
-    tree
-  end
-
-  # @doc """
-  # This fetches the current mnesia tree storage
-
-  # This value is expected to differ, and will be a fixture for other
-  # tests to assert about.
-  # """
-  @spec current_tree_mnesia_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
-  def current_tree_mnesia_ct(spec) do
-    table_name = Tables.table_commitment_tree()
-    tree = CommitmentTree.new(spec, table_name)
-
-    assert :mnesia.table_info(table_name, :size) == tree.size
-
-    tree
-  end
-
-  @spec babylon_mnesia_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
-  def babylon_mnesia_ct(spec \\ sha256_32_spec()) do
+  @spec babylon_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
+  def babylon_ct(spec \\ sha256_32_spec()) do
     # This resets the table, this binding is important!
-    empty_ct = empty_mnesia_backed_ct(spec)
+    empty_ct = new_ct(spec)
 
     # It's fine the adding hashes come from sha256. Cuz Cairo poseidon hash also
     # returns 256bits.
@@ -107,10 +75,6 @@ defmodule Examples.ECommitmentTree do
     {ct, anchor} = CommitmentTree.add(empty_ct, hashes)
 
     assert length(hashes) == ct.size
-
-    restored_tc = current_tree_mnesia_ct(spec)
-
-    assert ct == restored_tc, "Restoring from storage gives the same tree"
 
     for {hash, index} <- Enum.with_index(hashes) do
       prove = CommitmentTree.prove(ct, index)
@@ -130,7 +94,7 @@ defmodule Examples.ECommitmentTree do
 
   @spec babylon_ct_new_hash(CommitmentTree.Spec.t()) :: CommitmentTree.t()
   def babylon_ct_new_hash(spec \\ sha256_32_spec()) do
-    ct = babylon_mnesia_ct(spec)
+    ct = babylon_ct(spec)
     new_hash = :crypto.hash(:sha256, "nice")
 
     {new_ct, anchor} = CommitmentTree.add(ct, [new_hash])
@@ -143,7 +107,7 @@ defmodule Examples.ECommitmentTree do
 
   @spec lots_of_inserts_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
   def lots_of_inserts_ct(spec \\ sha256_32_spec()) do
-    ct = memory_backed_ct(spec)
+    ct = new_ct(spec)
 
     {ct_batches, keys} =
       Enum.reduce(1..100, {ct, []}, fn _, {ct, keys} ->
@@ -177,7 +141,7 @@ defmodule Examples.ECommitmentTree do
   def a_merkle_proof() do
     cairo_spec = cairo_poseidon_spec()
 
-    cm_tree = empty_mnesia_backed_ct(cairo_spec)
+    cm_tree = new_ct(cairo_spec)
     input_resource_cm = ECairo.EResource.a_resource_commitment()
 
     # Insert the input resource to the tree
@@ -194,13 +158,13 @@ defmodule Examples.ECommitmentTree do
   @doc """
   A commitment tree with commits from Examples.ERM.EShielded.ETransaction.a_shielded_transaction/0
   """
-  @spec memory_backed_ct_with_trivial_cairo_tx(term()) ::
+  @spec ct_with_trivial_cairo_tx(term()) ::
           {CommitmentTree.t(), binary()}
-  def memory_backed_ct_with_trivial_cairo_tx(
+  def ct_with_trivial_cairo_tx(
         cms,
         spec \\ cairo_poseidon_spec()
       ) do
-    tree = memory_backed_ct(spec)
+    tree = new_ct(spec)
 
     {tree, anchor} = CommitmentTree.add(tree, cms)
 

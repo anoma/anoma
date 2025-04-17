@@ -20,7 +20,6 @@ defmodule Anoma.Node.Tables do
 
   @tables [
     {Events, [:type, :body]},
-    {CommitmentTree, [:index, :hash]},
     {Blocks, [:round, :block]},
     {Values, [:key, :value]},
     {Updates, [:key, :value]},
@@ -59,15 +58,6 @@ defmodule Anoma.Node.Tables do
   @spec table_events(String.t()) :: atom()
   def table_events(node_id) do
     node_table_name(node_id, Events)
-  end
-
-  @doc """
-  I return the table name for the given node its commitment tree.
-  I can be called without a node id too. In that case I use "no_node" as node id.
-  """
-  @spec table_commitment_tree(String.t()) :: atom()
-  def table_commitment_tree(node_id \\ "no_node") do
-    node_table_name(node_id, CommitmentTree)
   end
 
   @doc """
