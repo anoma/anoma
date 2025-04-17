@@ -25,6 +25,68 @@
 5. [Analysis](./../analysis.livemd)
 6. [Jam](./../jam.livemd)
 
+## Datastructure Rules
+
+Any datastructure that is exposed outside of the boundaries of a single module
+should be represented as a struct. Representing compound datastructures this way
+ensures that the structure is defined, documented, typed, and maintained in a
+single place in the codebase.
+
+Examples of a compound datastructure are tuples, fixed-size lists, maps, or sets.
+
+### Examples
+
+#### Transaction Result
+
+For example, a function that returns the result of evaluating a transaction might have the following typespec.
+
+```elixir
+@spec execute_transaction :: {:ok, Noun.t()} | :error | :in_progress
+```
+
+Instead of using ad-hoc compound datastructures here, define a struct `TransactionResult` that captures the meaning of these values.
+
+```elixir
+typedstruct TransactionResult do
+  @typedoc """
+  I represent the execution result of a transaction.
+
+  - `:result`   - The result of the transaction.
+  """
+  field(:result, Noun.t() | :error | :in_progress | :complete)
+end
+```
+
+#### Example Node
+
+In the node examples, the function `start_node/1` starts up a node and returns a
+map with extra information about this node: the `pid` of its supervisor, and its `node_id`.
+
+Instead of returning a tuple `{pid, node_id}`, a struct is created `ENode`.
+
+So instead of writing
+```elixir
+@spec start_node(Keyword.t()) :: {pid, String.t()}
+```
+
+we write
+
+```elixir
+  typedstruct do
+    @typedoc """
+    I represent a node to be used in examples.
+
+    ### Fields
+    - `:node_id`    - The node id of this node.
+    - `:pid`        - the pid of the supervision tree.
+    """
+    field(:node_id, String.t())
+    field(:pid, pid())
+  end
+
+@spec start_node(Keyword.t()) :: ENode.t()
+```
+
 ## Structural Rules
 
 A module is **documented** if
