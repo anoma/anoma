@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package Anoma.Proto.PubSub;
+
+import "node.proto";
+
+/*
+ A topic that can be subscribed to or unsubscribed from.
+*/
+message Topic { string topic = 1; }
+
+/*
+ A message that can be published to a topic.
+*/
+message Message { string message = 1; }
+/*
+ A subscription to a topic.
+*/
+message Subscribe {
+  message Request {
+    Node node = 1;
+    Topic topic = 2;
+    Node subscriber = 3;
+  }
+
+  message Response {
+    bool success = 1;
+    string error = 2;
+  }
+}
+
+/*
+ An unsubscription to a topic.
+*/
+message Unsubscribe {
+  message Request {
+    Node node = 1;
+    Topic topic = 2;
+    Node subscriber = 3;
+  }
+
+  message Response {}
+}
+
+/*
+ An event that is being published on a particular topic.
+*/
+message Event {
+  message Request {
+    Topic topic = 1;
+    Message message = 2;
+  }
+
+  message Response {}
+}

@@ -5,16 +5,15 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
   alias GRPC.Server.Stream
   alias Noun.Jam
 
-  import Anoma.Protobuf.ErrorHandler
-
   use GRPC.Server, service: Anoma.Proto.MempoolService.Service
+
   require Logger
 
-  @spec add(Add.Request.t(), Stream.t()) ::
-          Add.Response.t()
+  import Anoma.Protobuf.ErrorHandler
+
+  @spec add(Add.Request.t(), Stream.t()) :: Add.Response.t()
   def add(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
-
     # validate the request. will raise if not valid.
     validate_request!(request)
 
@@ -25,10 +24,11 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
 
     # create the transaction from the noun
     noun = Jam.cue!(request.transaction.transaction)
+    transaction = {request.transaction_type, noun}
 
     # submit the transaction to the mempool
     node_id = request.node.id
-    :ok = Mempool.tx(node_id, {request.transaction_type, noun})
+    :ok = Mempool.tx(node_id, transaction)
 
     # return an empty response
     %Add.Response{}
