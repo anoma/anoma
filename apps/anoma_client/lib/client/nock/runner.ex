@@ -1,13 +1,16 @@
 defmodule Anoma.Client.Runner do
+  @moduledoc """
+  I contain logic to run nock code.
+  """
+  alias Anoma.Client.Node.GRPCProxy
   alias Anoma.Client.Storage
-  alias Anoma.Client.Connection.GRPCProxy
   alias Anoma.RM.Transparent.Transaction
 
   @doc """
   I run the given Nock program with its inputs and return the result.
   """
   @spec prove(Noun.t(), [Noun.t()]) ::
-          {:ok, Noun.t(), [Noun.t()]} | {:error, :failed_to_prove}
+          {:ok, Noun.t(), [Noun.t()]} | {:error, :failed_to_prove, [Noun.t()]}
   def prove(program, inputs) do
     core =
       (Noun.list_nock_to_erlang(program) ++ [Nock.Lib.rm_core()])
@@ -23,35 +26,49 @@ defmodule Anoma.Client.Runner do
 
     io_sink = open_io_sink()
 
-    case Nock.nock(core, eval_call, %Nock{
-           stdio: io_sink,
-           scry_function: &client_scry/1
-         }) do
+    nock_environment = %Nock{stdio: io_sink, scry_function: &client_scry/1}
+
+    result = Nock.nock(core, eval_call, nock_environment)
+
+    # close the IO sink
+    {:ok, hints} = close_io_sink(io_sink)
+
+    case result do
       {:ok, noun} ->
-        try do
-          {:ok, tx} = noun |> Transaction.from_noun()
+        # if the result of the nock program is a transaction, write out its appdata.
+        # if it doesnt happen to be a transaction, ignore it and return the result as is.
+        :ok = write_transaction_app_data(noun)
 
-          for {binary, bool} <- Transaction.app_data(tx) do
-            if bool do
-              Storage.write({:crypto.hash(:sha256, binary), binary})
-            end
-          end
-        rescue
-          _ -> :ok
-        end
-
-        {:ok, result} = close_io_sink(io_sink)
-
-        {:ok, noun, result}
+        {:ok, noun, hints}
 
       :error ->
-        {:error, :failed_to_prove}
+        {:error, :failed_to_prove, hints}
     end
   end
 
   ############################################################
   #                           Helpers                        #
   ############################################################
+
+  @spec write_transaction_app_data(Noun.t()) :: :ok
+  defp write_transaction_app_data(noun = [_, _ | _]) do
+    case Transaction.from_noun(noun) do
+      {:ok, tx} ->
+        tx
+        |> Transaction.app_data()
+        |> Enum.filter(fn {_, bool} -> bool end)
+        |> Enum.each(fn {bin, _} ->
+          Storage.write({:crypto.hash(:sha256, bin), bin})
+        end)
+
+        :ok
+
+      :error ->
+        :ok
+    end
+  end
+
+  defp write_transaction_app_data(_), do: :ok
 
   @doc """
   I turn a list into an improper list.
@@ -73,10 +90,11 @@ defmodule Anoma.Client.Runner do
 
   @spec close_io_sink(pid()) :: {:error, :timeout} | {:ok, term()}
   def close_io_sink(io) do
-    send(io, {:quit, self()})
+    ref = make_ref()
+    send(io, {:quit, self(), ref})
 
     receive do
-      output ->
+      {^ref, output} ->
         {:ok, output}
     after
       10 ->
@@ -93,9 +111,9 @@ defmodule Anoma.Client.Runner do
         noun = Base.decode64!(noun_str) |> Noun.Jam.cue!()
         capture([noun | acc])
 
-      {:quit, from} ->
+      {:quit, from, ref} ->
         output = acc |> Enum.reverse()
-        send(from, output)
+        send(from, {ref, output})
 
       _ ->
         capture(acc)
@@ -151,16 +169,15 @@ defmodule Anoma.Client.Runner do
   defp send_candidate(space) do
     tx_candidate = space |> ro_tx_candidate() |> Noun.Jam.jam()
 
-    with {:ok, reply} <-
-           tx_candidate |> GRPCProxy.add_read_only_transaction() do
-      case reply.result do
-        {:success, res} ->
-          value = res.result |> Noun.Jam.cue!()
-          {:ok, value}
+    case GRPCProxy.add_read_only_transaction(tx_candidate) do
+      {:ok, noun} ->
+        {:ok, noun}
 
-        _ ->
-          :error
-      end
+      {:error, _, _} ->
+        :error
+
+      {:error, :absent} ->
+        :error
     end
   end
 end

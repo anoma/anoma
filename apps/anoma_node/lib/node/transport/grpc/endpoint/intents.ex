@@ -62,8 +62,5 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
     IntentPool.new_intent(request.node.id, intent)
 
     %Add.Response{result: "intent added"}
-  rescue
-    e ->
-      raise_grpc_error!(e)
   end
 end
