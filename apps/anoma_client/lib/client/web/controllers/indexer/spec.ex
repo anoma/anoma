@@ -3,6 +3,16 @@ defmodule Anoma.Client.Web.IndexerController.Spec do
 
   require OpenApiSpex
 
+  defmodule Nullifier do
+    OpenApiSpex.schema(%{
+      # The title is optional. It defaults to the last section of the module name.
+      # So the derived title for MyApp.User is "User".
+      description: "Base64 encoded, jammed representing a nullifier",
+      type: :string,
+      example: "TkZfAaHYNGTIOM4U"
+    })
+  end
+
   defmodule Nullifiers do
     OpenApiSpex.schema(%{
       # The title is optional. It defaults to the last section of the module name.
@@ -11,16 +21,28 @@ defmodule Anoma.Client.Web.IndexerController.Spec do
       type: :object,
       properties: %{
         nullifiers: %Schema{
-          type: :list,
-          description: "Base64 encoded, jammed representing a nullifier"
+          type: :array,
+          items: Nullifier
         }
       },
       required: [:nullifiers],
       example: %{
         "nullifiers" => [
-          "TkZfAaHYNGTIOM4U"
+          Nullifier.schema().example,
+          Nullifier.schema().example
         ]
       }
+    })
+  end
+
+  defmodule UnrevealedCommit do
+    OpenApiSpex.schema(%{
+      # The title is optional. It defaults to the last section of the module name.
+      # So the derived title for MyApp.User is "User".
+      description: "Base64 encoded, jammed representing an unrevealed commit",
+      type: :string,
+      example:
+        "Q01fAaHYNGTIOA6AAOG3T2NX290OA60mr6qwQHGWTvHJoPCr8Q7bBg4GyJCgKQ=="
     })
   end
 
@@ -32,17 +54,26 @@ defmodule Anoma.Client.Web.IndexerController.Spec do
       type: :object,
       properties: %{
         commits: %Schema{
-          type: :list,
-          description:
-            "Base64 encoded, jammed representing an unrevealed commit"
+          type: :array,
+          items: UnrevealedCommit
         }
       },
       required: [:commits],
       example: %{
         "commits" => [
-          "Q01fAaHYNGTIOA6AAOG3T2NX290OA60mr6qwQHGWTvHJoPCr8Q7bBg4GyJCgKQ=="
+          UnrevealedCommit.schema().example,
+          UnrevealedCommit.schema().example
         ]
       }
+    })
+  end
+
+  defmodule Commit do
+    OpenApiSpex.schema(%{
+      description: "Integer representing a commit",
+      type: :string,
+      example:
+        "1537671851947758927876308911542417830990302212266205757362361328816119338469879118087480334645489341223095619"
     })
   end
 
@@ -50,20 +81,31 @@ defmodule Anoma.Client.Web.IndexerController.Spec do
     OpenApiSpex.schema(%{
       # The title is optional. It defaults to the last section of the module name.
       # So the derived title for MyApp.User is "User".
-      description: "List of unrevealed commits",
+      description: "List of commits",
       type: :object,
       properties: %{
         commits: %Schema{
-          type: :list,
-          description: "Integer representing a commit"
+          type: :array,
+          items: Commit
         }
       },
       required: [:commits],
       example: %{
         "commits" => [
-          "1537671851947758927876308911542417830990302212266205757362361328816119338469879118087480334645489341223095619"
+          Commit.schema().example,
+          Commit.schema().example
         ]
       }
+    })
+  end
+
+  defmodule UnspentResource do
+    OpenApiSpex.schema(%{
+      # The title is optional. It defaults to the last section of the module name.
+      # So the derived title for MyApp.User is "User".
+      description: "Base64 encoded, jammed representing an unspent resource",
+      type: :string,
+      example: "AaHYNGTIOA6AAOG3T2NX290OA60mr6qwQHGWTvHJoPCr8Q7bBg4GyJCgKQ=="
     })
   end
 
@@ -74,16 +116,16 @@ defmodule Anoma.Client.Web.IndexerController.Spec do
       description: "List of unspent resources",
       type: :object,
       properties: %{
-        unspent_resources: %Schema{
-          type: :list,
-          description:
-            "Base64 encoded, jammed representing an unspent resource"
+        commits: %Schema{
+          type: :array,
+          items: UnspentResource
         }
       },
-      required: [:unspent_resources],
+      required: [:commits],
       example: %{
         "unspent_resources" => [
-          "AaHYNGTIOA6AAOG3T2NX290OA60mr6qwQHGWTvHJoPCr8Q7bBg4GyJCgKQ=="
+          UnspentResource.schema().example,
+          UnspentResource.schema().example
         ]
       }
     })
@@ -175,7 +217,7 @@ defmodule Anoma.Client.Web.IndexerController.Spec do
       },
       required: [:blocks],
       example: %{
-        "blocks" => []
+        "blocks" => [Block.schema().example]
       }
     })
   end

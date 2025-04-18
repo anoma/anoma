@@ -179,11 +179,9 @@ defmodule Anoma.Client.Examples.EClient.Indexer do
   """
   @spec get_blocks_empty(EClient.t()) :: EClient.t()
   def get_blocks_empty(client \\ setup()) do
-    payload = %{direction: :before, offset: 0}
-
     data =
       client.conn
-      |> get(~p"/indexer/blocks", payload)
+      |> get(~p"/indexer/blocks/before/0")
       |> json_response(200)
 
     assert data == %{"blocks" => []}
@@ -200,11 +198,9 @@ defmodule Anoma.Client.Examples.EClient.Indexer do
     # After this call, there should be two blocks present.
     EIndexer.indexer_reads_after(client.node.node_id)
 
-    payload = %{direction: :before, offset: 100}
-
     data =
       client.conn
-      |> get(~p"/indexer/blocks", payload)
+      |> get(~p"/indexer/blocks/before/100")
       |> json_response(200)
 
     %{"blocks" => blocks} = data

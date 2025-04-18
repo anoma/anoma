@@ -54,7 +54,7 @@ defmodule Anoma.Client.Web.Router do
     get("/unrevealed-commits", IndexerController, :list_unrevealed_commits)
     get("/commits", IndexerController, :list_commits)
     get("/unspent-resources", IndexerController, :list_unspent_resources)
-    get("/blocks", IndexerController, :get_blocks)
+    get("/blocks/:direction/:offset", IndexerController, :get_blocks)
     get("/latest-block", IndexerController, :get_latest_block)
     get("/root", IndexerController, :root)
     post("/filter-resources", IndexerController, :filter_resource)

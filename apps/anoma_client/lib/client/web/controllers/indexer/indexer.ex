@@ -7,6 +7,7 @@ defmodule Anoma.Client.Web.IndexerController do
   alias Anoma.Client.Node.GRPCProxy
   alias Anoma.Client.Web.IndexerController.Spec
   alias OpenApiSpex.Schema
+  alias OpenApiSpex.Operation
 
   ############################################################
   #                           OpenAPI Spec                   #
@@ -56,26 +57,33 @@ defmodule Anoma.Client.Web.IndexerController do
 
   operation(:get_blocks,
     summary: "List all blocks",
-    parameters: [],
-    request_body:
-      {"The parameters for the blocks", "application/json",
-       %Schema{
-         type: :object,
-         properties: %{
-           direction: %Schema{
-             type: :string,
-             description: "before or after offset",
-             default: "before",
-             enum: ["before", "after"]
-           },
-           offset: %Schema{
-             type: :integer,
-             description: "offset of blocks",
-             default: 0,
-             minimum: 0
-           }
-         }
-       }},
+    parameters: [
+      Operation.parameter(
+        :direction,
+        :path,
+        %Schema{
+          type: :string,
+          description: "before or after offset",
+          default: "before",
+          enum: ["before", "after"]
+        },
+        "Direction",
+        example: "before"
+      ),
+      Operation.parameter(
+        :offset,
+        :path,
+        %Schema{
+          type: :integer,
+          description: "offset of blocks",
+          default: 0,
+          minimum: 0
+        },
+        "Block offset",
+        example: 1
+      )
+    ],
+    request_body: {},
     responses: [
       ok: {"List of blocks", "application/json", Spec.Blocks}
     ]
