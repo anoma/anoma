@@ -290,7 +290,7 @@ defmodule Anoma.Client.Examples.EClient.Indexer do
 
     data =
       client.conn
-      |> get(~p"/indexer/filter-resources", payload)
+      |> post(~p"/indexer/filter-resources", payload)
       |> json_response(200)
 
     assert data == %{"resources" => []}
@@ -303,11 +303,11 @@ defmodule Anoma.Client.Examples.EClient.Indexer do
   """
   @spec filter_resource_empty_owner(EClient.t()) :: EClient.t()
   def filter_resource_empty_owner(client \\ setup()) do
-    payload = %{filters: [{:owner, Noun.pad_trailing("jeremy", 32)}]}
+    payload = %{filters: [example_owner_filter()]}
 
     data =
       client.conn
-      |> get(~p"/indexer/filter-resources", payload)
+      |> post(~p"/indexer/filter-resources", payload)
       |> json_response(200)
 
     assert data == %{"resources" => []}
@@ -322,11 +322,11 @@ defmodule Anoma.Client.Examples.EClient.Indexer do
   def filter_resource_owner(client \\ setup()) do
     EIndexer.indexer_filters_owner(client.node.node_id)
 
-    payload = %{filters: [{:owner, Noun.pad_trailing("jeremy", 32)}]}
+    payload = %{filters: [example_owner_filter()]}
 
     data =
       client.conn
-      |> get(~p"/indexer/filter-resources", payload)
+      |> post(~p"/indexer/filter-resources", payload)
       |> json_response(200)
 
     %{"resources" => resources} = data
@@ -340,11 +340,11 @@ defmodule Anoma.Client.Examples.EClient.Indexer do
   """
   @spec filter_resource_empty_kind(EClient.t()) :: EClient.t()
   def filter_resource_empty_kind(client \\ setup()) do
-    payload = %{filters: [{:kind, Resource.kind(%Resource{})}]}
+    payload = %{filters: [example_kind_filter()]}
 
     data =
       client.conn
-      |> get(~p"/indexer/filter-resources", payload)
+      |> post(~p"/indexer/filter-resources", payload)
       |> json_response(200)
 
     assert data == %{"resources" => []}
@@ -359,15 +359,59 @@ defmodule Anoma.Client.Examples.EClient.Indexer do
   def filter_resource_kind(client \\ setup()) do
     EIndexer.indexer_filters_owner(client.node.node_id)
 
-    payload = %{filters: [{:kind, Resource.kind(%Resource{})}]}
+    payload = %{filters: [example_kind_filter()]}
 
     data =
       client.conn
-      |> get(~p"/indexer/filter-resources", payload)
+      |> post(~p"/indexer/filter-resources", payload)
       |> json_response(200)
 
     %{"resources" => resources} = data
     assert Enum.count(resources) == 2
     client
+  end
+
+  @doc """
+  List resources based on multiple filters.
+  """
+  @spec filter_resource_multiple_filters(EClient.t()) :: EClient.t()
+  def filter_resource_multiple_filters(client \\ setup()) do
+    EIndexer.indexer_filters_owner(client.node.node_id)
+
+    payload = %{filters: [example_kind_filter(), example_kind_filter()]}
+
+    data =
+      client.conn
+      |> post(~p"/indexer/filter-resources", payload)
+      |> json_response(200)
+
+    %{"resources" => resources} = data
+    assert Enum.count(resources) == 2
+    client
+  end
+
+  ############################################################
+  #                           Helpers                        #
+  ############################################################
+
+  # @doc """
+  # An example filter for a resource kind.
+  # The filter is always the base64 encoded representation of the kind.
+  # """
+  @spec example_kind_filter :: %{kind: String.t()}
+  defp example_kind_filter do
+    kind = Base.encode64(Resource.kind(%Resource{}))
+    %{kind: kind}
+  end
+
+  # @doc """
+  # An example filter for an owner.
+  # The filter is always the base64 encoded representation of the owner,
+  # padded to 32 bytes.
+  # """
+  @spec example_owner_filter :: %{owner: String.t()}
+  defp example_owner_filter do
+    owner = Base.encode64(Noun.pad_trailing("jeremy", 32))
+    %{owner: owner}
   end
 end

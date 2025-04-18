@@ -118,20 +118,9 @@ defmodule Anoma.Client.Web.IndexerController do
   operation(:filter_resource,
     summary: "Filter resources",
     parameters: [],
-    request_body: {},
-    responses: [
-      ok:
-        {"List of filters to apply", "application/json",
-         %Schema{
-           type: :object,
-           properties: %{
-             filters: %Schema{
-               type: :array,
-               items: Spec.Filter
-             }
-           }
-         }}
-    ]
+    request_body:
+      {"A list of filter objects", "application/json", Spec.Filters},
+    responses: []
   )
 
   ############################################################
@@ -210,16 +199,20 @@ defmodule Anoma.Client.Web.IndexerController do
     end
   end
 
+  # @doc """
+  # Example of filters query:
+  # %{"filters" => [%{"owner" => "jeremy"}]}
+  # """
   defp parse_filters(""), do: []
 
-  defp parse_filters(filters) do
+  defp parse_filters(filters) when is_list(filters) do
     Enum.map(filters, fn filter ->
       case filter do
-        {"owner", binary} ->
-          {:owner, binary}
+        %{"owner" => binary} ->
+          {:owner, Base.decode64!(binary)}
 
-        {"kind", kind} ->
-          {:kind, kind}
+        %{"kind" => kind} ->
+          {:kind, Base.decode64!(kind)}
       end
     end)
   end

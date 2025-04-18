@@ -57,6 +57,6 @@ defmodule Anoma.Client.Web.Router do
     get("/blocks", IndexerController, :get_blocks)
     get("/latest-block", IndexerController, :get_latest_block)
     get("/root", IndexerController, :root)
-    get("/filter-resources", IndexerController, :filter_resource)
+    post("/filter-resources", IndexerController, :filter_resource)
   end
 end

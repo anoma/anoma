@@ -184,19 +184,56 @@ defmodule Anoma.Client.Web.IndexerController.Spec do
     OpenApiSpex.schema(%{
       # The title is optional. It defaults to the last section of the module name.
       # So the derived title for MyApp.User is "User".
-      description: "A resource owner filter",
+      description: "A resource filter",
+      type: :object,
+      oneOf: [
+        %Schema{
+          description: "Kind filter",
+          type: :object,
+          properties: %{
+            kind: %Schema{
+              type: :string,
+              description: "The kind of the resoruce, base64 encoded."
+            }
+          }
+        },
+        %Schema{
+          description: "Owner filter",
+          type: :object,
+          properties: %{
+            kind: %Schema{
+              type: :string,
+              description:
+                "The owner of the resource, left-padded to 32 bytes, base64 encoded"
+            }
+          }
+        }
+      ],
+      example: %{
+        "owner" => "amVyZW15AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      }
+    })
+  end
+
+  defmodule Filters do
+    OpenApiSpex.schema(%{
+      # The title is optional. It defaults to the last section of the module name.
+      # So the derived title for MyApp.User is "User".
+      description: "A list of resource filters",
       type: :object,
       properties: %{
-        owner: %Schema{
-          type: :string
-        },
-        kind: %Schema{
-          type: :string
+        filters: %Schema{
+          type: :array,
+          items: Filter
         }
       },
-      required: [:blocks],
       example: %{
-        "owner" => "jeremy"
+        "filters" => [
+          %{
+            "owner" => "amVyZW15AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+          },
+          %{"kind" => "LcbjKTdsnkhy5QLO2uhAkORI+ydmwmv6FpmVl3d4WVc="}
+        ]
       }
     })
   end
