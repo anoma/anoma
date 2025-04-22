@@ -98,9 +98,8 @@ defmodule Anoma.Node.Transaction.Executor do
   @doc """
   I am the Executor launch function.
 
-  Given a transaction in {backend, code} format with specific ID,
-  I launch that transaction as a task. If no ID is provided, I generate one
-  randomly.
+  Given a transaction with specific ID and appropriate reads, I launch that
+  transaction as a task, with specified reads fed as scry-restrictions.
   """
 
   @spec launch(

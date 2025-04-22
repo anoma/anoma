@@ -21,7 +21,6 @@ defmodule Anoma.Node.Transaction.Mempool do
   - `tx_dump/1`
   - `execute/2`
   - `tx/2`
-  - `tx/3`
   """
 
   alias __MODULE__
@@ -265,8 +264,12 @@ defmodule Anoma.Node.Transaction.Mempool do
   @doc """
   I am a launch function for a new transaction.
 
-  Given a node ID with a {backend, tx} tuple, I launch a new transaction
+  Given a node ID with a transaction candidate, I launch a new transaction
   with a random ID, sending an appropriate event.
+
+  After running an initial Nock evaluation, I look at the keys the
+  transaction reads from and writes to. Depending on these, a backend gets
+  assigned.
 
   Afterwards, the transaction code is sent to the Executor Engine to be
   assigned to a Worker, while the code wrapped in `Tx.t()` will be stored
