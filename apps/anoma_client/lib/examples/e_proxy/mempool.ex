@@ -16,7 +16,7 @@ defmodule Anoma.Client.Examples.EProxy.Mempool do
   @spec add_transaction(EClient.t()) :: {EClient.t(), any()}
   def add_transaction(client \\ setup()) do
     # create an arbitrary intent and jam it, and then encode it
-    {_, transaction} = ETransaction.trivial_transparent_transaction()
+    transaction = ETransaction.trivial_transparent_transaction()
 
     transaction = Noun.Jam.jam(transaction)
 

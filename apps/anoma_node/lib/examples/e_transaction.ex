@@ -317,26 +317,24 @@ defmodule Anoma.Node.Examples.ETransaction do
     ENode.start_node(node_id: node_id)
   end
 
-  @spec zero(String.t()) :: {Backends.backend(), Noun.t()}
-  def zero(key \\ "key") do
-    {:debug_term_storage, Examples.ENock.zero(key)}
+  @spec zero(String.t()) :: Noun.t()
+  def zero(key \\ "key", writes \\ [["key"]]) do
+    Examples.ENock.zero(key, writes)
   end
 
-  @spec inc(String.t()) :: {Backends.backend(), Noun.t()}
-  def inc(key \\ "key") do
-    {:debug_term_storage, Examples.ENock.inc(key)}
+  @spec inc(String.t()) :: Noun.t()
+  def inc(key \\ "key", writes \\ [["key"]]) do
+    Examples.ENock.inc(key, writes)
   end
 
-  @spec trivial_transparent_transaction() :: {Backends.backend(), Noun.t()}
+  @spec trivial_transparent_transaction() :: Noun.t()
   def trivial_transparent_transaction() do
-    {:transparent_resource, ENock.transparent_core(ENock.trivial_swap())}
+    ENock.transparent_core(ENock.trivial_swap())
   end
 
-  @spec trivial_transparent_transaction_no_eph() ::
-          {Backends.backend(), Noun.t()}
+  @spec trivial_transparent_transaction_no_eph() :: Noun.t()
   def trivial_transparent_transaction_no_eph() do
-    {:transparent_resource,
-     ENock.transparent_core(ENock.trivial_swap_no_eph())}
+    ENock.transparent_core(ENock.trivial_swap_no_eph())
   end
 
   @doc """
@@ -344,11 +342,11 @@ defmodule Anoma.Node.Examples.ETransaction do
   """
   @spec simple_transaction() :: __MODULE__.t()
   def simple_transaction() do
-    {backend, noun} = zero()
+    noun = zero()
 
     %__MODULE__{
       id: nil,
-      backend: backend,
+      backend: :debug_term_storage,
       noun: noun,
       result: {:ok, [[["key"] | 0]]}
     }
@@ -362,7 +360,7 @@ defmodule Anoma.Node.Examples.ETransaction do
     %__MODULE__{
       id: id,
       backend: :debug_term_storage,
-      noun: [0 | 0],
+      noun: bluf(),
       result: :error
     }
   end
@@ -471,9 +469,9 @@ defmodule Anoma.Node.Examples.ETransaction do
   def zero_counter_submit(node_id \\ Node.example_random_id()) do
     key = "key"
     start_tx_module(node_id)
-    {back, zero} = zero(key)
+    zero = zero(key)
 
-    id = Mempool.tx(node_id, {back, zero})
+    id = Mempool.tx(node_id, zero)
     :mnesia.subscribe({:table, Storage.blocks_table(node_id), :simple})
     dump = Mempool.tx_dump(node_id)
 
@@ -500,7 +498,7 @@ defmodule Anoma.Node.Examples.ETransaction do
        [
          %Mempool.Tx{
            code: ^zero,
-           backend: ^back,
+           backend: :debug_term_storage,
            vm_result: {:ok, [[[^key] | 0] | 0]},
            tx_result: {:ok, [[[^key] | 0]]}
          }
@@ -515,11 +513,11 @@ defmodule Anoma.Node.Examples.ETransaction do
     blocks_table = Storage.blocks_table(node_id)
     key = "key"
     start_tx_module(node_id)
-    {back1, zero} = zero(key)
-    {back2, inc} = inc(key)
+    zero = zero(key)
+    inc = inc(key)
 
-    id1 = Mempool.tx(node_id, {back1, zero})
-    id2 = Mempool.tx(node_id, {back2, inc})
+    id1 = Mempool.tx(node_id, zero)
+    id2 = Mempool.tx(node_id, inc)
     :mnesia.subscribe({:table, blocks_table, :simple})
     Mempool.execute(node_id, [id1, id2])
 
@@ -539,13 +537,13 @@ defmodule Anoma.Node.Examples.ETransaction do
        [
          %Mempool.Tx{
            code: ^zero,
-           backend: ^back1,
+           backend: :debug_term_storage,
            vm_result: {:ok, [[[^key] | 0] | 0]},
            tx_result: {:ok, [[[^key] | 0]]}
          },
          %Mempool.Tx{
            code: ^inc,
-           backend: ^back2,
+           backend: :debug_term_storage,
            vm_result: {:ok, [[[^key] | 1] | 0]},
            tx_result: {:ok, [[[^key] | 1]]}
          }
@@ -560,8 +558,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     blocks_table = Storage.blocks_table(node_id)
     key = "key"
     zero_counter_submit(node_id)
-    {back, inc} = inc(key)
-    id1 = Mempool.tx(node_id, {back, inc})
+    inc = inc(key)
+    id1 = Mempool.tx(node_id, inc)
     :mnesia.subscribe({:table, blocks_table, :simple})
     Mempool.execute(node_id, [id1])
 
@@ -581,7 +579,7 @@ defmodule Anoma.Node.Examples.ETransaction do
        [
          %Mempool.Tx{
            code: ^inc,
-           backend: ^back,
+           backend: :debug_term_storage,
            vm_result: {:ok, [[[^key] | 1] | 0]},
            tx_result: {:ok, [[[^key] | 1]]}
          }
@@ -593,7 +591,11 @@ defmodule Anoma.Node.Examples.ETransaction do
 
   @spec bluf() :: Noun.t()
   def bluf() do
-    [0 | 0]
+    # Place the result in a list
+    arm = [0 | 0]
+    sample = 0
+    keyspace = [0 | [["key"]]]
+    [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
   end
 
   @spec bluf_transaction_errors(String.t()) :: String.t()
@@ -602,7 +604,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     start_tx_module(node_id)
     # todo: ideally we wait for the event broker message
     # before execution
-    id1 = Mempool.tx(node_id, {:debug_term_storage, bluf()})
+    bluf = bluf()
+    id1 = Mempool.tx(node_id, bluf)
     :mnesia.subscribe({:table, blocks_table, :simple})
     Mempool.execute(node_id, [id1])
 
@@ -621,7 +624,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       {^blocks_table, 1,
        [
          %Mempool.Tx{
-           code: [0 | 0],
+           code: ^bluf,
            backend: :debug_term_storage,
            vm_result: :vm_error,
            tx_result: :error
@@ -636,10 +639,10 @@ defmodule Anoma.Node.Examples.ETransaction do
   def read_txs_write_nothing(node_id \\ Node.example_random_id()) do
     key = "key"
     start_tx_module(node_id)
-    {_backend, code} = zero(key)
+    code = zero(key, 0)
 
     with_subscription [[]] do
-      id = Mempool.tx(node_id, {:read_only, code})
+      id = Mempool.tx(node_id, code)
 
       res = [[[key] | 0] | 0]
 
@@ -664,12 +667,12 @@ defmodule Anoma.Node.Examples.ETransaction do
     read_txs_write_nothing(node_id)
     key = "key"
 
-    {_backend, code} = inc(key)
+    code = inc(key, 0)
 
     zero_counter_submit(node_id)
 
     with_subscription [[]] do
-      id = Mempool.tx(node_id, {:read_only, code})
+      id = Mempool.tx(node_id, code)
       res = [[[key] | 1] | 0]
 
       assert_receive(
@@ -691,12 +694,12 @@ defmodule Anoma.Node.Examples.ETransaction do
     read_txs_write_nothing(node_id)
     key = "key"
 
-    {_backend, code} = inc(key)
+    code = inc(key, 0)
 
     inc_counter_submit_with_zero(node_id)
 
     with_subscription [[]] do
-      id = Mempool.tx(node_id, {:read_only, code})
+      id = Mempool.tx(node_id, code)
       res = [[[key] | 2] | 0]
 
       assert_receive(
@@ -720,8 +723,9 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     # this example also creates a block, so the next round is 2.
     zero_counter_submit(node_id)
-    {back, inc} = inc(key)
-    id2 = Mempool.tx(node_id, {:debug_term_storage, bluf()})
+    inc = inc(key)
+    bluf = bluf()
+    id2 = Mempool.tx(node_id, bluf)
     id3 = Mempool.tx(node_id, inc(key))
     :mnesia.subscribe({:table, blocks_table, :simple})
     Mempool.execute(node_id, [id2, id3])
@@ -738,14 +742,14 @@ defmodule Anoma.Node.Examples.ETransaction do
       {^blocks_table, 2,
        [
          %Mempool.Tx{
-           code: [0 | 0],
+           code: ^bluf,
            backend: :debug_term_storage,
            vm_result: :vm_error,
            tx_result: :error
          },
          %Mempool.Tx{
            code: ^inc,
-           backend: ^back,
+           backend: :debug_term_storage,
            vm_result: {:ok, [[[^key] | 1] | 0]},
            tx_result: {:ok, [[[^key] | 1]]}
          }

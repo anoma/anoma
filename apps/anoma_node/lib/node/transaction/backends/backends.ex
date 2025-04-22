@@ -52,17 +52,19 @@ defmodule Anoma.Node.Transaction.Backends do
     which is transmitted as a Nullifier Event.
   """
 
-  @spec execute(node_id, {back, Noun.t()}, id) :: :ok
+  @spec execute(node_id, {back, Noun.t()}, id, reads) :: :ok
         when id: binary(),
              node_id: String.t(),
-             back: backend()
-  def execute(node_id, {backend, tx_code}, id) do
+             back: backend(),
+             reads: list(list(binary()))
+  def execute(node_id, {backend, tx_code}, id, reads) do
     time = Storage.current_time(node_id)
 
     scry =
       fn list ->
         if list do
           with [id, key] <- list |> Noun.list_nock_to_erlang(),
+               true <- Enum.any?(reads, fn x -> Noun.equal?(key, x) end),
                {:ok, value} <-
                  (case backend do
                     :read_only ->
@@ -87,7 +89,7 @@ defmodule Anoma.Node.Transaction.Backends do
       end
 
     env = %Nock{scry_function: scry}
-    vm_result = vm_execute(tx_code, env, id)
+    vm_result = vm_execute(tx_code, env)
     result_event(id, vm_result, node_id, backend)
 
     res =
@@ -109,26 +111,14 @@ defmodule Anoma.Node.Transaction.Backends do
   #                       VM Execution                       #
   ############################################################
 
-  @spec vm_execute(Noun.t(), Nock.t(), binary()) ::
+  @spec vm_execute(Noun.t(), Nock.t()) ::
           {:ok, Noun.t()} | :vm_error
-  defp vm_execute(tx_code, env, id) do
-    with {:ok, code} <- cue_when_atom(tx_code),
-         {:ok, [_ | stage_2_tx]} <- nock(code, [9, 2, 0 | 1], env),
-         {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
-         {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
+  defp vm_execute(tx_code, env) do
+    with {:ok, result} <- nock(tx_code, [9, 2, 0 | 1], env) do
       {:ok, result}
     else
       _e -> :vm_error
     end
-  end
-
-  @spec cue_when_atom(Noun.t()) :: :error | {:ok, Noun.t()}
-  defp cue_when_atom(tx_code) when Noun.is_noun_atom(tx_code) do
-    Noun.Jam.cue(tx_code)
-  end
-
-  defp cue_when_atom(tx_code) do
-    {:ok, tx_code}
   end
 
   ############################################################

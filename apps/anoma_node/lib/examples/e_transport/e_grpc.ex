@@ -201,11 +201,12 @@ defmodule Anoma.Node.Examples.EGRPC do
     intent_jammed =
       ETransaction.nullify_intent()
       |> Noun.Nounable.to_noun()
-      |> Noun.Jam.jam()
+
+    tx = Examples.ENock.transparent_core(intent_jammed) |> Noun.Jam.jam()
 
     request = %Mempool.Add.Request{
       node: node_id,
-      transaction: %Transaction{transaction: intent_jammed},
+      transaction: %Transaction{transaction: tx},
       transaction_type: :transparent_resource
     }
 

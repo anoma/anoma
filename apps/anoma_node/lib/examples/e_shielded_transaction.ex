@@ -1,7 +1,6 @@
 defmodule Anoma.Node.Examples.EShieldedTransaction do
   alias Anoma.Node
   alias Anoma.Node.Examples.ETransaction
-  alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Storage
   alias Examples.ECairo.EResource, as: ESResource
@@ -192,17 +191,17 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
     node_id
   end
 
-  @spec trivial_cairo_transaction() :: {Backends.backend(), Noun.t()}
+  @spec trivial_cairo_transaction() :: Noun.t()
   def trivial_cairo_transaction() do
     s_tx = Examples.ECairo.ETransaction.a_shielded_transaction()
     noun = s_tx |> Noun.Nounable.to_noun()
 
     assert Anoma.CairoResource.Transaction.from_noun(noun) == {:ok, s_tx}
 
-    {:cairo_resource, ENock.transparent_core(noun)}
+    ENock.shielded_core(noun)
   end
 
-  @spec trivial_cairo_intent_transaction() :: {Backends.backend(), Noun.t()}
+  @spec trivial_cairo_intent_transaction() :: Noun.t()
   def trivial_cairo_intent_transaction() do
     s_tx =
       Examples.ECairo.ETransaction.a_shielded_transaction_with_intents()
@@ -211,10 +210,10 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     assert Anoma.CairoResource.Transaction.from_noun(noun) == {:ok, s_tx}
 
-    {:cairo_resource, ENock.transparent_core(noun)}
+    ENock.shielded_core(noun)
   end
 
-  @spec complex_cairo_transaction() :: {Backends.backend(), Noun.t()}
+  @spec complex_cairo_transaction() :: Noun.t()
   def complex_cairo_transaction() do
     s_tx =
       Examples.ECairo.ETransaction.a_shielded_transaction_with_multiple_actions()
@@ -223,6 +222,6 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     assert Anoma.CairoResource.Transaction.from_noun(noun) == {:ok, s_tx}
 
-    {:cairo_resource, ENock.transparent_core(noun)}
+    ENock.shielded_core(noun)
   end
 end
