@@ -171,7 +171,37 @@ defmodule Examples.ENock do
         |> Noun.Nounable.to_noun()
       ) do
     trivial_swap_arm = [1 | tx_noun]
-    keyspace = 0
+
+    keyspace = [
+      0
+      | [
+          ["anoma", "transparent", "anchor"],
+          ["anoma", "transparent", "commitments"],
+          ["anoma", "transparent", "nullifiers"]
+        ]
+    ]
+
+    swap = [[1, keyspace, trivial_swap_arm, 0 | 909], 0 | 707]
+    swap
+  end
+
+  @spec shielded_core(Noun.t()) :: Noun.t()
+  def shielded_core(
+        tx_noun \\ Examples.ETransparent.ETransaction.swap_from_actions()
+        |> Noun.Nounable.to_noun()
+      ) do
+    trivial_swap_arm = [1 | tx_noun]
+
+    keyspace = [
+      0
+      | [
+          ["anoma", "cairo", "roots"],
+          ["anoma", "cairo", "ct"],
+          ["anoma", "cairo", "nullifiers"],
+          ["anoma", "cairo", "ciphertexts"]
+        ]
+    ]
+
     swap = [[1, keyspace, trivial_swap_arm, 0 | 909], 0 | 707]
     swap
   end

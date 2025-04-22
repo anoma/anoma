@@ -18,12 +18,12 @@ defmodule Anoma.Node.Examples.IntraNode do
     assert [] == Mempool.tx_dump(remote.node_id)
 
     # create a random transaction to add
-    transaction = ETransaction.simple_transaction()
+    transaction = ETransaction.trivial_transparent_transaction()
 
     id =
       Mempool.tx(
         remote.node_id,
-        {transaction.backend, transaction.noun}
+        transaction
       )
 
     # assert that the transaction is in the node

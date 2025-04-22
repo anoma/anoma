@@ -26,6 +26,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   alias __MODULE__
   alias Anoma.Node
+  alias Anoma.Node.Logging
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Executor
@@ -38,6 +39,18 @@ defmodule Anoma.Node.Transaction.Mempool do
   use EventBroker.DefFilter
   use GenServer
   use TypedStruct
+
+  import Noun
+
+  ############################################################
+  #                      Keyspaces                           #
+  ############################################################
+
+  @cairo_keyspace MapSet.new([["anoma", "cairo"], ["anoma", "blob"]])
+  @transparent_keyspace MapSet.new([
+                          ["anoma", "transparent"],
+                          ["anoma", "blob"]
+                        ])
 
   ############################################################
   #                       Types                              #
@@ -59,7 +72,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @type args_t ::
           [
             node_id: String.t(),
-            transactions: [{binary, {Backends.backend(), Noun.t()}}],
+            transactions: [{binary, Noun.t()}],
             consensus: [[binary()]],
             round: non_neg_integer()
           ]
@@ -223,8 +236,8 @@ defmodule Anoma.Node.Transaction.Mempool do
   def handle_continue({:load_state, transactions, consensus}, state) do
     node_id = state.node_id
 
-    for {id, tx_w_backend} <- transactions do
-      tx(node_id, tx_w_backend, id)
+    for {id, {_backend, tx_candidate}} <- transactions do
+      tx(node_id, tx_candidate, id)
     end
 
     for list <- consensus do
@@ -262,7 +275,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   I return the ID assigned by the Mempool to the launched transaction.
   """
 
-  @spec tx(String.t(), {Backends.backend(), Noun.t()}) :: binary()
+  @spec tx(String.t(), Noun.t()) :: binary()
   def tx(node_id, tx_w_backend) do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
@@ -386,26 +399,79 @@ defmodule Anoma.Node.Transaction.Mempool do
   #                 Genserver Implementation                 #
   ############################################################
 
-  @spec handle_tx({Backends.backend(), Noun.t()}, binary(), t()) :: t()
-  defp handle_tx(tx = {:read_only, _code}, tx_id, state = %Mempool{}) do
+  @spec handle_tx(Noun.t(), binary(), t()) :: t()
+  defp handle_tx(tx, tx_id, state = %Mempool{}) do
+    with {:ok, code} <- cue_when_atom(tx),
+         {:ok, [[reads | writes] | function]} <-
+           Nock.nock(code, [9, 2, 0 | 1], %Nock{}),
+         {:ok, tx_function} <-
+           Nock.nock(function, [10, [6, 1 | tx_id], 0 | 1], %Nock{}),
+         {:ok, reads_list} <- Noun.Nounable.List.from_noun(reads),
+         {:ok, writes_list} <- Noun.Nounable.List.from_noun(writes) do
+      handle_keyspace(
+        code,
+        {reads_list, writes_list},
+        tx_function,
+        tx_id,
+        state
+      )
+    else
+      _ ->
+        Logging.log_event(
+          state.node_id,
+          :error,
+          "Could not process keyspace evaluation. ID: #{inspect(tx_id)}"
+        )
+
+        state
+    end
+  end
+
+  defp handle_keyspace(_code, {reads, writes}, tx_function, tx_id, state)
+       when is_noun_zero(writes) do
     node_id = state.node_id
-    Executor.launch(node_id, tx, tx_id)
+
+    Executor.launch(node_id, {:read_only, tx_function}, tx_id, reads)
 
     state
   end
 
-  defp handle_tx(tx = {backend, code}, tx_id, state = %Mempool{}) do
-    value = %Tx{backend: backend, code: code}
-    node_id = state.node_id
+  defp handle_keyspace(code, {reads, writes}, tx_function, tx_id, state) do
+    flag =
+      cond do
+        keyspace_check(writes, @cairo_keyspace) ->
+          :cairo_resource
 
-    tx_event(tx_id, value, node_id)
+        keyspace_check(writes, @transparent_keyspace) ->
+          :transparent_resource
 
-    Executor.launch(node_id, tx, tx_id)
+        true ->
+          if Mix.env() in [:test, :dev] do
+            :debug_term_storage
+          end
+      end
 
-    %Mempool{
+    unless flag do
+      Logging.log_event(
+        state.node_id,
+        :error,
+        "No keyspace match. Writes: #{inspect(writes)}"
+      )
+
       state
-      | transactions: Map.put(state.transactions, tx_id, value)
-    }
+    else
+      value = %Tx{code: code, backend: flag}
+      node_id = state.node_id
+
+      tx_event(tx_id, value, node_id)
+
+      Executor.launch(node_id, {flag, tx_function}, tx_id, reads)
+
+      %Mempool{
+        state
+        | transactions: Map.put(state.transactions, tx_id, value)
+      }
+    end
   end
 
   @spec handle_execute(list(binary()), t()) :: :ok
@@ -489,5 +555,22 @@ defmodule Anoma.Node.Transaction.Mempool do
 
         {[Map.put(tx_struct, :tx_result, tx_res) | lst], map}
     end
+  end
+
+  @spec cue_when_atom(Noun.t()) :: :error | {:ok, Noun.t()}
+  defp cue_when_atom(tx_code) when Noun.is_noun_atom(tx_code) do
+    Noun.Jam.cue(tx_code)
+  end
+
+  defp cue_when_atom(tx_code) do
+    {:ok, tx_code}
+  end
+
+  @spec keyspace_check([[binary()]], MapSet.t()) :: bool()
+  defp keyspace_check(writes, space) do
+    writes
+    |> Enum.map(&Enum.take(&1, 2))
+    |> MapSet.new()
+    |> MapSet.subset?(space)
   end
 end

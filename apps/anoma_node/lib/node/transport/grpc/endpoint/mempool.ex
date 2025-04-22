@@ -24,7 +24,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
 
     # create the transaction from the noun
     noun = Jam.cue!(request.transaction.transaction)
-    transaction = {request.transaction_type, noun}
+    transaction = noun
 
     # submit the transaction to the mempool
     node_id = request.node.id

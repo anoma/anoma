@@ -39,7 +39,7 @@ defmodule Anoma.Node.Examples.Mempool do
     id =
       Mempool.tx(
         enode.node_id,
-        {transaction.backend, transaction.noun}
+        transaction.noun
       )
 
     # assert that the transaction is in the mempool.

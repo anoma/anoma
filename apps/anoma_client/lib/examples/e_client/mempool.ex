@@ -16,7 +16,7 @@ defmodule Anoma.Client.Examples.EClient.Mempool do
   import ExUnit.CaptureLog
 
   def example_transaction do
-    {_, transaction} = ETransaction.trivial_transparent_transaction()
+    transaction = ETransaction.trivial_transparent_transaction()
 
     transaction
     |> Nounable.to_noun()

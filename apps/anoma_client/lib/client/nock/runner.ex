@@ -161,7 +161,7 @@ defmodule Anoma.Client.Runner do
   @spec ro_tx_candidate(Noun.t()) :: Noun.t()
   def ro_tx_candidate(ref) do
     sample = 0
-    keyspace = 0
+    keyspace = [[ref] | 0]
 
     arm = [12, [1], [0 | 6] | [1, ref]]
 
