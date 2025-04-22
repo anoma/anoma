@@ -57,21 +57,21 @@ defmodule Examples.ENock do
   #### Term Examples
 
   @spec zero(Noun.t()) :: Noun.t()
-  def zero(key \\ "key") do
+  def zero(key \\ "key", writes \\ [["key"]]) do
     zero_counter_arm = [1, [key] | 0]
     arm = [10, [2 | zero_counter_arm], 1, 0 | 0]
     sample = 0
-    keyspace = 0
+    keyspace = [0 | writes]
     [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
   end
 
-  @spec inc(Noun.t()) :: Noun.t()
-  def inc(key \\ "key") do
+  @spec inc(Noun.t(), Noun.t()) :: Noun.t()
+  def inc(key \\ "key", writes \\ [["key"]]) do
     increment_value_arm = [[1 | [key]], 4, 12, [1 | 0], [0 | 6], 1, [key] | 0]
     # Place the result in a list
     arm = [10, [2 | increment_value_arm], 1, 0 | 0]
     sample = 0
-    keyspace = 0
+    keyspace = [[["key"]] | writes]
     [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
   end
 
