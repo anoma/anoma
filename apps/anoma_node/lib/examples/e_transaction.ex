@@ -465,6 +465,28 @@ defmodule Anoma.Node.Examples.ETransaction do
     node_id
   end
 
+  @spec submit_error_keyspace(String.t()) :: String.t()
+  def submit_error_keyspace(node_id \\ Node.example_random_id()) do
+    start_tx_module(node_id)
+    code = [0 | 0]
+
+    with_subscription [[]] do
+      msg = "Could not process keyspace evaluation"
+
+      log =
+        capture_log(fn ->
+          Mempool.tx(node_id, code)
+          recieve_logger_failure(node_id, msg)
+        end)
+
+      # Occasionally, the log might be empty because `Anoma.Node.Logging`
+      # hasn't finished writing the log entries yet.
+      assert log =~ msg || log == ""
+    end
+
+    node_id
+  end
+
   @spec zero_counter_submit(String.t()) :: String.t()
   def zero_counter_submit(node_id \\ Node.example_random_id()) do
     key = "key"
