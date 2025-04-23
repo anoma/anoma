@@ -111,7 +111,7 @@ defmodule Anoma.Client.Web.IndexerController do
     request_body: {},
     responses: [
       ok:
-        {"The root hash of the chain", "application/json",
+        {"The base64 encoded root hash of the chain", "application/json",
          %Schema{
            type: :object,
            properties: %{
@@ -193,7 +193,8 @@ defmodule Anoma.Client.Web.IndexerController do
   @doc """
   """
   def root(conn, _params) do
-    with {:ok, root} <- GRPCProxy.root() do
+    with {:ok, root} <- GRPCProxy.root(),
+         root <- Base.encode64(root) do
       render(conn, "root.json", root: root)
     end
   end

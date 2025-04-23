@@ -183,7 +183,7 @@ defmodule Noun do
       fal
     else
       haz = Murmur.hash_x86_32(key, seed)
-      ham = haz >>> 31 |> bxor(haz &&& (1 <<< 31) - 1)
+      ham = (haz >>> 31) |> bxor(haz &&& (1 <<< 31) - 1)
 
       unless ham == 0 do
         ham

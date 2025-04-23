@@ -255,7 +255,7 @@ defmodule Anoma.Client.Examples.EClient.Indexer do
       |> get(~p"/indexer/root")
       |> json_response(200)
 
-    assert data == %{"root" => ""}
+    assert data == %{"root" => Base.encode64("")}
 
     client
   end
@@ -272,7 +272,7 @@ defmodule Anoma.Client.Examples.EClient.Indexer do
       |> get(~p"/indexer/root")
       |> json_response(200)
 
-    assert data == %{"root" => "I am a root at height 1"}
+    assert data == %{"root" => Base.encode64("I am a root at height 1")}
 
     client
   end
