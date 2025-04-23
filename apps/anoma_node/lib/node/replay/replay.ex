@@ -81,7 +81,12 @@ defmodule Anoma.Node.Replay do
       Anoma.Supervisor.start_node(
         node_id: temp_node_id,
         replay: false,
-        transaction: args
+        transaction: args,
+        node_config: %{
+          node_id: temp_node_id,
+          grpc_host: "localhost",
+          grpc_port: Application.get_env(:anoma_node, :grpc_port)
+        }
       )
 
       final_consensus = List.last(args[:mempool][:consensus])
@@ -138,7 +143,7 @@ defmodule Anoma.Node.Replay do
   """
   @spec temporary_node_id() :: String.t()
   def temporary_node_id() do
-    Base.encode64("#{System.monotonic_time()}")
+    Base.encode16(:crypto.strong_rand_bytes(32))
   end
 
   ############################################################

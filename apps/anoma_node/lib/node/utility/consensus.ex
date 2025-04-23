@@ -18,7 +18,7 @@ defmodule Anoma.Node.Utility.Consensus do
   end
 
   deffilter BlockFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
+    %EventBroker.Event{body: %Node.Event{body: %Mempool.Events.BlockEvent{}}} ->
       true
 
     _ ->
@@ -92,7 +92,7 @@ defmodule Anoma.Node.Utility.Consensus do
     receive do
       %EventBroker.Event{
         body: %Node.Event{
-          body: %Mempool.BlockEvent{
+          body: %Mempool.Events.BlockEvent{
             order: ^consensus
           }
         }

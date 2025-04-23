@@ -2,14 +2,31 @@ import Config
 
 config :logger,
   level: :error,
-  handle_otp_reports: true,
-  handle_sasl_reports: true
+  handle_otp_reports: false,
+  handle_sasl_reports: false
 
-config :anoma_client, []
+# ----------------------------------------------------------------------------
+# Endpoint
+
+# Configures the endpoint
+config :anoma_client, Anoma.Client.Web.Endpoint,
+  server: true,
+  adapter: Bandit.PhoenixAdapter,
+  http: [
+    ip: {127, 0, 0, 1},
+    port: String.to_integer(System.get_env("CLIENT_HTTP_PORT") || "4000")
+  ],
+  check_origin: false,
+  debug_errors: false,
+  render_errors: [view: Anoma.Client.Web.ErrorJSON, accepts: ~w(json)]
+
+config :anoma_client,
+  grpc_port: String.to_integer(System.get_env("CLIENT_GRPC_PORT") || "40051")
+
 config :anoma_lib, []
 
 config :anoma_node,
-  grpc_port: String.to_integer(System.get_env("GRPC_PORT") || "50051")
+  grpc_port: String.to_integer(System.get_env("NODE_GRPC_PORT") || "50051")
 
 config :anoma_protobuf, []
 config :compile_protoc, []
