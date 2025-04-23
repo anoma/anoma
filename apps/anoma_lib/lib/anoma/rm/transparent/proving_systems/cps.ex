@@ -26,6 +26,25 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS.Instance do
     field(:unit_delta, integer(), default: 2)
   end
 
+  defimpl Jason.Encoder, for: Instance do
+    def encode(instance, opts) do
+      instance
+      |> Map.update!(
+        :consumed,
+        &Enum.map(&1, fn {nullifier, root, logic} ->
+          %{nullifier: nullifier, root: root, logic: logic}
+        end)
+      )
+      |> Map.update!(
+        :created,
+        &Enum.map(&1, fn {commitment, logic} ->
+          %{commitment: commitment, logic: logic}
+        end)
+      )
+      |> Jason.Encode.map(opts)
+    end
+  end
+
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([consumed, created | unit_delta]) do
     with {:ok, list_consumed} <- Noun.Nounable.List.from_noun(consumed),

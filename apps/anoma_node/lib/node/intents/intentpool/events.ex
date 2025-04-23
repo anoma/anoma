@@ -16,6 +16,7 @@ defmodule Anoma.Node.Intents.IntentPool.Events do
   ############################################################
 
   typedstruct enforce: true, module: IntentAddSuccess do
+    @derive Jason.Encoder
     @typedoc """
     I am an event specifying that an intent has been submitted succesfully.
 
@@ -26,6 +27,7 @@ defmodule Anoma.Node.Intents.IntentPool.Events do
   end
 
   typedstruct enforce: true, module: IntentAddError do
+    @derive Jason.Encoder
     @typedoc """
     I am an event specifying that an intent submission has failed alongside
     with a reason.

@@ -45,6 +45,22 @@ defmodule Anoma.RM.Transparent.Action do
     )
   end
 
+  defimpl Jason.Encoder, for: Action do
+    def encode(action, opts) do
+      # a resource logic proof is a mapping from integers to tuples that contain two jammed nounds.
+      action
+      |> Map.update!(
+        :resource_logic_proofs,
+        &Map.new(
+          Enum.map(&1, fn {int, {x, y}} ->
+            {int, %{verifying_key: x, proof: y}}
+          end)
+        )
+      )
+      |> Jason.Encode.map(opts)
+    end
+  end
+
   @doc """
   I am the creation interface for the transparent action.
 

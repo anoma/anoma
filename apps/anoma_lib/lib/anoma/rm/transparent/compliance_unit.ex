@@ -25,6 +25,15 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
     field(:vk, binary(), default: CPS.key())
   end
 
+  defimpl Jason.Encoder, for: ComplianceUnit do
+    def encode(compliance_unit, opts) do
+      compliance_unit
+      |> Map.update!(:proof, &Base.encode64/1)
+      |> Map.update!(:vk, &Base.encode64/1)
+      |> Jason.Encode.map(opts)
+    end
+  end
+
   @doc """
   I am the delta function for a compliance unit in the TRM.
 

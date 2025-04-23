@@ -26,12 +26,20 @@ defmodule Anoma.RM.Transparent.Transaction do
   use TypedStruct
 
   typedstruct enforce: true do
+    @derive Jason.Encoder
     # why do we need roots this high up?
     # why not just let them rest in compliance units?
     field(:roots, MapSet.t(integer()), default: MapSet.new())
     field(:actions, MapSet.t(Action.t()), default: MapSet.new())
     field(:delta_proof, <<>>, default: <<>>)
   end
+
+  # defimpl Jason.Encoder, for: Transaction do
+  #   def encode(transaction, opts) do
+  #     transaction
+  #     |> Jason.Encode.map(transaction, opts)
+  #   end
+  # end
 
   @doc """
   I am the transparent transaction creation interface.

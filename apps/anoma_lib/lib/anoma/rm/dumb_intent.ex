@@ -2,6 +2,7 @@ defmodule Anoma.RM.DumbIntent do
   use TypedStruct
 
   typedstruct do
+    @derive Jason.Encoder
     @typedoc """
     I hold the state for an intent.
 

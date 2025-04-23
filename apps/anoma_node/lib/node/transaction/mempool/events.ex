@@ -95,4 +95,16 @@ defmodule Anoma.Node.Transaction.Mempool.Events do
     _ ->
       false
   end
+
+  ############################################################
+  #                           Json Encoding                  #
+  ############################################################
+
+  # defimpl Jason.Encoder, for: TxEvent do
+  #   def encode(%TxEvent{} = event, opts) do
+  #     event
+  #     |> Map.take([:tx, :id])
+  #     |> Jason.Encode.map(opts)
+  #   end
+  # end
 end

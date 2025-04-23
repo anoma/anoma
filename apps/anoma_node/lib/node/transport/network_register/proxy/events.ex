@@ -12,6 +12,7 @@ defmodule Anoma.Node.Transport.Proxy.Events do
   ############################################################
 
   typedstruct enforce: true, module: External do
+    @derive Jason.Encoder
     @typedoc """
     I hold the content of the Result Event, which conveys the result of
     the transaction candidate code execution on the Anoma VM to
