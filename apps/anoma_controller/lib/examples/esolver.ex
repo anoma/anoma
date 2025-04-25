@@ -1,12 +1,12 @@
-defmodule Anoma.Node.Examples.ESolver do
+defmodule Anoma.Controller.Examples.ESolver do
   @moduledoc """
   I contain several examples on how to use the solver.
   """
 
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Node.Intents.IntentPool
-  alias Anoma.Node.Intents.Solver
-  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Controller.Examples.EController
+  alias Anoma.Controller.Intents.IntentPool
+  alias Anoma.Controller.Intents.Solver
+  alias Anoma.Controller.Transaction.Mempool
   alias Anoma.RM.DumbIntent
 
   require ExUnit.Assertions
@@ -67,8 +67,8 @@ defmodule Anoma.Node.Examples.ESolver do
   I insert a single transaction into the solver, which it cannot solve.
   I verify that the transaction is then in the unsolved list.
   """
-  @spec solvable_transaction_via_intent_pool(ENode.t()) :: boolean()
-  def solvable_transaction_via_intent_pool(enode \\ ENode.start_node()) do
+  @spec solvable_transaction_via_intent_pool(EController.t()) :: boolean()
+  def solvable_transaction_via_intent_pool(enode \\ EController.start_node()) do
     # startup
     # the solver does not have solved transactions.
     assert [] == Solver.get_unsolved(enode.node_id)
@@ -107,8 +107,8 @@ defmodule Anoma.Node.Examples.ESolver do
   I send a trivial transaction to the Intent Pool, which then gets solved
   by itself and then sent to the Mempool to be executed.
   """
-  @spec solvable_transaction_gets_executed(ENode.t()) :: :ok
-  def solvable_transaction_gets_executed(enode \\ ENode.start_node()) do
+  @spec solvable_transaction_gets_executed(EController.t()) :: :ok
+  def solvable_transaction_gets_executed(enode \\ EController.start_node()) do
     node_id = enode.node_id
     assert [] == Solver.get_unsolved(node_id)
 
@@ -121,7 +121,10 @@ defmodule Anoma.Node.Examples.ESolver do
       0 | 707
     ]
 
-    tx_filter = [Anoma.Node.Event.node_filter(node_id), %Mempool.TxFilter{}]
+    tx_filter = [
+      Anoma.Controller.Event.node_filter(node_id),
+      %Mempool.TxFilter{}
+    ]
 
     with_subscription [tx_filter] do
       Mempool.tx(
@@ -132,7 +135,7 @@ defmodule Anoma.Node.Examples.ESolver do
       :ok =
         receive do
           %EventBroker.Event{
-            body: %Anoma.Node.Event{
+            body: %Anoma.Controller.Event{
               node_id: ^node_id,
               body: %Mempool.TxEvent{
                 tx: %Mempool.Tx{backend: _, code: ^tx_candidate}

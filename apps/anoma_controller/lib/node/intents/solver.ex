@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Intents.Solver do
+defmodule Anoma.Controller.Intents.Solver do
   @moduledoc """
   I am a strawman intent solver for testing purposes.
 
@@ -10,10 +10,10 @@ defmodule Anoma.Node.Intents.Solver do
   """
 
   alias __MODULE__
-  alias Anoma.Node
-  alias Anoma.Node.Intents.IntentPool
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Controller
+  alias Anoma.Controller.Intents.IntentPool
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Transaction.Mempool
   alias Anoma.RM.Intent
   alias EventBroker.Event
 
@@ -34,7 +34,7 @@ defmodule Anoma.Node.Intents.Solver do
     ### Fields
     - `:unsolved` - The set of unsolved intents.
                     Default: MapSet.new()
-    - `:node_id` - The ID of the Node to which the Solver is connected.
+    - `:node_id` - The ID of the Controller to which the Solver is connected.
     """
     field(:unsolved, MapSet.t(Intent.t()), default: MapSet.new())
     field(:node_id, String.t())
@@ -123,7 +123,7 @@ defmodule Anoma.Node.Intents.Solver do
     case event do
       %Event{
         source_module: IntentPool,
-        body: %Anoma.Node.Event{
+        body: %Anoma.Controller.Event{
           body: %IntentPool.IntentAddSuccess{intent: intent}
         }
       } ->
@@ -235,7 +235,7 @@ defmodule Anoma.Node.Intents.Solver do
     filter = %IntentPool.IntentAddSuccessFilter{}
 
     EventBroker.subscribe_me([
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       filter
     ])
   end
@@ -269,7 +269,7 @@ defmodule Anoma.Node.Intents.Solver do
   def submit(tx = %Anoma.RM.Transparent.Transaction{}, node_id) do
     tx_noun = tx |> Noun.Nounable.to_noun()
     tx_candidate = [[1, 0, [1 | tx_noun], 0 | 909], 0 | 707]
-    tx_filter = [Node.Event.node_filter(node_id), %Mempool.TxFilter{}]
+    tx_filter = [Controller.Event.node_filter(node_id), %Mempool.TxFilter{}]
 
     with_subscription [tx_filter] do
       Mempool.tx(
@@ -279,7 +279,7 @@ defmodule Anoma.Node.Intents.Solver do
 
       receive do
         %EventBroker.Event{
-          body: %Node.Event{
+          body: %Controller.Event{
             node_id: ^node_id,
             body: %Mempool.TxEvent{
               tx: %Mempool.Tx{backend: _, code: ^tx_candidate}

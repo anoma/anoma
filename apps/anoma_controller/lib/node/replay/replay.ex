@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Replay do
+defmodule Anoma.Controller.Replay do
   @moduledoc """
   I contain logic to replay storage.
 
@@ -19,9 +19,9 @@ defmodule Anoma.Node.Replay do
   The real node can continue starting up using the old data.
   The mock node is removed from the system.
   """
-  alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Tables
-  alias Anoma.Node.Replay.State
+  alias Anoma.Controller.Transaction.Backends
+  alias Anoma.Controller.Tables
+  alias Anoma.Controller.Replay.State
 
   require Logger
 

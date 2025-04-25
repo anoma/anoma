@@ -36,11 +36,11 @@ A module is **documented** if
 
 #### Rule 1.1
 
-Any module which is specified under the Node directory ought to be **documented**.
+Any module which is specified under the Controller directory ought to be **documented**.
 
 #### Rule 1.2
 
-Any public function which is used in a public function by a module specified under the Node directory ought to have nonempty documentation.
+Any public function which is used in a public function by a module specified under the Controller directory ought to have nonempty documentation.
 
 #### Rule 1.3
 
@@ -48,7 +48,7 @@ Documentation should be given in first person.
 
 #### Rule 1.4
 
-If `foo` uses `bar` in the same module in the Node dir then `foo` is placed higher than `bar` in the module.
+If `foo` uses `bar` in the same module in the Controller dir then `foo` is placed higher than `bar` in the module.
 
 Exceptions might exist but should be noted explicitly in PR and commit messages.
 
@@ -168,7 +168,7 @@ If subsections were used yet not all functions feature in their lists, the rest 
 <!-- livebook:{"force_markdown":true} -->
 
 ```elixir
-  defmodule Anoma.Node.Clock do
+  defmodule Anoma.Controller.Clock do
     @moduledoc """
     I am the Clock module implementing the Local Wall Clock Engine.
 
@@ -227,9 +227,9 @@ Given an option `:option` we list it as ``` - `:option` - ``` followed by a shor
   - `:supervisor` - This flag determine if we use a supervisor and if
   so what options. See `t:Supervisor.option/0 ` for supervisor options.
   - `:testing` - This flag notes if we are testing the node. This gets
-    fed directly into the type `t:Anoma.Node.configuration/0` for
-    `Anoma.Node.start_link/1`. Please consult the
-    `t:Anoma.Node.configuration/0` documentation for the full effect
+    fed directly into the type `t:Anoma.Controller.configuration/0` for
+    `Anoma.Controller.start_link/1`. Please consult the
+    `t:Anoma.Controller.configuration/0` documentation for the full effect
     this has on the node.
   ```
 
@@ -263,9 +263,9 @@ Given an option `:option` we list it as ``` - `:option` - ``` followed by a shor
   - `:supervisor` - This flag determine if we use a supervisor and if
   so what options. See `t:Supervisor.option/0 ` for supervisor options.
   - `:testing` - This flag notes if we are testing the node. This gets
-    fed directly into the type `t:Anoma.Node.configuration/0` for
-    `Anoma.Node.start_link/1`. Please consult the
-    `t:Anoma.Node.configuration/0` documentation for the full effect
+    fed directly into the type `t:Anoma.Controller.configuration/0` for
+    `Anoma.Controller.start_link/1`. Please consult the
+    `t:Anoma.Controller.configuration/0` documentation for the full effect
     this has on the node.
   """
   @type launch_option ::

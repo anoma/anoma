@@ -1,9 +1,9 @@
-defmodule Anoma.Node.Logging do
+defmodule Anoma.Controller.Logging do
   @moduledoc """
   I am the Logging Engine.
 
   I combine the classic logger with replay functionality. In particular,
-  I store the most recent data coming outside of a Node so that if it fails
+  I store the most recent data coming outside of a Controller so that if it fails
   I can re-do the actions fed to me in a linear fashion.
 
   ### Public API
@@ -25,13 +25,13 @@ defmodule Anoma.Node.Logging do
   - `log_event/3`
   """
 
-  alias Anoma.Node
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Tables
+  alias Anoma.Controller
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Transaction.Mempool
+  alias Anoma.Controller.Tables
 
   require Logger
-  require Node.Event
+  require Controller.Event
 
   use EventBroker.DefFilter
   use GenServer
@@ -64,7 +64,7 @@ defmodule Anoma.Node.Logging do
     - `:msg` - A logging message.
     """
 
-    field(:flag, Anoma.Node.Logging.flag())
+    field(:flag, Anoma.Controller.Logging.flag())
     field(:msg, binary())
   end
 
@@ -72,12 +72,12 @@ defmodule Anoma.Node.Logging do
     @typedoc """
     I am the type of the Logging Engine.
 
-    I store a Node ID with which I am associated alongside a table which
+    I store a Controller ID with which I am associated alongside a table which
     stores all relevant events.
 
     ### Fields
 
-    - `:node_id` - The ID of the Node to which a Logging Engine
+    - `:node_id` - The ID of the Controller to which a Logging Engine
                    instantiation is bound.
     """
 
@@ -86,14 +86,16 @@ defmodule Anoma.Node.Logging do
 
   deffilter LoggingFilter do
     %EventBroker.Event{
-      body: %Node.Event{body: %Anoma.Node.Logging.LoggingEvent{}}
+      body: %Controller.Event{body: %Anoma.Controller.Logging.LoggingEvent{}}
     } ->
       true
 
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.TxEvent{}}} ->
+    %EventBroker.Event{body: %Controller.Event{body: %Mempool.TxEvent{}}} ->
       true
 
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.ConsensusEvent{}}} ->
+    %EventBroker.Event{
+      body: %Controller.Event{body: %Mempool.ConsensusEvent{}}
+    } ->
       true
 
     _ ->
@@ -101,7 +103,7 @@ defmodule Anoma.Node.Logging do
   end
 
   deffilter BlocksFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
+    %EventBroker.Event{body: %Controller.Event{body: %Mempool.BlockEvent{}}} ->
       true
 
     _ ->
@@ -115,7 +117,7 @@ defmodule Anoma.Node.Logging do
   @doc """
   I am the start_link function of the Logging Engine.
 
-  I register the Engine with the supplied Node ID provided by the arguments
+  I register the Engine with the supplied Controller ID provided by the arguments
   and check that the table keyword has been provided.
   """
 
@@ -129,7 +131,7 @@ defmodule Anoma.Node.Logging do
   @doc """
   I am the initialization function for the Logging Engine.
 
-  From the specified arguments, I get the Node ID, the table name, as well
+  From the specified arguments, I get the Controller ID, the table name, as well
   as the boolean indicating whether the table should be backed by RocksDB.
 
   I then initialize the table with the given name and backing options,
@@ -149,12 +151,12 @@ defmodule Anoma.Node.Logging do
     node_id = args[:node_id]
 
     EventBroker.subscribe_me([
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       logging_filter()
     ])
 
     EventBroker.subscribe_me([
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       blocks_filter()
     ])
 
@@ -188,7 +190,7 @@ defmodule Anoma.Node.Logging do
   @impl true
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{
+          body: %Controller.Event{
             body: %__MODULE__.LoggingEvent{}
           }
         },
@@ -199,7 +201,7 @@ defmodule Anoma.Node.Logging do
 
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{
+          body: %Controller.Event{
             body: %Mempool.TxEvent{}
           }
         },
@@ -210,7 +212,7 @@ defmodule Anoma.Node.Logging do
 
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{
+          body: %Controller.Event{
             body: %Mempool.ConsensusEvent{}
           }
         },
@@ -221,7 +223,7 @@ defmodule Anoma.Node.Logging do
 
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{
+          body: %Controller.Event{
             body: %Mempool.BlockEvent{}
           }
         },
@@ -237,7 +239,7 @@ defmodule Anoma.Node.Logging do
   @spec handle_logging_event(EventBroker.Event.t(), t()) :: t()
   defp handle_logging_event(
          %EventBroker.Event{
-           body: %Node.Event{
+           body: %Controller.Event{
              body: %__MODULE__.LoggingEvent{
                flag: flag,
                msg: msg
@@ -257,7 +259,7 @@ defmodule Anoma.Node.Logging do
   @spec handle_tx_event(EventBroker.Event.t(), t()) :: t()
   defp handle_tx_event(
          %EventBroker.Event{
-           body: %Node.Event{
+           body: %Controller.Event{
              body: %Mempool.TxEvent{
                id: id,
                tx: %Mempool.Tx{backend: backend, code: code}
@@ -283,7 +285,7 @@ defmodule Anoma.Node.Logging do
   @spec handle_consensus_event(EventBroker.Event.t(), t()) :: t()
   defp handle_consensus_event(
          %EventBroker.Event{
-           body: %Node.Event{
+           body: %Controller.Event{
              body: %Mempool.ConsensusEvent{
                order: list
              }
@@ -308,7 +310,7 @@ defmodule Anoma.Node.Logging do
   @spec handle_block_event(EventBroker.Event.t(), t()) :: t()
   defp handle_block_event(
          %EventBroker.Event{
-           body: %Node.Event{
+           body: %Controller.Event{
              body: %Mempool.BlockEvent{
                order: id_list,
                round: round
@@ -356,7 +358,7 @@ defmodule Anoma.Node.Logging do
     updates_table = Tables.table_updates(node_id)
 
     setup = replay_setup(event_table, block_table)
-    mock_id = Node.prefix_random_id("mock")
+    mock_id = Controller.prefix_random_id("mock")
     replay_table_clone(values_table, updates_table, mock_id)
     replay_args = replay_args(setup)
 
@@ -389,7 +391,7 @@ defmodule Anoma.Node.Logging do
   separate task to test whether the original data has been corrupted or
   note.
 
-  Namely, a launch a Node with given replay arguments and make sure that
+  Namely, a launch a Controller with given replay arguments and make sure that
   the final consensus gets provided.
   """
 
@@ -409,7 +411,7 @@ defmodule Anoma.Node.Logging do
       if final_consensus do
         receive do
           %EventBroker.Event{
-            body: %Node.Event{
+            body: %Controller.Event{
               node_id: ^mock_id,
               body: %Mempool.ConsensusEvent{
                 order: ^final_consensus
@@ -529,13 +531,13 @@ defmodule Anoma.Node.Logging do
 
   I provide an interface to "log" new messages in an easy format.
 
-  Given a Node ID, a flag, and a message, I create a new event with
+  Given a Controller ID, a flag, and a message, I create a new event with
   appropriate flag and message.
   """
 
   @spec log_event(String.t(), flag(), binary()) :: :ok
   def log_event(node_id, flag, msg) do
-    Node.Event.new_with_body(node_id, %__MODULE__.LoggingEvent{
+    Controller.Event.new_with_body(node_id, %__MODULE__.LoggingEvent{
       flag: flag,
       msg: msg
     })

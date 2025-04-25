@@ -4,5 +4,5 @@ defmodule ShieldedTransactionTest do
   @moduletag :zk
 
   use TestHelper.GenerateExampleTests,
-    for: Anoma.Node.Examples.EShieldedTransaction
+    for: Anoma.Controller.Examples.EShieldedTransaction
 end

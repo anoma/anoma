@@ -1,6 +1,6 @@
-defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Mempool
+defmodule Anoma.Controller.Transport.GRPC.Servers.Mempool do
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Transaction.Mempool
   alias Anoma.Proto.Mempool.Add
   alias GRPC.Server.Stream
   alias Noun.Jam

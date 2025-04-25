@@ -3,5 +3,5 @@ defmodule Examples.StartStateTest do
   use TestHelper.TestMacro
 
   use TestHelper.GenerateExampleTests,
-    for: Anoma.Node.Examples.EReplay.StartState
+    for: Anoma.Controller.Examples.EReplay.StartState
 end

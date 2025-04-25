@@ -86,7 +86,7 @@ defmodule AnomaTest.LiveBook.NoCrash do
     name = :intent_example
 
     unless Process.whereis(name) do
-      Anoma.Node.Intent.init(name)
+      Anoma.Controller.Intent.init(name)
     end
 
     [intent_pool: name]
@@ -97,7 +97,7 @@ end
 <!-- livebook:{"output":true} -->
 
 ```
-warning: Anoma.Node.Intent.init/1 is undefined (module Anoma.Node.Intent is not available or is yet to be defined)
+warning: Anoma.Controller.Intent.init/1 is undefined (module Anoma.Controller.Intent is not available or is yet to be defined)
   documentation/contributing/testing.livemd#cell:qbrtwwd53rvqgtpz:8: AnomaTest.LiveBook.NoCrash.__ex_unit_setup_all_0/1
 ```
 

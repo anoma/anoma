@@ -8,7 +8,7 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   alias Anoma.Proto.Mempool
   alias Anoma.Proto.Mempool.Transaction
   alias Anoma.Proto.MempoolService
-  alias Anoma.Proto.Node
+  alias Anoma.Proto.Controller
 
   require Logger
 
@@ -94,14 +94,14 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
   @impl true
   def handle_call({:list_intents}, _from, state) do
-    node_info = %Node{id: state.node_id}
+    node_info = %Controller{id: state.node_id}
     request = %Intentpool.List.Request{node: node_info}
     intents = IntentpoolService.Stub.list(state.channel, request)
     {:reply, intents, state}
   end
 
   def handle_call({:add_intent, intent}, _from, state) do
-    node_info = %Node{id: state.node_id}
+    node_info = %Controller{id: state.node_id}
     request = %Intentpool.Add.Request{node: node_info, intent: intent}
 
     result = IntentpoolService.Stub.add(state.channel, request)
@@ -109,7 +109,7 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   end
 
   def handle_call({:add_transaction, jammed_nock, type}, _from, state) do
-    node_info = %Node{id: state.node_id}
+    node_info = %Controller{id: state.node_id}
 
     request = %Mempool.Add.Request{
       transaction: %Transaction{transaction: jammed_nock},
@@ -122,7 +122,7 @@ defmodule Anoma.Client.Connection.GRPCProxy do
   end
 
   def handle_call({:add_ro_transaction, jammed_nock}, _from, state) do
-    node_info = %Node{id: state.node_id}
+    node_info = %Controller{id: state.node_id}
 
     request = %AddROTransaction.Request{
       transaction: %Transaction{transaction: jammed_nock},

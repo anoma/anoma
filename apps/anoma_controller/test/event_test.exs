@@ -3,5 +3,5 @@ defmodule EventTest do
 
   # disabled https://github.com/anoma/anoma/issues/1804
   # use TestHelper.GenerateExampleTests,
-  #   for: Anoma.Node.Examples.EEvent
+  #   for: Anoma.Controller.Examples.EEvent
 end

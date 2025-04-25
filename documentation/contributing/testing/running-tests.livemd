@@ -131,7 +131,7 @@ A good example of this at play is the following example:
 iex(mariari@YU-NO)1> ExUnit.start
 :ok
 iex(mariari@YU-NO)2> c "test/node/mempool_test.exs"
-[AnomaTest.Node.Mempool]
+[AnomaTest.Controller.Mempool]
 iex(mariari@YU-NO)3> ExUnit.run
 
 14:46:45.846 [error] Worker failed! :error
@@ -147,7 +147,7 @@ Randomized with seed 670138
 
 We can see here that I've started up ExUnit with `ExUnit.start/0`, then I've manually compiled the module I wanted to run `c ...` and then I ran `ExUnit.run/0`.
 
-The side effect of running tests this way is that only `AnomaTest.Node.Mempool` is in scope. The other tests are not.
+The side effect of running tests this way is that only `AnomaTest.Controller.Mempool` is in scope. The other tests are not.
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -182,11 +182,11 @@ No tests were run again! This can be rather annoying as we often make changes to
 A way around this is by recompiling the given module then running again
 
 ```iex
-iex 7> r AnomaTest.Node.Mempool
-warning: redefining module AnomaTest.Node.Mempool (current version defined in memory)
-  test/node/mempool_test.exs:1: AnomaTest.Node.Mempool (module)
+iex 7> r AnomaTest.Controller.Mempool
+warning: redefining module AnomaTest.Controller.Mempool (current version defined in memory)
+  test/node/mempool_test.exs:1: AnomaTest.Controller.Mempool (module)
 
-{:reloaded, [AnomaTest.Node.Mempool]}
+{:reloaded, [AnomaTest.Controller.Mempool]}
 iex(mariari@YU-NO)8> Mix.Tasks.Test.run([])
 
 14:58:09.255 [error] Worker failed! :error

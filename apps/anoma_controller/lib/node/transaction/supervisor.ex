@@ -1,13 +1,13 @@
-defmodule Anoma.Node.Transaction.Supervisor do
+defmodule Anoma.Controller.Transaction.Supervisor do
   @moduledoc """
   I am the supervisor for the transaction subsystem.
   """
 
   use Supervisor
 
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Transaction.Ordering
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Transaction.Mempool
+  alias Anoma.Controller.Transaction.Ordering
 
   ############################################################
   #                       Types                              #
@@ -36,14 +36,14 @@ defmodule Anoma.Node.Transaction.Supervisor do
     Process.set_label(__MODULE__)
 
     children = [
-      {Anoma.Node.Transaction.Ordering,
+      {Anoma.Controller.Transaction.Ordering,
        [node_id: args[:node_id]] ++ Keyword.get(args, :ordering, [])},
-      {Anoma.Node.Transaction.Storage,
+      {Anoma.Controller.Transaction.Storage,
        [node_id: args[:node_id]] ++ Keyword.get(args, :storage, [])},
-      {Anoma.Node.Transaction.Mempool,
+      {Anoma.Controller.Transaction.Mempool,
        [node_id: args[:node_id]] ++ Keyword.get(args, :mempool, [])},
       {Task.Supervisor, name: Registry.via(args[:node_id], TxSupervisor)},
-      {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]}
+      {Anoma.Controller.Transaction.Executor, [node_id: args[:node_id]]}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)

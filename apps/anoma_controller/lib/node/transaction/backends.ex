@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transaction.Backends do
+defmodule Anoma.Controller.Transaction.Backends do
   @moduledoc """
   I am the Transaction Backend module.
 
@@ -13,16 +13,16 @@ defmodule Anoma.Node.Transaction.Backends do
   """
 
   alias Anoma.CairoResource.Transaction, as: CTransaction
-  alias Anoma.Node
-  alias Anoma.Node.Logging
-  alias Anoma.Node.Transaction.Executor
-  alias Anoma.Node.Transaction.Ordering
-  alias Anoma.Node.Transaction.Storage
+  alias Anoma.Controller
+  alias Anoma.Controller.Logging
+  alias Anoma.Controller.Transaction.Executor
+  alias Anoma.Controller.Transaction.Ordering
+  alias Anoma.Controller.Transaction.Storage
   alias Anoma.RM.Transparent.ComplianceUnit, as: TCU
   alias Anoma.RM.Transparent.Transaction, as: TTransaction
   alias Anoma.RM.Transparent.Primitive.CommitmentAccumulator, as: TAcc
 
-  require Node.Event
+  require Controller.Event
   require Noun
 
   import Nock
@@ -100,7 +100,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   deffilter CompleteFilter do
-    %EventBroker.Event{body: %Node.Event{body: %CompleteEvent{}}} ->
+    %EventBroker.Event{body: %Controller.Event{body: %CompleteEvent{}}} ->
       true
 
     _ ->
@@ -108,7 +108,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   deffilter ForMempoolFilter do
-    %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}} ->
+    %EventBroker.Event{body: %Controller.Event{body: %ResultEvent{}}} ->
       true
 
     _ ->
@@ -116,7 +116,9 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   deffilter ForMempoolExecutionFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Executor.ExecutionEvent{}}} ->
+    %EventBroker.Event{
+      body: %Controller.Event{body: %Executor.ExecutionEvent{}}
+    } ->
       true
 
     _ ->
@@ -584,7 +586,7 @@ defmodule Anoma.Node.Transaction.Backends do
         ) :: :ok
   defp complete_event(id, result, node_id, backend) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.CompleteEvent{
+      Controller.Event.new_with_body(node_id, %__MODULE__.CompleteEvent{
         tx_id: id,
         tx_result: result
       })
@@ -595,7 +597,7 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec result_event(String.t(), any(), String.t(), backend()) :: :ok
   defp result_event(id, result, node_id, backend) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
+      Controller.Event.new_with_body(node_id, %__MODULE__.ResultEvent{
         tx_id: id,
         vm_result: result
       })
@@ -610,7 +612,7 @@ defmodule Anoma.Node.Transaction.Backends do
         ) :: :ok
   defp transparent_rm_event(cms, nlfs, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.TRMEvent{
+      Controller.Event.new_with_body(node_id, %__MODULE__.TRMEvent{
         commitments: cms,
         nullifiers: nlfs
       })
@@ -625,7 +627,7 @@ defmodule Anoma.Node.Transaction.Backends do
         ) :: :ok
   defp cairo_rm_event(cms, nlfs, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.SRMEvent{
+      Controller.Event.new_with_body(node_id, %__MODULE__.SRMEvent{
         commitments: cms,
         nullifiers: nlfs
       })

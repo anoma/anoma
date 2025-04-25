@@ -1,12 +1,12 @@
-defmodule Anoma.Node.Examples.ETransaction do
-  alias Anoma.Node
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Executor
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Transaction.Ordering
-  alias Anoma.Node.Transaction.Storage
-  alias Anoma.Node.Tables
+defmodule Anoma.Controller.Examples.ETransaction do
+  alias Anoma.Controller
+  alias Anoma.Controller.Examples.EController
+  alias Anoma.Controller.Transaction.Backends
+  alias Anoma.Controller.Transaction.Executor
+  alias Anoma.Controller.Transaction.Mempool
+  alias Anoma.Controller.Transaction.Ordering
+  alias Anoma.Controller.Transaction.Storage
+  alias Anoma.Controller.Tables
   alias Anoma.RM.Transparent.Transaction
   alias Examples.ENock
   alias Examples.ETransparent.ETransaction
@@ -34,12 +34,12 @@ defmodule Anoma.Node.Examples.ETransaction do
   ############################################################
 
   @spec start_storage(String.t()) :: GenServer.on_start()
-  def start_storage(node_id \\ Node.example_random_id()) do
-    Anoma.Node.Transaction.Storage.start_link(node_id: node_id)
+  def start_storage(node_id \\ Controller.example_random_id()) do
+    Anoma.Controller.Transaction.Storage.start_link(node_id: node_id)
   end
 
   @spec write_then_read(String.t()) :: String.t()
-  def write_then_read(node_id \\ Node.example_random_id()) do
+  def write_then_read(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     Storage.write(node_id, {1, [{["abc"], 123}]})
     {:ok, 123} = Storage.read(node_id, {1, ["abc"]})
@@ -47,7 +47,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec write_then_read_other(String.t()) :: String.t()
-  def write_then_read_other(node_id \\ Node.example_random_id()) do
+  def write_then_read_other(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     Storage.write(node_id, {1, [{["abc"], 123}]})
     :absent = Storage.read(node_id, {1, ["def"]})
@@ -55,7 +55,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec read_future_then_write(String.t()) :: String.t()
-  def read_future_then_write(node_id \\ Node.example_random_id()) do
+  def read_future_then_write(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     task = Task.async(fn -> Storage.read(node_id, {1, ["abc"]}) end)
     Storage.write(node_id, {1, [{["abc"], 123}]})
@@ -64,7 +64,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec read_other_future_then_write(String.t()) :: String.t()
-  def read_other_future_then_write(node_id \\ Node.example_random_id()) do
+  def read_other_future_then_write(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     task = Task.async(fn -> Storage.read(node_id, {1, ["def"]}) end)
     Storage.write(node_id, {1, [{["abc"], 123}]})
@@ -73,7 +73,9 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec write_future_then_write_present(String.t()) :: String.t()
-  def write_future_then_write_present(node_id \\ Node.example_random_id()) do
+  def write_future_then_write_present(
+        node_id \\ Controller.example_random_id()
+      ) do
     start_storage(node_id)
 
     _task1 =
@@ -87,7 +89,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec write_multiple_then_read(String.t()) :: String.t()
-  def write_multiple_then_read(node_id \\ Node.example_random_id()) do
+  def write_multiple_then_read(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     Storage.write(node_id, {1, [{["abc"], 123}, {["bcd"], 231}]})
     {:ok, 123} = Storage.read(node_id, {1, ["abc"]})
@@ -97,7 +99,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
   @spec write_future_multiple_then_write_present(String.t()) :: String.t()
   def write_future_multiple_then_write_present(
-        node_id \\ Node.example_random_id()
+        node_id \\ Controller.example_random_id()
       ) do
     start_storage(node_id)
 
@@ -114,7 +116,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec append_then_read(String.t()) :: String.t()
-  def append_then_read(node_id \\ Node.example_random_id()) do
+  def append_then_read(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     new_set = MapSet.new(["value"])
     Storage.append(node_id, {1, [{["set"], new_set}]})
@@ -123,7 +125,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec append_then_read_same(String.t()) :: String.t()
-  def append_then_read_same(node_id \\ Node.example_random_id()) do
+  def append_then_read_same(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     new_set = MapSet.new(["value"])
     Storage.append(node_id, {1, [{["set"], new_set}, {["set"], new_set}]})
@@ -132,7 +134,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec append_then_read_several(String.t()) :: String.t()
-  def append_then_read_several(node_id \\ Node.example_random_id()) do
+  def append_then_read_several(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     set1 = MapSet.new(["value1"])
     set2 = MapSet.new(["value2"])
@@ -143,7 +145,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec append_twice_then_read(String.t()) :: String.t()
-  def append_twice_then_read(node_id \\ Node.example_random_id()) do
+  def append_twice_then_read(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     set1 = MapSet.new(["value1"])
     Storage.append(node_id, {1, [{["set"], set1}]})
@@ -156,7 +158,9 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec append_twice_then_read_with_commit(String.t()) :: String.t()
-  def append_twice_then_read_with_commit(node_id \\ Node.example_random_id()) do
+  def append_twice_then_read_with_commit(
+        node_id \\ Controller.example_random_id()
+      ) do
     start_storage(node_id)
     set1 = MapSet.new(["value1"])
     Storage.append(node_id, {1, [{["set"], set1}]})
@@ -172,7 +176,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec add_rewrites(String.t()) :: String.t()
-  def add_rewrites(node_id \\ Node.example_random_id()) do
+  def add_rewrites(node_id \\ Controller.example_random_id()) do
     write_then_read(node_id)
     new_set = MapSet.new(["value1"])
 
@@ -187,7 +191,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec add_append(String.t()) :: String.t()
-  def add_append(node_id \\ Node.example_random_id()) do
+  def add_append(node_id \\ Controller.example_random_id()) do
     append_then_read(node_id)
     new_value_set = MapSet.new(["new_value"])
 
@@ -203,7 +207,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec complicated_storage(String.t()) :: String.t()
-  def complicated_storage(node_id \\ Node.example_random_id()) do
+  def complicated_storage(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     task1 = Task.async(fn -> Storage.read(node_id, {3, ["abc"]}) end)
     task2 = Task.async(fn -> Storage.read(node_id, {2, ["abc"]}) end)
@@ -227,7 +231,9 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec complicated_storage_with_commit(String.t()) :: String.t()
-  def complicated_storage_with_commit(node_id \\ Node.example_random_id()) do
+  def complicated_storage_with_commit(
+        node_id \\ Controller.example_random_id()
+      ) do
     start_storage(node_id)
     task1 = Task.async(fn -> Storage.read(node_id, {3, ["abc"]}) end)
     task2 = Task.async(fn -> Storage.read(node_id, {2, ["abc"]}) end)
@@ -256,12 +262,12 @@ defmodule Anoma.Node.Examples.ETransaction do
   ############################################################
 
   @spec start_ordering(String.t()) :: GenServer.on_start()
-  def start_ordering(node_id \\ Node.example_random_id()) do
-    Anoma.Node.Transaction.Ordering.start_link(node_id: node_id)
+  def start_ordering(node_id \\ Controller.example_random_id()) do
+    Anoma.Controller.Transaction.Ordering.start_link(node_id: node_id)
   end
 
   @spec ord_write_then_read(String.t()) :: String.t()
-  def ord_write_then_read(node_id \\ Node.example_random_id()) do
+  def ord_write_then_read(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     start_ordering(node_id)
 
@@ -281,7 +287,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec ord_read_future_then_write(String.t()) :: String.t()
-  def ord_read_future_then_write(node_id \\ Node.example_random_id()) do
+  def ord_read_future_then_write(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     start_ordering(node_id)
 
@@ -300,7 +306,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec ord_order_first(String.t()) :: String.t()
-  def ord_order_first(node_id \\ Node.example_random_id()) do
+  def ord_order_first(node_id \\ Controller.example_random_id()) do
     start_storage(node_id)
     start_ordering(node_id)
 
@@ -311,9 +317,9 @@ defmodule Anoma.Node.Examples.ETransaction do
     node_id
   end
 
-  @spec start_tx_module(String.t()) :: ENode.t() | any()
-  def start_tx_module(node_id \\ Node.example_random_id()) do
-    ENode.start_node(node_id: node_id)
+  @spec start_tx_module(String.t()) :: EController.t() | any()
+  def start_tx_module(node_id \\ Controller.example_random_id()) do
+    EController.start_node(node_id: node_id)
   end
 
   @spec zero(String.t()) :: {Backends.backend(), Noun.t()}
@@ -379,7 +385,9 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec submit_successful_trivial_swap(String.t()) :: String.t()
-  def submit_successful_trivial_swap(node_id \\ Node.example_random_id()) do
+  def submit_successful_trivial_swap(
+        node_id \\ Controller.example_random_id()
+      ) do
     start_tx_module(node_id)
 
     code = trivial_transparent_transaction()
@@ -413,7 +421,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec resubmit_trivial_swap(String.t()) :: String.t()
-  def resubmit_trivial_swap(node_id \\ Node.example_random_id()) do
+  def resubmit_trivial_swap(node_id \\ Controller.example_random_id()) do
     submit_successful_trivial_swap(node_id)
 
     code = trivial_transparent_transaction()
@@ -427,7 +435,7 @@ defmodule Anoma.Node.Examples.ETransaction do
         recieve_logger_failure(node_id, "already exist")
       end)
 
-    # Occasionally, the log might be empty because `Anoma.Node.Logging`
+    # Occasionally, the log might be empty because `Anoma.Controller.Logging`
     # hasn't finished writing the log entries yet.
     assert log =~ "already exist" || log == ""
 
@@ -437,7 +445,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec submit_failed_trivial_swap(String.t()) :: String.t()
-  def submit_failed_trivial_swap(node_id \\ Node.example_random_id()) do
+  def submit_failed_trivial_swap(node_id \\ Controller.example_random_id()) do
     start_tx_module(node_id)
     code = trivial_transparent_transaction_no_eph()
     EventBroker.subscribe_me([])
@@ -449,7 +457,7 @@ defmodule Anoma.Node.Examples.ETransaction do
         recieve_logger_failure(node_id, "Root does not exist")
       end)
 
-    # Occasionally, the log might be empty because `Anoma.Node.Logging`
+    # Occasionally, the log might be empty because `Anoma.Controller.Logging`
     # hasn't finished writing the log entries yet.
     assert log =~ "Root does not exist" || log == ""
 
@@ -457,7 +465,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec zero_counter_submit(String.t()) :: String.t()
-  def zero_counter_submit(node_id \\ Node.example_random_id()) do
+  def zero_counter_submit(node_id \\ Controller.example_random_id()) do
     key = "key"
     start_tx_module(node_id)
     {back, zero} = zero(key)
@@ -497,7 +505,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec inc_counter_submit_with_zero(String.t()) :: String.t()
-  def inc_counter_submit_with_zero(node_id \\ Node.example_random_id()) do
+  def inc_counter_submit_with_zero(node_id \\ Controller.example_random_id()) do
     blocks_table = Storage.blocks_table(node_id)
     key = "key"
     start_tx_module(node_id)
@@ -542,7 +550,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec inc_counter_submit_after_zero(String.t()) :: String.t()
-  def inc_counter_submit_after_zero(node_id \\ Node.example_random_id()) do
+  def inc_counter_submit_after_zero(node_id \\ Controller.example_random_id()) do
     blocks_table = Storage.blocks_table(node_id)
     key = "key"
     zero_counter_submit(node_id)
@@ -582,7 +590,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec bluf_transaction_errors(String.t()) :: String.t()
-  def bluf_transaction_errors(node_id \\ Node.example_random_id()) do
+  def bluf_transaction_errors(node_id \\ Controller.example_random_id()) do
     blocks_table = Storage.blocks_table(node_id)
     start_tx_module(node_id)
     # todo: ideally we wait for the event broker message
@@ -617,7 +625,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec read_txs_write_nothing(String.t()) :: String.t()
-  def read_txs_write_nothing(node_id \\ Node.example_random_id()) do
+  def read_txs_write_nothing(node_id \\ Controller.example_random_id()) do
     key = "key"
     start_tx_module(node_id)
     {_backend, code} = zero(key)
@@ -632,7 +640,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec read_txs_actually_read(String.t()) :: String.t()
-  def read_txs_actually_read(node_id \\ Node.example_random_id()) do
+  def read_txs_actually_read(node_id \\ Controller.example_random_id()) do
     read_txs_write_nothing(node_id)
     key = "key"
 
@@ -648,7 +656,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec read_txs_read_recent(String.t()) :: String.t()
-  def read_txs_read_recent(node_id \\ Node.example_random_id()) do
+  def read_txs_read_recent(node_id \\ Controller.example_random_id()) do
     read_txs_write_nothing(node_id)
     key = "key"
 
@@ -664,7 +672,9 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec inc_counter_submit_after_bluff(String.t()) :: String.t()
-  def inc_counter_submit_after_bluff(node_id \\ Node.example_random_id()) do
+  def inc_counter_submit_after_bluff(
+        node_id \\ Controller.example_random_id()
+      ) do
     blocks_table = Tables.table_blocks(node_id)
     key = "key"
 
@@ -705,7 +715,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec bluff_txs_write_nothing(String.t()) :: String.t()
-  def bluff_txs_write_nothing(node_id \\ Node.example_random_id()) do
+  def bluff_txs_write_nothing(node_id \\ Controller.example_random_id()) do
     bluf_transaction_errors(node_id)
 
     [] = :mnesia.dirty_all_keys(Tables.table_values(node_id))
@@ -717,7 +727,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   def recieve_round_event(node_id, round) do
     receive do
       %EventBroker.Event{
-        body: %Node.Event{
+        body: %Controller.Event{
           node_id: ^node_id,
           body: %Mempool.BlockEvent{round: ^round}
         }
@@ -732,9 +742,9 @@ defmodule Anoma.Node.Examples.ETransaction do
   defp recieve_logger_failure(node_id, exp_message) do
     receive do
       %EventBroker.Event{
-        body: %Node.Event{
+        body: %Controller.Event{
           node_id: ^node_id,
-          body: %Anoma.Node.Logging.LoggingEvent{flag: :error, msg: msg}
+          body: %Anoma.Controller.Logging.LoggingEvent{flag: :error, msg: msg}
         }
       } ->
         assert msg =~ exp_message

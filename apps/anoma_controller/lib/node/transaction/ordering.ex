@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transaction.Ordering do
+defmodule Anoma.Controller.Transaction.Ordering do
   @moduledoc """
   I am the Ordering Engine.
 
@@ -23,11 +23,11 @@ defmodule Anoma.Node.Transaction.Ordering do
   """
 
   alias __MODULE__
-  alias Anoma.Node
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Storage
+  alias Anoma.Controller
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Transaction.Storage
 
-  require Node.Event
+  require Controller.Event
 
   use EventBroker.DefFilter
   use GenServer
@@ -54,12 +54,12 @@ defmodule Anoma.Node.Transaction.Ordering do
     @typedoc """
     I am the type of the Ordering Enigine.
 
-    I contain the Node for which the Ordering is launched, the upcoming
+    I contain the Controller for which the Ordering is launched, the upcoming
     hight as well as a map from transaction IDs to their global order.
 
     ### Fields
 
-    - `:node_id` - The ID of the Node to which an Ordering instantiation is
+    - `:node_id` - The ID of the Controller to which an Ordering instantiation is
                    bound.
     - `:next_height` - The height that the next ordered transaction
                        candidate will get.
@@ -90,8 +90,11 @@ defmodule Anoma.Node.Transaction.Ordering do
   end
 
   deffilter TxIdFilter, tx_id: binary() do
-    %EventBroker.Event{body: %Node.Event{body: %{tx_id: ^tx_id}}} -> true
-    _ -> false
+    %EventBroker.Event{body: %Controller.Event{body: %{tx_id: ^tx_id}}} ->
+      true
+
+    _ ->
+      false
   end
 
   @doc """
@@ -113,7 +116,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   @doc """
   I am the initialization function for the Ordering Engine.
 
-  From the specified arguments, I get the Node ID as well as the info
+  From the specified arguments, I get the Controller ID as well as the info
   regarding the next height Ordering should be started with.
   """
 
@@ -135,7 +138,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   @doc """
   I am the Ordering read function.
 
-  I receive a Node ID and an {id, key} tuple. There are two states possible
+  I receive a Controller ID and an {id, key} tuple. There are two states possible
   when Ordering processes my request. Either:
 
   - The id has been assigned an order.
@@ -162,7 +165,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   @doc """
   I am the Ordering write function.
 
-  I receive a Node ID and an {id, kvlist} tuple. There are two states
+  I receive a Controller ID and an {id, kvlist} tuple. There are two states
   possible when Ordering processes my request. Either:
 
   - The id has been assigned an order.
@@ -187,7 +190,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   @doc """
   I am the Ordering append function.
 
-  I receive a Node ID and an {id, kvlist} tuple. There are two states
+  I receive a Controller ID and an {id, kvlist} tuple. There are two states
   possible when Ordering processes my request. Either:
 
   - The id has been assigned an order.
@@ -212,7 +215,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   @doc """
   I am the Ordering write function.
 
-  I receive a Node ID and an {id, map} tuple. There are two states possible
+  I receive a Controller ID and an {id, map} tuple. There are two states possible
   when Ordering processes my request. Either:
 
   - The id has been assigned an order.
@@ -237,7 +240,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   @doc """
   I am the Ordering order function.
 
-  Given a Node ID and a list of transaction IDs, I percieve the latter as a
+  Given a Controller ID and a list of transaction IDs, I percieve the latter as a
   partial ordering of transactions. Afterwards, I assign them a global
   ordering by adding the next height stored in the Ordering Engine to the
   respective ordering inside a list.
@@ -362,9 +365,12 @@ defmodule Anoma.Node.Transaction.Ordering do
           reduce: {state.tx_id_to_height, state.next_height} do
         {map, order} ->
           order_event =
-            Node.Event.new_with_body(state.node_id, %__MODULE__.OrderEvent{
-              tx_id: tx_id
-            })
+            Controller.Event.new_with_body(
+              state.node_id,
+              %__MODULE__.OrderEvent{
+                tx_id: tx_id
+              }
+            )
 
           EventBroker.event(order_event)
           {Map.put(map, tx_id, order), order + 1}
@@ -401,7 +407,7 @@ defmodule Anoma.Node.Transaction.Ordering do
       Task.start(call)
 
     EventBroker.subscribe(pid, [
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       this_module_filter(),
       tx_id_filter(id)
     ])
@@ -429,7 +435,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   defp block(from, tx_id, call, node_id) do
     receive do
       %EventBroker.Event{
-        body: %Node.Event{body: %__MODULE__.OrderEvent{tx_id: ^tx_id}}
+        body: %Controller.Event{body: %__MODULE__.OrderEvent{tx_id: ^tx_id}}
       } ->
         result = call.()
         GenServer.reply(from, result)
@@ -439,7 +445,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     end
 
     EventBroker.unsubscribe_me([
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       this_module_filter(),
       tx_id_filter(tx_id)
     ])

@@ -1,6 +1,6 @@
-defmodule Anoma.Node.Event do
+defmodule Anoma.Controller.Event do
   @moduledoc """
-  I am an Node Event module for Anoma Node.
+  I am an Controller Event module for Anoma Controller.
   I provide a wrapper around all Anoma Events.
   """
 
@@ -11,10 +11,10 @@ defmodule Anoma.Node.Event do
 
   typedstruct enforce: true do
     @typedoc """
-    I am the Event type for the Node events.
-    My fields determine the overall structure of the Node messages.
+    I am the Event type for the Controller events.
+    My fields determine the overall structure of the Controller messages.
     ### Fields
-    - `:node_id` - The ID of the Anoma Node sending an event. Nil in case
+    - `:node_id` - The ID of the Anoma Controller sending an event. Nil in case
                    of a non-Anoma event.
     - `:body` - A body of the event.
     """
@@ -27,7 +27,7 @@ defmodule Anoma.Node.Event do
     quote do
       %EventBroker.Event{
         source_module: __MODULE__,
-        body: %Anoma.Node.Event{
+        body: %Anoma.Controller.Event{
           node_id: unquote(node_id),
           body: unquote(body)
         }
@@ -35,16 +35,16 @@ defmodule Anoma.Node.Event do
     end
   end
 
-  deffilter NodeFilter, node_id: String.t() do
-    %EventBroker.Event{body: %Anoma.Node.Event{node_id: ^node_id}} ->
+  deffilter ControllerFilter, node_id: String.t() do
+    %EventBroker.Event{body: %Anoma.Controller.Event{node_id: ^node_id}} ->
       true
 
     _ ->
       false
   end
 
-  @spec node_filter(String.t()) :: NodeFilter.t()
+  @spec node_filter(String.t()) :: ControllerFilter.t()
   def node_filter(node_id) do
-    %__MODULE__.NodeFilter{node_id: node_id}
+    %__MODULE__.ControllerFilter{node_id: node_id}
   end
 end

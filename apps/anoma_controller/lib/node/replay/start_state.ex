@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Replay.State do
+defmodule Anoma.Controller.Replay.State do
   @moduledoc """
   I define logic that determines the startup state for the node.
 
@@ -14,7 +14,7 @@ defmodule Anoma.Node.Replay.State do
 
   """
 
-  alias Anoma.Node.Tables
+  alias Anoma.Controller.Tables
 
   require Logger
 

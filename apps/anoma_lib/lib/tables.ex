@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Tables do
+defmodule Anoma.Controller.Tables do
   require Logger
 
   ############################################################

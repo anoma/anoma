@@ -1,7 +1,7 @@
-defmodule Anoma.Node.Transport.GRPC.Servers.Executor do
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Executor
-  alias Anoma.Node.Transaction.Executor
+defmodule Anoma.Controller.Transport.GRPC.Servers.Executor do
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Transaction.Executor
+  alias Anoma.Controller.Transaction.Executor
   alias Anoma.Proto.Executor.AddROTransaction
   alias Anoma.Proto.Nock.Error
   alias Anoma.Proto.Nock.Success

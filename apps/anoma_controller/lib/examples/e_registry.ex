@@ -1,7 +1,7 @@
-defmodule Anoma.Node.Examples.ERegistry do
+defmodule Anoma.Controller.Examples.ERegistry do
   alias __MODULE__
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Registry.Address
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Registry.Address
 
   import ExUnit.Assertions
 
@@ -186,8 +186,8 @@ defmodule Anoma.Node.Examples.ERegistry do
     # names of all the engines that are registered.
     engines =
       [
-        Anoma.Node.Transaction.Mempool,
-        Anoma.Node.Intents.IntentPool
+        Anoma.Controller.Transaction.Mempool,
+        Anoma.Controller.Intents.IntentPool
       ]
       |> Enum.sort()
 

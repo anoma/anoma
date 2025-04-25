@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Examples.EEvent do
+defmodule Anoma.Controller.Examples.EEvent do
   @moduledoc """
   I contain logic to send node events and wait for node events.
 
@@ -6,18 +6,18 @@ defmodule Anoma.Node.Examples.EEvent do
   Rather, these are specific node events.
   """
 
-  alias Anoma.Node.Examples.ENode
+  alias Anoma.Controller.Examples.EController
 
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Event
-  alias Anoma.Node.Examples.ETransaction
-  alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Ordering
-  alias Anoma.Node.Transaction.Executor
+  alias Anoma.Controller.Transaction.Mempool
+  alias Anoma.Controller.Event
+  alias Anoma.Controller.Examples.ETransaction
+  alias Anoma.Controller.Transaction.Backends
+  alias Anoma.Controller.Transaction.Ordering
+  alias Anoma.Controller.Transaction.Executor
 
   import ExUnit.Assertions
 
-  require Anoma.Node.Event
+  require Anoma.Controller.Event
 
   ############################################################
   #                       Events                             #
@@ -25,9 +25,9 @@ defmodule Anoma.Node.Examples.EEvent do
   # @doc """
   # I create a transaction event
   # """
-  @spec transaction_event(ENode.t(), ETransaction.t()) ::
+  @spec transaction_event(EController.t(), ETransaction.t()) ::
           EventBroker.Event.t()
-  def transaction_event(enode \\ ENode.start_node()) do
+  def transaction_event(enode \\ EController.start_node()) do
     transaction = ETransaction.simple_transaction()
     transaction_event(enode, transaction)
   end
@@ -43,8 +43,12 @@ defmodule Anoma.Node.Examples.EEvent do
   @doc """
   I create a consensus event for the given transaction ids.
   """
-  @spec consensus_event(ENode.t(), [String.t()]) :: EventBroker.Event.t()
-  def consensus_event(enode \\ ENode.start_node(), transaction_ids \\ []) do
+  @spec consensus_event(EController.t(), [String.t()]) ::
+          EventBroker.Event.t()
+  def consensus_event(
+        enode \\ EController.start_node(),
+        transaction_ids \\ []
+      ) do
     # create a transaction event
     event = new_consensus_event(transaction_ids)
 
@@ -54,8 +58,9 @@ defmodule Anoma.Node.Examples.EEvent do
   @doc """
   I create an order event for the given transaction id.
   """
-  @spec order_event(ENode.t(), String.t() | nil) :: EventBroker.Event.t()
-  def order_event(enode \\ ENode.start_node(), transaction_id \\ nil) do
+  @spec order_event(EController.t(), String.t() | nil) ::
+          EventBroker.Event.t()
+  def order_event(enode \\ EController.start_node(), transaction_id \\ nil) do
     transaction_id =
       if transaction_id do
         transaction_id
@@ -75,9 +80,10 @@ defmodule Anoma.Node.Examples.EEvent do
   E.g., {{:ok, [["key" | 0]]}, "id 1"}
         {[error: "id 1"], "id 1"}
   """
-  @spec execution_event(ENode.t()) :: EventBroker.Event.t()
-  @spec execution_event(ENode.t(), ETransaction.t()) :: EventBroker.Event.t()
-  def execution_event(enode \\ ENode.start_node()) do
+  @spec execution_event(EController.t()) :: EventBroker.Event.t()
+  @spec execution_event(EController.t(), ETransaction.t()) ::
+          EventBroker.Event.t()
+  def execution_event(enode \\ EController.start_node()) do
     transaction = ETransaction.faulty_transaction()
     execution_event(enode, transaction)
   end
@@ -93,10 +99,10 @@ defmodule Anoma.Node.Examples.EEvent do
   I create a block event for the given transaction id and the given result.
   The transaction should be a tuple with an id and an expected result.
   """
-  @spec block_event(ENode.t()) :: EventBroker.Event.t()
-  @spec block_event(ENode.t(), ETransaction.t(), non_neg_integer()) ::
+  @spec block_event(EController.t()) :: EventBroker.Event.t()
+  @spec block_event(EController.t(), ETransaction.t(), non_neg_integer()) ::
           EventBroker.Event.t()
-  def block_event(enode \\ ENode.start_node()) do
+  def block_event(enode \\ EController.start_node()) do
     transaction = ETransaction.faulty_transaction()
     order = 0
     block_event(enode, transaction, order)
@@ -117,9 +123,9 @@ defmodule Anoma.Node.Examples.EEvent do
   I send the given transaction event.
   If no event was given, I send a default event.
   """
-  @spec send_transaction_event(ENode.t(), EventBroker.Event.t() | nil) ::
-          {ENode.t(), EventBroker.Event.t()}
-  def send_transaction_event(enode \\ ENode.start_node(), event \\ nil) do
+  @spec send_transaction_event(EController.t(), EventBroker.Event.t() | nil) ::
+          {EController.t(), EventBroker.Event.t()}
+  def send_transaction_event(enode \\ EController.start_node(), event \\ nil) do
     # if no event was given, create a default event
     event = if event, do: event, else: transaction_event(enode)
 
@@ -133,9 +139,9 @@ defmodule Anoma.Node.Examples.EEvent do
   I send the consensus event.
   If no event was given, I send a default event.
   """
-  @spec send_consensus_event(ENode.t(), EventBroker.Event.t() | nil) ::
-          {ENode.t(), EventBroker.Event.t()}
-  def send_consensus_event(enode \\ ENode.start_node(), event \\ nil) do
+  @spec send_consensus_event(EController.t(), EventBroker.Event.t() | nil) ::
+          {EController.t(), EventBroker.Event.t()}
+  def send_consensus_event(enode \\ EController.start_node(), event \\ nil) do
     # if no event was given, create a default event
     event = if event, do: event, else: consensus_event(enode)
 
@@ -149,9 +155,9 @@ defmodule Anoma.Node.Examples.EEvent do
   I send the order event.
   If no event was given, I send a default event.
   """
-  @spec send_order_event(ENode.t(), EventBroker.Event.t() | nil) ::
-          {ENode.t(), EventBroker.Event.t()}
-  def send_order_event(enode \\ ENode.start_node(), event \\ nil) do
+  @spec send_order_event(EController.t(), EventBroker.Event.t() | nil) ::
+          {EController.t(), EventBroker.Event.t()}
+  def send_order_event(enode \\ EController.start_node(), event \\ nil) do
     # if no event was given, create a default event
     event = if event, do: event, else: order_event(enode)
 
@@ -165,9 +171,9 @@ defmodule Anoma.Node.Examples.EEvent do
   I send the execution event.
   If no event was given, I send a default event.
   """
-  @spec send_execution_event(ENode.t(), EventBroker.Event.t() | nil) ::
-          {ENode.t(), EventBroker.Event.t()}
-  def send_execution_event(enode \\ ENode.start_node(), event \\ nil) do
+  @spec send_execution_event(EController.t(), EventBroker.Event.t() | nil) ::
+          {EController.t(), EventBroker.Event.t()}
+  def send_execution_event(enode \\ EController.start_node(), event \\ nil) do
     # if no event was given, create a default event
     event = if event, do: event, else: execution_event(enode)
 
@@ -181,9 +187,9 @@ defmodule Anoma.Node.Examples.EEvent do
   I send the block event.
   If no event was given, I send a default event.
   """
-  @spec send_block_event(ENode.t(), EventBroker.Event.t() | nil) ::
-          {ENode.t(), EventBroker.Event.t()}
-  def send_block_event(enode \\ ENode.start_node(), event \\ nil) do
+  @spec send_block_event(EController.t(), EventBroker.Event.t() | nil) ::
+          {EController.t(), EventBroker.Event.t()}
+  def send_block_event(enode \\ EController.start_node(), event \\ nil) do
     # if no event was given, create a default event
     event = if event, do: event, else: block_event(enode)
 

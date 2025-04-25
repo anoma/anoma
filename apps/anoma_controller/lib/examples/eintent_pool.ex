@@ -1,17 +1,17 @@
-defmodule Anoma.Node.Examples.EIntentPool do
+defmodule Anoma.Controller.Examples.EIntentPool do
   @moduledoc """
   I contain several examples on how to run the intent pool.
   """
 
-  alias Anoma.Node
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Node.Intents.IntentPool
-  alias Anoma.Node.Tables
+  alias Anoma.Controller
+  alias Anoma.Controller.Examples.EController
+  alias Anoma.Controller.Intents.IntentPool
+  alias Anoma.Controller.Tables
   alias Anoma.RM.DumbIntent
   alias Anoma.RM.Intent
 
   require ExUnit.Assertions
-  require Node.Event
+  require Controller.Event
 
   import ExUnit.Assertions
 
@@ -22,8 +22,8 @@ defmodule Anoma.Node.Examples.EIntentPool do
   @doc """
   I check that the intent pool returns an empty map of intents when its started.
   """
-  @spec list_intents(ENode.t()) :: ENode.t()
-  def list_intents(enode \\ ENode.start_node()) do
+  @spec list_intents(EController.t()) :: EController.t()
+  def list_intents(enode \\ EController.start_node()) do
     assert MapSet.new() == IntentPool.intents(enode.node_id)
     enode
   end
@@ -31,8 +31,8 @@ defmodule Anoma.Node.Examples.EIntentPool do
   @doc """
   I check that when an intent is added to the pool, is is present in the mapset.
   """
-  @spec add_intent(ENode.t()) :: ENode.t()
-  def add_intent(enode \\ ENode.start_node()) do
+  @spec add_intent(EController.t()) :: EController.t()
+  def add_intent(enode \\ EController.start_node()) do
     intent = %DumbIntent{}
     IntentPool.new_intent(enode.node_id, intent)
 
@@ -45,8 +45,8 @@ defmodule Anoma.Node.Examples.EIntentPool do
   @doc """
   I add and remove an intent from the pool and ensure that it's actually gone.
   """
-  @spec remove_intent(ENode.t()) :: ENode.t()
-  def remove_intent(enode \\ ENode.start_node()) do
+  @spec remove_intent(EController.t()) :: EController.t()
+  def remove_intent(enode \\ EController.start_node()) do
     # add an intent to the pool
     intent = %DumbIntent{}
     IntentPool.new_intent(enode.node_id, intent)
@@ -67,8 +67,8 @@ defmodule Anoma.Node.Examples.EIntentPool do
   I submit a transaction containing a nullifier to an ephemeral resource
   used in a trivial swap transaction.
   """
-  @spec add_intent_transaction_nullifier(ENode.t()) :: ENode.t()
-  def add_intent_transaction_nullifier(enode \\ ENode.start_node()) do
+  @spec add_intent_transaction_nullifier(EController.t()) :: EController.t()
+  def add_intent_transaction_nullifier(enode \\ EController.start_node()) do
     intent = Examples.ETransparent.ETransaction.nullify_intent_eph()
     node_id = enode.node_id
     IntentPool.new_intent(node_id, intent)
@@ -85,11 +85,14 @@ defmodule Anoma.Node.Examples.EIntentPool do
   The nullifier of the ephemeral resource used gets trasmitted to the
   intent pool, hence removing the specified intent from the pool.
   """
-  @spec remove_intents_with_nulllified_resources(ENode.t()) :: ENode.t()
-  def remove_intents_with_nulllified_resources(enode \\ ENode.start_node()) do
+  @spec remove_intents_with_nulllified_resources(EController.t()) ::
+          EController.t()
+  def remove_intents_with_nulllified_resources(
+        enode \\ EController.start_node()
+      ) do
     add_intent_transaction_nullifier(enode)
 
-    Anoma.Node.Examples.ETransaction.submit_successful_trivial_swap(
+    Anoma.Controller.Examples.ETransaction.submit_successful_trivial_swap(
       enode.node_id
     )
 
@@ -102,8 +105,8 @@ defmodule Anoma.Node.Examples.EIntentPool do
   I check that adding an intent with nullifiers already known in the nlfs_set
   does not add the intent to the pool.
   """
-  @spec add_intent_with_known_nullifiers(ENode.t()) :: ENode.t()
-  def add_intent_with_known_nullifiers(enode \\ ENode.start_node()) do
+  @spec add_intent_with_known_nullifiers(EController.t()) :: EController.t()
+  def add_intent_with_known_nullifiers(enode \\ EController.start_node()) do
     intent = Examples.ETransparent.ETransaction.nullify_intent_eph()
     nlfs_set = Intent.nullifiers(intent)
 
@@ -124,8 +127,9 @@ defmodule Anoma.Node.Examples.EIntentPool do
   I check that adding an intent with commitments already known in the state
   does not add the intent to the pool.
   """
-  @spec add_intent_with_submitted_commitments(ENode.t()) :: ENode.t()
-  def add_intent_with_submitted_commitments(enode \\ ENode.start_node()) do
+  @spec add_intent_with_submitted_commitments(EController.t()) ::
+          EController.t()
+  def add_intent_with_submitted_commitments(enode \\ EController.start_node()) do
     intent = Examples.ETransparent.ETransaction.single_swap()
     cms_set = Intent.commitments(intent)
 
@@ -142,7 +146,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
     enode
   end
 
-  def intents_are_written(enode \\ ENode.start_node()) do
+  def intents_are_written(enode \\ EController.start_node()) do
     add_intent_transaction_nullifier(enode)
 
     table = Tables.table_intents(enode.node_id)
@@ -156,17 +160,17 @@ defmodule Anoma.Node.Examples.EIntentPool do
   @doc """
   I submit a nullifier event to the node.
   """
-  @spec new_nullifiers_event(ENode.t(), MapSet.t()) :: ENode.t()
+  @spec new_nullifiers_event(EController.t(), MapSet.t()) :: EController.t()
   def new_nullifiers_event(
-        enode \\ ENode.start_node(),
+        enode \\ EController.start_node(),
         nlfs_set \\ MapSet.new()
       ) do
     node_id = enode.node_id
 
     event =
-      Node.Event.new_with_body(
+      Controller.Event.new_with_body(
         node_id,
-        %Anoma.Node.Transaction.Backends.TRMEvent{
+        %Anoma.Controller.Transaction.Backends.TRMEvent{
           nullifiers: nlfs_set,
           commitments: MapSet.new([])
         }
@@ -180,17 +184,17 @@ defmodule Anoma.Node.Examples.EIntentPool do
   @doc """
   I submit a commitment event to the node.
   """
-  @spec new_commitments_event(ENode.t(), MapSet.t()) :: ENode.t()
+  @spec new_commitments_event(EController.t(), MapSet.t()) :: EController.t()
   def new_commitments_event(
-        enode \\ ENode.start_node(),
+        enode \\ EController.start_node(),
         cms_set \\ MapSet.new()
       ) do
     node_id = enode.node_id
 
     event =
-      Node.Event.new_with_body(
+      Controller.Event.new_with_body(
         node_id,
-        %Anoma.Node.Transaction.Backends.TRMEvent{
+        %Anoma.Controller.Transaction.Backends.TRMEvent{
           nullifiers: MapSet.new([]),
           commitments: cms_set
         }

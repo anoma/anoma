@@ -1,22 +1,22 @@
-defmodule Anoma.Node.Examples.ELogging do
-  alias Anoma.Node
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Node.Logging
-  alias Anoma.Node.Tables
-  alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Transaction.Storage
+defmodule Anoma.Controller.Examples.ELogging do
+  alias Anoma.Controller
+  alias Anoma.Controller.Examples.EController
+  alias Anoma.Controller.Logging
+  alias Anoma.Controller.Tables
+  alias Anoma.Controller.Transaction.Backends
+  alias Anoma.Controller.Transaction.Mempool
+  alias Anoma.Controller.Transaction.Storage
 
   require ExUnit.Assertions
-  require Node.Event
+  require Controller.Event
 
   import ExUnit.Assertions
 
   use EventBroker.WithSubscription
 
   @spec check_tx_event(String.t()) :: String.t()
-  def check_tx_event(node_id \\ Node.example_random_id()) do
-    ENode.start_node(node_id: node_id)
+  def check_tx_event(node_id \\ Controller.example_random_id()) do
+    EController.start_node(node_id: node_id)
     table_name = Tables.table_events(node_id)
 
     :mnesia.subscribe({:table, table_name, :simple})
@@ -40,8 +40,8 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   @spec check_multiple_tx_events(String.t()) :: String.t()
-  def check_multiple_tx_events(node_id \\ Node.example_random_id()) do
-    ENode.start_node(node_id: node_id)
+  def check_multiple_tx_events(node_id \\ Controller.example_random_id()) do
+    EController.start_node(node_id: node_id)
 
     table_name = Tables.table_events(node_id)
 
@@ -84,7 +84,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
   @spec check_consensus_event(String.t()) :: String.t()
   def check_consensus_event(
-        node_id \\ Node.example_random_id()
+        node_id \\ Controller.example_random_id()
         |> Base.url_encode64()
       ) do
     check_tx_event(node_id)
@@ -112,7 +112,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
   @spec check_consensus_event_multiple(String.t()) :: String.t()
   def check_consensus_event_multiple(
-        node_id \\ Node.example_random_id()
+        node_id \\ Controller.example_random_id()
         |> Base.url_encode64()
       ) do
     check_multiple_tx_events(node_id)
@@ -145,7 +145,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
   @spec check_block_event(String.t()) :: String.t()
   def check_block_event(
-        node_id \\ Node.example_random_id()
+        node_id \\ Controller.example_random_id()
         |> Base.url_encode64()
       ) do
     check_consensus_event(node_id)
@@ -177,7 +177,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
   @spec check_block_event_multiple(String.t()) :: String.t()
   def check_block_event_multiple(
-        node_id \\ Node.example_random_id()
+        node_id \\ Controller.example_random_id()
         |> Base.url_encode64()
       ) do
     check_consensus_event_multiple(node_id)
@@ -225,7 +225,7 @@ defmodule Anoma.Node.Examples.ELogging do
 
   @spec check_block_event_leave_one_out(String.t()) :: String.t()
   def check_block_event_leave_one_out(
-        node_id \\ Node.example_random_id()
+        node_id \\ Controller.example_random_id()
         |> Base.url_encode64()
       ) do
     check_consensus_event_multiple(node_id)
@@ -261,7 +261,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   @spec replay_corrects_result(String.t()) :: String.t()
-  def replay_corrects_result(node_id \\ Node.example_random_id()) do
+  def replay_corrects_result(node_id \\ Controller.example_random_id()) do
     replay_ensure_created_tables(node_id)
     table = Storage.blocks_table(node_id)
 
@@ -284,7 +284,9 @@ defmodule Anoma.Node.Examples.ELogging do
         wait_for_tx(node_id, "id 1", "code 1")
     end
 
-    state = Anoma.Node.Registry.whereis(node_id, Mempool) |> :sys.get_state()
+    state =
+      Anoma.Controller.Registry.whereis(node_id, Mempool) |> :sys.get_state()
+
     nil = Map.get(state.transactions, "id 1")
     1 = state.round
 
@@ -292,7 +294,9 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   @spec replay_consensus_leave_one_out(String.t()) :: String.t()
-  def replay_consensus_leave_one_out(node_id \\ Node.example_random_id()) do
+  def replay_consensus_leave_one_out(
+        node_id \\ Controller.example_random_id()
+      ) do
     write_consensus_leave_one_out(node_id)
     replay_ensure_created_tables(node_id)
 
@@ -320,7 +324,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   @spec replay_several_consensus(String.t()) :: String.t()
-  def replay_several_consensus(node_id \\ Node.example_random_id()) do
+  def replay_several_consensus(node_id \\ Controller.example_random_id()) do
     write_several_consensus(node_id)
     replay_ensure_created_tables(node_id)
 
@@ -347,7 +351,9 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   @spec replay_consensus_with_several_txs(String.t()) :: String.t()
-  def replay_consensus_with_several_txs(node_id \\ Node.example_random_id()) do
+  def replay_consensus_with_several_txs(
+        node_id \\ Controller.example_random_id()
+      ) do
     write_consensus_with_several_tx(node_id)
     replay_ensure_created_tables(node_id)
 
@@ -371,7 +377,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   @spec replay_consensus(String.t()) :: String.t()
-  def replay_consensus(node_id \\ Node.example_random_id()) do
+  def replay_consensus(node_id \\ Controller.example_random_id()) do
     write_consensus(node_id)
     replay_ensure_created_tables(node_id)
 
@@ -392,7 +398,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   @spec replay_several_txs(String.t()) :: String.t()
-  def replay_several_txs(node_id \\ Node.example_random_id()) do
+  def replay_several_txs(node_id \\ Controller.example_random_id()) do
     write_several_tx(node_id)
     replay_ensure_created_tables(node_id)
 
@@ -412,7 +418,7 @@ defmodule Anoma.Node.Examples.ELogging do
   end
 
   @spec replay_tx(String.t()) :: String.t()
-  def replay_tx(node_id \\ Node.example_random_id()) do
+  def replay_tx(node_id \\ Controller.example_random_id()) do
     write_tx(node_id)
     replay_ensure_created_tables(node_id)
 
@@ -500,7 +506,7 @@ defmodule Anoma.Node.Examples.ELogging do
   defp wait_for_consensus(node_id, consensus) do
     receive do
       %EventBroker.Event{
-        body: %Node.Event{
+        body: %Controller.Event{
           node_id: ^node_id,
           body: %Mempool.ConsensusEvent{
             order: ^consensus
@@ -517,7 +523,7 @@ defmodule Anoma.Node.Examples.ELogging do
   defp wait_for_tx(node_id, id, code) do
     receive do
       %EventBroker.Event{
-        body: %Node.Event{
+        body: %Controller.Event{
           node_id: ^node_id,
           body: %Mempool.TxEvent{
             id: ^id,
@@ -563,7 +569,7 @@ defmodule Anoma.Node.Examples.ELogging do
   @spec tx_event(binary(), Backends.backend(), Noun.t(), String.t()) :: :ok
   def tx_event(id, backend, code, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %Mempool.TxEvent{
+      Controller.Event.new_with_body(node_id, %Mempool.TxEvent{
         id: id,
         tx: %Mempool.Tx{backend: backend, code: code}
       })
@@ -574,7 +580,7 @@ defmodule Anoma.Node.Examples.ELogging do
   @spec consensus_event(list(binary()), String.t()) :: :ok
   def consensus_event(order, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %Mempool.ConsensusEvent{
+      Controller.Event.new_with_body(node_id, %Mempool.ConsensusEvent{
         order: order
       })
 
@@ -584,7 +590,7 @@ defmodule Anoma.Node.Examples.ELogging do
   @spec block_event(list(binary()), non_neg_integer(), String.t()) :: :ok
   def block_event(order, round, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %Mempool.BlockEvent{
+      Controller.Event.new_with_body(node_id, %Mempool.BlockEvent{
         order: order,
         round: round
       })

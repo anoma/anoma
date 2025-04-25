@@ -6,15 +6,15 @@ defmodule Anoma.Supervisor do
 
   ### Shared Processes
    - Registry
-   - NodeSupervisor
+   - ControllerSupervisor
   """
 
   use Supervisor
 
-  alias Anoma.Node
-  alias Anoma.Node.Replay.State
-  alias Anoma.Node.Tables
-  alias Anoma.Node.Transport
+  alias Anoma.Controller
+  alias Anoma.Controller.Replay.State
+  alias Anoma.Controller.Tables
+  alias Anoma.Controller.Transport
 
   ############################################################
   #                       Supervisor Implementation          #
@@ -31,13 +31,13 @@ defmodule Anoma.Supervisor do
 
     grpc_port = Application.get_env(:anoma_controller, :grpc_port)
 
-    :ok = Anoma.Node.Tables.initialize_storage()
+    :ok = Anoma.Controller.Tables.initialize_storage()
 
     children = [
-      {Elixir.Registry, keys: :unique, name: Anoma.Node.Registry},
+      {Elixir.Registry, keys: :unique, name: Anoma.Controller.Registry},
       {GRPC.Server.Supervisor,
        endpoint: Transport.GRPC.Endpoint, port: grpc_port, start_server: true},
-      {DynamicSupervisor, name: Anoma.Node.NodeSupervisor}
+      {DynamicSupervisor, name: Anoma.Controller.ControllerSupervisor}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)
@@ -50,7 +50,7 @@ defmodule Anoma.Supervisor do
   @doc """
   I start a new node with the given `node_id`.
   """
-  @spec start_node(Node.Supervisor.args_t()) ::
+  @spec start_node(Controller.Supervisor.args_t()) ::
           DynamicSupervisor.on_start_child()
   def start_node(args) do
     node_id = args[:node_id]
@@ -61,8 +61,8 @@ defmodule Anoma.Supervisor do
       args = Keyword.put_new(args, :transaction, init_args)
 
       DynamicSupervisor.start_child(
-        Anoma.Node.NodeSupervisor,
-        {Anoma.Node.Supervisor, args}
+        Anoma.Controller.ControllerSupervisor,
+        {Anoma.Controller.Supervisor, args}
       )
     else
       {:error, :failed_to_initialize_storage} ->
@@ -75,9 +75,11 @@ defmodule Anoma.Supervisor do
   """
   @spec stop_node(String.t()) :: :ok
   def stop_node(node_id) do
-    Anoma.Node.Registry.via(node_id, Anoma.Node.Supervisor)
+    Anoma.Controller.Registry.via(node_id, Anoma.Controller.Supervisor)
 
-    Supervisor.stop(Anoma.Node.Registry.via(node_id, Anoma.Node.Supervisor))
+    Supervisor.stop(
+      Anoma.Controller.Registry.via(node_id, Anoma.Controller.Supervisor)
+    )
   end
 
   ############################################################

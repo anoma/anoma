@@ -1,10 +1,10 @@
-defmodule Anoma.Node.Examples.EGRPC do
+defmodule Anoma.Controller.Examples.EGRPC do
   @moduledoc """
   I contain examples to test the GRPC endpoint of the node.
   """
 
-  alias Anoma.Node.Examples.EGRPC
-  alias Anoma.Node.Examples.ENode
+  alias Anoma.Controller.Examples.EGRPC
+  alias Anoma.Controller.Examples.EController
   alias Anoma.Proto.Intentpool.Add
   alias Anoma.Proto.Intentpool.Intent
   alias Anoma.Proto.Intentpool.List
@@ -12,7 +12,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   alias Anoma.Proto.Mempool
   alias Anoma.Proto.Mempool.Transaction
   alias Anoma.Proto.MempoolService
-  alias Anoma.Proto.Node
+  alias Anoma.Proto.Controller
   alias Examples.ETransparent.ETransaction
 
   require Logger
@@ -35,7 +35,7 @@ defmodule Anoma.Node.Examples.EGRPC do
     - `:node`    - The node to which the client is connected.
     """
     field(:channel, any())
-    field(:node, ENode.t())
+    field(:node, EController.t())
   end
 
   @doc """
@@ -45,7 +45,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   The client needs a node to process incoming requests (except prove), so a node is also required
   to run these examples.
   """
-  @spec connect_to_node(ENode.t() | nil) :: EGRPC.t()
+  @spec connect_to_node(EController.t() | nil) :: EGRPC.t()
   def connect_to_node(enode \\ nil) do
     # if no node was given, this ran in a unit test.
     # we kill all nodes since we can only have a local node for this test.
@@ -53,8 +53,8 @@ defmodule Anoma.Node.Examples.EGRPC do
 
     enode =
       if enode == nil do
-        ENode.kill_all_nodes()
-        ENode.start_node()
+        EController.kill_all_nodes()
+        EController.start_node()
       else
         enode
       end
@@ -79,7 +79,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   """
   @spec list_intents(EGRPC.t()) :: boolean()
   def list_intents(%EGRPC{} = client \\ connect_to_node()) do
-    node = %Node{id: client.node.node_id}
+    node = %Controller{id: client.node.node_id}
     request = %List.Request{node: node}
 
     {:ok, reply} = IntentpoolService.Stub.list(client.channel, request)
@@ -115,7 +115,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   @spec list_intents_invalid_node(EGRPC.t()) :: boolean()
   def list_intents_invalid_node(%EGRPC{} = client \\ connect_to_node()) do
     # we assume here that nodeid deadbeef does not exist.
-    node = %Node{id: "wrong"}
+    node = %Controller{id: "wrong"}
     request = %List.Request{node: node}
 
     expected =
@@ -142,7 +142,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   """
   @spec add_intent(EGRPC.t()) :: boolean()
   def add_intent(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %Node{id: client.node.node_id}
+    node_id = %Controller{id: client.node.node_id}
 
     # create an arbitrary intent and jam it
     intent_jammed =
@@ -173,7 +173,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   I expect an error to occur.
   """
   def add_intent_fail_no_intent(%EGRPC{} = client \\ connect_to_node()) do
-    node = %Node{id: client.node.node_id}
+    node = %Controller{id: client.node.node_id}
     request = %Add.Request{node: node}
 
     assert capture_log(fn ->
@@ -195,7 +195,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   """
   @spec add_transaction(EGRPC.t()) :: EGRPC.t()
   def add_transaction(%EGRPC{} = client \\ connect_to_node()) do
-    node_id = %Node{id: client.node.node_id}
+    node_id = %Controller{id: client.node.node_id}
 
     # create an arbitrary intent and jam it
     intent_jammed =

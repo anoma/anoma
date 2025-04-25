@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transaction.Executor do
+defmodule Anoma.Controller.Transaction.Executor do
   @moduledoc """
   I am the Executor Engine.
 
@@ -18,13 +18,13 @@ defmodule Anoma.Node.Transaction.Executor do
   """
 
   alias __MODULE__
-  alias Anoma.Node
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Transaction.Ordering
+  alias Anoma.Controller
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Transaction.Backends
+  alias Anoma.Controller.Transaction.Mempool
+  alias Anoma.Controller.Transaction.Ordering
 
-  require Node.Event
+  require Controller.Event
 
   use GenServer
   use TypedStruct
@@ -103,7 +103,7 @@ defmodule Anoma.Node.Transaction.Executor do
     Process.set_label(__MODULE__)
 
     EventBroker.subscribe_me([
-      Node.Event.node_filter(args[:node_id]),
+      Controller.Event.node_filter(args[:node_id]),
       Mempool.worker_module_filter(),
       complete_filter()
     ])
@@ -222,7 +222,7 @@ defmodule Anoma.Node.Transaction.Executor do
   defp listen_for_worker_finish!(id) do
     receive do
       %EventBroker.Event{
-        body: %Node.Event{
+        body: %Controller.Event{
           body: %Backends.CompleteEvent{
             tx_id: ^id,
             tx_result: res
@@ -237,7 +237,7 @@ defmodule Anoma.Node.Transaction.Executor do
           :ok
   defp execution_event(res_list, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.ExecutionEvent{
+      Controller.Event.new_with_body(node_id, %__MODULE__.ExecutionEvent{
         result: res_list
       })
 
@@ -247,7 +247,9 @@ defmodule Anoma.Node.Transaction.Executor do
   @spec task_crash_event(any(), String.t()) :: :ok
   defp task_crash_event(task, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %__MODULE__.TaskCrash{task: task})
+      Controller.Event.new_with_body(node_id, %__MODULE__.TaskCrash{
+        task: task
+      })
 
     EventBroker.event(event)
   end

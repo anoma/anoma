@@ -146,10 +146,10 @@ defimpl Validate, for: Anoma.Proto.Mempool.Add.Request do
 end
 
 ############################################################
-#                       Node Info                          #
+#                    Controller Info                       #
 ############################################################
 
-defimpl Validate, for: Anoma.Proto.Node do
+defimpl Validate, for: Anoma.Proto.Controller do
   @not_nil [:id]
 
   def valid?(request) do

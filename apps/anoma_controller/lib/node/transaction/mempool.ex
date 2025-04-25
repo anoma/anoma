@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transaction.Mempool do
+defmodule Anoma.Controller.Transaction.Mempool do
   @moduledoc """
   I am the Mempool Engine.
 
@@ -25,16 +25,16 @@ defmodule Anoma.Node.Transaction.Mempool do
   """
 
   alias __MODULE__
-  alias Anoma.Node
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Backends.ResultEvent
-  alias Anoma.Node.Transaction.Executor
-  alias Anoma.Node.Transaction.Executor.ExecutionEvent
-  alias Anoma.Node.Transaction.Storage
+  alias Anoma.Controller
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Transaction.Backends
+  alias Anoma.Controller.Transaction.Backends.ResultEvent
+  alias Anoma.Controller.Transaction.Executor
+  alias Anoma.Controller.Transaction.Executor.ExecutionEvent
+  alias Anoma.Controller.Transaction.Storage
 
   require Logger
-  require Node.Event
+  require Controller.Event
 
   use EventBroker.DefFilter
   use GenServer
@@ -153,7 +153,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
     ### Fields
 
-    - `:node_id` - The ID of the Node to which a Mempool instantiation is
+    - `:node_id` - The ID of the Controller to which a Mempool instantiation is
                    is bound.
     - `:transactions` - A map with keys being the binary IDs of launched
                         transactions and values the corresponding
@@ -174,7 +174,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   deffilter TxFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.TxEvent{}}} ->
+    %EventBroker.Event{body: %Controller.Event{body: %Mempool.TxEvent{}}} ->
       true
 
     _ ->
@@ -182,7 +182,9 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   deffilter ConsensusFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.ConsensusEvent{}}} ->
+    %EventBroker.Event{
+      body: %Controller.Event{body: %Mempool.ConsensusEvent{}}
+    } ->
       true
 
     _ ->
@@ -190,7 +192,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   deffilter BlockFilter do
-    %EventBroker.Event{body: %Node.Event{body: %Mempool.BlockEvent{}}} ->
+    %EventBroker.Event{body: %Controller.Event{body: %Mempool.BlockEvent{}}} ->
       true
 
     _ ->
@@ -246,12 +248,12 @@ defmodule Anoma.Node.Transaction.Mempool do
     node_id = args[:node_id]
 
     EventBroker.subscribe_me([
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       filter_for_mempool()
     ])
 
     EventBroker.subscribe_me([
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       filter_for_mempool_execution_events()
     ])
 
@@ -349,7 +351,9 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @spec worker_module_filter() :: EventBroker.Filters.SourceModule.t()
   def worker_module_filter() do
-    %EventBroker.Filters.SourceModule{module: Anoma.Node.Transaction.Backends}
+    %EventBroker.Filters.SourceModule{
+      module: Anoma.Controller.Transaction.Backends
+    }
   end
 
   @doc """
@@ -394,7 +398,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   @impl true
   def handle_info(
-        e = %EventBroker.Event{body: %Node.Event{body: %ResultEvent{}}},
+        e = %EventBroker.Event{body: %Controller.Event{body: %ResultEvent{}}},
         state
       ) do
     {:noreply, handle_result_event(e, state)}
@@ -402,7 +406,7 @@ defmodule Anoma.Node.Transaction.Mempool do
 
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{body: %ExecutionEvent{}}
+          body: %Controller.Event{body: %ExecutionEvent{}}
         },
         state
       ) do
@@ -474,7 +478,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @spec block_event(list(binary), non_neg_integer(), String.t()) :: :ok
   defp block_event(id_list, round, node_id) do
     block_event =
-      Node.Event.new_with_body(node_id, %__MODULE__.BlockEvent{
+      Controller.Event.new_with_body(node_id, %__MODULE__.BlockEvent{
         order: id_list,
         round: round
       })
@@ -485,7 +489,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @spec tx_event(binary(), Mempool.Tx.t(), String.t()) :: :ok
   defp tx_event(tx_id, value, node_id) do
     tx_event =
-      Node.Event.new_with_body(node_id, %__MODULE__.TxEvent{
+      Controller.Event.new_with_body(node_id, %__MODULE__.TxEvent{
         id: tx_id,
         tx: value
       })
@@ -496,7 +500,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @spec consensus_event(list(binary()), String.t()) :: :ok
   defp consensus_event(id_list, node_id) do
     consensus_event =
-      Node.Event.new_with_body(node_id, %__MODULE__.ConsensusEvent{
+      Controller.Event.new_with_body(node_id, %__MODULE__.ConsensusEvent{
         order: id_list
       })
 

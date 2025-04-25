@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transport.Supervisor do
+defmodule Anoma.Controller.Transport.Supervisor do
   @moduledoc """
   I am the transport supervisor.
 

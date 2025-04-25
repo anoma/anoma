@@ -1,13 +1,13 @@
-defmodule Anoma.Node.Examples.Mempool do
+defmodule Anoma.Controller.Examples.Mempool do
   @moduledoc """
   I contain examples on how to interact with the mempool.
   """
 
-  alias Anoma.Node.Examples.EEvent
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Node.Examples.ETransaction
-  alias Anoma.Node.Tables
-  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Controller.Examples.EEvent
+  alias Anoma.Controller.Examples.EController
+  alias Anoma.Controller.Examples.ETransaction
+  alias Anoma.Controller.Tables
+  alias Anoma.Controller.Transaction.Mempool
 
   import ExUnit.Assertions
 
@@ -19,12 +19,12 @@ defmodule Anoma.Node.Examples.Mempool do
   @doc """
   I add a transaction to the mempool.
   """
-  @spec add_transaction(ENode.t()) ::
-          {ENode.t(), ETransaction.t()}
-  @spec add_transaction(ENode.t(), ETransaction.t()) ::
-          {ENode.t(), ETransaction.t()}
+  @spec add_transaction(EController.t()) ::
+          {EController.t(), ETransaction.t()}
+  @spec add_transaction(EController.t(), ETransaction.t()) ::
+          {EController.t(), ETransaction.t()}
   # default arguments
-  def add_transaction(enode \\ ENode.start_node()) do
+  def add_transaction(enode \\ EController.start_node()) do
     transaction = ETransaction.simple_transaction()
     add_transaction(enode, transaction)
   end
@@ -58,12 +58,12 @@ defmodule Anoma.Node.Examples.Mempool do
   @doc """
   I add a transaction to the mempool that errors when executed.
   """
-  @spec add_error_transaction(ENode.t()) ::
-          {ENode.t(), ETransaction.t()}
+  @spec add_error_transaction(EController.t()) ::
+          {EController.t(), ETransaction.t()}
 
-  @spec add_error_transaction(ENode.t(), ETransaction.t()) ::
-          {ENode.t(), ETransaction.t()}
-  def add_error_transaction(enode \\ ENode.start_node()) do
+  @spec add_error_transaction(EController.t(), ETransaction.t()) ::
+          {EController.t(), ETransaction.t()}
+  def add_error_transaction(enode \\ EController.start_node()) do
     transaction = ETransaction.faulty_transaction()
     add_error_transaction(enode, transaction)
   end
@@ -75,12 +75,12 @@ defmodule Anoma.Node.Examples.Mempool do
   @doc """
   I add multiple transactions to the mempool.
   """
-  @spec add_multiple_transactions(ENode.t()) ::
-          {ENode.t(), [ETransaction.t()]}
-  @spec add_multiple_transactions(ENode.t(), [ETransaction.t()]) ::
-          {ENode.t(), [ETransaction.t()]}
+  @spec add_multiple_transactions(EController.t()) ::
+          {EController.t(), [ETransaction.t()]}
+  @spec add_multiple_transactions(EController.t(), [ETransaction.t()]) ::
+          {EController.t(), [ETransaction.t()]}
 
-  def add_multiple_transactions(enode \\ ENode.start_node()) do
+  def add_multiple_transactions(enode \\ EController.start_node()) do
     transactions =
       Enum.map(1..10, fn _ -> ETransaction.simple_transaction() end)
 
@@ -108,10 +108,10 @@ defmodule Anoma.Node.Examples.Mempool do
   I add a transaction to the mempool that executes properly.
   I execute this transaction.
   """
-  @spec execute_transaction(ENode.t(), ETransaction.t()) ::
-          {ENode.t(), ETransaction.t()}
+  @spec execute_transaction(EController.t(), ETransaction.t()) ::
+          {EController.t(), ETransaction.t()}
 
-  def execute_transaction(enode \\ ENode.start_node()) do
+  def execute_transaction(enode \\ EController.start_node()) do
     transaction = ETransaction.simple_transaction()
     execute_transaction(enode, transaction)
   end
@@ -138,10 +138,10 @@ defmodule Anoma.Node.Examples.Mempool do
   I add a transaction to the mempool that fails when executed.
   I execute this transaction.
   """
-  @spec execute_multiple_transactions(ENode.t()) ::
-          {ENode.t(), [ETransaction.t()]}
+  @spec execute_multiple_transactions(EController.t()) ::
+          {EController.t(), [ETransaction.t()]}
 
-  def execute_multiple_transactions(enode \\ ENode.start_node()) do
+  def execute_multiple_transactions(enode \\ EController.start_node()) do
     transactions =
       Enum.map(1..10, fn _ -> ETransaction.simple_transaction() end)
 
@@ -177,10 +177,10 @@ defmodule Anoma.Node.Examples.Mempool do
   I do not wait for the events of the block creation.
   """
   @spec make_block(
-          ENode.t(),
+          EController.t(),
           ETransaction.t()
-        ) :: {ENode.t(), ETransaction.t()}
-  def make_block(enode \\ ENode.start_node()) do
+        ) :: {EController.t(), ETransaction.t()}
+  def make_block(enode \\ EController.start_node()) do
     transaction = ETransaction.simple_transaction()
     make_block(enode, transaction)
   end
@@ -211,9 +211,9 @@ defmodule Anoma.Node.Examples.Mempool do
     end
   end
 
-  @spec complete_transaction(Anoma.Node.Examples.ENode.t()) ::
-          {Anoma.Node.Examples.ENode.t(),
-           Anoma.Node.Examples.ETransaction.t()}
+  @spec complete_transaction(Anoma.Controller.Examples.EController.t()) ::
+          {Anoma.Controller.Examples.EController.t(),
+           Anoma.Controller.Examples.ETransaction.t()}
   @doc """
   I run a transaction and let it complete.
   I expect a transaction description with the following values:
@@ -223,11 +223,11 @@ defmodule Anoma.Node.Examples.Mempool do
    - The id of the transaction
   """
   @spec complete_transaction(
-          ENode.t(),
+          EController.t(),
           ETransaction.t(),
           non_neg_integer()
-        ) :: {ENode.t(), ETransaction.t()}
-  def complete_transaction(enode \\ ENode.start_node(), round \\ 1) do
+        ) :: {EController.t(), ETransaction.t()}
+  def complete_transaction(enode \\ EController.start_node(), round \\ 1) do
     transaction = ETransaction.simple_transaction()
     complete_transaction(enode, transaction, round)
   end
@@ -280,11 +280,11 @@ defmodule Anoma.Node.Examples.Mempool do
   @doc """
   I run a list of transactions and create a block for each of them.
   """
-  @spec complete_ten_transactions(ENode.t()) ::
-          {ENode.t(), [ETransaction.t()]}
-  @spec complete_ten_transactions(ENode.t(), [ETransaction.t()]) ::
-          {ENode.t(), [ETransaction.t()]}
-  def complete_ten_transactions(enode \\ ENode.start_node()) do
+  @spec complete_ten_transactions(EController.t()) ::
+          {EController.t(), [ETransaction.t()]}
+  @spec complete_ten_transactions(EController.t(), [ETransaction.t()]) ::
+          {EController.t(), [ETransaction.t()]}
+  def complete_ten_transactions(enode \\ EController.start_node()) do
     transactions =
       Enum.map(1..10, fn _ -> ETransaction.simple_transaction() end)
 
@@ -310,8 +310,9 @@ defmodule Anoma.Node.Examples.Mempool do
   Given a node id and a transaction list, I wait until these
   transactions have been written into the events table its consensus column.
   """
-  @spec wait_for_consensus_write(ENode.t(), ETransaction.t()) :: ENode.t()
-  def wait_for_consensus_write(enode \\ ENode.start_node(), transaction) do
+  @spec wait_for_consensus_write(EController.t(), ETransaction.t()) ::
+          EController.t()
+  def wait_for_consensus_write(enode \\ EController.start_node(), transaction) do
     events_table = Tables.table_events(enode.node_id)
     transaction_id = transaction.id
 
@@ -327,9 +328,12 @@ defmodule Anoma.Node.Examples.Mempool do
   Given a node id and a transaction list, I wait until these
   transactions have been written into the events table its consensus column.
   """
-  @spec wait_for_transaction_in_table(ENode.t(), ETransaction.t()) ::
-          ENode.t()
-  def wait_for_transaction_in_table(enode \\ ENode.start_node(), transaction) do
+  @spec wait_for_transaction_in_table(EController.t(), ETransaction.t()) ::
+          EController.t()
+  def wait_for_transaction_in_table(
+        enode \\ EController.start_node(),
+        transaction
+      ) do
     events_table = Tables.table_events(enode.node_id)
     transaction_id = transaction.id
     transaction_backend = transaction.backend
@@ -348,9 +352,12 @@ defmodule Anoma.Node.Examples.Mempool do
   Given a node id and a transaction, I wait until this transaction is
   removed from the events table.
   """
-  @spec wait_for_transaction_removed(ENode.t(), ETransaction.t()) ::
-          ENode.t()
-  def wait_for_transaction_removed(enode \\ ENode.start_node(), transaction) do
+  @spec wait_for_transaction_removed(EController.t(), ETransaction.t()) ::
+          EController.t()
+  def wait_for_transaction_removed(
+        enode \\ EController.start_node(),
+        transaction
+      ) do
     events_table = Tables.table_events(enode.node_id)
     transaction_id = transaction.id
 

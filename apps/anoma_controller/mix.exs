@@ -1,4 +1,4 @@
-defmodule AnomaNode.MixProject do
+defmodule AnomaController.MixProject do
   use Mix.Project
 
   def version do
@@ -26,7 +26,7 @@ defmodule AnomaNode.MixProject do
   #       mnesia should *not* be started automatically
   def application do
     [
-      mod: {Anoma.Node, []},
+      mod: {Anoma.Controller, []},
       extra_applications: [
         :crypto,
         :debugger,

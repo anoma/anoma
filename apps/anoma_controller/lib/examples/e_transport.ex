@@ -1,2 +1,2 @@
-defmodule Anoma.Node.Examples.ETransport do
+defmodule Anoma.Controller.Examples.ETransport do
 end

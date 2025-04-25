@@ -1,8 +1,8 @@
-defmodule Anoma.Node.Examples.EEvent.EDefEvent do
-  alias Anoma.Node
-  alias Anoma.Node.Examples.ENode
+defmodule Anoma.Controller.Examples.EEvent.EDefEvent do
+  alias Anoma.Controller
+  alias Anoma.Controller.Examples.EController
 
-  require Node.Event
+  require Controller.Event
   require ExUnit.Assertions
 
   import ExUnit.Assertions
@@ -17,7 +17,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     quoted_module =
       quote do
         defmodule TestEventModule do
-          use Anoma.Node.Event.DefEvent
+          use Anoma.Controller.Event.DefEvent
 
           defevent SimpleEvent do
             field(:id, integer())
@@ -53,7 +53,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     quoted_module =
       quote do
         defmodule EnforcedEventModule do
-          use Anoma.Node.Event.DefEvent
+          use Anoma.Controller.Event.DefEvent
 
           defevent EnforcedEvent, enforce: true do
             field(:id, integer())
@@ -84,7 +84,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     quoted_module =
       quote do
         defmodule FilterEventModule do
-          use Anoma.Node.Event.DefEvent
+          use Anoma.Controller.Event.DefEvent
 
           defevent FilteredEvent, filter: CustomFilter do
             field(:id, integer())
@@ -119,7 +119,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     quoted_module =
       quote do
         defmodule NoFilterEventModule do
-          use Anoma.Node.Event.DefEvent
+          use Anoma.Controller.Event.DefEvent
 
           defevent NoFilterEvent, filter: nil do
             field(:id, integer())
@@ -143,7 +143,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     I define custom events `FooEvent` and `BarEvent` with filters.
     """
 
-    use Anoma.Node.Event.DefEvent
+    use Anoma.Controller.Event.DefEvent
 
     defevent FooEvent, filter: FooFilter do
       @typedoc """
@@ -166,8 +166,8 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
   I demonstrate filtered event subscription using `FooEvent` and `BarEvent`.
   """
   @spec filtered_event_subscription(String.t()) :: String.t()
-  def filtered_event_subscription(node_id \\ Node.example_random_id()) do
-    ENode.start_node(node_id: node_id)
+  def filtered_event_subscription(node_id \\ Controller.example_random_id()) do
+    EController.start_node(node_id: node_id)
 
     filter_foo = %EventExample.FooFilter{}
     filter_bar = %EventExample.BarFilter{}
@@ -175,12 +175,12 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     EventBroker.subscribe_me([filter_foo])
 
     event_foo =
-      Node.Event.new_with_body(node_id, %EventExample.FooEvent{
+      Controller.Event.new_with_body(node_id, %EventExample.FooEvent{
         id: 100
       })
 
     event_bar =
-      Node.Event.new_with_body(node_id, %EventExample.BarEvent{
+      Controller.Event.new_with_body(node_id, %EventExample.BarEvent{
         id: 200
       })
 
@@ -188,7 +188,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     EventBroker.event(event_bar)
 
     assert_receive %EventBroker.Event{
-      body: %Node.Event{
+      body: %Controller.Event{
         body: %EventExample.FooEvent{
           id: 100
         },
@@ -198,7 +198,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     }
 
     refute_receive %EventBroker.Event{
-      body: %Node.Event{
+      body: %Controller.Event{
         body: %EventExample.BarEvent{}
       }
     }
@@ -209,7 +209,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     EventBroker.event(event_bar)
 
     assert_receive %EventBroker.Event{
-      body: %Node.Event{
+      body: %Controller.Event{
         body: %EventExample.FooEvent{
           id: 100
         },
@@ -219,7 +219,7 @@ defmodule Anoma.Node.Examples.EEvent.EDefEvent do
     }
 
     assert_receive %EventBroker.Event{
-      body: %Node.Event{
+      body: %Controller.Event{
         body: %EventExample.BarEvent{
           id: 200
         },

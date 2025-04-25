@@ -1,6 +1,6 @@
-defmodule Anoma.Node.Registry do
+defmodule Anoma.Controller.Registry do
   @moduledoc """
-  I am the Node Registry module.
+  I am the Controller Registry module.
 
   I provide functionality for creating addresses, registering engines to
   specific addresses, and querying information regarding the registered
@@ -92,8 +92,8 @@ defmodule Anoma.Node.Registry do
     Registry.select(__MODULE__, [{pattern, guards, shape}])
     |> Enum.filter(
       &(&1 in [
-          Anoma.Node.Transaction.Mempool,
-          Anoma.Node.Intents.IntentPool,
+          Anoma.Controller.Transaction.Mempool,
+          Anoma.Controller.Intents.IntentPool,
           Client
         ])
     )

@@ -1,5 +1,5 @@
 defmodule Examples.ECommitmentTree do
-  alias Anoma.Node.Tables
+  alias Anoma.Controller.Tables
   alias Anoma.RM.Transparent.Transaction
   alias Examples.ECairo
   alias Examples.ETransparent.ETransaction

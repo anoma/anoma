@@ -1,6 +1,6 @@
-defmodule Anoma.Node.Transport.GRPC.Servers.Intents do
-  alias Anoma.Node.Intents.IntentPool
-  alias Anoma.Node.Registry
+defmodule Anoma.Controller.Transport.GRPC.Servers.Intents do
+  alias Anoma.Controller.Intents.IntentPool
+  alias Anoma.Controller.Registry
   alias Anoma.Proto.Intentpool.Add
   alias Anoma.Proto.Intentpool.Intent
   alias Anoma.Proto.Intentpool.List

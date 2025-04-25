@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Intents.Supervisor do
+defmodule Anoma.Controller.Intents.Supervisor do
   @moduledoc """
   I am the supervisor for the intents subsystem.
   """
@@ -16,8 +16,8 @@ defmodule Anoma.Node.Intents.Supervisor do
     Process.set_label(__MODULE__)
 
     children = [
-      {Anoma.Node.Intents.IntentPool, [node_id: args[:node_id]]},
-      {Anoma.Node.Intents.Solver, [node_id: args[:node_id]]}
+      {Anoma.Controller.Intents.IntentPool, [node_id: args[:node_id]]},
+      {Anoma.Controller.Intents.Solver, [node_id: args[:node_id]]}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)

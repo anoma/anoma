@@ -81,7 +81,7 @@ defmodule Anoma.RM.Transparent.Transaction do
     # do we need to check that a transaction is balanced elsewhere?
     # probably? unless there is a predetermined 0 balance for each PS
 
-    # checks to be done at the Node level:
+    # checks to be done at the Controller level:
     # 1. Roots existed at some point
     # 2. Created resources weren't created priot
     # 3. Consumed resources weren't consumed prior

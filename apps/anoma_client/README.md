@@ -1,7 +1,7 @@
 # Client
 
 I am the Anoma Client application. I provide the front-end for interacting
-with the Anoma Node.
+with the Anoma Controller.
 
 ## Installation
 

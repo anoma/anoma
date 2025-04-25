@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transaction.Storage do
+defmodule Anoma.Controller.Transaction.Storage do
   @moduledoc """
   I am the Storage Engine.
 
@@ -47,11 +47,11 @@ defmodule Anoma.Node.Transaction.Storage do
   - `commit/3`
   """
 
-  alias Anoma.Node
-  alias Anoma.Node.Tables
-  alias Anoma.Node.Registry
+  alias Anoma.Controller
+  alias Anoma.Controller.Tables
+  alias Anoma.Controller.Registry
 
-  require Node.Event
+  require Controller.Event
 
   use EventBroker.DefFilter
   use GenServer
@@ -99,7 +99,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
     ### Fields
 
-    - `:node_id` - The ID of the Node to which a Storage instantiation is
+    - `:node_id` - The ID of the Controller to which a Storage instantiation is
                    bound.
 
     - `:uncommitted` - The map of keys at a specific height to its value.
@@ -136,12 +136,19 @@ defmodule Anoma.Node.Transaction.Storage do
     """
 
     field(:height, non_neg_integer())
-    field(:writes, list({Anoma.Node.Transaction.Storage.bare_key(), term()}))
+
+    field(
+      :writes,
+      list({Anoma.Controller.Transaction.Storage.bare_key(), term()})
+    )
   end
 
   deffilter HeightFilter, height: non_neg_integer() do
-    %EventBroker.Event{body: %Node.Event{body: %{height: ^height}}} -> true
-    _ -> false
+    %EventBroker.Event{body: %Controller.Event{body: %{height: ^height}}} ->
+      true
+
+    _ ->
+      false
   end
 
   ############################################################
@@ -330,7 +337,7 @@ defmodule Anoma.Node.Transaction.Storage do
   @spec commit(
           String.t(),
           non_neg_integer(),
-          list(Anoma.Node.Transaction.Mempool.Tx.t()) | nil
+          list(Anoma.Controller.Transaction.Mempool.Tx.t()) | nil
         ) :: :ok
   def commit(node_id, block_round, writes) do
     GenServer.call(
@@ -384,7 +391,7 @@ defmodule Anoma.Node.Transaction.Storage do
   @doc """
   I am a block table name function.
 
-  Given a Node ID, I produce the name of the appropriate block table
+  Given a Controller ID, I produce the name of the appropriate block table
   connected to it.
   """
 
@@ -396,7 +403,7 @@ defmodule Anoma.Node.Transaction.Storage do
   @doc """
   I am a values table name function.
 
-  Given a Node ID, I produce the name of the appropriate values table
+  Given a Controller ID, I produce the name of the appropriate values table
   connected to it.
   """
   @spec values_table(String.t()) :: atom()
@@ -407,7 +414,7 @@ defmodule Anoma.Node.Transaction.Storage do
   @doc """
   I am an updates table name function.
 
-  Given a Node ID, I produce the name of the appropriate updates table
+  Given a Controller ID, I produce the name of the appropriate updates table
   connected to it.
   """
   @spec updates_table(String.t()) :: atom()
@@ -462,7 +469,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
   @spec handle_commit(
           non_neg_integer(),
-          list(Anoma.Node.Transaction.Mempool.Tx.t()),
+          list(Anoma.Controller.Transaction.Mempool.Tx.t()),
           t()
         ) :: t()
   defp handle_commit(round, writes, state = %__MODULE__{}) do
@@ -547,7 +554,7 @@ defmodule Anoma.Node.Transaction.Storage do
       {new_state, event_writes} = abwrite(write_opt, {height, args}, state)
 
       write_event =
-        Node.Event.new_with_body(state.node_id, %__MODULE__.WriteEvent{
+        Controller.Event.new_with_body(state.node_id, %__MODULE__.WriteEvent{
           height: height,
           writes: event_writes
         })
@@ -723,7 +730,7 @@ defmodule Anoma.Node.Transaction.Storage do
       Task.start(call)
 
     EventBroker.subscribe(pid, [
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       this_module_filter(),
       height_filter(height)
     ])
@@ -734,7 +741,7 @@ defmodule Anoma.Node.Transaction.Storage do
 
     receive do
       %EventBroker.Event{
-        body: %Node.Event{
+        body: %Controller.Event{
           body: %__MODULE__.WriteEvent{height: ^awaited_height}
         }
       } ->
@@ -742,7 +749,7 @@ defmodule Anoma.Node.Transaction.Storage do
     end
 
     EventBroker.unsubscribe_me([
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       this_module_filter(),
       height_filter(awaited_height)
     ])
@@ -755,7 +762,7 @@ defmodule Anoma.Node.Transaction.Storage do
       # if the key we care about was written at exactly the height we
       # care about, then we already have the value for free
       %EventBroker.Event{
-        body: %Node.Event{
+        body: %Controller.Event{
           body: %__MODULE__.WriteEvent{height: ^height, writes: writes}
         }
       } ->
@@ -774,7 +781,7 @@ defmodule Anoma.Node.Transaction.Storage do
     end
 
     EventBroker.unsubscribe_me([
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       this_module_filter(),
       height_filter(height)
     ])

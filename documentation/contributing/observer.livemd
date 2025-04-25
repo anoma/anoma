@@ -45,9 +45,9 @@ This view is quite nice because if we spawn a process, we can see it attach
 
 ```elixir
 alias Anoma.Storage
-alias Anoma.Node.Storage.Communicator, as: Scom
-alias Anoma.Node.Executor.Communicator, as: Ccom
-alias Anoma.Node.Mempool.Communicator, as: Mcom
+alias Anoma.Controller.Storage.Communicator, as: Scom
+alias Anoma.Controller.Executor.Communicator, as: Ccom
+alias Anoma.Controller.Mempool.Communicator, as: Mcom
 import TestHelper.Nock
 
 storage = %Anoma.Storage{
@@ -57,7 +57,7 @@ storage = %Anoma.Storage{
 
 name = :anoma
 snapshot_path = [:my_special_nock_snaphsot | 0]
-node = Anoma.Node.com_names(name)
+node = Anoma.Controller.com_names(name)
 key = 555
 zero = zero_counter(key)
 pid_zero = Mcom.tx(node.mempool, zero).pid

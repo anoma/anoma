@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Event.DefEvent do
+defmodule Anoma.Controller.Event.DefEvent do
   @moduledoc """
   I contain the `defevent` macro, which facilitates the definition of typed
   event structs and optionally associated filters. Require or use me to use `defevent`.
@@ -8,7 +8,7 @@ defmodule Anoma.Node.Event.DefEvent do
     quote do
       import TypedStruct, only: [typedstruct: 1, typedstruct: 2]
       import EventBroker.DefFilter, only: [deffilter: 2]
-      import Anoma.Node.Event.DefEvent, only: [defevent: 2, defevent: 3]
+      import Anoma.Controller.Event.DefEvent, only: [defevent: 2, defevent: 3]
     end
   end
 
@@ -77,7 +77,7 @@ defmodule Anoma.Node.Event.DefEvent do
     quote do
       deffilter unquote(filter_module) do
         %EventBroker.Event{
-          body: %Anoma.Node.Event{
+          body: %Anoma.Controller.Event{
             body: %unquote(event_module){}
           }
         } ->

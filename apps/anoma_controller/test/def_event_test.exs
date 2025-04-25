@@ -1,6 +1,6 @@
-defmodule Anoma.Node.Event.DefEventTest do
+defmodule Anoma.Controller.Event.DefEventTest do
   use ExUnit.Case
 
   use TestHelper.GenerateExampleTests,
-    for: Anoma.Node.Examples.EEvent.EDefEvent
+    for: Anoma.Controller.Examples.EEvent.EDefEvent
 end

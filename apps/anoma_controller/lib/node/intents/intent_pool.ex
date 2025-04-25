@@ -1,20 +1,20 @@
-defmodule Anoma.Node.Intents.IntentPool do
+defmodule Anoma.Controller.Intents.IntentPool do
   @moduledoc """
   I am the intent pool for the Anoma node.
   m1dnight still has to write these docs.
   """
 
   alias __MODULE__
-  alias Anoma.Node
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Transaction.Backends
+  alias Anoma.Controller
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Transaction.Backends
   alias Anoma.RM.Intent
   alias EventBroker.Broker
-  alias Anoma.Node.Tables
+  alias Anoma.Controller.Tables
 
   require EventBroker.Event
   require Logger
-  require Node.Event
+  require Controller.Event
 
   use EventBroker.DefFilter
   use GenServer
@@ -45,7 +45,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   deffilter IntentAddSuccessFilter do
     %EventBroker.Event{
-      body: %Node.Event{body: %IntentPool.IntentAddSuccess{}}
+      body: %Controller.Event{body: %IntentPool.IntentAddSuccess{}}
     } ->
       true
 
@@ -54,7 +54,9 @@ defmodule Anoma.Node.Intents.IntentPool do
   end
 
   deffilter IntentAddErrorFilter do
-    %EventBroker.Event{body: %Node.Event{body: %IntentPool.IntentAddError{}}} ->
+    %EventBroker.Event{
+      body: %Controller.Event{body: %IntentPool.IntentAddError{}}
+    } ->
       true
 
     _ ->
@@ -71,7 +73,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
     ### Fields
     - `:intents` - The intents in the pool.
-    - `:node_id` - The ID of the Node.
+    - `:node_id` - The ID of the Controller.
     - `:nlfs_set` - The set of known nullifiers.
     - `:cms_set` - The set of known commitments.
     """
@@ -108,7 +110,7 @@ defmodule Anoma.Node.Intents.IntentPool do
     node_id = args[:node_id]
 
     EventBroker.subscribe_me([
-      Node.Event.node_filter(node_id),
+      Controller.Event.node_filter(node_id),
       trm_filter()
     ])
 
@@ -184,7 +186,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   @impl true
   def handle_info(
         e = %EventBroker.Event{
-          body: %Node.Event{body: %Backends.TRMEvent{}}
+          body: %Controller.Event{body: %Backends.TRMEvent{}}
         },
         state
       ) do
@@ -247,7 +249,10 @@ defmodule Anoma.Node.Intents.IntentPool do
       Logger.debug("intent removed #{inspect(intent)}")
 
       EventBroker.event(
-        Node.Event.new_with_body(state.node_id, {:intent_removed, intent}),
+        Controller.Event.new_with_body(
+          state.node_id,
+          {:intent_removed, intent}
+        ),
         Broker
       )
 
@@ -262,7 +267,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   @spec handle_new_state(t(), EventBroker.Event.t()) :: t()
   defp handle_new_state(state, %EventBroker.Event{
-         body: %Node.Event{
+         body: %Controller.Event{
            body: %Backends.TRMEvent{
              nullifiers: nlfs_set,
              commitments: cms_set
@@ -324,9 +329,12 @@ defmodule Anoma.Node.Intents.IntentPool do
     Logger.debug("new intent added #{inspect(intent)}")
 
     EventBroker.event(
-      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddSuccess{
-        intent: intent
-      }),
+      Controller.Event.new_with_body(
+        state.node_id,
+        %__MODULE__.IntentAddSuccess{
+          intent: intent
+        }
+      ),
       Broker
     )
 
@@ -335,10 +343,13 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   defp handle_error(intent, reason, state) do
     EventBroker.event(
-      Node.Event.new_with_body(state.node_id, %__MODULE__.IntentAddError{
-        intent: intent,
-        reason: reason
-      }),
+      Controller.Event.new_with_body(
+        state.node_id,
+        %__MODULE__.IntentAddError{
+          intent: intent,
+          reason: reason
+        }
+      ),
       Broker
     )
 
@@ -358,7 +369,7 @@ defmodule Anoma.Node.Intents.IntentPool do
 
   deffilter TRMFilter do
     %EventBroker.Event{
-      body: %Anoma.Node.Event{body: %Backends.TRMEvent{}}
+      body: %Anoma.Controller.Event{body: %Backends.TRMEvent{}}
     } ->
       true
 

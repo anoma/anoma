@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Supervisor do
+defmodule Anoma.Controller.Supervisor do
   @moduledoc """
   I am the top level supervisor for the Anoma node.
   """
@@ -7,10 +7,10 @@ defmodule Anoma.Node.Supervisor do
 
   use Supervisor
 
-  alias Anoma.Node.Intents
-  alias Anoma.Node.Logging
-  alias Anoma.Node.Transaction
-  alias Anoma.Node.Transport
+  alias Anoma.Controller.Intents
+  alias Anoma.Controller.Logging
+  alias Anoma.Controller.Transaction
+  alias Anoma.Controller.Transport
 
   @typedoc """
   The type of the arguments that the supervisor expects.
@@ -42,7 +42,7 @@ defmodule Anoma.Node.Supervisor do
   @spec start_link(args_t) :: any()
   def start_link(args) do
     args = Keyword.validate!(args, @args)
-    name = Anoma.Node.Registry.via(args[:node_id], __MODULE__)
+    name = Anoma.Controller.Registry.via(args[:node_id], __MODULE__)
     Supervisor.start_link(__MODULE__, args, name: name)
   end
 

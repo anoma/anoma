@@ -106,10 +106,10 @@ defmodule Anoma.Client.Runner do
   I am the client-side scry function.
 
   Given a blob keyspace, I look for a value locally at the given ID-related
-  timestamp. If not found, send a read-only transaction to the Node for the
+  timestamp. If not found, send a read-only transaction to the Controller for the
   same blob.
 
-  For RM-reserved keyspaces, I fetch data from the Node directly.
+  For RM-reserved keyspaces, I fetch data from the Controller directly.
   """
   @spec client_scry(Noun.t()) :: :error | {:ok, Noun.t()}
   def client_scry([id | space]) do

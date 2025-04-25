@@ -14,7 +14,7 @@ message Intent { bytes intent = 1; }
  */
 message Add {
   message Request {
-    Node node = 1;
+    Controller node = 1;
     Intent intent = 2;
   }
 
@@ -25,7 +25,7 @@ message Add {
  * Retrieve all intents currently in the intentpool.
  */
 message List {
-  message Request { Node node = 1; }
+  message Request { Controller node = 1; }
 
   message Response {
     repeated Intent intents = 1; // a list of intents.
@@ -37,7 +37,7 @@ message List {
  */
 message Compose {
   message Request {
-    Node node = 1;
+    Controller node = 1;
     repeated Intent intents = 2;
   }
 
@@ -52,7 +52,7 @@ message Compose {
  */
 message Verify {
   message Request {
-    Node node = 1;
+    Controller node = 1;
     Intent intent = 2;
   }
 

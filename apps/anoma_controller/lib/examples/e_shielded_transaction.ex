@@ -1,9 +1,9 @@
-defmodule Anoma.Node.Examples.EShieldedTransaction do
-  alias Anoma.Node
-  alias Anoma.Node.Examples.ETransaction
-  alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Transaction.Storage
+defmodule Anoma.Controller.Examples.EShieldedTransaction do
+  alias Anoma.Controller
+  alias Anoma.Controller.Examples.ETransaction
+  alias Anoma.Controller.Transaction.Backends
+  alias Anoma.Controller.Transaction.Mempool
+  alias Anoma.Controller.Transaction.Storage
   alias Examples.ECairo.EResource, as: ESResource
   alias Examples.ENock
 
@@ -12,7 +12,9 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
   import ExUnit.Assertions
 
   @spec submit_successful_trivial_cairo_tx(String.t()) :: String.t()
-  def submit_successful_trivial_cairo_tx(node_id \\ Node.example_random_id()) do
+  def submit_successful_trivial_cairo_tx(
+        node_id \\ Controller.example_random_id()
+      ) do
     ETransaction.start_tx_module(node_id)
 
     tx_w_backend = trivial_cairo_transaction()
@@ -59,7 +61,9 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
   end
 
   @spec submit_successful_complex_cairo_tx(String.t()) :: String.t()
-  def submit_successful_complex_cairo_tx(node_id \\ Node.example_random_id()) do
+  def submit_successful_complex_cairo_tx(
+        node_id \\ Controller.example_random_id()
+      ) do
     ETransaction.start_tx_module(node_id)
 
     tx_w_backend = complex_cairo_transaction()
@@ -115,7 +119,7 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
   @spec submit_successful_multiple_cairo_txs(String.t()) :: String.t()
   def submit_successful_multiple_cairo_txs(
-        node_id \\ Node.example_random_id()
+        node_id \\ Controller.example_random_id()
       ) do
     ETransaction.start_tx_module(node_id)
 

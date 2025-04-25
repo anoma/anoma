@@ -1,4 +1,4 @@
-defmodule Anoma.Node do
+defmodule Anoma.Controller do
   use Application
 
   @impl true

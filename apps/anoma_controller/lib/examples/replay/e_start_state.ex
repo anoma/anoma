@@ -1,18 +1,18 @@
-defmodule Anoma.Node.Examples.EReplay.StartState do
+defmodule Anoma.Controller.Examples.EReplay.StartState do
   @moduledoc """
   I define examples on how the start state of a node is computed.
   """
 
-  alias Anoma.Node.Examples.ENode
-  alias Anoma.Node.Examples.Mempool, as: EMempool
-  alias Anoma.Node.Replay.State
-  alias Anoma.Node.Tables
-  alias Anoma.Node.Registry
-  alias Anoma.Node.Logging
-  alias Anoma.Node.Event
-  alias Anoma.Node.Examples.EEvent
-  alias Anoma.Node.Examples.ETransaction
-  alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Controller.Examples.EController
+  alias Anoma.Controller.Examples.Mempool, as: EMempool
+  alias Anoma.Controller.Replay.State
+  alias Anoma.Controller.Tables
+  alias Anoma.Controller.Registry
+  alias Anoma.Controller.Logging
+  alias Anoma.Controller.Event
+  alias Anoma.Controller.Examples.EEvent
+  alias Anoma.Controller.Examples.ETransaction
+  alias Anoma.Controller.Transaction.Mempool
 
   import ExUnit.Assertions
 
@@ -35,20 +35,21 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   @doc """
   I check whether a fresh node has all its tables created.
   """
-  @spec new_node_has_tables(ENode.t()) :: ENode.t()
-  def new_node_has_tables(enode \\ ENode.start_node()) do
+  @spec new_node_has_tables(EController.t()) :: EController.t()
+  def new_node_has_tables(enode \\ EController.start_node()) do
     has_tables? = Tables.has_data?(enode.node_id)
     assert has_tables? == {:ok, :exists}
 
     enode
   end
 
-  @spec partial_state_if_table_deleted() :: Anoma.Node.Examples.ENode.t()
+  @spec partial_state_if_table_deleted() ::
+          Anoma.Controller.Examples.EController.t()
   @doc """
   I check whether a node with some missing tables is marked as partial.
   """
-  @spec partial_state_if_table_deleted(ENode.t()) :: ENode.t()
-  def partial_state_if_table_deleted(enode \\ ENode.start_node()) do
+  @spec partial_state_if_table_deleted(EController.t()) :: EController.t()
+  def partial_state_if_table_deleted(enode \\ EController.start_node()) do
     # delete a table for the given node
     table_to_delete = Tables.table_blocks(enode.node_id)
 
@@ -69,8 +70,8 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
 
   I compute the startup arguments for this node and verify that they are the default arguments.
   """
-  @spec mempool_args_fresh_node(ENode.t()) :: ENode.t()
-  def mempool_args_fresh_node(enode \\ ENode.start_node()) do
+  @spec mempool_args_fresh_node(EController.t()) :: EController.t()
+  def mempool_args_fresh_node(enode \\ EController.start_node()) do
     # there should be 0 transactions
     {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
 
@@ -87,8 +88,8 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
 
   I compute the startup arguments for this node and verify that they are the default arguments.
   """
-  @spec mempool_args_added_transaction(ENode.t()) :: ENode.t()
-  def mempool_args_added_transaction(enode \\ ENode.start_node()) do
+  @spec mempool_args_added_transaction(EController.t()) :: EController.t()
+  def mempool_args_added_transaction(enode \\ EController.start_node()) do
     {_node, transaction} = EMempool.add_transaction(enode)
     # there should be 0 transactions
     {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)
@@ -109,8 +110,8 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   I add ten transactions to the mempool and complete all of them so that they are in a block.
   When I compute the startup arguments for this node's mempool, I expect to have the default arguments.
   """
-  @spec mempool_args_non_fresh_node(ENode.t()) :: ENode.t()
-  def mempool_args_non_fresh_node(enode \\ ENode.start_node()) do
+  @spec mempool_args_non_fresh_node(EController.t()) :: EController.t()
+  def mempool_args_non_fresh_node(enode \\ EController.start_node()) do
     # run ten separate transactions in a block through the node.
     EMempool.complete_ten_transactions(enode)
 
@@ -129,9 +130,9 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   I add a transaction to the mempool.
   The startup arguments for this mempool should contain the transaction I added.
   """
-  @spec mempool_args_non_block_transaction(ENode.t()) ::
-          {ENode.t(), ETransaction.t()}
-  def mempool_args_non_block_transaction(enode \\ ENode.start_node()) do
+  @spec mempool_args_non_block_transaction(EController.t()) ::
+          {EController.t(), ETransaction.t()}
+  def mempool_args_non_block_transaction(enode \\ EController.start_node()) do
     # run a transaction, but do not create a block
     # this will make sure the transaction is still present in the mempool's tables
     # and it should be restored.
@@ -156,8 +157,9 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   I add a bunch of transactions to the mempool.
   The startup arguments for this mempool should contain the transactions I added.
   """
-  @spec mempool_args_non_block_transactions(ENode.t()) :: ENode.t()
-  def mempool_args_non_block_transactions(enode \\ ENode.start_node()) do
+  @spec mempool_args_non_block_transactions(EController.t()) ::
+          EController.t()
+  def mempool_args_non_block_transactions(enode \\ EController.start_node()) do
     # run 10 transactions, but do not create a block
     # this will make sure the transactions are still present in the mempool's tables
     # and they should be restored.
@@ -186,8 +188,9 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   To do this, I force unsubscribe the mempool from execution events.
   This ensures that no commits happen, and no block event is generated.
   """
-  @spec mempool_todo_consensus(ENode.t()) :: {ENode.t(), ETransaction.t()}
-  def mempool_todo_consensus(enode \\ ENode.start_node()) do
+  @spec mempool_todo_consensus(EController.t()) ::
+          {EController.t(), ETransaction.t()}
+  def mempool_todo_consensus(enode \\ EController.start_node()) do
     with_subscription [[]] do
       # stop the logging engine from processing block events.
       mempool_engine = Registry.whereis(enode.node_id, Mempool)
@@ -245,7 +248,7 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   If a block event is fired, the Logging engine will remove these values from the database.
   We make sure that this not happen by mocking this behaviour.
   """
-  def mempool_obsolete_consensus(enode \\ ENode.start_node()) do
+  def mempool_obsolete_consensus(enode \\ EController.start_node()) do
     with_subscription [[]] do
       # create ten blocks
       {_enode, transactions} = EMempool.complete_ten_transactions(enode)
@@ -283,7 +286,7 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
     end
   end
 
-  def mempool_obsolete_consensi(enode \\ ENode.start_node()) do
+  def mempool_obsolete_consensi(enode \\ EController.start_node()) do
     with_subscription [[]] do
       # create ten blocks
       {_enode, transactions} = EMempool.complete_ten_transactions(enode)
@@ -329,12 +332,12 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   # -----------------------------------------------------------
   # Storage
 
-  @spec storage_args_fresh_node() :: Anoma.Node.Examples.ENode.t()
+  @spec storage_args_fresh_node() :: Anoma.Controller.Examples.EController.t()
   @doc """
   I check whether the storage arguments for a fresh node are the default arguments.
   """
-  @spec storage_args_fresh_node(ENode.t()) :: ENode.t()
-  def storage_args_fresh_node(enode \\ ENode.start_node()) do
+  @spec storage_args_fresh_node(EController.t()) :: EController.t()
+  def storage_args_fresh_node(enode \\ EController.start_node()) do
     # there should be 0 transactions, and the committed height should be 0.
     {:ok, storage_start_args} = State.storage_arguments(enode.node_id)
 
@@ -346,8 +349,8 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   @doc """
   I check whether the storage arguments for a fresh node are the default arguments.
   """
-  @spec storage_args_non_fresh_node(ENode.t()) :: ENode.t()
-  def storage_args_non_fresh_node(enode \\ ENode.start_node()) do
+  @spec storage_args_non_fresh_node(EController.t()) :: EController.t()
+  def storage_args_non_fresh_node(enode \\ EController.start_node()) do
     # run ten separate transactions in a block through the node.
     EMempool.complete_ten_transactions(enode)
 
@@ -363,8 +366,8 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   I check whether the storage arguments are default when a transaction is added
   but not executed.
   """
-  @spec storage_args_non_block_transaction(ENode.t()) :: ENode.t()
-  def storage_args_non_block_transaction(enode \\ ENode.start_node()) do
+  @spec storage_args_non_block_transaction(EController.t()) :: EController.t()
+  def storage_args_non_block_transaction(enode \\ EController.start_node()) do
     # run ten separate transactions in a block through the node.
     EMempool.add_transaction(enode)
 
@@ -382,8 +385,8 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   @doc """
   I check whether the ordering arguments for a fresh node are the default arguments.
   """
-  @spec ordering_args_fresh_node(ENode.t()) :: ENode.t()
-  def ordering_args_fresh_node(enode \\ ENode.start_node()) do
+  @spec ordering_args_fresh_node(EController.t()) :: EController.t()
+  def ordering_args_fresh_node(enode \\ EController.start_node()) do
     # there should be 0 transactions, and the committed height should be 0.
     {:ok, ordering_start_args} = State.ordering_arguments(enode.node_id)
 
@@ -395,8 +398,8 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   @doc """
   I check whether the ordering arguments for a fresh node are the default arguments.
   """
-  @spec ordering_args_non_fresh_node(ENode.t()) :: ENode.t()
-  def ordering_args_non_fresh_node(enode \\ ENode.start_node()) do
+  @spec ordering_args_non_fresh_node(EController.t()) :: EController.t()
+  def ordering_args_non_fresh_node(enode \\ EController.start_node()) do
     # run ten separate transactions in a block through the node.
     EMempool.complete_ten_transactions(enode)
 
