@@ -8,9 +8,6 @@ defmodule Anoma.CairoResource.Transaction do
   alias __MODULE__
   alias Anoma.CairoResource.Action
   alias Anoma.CairoResource.LogicInstance
-  alias Anoma.CairoResource.Resource
-  alias Anoma.CairoResource.Utils
-  alias Anoma.CairoResource.Workflow
 
   require Logger
 
@@ -216,88 +213,15 @@ defmodule Anoma.CairoResource.Transaction do
         output_logics,
         output_witnesses
       ) do
-    with input_resource_jsons =
-           Enum.map(compliance_units, & &1["input"]),
-         output_resource_jsons =
-           Enum.map(compliance_units, & &1["output"]),
-         {:ok, input_nf_keys} <-
-           Enum.map(
+    with {:ok, {action, delta_witness}} <-
+           Action.create(
              compliance_units,
-             &Utils.parse_json_field_to_binary32(&1, "input_nf_key")
-           )
-           |> Utils.check_list(),
-         {:ok, input_resources} <-
-           Workflow.get_input_resources(
-             input_resource_jsons,
              input_logics,
-             input_nf_keys
-           ),
-         input_nullifiers =
-           Enum.zip_with(
-             input_resources,
-             input_nf_keys,
-             &Resource.nullifier/2
-           ),
-         {:ok, output_resources} <-
-           Workflow.get_output_resources(
-             output_resource_jsons,
-             output_logics,
-             input_nullifiers
-           ),
-         output_commitments =
-           Enum.map(output_resources, &Resource.commitment/1),
-         {:ok, input_paths, output_paths} <-
-           Workflow.create_merkle_tree_paths(
-             input_nullifiers,
-             output_commitments
-           ),
-         input_is_consumed_flags =
-           Enum.map(input_resources, fn _ -> true end),
-         {:ok, updated_input_witnesses} <-
-           Workflow.update_witnesses(
              input_witnesses,
-             input_resources,
-             input_is_consumed_flags,
-             input_nf_keys,
-             input_paths
-           ),
-         output_is_consumed_flags =
-           Enum.map(output_resources, fn _ -> false end),
-         {:ok, updated_output_witnesses} <-
-           Workflow.update_witnesses(
-             output_witnesses,
-             output_resources,
-             output_is_consumed_flags,
-             input_nf_keys,
-             output_paths
-           ),
-         {:ok, input_logic_proofs} <-
-           Workflow.generate_resource_logic_proofs(
-             input_logics,
-             updated_input_witnesses
-           ),
-         {:ok, output_logic_proofs} <-
-           Workflow.generate_resource_logic_proofs(
              output_logics,
-             updated_output_witnesses
-           ),
-         {:ok, compliance_witness} <-
-           Workflow.create_compliance_inputs(
-             compliance_units,
-             input_resources,
-             output_resources
-           ),
-         {:ok, compliance_proofs} <-
-           Workflow.generate_compliance_proofs(compliance_witness),
-         action =
-           Workflow.create_action(
-             input_logic_proofs,
-             output_logic_proofs,
-             compliance_proofs
-           ),
-         {:ok, priv_keys} <-
-           Workflow.create_private_keys(compliance_units) do
-      {:ok, Transaction.create(MapSet.new([action]), priv_keys)}
+             output_witnesses
+           ) do
+      {:ok, Transaction.create(MapSet.new([action]), delta_witness)}
     else
       {:error, x} -> {:error, x}
     end
