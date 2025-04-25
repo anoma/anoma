@@ -32,13 +32,13 @@ defmodule Anoma.CairoResource.Transaction do
   @spec commitments(t()) :: list(binary())
   def commitments(transaction = %Transaction{}) do
     transaction.actions
-    |> Enum.flat_map(& &1.created_commitments)
+    |> Enum.flat_map(&Action.commitments/1)
   end
 
   @spec nullifiers(t()) :: list(binary())
   def nullifiers(transaction = %Transaction{}) do
     transaction.actions
-    |> Enum.flat_map(& &1.consumed_nullifiers)
+    |> Enum.flat_map(&Action.nullifiers/1)
   end
 
   @spec compose(t(), t()) :: t()
@@ -85,7 +85,7 @@ defmodule Anoma.CairoResource.Transaction do
           list(%{tag: binary(), cipher: list(binary())})
   def get_cipher_texts(tx) do
     tx.actions
-    |> Enum.flat_map(& &1.logic_proofs)
+    |> Enum.flat_map(& &1.resource_logic_proofs)
     |> Enum.map(fn {_tag, {_logic_hash, proof_record}} ->
       proof_record.instance
       |> LogicInstance.from_public_input()
@@ -291,8 +291,6 @@ defmodule Anoma.CairoResource.Transaction do
            Workflow.generate_compliance_proofs(compliance_witness),
          action =
            Workflow.create_action(
-             output_commitments,
-             input_nullifiers,
              input_logic_proofs,
              output_logic_proofs,
              compliance_proofs

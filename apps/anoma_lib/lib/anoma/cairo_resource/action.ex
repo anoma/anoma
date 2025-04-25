@@ -17,55 +17,62 @@ defmodule Anoma.CairoResource.Action do
   use TypedStruct
 
   typedstruct enforce: true do
-    field(:created_commitments, list(<<_::256>>), default: [])
-    field(:consumed_nullifiers, list(<<_::256>>), default: [])
-    # logic_proofs Type: Map<Tag, (logic_hash, Proof)>
-    field(:logic_proofs, %{binary() => {binary(), ProofRecord.t()}},
+    # resource_logic_proofs Type: Map<Tag, (logic_hash, Proof)>
+    # (isConsumed, applicationData) is in the Proof.instance
+    field(:resource_logic_proofs, %{binary() => {binary(), ProofRecord.t()}},
       default: {}
     )
 
-    field(:compliance_units, MapSet.t(ProofRecord.t()), default: MapSet.new())
-    # app_data Type: Map<Tag, list({field_element, DeletionCriterion})>. Right
-    # now, the DeletionCriterion can be either 0 or 1 to indicate whether need
-    # to store the field_element. It could be extended to more complex criterion
-    # in the future.
-    field(:app_data, %{<<_::256>> => list({<<_::256>>, <<_::256>>})},
-      default: %{}
-    )
+    field(:compliance_units, list(ProofRecord.t()), default: [])
   end
 
   @spec new(
-          list(<<_::256>>),
-          list(<<_::256>>),
           list(ProofRecord.t()),
           list(ProofRecord.t())
         ) :: t()
   def new(
-        created_commitments,
-        consumed_nullifiers,
-        logic_proofs,
+        resource_logic_proofs,
         compliance_units
       ) do
     logic_proof_map =
-      Enum.into(logic_proofs, %{}, fn proof ->
+      Enum.into(resource_logic_proofs, %{}, fn proof ->
         {proof.instance |> LogicInstance.get_tag(),
          {ProofRecord.get_cairo_program_hash(proof), proof}}
       end)
 
-    app_data =
-      Enum.map(logic_proofs, fn proof ->
-        proof.instance |> LogicInstance.get_app_data_pair()
-      end)
-      |> Enum.filter(fn {_, app_data} -> app_data != [] end)
-      |> Enum.into(%{})
-
     %Action{
-      created_commitments: created_commitments,
-      consumed_nullifiers: consumed_nullifiers,
-      logic_proofs: logic_proof_map,
-      compliance_units: compliance_units |> MapSet.new(),
-      app_data: app_data
+      resource_logic_proofs: logic_proof_map,
+      compliance_units: compliance_units
     }
+  end
+
+  @spec commitments(t()) :: list(binary())
+  def commitments(action) do
+    action.compliance_units
+    |> Enum.map(fn proof_record ->
+      proof_record.instance
+      |> ComplianceInstance.from_public_input()
+    end)
+    |> Enum.map(& &1.output_cm)
+  end
+
+  @spec nullifiers(t()) :: list(binary())
+  def nullifiers(action) do
+    action.compliance_units
+    |> Enum.map(fn proof_record ->
+      proof_record.instance
+      |> ComplianceInstance.from_public_input()
+    end)
+    |> Enum.map(& &1.nullifier)
+  end
+
+  @spec app_data(t()) :: list({<<_::256>>, <<_::256>>})
+  def app_data(action) do
+    action.resource_logic_proofs
+    |> Enum.flat_map(fn {_tag, {_logic_hash, proof_record}} ->
+      proof_record.instance
+      |> LogicInstance.get_app_data()
+    end)
   end
 
   @spec verify(t()) :: boolean()
@@ -81,79 +88,63 @@ defmodule Anoma.CairoResource.Action do
           |> ComplianceInstance.from_public_input()
         end)
 
-      # Check the consistence of cms and nfs in compliances
-      nfs_cms_from_compliances =
+      # Get all the nullifiers and commitments
+      resource_tree_leaves =
         complaince_instances
         |> Enum.flat_map(fn instance ->
           [instance.nullifier, instance.output_cm]
         end)
 
-      resource_tree_leaves =
-        Enum.zip_with(
-          action.consumed_nullifiers,
-          action.created_commitments,
-          &[&1, &2]
-        )
-        |> Enum.concat()
-
-      is_cms_nfs_valid =
-        MapSet.equal?(
-          MapSet.new(nfs_cms_from_compliances),
-          MapSet.new(resource_tree_leaves)
-        )
-
-      # Compute the expected resource tree root
+      # Generate the expected action tree root
       rt =
         Tree.construct(
           CommitmentTree.Spec.cairo_poseidon_resource_tree_spec(),
           resource_tree_leaves
         )
 
-      # check correspondence between logic_proofs and compliance_units
-      is_consistent =
-        Enum.reduce_while(complaince_instances, true, fn complaince_instance,
-                                                         _acc ->
-          # check all the resource logic proofs are included
-          res =
-            with {:ok, {input_logic_hash, input_proof}} <-
-                   Map.fetch(
-                     action.logic_proofs,
-                     complaince_instance.nullifier
-                   ),
-                 true <- ProofRecord.verify(input_proof),
-                 {:ok, {output_logic_hash, output_proof}} <-
-                   Map.fetch(
-                     action.logic_proofs,
-                     complaince_instance.output_cm
-                   ),
-                 true <- ProofRecord.verify(output_proof) do
-              is_input_logic_valid =
-                complaince_instance.input_logic_ref == input_logic_hash
+      # check correspondence between resource_logic_proofs and compliance_units
+      Enum.reduce_while(complaince_instances, true, fn complaince_instance,
+                                                       _acc ->
+        # check all the resource logic proofs are included and valid
+        res =
+          with {:ok, {consumed_logic_hash, consumed_logic_proof}} <-
+                 Map.fetch(
+                   action.resource_logic_proofs,
+                   complaince_instance.nullifier
+                 ),
+               true <- ProofRecord.verify(consumed_logic_proof),
+               {:ok, {created_logic_hash, created_logic_proof}} <-
+                 Map.fetch(
+                   action.resource_logic_proofs,
+                   complaince_instance.output_cm
+                 ),
+               true <- ProofRecord.verify(created_logic_proof) do
+            is_consumed_logic_consistent =
+              complaince_instance.input_logic_ref == consumed_logic_hash
 
-              is_output_logic_valid =
-                complaince_instance.output_logic_ref == output_logic_hash
+            is_created_logic_consistent =
+              complaince_instance.output_logic_ref == created_logic_hash
 
-              is_root_valid =
+            is_root_valid =
+              rt.root ==
+                consumed_logic_proof.instance |> LogicInstance.get_root() &&
                 rt.root ==
-                  input_proof.instance |> LogicInstance.get_root() &&
-                  rt.root ==
-                    output_proof.instance |> LogicInstance.get_root()
+                  created_logic_proof.instance |> LogicInstance.get_root()
 
-              is_input_logic_valid && is_output_logic_valid && is_root_valid
-            else
-              _ -> false
-            end
-
-          case res do
-            true ->
-              {:cont, true}
-
-            false ->
-              {:halt, false}
+            is_consumed_logic_consistent && is_created_logic_consistent &&
+              is_root_valid
+          else
+            _ -> false
           end
-        end)
 
-      is_cms_nfs_valid && is_consistent
+        case res do
+          true ->
+            {:cont, true}
+
+          false ->
+            {:halt, false}
+        end
+      end)
     else
       _ -> false
     end
@@ -182,41 +173,26 @@ defmodule Anoma.CairoResource.Action do
   end
 
   @spec from_noun(Noun.t()) :: {:ok, Action.t()} | :error
-  def from_noun([created, consumed, proofs, cus | data]) do
-    with {:ok, cm_list} <- Noun.Nounable.List.from_noun(created),
-         {:ok, nlf_list} <- Noun.Nounable.List.from_noun(consumed),
-         {:ok, proof_map} <- Noun.Nounable.Map.from_noun(proofs),
-         {:ok, cus} <- Noun.Nounable.MapSet.from_noun(cus),
-         {:ok, data} <- Noun.Nounable.Map.from_noun(data),
-         cus_proper <-
-           cus
-           |> Enum.into(MapSet.new(), fn x ->
-             {:ok, cu} = ProofRecord.from_noun(x)
-             cu
-           end),
-         app_data <-
-           data
-           |> Enum.into(%{}, fn {tag, [bin | bool]} ->
-             {Noun.atom_integer_to_binary(tag, 32),
-              {Noun.atom_integer_to_binary(bin),
-               Noun.atom_integer_to_binary(bool, 32)}}
-           end) do
+  def from_noun([logic_proofs | compliance_proofs]) do
+    with {:ok, logic_proofs_map} <- Noun.Nounable.Map.from_noun(logic_proofs),
+         {:ok, compliance_proof_list} <-
+           Noun.Nounable.List.from_noun(compliance_proofs) do
       {:ok,
        %__MODULE__{
-         created_commitments:
-           Enum.map(cm_list, &Noun.atom_integer_to_binary(&1, 32)),
-         consumed_nullifiers:
-           Enum.map(nlf_list, &Noun.atom_integer_to_binary(&1, 32)),
-         logic_proofs:
-           proof_map
+         resource_logic_proofs:
+           logic_proofs_map
            |> Enum.into(%{}, fn {tag, [bin | proof]} ->
              {:ok, pr} = ProofRecord.from_noun(proof)
 
              {Noun.atom_integer_to_binary(tag, 32),
               {Noun.atom_integer_to_binary(bin), pr}}
            end),
-         compliance_units: cus_proper,
-         app_data: app_data
+         compliance_units:
+           compliance_proof_list
+           |> Enum.map(fn proof ->
+             {:ok, pr} = ProofRecord.from_noun(proof)
+             pr
+           end)
        }}
     else
       _ -> :error
@@ -227,11 +203,8 @@ defmodule Anoma.CairoResource.Action do
     @impl true
     def to_noun(action = %Action{}) do
       {
-        action.created_commitments,
-        action.consumed_nullifiers,
-        action.logic_proofs,
-        action.compliance_units,
-        action.app_data
+        action.resource_logic_proofs,
+        action.compliance_units
       }
       |> Noun.Nounable.to_noun()
     end

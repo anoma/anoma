@@ -13,6 +13,7 @@ defmodule Anoma.Node.Transaction.Backends do
   """
 
   alias Anoma.CairoResource.Transaction, as: CTransaction
+  alias Anoma.CairoResource.Action, as: CAction
   alias Anoma.Node
   alias Anoma.Node.Logging
   alias Anoma.Node.Transaction.Backends.Events
@@ -397,16 +398,13 @@ defmodule Anoma.Node.Transaction.Backends do
       write_app_data =
         tx.actions
         |> Enum.flat_map(fn action ->
-          action.app_data
-          |> Enum.flat_map(fn {_key, value_list} ->
-            value_list
-            |> Enum.filter(fn {_, deletion} ->
-              Noun.equal?(deletion, <<1::256>>)
-            end)
-            |> Enum.map(fn {value, _} ->
-              {["anoma", "blob", "cairo", :crypto.hash(:sha256, value)],
-               value}
-            end)
+          action
+          |> CAction.app_data()
+          |> Enum.filter(fn {_, deletion_criterion} ->
+            deletion_criterion == <<1::256>>
+          end)
+          |> Enum.map(fn {value, _} ->
+            {["anoma", "blob", :crypto.hash(:sha256, value)], value}
           end)
         end)
 

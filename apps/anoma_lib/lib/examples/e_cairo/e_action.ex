@@ -16,8 +16,6 @@ defmodule Examples.ECairo.EAction do
 
     action =
       Action.new(
-        [EResource.a_fixed_output_resource_commitment()],
-        [EResource.a_resource_nullifier()],
         [input_resource_logic, output_resource_logic],
         [proof]
       )
@@ -35,8 +33,6 @@ defmodule Examples.ECairo.EAction do
 
     action =
       Action.new(
-        [EResource.a_trivial_output_intent_resource_commitment()],
-        [EResource.a_trivial_input_intent_resource_nullifier()],
         [input_resource_logic, output_resource_logic],
         [proof]
       )
@@ -107,8 +103,6 @@ defmodule Examples.ECairo.EAction do
 
     action =
       Action.new(
-        [output_resource_cm_1, output_resource_cm_2],
-        [input_resource_nf_1, input_resource_nf_2],
         [
           input_resource_logic_proof_1,
           input_resource_logic_proof_2,
