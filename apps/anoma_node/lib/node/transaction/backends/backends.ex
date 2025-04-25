@@ -469,7 +469,11 @@ defmodule Anoma.Node.Transaction.Backends do
         {:ok, val} -> val
       end
 
-    Enum.all?(transaction.roots, &MapSet.member?(stored_roots, &1)) or
+    roots =
+      transaction
+      |> CTransaction.roots()
+
+    Enum.all?(roots, &MapSet.member?(stored_roots, &1)) or
       {:error, "A submitted root dose not exist in storage"}
   end
 

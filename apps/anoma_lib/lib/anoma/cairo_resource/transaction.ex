@@ -18,9 +18,6 @@ defmodule Anoma.CairoResource.Transaction do
   use TypedStruct
 
   typedstruct enforce: true do
-    # The roots seems redundant here as we can get the roots from the instance
-    # of actions
-    field(:roots, MapSet.t(binary()), default: MapSet.new())
     field(:actions, MapSet.t(Action.t()), default: MapSet.new())
 
     # When the tx is not finalized/signed, the delta_proof is the collection of
@@ -41,10 +38,16 @@ defmodule Anoma.CairoResource.Transaction do
     |> Enum.flat_map(&Action.nullifiers/1)
   end
 
+  @spec roots(t()) :: MapSet.t()
+  def roots(transaction = %Transaction{}) do
+    transaction.actions
+    |> Enum.flat_map(&Action.roots/1)
+    |> MapSet.new()
+  end
+
   @spec compose(t(), t()) :: t()
   def compose(tx1, tx2) do
     %Transaction{
-      roots: MapSet.union(tx1.roots, tx2.roots),
       actions: MapSet.union(tx1.actions, tx2.actions),
       delta_proof: tx1.delta_proof <> tx2.delta_proof
     }
@@ -170,9 +173,8 @@ defmodule Anoma.CairoResource.Transaction do
   end
 
   @spec from_noun(Noun.t()) :: {:ok, Transaction.t()} | :error
-  def from_noun([roots, actions | proof]) do
-    with {:ok, r_set} <- Noun.Nounable.MapSet.from_noun(roots),
-         {:ok, a_set} <- Noun.Nounable.MapSet.from_noun(actions),
+  def from_noun([actions | proof]) do
+    with {:ok, a_set} <- Noun.Nounable.MapSet.from_noun(actions),
          a_set <-
            Enum.into(a_set, MapSet.new(), fn a ->
              {:ok, act} = Action.from_noun(a)
@@ -180,8 +182,6 @@ defmodule Anoma.CairoResource.Transaction do
            end) do
       {:ok,
        %__MODULE__{
-         roots:
-           Enum.into(r_set, MapSet.new(), &Noun.atom_integer_to_binary/1),
          actions: a_set,
          delta_proof: Noun.atom_integer_to_binary(proof)
        }}
@@ -193,7 +193,7 @@ defmodule Anoma.CairoResource.Transaction do
   defimpl Noun.Nounable, for: Transaction do
     @impl true
     def to_noun(t = %Transaction{}) do
-      {t.roots, t.actions, t.delta_proof} |> Noun.Nounable.to_noun()
+      {t.actions, t.delta_proof} |> Noun.Nounable.to_noun()
     end
   end
 

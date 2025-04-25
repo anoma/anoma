@@ -40,9 +40,9 @@ defmodule Anoma.Constants do
   @spec default_cairo_rm_root() :: binary()
   def default_cairo_rm_root,
     do:
-      <<4, 159, 35, 51, 235, 49, 48, 244, 131, 34, 79, 109, 240, 252, 193, 45,
-        153, 168, 38, 144, 4, 120, 15, 77, 11, 26, 82, 221, 66, 229, 253,
-        122>>
+      <<7, 48, 114, 58, 201, 51, 84, 207, 156, 229, 167, 62, 191, 205, 145,
+        220, 193, 213, 117, 120, 142, 223, 253, 23, 241, 134, 128, 24, 121,
+        115, 28, 150>>
 
   @spec default_cairo_nullifier_key() :: binary()
   def default_cairo_nullifier_key,
