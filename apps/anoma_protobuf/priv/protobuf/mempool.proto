@@ -20,7 +20,7 @@ message Transaction { bytes transaction = 1; }
  */
 message Add {
   message Request {
-    Node node = 1;
+    Controller node = 1;
     Transaction transaction = 2;
     TransactionType transaction_type = 3;
   }

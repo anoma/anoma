@@ -13,7 +13,7 @@ message Input {
 
 message Prove {
   message Request {
-    Node node = 1;
+    Controller node = 1;
 
     oneof program {
       bytes jammed_program = 2;
@@ -35,7 +35,7 @@ message Prove {
 
 message Run {
   message Request {
-    Node node_info = 1;
+    Controller node_info = 1;
     oneof program {
       bytes jammed_program = 2;
       string text_program = 3;

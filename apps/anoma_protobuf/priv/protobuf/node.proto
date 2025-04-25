@@ -5,4 +5,4 @@ package Anoma.Proto;
 /*
  A description of a node.
 */
-message Node { bytes id = 1; }
+message Controller { bytes id = 1; }

@@ -1,0 +1,755 @@
+defmodule Anoma.Controller.Examples.ETransaction do
+  alias Anoma.Controller
+  alias Anoma.Controller.Examples.EController
+  alias Anoma.Controller.Transaction.Backends
+  alias Anoma.Controller.Transaction.Executor
+  alias Anoma.Controller.Transaction.Mempool
+  alias Anoma.Controller.Transaction.Ordering
+  alias Anoma.Controller.Transaction.Storage
+  alias Anoma.Controller.Tables
+  alias Anoma.RM.Transparent.Transaction
+  alias Examples.ENock
+  alias Examples.ETransparent.ETransaction
+
+  require ExUnit.Assertions
+
+  import ExUnit.Assertions
+  import ExUnit.CaptureLog
+
+  use TypedStruct
+
+  ############################################################
+  #                    Context                               #
+  ############################################################
+
+  typedstruct do
+    field(:id, String.t())
+    field(:backend, atom())
+    field(:noun, Noun.t())
+    field(:result, any())
+  end
+
+  ############################################################
+  #                          Storage                         #
+  ############################################################
+
+  @spec start_storage(String.t()) :: GenServer.on_start()
+  def start_storage(node_id \\ Controller.example_random_id()) do
+    Anoma.Controller.Transaction.Storage.start_link(node_id: node_id)
+  end
+
+  @spec write_then_read(String.t()) :: String.t()
+  def write_then_read(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    Storage.write(node_id, {1, [{["abc"], 123}]})
+    {:ok, 123} = Storage.read(node_id, {1, ["abc"]})
+    node_id
+  end
+
+  @spec write_then_read_other(String.t()) :: String.t()
+  def write_then_read_other(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    Storage.write(node_id, {1, [{["abc"], 123}]})
+    :absent = Storage.read(node_id, {1, ["def"]})
+    node_id
+  end
+
+  @spec read_future_then_write(String.t()) :: String.t()
+  def read_future_then_write(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    task = Task.async(fn -> Storage.read(node_id, {1, ["abc"]}) end)
+    Storage.write(node_id, {1, [{["abc"], 123}]})
+    {:ok, 123} = Task.await(task)
+    node_id
+  end
+
+  @spec read_other_future_then_write(String.t()) :: String.t()
+  def read_other_future_then_write(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    task = Task.async(fn -> Storage.read(node_id, {1, ["def"]}) end)
+    Storage.write(node_id, {1, [{["abc"], 123}]})
+    :absent = Task.await(task)
+    node_id
+  end
+
+  @spec write_future_then_write_present(String.t()) :: String.t()
+  def write_future_then_write_present(
+        node_id \\ Controller.example_random_id()
+      ) do
+    start_storage(node_id)
+
+    _task1 =
+      Task.async(fn -> Storage.write(node_id, {2, [{["abc"], 123}]}) end)
+
+    task2 = Task.async(fn -> Storage.read(node_id, {2, ["abc"]}) end)
+    Storage.write(node_id, {1, [{["other"], 999}]})
+
+    {:ok, 123} = Task.await(task2)
+    node_id
+  end
+
+  @spec write_multiple_then_read(String.t()) :: String.t()
+  def write_multiple_then_read(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    Storage.write(node_id, {1, [{["abc"], 123}, {["bcd"], 231}]})
+    {:ok, 123} = Storage.read(node_id, {1, ["abc"]})
+    {:ok, 231} = Storage.read(node_id, {1, ["bcd"]})
+    node_id
+  end
+
+  @spec write_future_multiple_then_write_present(String.t()) :: String.t()
+  def write_future_multiple_then_write_present(
+        node_id \\ Controller.example_random_id()
+      ) do
+    start_storage(node_id)
+
+    _task1 =
+      Task.async(fn ->
+        Storage.write(node_id, {2, [{["abc"], 123}, {["bcd"], 231}]})
+      end)
+
+    task2 = Task.async(fn -> Storage.read(node_id, {2, ["bcd"]}) end)
+    Storage.write(node_id, {1, [{["other"], 999}]})
+
+    {:ok, 231} = Task.await(task2)
+    node_id
+  end
+
+  @spec append_then_read(String.t()) :: String.t()
+  def append_then_read(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    new_set = MapSet.new(["value"])
+    Storage.append(node_id, {1, [{["set"], new_set}]})
+    {:ok, ^new_set} = Storage.read(node_id, {1, ["set"]})
+    node_id
+  end
+
+  @spec append_then_read_same(String.t()) :: String.t()
+  def append_then_read_same(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    new_set = MapSet.new(["value"])
+    Storage.append(node_id, {1, [{["set"], new_set}, {["set"], new_set}]})
+    {:ok, ^new_set} = Storage.read(node_id, {1, ["set"]})
+    node_id
+  end
+
+  @spec append_then_read_several(String.t()) :: String.t()
+  def append_then_read_several(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    set1 = MapSet.new(["value1"])
+    set2 = MapSet.new(["value2"])
+    Storage.append(node_id, {1, [{["set"], set1}, {["set"], set2}]})
+    new_set = MapSet.new(["value1", "value2"])
+    {:ok, ^new_set} = Storage.read(node_id, {1, ["set"]})
+    node_id
+  end
+
+  @spec append_twice_then_read(String.t()) :: String.t()
+  def append_twice_then_read(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    set1 = MapSet.new(["value1"])
+    Storage.append(node_id, {1, [{["set"], set1}]})
+    {:ok, ^set1} = Storage.read(node_id, {1, ["set"]})
+    set2 = MapSet.new(["value2"])
+    Storage.append(node_id, {2, [{["set"], set2}]})
+    appended_set = MapSet.new(["value1", "value2"])
+    {:ok, ^appended_set} = Storage.read(node_id, {2, ["set"]})
+    node_id
+  end
+
+  @spec append_twice_then_read_with_commit(String.t()) :: String.t()
+  def append_twice_then_read_with_commit(
+        node_id \\ Controller.example_random_id()
+      ) do
+    start_storage(node_id)
+    set1 = MapSet.new(["value1"])
+    Storage.append(node_id, {1, [{["set"], set1}]})
+    {:ok, ^set1} = Storage.read(node_id, {1, ["set"]})
+
+    Storage.commit(node_id, 1, nil)
+
+    set2 = MapSet.new(["value2"])
+    Storage.append(node_id, {2, [{["set"], set2}]})
+    appended_set = MapSet.new(["value1", "value2"])
+    {:ok, ^appended_set} = Storage.read(node_id, {2, ["set"]})
+    node_id
+  end
+
+  @spec add_rewrites(String.t()) :: String.t()
+  def add_rewrites(node_id \\ Controller.example_random_id()) do
+    write_then_read(node_id)
+    new_set = MapSet.new(["value1"])
+
+    Storage.add(
+      node_id,
+      {2, %{write: [{["abc"], 234}], append: [{["set"], new_set}]}}
+    )
+
+    {:ok, 234} = Storage.read(node_id, {2, ["abc"]})
+    {:ok, ^new_set} = Storage.read(node_id, {2, ["set"]})
+    node_id
+  end
+
+  @spec add_append(String.t()) :: String.t()
+  def add_append(node_id \\ Controller.example_random_id()) do
+    append_then_read(node_id)
+    new_value_set = MapSet.new(["new_value"])
+
+    Storage.add(
+      node_id,
+      {2, %{write: [{["abc"], 234}], append: [{["set"], new_value_set}]}}
+    )
+
+    {:ok, 234} = Storage.read(node_id, {2, ["abc"]})
+    new_set = MapSet.new(["new_value", "value"])
+    {:ok, ^new_set} = Storage.read(node_id, {2, ["set"]})
+    node_id
+  end
+
+  @spec complicated_storage(String.t()) :: String.t()
+  def complicated_storage(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    task1 = Task.async(fn -> Storage.read(node_id, {3, ["abc"]}) end)
+    task2 = Task.async(fn -> Storage.read(node_id, {2, ["abc"]}) end)
+    task3 = Task.async(fn -> Storage.read(node_id, {1, ["abc"]}) end)
+    task4 = Task.async(fn -> Storage.read(node_id, {0, ["abc"]}) end)
+
+    _blocking_write_task =
+      Task.async(fn -> Storage.write(node_id, {2, [{["abc"], 123}]}) end)
+
+    Storage.write(node_id, {1, [{["def"], 999}]})
+    Storage.write(node_id, {3, [{["abc"], 401}]})
+
+    %{
+      task1: {:ok, 401} = Task.await(task1),
+      task2: {:ok, 123} = Task.await(task2),
+      task3: :absent = Task.await(task3),
+      task4: :absent = Task.await(task4)
+    }
+
+    node_id
+  end
+
+  @spec complicated_storage_with_commit(String.t()) :: String.t()
+  def complicated_storage_with_commit(
+        node_id \\ Controller.example_random_id()
+      ) do
+    start_storage(node_id)
+    task1 = Task.async(fn -> Storage.read(node_id, {3, ["abc"]}) end)
+    task2 = Task.async(fn -> Storage.read(node_id, {2, ["abc"]}) end)
+    task3 = Task.async(fn -> Storage.read(node_id, {1, ["abc"]}) end)
+    task4 = Task.async(fn -> Storage.read(node_id, {0, ["abc"]}) end)
+
+    _blocking_write_task =
+      Task.async(fn -> Storage.write(node_id, {2, [{["abc"], 123}]}) end)
+
+    Storage.write(node_id, {1, [{["def"], 999}]})
+    Storage.commit(node_id, 1, nil)
+    Storage.write(node_id, {3, [{["abc"], 401}]})
+
+    %{
+      task1: {:ok, 401} = Task.await(task1),
+      task2: {:ok, 123} = Task.await(task2),
+      task3: :absent = Task.await(task3),
+      task4: :absent = Task.await(task4)
+    }
+
+    node_id
+  end
+
+  ############################################################
+  #                         Ordering                         #
+  ############################################################
+
+  @spec start_ordering(String.t()) :: GenServer.on_start()
+  def start_ordering(node_id \\ Controller.example_random_id()) do
+    Anoma.Controller.Transaction.Ordering.start_link(node_id: node_id)
+  end
+
+  @spec ord_write_then_read(String.t()) :: String.t()
+  def ord_write_then_read(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    start_ordering(node_id)
+
+    _write_task =
+      Task.async(fn ->
+        Ordering.write(node_id, {"tx id 1", [{["abc"], 123}]})
+      end)
+
+    read_task =
+      Task.async(fn -> Ordering.read(node_id, {"tx id 2", ["abc"]}) end)
+
+    order = ["tx id 1", "tx id 2"]
+
+    Ordering.order(node_id, order)
+    {:ok, 123} = Task.await(read_task)
+    node_id
+  end
+
+  @spec ord_read_future_then_write(String.t()) :: String.t()
+  def ord_read_future_then_write(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    start_ordering(node_id)
+
+    read_task =
+      Task.async(fn -> Ordering.read(node_id, {"tx id 2", ["abc"]}) end)
+
+    write_task =
+      Task.async(fn ->
+        Ordering.write(node_id, {"tx id 1", [{["abc"], 123}]})
+      end)
+
+    Ordering.order(node_id, ["tx id 1", "tx id 2"])
+    :ok = Task.await(write_task)
+    {:ok, 123} = Task.await(read_task)
+    node_id
+  end
+
+  @spec ord_order_first(String.t()) :: String.t()
+  def ord_order_first(node_id \\ Controller.example_random_id()) do
+    start_storage(node_id)
+    start_ordering(node_id)
+
+    Ordering.order(node_id, ["tx id 1", "tx id 2"])
+
+    Ordering.write(node_id, {"tx id 1", [{["abc"], 123}]})
+    {:ok, 123} = Ordering.read(node_id, {"tx id 2", ["abc"]})
+    node_id
+  end
+
+  @spec start_tx_module(String.t()) :: EController.t() | any()
+  def start_tx_module(node_id \\ Controller.example_random_id()) do
+    EController.start_node(node_id: node_id)
+  end
+
+  @spec zero(String.t()) :: {Backends.backend(), Noun.t()}
+  def zero(key \\ "key") do
+    {:debug_term_storage, Examples.ENock.zero(key)}
+  end
+
+  @spec inc(String.t()) :: {Backends.backend(), Noun.t()}
+  def inc(key \\ "key") do
+    {:debug_term_storage, Examples.ENock.inc(key)}
+  end
+
+  @spec trivial_transparent_transaction() :: {Backends.backend(), Noun.t()}
+  def trivial_transparent_transaction() do
+    {:transparent_resource, ENock.transparent_core(ENock.trivial_swap())}
+  end
+
+  @spec trivial_transparent_transaction_no_eph() ::
+          {Backends.backend(), Noun.t()}
+  def trivial_transparent_transaction_no_eph() do
+    {:transparent_resource,
+     ENock.transparent_core(ENock.trivial_swap_no_eph())}
+  end
+
+  @doc """
+  I return an ETransaction struct that holds an example transaction.
+  """
+  @spec simple_transaction(String.t()) :: __MODULE__.t()
+  def simple_transaction(id \\ random_transaction_id()) do
+    {backend, noun} = zero()
+
+    %__MODULE__{
+      id: id,
+      backend: backend,
+      noun: noun,
+      result: {:ok, [[["key"] | 0]]}
+    }
+  end
+
+  @doc """
+  I return an ETransaction struct that holds an example transaction.
+  """
+  @spec faulty_transaction(String.t()) :: __MODULE__.t()
+  def faulty_transaction(id \\ random_transaction_id()) do
+    %__MODULE__{
+      id: id,
+      backend: :debug_term_storage,
+      noun: [0 | 0],
+      result: :error
+    }
+  end
+
+  ############################################################
+  #                        Transactions                      #
+  ############################################################
+
+  @doc """
+  I create a random transaction id.
+  """
+  @spec random_transaction_id() :: String.t()
+  def random_transaction_id() do
+    Base.encode64(:crypto.strong_rand_bytes(16))
+  end
+
+  @spec submit_successful_trivial_swap(String.t()) :: String.t()
+  def submit_successful_trivial_swap(
+        node_id \\ Controller.example_random_id()
+      ) do
+    start_tx_module(node_id)
+
+    code = trivial_transparent_transaction()
+
+    EventBroker.subscribe_me([])
+
+    Mempool.tx(node_id, code, "id 1")
+    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+
+    recieve_round_event(node_id, 0)
+
+    base_swap = ETransaction.swap_from_actions()
+
+    assert {:ok, base_swap |> Transaction.nullifiers()} ==
+             Storage.read(node_id, {1, ["anoma", "nullifiers"]})
+
+    assert {:ok, base_swap |> Transaction.commitments()} ==
+             Storage.read(node_id, {1, ["anoma", "commitments"]})
+
+    cms = base_swap |> Transaction.commitments()
+
+    assert {:ok, cms} == Storage.read(node_id, {1, ["anoma", "commitments"]})
+
+    assert {:ok,
+            Anoma.RM.Transparent.Primitive.CommitmentAccumulator.value(cms)} ==
+             Storage.read(node_id, {1, ["anoma", "anchor"]})
+
+    EventBroker.unsubscribe_me([])
+
+    node_id
+  end
+
+  @spec resubmit_trivial_swap(String.t()) :: String.t()
+  def resubmit_trivial_swap(node_id \\ Controller.example_random_id()) do
+    submit_successful_trivial_swap(node_id)
+
+    code = trivial_transparent_transaction()
+
+    EventBroker.subscribe_me([])
+
+    log =
+      capture_log(fn ->
+        Mempool.tx(node_id, code, "id 2")
+        Mempool.execute(node_id, Mempool.tx_dump(node_id))
+        recieve_logger_failure(node_id, "already exist")
+      end)
+
+    # Occasionally, the log might be empty because `Anoma.Controller.Logging`
+    # hasn't finished writing the log entries yet.
+    assert log =~ "already exist" || log == ""
+
+    EventBroker.unsubscribe_me([])
+
+    node_id
+  end
+
+  @spec submit_failed_trivial_swap(String.t()) :: String.t()
+  def submit_failed_trivial_swap(node_id \\ Controller.example_random_id()) do
+    start_tx_module(node_id)
+    code = trivial_transparent_transaction_no_eph()
+    EventBroker.subscribe_me([])
+
+    log =
+      capture_log(fn ->
+        Mempool.tx(node_id, code, "id 1")
+        Mempool.execute(node_id, Mempool.tx_dump(node_id))
+        recieve_logger_failure(node_id, "Root does not exist")
+      end)
+
+    # Occasionally, the log might be empty because `Anoma.Controller.Logging`
+    # hasn't finished writing the log entries yet.
+    assert log =~ "Root does not exist" || log == ""
+
+    node_id
+  end
+
+  @spec zero_counter_submit(String.t()) :: String.t()
+  def zero_counter_submit(node_id \\ Controller.example_random_id()) do
+    key = "key"
+    start_tx_module(node_id)
+    {back, zero} = zero(key)
+
+    Mempool.tx(node_id, {back, zero}, "id 1")
+    :mnesia.subscribe({:table, Storage.blocks_table(node_id), :simple})
+    dump = Mempool.tx_dump(node_id)
+    Mempool.execute(node_id, dump)
+
+    blocks_table = Storage.blocks_table(node_id)
+
+    assert_receive(
+      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
+      5000
+    )
+
+    :mnesia.unsubscribe({:table, Storage.blocks_table(node_id), :simple})
+
+    {:atomic, block} =
+      :mnesia.transaction(fn ->
+        :mnesia.read({Storage.blocks_table(node_id), 1})
+      end)
+
+    [
+      {^blocks_table, 1,
+       [
+         %Mempool.Tx{
+           code: ^zero,
+           backend: ^back,
+           vm_result: {:ok, [[[^key] | 0] | 0]},
+           tx_result: {:ok, [[[^key] | 0]]}
+         }
+       ]}
+    ] = block
+
+    node_id
+  end
+
+  @spec inc_counter_submit_with_zero(String.t()) :: String.t()
+  def inc_counter_submit_with_zero(node_id \\ Controller.example_random_id()) do
+    blocks_table = Storage.blocks_table(node_id)
+    key = "key"
+    start_tx_module(node_id)
+    {back1, zero} = zero(key)
+    {back2, inc} = inc(key)
+
+    Mempool.tx(node_id, {back1, zero}, "id 1")
+    Mempool.tx(node_id, {back2, inc}, "id 2")
+    :mnesia.subscribe({:table, blocks_table, :simple})
+    dump = Mempool.tx_dump(node_id)
+    Mempool.execute(node_id, dump)
+
+    assert_receive(
+      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
+      5000
+    )
+
+    :mnesia.unsubscribe({:table, blocks_table, :simple})
+
+    {:atomic, block} =
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
+
+    [
+      {^blocks_table, 1,
+       [
+         %Mempool.Tx{
+           code: ^zero,
+           backend: ^back1,
+           vm_result: {:ok, [[[^key] | 0] | 0]},
+           tx_result: {:ok, [[[^key] | 0]]}
+         },
+         %Mempool.Tx{
+           code: ^inc,
+           backend: ^back2,
+           vm_result: {:ok, [[[^key] | 1] | 0]},
+           tx_result: {:ok, [[[^key] | 1]]}
+         }
+       ]}
+    ] = block
+
+    node_id
+  end
+
+  @spec inc_counter_submit_after_zero(String.t()) :: String.t()
+  def inc_counter_submit_after_zero(node_id \\ Controller.example_random_id()) do
+    blocks_table = Storage.blocks_table(node_id)
+    key = "key"
+    zero_counter_submit(node_id)
+    {back, inc} = inc(key)
+    Mempool.tx(node_id, {back, inc}, "id 2")
+    :mnesia.subscribe({:table, blocks_table, :simple})
+    Mempool.execute(node_id, ["id 2"])
+
+    assert_receive(
+      {:mnesia_table_event, {:write, {^blocks_table, 2, _}, _}},
+      5000
+    )
+
+    :mnesia.unsubscribe({:table, blocks_table, :simple})
+
+    {:atomic, block} =
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 2}) end)
+
+    [
+      {^blocks_table, 2,
+       [
+         %Mempool.Tx{
+           code: ^inc,
+           backend: ^back,
+           vm_result: {:ok, [[[^key] | 1] | 0]},
+           tx_result: {:ok, [[[^key] | 1]]}
+         }
+       ]}
+    ] = block
+
+    node_id
+  end
+
+  @spec bluf() :: Noun.t()
+  def bluf() do
+    [0 | 0]
+  end
+
+  @spec bluf_transaction_errors(String.t()) :: String.t()
+  def bluf_transaction_errors(node_id \\ Controller.example_random_id()) do
+    blocks_table = Storage.blocks_table(node_id)
+    start_tx_module(node_id)
+    # todo: ideally we wait for the event broker message
+    # before execution
+    Mempool.tx(node_id, {:debug_term_storage, bluf()}, "id 1")
+    :mnesia.subscribe({:table, blocks_table, :simple})
+    Mempool.execute(node_id, ["id 1"])
+
+    assert_receive(
+      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
+      5000
+    )
+
+    :mnesia.unsubscribe({:table, blocks_table, :simple})
+
+    {:atomic, block} =
+      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
+
+    [
+      {^blocks_table, 1,
+       [
+         %Mempool.Tx{
+           code: [0 | 0],
+           backend: :debug_term_storage,
+           vm_result: :vm_error,
+           tx_result: :error
+         }
+       ]}
+    ] = block
+
+    node_id
+  end
+
+  @spec read_txs_write_nothing(String.t()) :: String.t()
+  def read_txs_write_nothing(node_id \\ Controller.example_random_id()) do
+    key = "key"
+    start_tx_module(node_id)
+    {_backend, code} = zero(key)
+
+    Executor.launch(node_id, {{:read_only, self()}, code})
+
+    assert_receive({0, [[[^key] | 0] | 0]}, 5000)
+
+    [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
+    [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
+    node_id
+  end
+
+  @spec read_txs_actually_read(String.t()) :: String.t()
+  def read_txs_actually_read(node_id \\ Controller.example_random_id()) do
+    read_txs_write_nothing(node_id)
+    key = "key"
+
+    {_backend, code} = inc(key)
+
+    zero_counter_submit(node_id)
+
+    Executor.launch(node_id, {{:read_only, self()}, code})
+
+    assert_receive({1, [[[^key] | 1] | 0]}, 5000)
+
+    node_id
+  end
+
+  @spec read_txs_read_recent(String.t()) :: String.t()
+  def read_txs_read_recent(node_id \\ Controller.example_random_id()) do
+    read_txs_write_nothing(node_id)
+    key = "key"
+
+    {_backend, code} = inc(key)
+
+    inc_counter_submit_with_zero(node_id)
+
+    Executor.launch(node_id, {{:read_only, self()}, code})
+
+    assert_receive({2, [[[^key] | 2] | 0]}, 5000)
+
+    node_id
+  end
+
+  @spec inc_counter_submit_after_bluff(String.t()) :: String.t()
+  def inc_counter_submit_after_bluff(
+        node_id \\ Controller.example_random_id()
+      ) do
+    blocks_table = Tables.table_blocks(node_id)
+    key = "key"
+
+    # this example also creates a block, so the next round is 2.
+    zero_counter_submit(node_id)
+    {back, inc} = inc(key)
+    Mempool.tx(node_id, {:debug_term_storage, bluf()}, "id 2")
+    Mempool.tx(node_id, inc(key), "id 3")
+    :mnesia.subscribe({:table, blocks_table, :simple})
+    Mempool.execute(node_id, ["id 2", "id 3"])
+
+    assert_receive(
+      {:mnesia_table_event, {:write, {^blocks_table, 2, _}, _}},
+      5000
+    )
+
+    :mnesia.unsubscribe({:table, blocks_table, :simple})
+
+    [
+      {^blocks_table, 2,
+       [
+         %Mempool.Tx{
+           code: [0 | 0],
+           backend: :debug_term_storage,
+           vm_result: :vm_error,
+           tx_result: :error
+         },
+         %Mempool.Tx{
+           code: ^inc,
+           backend: ^back,
+           vm_result: {:ok, [[[^key] | 1] | 0]},
+           tx_result: {:ok, [[[^key] | 1]]}
+         }
+       ]}
+    ] = :mnesia.dirty_read({blocks_table, 2})
+
+    node_id
+  end
+
+  @spec bluff_txs_write_nothing(String.t()) :: String.t()
+  def bluff_txs_write_nothing(node_id \\ Controller.example_random_id()) do
+    bluf_transaction_errors(node_id)
+
+    [] = :mnesia.dirty_all_keys(Tables.table_values(node_id))
+    [] = :mnesia.dirty_all_keys(Tables.table_updates(node_id))
+    node_id
+  end
+
+  @spec recieve_round_event(String.t(), non_neg_integer()) :: :ok | :error_tx
+  def recieve_round_event(node_id, round) do
+    receive do
+      %EventBroker.Event{
+        body: %Controller.Event{
+          node_id: ^node_id,
+          body: %Mempool.BlockEvent{round: ^round}
+        }
+      } ->
+        :ok
+    after
+      1000 -> :error_tx
+    end
+  end
+
+  @spec recieve_logger_failure(binary(), String.t()) :: any()
+  defp recieve_logger_failure(node_id, exp_message) do
+    receive do
+      %EventBroker.Event{
+        body: %Controller.Event{
+          node_id: ^node_id,
+          body: %Anoma.Controller.Logging.LoggingEvent{flag: :error, msg: msg}
+        }
+      } ->
+        assert msg =~ exp_message
+    after
+      1000 -> assert(false, "Failed to find failure message: #{exp_message}")
+    end
+  end
+end

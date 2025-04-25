@@ -1,4 +1,4 @@
-defmodule CommitmentTree.Node do
+defmodule CommitmentTree.Controller do
   use TypedStruct
 
   typedstruct enforce: true do
@@ -14,9 +14,9 @@ defmodule CommitmentTree.Node do
   Creates a new internal node.
   Children is a tuple of size spec.splay, each element of which is either a binary or another node.
   """
-  @spec new(CommitmentTree.Spec.t(), tuple()) :: CommitmentTree.Node.t()
+  @spec new(CommitmentTree.Spec.t(), tuple()) :: CommitmentTree.Controller.t()
   def new(spec, children) do
-    %CommitmentTree.Node{
+    %CommitmentTree.Controller{
       children: children,
       hash:
         spec.hash.(
@@ -34,7 +34,7 @@ defmodule CommitmentTree.Node do
   @doc """
   Creates a new internal node, all children of which are empty.
   """
-  @spec new_empty(CommitmentTree.Spec.t()) :: CommitmentTree.Node.t()
+  @spec new_empty(CommitmentTree.Spec.t()) :: CommitmentTree.Controller.t()
   def new_empty(spec) do
     new(spec, Tuple.duplicate(spec.key_zero, spec.splay))
   end
@@ -43,7 +43,11 @@ defmodule CommitmentTree.Node do
   Produces a proof for leaf #cursor of node, taking the form of a nested tuple,
   as described in proof.ex
   """
-  @spec prove(CommitmentTree.Spec.t(), CommitmentTree.Node.t(), integer()) ::
+  @spec prove(
+          CommitmentTree.Spec.t(),
+          CommitmentTree.Controller.t(),
+          integer()
+        ) ::
           tuple()
   def prove(spec, node, cursor) do
     prove(spec, spec.splay_suff_prod, node, cursor)

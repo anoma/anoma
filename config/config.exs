@@ -8,7 +8,7 @@ config :logger,
 config :anoma_client, []
 config :anoma_lib, []
 
-config :anoma_node,
+config :anoma_controller,
   grpc_port: String.to_integer(System.get_env("GRPC_PORT") || "50051")
 
 config :anoma_protobuf, []
@@ -30,7 +30,7 @@ config :event_broker, []
 #
 # rocksdb:         should the rockdb backend be used?
 #                  default: true
-config :anoma_node, :mnesia,
+config :anoma_controller, :mnesia,
   persist_to_disk: false,
   rocksdb: false
 

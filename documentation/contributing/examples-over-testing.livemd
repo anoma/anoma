@@ -241,7 +241,7 @@ Further, if we were to not do a 1 to 1 extraction, we could factor some of the d
 ## Examplifying stateful code
 
 ```elixir
-defmodule AnomaTest.Node.Executor.Worker do
+defmodule AnomaTest.Controller.Executor.Worker do
   use ExUnit.Case, async: true
 
   setup_all do
@@ -250,13 +250,13 @@ defmodule AnomaTest.Node.Executor.Worker do
       order: AnomaTest.Worker.Order
     }
 
-    {:ok, router, _} = Anoma.Node.Router.start()
+    {:ok, router, _} = Anoma.Controller.Router.start()
 
     {:ok, storage} =
-      Anoma.Node.Router.start_engine(router, Storage, storage)
+      Anoma.Controller.Router.start_engine(router, Storage, storage)
 
     {:ok, ordering} =
-      Anoma.Node.Router.start_engine(router, Ordering, table: storage)
+      Anoma.Controller.Router.start_engine(router, Ordering, table: storage)
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
@@ -440,7 +440,7 @@ defmodule Example.Worker.Phase2 do
   def network() do
     router = router()
     storage = storage(router)
-    %Node{router: router, ordering: ordering(router, storage), storage: storage}
+    %Controller{router: router, ordering: ordering(router, storage), storage: storage}
   end
 
   # Let's get an unique number

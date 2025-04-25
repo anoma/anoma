@@ -25,8 +25,8 @@ defmodule Anoma.Client.CLI do
   run the following.
 
   ```text
-  iex(1)> Anoma.Node.Examples.ENode.start_node(grpc_port: 8181)
-  %Anoma.Node.Examples.ENode{
+  iex(1)> Anoma.Controller.Examples.EController.start_node(grpc_port: 8181)
+  %Anoma.Controller.Examples.EController{
     grpc_port: 8181,
     pid: #PID<0.353.0>,
     node_id: "110532251"

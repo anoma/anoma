@@ -34,14 +34,14 @@ instance.
 require IEx.Helpers
 import IEx.Helpers
 # the above two lines are not requried for the REPL!
-h(Anoma.Node.Transaction.Backends)
+h(Anoma.Controller.Transaction.Backends)
 ```
 
 <!-- livebook:{"output":true} -->
 
 ```
 
-                        Anoma.Node.Transaction.Backends
+                        Anoma.Controller.Transaction.Backends
 
 Backend module. Support :kv, :ro, :rm, :cairo execution.
 

@@ -10,7 +10,7 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Client
   alias Anoma.Client.Examples.EClient
   alias Anoma.Client.Storage
-  alias Anoma.Node.Examples.ENode
+  alias Anoma.Controller.Examples.EController
   alias Anoma.Proto.Intentpool.Add
   alias Anoma.Proto.Intentpool.Intent
   alias Anoma.Proto.Intentpool.List
@@ -18,7 +18,7 @@ defmodule Anoma.Client.Examples.EClient do
   alias Anoma.Proto.Nock.Input
   alias Anoma.Proto.Nock.Prove
   alias Anoma.Proto.NockService
-  alias Anoma.Proto.Node
+  alias Anoma.Proto.Controller
   alias Anoma.RM.Transparent.Action
   alias Anoma.RM.Transparent.Transaction
   alias Examples.ETransparent.ETransaction
@@ -46,7 +46,7 @@ defmodule Anoma.Client.Examples.EClient do
     - `:channel`    - The channel for making grpc requests.
     """
     field(:supervisor, pid())
-    field(:node, ENode.t())
+    field(:node, EController.t())
     field(:client, Client.t())
     field(:channel, any())
   end
@@ -71,10 +71,10 @@ defmodule Anoma.Client.Examples.EClient do
   I create a new node in the system, and ensure that that is the only node that is running
   by killing all other nodes.
   """
-  @spec create_single_example_node() :: ENode.t()
+  @spec create_single_example_node() :: EController.t()
   def create_single_example_node() do
-    ENode.kill_all_nodes()
-    ENode.start_node()
+    EController.kill_all_nodes()
+    EController.start_node()
   end
 
   @doc """
@@ -92,11 +92,11 @@ defmodule Anoma.Client.Examples.EClient do
 
   If there is already a client started, I kill it and start a new one.
   """
-  @spec create_example_client(ENode.t() | nil) :: EClient.t()
+  @spec create_example_client(EController.t() | nil) :: EClient.t()
   def create_example_client(enode \\ create_single_example_node()) do
     kill_existing_client()
 
-    grpc_port = Application.get_env(:anoma_node, :grpc_port)
+    grpc_port = Application.get_env(:anoma_controller, :grpc_port)
 
     {:ok, client} = Client.connect("localhost", grpc_port, 0, enode.node_id)
 
@@ -134,7 +134,7 @@ defmodule Anoma.Client.Examples.EClient do
   """
   @spec list_intents(EConnection.t()) :: EConnection.t()
   def list_intents(conn \\ setup()) do
-    node_id = %Node{id: conn.client.node.node_id}
+    node_id = %Controller{id: conn.client.node.node_id}
     request = %List.Request{node: node_id}
 
     {:ok, _reply} = IntentpoolService.Stub.list(conn.channel, request)
@@ -152,7 +152,7 @@ defmodule Anoma.Client.Examples.EClient do
       |> Nounable.to_noun()
       |> Noun.Jam.jam()
 
-    node_id = %Node{id: conn.client.node.node_id}
+    node_id = %Controller{id: conn.client.node.node_id}
 
     request = %Add.Request{
       node: node_id,
@@ -357,7 +357,7 @@ defmodule Anoma.Client.Examples.EClient do
     Anoma.Client.Examples.EStorage.setup()
     key = ["anoma", "blob", "key"]
 
-    Anoma.Node.Transaction.Storage.write(
+    Anoma.Controller.Transaction.Storage.write(
       conn.client.node.node_id,
       {1, [{key, 123}]}
     )
@@ -390,7 +390,7 @@ defmodule Anoma.Client.Examples.EClient do
     val = MapSet.new(["i am a set"])
     key = ["anoma", "blob", "key"]
 
-    Anoma.Node.Transaction.Storage.write(
+    Anoma.Controller.Transaction.Storage.write(
       conn.client.node.node_id,
       {1, [{key, val}]}
     )

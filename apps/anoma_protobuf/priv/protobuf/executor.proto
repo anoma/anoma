@@ -11,7 +11,7 @@ import "mempool.proto";
 */
 message AddROTransaction {
   message Request {
-    Node node = 1;
+    Controller node = 1;
     Mempool.Transaction transaction = 2;
   }
 

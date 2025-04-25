@@ -5,13 +5,13 @@ The Anoma client serves the purpose of taking in requests from the third party c
 to an arbitrary Anoma node.
 
 ```
-Your Client <---> Anoma Client <---> Anoma Node
+Your Client <---> Anoma Client <---> Anoma Controller
                    Full API            Full API
                    + Prove
                    + RunNock
 ```
 
-The API of the Anoma Client is the same as the one of the Anoma Node, save for the `prove` and
+The API of the Anoma Client is the same as the one of the Anoma Controller, save for the `prove` and
 `runNock` endpoints which allow clients to run Nock code.
 
 # Setup
@@ -26,8 +26,8 @@ create and destroy them as you please. Every time a node is started it's a clean
 Erlang/OTP 27 [erts-15.0] [source] [64-bit] [smp:10:10] [ds:10:10:10] [async-threads:1] [jit]
 
 Interactive Elixir (1.17.1) - press Ctrl+C to exit (type h() ENTER for help)
-iex(1)> node = Anoma.Node.Examples.ENode.start_node()
-%Anoma.Node.Examples.ENode{
+iex(1)> node = Anoma.Controller.Examples.EController.start_node()
+%Anoma.Controller.Examples.EController{
   grpc_port: 58447,
   pid: #PID<0.318.0>,
   node_id: "2615099"
@@ -51,8 +51,8 @@ will listen for requests on port `50051`.
 Erlang/OTP 27 [erts-15.1.2] [source] [64-bit] [smp:10:10] [ds:10:10:10] [async-threads:1] [jit]
 
 Interactive Elixir (1.17.1) - press Ctrl+C to exit (type h() ENTER for help)
-iex(1)> node = ENode.start_node(grpc_port: 0)
-%Anoma.Node.Examples.ENode{
+iex(1)> node = EController.start_node(grpc_port: 0)
+%Anoma.Controller.Examples.EController{
   grpc_port: 63796,
   pid: #PID<0.345.0>,
   node_id: "62831092"

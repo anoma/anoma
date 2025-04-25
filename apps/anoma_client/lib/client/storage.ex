@@ -2,10 +2,10 @@ defmodule Anoma.Client.Storage do
   @moduledoc """
   I am the Client Storage module.
 
-  I represent the local timestamped cache of a client akin to the Node
+  I represent the local timestamped cache of a client akin to the Controller
   Storage.
 
-  In contrast to the Node Storage I
+  In contrast to the Controller Storage I
   - never block and return an error on evident semantics failures
   - use os time for timestamps
   - don't have in-progress storage and commit directly to default

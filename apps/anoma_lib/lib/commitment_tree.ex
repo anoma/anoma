@@ -10,7 +10,7 @@ defmodule CommitmentTree do
 
   Fiats that empty subtrees have a hash of 0 for simplicity.
   """
-  alias Anoma.Node.Tables
+  alias Anoma.Controller.Tables
 
   use TypedStruct
 
@@ -18,7 +18,7 @@ defmodule CommitmentTree do
     # the specification for this tree
     field(:spec, CommitmentTree.Spec.t())
     # the root node of the tree
-    field(:root, CommitmentTree.Node.t())
+    field(:root, CommitmentTree.Controller.t())
     # the current number of commitments in the tree
     field(:size, integer())
 
@@ -49,7 +49,7 @@ defmodule CommitmentTree do
       # technically, this gives us an initial anchor of H(zero, zero, zero...)
       # instead of zero, but it simplifies the logic, and you can't prove
       # anything against an empty tree anyway
-      root: CommitmentTree.Node.new_empty(spec),
+      root: CommitmentTree.Controller.new_empty(spec),
       table: table
     }
 
@@ -134,7 +134,7 @@ defmodule CommitmentTree do
 
     CommitmentTree.Proof.new(
       path,
-      CommitmentTree.Node.prove(tree.spec, tree.root, i)
+      CommitmentTree.Controller.prove(tree.spec, tree.root, i)
     )
   end
 
@@ -147,17 +147,17 @@ defmodule CommitmentTree do
   # we could use take when recursing to avoid this, but that would spuriously cons a lot
   @spec addx(
           CommitmentTree.Spec.t(),
-          CommitmentTree.Node.t(),
+          CommitmentTree.Controller.t(),
           integer(),
           list(integer()),
           list(binary()),
           integer()
-        ) :: CommitmentTree.Node.t()
+        ) :: CommitmentTree.Controller.t()
   defp addx(spec, node, cursor, suff_prod, cms, n) do
     children = node.children
     # no more recursion to be done; the children of this node are leaves
     if suff_prod == [] do
-      CommitmentTree.Node.new(
+      CommitmentTree.Controller.new(
         spec,
         Enum.reduce(
           Enum.zip(cms, cursor..(cursor + n - 1)),
@@ -210,7 +210,7 @@ defmodule CommitmentTree do
                i,
                addx(
                  spec,
-                 CommitmentTree.Node.new_empty(spec),
+                 CommitmentTree.Controller.new_empty(spec),
                  0,
                  tl(suff_prod),
                  cms,
@@ -220,7 +220,7 @@ defmodule CommitmentTree do
           end
         )
 
-      CommitmentTree.Node.new(spec, children)
+      CommitmentTree.Controller.new(spec, children)
     end
   end
 end
