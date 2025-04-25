@@ -339,7 +339,6 @@ defmodule Noun do
     cond do
       cell == Nock.Lib.stdlib_core() -> "<stdlib>"
       cell == Nock.Lib.rm_core() -> "<rm>"
-      cell == Nock.Lib.logics_core() -> "<logics>"
       true -> "[" <> condensed_print(h) <> " " <> condensed_print(t) <> "]"
     end
   end

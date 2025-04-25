@@ -18,19 +18,19 @@
     valueref=`@u`2
     quantity=`@u`1
     isephemeral=|
-    nonce=*@I
-    nullifierkeycommitment=*@I
+    nonce=[32 *@]
+    nullifierkeycommitment=[32 *@]
     randseed=%fake
   ==
   $:
-    logicref=@u                ::  jam of logic
-    labelref=@u                ::  label reference
-    valueref=@u                ::  value reference
-    quantity=@u                ::  quanitity
-    isephemeral=?              ::  ephemerality flag
-    nonce=@I                   ::  nonce
-    nullifierkeycommitment=@I  ::  nullifer key
-    randseed=%fake             ::  fake random seed field
+    logicref=@u                    ::  jam of logic
+    labelref=@u                    ::  label reference
+    valueref=@u                    ::  value reference
+    quantity=@u                    ::  quanitity
+    isephemeral=?                  ::  ephemerality flag
+    nonce=[@ @]                    ::  nonce
+    nullifierkeycommitment=[@ @]   ::  nullifer key
+    randseed=%fake                 ::  fake random seed field
   ==
 +$  cairo-resource
   $~  :*
@@ -152,7 +152,7 @@
   ^-  t-commitment
   (~(cat block 3) 'CM_' (jam t-resource))
 ++  nullify  ::  nullify a resource
-  |=  [key=@I resource=t-resource]
+  |=  [key=[@ @] resource=t-resource]
   ^-  t-nullifier
   (~(cat block 3) 'NF_' (jam resource))
 ++  is-commitment  ::  check whether an atom is a commitment
@@ -205,7 +205,7 @@
   !!
 ++  action-create  ::  create interface for actions
   ~/  %action-create
-  |=  [consumed=(list [@I t-resource t-root]) created=(list t-resource) data=(map t-tag (list (pair @ ?)))]
+  |=  [consumed=(list [[@ @] t-resource t-root]) created=(list t-resource) data=(map t-tag (list (pair @ ?)))]
   =+  c=%action-create
   ^-  t-action
   !!
