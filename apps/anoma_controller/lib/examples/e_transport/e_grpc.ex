@@ -49,7 +49,7 @@ defmodule Anoma.Node.Examples.EGRPC do
   def connect_to_node(enode \\ nil) do
     # if no node was given, this ran in a unit test.
     # we kill all nodes since we can only have a local node for this test.
-    grpc_port = Application.get_env(:anoma_node, :grpc_port)
+    grpc_port = Application.get_env(:anoma_controller, :grpc_port)
 
     enode =
       if enode == nil do

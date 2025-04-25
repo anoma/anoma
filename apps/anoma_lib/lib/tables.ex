@@ -463,7 +463,7 @@ defmodule Anoma.Node.Tables do
   # """
   defp config() do
     config =
-      Application.get_env(:anoma_node, :mnesia, [])
+      Application.get_env(:anoma_controller, :mnesia, [])
       |> Keyword.validate!(
         data_dir: mnesia_data_dir(),
         rocksdb: true,

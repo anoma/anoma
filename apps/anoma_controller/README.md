@@ -12,7 +12,7 @@ by adding `anoma_node` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:anoma_node, "~> 0.1.0"}
+    {:anoma_controller, "~> 0.1.0"}
   ]
 end
 ```

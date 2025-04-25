@@ -8,7 +8,7 @@ defmodule AnomaNode.MixProject do
 
   def project do
     [
-      app: :anoma_node,
+      app: :anoma_controller,
       version: version(),
       build_path: "../../_build",
       config_path: "../../config/config.exs",

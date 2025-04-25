@@ -29,7 +29,7 @@ defmodule Anoma.Supervisor do
   def init(_args) do
     Process.set_label(__MODULE__)
 
-    grpc_port = Application.get_env(:anoma_node, :grpc_port)
+    grpc_port = Application.get_env(:anoma_controller, :grpc_port)
 
     :ok = Anoma.Node.Tables.initialize_storage()
 

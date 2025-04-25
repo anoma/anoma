@@ -96,7 +96,7 @@ defmodule Anoma.Client.Examples.EClient do
   def create_example_client(enode \\ create_single_example_node()) do
     kill_existing_client()
 
-    grpc_port = Application.get_env(:anoma_node, :grpc_port)
+    grpc_port = Application.get_env(:anoma_controller, :grpc_port)
 
     {:ok, client} = Client.connect("localhost", grpc_port, 0, enode.node_id)
 

@@ -28,7 +28,7 @@ defmodule Anoma.Client.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:anoma_node, in_umbrella: true, runtime: false},
+      {:anoma_controller, in_umbrella: true, runtime: false},
       {:anoma_lib, in_umbrella: true},
       {:anoma_protobuf, in_umbrella: true},
       {:protobuf, "~> 0.11.0"},

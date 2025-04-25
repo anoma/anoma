@@ -30,7 +30,7 @@
 A good overview of Actors can be seen by looking at the supervision tree of Anoma itself.
 
 ```elixir
-Kino.Process.render_app_tree(:anoma_node, direction: :left_right)
+Kino.Process.render_app_tree(:anoma_controller, direction: :left_right)
 ```
 
 <!-- livebook:{"output":true} -->
