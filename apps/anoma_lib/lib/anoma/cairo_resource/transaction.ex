@@ -7,7 +7,6 @@ defmodule Anoma.CairoResource.Transaction do
 
   alias __MODULE__
   alias Anoma.CairoResource.Action
-  alias Anoma.CairoResource.ComplianceInstance
   alias Anoma.CairoResource.LogicInstance
   alias Anoma.CairoResource.Resource
   alias Anoma.CairoResource.Utils
@@ -24,6 +23,11 @@ defmodule Anoma.CairoResource.Transaction do
     # private keys. When the tx is finalized/signed, the delta_proof is the
     # binding signature/proof
     field(:delta_proof, binary(), default: <<>>)
+  end
+
+  @spec create(MapSet.t(Action.t()), binary()) :: t()
+  def create(actions, delta_proof) do
+    %__MODULE__{actions: actions, delta_proof: delta_proof}
   end
 
   @spec commitments(t()) :: list(binary())
@@ -109,7 +113,7 @@ defmodule Anoma.CairoResource.Transaction do
           true | {:error, String.t()}
   defp verify_delta(tx) do
     # Collect binding public keys
-    binding_pub_keys = get_binding_pub_keys(tx)
+    binding_pub_keys = delta(tx)
 
     # Collect binding signature msgs
     binding_messages = get_binding_messages(tx)
@@ -136,19 +140,15 @@ defmodule Anoma.CairoResource.Transaction do
     end
   end
 
-  @spec get_binding_pub_keys(Transaction.t()) :: list(byte())
-  defp get_binding_pub_keys(tx) do
+  @spec delta(Transaction.t()) :: list(byte())
+  defp delta(tx) do
     tx.actions
     |> Enum.flat_map(fn action ->
-      action.compliance_units
-      |> Enum.map(fn proof_record ->
-        proof_record.instance
-        |> ComplianceInstance.from_public_input()
-      end)
+      Action.delta(action)
     end)
     |> Enum.reduce(
       [],
-      &[:binary.bin_to_list(&1.delta_x <> &1.delta_y) | &2]
+      &[:binary.bin_to_list(&1) | &2]
     )
   end
 
@@ -297,11 +297,7 @@ defmodule Anoma.CairoResource.Transaction do
            ),
          {:ok, priv_keys} <-
            Workflow.create_private_keys(compliance_units) do
-      {:ok,
-       %Transaction{
-         actions: MapSet.new([action]),
-         delta_proof: priv_keys
-       }}
+      {:ok, Transaction.create(MapSet.new([action]), priv_keys)}
     else
       {:error, x} -> {:error, x}
     end

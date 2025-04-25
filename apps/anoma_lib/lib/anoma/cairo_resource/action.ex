@@ -76,6 +76,16 @@ defmodule Anoma.CairoResource.Action do
     |> Enum.map(& &1.root)
   end
 
+  @spec delta(t()) :: list(binary())
+  def delta(action) do
+    action.compliance_units
+    |> Enum.map(fn proof_record ->
+      proof_record.instance
+      |> ComplianceInstance.from_public_input()
+    end)
+    |> Enum.map(fn instance -> instance.delta_x <> instance.delta_y end)
+  end
+
   @spec app_data(t()) :: list({<<_::256>>, <<_::256>>})
   def app_data(action) do
     action.resource_logic_proofs
