@@ -205,8 +205,8 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
       {_enode, transaction} = EMempool.make_block(enode)
 
       # wait for the block event
-      order_event = EEvent.order_event(enode, transaction.id)
-      EEvent.wait_for_event(order_event)
+      execution_event = EEvent.execution_event(enode, transaction)
+      EEvent.wait_for_event(execution_event)
 
       # compute the mempool arguments.
       {:ok, mempool_start_args} = State.mempool_arguments(enode.node_id)

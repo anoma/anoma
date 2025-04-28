@@ -284,13 +284,10 @@ defmodule Anoma.Node.Transaction.Ordering do
   def handle_call({write_opt, {tx_id, args}}, from, state)
       when write_opt in [:write, :append, :add] do
     handle_write(write_opt, {tx_id, args}, from, state)
-
-    {:noreply, state}
   end
 
   def handle_call({:read, {tx_id, key}}, from, state) do
     handle_read({tx_id, key}, from, state)
-    {:noreply, state}
   end
 
   def handle_call(_msg, _from, state) do
@@ -320,29 +317,28 @@ defmodule Anoma.Node.Transaction.Ordering do
           {binary(), [any()]},
           GenServer.from(),
           t()
-        ) :: any()
+        ) :: {:noreply, t()}
   defp handle_write(write_opt, {tx_id, args}, from, state) do
-    call = &chose_write_function(write_opt).(state.node_id, &1)
+    call = &chose_function(write_opt).(state.node_id, &1)
 
     with {:ok, height} <- Map.fetch(state.tx_id_to_height, tx_id) do
       Task.start(fn ->
         GenServer.reply(from, call.({height, args}))
       end)
+
+      {:noreply, state}
     else
       _ ->
-        node_id = state.node_id
-
-        block_spawn(
-          tx_id,
-          fn ->
-            blocking_write(node_id, {tx_id, args}, from)
-          end,
-          node_id
-        )
+        {:noreply,
+         %__MODULE__{
+           state
+           | requests: Map.put(state.requests, tx_id, {from, write_opt, args})
+         }}
     end
   end
 
-  @spec handle_read({binary(), any()}, GenServer.from(), t()) :: any()
+  @spec handle_read({binary(), any()}, GenServer.from(), t()) ::
+          {:noreply, t()}
   defp handle_read({tx_id, key}, from, state) do
     with {:ok, height} <- Map.fetch(state.tx_id_to_height, tx_id) do
       Task.start(fn ->
@@ -352,17 +348,11 @@ defmodule Anoma.Node.Transaction.Ordering do
       {:noreply, state}
     else
       _ ->
-        node_id = state.node_id
-
-        block_spawn(
-          tx_id,
-          fn ->
-            blocking_read(node_id, {tx_id, key}, from)
-          end,
-          node_id
-        )
-
-        {:noreply, state}
+        {:noreply,
+         %__MODULE__{
+           state
+           | requests: Map.put(state.requests, tx_id, {from, :read, key})
+         }}
     end
   end
 
@@ -372,12 +362,14 @@ defmodule Anoma.Node.Transaction.Ordering do
       for tx_id <- tx_id_list,
           reduce: {state.tx_id_to_height, state.next_height} do
         {map, order} ->
-          order_event =
-            Node.Event.new_with_body(state.node_id, %__MODULE__.OrderEvent{
-              tx_id: tx_id
-            })
+          with {from, atom, args} <- Map.get(state.requests, tx_id) do
+            call = &chose_function(atom).(state.node_id, &1)
 
-          EventBroker.event(order_event)
+            Task.start(fn ->
+              GenServer.reply(from, call.({order, args}))
+            end)
+          end
+
           {Map.put(map, tx_id, order), order + 1}
       end
 
@@ -388,71 +380,11 @@ defmodule Anoma.Node.Transaction.Ordering do
   #                           Helpers                        #
   ############################################################
 
-  @spec chose_write_function(Storage.write_opts()) ::
+  @spec chose_function(atom()) ::
           (String.t(), {non_neg_integer(), list() | map()} ->
              any())
-  defp chose_write_function(:write), do: &Storage.write/2
-  defp chose_write_function(:append), do: &Storage.append/2
-  defp chose_write_function(:add), do: &Storage.add/2
-
-  ############################################################
-  #                      Private Filters                     #
-  ############################################################
-
-  defp this_module_filter() do
-    %EventBroker.Filters.SourceModule{module: __MODULE__}
-  end
-
-  ############################################################
-  #                    Blocking Operations                   #
-  ############################################################
-
-  defp block_spawn(id, call, node_id) do
-    {:ok, pid} =
-      Task.start(call)
-
-    EventBroker.subscribe(pid, [
-      Node.Event.node_filter(node_id),
-      this_module_filter(),
-      tx_id_filter(id)
-    ])
-  end
-
-  @spec blocking_read(String.t(), {binary(), any()}, GenServer.from()) :: :ok
-  defp blocking_read(node_id, {id, key}, from) do
-    block(from, id, fn -> read(node_id, {id, key}) end, node_id)
-  end
-
-  @spec blocking_write(String.t(), {binary(), [any()]}, GenServer.from()) ::
-          :ok
-  defp blocking_write(node_id, {id, kvlist}, from) do
-    block(
-      from,
-      id,
-      fn ->
-        write(node_id, {id, kvlist})
-      end,
-      node_id
-    )
-  end
-
-  @spec block(GenServer.from(), binary(), (-> any()), String.t()) :: :ok
-  defp block(from, tx_id, call, node_id) do
-    receive do
-      %EventBroker.Event{
-        body: %Node.Event{body: %__MODULE__.OrderEvent{tx_id: ^tx_id}}
-      } ->
-        result = call.()
-        GenServer.reply(from, result)
-
-      _ ->
-        IO.puts("this should be unreachable")
-    end
-
-    EventBroker.unsubscribe_me([
-      Node.Event.node_filter(node_id),
-      this_module_filter(),
-      tx_id_filter(tx_id)
-    ])
-  end
+  defp chose_function(:write), do: &Storage.write/2
+  defp chose_function(:append), do: &Storage.append/2
+  defp chose_function(:add), do: &Storage.add/2
+  defp chose_function(:read), do: &Storage.read/2
 end

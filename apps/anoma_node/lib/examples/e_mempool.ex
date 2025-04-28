@@ -245,17 +245,12 @@ defmodule Anoma.Node.Examples.Mempool do
       # must be assertd.
       # - consensus event is fired
       # - the events table writes a new consensus value
-      # - order event is fired
       # - execution event is fired
       # - block event is fired
 
       # wait for the consensus event
       consensus_event = EEvent.consensus_event(enode, [transaction.id])
       EEvent.wait_for_event(consensus_event)
-
-      # wait for the order event
-      order_event = EEvent.order_event(enode, transaction.id)
-      EEvent.wait_for_event(order_event)
 
       # wait for the execution event
       execution_event = EEvent.execution_event(enode, transaction)
