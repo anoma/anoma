@@ -66,12 +66,23 @@ defmodule Anoma.Node.Transaction.Ordering do
                        Default: 1
     - `:tx_id_to_height` - A map from an ID of a transaction candidate to
                            its order.
+    - `:requests` - A map from the ID of a transaction candidate to its
+                    worker address with the request to read or write.
+                   Default:  %{}
     """
     field(:node_id, String.t())
     field(:next_height, integer(), default: 1)
     # maps tx ids to their height for writing.
     # the previous height is used for reading.
     field(:tx_id_to_height, %{binary() => integer()}, default: %{})
+
+    field(
+      :requests,
+      %{
+        binary() => {GenServer.from(), atom(), list(String.t()) | list(any())}
+      },
+      default: %{}
+    )
   end
 
   typedstruct enforce: true, module: OrderEvent do
