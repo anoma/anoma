@@ -1,4 +1,4 @@
-defmodule Anoma.CairoResource.ComplianceWitness do
+defmodule Anoma.CairoResource.Compliance.Witness do
   @moduledoc """
   I represent a compliance's private inputs.
   """
@@ -25,7 +25,7 @@ defmodule Anoma.CairoResource.ComplianceWitness do
 
   @doc "Generate the compliance witness json"
   @spec to_json_string(t()) :: binary()
-  def to_json_string(input = %ComplianceWitness{}) do
+  def to_json_string(input = %Witness{}) do
     {_, _, path} =
       Enum.reduce(
         1..32,

@@ -1,4 +1,4 @@
-defmodule Anoma.CairoResource.ComplianceInstance do
+defmodule Anoma.CairoResource.Compliance.Instance do
   @moduledoc """
   I represent the resource's instance.
   """
@@ -21,7 +21,7 @@ defmodule Anoma.CairoResource.ComplianceInstance do
     field(:output_logic_ref, <<_::256>>, default: <<0::256>>)
   end
 
-  @spec from_public_input(binary()) :: t()
+  @spec from_public_input(list(byte())) :: t()
   def from_public_input(public_input) do
     ## call cairo api to get output bytes
     [
@@ -33,7 +33,7 @@ defmodule Anoma.CairoResource.ComplianceInstance do
       input_logic_ref,
       output_logic_ref
     ] =
-      public_input |> :binary.bin_to_list() |> Cairo.get_output()
+      public_input |> Cairo.get_output()
 
     %__MODULE__{
       nullifier: nullifier |> :binary.list_to_bin(),

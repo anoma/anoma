@@ -6,7 +6,7 @@ defmodule Anoma.CairoResource.Action do
   @behaviour Noun.Nounable.Kind
 
   alias __MODULE__
-  alias Anoma.CairoResource.ComplianceInstance
+  alias Anoma.CairoResource.Compliance.ComplianceUnit
   alias Anoma.CairoResource.LogicInstance
   alias Anoma.CairoResource.ProofRecord
   alias Anoma.CairoResource.Tree
@@ -26,7 +26,7 @@ defmodule Anoma.CairoResource.Action do
       default: {}
     )
 
-    field(:compliance_units, list(ProofRecord.t()), default: [])
+    field(:compliance_units, list(ComplianceUnit.t()), default: [])
   end
 
   @spec create(
@@ -133,7 +133,7 @@ defmodule Anoma.CairoResource.Action do
 
   @spec new(
           list(ProofRecord.t()),
-          list(ProofRecord.t())
+          list(ComplianceUnit.t())
         ) :: t()
   def new(
         resource_logic_proofs,
@@ -154,41 +154,33 @@ defmodule Anoma.CairoResource.Action do
   @spec commitments(t()) :: list(binary())
   def commitments(action) do
     action.compliance_units
-    |> Enum.map(fn proof_record ->
-      proof_record.instance
-      |> ComplianceInstance.from_public_input()
+    |> Enum.map(fn compliance_unit ->
+      compliance_unit.instance.output_cm
     end)
-    |> Enum.map(& &1.output_cm)
   end
 
   @spec nullifiers(t()) :: list(binary())
   def nullifiers(action) do
     action.compliance_units
-    |> Enum.map(fn proof_record ->
-      proof_record.instance
-      |> ComplianceInstance.from_public_input()
+    |> Enum.map(fn compliance_unit ->
+      compliance_unit.instance.nullifier
     end)
-    |> Enum.map(& &1.nullifier)
   end
 
   @spec roots(t()) :: list(binary())
   def roots(action) do
     action.compliance_units
-    |> Enum.map(fn proof_record ->
-      proof_record.instance
-      |> ComplianceInstance.from_public_input()
+    |> Enum.map(fn compliance_unit ->
+      compliance_unit.instance.root
     end)
-    |> Enum.map(& &1.root)
   end
 
   @spec delta(t()) :: list(binary())
   def delta(action) do
     action.compliance_units
-    |> Enum.map(fn proof_record ->
-      proof_record.instance
-      |> ComplianceInstance.from_public_input()
+    |> Enum.map(fn compliance_unit ->
+      compliance_unit.instance.delta_x <> compliance_unit.instance.delta_y
     end)
-    |> Enum.map(fn instance -> instance.delta_x <> instance.delta_y end)
   end
 
   @spec app_data(t()) :: list({<<_::256>>, <<_::256>>})
@@ -203,14 +195,13 @@ defmodule Anoma.CairoResource.Action do
   @spec verify(t()) :: boolean()
   def verify(action) do
     with true <-
-           verify_proofs(action.compliance_units),
+           verify_compliance_proofs(action.compliance_units),
          true <- verify_compliance_hash(action.compliance_units) do
       # Decode compliance_instances from compliance_units
       complaince_instances =
         action.compliance_units
-        |> Enum.map(fn proof_record ->
-          proof_record.instance
-          |> ComplianceInstance.from_public_input()
+        |> Enum.map(fn compliance_unit ->
+          compliance_unit.instance
         end)
 
       # Get all the nullifiers and commitments
@@ -275,10 +266,10 @@ defmodule Anoma.CairoResource.Action do
     end
   end
 
-  @spec verify_proofs(list(ProofRecord.t())) :: boolean()
-  defp verify_proofs(proofs) do
-    Enum.reduce_while(proofs, true, fn proof_record, _acc ->
-      res = ProofRecord.verify(proof_record)
+  @spec verify_compliance_proofs(list(ComplianceUnit.t())) :: boolean()
+  defp verify_compliance_proofs(proofs) do
+    Enum.reduce_while(proofs, true, fn proof, _acc ->
+      res = ComplianceUnit.verify(proof)
 
       case res do
         true -> {:cont, true}
@@ -288,20 +279,19 @@ defmodule Anoma.CairoResource.Action do
     end)
   end
 
-  @spec verify_compliance_hash(list(ProofRecord.t())) :: boolean()
+  @spec verify_compliance_hash(list(ComplianceUnit.t())) :: boolean()
   defp verify_compliance_hash(compliance_units) do
     compliance_units
     |> Enum.all?(
-      &(ProofRecord.get_cairo_program_hash(&1) ==
-          Constants.cairo_compliance_program_hash())
+      &(&1.verifying_key == Constants.cairo_compliance_program_hash())
     )
   end
 
   @spec from_noun(Noun.t()) :: {:ok, Action.t()} | :error
-  def from_noun([logic_proofs | compliance_proofs]) do
+  def from_noun([logic_proofs | compliance_units]) do
     with {:ok, logic_proofs_map} <- Noun.Nounable.Map.from_noun(logic_proofs),
-         {:ok, compliance_proof_list} <-
-           Noun.Nounable.List.from_noun(compliance_proofs) do
+         {:ok, compliance_unit_list} <-
+           Noun.Nounable.List.from_noun(compliance_units) do
       {:ok,
        %__MODULE__{
          resource_logic_proofs:
@@ -313,10 +303,10 @@ defmodule Anoma.CairoResource.Action do
               {Noun.atom_integer_to_binary(bin), pr}}
            end),
          compliance_units:
-           compliance_proof_list
-           |> Enum.map(fn proof ->
-             {:ok, pr} = ProofRecord.from_noun(proof)
-             pr
+           compliance_unit_list
+           |> Enum.map(fn unit ->
+             {:ok, compliance_unit} = ComplianceUnit.from_noun(unit)
+             compliance_unit
            end)
        }}
     else

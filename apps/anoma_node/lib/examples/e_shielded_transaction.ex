@@ -97,17 +97,29 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       ESResource.a_trivial_output_intent_resource()
       |> Anoma.CairoResource.Resource.commitment()
 
-    {tree, anchor} =
+    {tree1, anchor1} =
       Examples.ECommitmentTree.ct_with_trivial_cairo_tx([
         output_cm_1,
         output_cm_2
       ])
 
-    assert {:ok,
-            MapSet.new([Anoma.Constants.default_cairo_rm_root(), anchor])} ==
-             Storage.read(node_id, {1, ["anoma", "cairo_roots"]})
+    {tree2, anchor2} =
+      Examples.ECommitmentTree.ct_with_trivial_cairo_tx([
+        output_cm_2,
+        output_cm_1
+      ])
 
-    assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "cairo_ct"]})
+    cur_roots = Storage.read(node_id, {1, ["anoma", "cairo_roots"]})
+
+    assert {:ok,
+            MapSet.new([Anoma.Constants.default_cairo_rm_root(), anchor1])} ==
+             cur_roots ||
+             {:ok,
+              MapSet.new([Anoma.Constants.default_cairo_rm_root(), anchor2])} ==
+               cur_roots
+
+    cur_tree = Storage.read(node_id, {1, ["anoma", "cairo_ct"]})
+    assert {:ok, tree1} == cur_tree || {:ok, tree2} == cur_tree
     EventBroker.unsubscribe_me([])
 
     node_id

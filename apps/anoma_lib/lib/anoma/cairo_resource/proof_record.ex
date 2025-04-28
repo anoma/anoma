@@ -24,8 +24,6 @@ defmodule Anoma.CairoResource.ProofRecord do
      }}
   end
 
-  def from_noun(_), do: :error
-
   defimpl Noun.Nounable, for: __MODULE__ do
     @impl true
     def to_noun(proof_record = %ProofRecord{}) do
@@ -106,37 +104,6 @@ defmodule Anoma.CairoResource.ProofRecord do
     proof.proof
     |> :binary.bin_to_list()
     |> Cairo.verify(instance)
-  end
-
-  @doc """
-  Generates a compliance proof using the provided witness and the fixed
-  compliance proving key.
-
-  This function reads the compliance proving key from a JSON file. It then uses
-  this proving key to generate a proof based on the given witness.
-
-  ## Parameters
-
-    - `witness` (binary()): The witness data used to generate the compliance
-      proof.
-
-  ## Returns
-
-    - `{:ok, t()}`: If the compliance proof is successfully generated.
-    - `{:error, term()}`: If there is an error, such as the compliance proving key
-      file not being found.
-
-  """
-  @spec generate_compliance_proof(binary()) :: {:ok, t()} | {:error, term()}
-  def generate_compliance_proof(witness) do
-    dir =
-      Path.join(:code.priv_dir(:anoma_lib), "params/cairo_compliance.json")
-
-    with {:ok, compliance_proving_key} <- File.read(dir) do
-      prove(compliance_proving_key, witness)
-    else
-      _ -> {:error, "cairo_compliance.json not found"}
-    end
   end
 
   @doc """

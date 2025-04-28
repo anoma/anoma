@@ -8,6 +8,7 @@ defmodule Anoma.CairoResource.Workflow do
   alias Anoma.CairoResource.Resource
   alias Anoma.CairoResource.Tree
   alias Anoma.CairoResource.Utils
+  alias Anoma.CairoResource.Compliance.ComplianceUnit
 
   require Logger
 
@@ -320,12 +321,12 @@ defmodule Anoma.CairoResource.Workflow do
   end
 
   @spec generate_compliance_proofs(list(String.t())) ::
-          {:ok, list(ProofRecord.t())} | {:error, term()}
+          {:ok, list(ComplianceUnit.t())} | {:error, term()}
   def generate_compliance_proofs(compliance_witness) do
     with {:ok, compliance_units} <-
            Enum.map(
              compliance_witness,
-             &ProofRecord.generate_compliance_proof/1
+             &ComplianceUnit.generate_compliance_proof/1
            )
            |> Utils.check_list() do
       {:ok, compliance_units}
@@ -337,7 +338,7 @@ defmodule Anoma.CairoResource.Workflow do
   @spec create_action(
           list(ProofRecord.t()),
           list(ProofRecord.t()),
-          list(ProofRecord.t())
+          list(ComplianceUnit.t())
         ) :: Action.t()
   def create_action(
         input_logic_proofs,
