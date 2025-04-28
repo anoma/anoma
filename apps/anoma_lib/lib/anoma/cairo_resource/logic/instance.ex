@@ -1,8 +1,9 @@
-defmodule Anoma.CairoResource.LogicInstance do
+defmodule Anoma.CairoResource.Logic.Instance do
   @moduledoc """
   I represent the resource logic's instance.
   """
 
+  alias __MODULE__
   use TypedStruct
 
   typedstruct enforce: true do
@@ -18,9 +19,15 @@ defmodule Anoma.CairoResource.LogicInstance do
     field(:app_data, list({<<_::256>>, <<_::256>>}), default: [])
   end
 
-  @spec from_public_input(binary()) :: t()
-  def from_public_input(public_input) do
+  @spec to_instance(list(byte())) :: t()
+  def to_instance(public_input) do
     # call cairo api to get output bytes
+    output = public_input |> Cairo.get_output()
+
+    unless is_list(output) and length(output) >= 17 do
+      raise ArgumentError, "Invalid output from Cairo.get_output/1"
+    end
+
     [
       tag,
       is_consumed,
@@ -39,10 +46,9 @@ defmodule Anoma.CairoResource.LogicInstance do
       pk_x,
       pk_y,
       nonce | app_data
-    ] =
-      public_input |> :binary.bin_to_list() |> Cairo.get_output()
+    ] = output
 
-    %__MODULE__{
+    %Instance{
       tag: tag |> :binary.list_to_bin(),
       is_consumed: is_consumed |> :binary.list_to_bin(),
       root: root |> :binary.list_to_bin(),
@@ -67,24 +73,6 @@ defmodule Anoma.CairoResource.LogicInstance do
     }
   end
 
-  @spec get_tag(binary()) :: binary()
-  def get_tag(public_input) do
-    public_input
-    |> :binary.bin_to_list()
-    |> Cairo.get_output()
-    |> hd()
-    |> :binary.list_to_bin()
-  end
-
-  @spec get_root(binary()) :: binary()
-  def get_root(public_input) do
-    public_input
-    |> :binary.bin_to_list()
-    |> Cairo.get_output()
-    |> Enum.at(2)
-    |> :binary.list_to_bin()
-  end
-
   @spec decrypt(list(binary()), binary()) ::
           {:ok, list(binary())} | {:error, term()}
   def decrypt(cipher, sk) do
@@ -99,21 +87,5 @@ defmodule Anoma.CairoResource.LogicInstance do
       plain_text ->
         {:ok, plain_text |> Enum.map(&:binary.list_to_bin/1)}
     end
-  end
-
-  @spec get_app_data(binary()) :: list({<<_::256>>, <<_::256>>})
-  def get_app_data(public_input) do
-    output =
-      public_input
-      |> :binary.bin_to_list()
-      |> Cairo.get_output()
-
-    output
-    |> Enum.drop(17)
-    |> Enum.map(&:binary.list_to_bin/1)
-    |> Enum.chunk_every(2)
-    |> Enum.map(fn [a, b] ->
-      {a, b}
-    end)
   end
 end

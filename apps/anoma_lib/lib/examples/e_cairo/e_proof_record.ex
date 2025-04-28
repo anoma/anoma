@@ -1,5 +1,5 @@
 defmodule Examples.ECairo.EProofRecord do
-  alias Anoma.CairoResource.ProofRecord
+  alias Anoma.CairoResource.Logic.ProofRecord
   alias Anoma.CairoResource.Compliance.ComplianceUnit
   alias Anoma.CairoResource.Tree
   alias Examples.ECairo.EComplianceWitness

@@ -7,9 +7,6 @@ defmodule Anoma.CairoResource.Transaction do
 
   alias __MODULE__
   alias Anoma.CairoResource.Action
-  alias Anoma.CairoResource.LogicInstance
-
-  require Logger
 
   use TypedStruct
 
@@ -90,11 +87,9 @@ defmodule Anoma.CairoResource.Transaction do
   def get_cipher_texts(tx) do
     tx.actions
     |> Enum.flat_map(& &1.resource_logic_proofs)
-    |> Enum.map(fn {_tag, {_logic_hash, proof_record}} ->
-      proof_record.instance
-      |> LogicInstance.from_public_input()
+    |> Enum.map(fn {tag, proof_record} ->
+      %{tag: tag, cipher: proof_record.instance.cipher}
     end)
-    |> Enum.map(&%{tag: &1.tag, cipher: &1.cipher})
   end
 
   @spec verify_actions(Transaction.t()) :: true | {:error, String.t()}

@@ -7,24 +7,18 @@ defmodule Anoma.CairoResource.Action do
 
   alias __MODULE__
   alias Anoma.CairoResource.Compliance.ComplianceUnit
-  alias Anoma.CairoResource.LogicInstance
-  alias Anoma.CairoResource.ProofRecord
+  alias Anoma.CairoResource.Logic.ProofRecord
   alias Anoma.CairoResource.Tree
   alias Anoma.Constants
   alias Anoma.CairoResource.Resource
   alias Anoma.CairoResource.Utils
   alias Anoma.CairoResource.Workflow
 
-  require Logger
-
   use TypedStruct
 
   typedstruct enforce: true do
-    # resource_logic_proofs Type: Map<Tag, (logic_hash, Proof)>
-    # (isConsumed, applicationData) is in the Proof.instance
-    field(:resource_logic_proofs, %{binary() => {binary(), ProofRecord.t()}},
-      default: {}
-    )
+    # resource_logic_proofs Type: Map<Tag, LogicProofRecord>
+    field(:resource_logic_proofs, %{binary() => ProofRecord.t()}, default: {})
 
     field(:compliance_units, list(ComplianceUnit.t()), default: [])
   end
@@ -140,9 +134,8 @@ defmodule Anoma.CairoResource.Action do
         compliance_units
       ) do
     logic_proof_map =
-      Enum.into(resource_logic_proofs, %{}, fn proof ->
-        {proof.instance |> LogicInstance.get_tag(),
-         {ProofRecord.get_cairo_program_hash(proof), proof}}
+      Enum.into(resource_logic_proofs, %{}, fn pr ->
+        {pr.instance.tag, pr}
       end)
 
     %Action{
@@ -186,9 +179,8 @@ defmodule Anoma.CairoResource.Action do
   @spec app_data(t()) :: list({<<_::256>>, <<_::256>>})
   def app_data(action) do
     action.resource_logic_proofs
-    |> Enum.flat_map(fn {_tag, {_logic_hash, proof_record}} ->
-      proof_record.instance
-      |> LogicInstance.get_app_data()
+    |> Enum.flat_map(fn {_tag, pr} ->
+      pr.instance.app_data
     end)
   end
 
@@ -223,29 +215,31 @@ defmodule Anoma.CairoResource.Action do
                                                        _acc ->
         # check all the resource logic proofs are included and valid
         res =
-          with {:ok, {consumed_logic_hash, consumed_logic_proof}} <-
+          with {:ok, consumed_logic_pr} <-
                  Map.fetch(
                    action.resource_logic_proofs,
                    complaince_instance.nullifier
                  ),
-               true <- ProofRecord.verify(consumed_logic_proof),
-               {:ok, {created_logic_hash, created_logic_proof}} <-
+               true <- ProofRecord.verify(consumed_logic_pr),
+               {:ok, created_logic_pr} <-
                  Map.fetch(
                    action.resource_logic_proofs,
                    complaince_instance.output_cm
                  ),
-               true <- ProofRecord.verify(created_logic_proof) do
+               true <- ProofRecord.verify(created_logic_pr) do
             is_consumed_logic_consistent =
-              complaince_instance.input_logic_ref == consumed_logic_hash
+              complaince_instance.input_logic_ref ==
+                consumed_logic_pr.verifying_key
 
             is_created_logic_consistent =
-              complaince_instance.output_logic_ref == created_logic_hash
+              complaince_instance.output_logic_ref ==
+                created_logic_pr.verifying_key
 
             is_root_valid =
               rt.root ==
-                consumed_logic_proof.instance |> LogicInstance.get_root() &&
+                consumed_logic_pr.instance.root &&
                 rt.root ==
-                  created_logic_proof.instance |> LogicInstance.get_root()
+                  created_logic_pr.instance.root
 
             is_consumed_logic_consistent && is_created_logic_consistent &&
               is_root_valid
@@ -296,11 +290,10 @@ defmodule Anoma.CairoResource.Action do
        %__MODULE__{
          resource_logic_proofs:
            logic_proofs_map
-           |> Enum.into(%{}, fn {tag, [bin | proof]} ->
-             {:ok, pr} = ProofRecord.from_noun(proof)
+           |> Enum.into(%{}, fn {tag, pr} ->
+             {:ok, logic_pr} = ProofRecord.from_noun(pr)
 
-             {Noun.atom_integer_to_binary(tag, 32),
-              {Noun.atom_integer_to_binary(bin), pr}}
+             {Noun.atom_integer_to_binary(tag, 32), logic_pr}
            end),
          compliance_units:
            compliance_unit_list

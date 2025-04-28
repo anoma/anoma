@@ -4,7 +4,7 @@ defmodule Anoma.CairoResource.Workflow do
   """
 
   alias Anoma.CairoResource.Action
-  alias Anoma.CairoResource.ProofRecord
+  alias Anoma.CairoResource.Logic.ProofRecord
   alias Anoma.CairoResource.Resource
   alias Anoma.CairoResource.Tree
   alias Anoma.CairoResource.Utils

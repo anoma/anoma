@@ -1,6 +1,6 @@
 defmodule Examples.ECairo.EResourceLogic do
-  alias Anoma.CairoResource.LogicInstance
-  alias Anoma.CairoResource.ProofRecord
+  alias Anoma.CairoResource.Logic.Instance
+  alias Anoma.CairoResource.Logic.ProofRecord
   alias Examples.ECairo.EProofRecord
   alias Examples.ECairo.EResource
 
@@ -14,10 +14,8 @@ defmodule Examples.ECairo.EResourceLogic do
         "params/trivial_input_resource_logic_witness.json"
       )
 
-    instance = res.instance |> LogicInstance.from_public_input()
-
     assert {:ok, plaintext} =
-             LogicInstance.decrypt(instance.cipher, <<1::256>>)
+             Instance.decrypt(res.instance.cipher, <<1::256>>)
 
     a_resource = EResource.a_fixed_resource()
 

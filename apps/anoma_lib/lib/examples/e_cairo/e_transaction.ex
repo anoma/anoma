@@ -1,7 +1,7 @@
 defmodule Examples.ECairo.ETransaction do
   use Memoize
 
-  alias Anoma.CairoResource.{LogicInstance, Transaction, Utils}
+  alias Anoma.CairoResource.{Logic.Instance, Transaction, Utils}
   alias Examples.ECairo.EAction
 
   use TestHelper.TestMacro
@@ -202,7 +202,7 @@ defmodule Examples.ECairo.ETransaction do
       |> Transaction.get_cipher_texts()
 
     for %{tag: _, cipher: c} <- cipher_texts do
-      assert {:ok, _} = LogicInstance.decrypt(c, decryption_key)
+      assert {:ok, _} = Instance.decrypt(c, decryption_key)
     end
 
     cipher_texts
