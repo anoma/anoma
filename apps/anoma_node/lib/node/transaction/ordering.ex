@@ -158,7 +158,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   the transaction candidate. See `Storage.read/2`.
 
   If the latter is true, I leave the caller blocked until the id has been
-  assigned a value, i.e. until a corresponding event gets received.
+  assigned a value.
   """
 
   @spec read(String.t(), {binary(), any()}) :: any()
@@ -183,7 +183,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   the specified height to the Storage. See `Storage.write/2`
 
   If the latter is true, I leave the caller blocked until the id has been
-  assigned a value, i.e. until a corresponding event gets received.
+  assigned a value.
   """
 
   @spec write(String.t(), {binary(), list({any(), any()})}) :: :ok
@@ -208,7 +208,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   the specified height to the Storage. See `Storage.append/2`
 
   If the latter is true, I leave the caller blocked until the id has been
-  assigned a value, i.e. until a corresponding event gets received.
+  assigned a value.
   """
 
   @spec append(String.t(), {binary(), list({any(), MapSet.t()})}) :: :ok
@@ -233,7 +233,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   the Storage at the specified height. See `Storage.add/2`
 
   If the latter is true, I leave the caller blocked until the id has been
-  assigned a value, i.e. until a corresponding event gets received.
+  assigned a value.
   """
 
   @spec add(String.t(), {binary(), %{write: list(), append: list()}}) :: any()
@@ -253,8 +253,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   ordering by adding the next height stored in the Ordering Engine to the
   respective ordering inside a list.
 
-  Afterwards, I send an event specifying that a particular ID has indeed
-  received an order.
+  Afterwards, I launch appropriate read and write requests concurrently.
   """
 
   @spec order(String.t(), [binary()]) :: :ok
