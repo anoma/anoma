@@ -24,6 +24,8 @@
   {:rexbug, ">= 2.0.0-rc1"},
   {:toml, "~> 0.7"},
   {:typed_struct, "~> 0.3.0"},
+  {:unclog, git: "https://github.com/m1dnight/unclog"},
+  {:parse_trans, "~> 3.4.2"},
   {:lexical_credo, "~> 0.1.0", only: [:dev, :test]},
   # non-runtime dependencies below
   {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
