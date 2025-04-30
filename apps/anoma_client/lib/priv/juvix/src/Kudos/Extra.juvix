@@ -1,0 +1,61 @@
+module Kudos.Extra;
+
+import Stdlib.Prelude open;
+import Applib open;
+import Anoma.Identity.External open;
+import Anoma.Identity.Internal open;
+import Stdlib.Debug.Trace open using {trace as stdlib-trace};
+
+--- A message format specifying resources that must be created and consumed within an ;Action;.
+--- @param origin The reference to the resource performing the check.
+--- @param mustBeConsumed The resources that must be consumed.
+--- @param mustBeCreated The resources that must be created.
+type ResourceRelationship :=
+  mk@{
+    origin : Tag;
+    mustBeConsumed : List Nullifier;
+    mustBeCreated : List Commitment;
+  };
+
+computeKind (logic : Logic) (label : Label) : Kind :=
+  let
+    dummy : Resource :=
+      Resource.mk@{
+        label;
+        logic := Encoded.encode logic;
+        -- the arguments below don't matter
+        ephemeral := true;
+        nonce := Nonce.Raw.mk 0;
+        value := 0;
+        quantity := 0;
+        unusedRandSeed := 0;
+        nullifierKeyCommitment := 0;
+      };
+  in kind dummy;
+
+signatureLookupKey : AnomaAtom :=
+  AnomaAtom.fromNat (builtinAnomaEncode "signatureLookupKey");
+
+mkIdentityFromPayload (privateKey publicKey : ByteArray) : Identity :=
+  Identity.mk@{
+    internal := InternalIdentity.fromByteArray privateKey;
+    external := ExternalIdentity.fromByteArray publicKey;
+  };
+
+syntax iterator mapM {init := 0; range := 1};
+mapM
+  {t : Type -> Type}
+  {F : Type -> Type}
+  {A B}
+  {{Traversable t}}
+  {{Applicative F}}
+  (fun : A -> F B)
+  (l : t A)
+  : F (t B) := traverse fun l;
+
+trace {A} (a : A) : A :=
+  let
+    debugMode := false;
+  in if
+    | debugMode := stdlib-trace a
+    | else := a;

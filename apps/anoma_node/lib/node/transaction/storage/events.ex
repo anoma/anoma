@@ -50,6 +50,26 @@ defmodule Anoma.Node.Transaction.Storage.Events do
         :writes,
         [],
         &Enum.map(&1, fn {key, value} ->
+          # keys can be eitehr a list of strings, or something else.
+          key =
+            case key do
+              key when is_list(key) ->
+                Enum.map(key, fn k -> Base.encode64(k) end)
+
+              key ->
+                Base.encode64(key)
+            end
+
+          # values can be either a binary, a very large number, or a mapset.
+          value =
+            case value do
+              value when is_binary(value) ->
+                Base.encode64(value)
+
+              value ->
+                value
+            end
+
           %{key: key, value: value}
         end)
       )

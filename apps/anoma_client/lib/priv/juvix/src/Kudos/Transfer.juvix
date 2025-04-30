@@ -1,0 +1,90 @@
+module Kudos.Transfer;
+
+import Stdlib.Prelude open;
+import Stdlib.Debug open;
+import Stdlib.Data.Set as Set open using {Set};
+import Stdlib.Data.Map as Map open using {Map};
+import Applib open;
+import Anoma.Builtin.System open;
+import Anoma.Identity.External open;
+import Anoma.Identity.Internal open;
+import Kudos.Layer open;
+import Kudos.Extra open;
+
+transfer
+  {M : Type -> Type}
+  {{Monad M}}
+  {{Tx M}}
+  (kudosLogic : Logic)
+  (token : Resource)
+  (receiver : ExternalIdentity)
+  : M Transaction :=
+  do {
+    caller <- TxContext.caller <$> getTxContext;
+    let
+      self := Identity.external caller;
+    in
+    case Kudos.Resource.isKudo kudosLogic token of {
+      | false := failwith "not kudos"
+      | true :=
+        transferHelper@{
+          toTransfer := token;
+          receiver;
+        }
+    };
+  };
+
+transferHelper
+  {M : Type -> Type}
+  {{Monad M}}
+  {{Tx M}}
+  (toTransfer : Resource)
+  (receiver : ExternalIdentity)
+  : M Transaction :=
+  do {
+    txCtx <- getTxContext;
+    nonce <- genRandomNonce;
+    let
+      currentRoot := TxContext.currentRoot txCtx;
+      transferred : Resource :=
+        toTransfer
+          |> Kudos.Resource.setOwner receiver
+          |> (@Resource{nonce := Nonce.toRaw nonce});
+    in
+    a <- actionWithAuthorizationAppData@{
+           consumed := [toTransfer];
+           created := [transferred];
+         };
+    pure
+      mkTransactionHelper@{
+        roots := [currentRoot];
+        actions := [a];
+      };
+  };
+
+txContext (caller : Identity) (currentRoot : CommitmentRoot) : TxContext :=
+  TxContext.mk@{
+    caller;
+    currentRoot;
+  };
+
+main
+  (latestRoot : CommitmentRoot)
+  (randSeed : Nat)
+  (ownerPrivateKeyPayload : ByteArray)
+  (ownerPublicKeyPayload : ByteArray)
+  (receiver : ByteArray)
+  (r : Resource)
+  (logic : Logic)
+  : TransactionRequest :=
+  let
+    receiverIden : ExternalIdentity := ExternalIdentity.fromByteArray receiver;
+    callerIdentity : Identity :=
+      mkIdentityFromPayload@{
+        privateKey := ownerPrivateKeyPayload;
+        publicKey := ownerPublicKeyPayload;
+      };
+  in TransactionRequest.build
+    randSeed
+    (txContext callerIdentity latestRoot)
+    (transfer logic r receiverIden);

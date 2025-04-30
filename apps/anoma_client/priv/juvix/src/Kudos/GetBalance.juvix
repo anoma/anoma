@@ -1,0 +1,51 @@
+module Kudos.GetBalance;
+
+import Stdlib.Prelude open;
+import Stdlib.Data.Map as Map open using {Map};
+import Applib open;
+import Stdlib.Debug.Fail open;
+import Kudos.Layer open;
+
+aggregateBalance
+  (ownedResources : List (Encoded Resource)) : Map (Encoded String) Nat :=
+  for (acc := Map.empty) (r in map Encoded.decode ownedResources) {
+    let
+      i : Kudos.KLabel := Kudos.Resource.identity r;
+      encodedSymbol : Encoded String :=
+        Kudos.KLabel.kudosSymbol i |> Encoded.encode;
+    in Map.insertWith (+) encodedSymbol (Resource.quantity r) acc
+  };
+
+anomaNatToString (n : Nat) : String :=
+  let
+    unsafeDigitToChar (m : Nat) : String :=
+      if
+        | m == 0 := "0"
+        | m == 1 := "1"
+        | m == 2 := "2"
+        | m == 3 := "3"
+        | m == 4 := "4"
+        | m == 5 := "5"
+        | m == 6 := "6"
+        | m == 7 := "7"
+        | m == 8 := "8"
+        | m == 9 := "9"
+        | else := failwith "unsafeDigitToChar not a digit";
+
+    terminating
+    go (m : Nat) : String :=
+      if
+        | m == 0 := ""
+        | else := go (div m 10) ++str unsafeDigitToChar (mod m 10);
+  in if
+    | n == 0 := "0"
+    | else := go n;
+
+main (ownedResources : List (Encoded Resource)) : String :=
+  for (acc := "") (encodedSymbol, balance in aggregateBalance ownedResources) {
+    acc
+      ++str Encoded.decode encodedSymbol
+      ++str " : "
+      ++str anomaNatToString balance
+      ++str "\n"
+  };

@@ -215,6 +215,19 @@ defmodule Anoma.Node.Examples.EEvent do
     :ok
   end
 
+  @doc """
+  I wait for any event that is of the given struct.
+  """
+  defmacro wait_for_pattern(pattern) do
+    quote do
+      assert_receive %EventBroker.Event{
+                       body: unquote(pattern),
+                       source_module: _
+                     },
+                     5000
+    end
+  end
+
   ############################################################
   #                       Helpers                            #
   ############################################################

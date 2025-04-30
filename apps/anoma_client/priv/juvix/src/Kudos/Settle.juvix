@@ -1,0 +1,82 @@
+module Kudos.Settle;
+
+import Stdlib.Prelude open;
+import Stdlib.Data.Set as Set;
+import Applib open;
+import Anoma.Identity.External open;
+import Anoma.Identity.Internal open;
+import Kudos.Layer open;
+import Kudos.Extra open;
+import Kudos.Create as Create;
+
+type SatisfiedIntent :=
+  mk@{
+    intent : Resource;
+    created : List Resource;
+  }
+with
+
+  toAction
+    {M : Type -> Type} {{Monad M}} {{Tx M}} (s : SatisfiedIntent) : M Action :=
+
+    actionWithAuthorizationAppData@{
+      consumed := [SatisfiedIntent.intent s];
+      created := SatisfiedIntent.created s;
+    };
+
+end;
+
+type Solution :=
+  mk@{
+    solution : List SatisfiedIntent;
+  };
+
+main
+  (root : CommitmentRoot)
+  (rngSeed : Nat)
+  (privateKeyPayload publicKeyPayload : ByteArray)
+  (kudosLogic : Logic)
+  (toSolveEncoded : List (Encoded Transaction))
+  (solution : Solution)
+  : Transaction :=
+  let
+    toSolve : List Transaction := map Encoded.decode toSolveEncoded;
+    caller : Identity :=
+      mkIdentityFromPayload privateKeyPayload publicKeyPayload;
+    self : ExternalIdentity := Identity.external caller;
+
+    helper {M : Type -> Type} {{Monad M}} {{Tx M}} : M Transaction :=
+      do {
+        actions <- mapM SatisfiedIntent.toAction (Solution.solution solution);
+        root <- TxContext.currentRoot <$> getTxContext;
+        let
+
+          intentOwners : List ExternalIdentity :=
+            map (sat in Solution.solution solution) {
+              Kudos.Resource.owner (SatisfiedIntent.intent sat)
+            };
+
+          checkOwnerShip : M Unit :=
+            if
+              | all (intentOwner in intentOwners) {
+                intentOwner == self
+              } := pure unit
+              | else := txThrow "I must own all resources";
+          extraTx : Transaction :=
+            mkTransactionHelper@{
+              roots := [root];
+              actions;
+            };
+
+          allTransactions : List Transaction := extraTx :: toSolve;
+        in
+        checkOwnerShip;
+        pure (composeAll allTransactions);
+      };
+  in Tx.run rngSeed (txContext caller root) helper;
+
+txContext (caller : Identity) (currentRoot : CommitmentRoot) : TxContext :=
+  TxContext.mk@{
+    caller;
+    currentRoot;
+  };

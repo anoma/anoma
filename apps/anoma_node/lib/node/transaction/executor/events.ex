@@ -50,6 +50,15 @@ defmodule Anoma.Node.Transaction.Executor.Events do
             {:error, id} ->
               %{result: "error", id: id}
 
+            {{:ok, %Anoma.RM.Transparent.Transaction{} = tx}, id} ->
+              result =
+                tx
+                |> Noun.Nounable.to_noun()
+                |> Noun.Jam.jam()
+                |> Base.encode64()
+
+              %{result: result, id: id}
+
             {{:ok, noun}, id} ->
               %{result: Base.encode64(Noun.Jam.jam(noun)), id: id}
           end

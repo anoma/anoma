@@ -57,6 +57,19 @@ defmodule Anoma.RM.Transparent.Action do
           end)
         )
       )
+      |> Map.update!(
+        :app_data,
+        &Map.new(
+          Enum.map(&1, fn {int, bin_bools} ->
+            bin_bools =
+              Enum.map(bin_bools, fn {bin, bool} ->
+                %{binary: Base.encode64(bin), boolean: bool}
+              end)
+
+            {int, bin_bools}
+          end)
+        )
+      )
       |> Jason.Encode.map(opts)
     end
   end

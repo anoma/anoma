@@ -81,6 +81,14 @@ defmodule Anoma.Node.Transaction.Backends.Events do
       encode_maybe_noun(noun)
     end
 
+    defp encode_maybe_noun(tx = %Anoma.RM.Transparent.Transaction{}) do
+      with noun <- Noun.Nounable.to_noun(tx),
+           jammed <- Noun.Jam.jam(noun),
+           encoded <- Base.encode64(jammed) do
+        encoded
+      end
+    end
+
     defp encode_maybe_noun(noun) do
       with jammed <- Noun.Jam.jam(noun),
            encoded <- Base.encode64(jammed) do

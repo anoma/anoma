@@ -1,0 +1,21 @@
+module Kudos.KudosKind;
+
+import Stdlib.Prelude open;
+import Applib open;
+import Anoma.Identity.External open;
+import Anoma.Identity.Internal open;
+import Kudos.Layer open;
+
+main
+  (kudosLogic : Logic)
+  (originatorPublicKey : ByteArray)
+  (kudosSymbol : String)
+  : Kind :=
+  let
+    originator := ExternalIdentity.fromByteArray originatorPublicKey;
+    identity :=
+      Kudos.KLabel.mk@{
+        originator;
+        kudosSymbol;
+      };
+  in computeKudosKind kudosLogic identity;
