@@ -1,0 +1,107 @@
+module Kudos.Merge;
+
+import Stdlib.Prelude open;
+import Stdlib.Data.Set as Set open using {Set};
+import Stdlib.Data.Map as Map open using {Map};
+import Applib open;
+import Stdlib.Debug.Fail open;
+import Anoma.Builtin.System open;
+import Anoma.Identity.External open;
+import Anoma.Identity.Internal open;
+import Kudos.Layer open;
+import Kudos.Extra open;
+import Stdlib.Debug.Trace as Debug;
+
+
+kudosMerge
+  {M : Type -> Type}
+  {{Monad M}}
+  {{Tx M}}
+  (kudosLogic : Logic)
+  (toMerge : List Resource)
+  (receiver : ExternalIdentity)
+  : M Transaction :=
+  do {
+    txCtx <- getTxContext;
+    let
+      caller := TxContext.caller txCtx;
+      self := Identity.external caller;
+      checkKind : M Unit :=
+        if
+          | all (r in toMerge) {
+            Kudos.Resource.isKudo kudosLogic r
+          } := pure unit
+          | else := txThrow "not kudos";
+
+      checkOwnership : M Unit :=
+        if
+          | all (r in toMerge) {
+            Kudos.Resource.owner r == self
+          } := pure unit
+          | else := txThrow "I must own all resources to be merged";
+
+      totalQuantity : Nat :=
+        for (acc := 0) (r in toMerge) {
+          acc + Kudos.Resource.quantity r
+        };
+
+      getIdentity : M Kudos.KLabel :=
+        case toMerge of
+          | [] := txThrow "must merge at least one resource"
+          | h :: _ := pure (Kudos.Resource.identity h);
+    in
+    checkKind;
+    checkOwnership;
+    nonce <- genRandomNonce;
+    label <- getIdentity;
+    let
+      currentRoot := TxContext.currentRoot txCtx;
+      newResource :=
+        Kudos.Resource.mk@{
+          quantity := totalQuantity;
+          nonce;
+          ephemeral := false;
+          logic := kudosLogic;
+          owner := receiver;
+          label;
+        };
+    in
+    a <- actionWithAuthorizationAppData@{
+           consumed := toMerge;
+           created := [newResource];
+         };
+    pure
+      mkTransactionHelper@{
+        roots := [currentRoot];
+        actions := [a];
+      };
+  };
+
+txContext (caller : Identity) (currentRoot : CommitmentRoot) : TxContext :=
+  TxContext.mk@{
+    caller;
+    currentRoot;
+  };
+
+main
+  (latestRoot : CommitmentRoot)
+  (randSeed : Nat)
+  (ownerPrivateKeyPayload : ByteArray)
+  (ownerPublicKeyPayload : ByteArray)
+  (toMergeEncoded : List (Encoded Resource))
+  (receiverExternalIdentityBytes : ByteArray)
+  (logic : Logic)
+  : TransactionRequest :=
+  (Debug.trace toMergeEncoded) >-> (let
+    receiver : ExternalIdentity :=
+      ExternalIdentity.fromByteArray receiverExternalIdentityBytes;
+    callerIdentity : Identity :=
+      mkIdentityFromPayload@{
+        privateKey := ownerPrivateKeyPayload;
+        publicKey := ownerPublicKeyPayload;
+      };
+    toMerge : List Resource := map Encoded.decode toMergeEncoded;
+  in TransactionRequest.build
+    randSeed
+    (txContext callerIdentity latestRoot)
+    (kudosMerge logic toMerge receiver));
