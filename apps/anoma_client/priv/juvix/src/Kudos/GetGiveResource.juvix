@@ -1,0 +1,25 @@
+module Kudos.GetGiveResource;
+
+import Stdlib.Prelude open;
+import Stdlib.Data.Map as Map open using {Map};
+import Applib open;
+import Stdlib.Debug.Fail open;
+import Kudos.Layer open;
+
+main
+  (giveSymbol : String)
+  (giveQuantity : Nat)
+  (ownedResources : List (Encoded Resource))
+  : Resource :=
+
+  let
+    isGiveResource (r : Resource) : Bool :=
+      Resource.quantity r == giveQuantity
+        && (r
+            |> Kudos.Resource.identity
+            |> Kudos.KLabel.kudosSymbol
+            |> builtinAnomaEncode)
+          == builtinAnomaEncode giveSymbol;
+  in case find isGiveResource (map Encoded.decode ownedResources) of
+       | just r := r
+       | nothing := failwith "No give resource found";

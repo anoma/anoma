@@ -1,0 +1,154 @@
+module Kudos.SwapWithIntent;
+
+import Stdlib.Prelude open;
+import Applib open;
+import Anoma.Identity.External open;
+import Anoma.Identity.Internal open;
+import Kudos.Layer open;
+import Kudos.Extra open;
+import Kudos.Create as Create;
+
+includesKudos
+  (kudosKind : Kind)
+  (quantity : Nat)
+  (receiver : ExternalIdentity)
+  (resourcesToCheck : List Resource)
+  : Bool :=
+  any (r in resourcesToCheck) {
+    quantity <= Resource.quantity r
+      && kudosKind == kind r
+      && receiver == Kudos.Resource.owner r
+  };
+
+swapIntentLogic (args : Logic.Args) : Bool :=
+  let
+    selfTag := Logic.Args.selfTag args;
+    self : Resource := Logic.Args.self args;
+
+    -- the important case
+    ephemeralConsumptionBranch (self : Resource) : Bool :=
+      let
+        solver := Kudos.Resource.owner self;
+
+        checkSolverIdentity : Bool :=
+          Create.isAuthorizedBy@{
+            signer := solver;
+            origin := selfTag;
+            args;
+          };
+
+        intentLabel : SwapIntentLabel :=
+          builtinAnomaDecode (Label.toNat (Resource.label self));
+
+        checkIntentSatisfied : Bool :=
+          includesKudos@{
+            kudosKind := SwapIntentLabel.kind intentLabel;
+            quantity := SwapIntentLabel.quantity intentLabel;
+            receiver := SwapIntentLabel.receiver intentLabel;
+            resourcesToCheck := Logic.Args.created args;
+          };
+
+      in checkSolverIdentity && checkIntentSatisfied;
+
+  in case selfTag of
+       | Consumed nullifier :=
+         if
+           | Resource.ephemeral self := ephemeralConsumptionBranch self
+           | else := false
+       | Created commitment :=
+         if
+           | Resource.ephemeral self := true
+           | else := false;
+
+type SwapIntentLabel :=
+  mk@{
+    receiver : ExternalIdentity;
+    quantity : Nat;
+    kind : Kind;
+  };
+
+main
+  (root : CommitmentRoot)
+  (rngSeed : Nat)
+  (privateKeyPayload publicKeyPayload : ByteArray)
+  (kudosLogic : Logic)
+
+  (giveSymbol : String)
+  (giveOriginator : ByteArray)
+  (giveQuantity : Nat)
+
+  (wantSymbol : String)
+  (wantOriginator : ByteArray)
+  (wantQuantity : Nat)
+  : Transaction :=
+  let
+    caller : Identity :=
+      mkIdentityFromPayload privateKeyPayload publicKeyPayload;
+
+    helper {M : Type -> Type} {{Monad M}} {{Tx M}} : M Transaction :=
+      do {
+        nonceIntent <- genRandomNonce;
+        nonceConsumed <- genRandomNonce;
+        let
+          owner := ExternalIdentity.fromByteArray publicKeyPayload;
+          consumedResource : Resource :=
+            Create.mkKudos@{
+              nonce := nonceConsumed;
+              owner;
+              logic := kudosLogic;
+              originator := ExternalIdentity.fromByteArray giveOriginator;
+              quantity := giveQuantity;
+              kudosSymbol := giveSymbol;
+            };
+          solver : ExternalIdentity := Universal.externalIdentity;
+          label : Kudos.KLabel :=
+            Kudos.KLabel.mk@{
+              originator := ExternalIdentity.fromByteArray wantOriginator;
+              kudosSymbol := wantSymbol;
+            };
+          kudosKind : Kind := computeKudosKind kudosLogic label;
+
+          swapIntent : Resource :=
+            Resource.mk@{
+              logic := Encoded.encode (Logic.mk swapIntentLogic);
+              nonce := Nonce.toRaw nonceIntent;
+              ephemeral := true;
+              quantity := 1;
+              unusedRandSeed := 0;
+              label :=
+                Label.fromNat
+                  (builtinAnomaEncode
+                    SwapIntentLabel.mk@{
+                      kind := kudosKind;
+                      quantity := wantQuantity;
+                      receiver :=
+                        ExternalIdentity.fromByteArray publicKeyPayload;
+                    });
+              value := 0;
+              nullifierKeyCommitment := ExternalIdentity.toAnomaAtom solver;
+            };
+
+          createdResource : Resource := swapIntent;
+
+          consumed : List Resource := [consumedResource];
+          created : List Resource := [createdResource];
+        in
+        action <- actionWithAuthorizationAppData@{
+                    created;
+                    consumed;
+                  };
+        root <- TxContext.currentRoot <$> getTxContext;
+        pure
+          Transaction.mk@{
+            roots := AnomaSet.fromList [root];
+            actions := AnomaSet.fromList [action];
+          };
+      };
+
+  in Tx.run rngSeed (txContext caller root) helper;
+
+txContext (caller : Identity) (latestRoot : CommitmentRoot) : TxContext :=
+  TxContext.mk@{
+    caller;
+    currentRoot := latestRoot;
+  };

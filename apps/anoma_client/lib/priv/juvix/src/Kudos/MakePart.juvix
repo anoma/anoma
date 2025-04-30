@@ -1,0 +1,9 @@
+module Kudos.MakePart;
+
+import Stdlib.Prelude open;
+import Applib open;
+import Anoma.Identity.External open;
+import Anoma.Identity.Internal open;
+
+main (receiver : ByteArray) (quantity : Nat) : Pair ExternalIdentity Nat :=
+  ExternalIdentity.fromByteArray receiver, quantity;
