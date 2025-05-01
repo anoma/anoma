@@ -242,6 +242,474 @@ defmodule Examples.ENockPoly do
   end
 
   ####################################################################
+  ##                  SLICE POLYNOMIAL TERM TESTS                   ##
+  ####################################################################
+  # Define an expression language with arithmetic and boolean expressions
+  # ArithExpr (Type 0):
+  #   - Num (Constructor 0, arity 0)
+  #   - Add (Constructor 1, arity 2, params: [ArithExpr, ArithExpr])
+  #   - IfThenElse (Constructor 2, arity 3, params: [BoolExpr, ArithExpr, ArithExpr])
+  # BoolExpr (Type 1):
+  #   - Bool (Constructor 0, arity 0)
+  #   - Less (Constructor 1, arity 2, params: [ArithExpr, ArithExpr])
+  #   - And (Constructor 2, arity 2, params: [BoolExpr, BoolExpr])
+
+  # Helper for testing the FinSlicePolyF module
+  # We're going to define a simple type system with two types:
+  #
+  # Type 0: ArithExpr with constructors:
+  #   - Zero (index 0, no parameters) - representing the number 0
+  #   - Successor (index 1, one ArithExpr parameter) - representing n+1
+  #   - Add (index 2, two ArithExpr parameters) - representing addition
+  #   - IfThenElse (index 3, one BoolExpr and two ArithExpr parameters)
+  #
+  # Type 1: BoolExpr with constructors:
+  #   - True (index 0, no parameters) - representing boolean true
+  #   - False (index 1, no parameters) - representing boolean false
+  #   - Less (index 2, two ArithExpr parameters) - representing comparison
+  #   - And (index 3, two BoolExpr parameters) - representing logical AND
+  defp create_expr_typespec() do
+    alias NockPoly.FinSlicePolyF, as: SliceF
+
+    # Create a simplified typespec manually rather than using the helpers
+    # This gives us more control for testing purposes
+    typespec = %{
+      # Two types: ArithExpr (0) and BoolExpr (1)
+      input_types: 2,
+      # Same output types
+      output_types: 2,
+      # Each type has 4 constructors
+      ctor_counts: [4, 4],
+
+      # Define constructor types function to explicitly map each constructor to its parameter types
+      ctor_types: fn
+        # ArithExpr.Zero (constructor 0) has no parameters
+        {0, 0} -> []
+        # ArithExpr.Successor (constructor 1) takes one ArithExpr parameter
+        {0, 1} -> [0]
+        # ArithExpr.Add (constructor 2) takes two ArithExpr parameters
+        {0, 2} -> [0, 0]
+        # ArithExpr.IfThenElse (constructor 3) takes BoolExpr and two ArithExpr parameters
+        {0, 3} -> [1, 0, 0]
+        # BoolExpr.True (constructor 0) has no parameters
+        {1, 0} -> []
+        # BoolExpr.False (constructor 1) has no parameters
+        {1, 1} -> []
+        # BoolExpr.Less (constructor 2) takes two ArithExpr parameters
+        {1, 2} -> [0, 0]
+        # BoolExpr.And (constructor 3) takes two BoolExpr parameters
+        {1, 3} -> [1, 1]
+      end
+    }
+
+    typespec
+  end
+
+  # Helper to map our readable constructors to typespec indices
+  defp create_expr_tspec() do
+    fn
+      # ArithExpr constructors
+      # Zero (no parameters)
+      {:zero} -> {:ok, {0, 0}}
+      # Successor (one ArithExpr parameter)
+      {:succ} -> {:ok, {0, 1}}
+      # Add (two ArithExpr parameters)
+      {:add} -> {:ok, {0, 2}}
+      # IfThenElse (BoolExpr, ArithExpr, ArithExpr)
+      {:if_then_else} -> {:ok, {0, 3}}
+      # BoolExpr constructors
+      # True (no parameters)
+      {true} -> {:ok, {1, 0}}
+      # False (no parameters)
+      {false} -> {:ok, {1, 1}}
+      # Less (two ArithExpr parameters)
+      {:less} -> {:ok, {1, 2}}
+      # And (two BoolExpr parameters)
+      {:and} -> {:ok, {1, 3}}
+      # Invalid constructor
+      _ -> {:invalid_constructor}
+    end
+  end
+
+  @doc """
+  slice_test_typespec_validation: Tests that typespec validation works correctly.
+  """
+  def slice_test_typespec_validation() do
+    alias NockPoly.FinSlicePolyF, as: SliceF
+
+    typespec = create_expr_typespec()
+    assert SliceF.validate_typespec(typespec) == :ok
+
+    # Test validation with invalid ctor_counts
+    # Too short for our 2 types
+    invalid_typespec = %{typespec | ctor_counts: [3]}
+
+    assert SliceF.validate_typespec(invalid_typespec) ==
+             {:error, :ctor_counts_length_mismatch}
+
+    typespec
+  end
+
+  @doc """
+  slice_test_simple_arith: Tests simple arithmetic expressions.
+  """
+  def slice_test_simple_arith() do
+    alias NockPoly.FinSlicePolyF, as: SliceF
+
+    typespec = create_expr_typespec()
+    tspec = create_expr_tspec()
+
+    # Zero (representing the number 0)
+    zero_term = {{:zero}, []}
+    assert {:ok, 0} = SliceF.typecheck(zero_term, typespec, tspec)
+
+    # Successor(Zero) (representing the number 1)
+    one_term = {{:succ}, [zero_term]}
+    assert {:ok, 0} = SliceF.typecheck(one_term, typespec, tspec)
+
+    # Successor(One) (representing the number 2)
+    two_term = {{:succ}, [one_term]}
+    assert {:ok, 0} = SliceF.typecheck(two_term, typespec, tspec)
+
+    # Add(One, One) (representing 1+1)
+    add_term = {{:add}, [one_term, one_term]}
+    assert {:ok, 0} = SliceF.typecheck(add_term, typespec, tspec)
+
+    add_term
+  end
+
+  @doc """
+  slice_test_simple_bool: Tests simple boolean expressions.
+  """
+  def slice_test_simple_bool() do
+    alias NockPoly.FinSlicePolyF, as: SliceF
+
+    typespec = create_expr_typespec()
+    tspec = create_expr_tspec()
+
+    # True (boolean constant)
+    true_term = {{true}, []}
+    assert {:ok, 1} = SliceF.typecheck(true_term, typespec, tspec)
+
+    # False (boolean constant)
+    false_term = {{false}, []}
+    assert {:ok, 1} = SliceF.typecheck(false_term, typespec, tspec)
+
+    # Get number terms for comparisons
+    zero_term = {{:zero}, []}
+    one_term = {{:succ}, [zero_term]}
+
+    # Less(Zero, One) (representing 0 < 1)
+    less_term = {{:less}, [zero_term, one_term]}
+    assert {:ok, 1} = SliceF.typecheck(less_term, typespec, tspec)
+
+    # And(True, False) (representing true AND false)
+    and_term = {{:and}, [true_term, false_term]}
+    assert {:ok, 1} = SliceF.typecheck(and_term, typespec, tspec)
+
+    and_term
+  end
+
+  @doc """
+  slice_test_complex: Tests a complex expression with both arithmetic and boolean expressions.
+  """
+  def slice_test_complex() do
+    alias NockPoly.FinSlicePolyF, as: SliceF
+
+    typespec = create_expr_typespec()
+    tspec = create_expr_tspec()
+
+    # Create our base number terms
+    zero_term = {{:zero}, []}
+    one_term = {{:succ}, [zero_term]}
+    two_term = {{:succ}, [one_term]}
+
+    # IfThenElse(Less(One, Two), Zero, Add(One, Two))
+    if_term =
+      {{:if_then_else},
+       [
+         # condition: Less(One, Two)
+         {{:less}, [one_term, two_term]},
+         # then branch: Zero
+         zero_term,
+         # else branch: Add(One, Two)
+         {{:add}, [one_term, two_term]}
+       ]}
+
+    assert {:ok, 0} = SliceF.typecheck(if_term, typespec, tspec)
+
+    if_term
+  end
+
+  @doc """
+  slice_test_invalid_type: Tests a term with invalid parameter type.
+  """
+  def slice_test_invalid_type() do
+    alias NockPoly.FinSlicePolyF, as: SliceF
+
+    typespec = create_expr_typespec()
+    tspec = create_expr_tspec()
+
+    # Create base terms
+    zero_term = {{:zero}, []}
+    true_term = {{true}, []}
+
+    # Error: Add takes arithmetic expressions, not boolean expressions
+    # Add(Zero, True) - second parameter has wrong type
+    invalid_term = {{:add}, [zero_term, true_term]}
+
+    {:error, errors} = SliceF.typecheck(invalid_term, typespec, tspec)
+    # We expect a single parameter type error
+    assert Enum.any?(errors, fn e ->
+             match?({:invalid_param_type, {0, 2}, 1, 1}, e)
+           end)
+
+    invalid_term
+  end
+
+  @doc """
+  slice_test_invalid_arity: Tests a term with wrong parameter count.
+  """
+  def slice_test_invalid_arity() do
+    alias NockPoly.FinSlicePolyF, as: SliceF
+
+    typespec = create_expr_typespec()
+    tspec = create_expr_tspec()
+
+    # Create base term
+    zero_term = {{:zero}, []}
+
+    # Error: Add should have 2 parameters but has 1
+    invalid_term = {{:add}, [zero_term]}
+
+    {:error, errors} = SliceF.typecheck(invalid_term, typespec, tspec)
+    assert length(errors) == 1
+    assert Enum.at(errors, 0) == {:invalid_param_count, {0, 2}, 2, 1}
+
+    invalid_term
+  end
+
+  @doc """
+  slice_test_multi_errors: Tests a term with multiple type errors.
+  """
+  def slice_test_multi_errors() do
+    alias NockPoly.FinSlicePolyF, as: SliceF
+
+    typespec = create_expr_typespec()
+    tspec = create_expr_tspec()
+
+    # Create base terms
+    zero_term = {{:zero}, []}
+    true_term = {{true}, []}
+
+    # Error: And should take 2 BoolExpr, but has 1 BoolExpr and 1 ArithExpr
+    # Also, the Add has wrong parameter count (1 instead of 2)
+    invalid_term =
+      {{:and},
+       [
+         # This is a valid BoolExpr
+         true_term,
+         # This is an ArithExpr with wrong param count
+         {{:add}, [zero_term]}
+       ]}
+
+    {:error, errors} = SliceF.typecheck(invalid_term, typespec, tspec)
+
+    # We expect at least one error related to parameter count
+    assert Enum.any?(errors, fn e ->
+             match?({:invalid_param_count, _, _, _}, e)
+           end)
+
+    # In this test we're only checking for the parameter count error.
+    # Depending on the implementation, we might also see a type error, but
+    # it's not required - the important thing is that we detect the term is invalid
+    # and return at least one error.
+
+    invalid_term
+  end
+
+  @doc """
+  slice_test_simple_type: Tests the simple_type helper creates a correct typespec.
+  """
+  def slice_test_simple_type() do
+    alias NockPoly.FinSlicePolyF, as: SliceF
+
+    typespec = SliceF.simple_type([0, 2, 1])
+    assert typespec.input_types == 1
+    assert typespec.output_types == 1
+    assert typespec.ctor_counts == [3]
+
+    # Should create constructors with the specified arities
+    assert typespec.ctor_types.({0, 0}) == []
+    assert typespec.ctor_types.({0, 1}) == [0, 0]
+    assert typespec.ctor_types.({0, 2}) == [0]
+
+    typespec
+  end
+
+  @doc """
+  slice_test_adapt_tspec: Tests that adapt_fin_tspec correctly converts a FinPolyF tspec.
+  """
+  def slice_test_adapt_tspec() do
+    alias NockPoly.FinSlicePolyF, as: SliceF
+
+    # Create a FinPolyF tspec
+    fin_tspec = fn
+      :a -> {:ok, 0}
+      :b -> {:ok, 2}
+      _ -> {:invalid_constructor}
+    end
+
+    # Map constructors to indices
+    ctor_indices = %{:a => 0, :b => 1}
+
+    # Convert to FinSlicePolyF tspec
+    slice_tspec = SliceF.adapt_fin_tspec(fin_tspec, ctor_indices)
+
+    # Test converted tspec
+    assert slice_tspec.(:a) == {:ok, {0, 0}}
+    assert slice_tspec.(:b) == {:ok, {0, 1}}
+    assert slice_tspec.(:c) == {:invalid_constructor}
+
+    slice_tspec
+  end
+
+  ####################################################################
+  ##                   EXPRESSION EVALUATOR                         ##
+  ####################################################################
+
+  @doc """
+  Evaluates an arithmetic or boolean expression to its corresponding Elixir value.
+
+  For arithmetic expressions, it returns a non-negative integer.
+  For boolean expressions, it returns a boolean value (true or false).
+
+  Assumes the expression has already been typechecked.
+  """
+  def evaluate_expr(term) do
+    alias NockPoly.Term, as: Term
+
+    # Define an algebra that interprets each constructor
+    algebra = fn {ctor, children} ->
+      case ctor do
+        # ArithExpr.Zero - represents 0
+        {:zero} ->
+          0
+
+        # ArithExpr.Successor - represents n+1
+        {:succ} ->
+          [n] = children
+          n + 1
+
+        # ArithExpr.Add - represents addition
+        {:add} ->
+          [a, b] = children
+          a + b
+
+        # ArithExpr.IfThenElse - represents conditional
+        {:if_then_else} ->
+          [condition, then_branch, else_branch] = children
+          if condition, do: then_branch, else: else_branch
+
+        # BoolExpr.True - represents boolean true
+        {true} ->
+          true
+
+        # BoolExpr.False - represents boolean false
+        {false} ->
+          false
+
+        # BoolExpr.Less - represents < comparison
+        {:less} ->
+          [a, b] = children
+          a < b
+
+        # BoolExpr.And - represents logical AND
+        {:and} ->
+          [a, b] = children
+          a and b
+      end
+    end
+
+    # Use cata to evaluate the term with our algebra
+    Term.cata(term, algebra)
+  end
+
+  @doc """
+  Tests the expression evaluator with a variety of expressions.
+  """
+  def evaluate_expr_test() do
+    # Create our base terms
+    zero_term = {{:zero}, []}
+    one_term = {{:succ}, [zero_term]}
+    two_term = {{:succ}, [one_term]}
+
+    # Test arithmetic expressions
+    assert evaluate_expr(zero_term) == 0
+    assert evaluate_expr(one_term) == 1
+    assert evaluate_expr(two_term) == 2
+
+    # Test addition
+    add_term = {{:add}, [one_term, two_term]}
+    assert evaluate_expr(add_term) == 3
+
+    # Test boolean expressions
+    true_term = {{true}, []}
+    false_term = {{false}, []}
+    assert evaluate_expr(true_term) == true
+    assert evaluate_expr(false_term) == false
+
+    # Test comparison
+    less_term = {{:less}, [one_term, two_term]}
+    assert evaluate_expr(less_term) == true
+
+    not_less_term = {{:less}, [two_term, one_term]}
+    assert evaluate_expr(not_less_term) == false
+
+    # Test logical AND
+    and_term = {{:and}, [true_term, false_term]}
+    assert evaluate_expr(and_term) == false
+
+    and_true_term = {{:and}, [true_term, true_term]}
+    assert evaluate_expr(and_true_term) == true
+
+    # Test complex conditional expression
+    # if (1 < 2) then 0 else (1 + 2)
+    if_term =
+      {{:if_then_else},
+       [
+         # condition: Less(One, Two)
+         {{:less}, [one_term, two_term]},
+         # then branch: Zero
+         zero_term,
+         # else branch: Add(One, Two)
+         {{:add}, [one_term, two_term]}
+       ]}
+
+    # Since 1 < 2 is true, this should evaluate to 0
+    assert evaluate_expr(if_term) == 0
+
+    # Now let's create an expression where the condition is false
+    # if (2 < 1) then 0 else (1 + 2)
+    if_false_term =
+      {{:if_then_else},
+       [
+         # condition: Less(Two, One) - false
+         {{:less}, [two_term, one_term]},
+         # then branch: Zero
+         zero_term,
+         # else branch: Add(One, Two)
+         {{:add}, [one_term, two_term]}
+       ]}
+
+    # Since 2 < 1 is false, this should evaluate to 1 + 2 = 3
+    assert evaluate_expr(if_false_term) == 3
+
+    # Return the most complex term as the result
+    if_false_term
+  end
+
+  ####################################################################
   ##                    NOCK TERM TESTS                             ##
   ####################################################################
   #  Tests for NockTerms conversion and typecheck invariants using
