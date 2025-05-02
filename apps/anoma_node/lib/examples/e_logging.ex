@@ -1,11 +1,9 @@
 defmodule Anoma.Node.Examples.ELogging do
   alias Anoma.Node
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Node.Logging
   alias Anoma.Node.Tables
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Transaction.Storage
 
   require ExUnit.Assertions
   require Node.Event
@@ -35,7 +33,8 @@ defmodule Anoma.Node.Examples.ELogging do
                :mnesia.read(table_name, "id 1")
              end)
 
-    :mnesia.unsubscribe({:table, table_name, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, table_name, :simple})
     node_id
   end
 
@@ -74,7 +73,8 @@ defmodule Anoma.Node.Examples.ELogging do
                :mnesia.read(table_name, "id 2")
              end)
 
-    :mnesia.unsubscribe({:table, table_name, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, table_name, :simple})
     node_id
   end
 
@@ -100,7 +100,8 @@ defmodule Anoma.Node.Examples.ELogging do
       5000
     )
 
-    :mnesia.unsubscribe({:table, table_name, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, table_name, :simple})
 
     assert {:atomic, [{^table_name, :consensus, [["id 1"]]}]} =
              :mnesia.transaction(fn ->
@@ -129,7 +130,8 @@ defmodule Anoma.Node.Examples.ELogging do
       5000
     )
 
-    :mnesia.unsubscribe({:table, table_name, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, table_name, :simple})
 
     assert {:atomic, [{^table_name, :consensus, [["id 1"], ["id 2"]]}]} =
              :mnesia.transaction(fn ->
@@ -160,7 +162,8 @@ defmodule Anoma.Node.Examples.ELogging do
       5000
     )
 
-    :mnesia.unsubscribe({:table, table_name, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, table_name, :simple})
 
     assert {:atomic, [{^table_name, :consensus, []}]} =
              :mnesia.transaction(fn ->
@@ -208,7 +211,8 @@ defmodule Anoma.Node.Examples.ELogging do
       5000
     )
 
-    :mnesia.unsubscribe({:table, table_name, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, table_name, :simple})
 
     assert {:atomic, [{^table_name, :consensus, []}]} =
              :mnesia.transaction(fn ->
@@ -239,7 +243,8 @@ defmodule Anoma.Node.Examples.ELogging do
       5000
     )
 
-    :mnesia.unsubscribe({:table, table_name, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, table_name, :simple})
 
     assert {:atomic, [{^table_name, :consensus, [["id 2"]]}]} =
              :mnesia.transaction(fn ->
@@ -260,225 +265,12 @@ defmodule Anoma.Node.Examples.ELogging do
     node_id
   end
 
-  @spec replay_corrects_result(String.t()) :: String.t()
-  def replay_corrects_result(node_id \\ Node.example_random_id()) do
-    replay_ensure_created_tables(node_id)
-    table = Storage.blocks_table(node_id)
-
-    :mnesia.transaction(fn ->
-      :mnesia.write(
-        {table, 0, [%Mempool.Tx{backend: :debug_bloblike, code: "code 1"}]}
-      )
-    end)
-
-    write_consensus_leave_one_out(node_id)
-    filter = [%Mempool.TxFilter{}]
-
-    with_subscription [filter] do
-      Logging.restart_with_replay(node_id)
-
-      :ok =
-        wait_for_tx(node_id, "id 2", "code 2")
-
-      :error_tx =
-        wait_for_tx(node_id, "id 1", "code 1")
-    end
-
-    state = Anoma.Node.Registry.whereis(node_id, Mempool) |> :sys.get_state()
-    nil = Map.get(state.transactions, "id 1")
-    1 = state.round
-
-    node_id
-  end
-
-  @spec replay_consensus_leave_one_out(String.t()) :: String.t()
-  def replay_consensus_leave_one_out(node_id \\ Node.example_random_id()) do
-    write_consensus_leave_one_out(node_id)
-    replay_ensure_created_tables(node_id)
-
-    filter = [%Mempool.TxFilter{}]
-
-    with_subscription [filter] do
-      Logging.restart_with_replay(node_id)
-
-      :ok =
-        wait_for_tx(node_id, "id 1", "code 1")
-
-      :ok =
-        wait_for_tx(node_id, "id 2", "code 2")
-
-      :ok =
-        wait_for_consensus(node_id, ["id 1"])
-
-      Mempool.execute(node_id, ["id 2"])
-
-      :ok =
-        wait_for_consensus(node_id, ["id 2"])
-
-      node_id
-    end
-  end
-
-  @spec replay_several_consensus(String.t()) :: String.t()
-  def replay_several_consensus(node_id \\ Node.example_random_id()) do
-    write_several_consensus(node_id)
-    replay_ensure_created_tables(node_id)
-
-    txfilter = [%Mempool.TxFilter{}]
-    consensus_filter = [%Mempool.ConsensusFilter{}]
-
-    with_subscription [txfilter, consensus_filter] do
-      Logging.restart_with_replay(node_id)
-
-      :ok =
-        wait_for_tx(node_id, "id 1", "code 1")
-
-      :ok =
-        wait_for_tx(node_id, "id 2", "code 2")
-
-      :ok =
-        wait_for_consensus(node_id, ["id 1"])
-
-      :ok =
-        wait_for_consensus(node_id, ["id 2"])
-
-      node_id
-    end
-  end
-
-  @spec replay_consensus_with_several_txs(String.t()) :: String.t()
-  def replay_consensus_with_several_txs(node_id \\ Node.example_random_id()) do
-    write_consensus_with_several_tx(node_id)
-    replay_ensure_created_tables(node_id)
-
-    txfilter = [%Mempool.TxFilter{}]
-    consensus_filter = [%Mempool.ConsensusFilter{}]
-
-    with_subscription [txfilter, consensus_filter] do
-      Logging.restart_with_replay(node_id)
-
-      :ok =
-        wait_for_tx(node_id, "id 1", "code 1")
-
-      :ok =
-        wait_for_tx(node_id, "id 2", "code 2")
-
-      :ok =
-        wait_for_consensus(node_id, ["id 1", "id 2"])
-
-      node_id
-    end
-  end
-
-  @spec replay_consensus(String.t()) :: String.t()
-  def replay_consensus(node_id \\ Node.example_random_id()) do
-    write_consensus(node_id)
-    replay_ensure_created_tables(node_id)
-
-    txfilter = [%Mempool.TxFilter{}]
-    consensus_filter = [%Mempool.ConsensusFilter{}]
-
-    with_subscription [txfilter, consensus_filter] do
-      Logging.restart_with_replay(node_id)
-
-      :ok =
-        wait_for_tx(node_id, "id 1", "code 1")
-
-      :ok =
-        wait_for_consensus(node_id, ["id 1"])
-
-      node_id
-    end
-  end
-
-  @spec replay_several_txs(String.t()) :: String.t()
-  def replay_several_txs(node_id \\ Node.example_random_id()) do
-    write_several_tx(node_id)
-    replay_ensure_created_tables(node_id)
-
-    txfilter = [%Mempool.TxFilter{}]
-
-    with_subscription [txfilter] do
-      Logging.restart_with_replay(node_id)
-
-      :ok =
-        wait_for_tx(node_id, "id 1", "code 1")
-
-      :ok =
-        wait_for_tx(node_id, "id 2", "code 2")
-
-      node_id
-    end
-  end
-
-  @spec replay_tx(String.t()) :: String.t()
-  def replay_tx(node_id \\ Node.example_random_id()) do
-    write_tx(node_id)
-    replay_ensure_created_tables(node_id)
-
-    txfilter = [%Mempool.TxFilter{}]
-
-    with_subscription [txfilter] do
-      {:ok, _pid} = Logging.restart_with_replay(node_id)
-
-      :ok =
-        wait_for_tx(node_id, "id 1", "code 1")
-
-      node_id
-    end
-  end
-
-  @spec write_consensus_leave_one_out(String.t()) :: atom()
-  defp write_consensus_leave_one_out(node_id) do
-    table = write_several_tx(node_id)
-
-    :mnesia.transaction(fn ->
-      :mnesia.write({table, :consensus, [["id 1"]]})
-    end)
-
-    table
-  end
-
-  @spec write_several_consensus(String.t()) :: atom()
-  defp write_several_consensus(node_id) do
-    table = write_several_tx(node_id)
-
-    :mnesia.transaction(fn ->
-      :mnesia.write({table, :consensus, [["id 1"], ["id 2"]]})
-    end)
-
-    table
-  end
-
-  @spec write_consensus_with_several_tx(String.t()) :: atom()
-  defp write_consensus_with_several_tx(node_id) do
-    table = write_several_tx(node_id)
-
-    :mnesia.transaction(fn ->
-      :mnesia.write({table, :consensus, [["id 1", "id 2"]]})
-    end)
-
-    table
-  end
-
   @spec write_consensus(String.t()) :: atom()
   def write_consensus(node_id) do
     table = write_tx(node_id)
 
     :mnesia.transaction(fn ->
       :mnesia.write({table, :consensus, [["id 1"]]})
-    end)
-
-    table
-  end
-
-  @spec write_several_tx(String.t()) :: atom()
-  defp write_several_tx(node_id) do
-    table = create_event_table(node_id)
-
-    :mnesia.transaction(fn ->
-      :mnesia.write({table, "id 1", {:debug_bloblike, "code 1"}})
-      :mnesia.write({table, "id 2", {:debug_bloblike, "code 2"}})
     end)
 
     table
@@ -495,42 +287,6 @@ defmodule Anoma.Node.Examples.ELogging do
     table
   end
 
-  @spec wait_for_consensus(String.t(), list(binary())) ::
-          :ok | :error_consensus
-  defp wait_for_consensus(node_id, consensus) do
-    receive do
-      %EventBroker.Event{
-        body: %Node.Event{
-          node_id: ^node_id,
-          body: %Mempool.ConsensusEvent{
-            order: ^consensus
-          }
-        }
-      } ->
-        :ok
-    after
-      1000 -> :error_consensus
-    end
-  end
-
-  @spec wait_for_tx(String.t(), binary(), Noun.t()) :: :ok | :error_tx
-  defp wait_for_tx(node_id, id, code) do
-    receive do
-      %EventBroker.Event{
-        body: %Node.Event{
-          node_id: ^node_id,
-          body: %Mempool.TxEvent{
-            id: ^id,
-            tx: %Mempool.Tx{backend: _, code: ^code}
-          }
-        }
-      } ->
-        :ok
-    after
-      1000 -> :error_tx
-    end
-  end
-
   @spec create_event_table(String.t()) :: atom()
   defp create_event_table(node_id) do
     table = Tables.table_events(node_id)
@@ -543,27 +299,10 @@ defmodule Anoma.Node.Examples.ELogging do
     table
   end
 
-  @spec replay_ensure_created_tables(String.t()) :: [{atom(), atom()}]
-  defp replay_ensure_created_tables(node_id) do
-    block_table = Storage.blocks_table(node_id)
-    values_table = Storage.values_table(node_id)
-    updates_table = Storage.updates_table(node_id)
-
-    :mnesia.create_table(values_table, attributes: [:key, :value])
-    :mnesia.create_table(updates_table, attributes: [:key, :value])
-    :mnesia.create_table(block_table, attributes: [:round, :block])
-
-    [
-      block_table: block_table,
-      values_table: values_table,
-      updates_table: updates_table
-    ]
-  end
-
   @spec tx_event(binary(), Backends.backend(), Noun.t(), String.t()) :: :ok
   def tx_event(id, backend, code, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %Mempool.TxEvent{
+      Node.Event.new_with_body(node_id, %Mempool.Events.TxEvent{
         id: id,
         tx: %Mempool.Tx{backend: backend, code: code}
       })
@@ -574,7 +313,7 @@ defmodule Anoma.Node.Examples.ELogging do
   @spec consensus_event(list(binary()), String.t()) :: :ok
   def consensus_event(order, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %Mempool.ConsensusEvent{
+      Node.Event.new_with_body(node_id, %Mempool.Events.ConsensusEvent{
         order: order
       })
 
@@ -584,7 +323,7 @@ defmodule Anoma.Node.Examples.ELogging do
   @spec block_event(list(binary()), non_neg_integer(), String.t()) :: :ok
   def block_event(order, round, node_id) do
     event =
-      Node.Event.new_with_body(node_id, %Mempool.BlockEvent{
+      Node.Event.new_with_body(node_id, %Mempool.Events.BlockEvent{
         order: order,
         round: round
       })

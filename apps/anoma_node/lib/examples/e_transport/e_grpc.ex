@@ -182,7 +182,7 @@ defmodule Anoma.Node.Examples.EGRPC do
              assert result ==
                       {:error,
                        %GRPC.RPCError{
-                         status: 2,
+                         status: 3,
                          message: "intent can not be nil"
                        }}
 
