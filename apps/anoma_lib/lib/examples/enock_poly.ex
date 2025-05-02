@@ -6,6 +6,8 @@ defmodule Examples.ENockPoly do
   import NockPoly
   alias NockPoly.Term, as: Term
   alias NockPoly.FinPolyF
+  alias NockPoly.FinSlicePolyF, as: SliceF
+  alias NockPoly.FinIndIndPolyF, as: IndIndF
   alias NockPoly.NockTerms
   alias Noun
 
@@ -269,8 +271,6 @@ defmodule Examples.ENockPoly do
   #   - Less (index 2, two ArithExpr parameters) - representing comparison
   #   - And (index 3, two BoolExpr parameters) - representing logical AND
   defp create_expr_typespec() do
-    alias NockPoly.FinSlicePolyF, as: SliceF
-
     # Create a simplified typespec manually rather than using the helpers
     # This gives us more control for testing purposes
     typespec = %{
@@ -326,8 +326,6 @@ defmodule Examples.ENockPoly do
       {:less} -> {:ok, {1, 2}}
       # And (two BoolExpr parameters)
       {:and} -> {:ok, {1, 3}}
-      # Invalid constructor
-      _ -> {:invalid_constructor}
     end
   end
 
@@ -335,8 +333,6 @@ defmodule Examples.ENockPoly do
   slice_test_typespec_validation: Tests that typespec validation works correctly.
   """
   def slice_test_typespec_validation() do
-    alias NockPoly.FinSlicePolyF, as: SliceF
-
     typespec = create_expr_typespec()
     assert SliceF.validate_typespec(typespec) == :ok
 
@@ -354,8 +350,6 @@ defmodule Examples.ENockPoly do
   slice_test_simple_arith: Tests simple arithmetic expressions.
   """
   def slice_test_simple_arith() do
-    alias NockPoly.FinSlicePolyF, as: SliceF
-
     typespec = create_expr_typespec()
     tspec = create_expr_tspec()
 
@@ -382,8 +376,6 @@ defmodule Examples.ENockPoly do
   slice_test_simple_bool: Tests simple boolean expressions.
   """
   def slice_test_simple_bool() do
-    alias NockPoly.FinSlicePolyF, as: SliceF
-
     typespec = create_expr_typespec()
     tspec = create_expr_tspec()
 
@@ -414,8 +406,6 @@ defmodule Examples.ENockPoly do
   slice_test_complex: Tests a complex expression with both arithmetic and boolean expressions.
   """
   def slice_test_complex() do
-    alias NockPoly.FinSlicePolyF, as: SliceF
-
     typespec = create_expr_typespec()
     tspec = create_expr_tspec()
 
@@ -445,8 +435,6 @@ defmodule Examples.ENockPoly do
   slice_test_invalid_type: Tests a term with invalid parameter type.
   """
   def slice_test_invalid_type() do
-    alias NockPoly.FinSlicePolyF, as: SliceF
-
     typespec = create_expr_typespec()
     tspec = create_expr_tspec()
 
@@ -471,8 +459,6 @@ defmodule Examples.ENockPoly do
   slice_test_invalid_arity: Tests a term with wrong parameter count.
   """
   def slice_test_invalid_arity() do
-    alias NockPoly.FinSlicePolyF, as: SliceF
-
     typespec = create_expr_typespec()
     tspec = create_expr_tspec()
 
@@ -493,8 +479,6 @@ defmodule Examples.ENockPoly do
   slice_test_multi_errors: Tests a term with multiple type errors.
   """
   def slice_test_multi_errors() do
-    alias NockPoly.FinSlicePolyF, as: SliceF
-
     typespec = create_expr_typespec()
     tspec = create_expr_tspec()
 
@@ -526,52 +510,6 @@ defmodule Examples.ENockPoly do
     # and return at least one error.
 
     invalid_term
-  end
-
-  @doc """
-  slice_test_simple_type: Tests the simple_type helper creates a correct typespec.
-  """
-  def slice_test_simple_type() do
-    alias NockPoly.FinSlicePolyF, as: SliceF
-
-    typespec = SliceF.simple_type([0, 2, 1])
-    assert typespec.input_types == 1
-    assert typespec.output_types == 1
-    assert typespec.ctor_counts == [3]
-
-    # Should create constructors with the specified arities
-    assert typespec.ctor_types.({0, 0}) == []
-    assert typespec.ctor_types.({0, 1}) == [0, 0]
-    assert typespec.ctor_types.({0, 2}) == [0]
-
-    typespec
-  end
-
-  @doc """
-  slice_test_adapt_tspec: Tests that adapt_fin_tspec correctly converts a FinPolyF tspec.
-  """
-  def slice_test_adapt_tspec() do
-    alias NockPoly.FinSlicePolyF, as: SliceF
-
-    # Create a FinPolyF tspec
-    fin_tspec = fn
-      :a -> {:ok, 0}
-      :b -> {:ok, 2}
-      _ -> {:invalid_constructor}
-    end
-
-    # Map constructors to indices
-    ctor_indices = %{:a => 0, :b => 1}
-
-    # Convert to FinSlicePolyF tspec
-    slice_tspec = SliceF.adapt_fin_tspec(fin_tspec, ctor_indices)
-
-    # Test converted tspec
-    assert slice_tspec.(:a) == {:ok, {0, 0}}
-    assert slice_tspec.(:b) == {:ok, {0, 1}}
-    assert slice_tspec.(:c) == {:invalid_constructor}
-
-    slice_tspec
   end
 
   ####################################################################
@@ -707,6 +645,772 @@ defmodule Examples.ENockPoly do
 
     # Return the most complex term as the result
     if_false_term
+  end
+
+  @doc """
+  slice_test_simple_type: Tests the simple_type helper creates a correct typespec.
+  """
+  def slice_test_simple_type() do
+    # Create a simple type with three constructors of arities 0, 2, and 1
+    # The array passed to simple_type defines the arities of each constructor
+    typespec = SliceF.simple_type([0, 2, 1])
+
+    # Check basic properties
+    assert typespec.input_types == 1
+    assert typespec.output_types == 1
+    assert typespec.ctor_counts == [3]
+
+    # Verify constructor arities match what we specified
+    # Constructor 0 should have 0 parameters (empty array)
+    constructor0_params = typespec.ctor_types.({0, 0})
+    assert constructor0_params == []
+
+    # Constructor 1 should have 2 parameters
+    constructor1_params = typespec.ctor_types.({0, 1})
+    assert length(constructor1_params) == 2
+    assert Enum.all?(constructor1_params, &(&1 == 0))
+
+    # Constructor 2 should have 1 parameter
+    constructor2_params = typespec.ctor_types.({0, 2})
+    assert length(constructor2_params) == 1
+    assert Enum.all?(constructor2_params, &(&1 == 0))
+
+    typespec
+  end
+
+  @doc """
+  slice_test_typecheck_v_with_variables: Tests typecheck_v with variables.
+  """
+  def slice_test_typecheck_v_with_variables() do
+    # Create a simple typespec for two types
+    typespec = %{
+      input_types: 2,
+      output_types: 2,
+      ctor_counts: [1, 1],
+      ctor_types: fn
+        # Type 0 constructor takes a Type 1 parameter
+        {0, 0} -> [1]
+        # Type 1 constructor takes a Type 0 parameter
+        {1, 0} -> [0]
+      end
+    }
+
+    # Create a tspec function
+    tspec = fn
+      {:type0_ctor} -> {:ok, {0, 0}}
+      {:type1_ctor} -> {:ok, {1, 0}}
+      _ -> {:invalid_constructor}
+    end
+
+    # Create a vspec function that accepts variables and assigns a type
+    vspec = fn
+      {:var_type0} -> {:ok, 0}
+      {:var_type1} -> {:ok, 1}
+      _ -> {:invalid_variable}
+    end
+
+    # For the SlicePolyF.typecheck_v, variables must be pairs of {variable, expected_type}
+    # Create various test terms
+    # Valid term with type0_ctor and a type1 variable
+    valid_term_with_var = {{:type0_ctor}, [{{:var_type1}, 1}]}
+
+    # Valid term with type1_ctor and a type0 variable
+    valid_term_type1 = {{:type1_ctor}, [{{:var_type0}, 0}]}
+
+    # Invalid term with wrong variable type
+    invalid_term_with_wrong_type = {{:type0_ctor}, [{{:var_type0}, 1}]}
+
+    # Term with invalid variable
+    term_with_invalid_var = {{:type0_ctor}, [{{:unknown_var}, 1}]}
+
+    # Term with invalid constructor
+    term_with_invalid_ctor = {{:unknown_ctor}, [{{:var_type1}, 1}]}
+
+    # Tests
+    # Valid terms should typecheck correctly
+    assert {:ok, 0} =
+             SliceF.typecheck_v(valid_term_with_var, {typespec, tspec, vspec})
+
+    assert {:ok, 1} =
+             SliceF.typecheck_v(valid_term_type1, {typespec, tspec, vspec})
+
+    # Test a variable with wrong type
+    {:error, errors1} =
+      SliceF.typecheck_v(
+        invalid_term_with_wrong_type,
+        {typespec, tspec, vspec}
+      )
+
+    assert Enum.any?(errors1, fn
+             {:invalid_variable_type, {:var_type0}, 1, 0} -> true
+           end)
+
+    # Test an invalid variable (one that vspec doesn't recognize)
+    {:error, errors2} =
+      SliceF.typecheck_v(term_with_invalid_var, {typespec, tspec, vspec})
+
+    assert Enum.any?(errors2, fn
+             {:invalid_variable_type, {:unknown_var}, 1, nil} -> true
+           end)
+
+    # Test an invalid constructor
+    {:error, errors3} =
+      SliceF.typecheck_v(term_with_invalid_ctor, {typespec, tspec, vspec})
+
+    assert Enum.any?(errors3, fn
+             {:invalid_constructor, {:unknown_ctor}} -> true
+           end)
+
+    valid_term_with_var
+  end
+
+  @doc """
+  slice_test_adapt_tspec: Tests that adapt_fin_tspec correctly converts a FinPolyF tspec.
+  """
+  def slice_test_adapt_tspec() do
+    # Create a FinPolyF tspec
+    fin_tspec = fn
+      :a -> {:ok, 0}
+      :b -> {:ok, 2}
+      _ -> {:invalid_constructor}
+    end
+
+    # Map constructors to indices
+    ctor_indices = %{:a => 0, :b => 1}
+
+    # Convert to FinSlicePolyF tspec
+    slice_tspec = SliceF.adapt_fin_tspec(fin_tspec, ctor_indices)
+
+    # Test converted tspec
+    assert slice_tspec.(:a) == {:ok, {0, 0}}
+    assert slice_tspec.(:b) == {:ok, {0, 1}}
+    assert slice_tspec.(:c) == {:invalid_constructor}
+
+    slice_tspec
+  end
+
+  @doc """
+  slice_test_invalid_constructor: Tests that typecheck_v properly handles the
+  invalid_constructor error from a tspec function.
+  """
+  def slice_test_invalid_constructor() do
+    # Create a simple typespec
+    typespec = %{
+      input_types: 1,
+      output_types: 1,
+      ctor_counts: [1],
+      ctor_types: fn
+        # This function will be called during the test to verify it's being used
+        {0, 0} -> []
+      end
+    }
+
+    # Create a tspec function that:
+    # 1. Returns valid constructor for :valid_ctor to test ctor_types usage
+    # 2. Returns invalid_constructor for anything else
+    test_tspec = fn
+      {:valid_ctor} ->
+        # This will trigger a call to ctor_types with {0, 0}
+        {:ok, {0, 0}}
+
+      _ ->
+        {:invalid_constructor}
+    end
+
+    # Empty vspec function that should never be called for this test
+    vspec = fn _ -> {:ok, 0} end
+
+    # Create a simple term
+    term = {{:zero}, []}
+
+    # Test that typecheck_v properly handles the invalid_constructor error
+    {:error, errors} =
+      SliceF.typecheck_v(term, {typespec, test_tspec, vspec})
+
+    assert Enum.any?(errors, fn error ->
+             match?({:invalid_constructor, _}, error)
+           end)
+
+    # Now also test a path that uses ctor_types
+    # Create a valid constructor term to trigger ctor_types
+    valid_term = {{:valid_ctor}, []}
+
+    # This will pass the tspec check and then use ctor_types to verify parameters
+    assert {:ok, 0} =
+             SliceF.typecheck_v(valid_term, {typespec, test_tspec, vspec})
+
+    term
+  end
+
+  @doc """
+  slice_test_constant_vspec: Tests that constant_vspec creates a vspec function
+  that always returns the specified type index.
+  """
+  def slice_test_constant_vspec() do
+    # Create a constant vspec for type 3
+    vspec = SliceF.constant_vspec(3)
+
+    # Should work for any variable
+    assert vspec.(:any_var) == {:ok, 3}
+    assert vspec.(123) == {:ok, 3}
+    assert vspec.("string") == {:ok, 3}
+
+    vspec
+  end
+
+  @doc """
+  slice_test_create_typespec_default: Tests that create_typespec correctly creates
+  a typespec with default parameter types.
+  """
+  def slice_test_create_typespec_default() do
+    # Create a typespec with:
+    # - Two types (Type 0 and Type 1)
+    # - Type 0 has three constructors with arities 0, 1, 2
+    # - Type 1 has two constructors with arities 1, 3
+    type_defs = [
+      # Type 0 constructors with arities 0, 1, 2
+      [0, 1, 2],
+      # Type 1 constructors with arities 1, 3
+      [1, 3]
+    ]
+
+    # Create param_types function that maps all parameters to type 0
+    param_types = fn {_type_idx, _ctor_idx, _param_idx} -> 0 end
+
+    # Create the typespec with explicitly defined parameter types
+    typespec = SliceF.create_typespec(type_defs, param_types)
+
+    # Verify basic properties
+    # Two types in the system
+    assert typespec.input_types == 2
+    # Two types produced
+    assert typespec.output_types == 2
+    # 3 constructors for type 0, 2 for type 1
+    assert typespec.ctor_counts == [3, 2]
+
+    # Check Type 0's constructors
+    type0_ctor0_params = typespec.ctor_types.({0, 0})
+    # Verify all parameters are type 0 (if there are any)
+    unless Enum.empty?(type0_ctor0_params) do
+      assert Enum.all?(type0_ctor0_params, &(&1 == 0))
+    end
+
+    type0_ctor1_params = typespec.ctor_types.({0, 1})
+    # Constructor 1 has 1 parameter
+    assert length(type0_ctor1_params) == 1
+    # Default to type 0
+    assert Enum.all?(type0_ctor1_params, &(&1 == 0))
+
+    type0_ctor2_params = typespec.ctor_types.({0, 2})
+    # Constructor 2 has 2 parameters
+    assert length(type0_ctor2_params) == 2
+    # Default to type 0
+    assert Enum.all?(type0_ctor2_params, &(&1 == 0))
+
+    # Check Type 1's constructors
+    type1_ctor0_params = typespec.ctor_types.({1, 0})
+    # Constructor 0 has 1 parameter
+    assert length(type1_ctor0_params) == 1
+    # Default to type 0
+    assert Enum.all?(type1_ctor0_params, &(&1 == 0))
+
+    type1_ctor1_params = typespec.ctor_types.({1, 1})
+    # Constructor 1 has 3 parameters
+    assert length(type1_ctor1_params) == 3
+    # Default to type 0
+    assert Enum.all?(type1_ctor1_params, &(&1 == 0))
+
+    typespec
+  end
+
+  @doc """
+  slice_test_create_typespec_custom: Tests that create_typespec correctly creates
+  a typespec with custom parameter types.
+  """
+  def slice_test_create_typespec_custom() do
+    # Define two types with custom parameter types
+    type_defs = [
+      # Type 0's constructors with arities 1 and 2
+      [1, 2],
+      # Type 1's constructor with arity 3
+      [3]
+    ]
+
+    # Define a custom parameter type mapping function
+    # For this example:
+    # - For type 0, constructor 0, parameter 0: use type 1
+    # - For type 1, constructor 0, all parameters: use type 1
+    # - Otherwise, use type 0
+    param_types = fn
+      {0, 0, 0} -> 1
+      {1, 0, _} -> 1
+      _ -> 0
+    end
+
+    typespec = SliceF.create_typespec(type_defs, param_types)
+
+    # Verify basic properties
+    assert typespec.input_types == 2
+    assert typespec.output_types == 2
+    assert typespec.ctor_counts == [2, 1]
+
+    # Verify first constructor of type 0 with custom parameter type
+    type0_ctor0_params = typespec.ctor_types.({0, 0})
+    assert length(type0_ctor0_params) == 1
+    # Parameter type should be 1
+    assert Enum.at(type0_ctor0_params, 0) == 1
+
+    # Verify second constructor of type 0 with explicitly specified parameter types
+    type0_ctor1_params = typespec.ctor_types.({0, 1})
+    assert length(type0_ctor1_params) == 2
+    # All parameters should be type 0
+    assert Enum.all?(type0_ctor1_params, &(&1 == 0))
+
+    # Verify constructor of type 1 with all custom parameter types
+    type1_ctor0_params = typespec.ctor_types.({1, 0})
+    assert length(type1_ctor0_params) == 3
+    # All parameters should be type 1
+    assert Enum.all?(type1_ctor0_params, &(&1 == 1))
+
+    typespec
+  end
+
+  ####################################################################
+  ##             INDUCTIVE-INDUCTIVE TYPE SYSTEM TESTS              ##
+  ####################################################################
+
+  @doc """
+  inductive_types_example: Tests the inductive-inductive type system
+  with explicitly typed constructors.
+
+  This example demonstrates how to represent mutually recursive types
+  using our tagged constructor approach with {:base, pos} and {:dep, pos}.
+  """
+  def inductive_types_example() do
+    # Define the base type with three constructors
+    st0f_f1 = [
+      # Constructor 0: no parameters
+      [],
+      # Constructor 1: two base type fields
+      [0, 0],
+      # Constructor 2: three base fields, each with one dependent field
+      [1, 1, 1]
+    ]
+
+    # Define the dependent type with four constructors
+    st1f_f1 = [
+      # Constructor 0: no parameters
+      [],
+      # Constructor 1: two base fields, each with one dependent field
+      [1, 1],
+      # Constructor 2: three base fields, each with one dependent field
+      [1, 1, 1],
+      # Constructor 3: two base fields, each with one dependent field
+      [1, 1]
+    ]
+
+    # Define how the dependent type relates to the base type
+    stnt_pos_map = [0, 1, 2, 2]
+
+    # Detail the field mappings between types for each constructor
+    st_rep_transformations = [
+      # For dependent constructor 0 (maps to base constructor 0)
+      %{
+        base_field_map: [],
+        dep_field_maps: []
+      },
+      # For dependent constructor 1 (maps to base constructor 1)
+      %{
+        base_field_map: [0, 1],
+        dep_field_maps: [[], []]
+      },
+      # For dependent constructor 2 (maps to base constructor 2)
+      %{
+        base_field_map: [0, 1, 2],
+        dep_field_maps: [[0], [0], [0]]
+      },
+      # For dependent constructor 3 (maps to base constructor 2)
+      %{
+        base_field_map: [0, 0, 1],
+        # Corrected the last entry to [0]
+        dep_field_maps: [[0], [0], [0]]
+      }
+    ]
+
+    # Assemble the complete natural transformation
+    stnt = %{
+      pos_map: stnt_pos_map,
+      rep_transformations: st_rep_transformations
+    }
+
+    # Create the slice relating the dependent type to the base type
+    stf1sl = %{
+      total: st1f_f1,
+      projection: stnt
+    }
+
+    # Create the complete inductive-inductive type system
+    stmlf = %{
+      base: st0f_f1,
+      slice: stf1sl
+    }
+
+    # Validate the spec before using it
+    assert :ok = IndIndF.validate_ind_ind_f(stmlf)
+
+    # Create and verify terms of the base type
+    # Using {:base, pos} constructor format to explicitly tag the type
+
+    # Base type constructor 0: no parameters
+    base0_term = {{:base, 0}, []}
+    assert {:ok, 0} = IndIndF.typecheck(base0_term, stmlf)
+
+    # Base type constructor 1: two base type parameters
+    base1_term = {{:base, 1}, [base0_term, base0_term]}
+    assert {:ok, 0} = IndIndF.typecheck(base1_term, stmlf)
+
+    # Create and verify terms of the dependent type
+    # Using {:dep, pos} constructor format to explicitly tag the type
+
+    # Dependent type constructor 0: no parameters
+    dep0_term = {{:dep, 0}, []}
+    assert {:ok, 1} = IndIndF.typecheck(dep0_term, stmlf)
+
+    # Dependent type constructor 1: two base fields and two dependent fields
+    # First two fields are base type, next two are dependent type (1 for each base field)
+    dep1_term = {{:dep, 1}, [base0_term, base0_term, dep0_term, dep0_term]}
+    assert {:ok, 1} = IndIndF.typecheck(dep1_term, stmlf)
+
+    # Create a more complex term that uses both types
+    # Base constructor 2: three base fields, each with one dependent field
+    complex_term =
+      {{:base, 2},
+       [base0_term, base0_term, base0_term, dep0_term, dep0_term, dep0_term]}
+
+    assert {:ok, 0} = IndIndF.typecheck(complex_term, stmlf)
+
+    # Test an invalid term with a non-existent constructor
+    invalid_term = {{:base, 3}, []}
+
+    assert match?(
+             {:error, {:invalid_constructor, _}},
+             IndIndF.typecheck(invalid_term, stmlf)
+           )
+
+    # Test an invalid format (using plain integer instead of tagged constructor)
+    invalid_format_term =
+      {2,
+       [base0_term, base0_term, base0_term, dep0_term, dep0_term, dep0_term]}
+
+    assert match?(
+             {:error, {:invalid_constructor_format, _, _}},
+             IndIndF.typecheck(invalid_format_term, stmlf)
+           )
+
+    # Return the complex term demonstrating the mutual recursion
+    complex_term
+  end
+
+  @doc """
+  Tests validation functions for the FinIndIndPolyF module.
+
+  This test covers various validation functions:
+  - validate_fin_mapping
+  - validate_representable_nt
+  - validate_ind_ind_f1_nt
+  - validate_ind_ind_f1_slice
+  - validate_ind_ind_f
+  """
+  def inductive_types_validation_test() do
+    # Test validate_fin_mapping
+    # Valid mapping
+    assert :ok = IndIndF.validate_fin_mapping([0, 1, 2], 3, 3)
+
+    # Invalid mapping length
+    assert {:error, :invalid_mapping_length} =
+             IndIndF.validate_fin_mapping([0, 1], 3, 3)
+
+    # Mapping out of range
+    assert {:error, :mapping_out_of_range} =
+             IndIndF.validate_fin_mapping([0, 3, 1], 3, 3)
+
+    # Create base specs for further validation testing
+    # Remember: in a natural transformation, we map from dependent (source) to base (target)
+    # Source with 2 base fields, each with 1 dependent field
+    source_rep = [1, 1]
+    # Target with 2 base fields, no dependent fields (it's the base type)
+    target_rep = [0, 0]
+
+    # Valid representable NT
+    valid_rep_nt = %{
+      # Source field 0 -> Target field 0, Source field 1 -> Target field 1
+      base_field_map: [0, 1],
+      # Empty dep maps since target has no dependent fields
+      dep_field_maps: [[], []]
+    }
+
+    assert :ok =
+             IndIndF.validate_representable_nt(
+               valid_rep_nt,
+               source_rep,
+               target_rep
+             )
+
+    # Invalid base field map length
+    invalid_rep_nt1 = %{
+      base_field_map: [0],
+      dep_field_maps: [[0], []]
+    }
+
+    assert {:error, :invalid_mapping_length} =
+             IndIndF.validate_representable_nt(
+               invalid_rep_nt1,
+               source_rep,
+               target_rep
+             )
+
+    # Invalid dep field maps length
+    invalid_rep_nt2 = %{
+      base_field_map: [0, 1],
+      # Only one dep map but need two
+      dep_field_maps: [[]]
+    }
+
+    assert {:error, :invalid_dep_field_maps_length} =
+             IndIndF.validate_representable_nt(
+               invalid_rep_nt2,
+               source_rep,
+               target_rep
+             )
+
+    # Create specs for IndIndF1 natural transformation validation
+    source_ind_f1 = [
+      # Constructor 0 has 2 base fields
+      [1, 0],
+      # Constructor 1 has 2 base fields
+      [2, 1]
+    ]
+
+    target_ind_f1 = [
+      # Constructor 0 has 1 base field
+      [0],
+      # Constructor 1 has 2 base fields
+      [1, 1]
+    ]
+
+    # Valid ind_ind_f1_nt
+    valid_ind_f1_nt = %{
+      # Source pos 0 -> Target pos 0, Source pos 1 -> Target pos 1
+      pos_map: [0, 1],
+      rep_transformations: [
+        # For source pos 0 -> target pos 0
+        %{
+          # Target base field 0 -> Source base field 0
+          base_field_map: [0],
+          # No dep fields for target
+          dep_field_maps: [[]]
+        },
+        # For source pos 1 -> target pos 1
+        %{
+          # Maps target fields to source fields
+          base_field_map: [0, 1],
+          # Dep maps for each target field
+          dep_field_maps: [[0], [0]]
+        }
+      ]
+    }
+
+    # Test validate_ind_ind_f1_nt with valid input
+    assert :ok =
+             IndIndF.validate_ind_ind_f1_nt(
+               valid_ind_f1_nt,
+               source_ind_f1,
+               target_ind_f1
+             )
+
+    # Invalid pos_map length
+    invalid_ind_f1_nt1 = %{
+      # Too short
+      pos_map: [0],
+      rep_transformations: [
+        %{
+          base_field_map: [0],
+          dep_field_maps: [[]]
+        }
+      ]
+    }
+
+    assert {:error, :invalid_mapping_length} =
+             IndIndF.validate_ind_ind_f1_nt(
+               invalid_ind_f1_nt1,
+               source_ind_f1,
+               target_ind_f1
+             )
+
+    # Invalid rep_transformations length
+    invalid_ind_f1_nt2 = %{
+      pos_map: [0, 1],
+      rep_transformations: [
+        %{
+          base_field_map: [0],
+          dep_field_maps: [[]]
+        }
+        # Missing the second transformation
+      ]
+    }
+
+    assert {:error, :invalid_rep_transformations_length} =
+             IndIndF.validate_ind_ind_f1_nt(
+               invalid_ind_f1_nt2,
+               source_ind_f1,
+               target_ind_f1
+             )
+
+    # Setup for slice validation
+    # Two constructors with no dep fields
+    base_type = [[], [0, 0]]
+
+    # The dependent type needs consistent dep field counts
+    # Two constructors with 0 and 2 base fields, and dep fields
+    dep_type = [[], [1, 1]]
+
+    valid_slice = %{
+      total: dep_type,
+      projection: %{
+        pos_map: [0, 1],
+        rep_transformations: [
+          %{
+            base_field_map: [],
+            # First constructor has no base fields
+            dep_field_maps: []
+          },
+          %{
+            # Second constructor maps to base fields 0 and 1
+            base_field_map: [0, 1],
+            # One dep field for each base field
+            dep_field_maps: [[], []]
+          }
+        ]
+      }
+    }
+
+    # No need to validate the base and dependent types separately
+    # as they're always well-formed by construction
+
+    # Now test validate_ind_ind_f1_slice
+    assert :ok = IndIndF.validate_ind_ind_f1_slice(valid_slice, base_type)
+
+    # Invalid source for projection
+    invalid_slice = %{
+      # Only one constructor, causing mismatch with projection
+      total: [[]],
+      # Projection expects two constructors
+      projection: valid_slice.projection
+    }
+
+    assert {:error, :invalid_mapping_length} =
+             IndIndF.validate_ind_ind_f1_slice(invalid_slice, base_type)
+
+    # Test validate_ind_ind_f
+    valid_ind_ind_f = %{
+      base: base_type,
+      slice: valid_slice
+    }
+
+    assert :ok = IndIndF.validate_ind_ind_f(valid_ind_ind_f)
+
+    # Return the valid inductive-inductive type system
+    valid_ind_ind_f
+  end
+
+  @doc """
+  Tests error cases in FinIndIndPolyF.typecheck_base_constructor and typecheck_dep_constructor.
+
+  This test covers error handling and validation of fields.
+  """
+  def inductive_types_error_test() do
+    # Create a minimal inductive-inductive type system
+    # Two constructors: one with no fields, one with two base fields
+    base_type = [[], [0, 0]]
+
+    # Dependent type with similar structure
+    # Two constructors: one with no fields, one with two base fields + deps
+    dep_type = [[], [1, 1]]
+
+    # Create the natural transformation
+    projection = %{
+      # Straightforward mapping
+      pos_map: [0, 1],
+      rep_transformations: [
+        %{
+          base_field_map: [],
+          dep_field_maps: []
+        },
+        %{
+          base_field_map: [0, 1],
+          dep_field_maps: [[0], [0]]
+        }
+      ]
+    }
+
+    # Complete system
+    stmlf = %{
+      base: base_type,
+      slice: %{
+        total: dep_type,
+        projection: projection
+      }
+    }
+
+    # Valid terms for testing
+    base0_term = {{:base, 0}, []}
+    dep0_term = {{:dep, 0}, []}
+
+    # Test field count errors in base constructor
+    # Should have 2 fields
+    invalid_field_count_base = {{:base, 1}, [base0_term]}
+
+    assert {:error, {:invalid_field_count, _, 2, 1}} =
+             IndIndF.typecheck(invalid_field_count_base, stmlf)
+
+    # Test field count errors in dependent constructor
+    # Should have 4 fields (2 base + 2 dep)
+    invalid_field_count_dep = {{:dep, 1}, [base0_term]}
+
+    assert {:error, {:invalid_field_count, _, 4, 1}} =
+             IndIndF.typecheck(invalid_field_count_dep, stmlf)
+
+    # Create a valid constructor with fields of correct type
+    valid_base_term = {{:base, 1}, [base0_term, base0_term]}
+    assert {:ok, 0} = IndIndF.typecheck(valid_base_term, stmlf)
+
+    # Create a term with mixed base and dependent type terms
+    # This should fail type checking because dep0_term is not allowed as a field
+    # in a base type constructor
+    invalid_type_term = {{:base, 1}, [base0_term, dep0_term]}
+    {:error, error_info} = IndIndF.typecheck(invalid_type_term, stmlf)
+
+    # Verify the error is of the form {:invalid_fields, _}
+    assert match?({:invalid_fields, _}, error_info)
+
+    # Test invalid term format
+    invalid_term = "not a term"
+
+    assert {:error, {:invalid_term_format}} =
+             IndIndF.typecheck(invalid_term, stmlf)
+
+    # Test error propagation with check_fields function
+    # Create an invalid field that will fail typecheck
+    # Constructor index 5 doesn't exist
+    invalid_field = {{:base, 5}, []}
+
+    # Use the invalid field in a valid constructor
+    term_with_invalid_field = {{:base, 1}, [invalid_field, invalid_field]}
+
+    assert {:error, {:invalid_fields, _}} =
+             IndIndF.typecheck(term_with_invalid_field, stmlf)
+
+    stmlf
   end
 
   ####################################################################
