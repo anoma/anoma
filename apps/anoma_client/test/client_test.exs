@@ -23,4 +23,7 @@ defmodule Anoma.ClientTest do
 
   use TestHelper.GenerateExampleTests,
     for: Anoma.Client.Examples.EClient.Nock.Prove
+
+  use TestHelper.GenerateExampleTests,
+    for: Anoma.Client.Examples.EClient.Indexer
 end

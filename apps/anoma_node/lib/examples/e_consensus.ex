@@ -22,7 +22,7 @@ defmodule Anoma.Node.Examples.EConsensus do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.BlockEvent{
+          body: %Mempool.Events.BlockEvent{
             order: []
           }
         }
@@ -45,7 +45,7 @@ defmodule Anoma.Node.Examples.EConsensus do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.ConsensusEvent{
+          body: %Mempool.Events.ConsensusEvent{
             order: []
           }
         }
@@ -57,7 +57,7 @@ defmodule Anoma.Node.Examples.EConsensus do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.BlockEvent{
+          body: %Mempool.Events.BlockEvent{
             order: []
           }
         }
@@ -71,7 +71,7 @@ defmodule Anoma.Node.Examples.EConsensus do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.ConsensusEvent{
+          body: %Mempool.Events.ConsensusEvent{
             order: ["id 1"]
           }
         }
@@ -83,7 +83,7 @@ defmodule Anoma.Node.Examples.EConsensus do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.BlockEvent{
+          body: %Mempool.Events.BlockEvent{
             order: ["id 1"]
           }
         }

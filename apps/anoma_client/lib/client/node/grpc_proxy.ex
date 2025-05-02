@@ -134,6 +134,62 @@ defmodule Anoma.Client.Node.GRPCProxy do
   end
 
   ############################################################
+  #                      Testnet Public RPC API              #
+  ############################################################
+
+  @spec list_nullifiers() ::
+          {:ok, [binary()]} | {:error, :failed_to_list_nullifiers, String.t()}
+  def list_nullifiers() do
+    GenServer.call(__MODULE__, {:list_nullifiers})
+  end
+
+  @spec list_unrevealed_commits() ::
+          {:ok, [binary()]}
+          | {:error, :failed_to_list_unrevealed_commits, String.t()}
+  def list_unrevealed_commits() do
+    GenServer.call(__MODULE__, {:list_unrevealed_commits})
+  end
+
+  @spec list_commits() ::
+          {:ok, [binary()]}
+          | {:error, :failed_to_list_commits, String.t()}
+  def list_commits() do
+    GenServer.call(__MODULE__, {:list_commits})
+  end
+
+  @spec list_unspent_resources() ::
+          {:ok, [binary()]}
+          | {:error, :failed_to_list_unspent_resources, String.t()}
+  def list_unspent_resources() do
+    GenServer.call(__MODULE__, {:list_unspent_resources})
+  end
+
+  @spec get_blocks({:before | :after, non_neg_integer()}) ::
+          {:ok, [RPC.block()]} | {:error, :failed_to_get_blocks, String.t()}
+  def get_blocks({direction, offset}) do
+    GenServer.call(__MODULE__, {:get_blocks, direction, offset})
+  end
+
+  @spec get_latest_block() ::
+          {:ok, RPC.block() | nil}
+          | {:error, :failed_to_get_block, String.t()}
+  def get_latest_block() do
+    GenServer.call(__MODULE__, :get_latest_block)
+  end
+
+  @spec root :: {:ok, binary()} | {:error, :failed_to_get_root, String.t()}
+  def root() do
+    GenServer.call(__MODULE__, :get_root)
+  end
+
+  @spec filter([{:owner | :kind, binary()}]) ::
+          {:ok, [binary()]}
+          | {:error, :failed_to_filter_resources, String.t()}
+  def filter(filters) do
+    GenServer.call(__MODULE__, {:filter, filters})
+  end
+
+  ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
@@ -177,6 +233,56 @@ defmodule Anoma.Client.Node.GRPCProxy do
       RPC.add_read_only_transaction(state.channel, state.node_id, transaction)
 
     {:reply, result, state}
+  end
+
+  # ----------------------------------------------------------------------------
+  # Testnet
+
+  def handle_call({:list_nullifiers}, _from, state) do
+    nullifiers = RPC.list_nullifiers(state.channel, state.node_id)
+    {:reply, nullifiers, state}
+  end
+
+  def handle_call({:list_unrevealed_commits}, _from, state) do
+    commits = RPC.list_unrevealed_commits(state.channel, state.node_id)
+    {:reply, commits, state}
+  end
+
+  def handle_call({:list_commits}, _from, state) do
+    commits = RPC.list_commits(state.channel, state.node_id)
+    {:reply, commits, state}
+  end
+
+  def handle_call({:list_unspent_resources}, _from, state) do
+    unspent_resources =
+      RPC.list_unspent_resources(state.channel, state.node_id)
+
+    {:reply, unspent_resources, state}
+  end
+
+  def handle_call({:get_blocks, direction, offset}, _from, state) do
+    blocks =
+      RPC.get_blocks(state.channel, state.node_id, direction, offset)
+
+    {:reply, blocks, state}
+  end
+
+  def handle_call(:get_latest_block, _from, state) do
+    block = RPC.latest_block(state.channel, state.node_id)
+
+    {:reply, block, state}
+  end
+
+  def handle_call(:get_root, _from, state) do
+    block = RPC.root_block(state.channel, state.node_id)
+
+    {:reply, block, state}
+  end
+
+  def handle_call({:filter, filters}, _from, state) do
+    block = RPC.filter(state.channel, state.node_id, filters)
+
+    {:reply, block, state}
   end
 
   @impl true

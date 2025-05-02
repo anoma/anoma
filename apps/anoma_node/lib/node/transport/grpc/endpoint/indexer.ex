@@ -32,7 +32,6 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
     unrevealed = Indexer.get(request.node.id, :unrevealed)
-
     %UnrevealedCommits.Response{commits: unrevealed}
   end
 
@@ -40,7 +39,11 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Indexer do
   def list_commits(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
-    unrevealed = Indexer.get(request.node.id, :cms)
+    # these are giant numbers, so encode them here.
+    unrevealed =
+      Indexer.get(request.node.id, :cms)
+      |> Enum.into([])
+      |> Enum.map(&:binary.encode_unsigned(&1))
 
     %Commits.Response{commits: unrevealed}
   end
