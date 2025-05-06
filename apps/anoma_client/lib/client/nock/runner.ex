@@ -58,7 +58,7 @@ defmodule Anoma.Client.Runner do
         |> Transaction.app_data()
         |> Enum.filter(fn {_, bool} -> bool end)
         |> Enum.each(fn {bin, _} ->
-          Storage.write({:crypto.hash(:sha256, bin), bin})
+          Storage.write({["anoma", "blob", :crypto.hash(:sha256, bin)], bin})
         end)
 
         :ok

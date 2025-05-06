@@ -53,7 +53,10 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
 
     # assert the storage value
     assert {:ok, string} ==
-             Storage.read({System.os_time(), :crypto.hash(:sha256, string)})
+             Storage.read(
+               {System.os_time(),
+                ["anoma", "blob", :crypto.hash(:sha256, string)]}
+             )
 
     client
   end
