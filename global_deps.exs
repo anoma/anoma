@@ -34,5 +34,7 @@
    only: [:dev],
    runtime: false},
   # for unclog
-  {:parse_trans, "~> 3.4.2"}
+  {:parse_trans, "~> 3.4.2"},
+  {:ex_secp256k1, "~> 0.7.4"},
+  {:ex_keccak, "~> 0.7.6"}
 ]
