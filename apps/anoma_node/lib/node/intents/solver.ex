@@ -38,6 +38,7 @@ defmodule Anoma.Node.Intents.Solver do
     """
     field(:unsolved, MapSet.t(Intent.t()), default: MapSet.new())
     field(:node_id, String.t())
+    field(:enabled, boolean(), default: true)
   end
 
   ############################################################
@@ -72,6 +73,11 @@ defmodule Anoma.Node.Intents.Solver do
     GenServer.call(name, :get_unsolved)
   end
 
+  def disable(node_id) do
+    name = Registry.via(node_id, __MODULE__)
+    GenServer.call(name, :disable)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -104,6 +110,11 @@ defmodule Anoma.Node.Intents.Solver do
     {:reply, handle_get_unsolved(state), state}
   end
 
+  def handle_call(:disable, _from, state) do
+    state = %{state | enabled: not state.enabled}
+    {:reply, state.enabled, state}
+  end
+
   @impl true
   def handle_info(event = %Event{}, state) do
     state = handle_event(event, state)
@@ -113,6 +124,11 @@ defmodule Anoma.Node.Intents.Solver do
   ############################################################
   #                  Genserver Implementation                #
   ############################################################
+
+  @spec handle_event(Event.t(), t()) :: t()
+  defp handle_event(_, state = %{enabled: false}) do
+    state
+  end
 
   # @doc """
   # I handle a new event coming from the event broker.
