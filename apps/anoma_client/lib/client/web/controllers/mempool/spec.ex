@@ -20,6 +20,11 @@ defmodule Anoma.Client.Web.MempoolController.Spec do
           description:
             "Base64 encoded, jammed nock representing a transaction"
         },
+        wrap: %Schema{
+          type: :bool,
+          description:
+            "If this flag is set, it will wrap the transaction in a transaction candidate before submitting it to the mempool."
+        },
         transaction_type: %Schema{
           type: :string,
           description: "The type of the transaction",
@@ -30,7 +35,8 @@ defmodule Anoma.Client.Web.MempoolController.Spec do
       required: [:transaction],
       example: %{
         "transaction" => @example_intent,
-        "transaction_type" => "transparent_resource"
+        "transaction_type" => "transparent_resource",
+        "wrap" => false
       }
     })
   end

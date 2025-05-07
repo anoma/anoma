@@ -23,6 +23,7 @@ message Add {
     Node node = 1;
     Transaction transaction = 2;
     TransactionType transaction_type = 3;
+    bool wrap = 4;
   }
 
   message Response { string result = 1; }

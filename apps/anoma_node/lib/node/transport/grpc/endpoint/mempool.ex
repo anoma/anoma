@@ -24,6 +24,9 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
 
     # create the transaction from the noun
     noun = Jam.cue!(request.transaction.transaction)
+
+    noun = if request.wrap, do: wrap_transaction(noun), else: noun
+
     transaction = {request.transaction_type, noun}
 
     # submit the transaction to the mempool
@@ -34,5 +37,13 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
     %Add.Response{}
   rescue
     e -> raise_grpc_error!(e)
+  end
+
+  # @doc """
+  # I wrap a transaction into a noun that makes it into a transaction candidate.
+  # """
+  @spec wrap_transaction(Noun.t()) :: Noun.t()
+  defp wrap_transaction(transaction) do
+    [[1, 0, [1 | transaction], 0 | 909], 0 | 707]
   end
 end
