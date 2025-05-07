@@ -2,9 +2,29 @@
 # Resource
 
 defimpl Jason.Encoder, for: Anoma.RM.Transparent.Resource do
+  defp extra_info(resource) do
+    # decode the labelref into a noun
+    label_noun =
+      resource.labelref
+      |> :binary.encode_unsigned(:little)
+      |> Noun.Jam.cue!()
+
+    # a labelref can be any other value too, so we catch those here.
+    case label_noun do
+      [_ | label] ->
+        %{label: label}
+
+      other ->
+        %{label: other}
+    end
+  end
+
   def encode(resource, opts) do
+    extra_info = extra_info(resource)
+
     resource =
       resource
+      |> Map.merge(extra_info)
       |> Map.update!(:nonce, &Base.encode64/1)
       |> Map.update!(:nullifierkeycommitment, &Base.encode64/1)
 
@@ -135,8 +155,19 @@ defimpl Jason.Encoder, for: Anoma.RM.Transparent.Action do
   # Action
 
   defimpl Jason.Encoder, for: Anoma.RM.Transparent.Transaction do
+    defp extra_info(transaction) do
+      jammed =
+        transaction
+        |> Noun.Nounable.to_noun()
+        |> Noun.Jam.jam()
+        |> Base.encode64()
+
+      %{jammed: jammed}
+    end
+
     def encode(transaction, opts) do
       transaction
+      |> Map.merge(extra_info(transaction))
       |> Map.update!(:delta_proof, &Base.encode64/1)
       |> Jason.Encode.map(opts)
     end
