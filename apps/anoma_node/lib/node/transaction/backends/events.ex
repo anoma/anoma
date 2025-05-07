@@ -22,7 +22,7 @@ defmodule Anoma.Node.Transaction.Backends.Events do
 
     ### Fields
     - `:tx_id`              - The transaction id.
-    - `:tx_result`          - VM execution result; either :error or an
+    - `:vm_result`          - VM execution result; either :error or an
                               {:ok, noun} tuple.
     """
     field(:tx_id, binary())
@@ -40,7 +40,7 @@ defmodule Anoma.Node.Transaction.Backends.Events do
                               {:ok, value} tuple.
     """
     field(:tx_id, binary())
-    field(:tx_result, Mempool.vm_result())
+    field(:tx_result, Mempool.tx_result())
   end
 
   typedstruct enforce: true, module: TRMEvent do
@@ -139,7 +139,7 @@ defmodule Anoma.Node.Transaction.Backends.Events do
     def encode(%ResultEvent{} = event, opts) do
       event
       |> Map.update!(:vm_result, fn
-        :error ->
+        :vm_error ->
           "error"
 
         {:ok, %Anoma.RM.Transparent.Transaction{} = tx} ->
