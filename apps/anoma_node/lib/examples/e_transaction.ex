@@ -253,64 +253,8 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   ############################################################
-  #                         Ordering                         #
+  #                      Candidate Code                      #
   ############################################################
-
-  @spec start_ordering(String.t()) :: GenServer.on_start()
-  def start_ordering(node_id \\ Node.example_random_id()) do
-    Anoma.Node.Transaction.Ordering.start_link(node_id: node_id)
-  end
-
-  @spec ord_write_then_read(String.t()) :: String.t()
-  def ord_write_then_read(node_id \\ Node.example_random_id()) do
-    start_storage(node_id)
-    start_ordering(node_id)
-
-    _write_task =
-      Task.async(fn ->
-        Ordering.write(node_id, {"tx id 1", [{["abc"], 123}]})
-      end)
-
-    read_task =
-      Task.async(fn -> Ordering.read(node_id, {"tx id 2", ["abc"]}) end)
-
-    order = ["tx id 1", "tx id 2"]
-
-    Ordering.order(node_id, order)
-    {:ok, 123} = Task.await(read_task)
-    node_id
-  end
-
-  @spec ord_read_future_then_write(String.t()) :: String.t()
-  def ord_read_future_then_write(node_id \\ Node.example_random_id()) do
-    start_storage(node_id)
-    start_ordering(node_id)
-
-    read_task =
-      Task.async(fn -> Ordering.read(node_id, {"tx id 2", ["abc"]}) end)
-
-    write_task =
-      Task.async(fn ->
-        Ordering.write(node_id, {"tx id 1", [{["abc"], 123}]})
-      end)
-
-    Ordering.order(node_id, ["tx id 1", "tx id 2"])
-    :ok = Task.await(write_task)
-    {:ok, 123} = Task.await(read_task)
-    node_id
-  end
-
-  @spec ord_order_first(String.t()) :: String.t()
-  def ord_order_first(node_id \\ Node.example_random_id()) do
-    start_storage(node_id)
-    start_ordering(node_id)
-
-    Ordering.order(node_id, ["tx id 1", "tx id 2"])
-
-    Ordering.write(node_id, {"tx id 1", [{["abc"], 123}]})
-    {:ok, 123} = Ordering.read(node_id, {"tx id 2", ["abc"]})
-    node_id
-  end
 
   @spec start_tx_module(String.t()) :: ENode.t() | any()
   def start_tx_module(node_id \\ Node.example_random_id()) do
