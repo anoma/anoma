@@ -172,14 +172,13 @@ defmodule Examples.ENock do
       ) do
     trivial_swap_arm = [1 | tx_noun]
 
-    keyspace = [
-      0
-      | [
-          ["anoma", "transparent", "anchor"],
-          ["anoma", "transparent", "commitments"],
-          ["anoma", "transparent", "nullifiers"]
-        ]
+    keys = [
+      ["anoma", "transparent", "roots"],
+      ["anoma", "transparent", "commitments"],
+      ["anoma", "transparent", "nullifiers"]
     ]
+
+    keyspace = [keys | keys]
 
     swap = [[1, keyspace, trivial_swap_arm, 0 | 909], 0 | 707]
     swap
@@ -192,14 +191,16 @@ defmodule Examples.ENock do
       ) do
     trivial_swap_arm = [1 | tx_noun]
 
+    keys = [
+      ["anoma", "cairo", "roots"],
+      ["anoma", "cairo", "ct"],
+      ["anoma", "cairo", "nullifiers"],
+      ["anoma", "cairo", "ciphertexts"]
+    ]
+
     keyspace = [
-      0
-      | [
-          ["anoma", "cairo", "roots"],
-          ["anoma", "cairo", "ct"],
-          ["anoma", "cairo", "nullifiers"],
-          ["anoma", "cairo", "ciphertexts"]
-        ]
+      keys
+      | keys
     ]
 
     swap = [[1, keyspace, trivial_swap_arm, 0 | 909], 0 | 707]

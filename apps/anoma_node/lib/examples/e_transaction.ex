@@ -329,36 +329,37 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     EventBroker.subscribe_me([])
 
-    Mempool.tx(node_id, code)
-    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+    id1 = Mempool.tx(node_id, code)
+    # progress the watermark to read
+    id2 = Mempool.tx(node_id, bluf())
+    Mempool.execute(node_id, [id1, id2])
 
     recieve_round_event(node_id, 0)
 
     base_swap = ETransaction.swap_from_actions()
 
     assert {:ok, base_swap |> Transaction.nullifiers()} ==
-             Storage.read(
-               node_id,
-               {1, ["anoma", "transparent", "nullifiers"]}
+             reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "transparent", "nullifiers"]
              )
 
     assert {:ok, base_swap |> Transaction.commitments()} ==
-             Storage.read(
-               node_id,
-               {1, ["anoma", "transparent", "commitments"]}
+             reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "transparent", "commitments"]
              )
 
     cms = base_swap |> Transaction.commitments()
 
     assert {:ok, cms} ==
-             Storage.read(
-               node_id,
-               {1, ["anoma", "transparent", "commitments"]}
+             reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "transparent", "commitments"]
              )
 
     assert {:ok,
             [Anoma.RM.Transparent.Primitive.CommitmentAccumulator.value(cms)]} ==
-             Storage.read(node_id, {1, ["anoma", "transparent", "roots"]})
+             reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "transparent", "roots"]
+             )
 
     EventBroker.unsubscribe_me([])
 
@@ -623,8 +624,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       )
     end
 
-    [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
-    [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
+    [] = :mnesia.dirty_all_keys(Tables.table_shard_backups(node_id))
     node_id
   end
 
@@ -762,5 +762,23 @@ defmodule Anoma.Node.Examples.ETransaction do
     after
       1000 -> assert(false, "Failed to find failure message: #{exp_message}")
     end
+  end
+
+  def reserve_and_do(:read, node_id, tx_id, opts) do
+    Ordering.reserve(node_id, tx_id, %{
+      read: MapSet.new([opts[:key]]),
+      write: MapSet.new([])
+    })
+
+    Ordering.read(node_id, {tx_id, opts[:key]})
+  end
+
+  def reserve_and_do(:write, node_id, tx_id, opts) do
+    Ordering.reserve(node_id, tx_id, %{
+      read: MapSet.new([]),
+      write: MapSet.new([opts[:key]])
+    })
+
+    Ordering.write(node_id, {tx_id, [{opts[:key], opts[:value]}]})
   end
 end

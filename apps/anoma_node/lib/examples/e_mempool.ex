@@ -258,10 +258,6 @@ defmodule Anoma.Node.Examples.Mempool do
       consensus_event = EEvent.consensus_event(enode, [transaction.id])
       EEvent.wait_for_event(consensus_event)
 
-      # wait for the order event
-      order_event = EEvent.order_event(enode, transaction.id)
-      EEvent.wait_for_event(order_event)
-
       # wait for the execution event
       execution_event = EEvent.execution_event(enode, transaction)
 
