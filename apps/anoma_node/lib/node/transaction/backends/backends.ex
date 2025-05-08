@@ -148,9 +148,25 @@ defmodule Anoma.Node.Transaction.Backends do
   defp transparent_resource_tx(node_id, id, result) do
     with {:ok, tx} <- TTransaction.from_noun(result),
          true <- TTransaction.verify(tx),
+         cms <-
+           read_with_default(
+             node_id,
+             id,
+             transparent_keyspace("commitments"),
+             MapSet.new()
+           ),
+         nlfs <-
+           read_with_default(
+             node_id,
+             id,
+             transparent_keyspace("nullifiers"),
+             MapSet.new()
+           ),
          # possibly also add check for CU roots
-         true <- storage_check(node_id, id, tx),
-         true <- verify_tx_root(node_id, tx) do
+         true <- storage_check(tx, cms, nlfs),
+         roots <-
+           read_with_default(node_id, id, transparent_keyspace("roots"), []),
+         true <- verify_tx_root(tx, roots) do
       map =
         for action <- tx.actions,
             reduce: %{
@@ -181,20 +197,17 @@ defmodule Anoma.Node.Transaction.Backends do
             }
         end
 
-      old_cms =
-        case Ordering.read(node_id, {id, transparent_keyspace("commitments")}) do
-          :absent -> MapSet.new()
-          {:ok, res} -> res
-        end
-
       writes = [
-        {transparent_keyspace("anchor"),
-         TAcc.value(
-           MapSet.union(
-             map.commitments,
-             old_cms
+        {transparent_keyspace("roots"),
+         [
+           TAcc.value(
+             MapSet.union(
+               map.commitments,
+               cms
+             )
            )
-         )}
+           | roots
+         ]}
         | map.blobs
       ]
 
@@ -226,10 +239,10 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
-  @spec verify_tx_root(String.t(), TTransaction.t()) ::
+  @spec verify_tx_root(TTransaction.t(), list(Noun.t())) ::
           true | {:error, String.t()}
-  defp verify_tx_root(node_id, trans = %TTransaction{}) do
-    with true <- roots_exist?(node_id, trans) do
+  defp verify_tx_root(trans = %TTransaction{}, roots) do
+    with true <- roots_exist?(trans, roots) do
       true
     else
       {:error, msg} ->
@@ -237,21 +250,9 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
-  @spec storage_check(String.t(), binary(), TTransaction.t()) ::
+  @spec storage_check(TTransaction.t(), MapSet.t(), MapSet.t()) ::
           true | {:error, String.t()}
-  defp storage_check(node_id, id, trans) do
-    stored_commitments =
-      case Ordering.read(node_id, {id, transparent_keyspace("commitments")}) do
-        :absent -> MapSet.new()
-        {:ok, res} -> res
-      end
-
-    stored_nullifiers =
-      case Ordering.read(node_id, {id, transparent_keyspace("nullifiers")}) do
-        :absent -> MapSet.new()
-        {:ok, res} -> res
-      end
-
+  defp storage_check(trans, stored_commitments, stored_nullifiers) do
     {:ok, precis} = TTransaction.action_precis(trans)
 
     with true <-
@@ -292,11 +293,11 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
-  @spec roots_exist?(String.t(), TTransaction.t()) ::
+  @spec roots_exist?(TTransaction.t(), list(Noun.t())) ::
           true | {:error, String.t()}
   defp roots_exist?(
-         node_id,
-         trans = %TTransaction{}
+         trans = %TTransaction{},
+         committed_roots
        ) do
     roots =
       for action <- trans.actions, reduce: MapSet.new() do
@@ -309,16 +310,10 @@ defmodule Anoma.Node.Transaction.Backends do
       end
 
     Enum.reduce_while(roots, true, fn root, acc ->
-      with {:atomic, [{_, {_, _}, ^root}]} <-
-             :mnesia.transaction(fn ->
-               :mnesia.match_object(
-                 {Storage.values_table(node_id),
-                  {:_, transparent_keyspace("anchor")}, root}
-               )
-             end) do
+      if Enum.any?(committed_roots, &Noun.equal?(&1, root)) do
         {:cont, acc}
       else
-        {:atomic, []} -> {:halt, {:error, "Root #{inspect(root)} is absent"}}
+        {:halt, {:error, "Root #{inspect(root)} is absent"}}
       end
     end)
   end
@@ -540,6 +535,14 @@ defmodule Anoma.Node.Transaction.Backends do
 
   defp event(_backend, event) do
     EventBroker.event(event)
+  end
+
+  @spec read_with_default(String.t(), binary(), list(), any()) :: any()
+  defp read_with_default(node_id, tx_id, key, default) do
+    case Ordering.read(node_id, {tx_id, key}) do
+      :absent -> default
+      {:ok, val} -> val
+    end
   end
 
   @spec cairo_keyspace(String.t()) :: list(String.t())
