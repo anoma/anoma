@@ -395,18 +395,28 @@ defmodule Anoma.Node.Examples.ETransaction do
     base_swap = ETransaction.swap_from_actions()
 
     assert {:ok, base_swap |> Transaction.nullifiers()} ==
-             Storage.read(node_id, {1, ["anoma", "nullifiers"]})
+             Storage.read(
+               node_id,
+               {1, ["anoma", "transparent", "nullifiers"]}
+             )
 
     assert {:ok, base_swap |> Transaction.commitments()} ==
-             Storage.read(node_id, {1, ["anoma", "commitments"]})
+             Storage.read(
+               node_id,
+               {1, ["anoma", "transparent", "commitments"]}
+             )
 
     cms = base_swap |> Transaction.commitments()
 
-    assert {:ok, cms} == Storage.read(node_id, {1, ["anoma", "commitments"]})
+    assert {:ok, cms} ==
+             Storage.read(
+               node_id,
+               {1, ["anoma", "transparent", "commitments"]}
+             )
 
     assert {:ok,
             Anoma.RM.Transparent.Primitive.CommitmentAccumulator.value(cms)} ==
-             Storage.read(node_id, {1, ["anoma", "anchor"]})
+             Storage.read(node_id, {1, ["anoma", "transparent", "anchor"]})
 
     EventBroker.unsubscribe_me([])
 
