@@ -5,13 +5,13 @@ The Anoma client serves the purpose of taking in requests from the third party c
 to an arbitrary Anoma node.
 
 ```
-Your Client <---> Anoma Client <---> Anoma Node
+Your Client <---> Anoma LocalDomain <---> Anoma Node
                    Full API            Full API
                    + Prove
                    + RunNock
 ```
 
-The API of the Anoma Client is the same as the one of the Anoma Node, save for the `prove` and
+The API of the Anoma LocalDomain is the same as the one of the Anoma Node, save for the `prove` and
 `runNock` endpoints which allow clients to run Nock code.
 
 # Setup
@@ -57,8 +57,8 @@ iex(1)> node = ENode.start_node(grpc_port: 0)
   pid: #PID<0.345.0>,
   node_id: "62831092"
 }
-iex(3)> {:ok, client} = Anoma.Client.connect("localhost", node.grpc_port, 50051, node.node_id)
-{:ok, %Anoma.Client{grpc_port: 50051, supervisor: #PID<0.396.0>, type: :grpc}}
+iex(3)> {:ok, client} = Anoma.LocalDomain.connect("localhost", node.grpc_port, 50051, node.node_id)
+{:ok, %Anoma.LocalDomain{grpc_port: 50051, supervisor: #PID<0.396.0>, type: :grpc}}
 ```
 
 ### Using a binary

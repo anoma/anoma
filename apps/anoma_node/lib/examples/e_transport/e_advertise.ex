@@ -260,8 +260,8 @@ defmodule Anoma.Node.Examples.EAdvertise do
         anoma_node: [grpc_port: my_grpc_port + 1500],
         anoma_client: [
           {:grpc_port, 40052},
-          {Anoma.Client.Web.Endpoint, [http: [port: 4001]]},
-          {Anoma.Client.Web.SocketHandler, [port: 3001]}
+          {Anoma.LocalDomain.Web.Endpoint, [http: [port: 4001]]},
+          {Anoma.LocalDomain.Web.SocketHandler, [port: 3001]}
         ]
       ]
     ])

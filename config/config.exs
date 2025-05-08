@@ -9,7 +9,7 @@ config :logger,
 # Endpoint
 
 # Configures the endpoint
-config :anoma_client, Anoma.Client.Web.Endpoint,
+config :anoma_local_domain, Anoma.LocalDomain.Web.Endpoint,
   server: true,
   adapter: Bandit.PhoenixAdapter,
   http: [
@@ -18,9 +18,9 @@ config :anoma_client, Anoma.Client.Web.Endpoint,
   ],
   check_origin: false,
   debug_errors: false,
-  render_errors: [view: Anoma.Client.Web.ErrorJSON, accepts: ~w(json)]
+  render_errors: [view: Anoma.LocalDomain.Web.ErrorJSON, accepts: ~w(json)]
 
-config :anoma_client,
+config :anoma_local_domain,
   grpc_port: String.to_integer(System.get_env("CLIENT_GRPC_PORT") || "40051")
 
 config :anoma_lib, []

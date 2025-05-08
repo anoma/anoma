@@ -99,7 +99,7 @@ defmodule Anoma.Node.Registry do
       &(&1 in [
           Anoma.Node.Transaction.Mempool,
           Anoma.Node.Intents.IntentPool,
-          Client
+          LocalDomain
         ])
     )
     |> Enum.sort()

@@ -43,10 +43,10 @@ defmodule Anoma.MixProject do
 
   def releases do
     [
-      anoma_client: [
+      local_domain: [
         include_executables_for: [:unix],
         applications: [
-          {:anoma_client, :permanent}
+          {:local_domain, :permanent}
         ]
       ],
       anoma: [
