@@ -28,7 +28,7 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
     input_nullifier = ESResource.a_resource_nullifier()
 
     assert {:ok, MapSet.new([input_nullifier])} ==
-             Storage.read(node_id, {1, ["anoma", "cairo_nullifiers"]})
+             Storage.read(node_id, {1, ["anoma", "cairo", "nullifiers"]})
 
     output_resource_cm =
       ESResource.a_fixed_output_resource()
@@ -46,12 +46,12 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     assert {:ok,
             MapSet.new([Anoma.Constants.default_cairo_rm_root(), anchor])} ==
-             Storage.read(node_id, {1, ["anoma", "cairo_roots"]})
+             Storage.read(node_id, {1, ["anoma", "cairo", "roots"]})
 
-    assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "cairo_ct"]})
+    assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "cairo", "ct"]})
 
     assert {:ok, set_of_ciphertexts} ==
-             Storage.read(node_id, {1, ["anoma", "cairo_ciphertexts"]})
+             Storage.read(node_id, {1, ["anoma", "cairo", "ciphertexts"]})
 
     EventBroker.unsubscribe_me([])
 
@@ -84,10 +84,10 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> Anoma.CairoResource.Resource.nullifier(<<1::256>>)
 
     assert {:ok, MapSet.new([input_nullifier_1, input_nullifier_2])} ==
-             Storage.read(node_id, {1, ["anoma", "cairo_nullifiers"]})
+             Storage.read(node_id, {1, ["anoma", "cairo", "nullifiers"]})
 
     assert {:ok, set_of_ciphertexts} ==
-             Storage.read(node_id, {1, ["anoma", "cairo_ciphertexts"]})
+             Storage.read(node_id, {1, ["anoma", "cairo", "ciphertexts"]})
 
     output_cm_1 =
       ESResource.a_fixed_output_resource()
@@ -105,9 +105,9 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     assert {:ok,
             MapSet.new([Anoma.Constants.default_cairo_rm_root(), anchor])} ==
-             Storage.read(node_id, {1, ["anoma", "cairo_roots"]})
+             Storage.read(node_id, {1, ["anoma", "cairo", "roots"]})
 
-    assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "cairo_ct"]})
+    assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "cairo", "ct"]})
     EventBroker.unsubscribe_me([])
 
     node_id
@@ -150,7 +150,7 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> Anoma.CairoResource.Resource.nullifier(<<1::256>>)
 
     assert {:ok, MapSet.new([input_nullifier_1, input_nullifier_2])} ==
-             Storage.read(node_id, {2, ["anoma", "cairo_nullifiers"]})
+             Storage.read(node_id, {2, ["anoma", "cairo", "nullifiers"]})
 
     output_cm_1 =
       ESResource.a_fixed_output_resource()
@@ -177,15 +177,15 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
               anchor_1,
               anchor_2
             ])} ==
-             Storage.read(node_id, {2, ["anoma", "cairo_roots"]})
+             Storage.read(node_id, {2, ["anoma", "cairo", "roots"]})
 
-    assert {:ok, tree} == Storage.read(node_id, {2, ["anoma", "cairo_ct"]})
+    assert {:ok, tree} == Storage.read(node_id, {2, ["anoma", "cairo", "ct"]})
 
     set_of_ciphertexts =
       MapSet.union(set_of_ciphertexts1, set_of_ciphertexts2)
 
     assert {:ok, set_of_ciphertexts} ==
-             Storage.read(node_id, {2, ["anoma", "cairo_ciphertexts"]})
+             Storage.read(node_id, {2, ["anoma", "cairo", "ciphertexts"]})
 
     EventBroker.unsubscribe_me([])
 
