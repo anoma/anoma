@@ -19,7 +19,7 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     EventBroker.subscribe_me([])
 
-    Mempool.tx(node_id, tx_w_backend, "id 1")
+    Mempool.tx(node_id, tx_w_backend)
     Mempool.execute(node_id, Mempool.tx_dump(node_id))
 
     ETransaction.recieve_round_event(node_id, 0)
@@ -71,7 +71,7 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     EventBroker.subscribe_me([])
 
-    Mempool.tx(node_id, tx_w_backend, "id 1")
+    Mempool.tx(node_id, tx_w_backend)
     Mempool.execute(node_id, Mempool.tx_dump(node_id))
 
     ETransaction.recieve_round_event(node_id, 0)
@@ -128,7 +128,7 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     EventBroker.subscribe_me([])
 
-    Mempool.tx(node_id, tx_w_backend_1, "id 1")
+    id1 = Mempool.tx(node_id, tx_w_backend_1)
 
     tx_w_backend_2 = trivial_cairo_intent_transaction()
 
@@ -137,8 +137,8 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> Anoma.CairoResource.Transaction.get_cipher_texts()
       |> MapSet.new()
 
-    Mempool.tx(node_id, tx_w_backend_2, "id 2")
-    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+    id2 = Mempool.tx(node_id, tx_w_backend_2)
+    Mempool.execute(node_id, [id1, id2])
 
     ETransaction.recieve_round_event(node_id, 0)
 

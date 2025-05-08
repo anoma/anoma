@@ -28,10 +28,10 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
 
     # submit the transaction to the mempool
     node_id = request.node.id
-    :ok = Mempool.tx(node_id, transaction)
+    id = Mempool.tx(node_id, transaction)
 
     # return an empty response
-    %Add.Response{}
+    %Add.Response{result: id}
   rescue
     e -> raise_grpc_error!(e)
   end

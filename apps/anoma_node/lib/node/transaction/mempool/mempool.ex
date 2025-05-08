@@ -256,28 +256,18 @@ defmodule Anoma.Node.Transaction.Mempool do
   with a random ID, sending an appropriate event.
 
   Afterwards, the transaction code is sent to the Executor Engine to be
-  assigned to a Worder, while the code wrapped in `Tx.t()` will be stored
+  assigned to a Worker, while the code wrapped in `Tx.t()` will be stored
   in Mempool's state.
 
-  See `tx/3` for launching a transaction with a given ID.
+  I return the ID assigned by the Mempool to the launched transaction.
   """
 
-  @spec tx(String.t(), {Backends.backend(), Noun.t()}) :: :ok
+  @spec tx(String.t(), {Backends.backend(), Noun.t()}) :: binary()
   def tx(node_id, tx_w_backend) do
-    tx(node_id, tx_w_backend, Base.encode64(:crypto.strong_rand_bytes(16)))
-  end
-
-  @doc """
-  I am a launch function for a new transaction with a given ID.
-
-  See `tx/2` for logic documentation. In constrast to it, I launch an new
-  transaction with a particular given ID. This functionality is to be used
-  only for replays and testing.
-  """
-
-  @spec tx(String.t(), {Backends.backend(), Noun.t()}, binary()) :: :ok
-  def tx(node_id, tx_w_backend, id) do
-    GenServer.cast(Registry.via(node_id, __MODULE__), {:tx, tx_w_backend, id})
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:tx, tx_w_backend, :crypto.strong_rand_bytes(16)}
+    )
   end
 
   @doc """
@@ -300,6 +290,14 @@ defmodule Anoma.Node.Transaction.Mempool do
     GenServer.cast(
       Registry.via(node_id, __MODULE__),
       {:execute, ordered_list_of_txs}
+    )
+  end
+
+  @spec tx(String.t(), {Backends.backend(), Noun.t()}, binary()) :: :ok
+  defp tx(node_id, tx_w_backend, id) do
+    GenServer.cast(
+      Registry.via(node_id, __MODULE__),
+      {:tx_async, tx_w_backend, id}
     )
   end
 
@@ -338,12 +336,17 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:reply, state.transactions |> Map.keys(), state}
   end
 
+  @impl true
+  def handle_call({:tx, tx, tx_id}, _from, state) do
+    {:reply, tx_id, handle_tx(tx, tx_id, state)}
+  end
+
   def handle_call(_, _, state) do
     {:reply, :ok, state}
   end
 
   @impl true
-  def handle_cast({:tx, tx, tx_id}, state) do
+  def handle_cast({:tx_async, tx, tx_id}, state) do
     {:noreply, handle_tx(tx, tx_id, state)}
   end
 

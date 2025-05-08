@@ -209,8 +209,10 @@ defmodule Anoma.Node.Examples.EGRPC do
       transaction_type: :transparent_resource
     }
 
-    {:ok, %Mempool.Add.Response{}} =
+    {:ok, %Mempool.Add.Response{result: id}} =
       MempoolService.Stub.add(client.channel, request)
+
+    assert id in Anoma.Node.Transaction.Mempool.tx_dump(client.node.node_id)
 
     client
   end
