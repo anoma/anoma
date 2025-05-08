@@ -7,7 +7,7 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Shard
   alias Anoma.Node.Tables
-  alias Anoma.Node.Transaction.ShardSupervisor
+  alias Anoma.Node.Transaction.Shard.Supervisor
 
   import ExUnit.Assertions
 
@@ -92,12 +92,12 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
     node_id = enode.node_id
 
     # 2. Dynamically start a new shard 'd' with an initial value
-    assert {:ok, pid_shard_d} = ShardSupervisor.start_shard(node_id, "d", 10)
+    assert {:ok, pid_shard_d} = Supervisor.start_shard(node_id, "d", 10)
     assert is_pid(pid_shard_d)
     assert pid_shard_d == Registry.whereis(node_id, Shard, :d)
 
     # 3. Dynamically start a new shard 'e' without an initial value
-    assert {:ok, pid_shard_e} = ShardSupervisor.start_shard(node_id, "e")
+    assert {:ok, pid_shard_e} = Supervisor.start_shard(node_id, "e")
     assert is_pid(pid_shard_e)
     assert pid_shard_e == Registry.whereis(node_id, Shard, :e)
 
@@ -105,7 +105,7 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
     # DynamicSupervisor returns {:error, {:already_started, pid}} if the child
     # process with the same registered name is already running.
     assert {:error, {:already_started, existing_pid_a}} =
-             ShardSupervisor.start_shard(node_id, "a", 99)
+             Supervisor.start_shard(node_id, "a", 99)
 
     assert is_pid(existing_pid_a)
     assert existing_pid_a == Registry.whereis(node_id, Shard, :a)

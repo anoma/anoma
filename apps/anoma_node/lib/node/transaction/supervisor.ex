@@ -7,7 +7,7 @@ defmodule Anoma.Node.Transaction.Supervisor do
 
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Ordering
-  alias Anoma.Node.Transaction.ShardSupervisor
+  alias Anoma.Node.Transaction.Shard
 
   ############################################################
   #                       Types                              #
@@ -20,7 +20,7 @@ defmodule Anoma.Node.Transaction.Supervisor do
           node_id: String.t(),
           mempool: Mempool.args_t(),
           ordering: Ordering.args_t(),
-          shards: ShardSupervisor.supervisor_args_t() | nil
+          shards: Shard.Supervisor.supervisor_args_t() | nil
         ]
 
   ############################################################
@@ -37,7 +37,7 @@ defmodule Anoma.Node.Transaction.Supervisor do
     Process.set_label(__MODULE__)
 
     children = [
-      {ShardSupervisor,
+      {Shard.Supervisor,
        [node_id: args[:node_id]] ++ Keyword.get(args, :shards, [])},
       {Anoma.Node.Transaction.Ordering,
        [node_id: args[:node_id]] ++ Keyword.get(args, :ordering, [])},

@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Transaction.ShardSupervisor do
+defmodule Anoma.Node.Transaction.Shard.Supervisor do
   @moduledoc """
   I am the dynamic supervisor for `Anoma.Node.Transaction.Shard` processes.
 
