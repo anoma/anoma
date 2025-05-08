@@ -20,7 +20,7 @@ defmodule Anoma.Node.Examples.EShard do
     node_id = "shard_test_node_#{unique_suffix}"
 
     # Define the schema: keys "a", "b", "c". "a" and "c" have initial values.
-    schema = [{"a", 5}, "b", {"c", 15}]
+    schema = [{["a"], 5}, ["b"], {["c"], 15}]
     shard_config = [strategy: :one_per_key, schema: schema]
     opts = [node_id: node_id, transaction: [shards: shard_config]]
 
@@ -43,14 +43,14 @@ defmodule Anoma.Node.Examples.EShard do
     state_c = Shard.debug_get_state(pid_c)
 
     # Verify initial states at height 0
-    assert Map.get(state_a.kv, "a", %{})[0].value == 5,
+    assert Map.get(state_a.kv, ["a"], %{})[0].value == 5,
            "Shard 'a' initial value mismatch at height 0"
 
-    assert Map.get(state_c.kv, "c", %{})[0].value == 15,
+    assert Map.get(state_c.kv, ["c"], %{})[0].value == 15,
            "Shard 'c' initial value mismatch at height 0"
 
     # Shard "b" should have no entry for key "b" at height 0
-    b_key_map = Map.get(state_b.kv, "b", %{})
+    b_key_map = Map.get(state_b.kv, ["b"], %{})
 
     refute Map.has_key?(b_key_map, 0),
            "Shard 'b' should not have an initial value at height 0"
@@ -72,27 +72,27 @@ defmodule Anoma.Node.Examples.EShard do
     shard_c_via = Registry.via(node_id, Shard, :c)
 
     # --- Simulate Watermark Advancement prior to acquiring reservations ---
-    Shard.advance_write_watermark(shard_c_via, "c", 5)
+    Shard.advance_write_watermark(shard_c_via, ["c"], 5)
 
     # --- Acquire Reservations First ---
-    assert :ok == Shard.reserve(shard_a_via, "a", 1, :read)
-    assert :ok == Shard.reserve(shard_b_via, "b", 5, :read)
-    assert :ok == Shard.reserve(shard_c_via, "c", 4, :read)
+    assert :ok == Shard.reserve(shard_a_via, ["a"], 1, :read)
+    assert :ok == Shard.reserve(shard_b_via, ["b"], 5, :read)
+    assert :ok == Shard.reserve(shard_c_via, ["c"], 4, :read)
 
     # --- Simulate Watermark Advancement after acquiring reservations ---
-    Shard.advance_write_watermark(shard_a_via, "a", 1)
-    Shard.advance_write_watermark(shard_b_via, "b", 10)
+    Shard.advance_write_watermark(shard_a_via, ["a"], 1)
+    Shard.advance_write_watermark(shard_b_via, ["b"], 10)
 
     # --- Test Reads (Now that watermarks allow immediate resolution) ---
 
     # Test key "a"
-    assert Shard.read(shard_a_via, "a", 1) == {:ok, 5}
+    assert Shard.read(shard_a_via, ["a"], 1) == {:ok, 5}
 
     # Test key "b"
-    assert Shard.read(shard_b_via, "b", 5) == :absent
+    assert Shard.read(shard_b_via, ["b"], 5) == :absent
 
     # Test key "c"
-    assert Shard.read(shard_c_via, "c", 4) == {:ok, 15}
+    assert Shard.read(shard_c_via, ["c"], 4) == {:ok, 15}
 
     {:ok, enode}
   end
@@ -108,7 +108,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :a)
 
-    key = "a"
+    key = ["a"]
     height = 7
 
     # 1. Acquire Reservation
@@ -148,7 +148,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :a)
 
-    key = "a"
+    key = ["a"]
     read_height = 7
     # Height for the intermediate write
     write_height = 5
@@ -209,7 +209,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :a)
 
-    key = "a"
+    key = ["a"]
     height = 5
 
     # 1. Acquire Reservation
@@ -259,7 +259,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :a)
 
-    key = "a"
+    key = ["a"]
 
     read_height_ok = 5
     read_height_timeout = 15
@@ -326,7 +326,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :a)
 
-    key = "a"
+    key = ["a"]
 
     # --- Acquire Write Reservations ---
     assert :ok == Shard.reserve(shard_via, key, 5, :write)
@@ -394,7 +394,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :a)
 
-    key = "a"
+    key = ["a"]
 
     # --- Writes ---
     write_ops = %{
@@ -512,7 +512,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :a)
 
-    key = "a"
+    key = ["a"]
 
     # --- Setup Watermarks ---
     Shard.advance_read_watermark(shard_via, key, 10)
@@ -602,7 +602,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :a)
 
-    key = "a"
+    key = ["a"]
 
     h_reserve = 5
     h_write = 7
@@ -650,7 +650,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :b)
 
-    key = "b"
+    key = ["b"]
     write_height = 10
     write_value = 5
     wm_height = 20
@@ -690,12 +690,12 @@ defmodule Anoma.Node.Examples.EShard do
 
     # Create read reservations for key "a" at heights 1, 2, 3, 4, 5
     Enum.each(1..5, fn height ->
-      assert :ok == Shard.reserve(shard_a_via, "a", height, :read)
+      assert :ok == Shard.reserve(shard_a_via, ["a"], height, :read)
     end)
 
     # Create write reservations for key "b" at heights 1, 2, 3, 4, 5
     Enum.each(1..5, fn height ->
-      assert :ok == Shard.reserve(shard_b_via, "b", height, :write)
+      assert :ok == Shard.reserve(shard_b_via, ["b"], height, :write)
     end)
 
     # Verify that all reservations were made correctly
@@ -703,7 +703,7 @@ defmodule Anoma.Node.Examples.EShard do
     state_before_unreserve_b = Shard.debug_get_state(shard_b_via)
 
     # Check "a" reservations (read)
-    a_heights = Map.get(state_before_unreserve_a.kv, "a", %{})
+    a_heights = Map.get(state_before_unreserve_a.kv, ["a"], %{})
 
     Enum.each(1..5, fn height ->
       assert Map.has_key?(a_heights, height)
@@ -712,7 +712,7 @@ defmodule Anoma.Node.Examples.EShard do
     end)
 
     # Check "b" reservations (write)
-    b_heights = Map.get(state_before_unreserve_b.kv, "b", %{})
+    b_heights = Map.get(state_before_unreserve_b.kv, ["b"], %{})
 
     Enum.each(1..5, fn height ->
       assert Map.has_key?(b_heights, height)
@@ -721,17 +721,17 @@ defmodule Anoma.Node.Examples.EShard do
     end)
 
     # Unreserve at height 3
-    assert :ok == Shard.unreserve(shard_a_via, "a", 3, :read)
-    assert :ok == Shard.unreserve(shard_a_via, "a", 3, :write)
-    assert :ok == Shard.unreserve(shard_b_via, "b", 3, :read)
-    assert :ok == Shard.unreserve(shard_b_via, "b", 3, :write)
+    assert :ok == Shard.unreserve(shard_a_via, ["a"], 3, :read)
+    assert :ok == Shard.unreserve(shard_a_via, ["a"], 3, :write)
+    assert :ok == Shard.unreserve(shard_b_via, ["b"], 3, :read)
+    assert :ok == Shard.unreserve(shard_b_via, ["b"], 3, :write)
 
     # Verify that only height 3 reservations were removed
     state_after_unreserve_a = Shard.debug_get_state(shard_a_via)
     state_after_unreserve_b = Shard.debug_get_state(shard_b_via)
 
     # Check "a" reservations after unreserve
-    a_heights_after = Map.get(state_after_unreserve_a.kv, "a", %{})
+    a_heights_after = Map.get(state_after_unreserve_a.kv, ["a"], %{})
     assert Map.has_key?(a_heights_after, 3)
     assert a_heights_after[3].read_reserved_count == 0
 
@@ -742,7 +742,7 @@ defmodule Anoma.Node.Examples.EShard do
     end)
 
     # Check "b" reservations after unreserve
-    b_heights_after = Map.get(state_after_unreserve_b.kv, "b", %{})
+    b_heights_after = Map.get(state_after_unreserve_b.kv, ["b"], %{})
     # Height 3 should have write_reserved? = false
     assert Map.has_key?(b_heights_after, 3)
     assert !b_heights_after[3].write_reserved?
@@ -767,7 +767,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :c)
 
-    key = "c"
+    key = ["c"]
 
     # 1. Write a value at height 3
     assert :ok == Shard.reserve(shard_via, key, 3, :write)
@@ -817,7 +817,7 @@ defmodule Anoma.Node.Examples.EShard do
     shard_via = Registry.via(node_id, Shard, :a)
 
     # Initial state %{"a" => 5} handled by spawn_node_with_initial_state
-    key = "a"
+    key = ["a"]
 
     h_write = 2
     write_value = 100
@@ -881,18 +881,18 @@ defmodule Anoma.Node.Examples.EShard do
 
     # --- Perform Writes ---
     # Key "a" writes
-    assert :ok == Shard.reserve(shard_a_via, "a", 2, :write)
-    assert :ok == Shard.write(shard_a_via, "a", 1, 2)
-    assert :ok == Shard.reserve(shard_a_via, "a", 5, :write)
-    assert :ok == Shard.write(shard_a_via, "a", 2, 5)
-    assert :ok == Shard.reserve(shard_a_via, "a", 7, :write)
-    assert :ok == Shard.write(shard_a_via, "a", 3, 7)
+    assert :ok == Shard.reserve(shard_a_via, ["a"], 2, :write)
+    assert :ok == Shard.write(shard_a_via, ["a"], 1, 2)
+    assert :ok == Shard.reserve(shard_a_via, ["a"], 5, :write)
+    assert :ok == Shard.write(shard_a_via, ["a"], 2, 5)
+    assert :ok == Shard.reserve(shard_a_via, ["a"], 7, :write)
+    assert :ok == Shard.write(shard_a_via, ["a"], 3, 7)
 
     # Key "b" writes (starts empty)
-    assert :ok == Shard.reserve(shard_b_via, "b", 5, :write)
-    assert :ok == Shard.write(shard_b_via, "b", 6, 5)
-    assert :ok == Shard.reserve(shard_b_via, "b", 6, :write)
-    assert :ok == Shard.write(shard_b_via, "b", 10, 6)
+    assert :ok == Shard.reserve(shard_b_via, ["b"], 5, :write)
+    assert :ok == Shard.write(shard_b_via, ["b"], 6, 5)
+    assert :ok == Shard.reserve(shard_b_via, ["b"], 6, :write)
+    assert :ok == Shard.write(shard_b_via, ["b"], 10, 6)
 
     assert :ok == Shard.backup_state(shard_a_via)
     assert :ok == Shard.backup_state(shard_b_via)
@@ -900,13 +900,13 @@ defmodule Anoma.Node.Examples.EShard do
     # Define the expected values in the backup table
     expected_backed_up_values = %{
       # Shard 'a' from node_id
-      {:a, "a", 0} => 5,
-      {:a, "a", 2} => 1,
-      {:a, "a", 5} => 2,
-      {:a, "a", 7} => 3,
+      {:a, ["a"], 0} => 5,
+      {:a, ["a"], 2} => 1,
+      {:a, ["a"], 5} => 2,
+      {:a, ["a"], 7} => 3,
       # Shard 'b' from node_id
-      {:b, "b", 5} => 6,
-      {:b, "b", 6} => 10
+      {:b, ["b"], 5} => 6,
+      {:b, ["b"], 6} => 10
     }
 
     # Get the backup table name

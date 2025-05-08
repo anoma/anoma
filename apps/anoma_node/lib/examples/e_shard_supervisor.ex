@@ -27,7 +27,7 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
         (System.unique_integer([:positive]) |> Integer.to_string())
 
     # 1. Define Schema and Start Node
-    schema = [{"a", 5}, "b", {"c", 7}]
+    schema = [{["a"], 5}, ["b"], {["c"], 7}]
     shard_config = [strategy: :one_per_key, schema: schema]
     opts = [node_id: node_id, transaction: [shards: shard_config]]
 
@@ -49,9 +49,9 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
     state_c = Shard.debug_get_state(pid_shard_c)
 
     # Check initial value at height 0
-    assert state_a.kv["a"][0].value == 5, "Shard 'a' initial value mismatch"
+    assert state_a.kv[["a"]][0].value == 5, "Shard 'a' initial value mismatch"
     assert state_b.kv == %{}, "Shard 'b' should have an empty initial kv map"
-    assert state_c.kv["c"][0].value == 7, "Shard 'c' initial value mismatch"
+    assert state_c.kv[["c"]][0].value == 7, "Shard 'c' initial value mismatch"
 
     # 4. Query the Mnesia table for key -> shard_label mapping
     table_name = Tables.table_shard_key_map(node_id)
@@ -62,16 +62,16 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
       end)
     end
 
-    assert read_tx.("a") == {:atomic, [{table_name, "a", :a}]},
+    assert read_tx.(["a"]) == {:atomic, [{table_name, ["a"], :a}]},
            "Mnesia lookup for 'a' failed"
 
-    assert read_tx.("b") == {:atomic, [{table_name, "b", :b}]},
+    assert read_tx.(["b"]) == {:atomic, [{table_name, ["b"], :b}]},
            "Mnesia lookup for 'b' failed"
 
-    assert read_tx.("c") == {:atomic, [{table_name, "c", :c}]},
+    assert read_tx.(["c"]) == {:atomic, [{table_name, ["c"], :c}]},
            "Mnesia lookup for 'c' failed"
 
-    assert read_tx.("d") == {:atomic, []},
+    assert read_tx.(["d"]) == {:atomic, []},
            "Mnesia lookup for unknown key 'd' should return empty list"
 
     enode
@@ -92,12 +92,12 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
     node_id = enode.node_id
 
     # 2. Dynamically start a new shard 'd' with an initial value
-    assert {:ok, pid_shard_d} = Supervisor.start_shard(node_id, "d", 10)
+    assert {:ok, pid_shard_d} = Supervisor.start_shard(node_id, ["d"], 10)
     assert is_pid(pid_shard_d)
     assert pid_shard_d == Registry.whereis(node_id, Shard, :d)
 
     # 3. Dynamically start a new shard 'e' without an initial value
-    assert {:ok, pid_shard_e} = Supervisor.start_shard(node_id, "e")
+    assert {:ok, pid_shard_e} = Supervisor.start_shard(node_id, ["e"])
     assert is_pid(pid_shard_e)
     assert pid_shard_e == Registry.whereis(node_id, Shard, :e)
 
@@ -105,7 +105,7 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
     # DynamicSupervisor returns {:error, {:already_started, pid}} if the child
     # process with the same registered name is already running.
     assert {:error, {:already_started, existing_pid_a}} =
-             Supervisor.start_shard(node_id, "a", 99)
+             Supervisor.start_shard(node_id, ["a"], 99)
 
     assert is_pid(existing_pid_a)
     assert existing_pid_a == Registry.whereis(node_id, Shard, :a)
@@ -114,7 +114,9 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
     state_d = Shard.debug_get_state(pid_shard_d)
     state_e = Shard.debug_get_state(pid_shard_e)
 
-    assert state_d.kv["d"][0].value == 10, "Shard 'd' initial value mismatch"
+    assert state_d.kv[["d"]][0].value == 10,
+           "Shard 'd' initial value mismatch"
+
     assert state_e.kv == %{}, "Shard 'e' should have an empty initial kv map"
 
     # 6. Query the Mnesia table for new key mappings
@@ -127,13 +129,13 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
     end
 
     # Verify 'a' IS in the map (from initial setup of this unique node)
-    assert read_tx.("a") == {:atomic, [{table_name, "a", :a}]},
+    assert read_tx.(["a"]) == {:atomic, [{table_name, ["a"], :a}]},
            "Mnesia lookup for 'a' failed"
 
-    assert read_tx.("d") == {:atomic, [{table_name, "d", :d}]},
+    assert read_tx.(["d"]) == {:atomic, [{table_name, ["d"], :d}]},
            "Mnesia lookup for 'd' failed"
 
-    assert read_tx.("e") == {:atomic, [{table_name, "e", :e}]},
+    assert read_tx.(["e"]) == {:atomic, [{table_name, ["e"], :e}]},
            "Mnesia lookup for 'e' failed"
 
     enode

@@ -49,7 +49,7 @@ defmodule Anoma.Node.Transaction.Shard do
   ############################################################
 
   @typedoc "The key in the key-value store."
-  @type key :: binary()
+  @type key :: [binary()]
 
   @typedoc "The height associated with an operation."
   # Allows 0 for initial state

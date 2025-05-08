@@ -40,7 +40,7 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
   ############################################################
 
   @typedoc "I represent a key managed by a shard."
-  @type key_t :: binary()
+  @type key_t :: [binary()]
 
   @typedoc "I represent the initial value associated with a key in a shard."
   @type initial_value_t :: any()
@@ -189,7 +189,7 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
           | {:error, :mnesia_update_failed, any()}
   def start_shard(node_id, key, initial_value \\ nil) do
     supervisor_name = Registry.via(node_id, __MODULE__)
-    shard_id = String.to_atom(key)
+    shard_id = Enum.reduce(key, "", &(&2 <> &1)) |> String.to_atom()
 
     # Check if already registered before attempting start
     case Registry.whereis(node_id, Shard, shard_id) do
@@ -247,7 +247,7 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
          key,
          initial_kv
        ) do
-    shard_id = String.to_atom(key)
+    shard_id = Enum.reduce(key, "", &(&2 <> &1)) |> String.to_atom()
 
     shard_args = [
       node_id: node_id,
@@ -279,8 +279,8 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
       # Determine key and initial_kv based on entry format
       {key, initial_kv} =
         case schema_entry do
-          {k, v} when is_binary(k) -> {k, %{k => v}}
-          k when is_binary(k) -> {k, %{}}
+          {k, v} when is_list(k) -> {k, %{k => v}}
+          k when is_list(k) -> {k, %{}}
           # Mark invalid entry
           _ -> {nil, nil}
         end
