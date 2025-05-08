@@ -1048,7 +1048,12 @@ defmodule Nock.Jets do
   def cairo_prove_delta(core) do
     with {:ok, sample} <- sample(core),
          {:ok, cairo_tx} <- CairoResource.Transaction.from_noun(sample) do
-      {:ok, CairoResource.Transaction.prove_delta(cairo_tx)}
+      tx =
+        cairo_tx
+        |> CairoResource.Transaction.prove_delta()
+        |> Noun.Nounable.to_noun()
+
+      {:ok, tx}
     else
       _ -> :error
     end
