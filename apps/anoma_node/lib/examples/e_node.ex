@@ -47,7 +47,8 @@ defmodule Anoma.Node.Examples.ENode do
           grpc_host: "localhost",
           grpc_port: Application.get_env(:anoma_node, :grpc_port)
         },
-        node_id: node_id
+        node_id: node_id,
+        transaction: []
       )
 
     enode =

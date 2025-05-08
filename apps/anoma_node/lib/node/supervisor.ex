@@ -19,8 +19,7 @@ defmodule Anoma.Node.Supervisor do
     :node_id,
     :transaction,
     :node_config,
-    replay: true,
-    transaction: [mempool: []]
+    replay: true
   ]
 
   ############################################################
