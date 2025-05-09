@@ -1,10 +1,11 @@
 # I compile the juvix files in the current folder.
+[file] = System.argv()
 
 # ----------------------------------------------------------------------------
 # Verify compiler version
 
 # version of the compiler used
-expected_juvix = "0.6.10-8c3a912"
+expected_juvix = "0.6.10-9692fe8"
 
 # ensure the juvix compiler is the right one
 {compiler_version, _} = System.cmd("juvix", ["--version"])
@@ -29,6 +30,7 @@ juvix_src_files =
   |> Path.join("**/*.juvix")
   |> Path.wildcard()
   |> Enum.map(&Path.relative_to(&1, juvix_dir))
+  |> Enum.filter(fn x -> String.contains?(x, file) end)
 
 # ----------------------------------------------------------------------------
 # Compile all the juvix files
