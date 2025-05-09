@@ -500,7 +500,7 @@ defmodule Nock.Jets do
     require IEx; IEx.pry()
     case maybe_sample do
       {:ok, sample} when is_noun_atom(sample) ->
-        Noun.Jam.cue(sample)
+        Noun.Jam.cue(sample |> Noun.atom_integer_to_binary())
 
       _ ->
         :error
