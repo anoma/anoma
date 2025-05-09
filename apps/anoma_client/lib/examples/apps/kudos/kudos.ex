@@ -101,7 +101,11 @@ defmodule Anoma.Client.Examples.Apps.Kudos do
 
   @spec nockma_file(file) :: binary()
   def nockma_file(filename) do
-    filename = String.capitalize("#{filename}") |> String.replace("_", "")
+    filename =
+      "#{filename}"
+      |> String.split("_")
+      |> Enum.map(&String.capitalize/1)
+      |> Enum.join("")
 
     @kudos_path
     |> Path.join("/.compiled/#{filename}.nockma")
