@@ -76,7 +76,12 @@ defmodule Anoma.Client.Examples.Apps.Kudos.Transfer do
       |> json_response(200)
 
     # assert the transaction succeeded
-    assert Kernel.match?(%{"io" => [], "result" => binary}, data)
+    assert Kernel.match?(%{"io" => _, "result" => binary}, data)
+
+    data["io"]
+    |> Enum.map(&Base.decode64!/1)
+    |> Enum.map(&Noun.Jam.cue!/1)
+    |> Enum.each(&IO.inspect(&1, label: "Transfer"))
 
     # extract the prove result
     proved_transfer = data["result"]

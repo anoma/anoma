@@ -124,8 +124,11 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
   @spec verify(binary(), Instance.t(), <<>>) :: boolean()
   def verify(jammed_predicate, instance, <<>>) do
     with {:ok, predicate} <- Noun.Jam.cue(jammed_predicate),
+         IO.puts("WHT WHAT"),
          {:ok, resource} <- match_resource(instance.tag, instance.flag),
+         IO.puts("WHT WHAT2"),
          true = Noun.equal?(jammed_predicate, resource.logicref),
+         IO.puts("WHT WHAT3"),
          {:ok, res} <-
            Nock.nock(predicate, [
              9,
@@ -133,14 +136,17 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
              10,
              [6, 1 | to_noun_rl_args(instance)],
              0 | 1
-           ]) do
+           ], %Nock{stdio: :stdio}) do
+      IO.inspect(res, label: "RLPS Verify")
       Noun.equal?(res, 0)
     else
       {:error, msg} ->
         Logger.error(msg)
         false
 
-      _ ->
+      _a ->
+        IO.puts("SAY WHAT")
+        IO.inspect(_a, label: "what")
         false
     end
   end

@@ -1,6 +1,7 @@
 module Kudos.Create;
 
 import Stdlib.Prelude open;
+import Stdlib.Debug.Trace as Debug;
 import Stdlib.Data.Set as Set open using {Set};
 import Stdlib.Data.Map as Map open using {Map};
 import Applib open;
@@ -10,7 +11,8 @@ import Anoma.Identity.Internal open;
 import Kudos.Extra open;
 import Kudos.Layer open;
 
-isValidLogic (args : Logic.Args) : Bool := true ||
+isValidLogic (args : Logic.Args) : Bool :=
+  trace "FOO" >->
   let
     self := Logic.Args.self args;
     selfTag : Tag := Logic.Args.selfTag args;
@@ -20,16 +22,17 @@ isValidLogic (args : Logic.Args) : Bool := true ||
     | else :=
       if
         | Resource.ephemeral self :=
+          trace "BAR" >->
           let
-            identity := Kudos.Resource.identity self;
-            originator := Kudos.KLabel.originator identity;
+            identity := trace "ID" >-> Kudos.Resource.identity self;
+            originator := trace "ORIG" >->  Kudos.KLabel.originator identity;
             authorized :=
               isAuthorizedBy@{
                 signer := originator;
                 origin := selfTag;
                 args;
               };
-          in if
+          in trace "FAZ" >-> if
             | not authorized :=
               trace "failed isAuthorizedBy originator tag" >-> false
             | else := true
@@ -71,12 +74,8 @@ mkKudos
 
 isAuthorizedBy
   (signer : ExternalIdentity) (origin : Tag) (args : Logic.Args) : Bool :=
-  case
-    lookupPublicInputs@{
-      key := signatureLookupKey;
-      publicInputs : Kudos.PublicData := Kudos.Instance.otherPublic args;
-    }
-  of
+  trace "MANN" >->
+  case lookupPublicInputs signatureLookupKey (Kudos.Instance.otherPublic args) of
     | nothing := true
     | just value :=
       let
@@ -202,7 +201,9 @@ main
   let
     caller : Identity :=
       mkIdentityFromPayload privateKeyPayload publicKeyPayload;
-  in TransactionRequest.build
+  in
+  trace "HELP MAIN" >->
+  TransactionRequest.build
     rngSeed
     (txContext caller (CommitmentRoot.fromNat 0))
     (initialize logic kudosSymbol quantity);

@@ -86,7 +86,7 @@ defmodule Anoma.Node.Transaction.Backends do
         end
       end
 
-    env = %Nock{scry_function: scry}
+    env = %Nock{scry_function: scry, stdio: :stdout}
     vm_result = vm_execute(tx_code, env, id)
     result_event(id, vm_result, node_id, backend)
 

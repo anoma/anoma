@@ -4,7 +4,7 @@ import Stdlib.Prelude open;
 import Applib open;
 import Anoma.Identity.External open;
 import Anoma.Identity.Internal open;
-import Stdlib.Debug.Trace open using {trace as stdlib-trace};
+import Stdlib.Debug.Trace as Debug;
 
 --- A message format specifying resources that must be created and consumed within an ;Action;.
 --- @param origin The reference to the resource performing the check.
@@ -53,9 +53,9 @@ mapM
   (l : t A)
   : F (t B) := traverse fun l;
 
-trace {A} (a : A) : A :=
-  let
-    debugMode := false;
-  in if
-    | debugMode := stdlib-trace a
-    | else := a;
+builtin trace
+axiom trace : {A : Type} -> A -> A;
+
+-- builtin trace
+-- trace {A} (a : A) : A :=
+--   Debug.trace a;

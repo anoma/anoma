@@ -2,6 +2,7 @@ module Kudos.Layer;
 
 import Kudos.Extra open;
 import Stdlib.Prelude open;
+import Stdlib.Debug.Trace as Debug;
 import Stdlib.Debug.Fail open;
 import Stdlib.Data.Set as Set open using {Set};
 import Stdlib.Data.Map as Map open using {Map};
@@ -112,7 +113,9 @@ module Kudos;
       computeKind kudosLogic (Resource.label resource) == kind resource;
 
     identity (r : Resource) : Kudos.KLabel :=
-      builtinAnomaDecode (Label.toNat (Applib.Resource.label r));
+      let
+        label := Label.toNat (Applib.Resource.label r);
+      in Debug.trace "Identity " >-> Debug.trace label >-> builtinAnomaDecode label;
 
     owner (r : Resource) : ExternalIdentity :=
       ExternalIdentity.fromByteArray

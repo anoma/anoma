@@ -3,10 +3,11 @@ module Kudos.Logic;
 import Stdlib.Prelude open;
 import Applib open;
 import Kudos.Create open;
+import Stdlib.Debug.Trace as Debug;
 
 type LogicWrapper :=
   mk@{
     logic : Logic;
   };
 
-main : LogicWrapper := LogicWrapper.mk (Logic.mk isValidLogic);
+main : LogicWrapper := Debug.trace "hi" >-> LogicWrapper.mk (Logic.mk isValidLogic);

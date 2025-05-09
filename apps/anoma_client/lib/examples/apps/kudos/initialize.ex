@@ -29,7 +29,13 @@ defmodule Anoma.Client.Examples.Apps.Kudos.Initialize do
       |> post(~p"/nock/prove", payload)
       |> json_response(200)
 
-    assert Kernel.match?(%{"io" => [], "result" => binary}, data)
+
+    assert Kernel.match?(%{"io" => _, "result" => binary}, data)
+    data["io"]
+    |> Enum.map(&Base.decode64!/1)
+    |> Enum.map(&Noun.Jam.cue!/1)
+    |> Enum.each(&IO.inspect(&1, label: "prove"))
+
 
     # extract the prove result
     proved_logic = data["result"]
@@ -84,8 +90,12 @@ defmodule Anoma.Client.Examples.Apps.Kudos.Initialize do
       |> json_response(200)
 
     # verify that there is no error.
-    assert Kernel.match?(%{"io" => [], "result" => binary}, data)
+    assert Kernel.match?(%{"io" => _, "result" => binary}, data)
 
+    data["io"]
+    |> Enum.map(&Base.decode64!/1)
+    |> Enum.map(&Noun.Jam.cue!/1)
+    |> Enum.each(&IO.inspect(&1, label: "initialize"))
     # extract the prove result
     proved_create = data["result"]
 

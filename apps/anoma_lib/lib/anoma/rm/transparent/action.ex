@@ -130,6 +130,7 @@ defmodule Anoma.RM.Transparent.Action do
   @spec verify(t()) :: boolean()
   def verify(t) do
     # 3
+    IO.puts("WHY GOD")
     with true <- cu_check(t),
          # Extra
          {:ok, _} <- is_list_unique(t.consumed),
@@ -138,6 +139,7 @@ defmodule Anoma.RM.Transparent.Action do
          # Extra
          {:ok, true} <- partition_check(t),
          # 2
+      IO.puts("WHY GOD2"),
          true <- consumed_logic_check(t),
          # 1
          true <- created_logic_check(t) do
