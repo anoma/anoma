@@ -496,8 +496,6 @@ defmodule Nock.Jets do
   @spec cue(Noun.t()) :: :error | {:ok, Noun.t()}
   def cue(core) do
     maybe_sample = sample(core)
-    IO.puts("HIIIIIIIIIIIII")
-    require IEx; IEx.pry()
     case maybe_sample do
       {:ok, sample} when is_noun_atom(sample) ->
         Noun.Jam.cue(sample |> Noun.atom_integer_to_binary())

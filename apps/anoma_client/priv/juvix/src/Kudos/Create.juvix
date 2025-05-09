@@ -75,12 +75,16 @@ mkKudos
 isAuthorizedBy
   (signer : ExternalIdentity) (origin : Tag) (args : Logic.Args) : Bool :=
   trace "MANN" >->
-  case lookupPublicInputs signatureLookupKey (Kudos.Instance.otherPublic args) of
+  let
+    pu := Kudos.Instance.otherPublic args;
+    lookup := trace "lookup" >-> lookupPublicInputs signatureLookupKey pu;
+  in
+  case lookup of
     | nothing := true
     | just value :=
       let
-        signature := Kudos.PublicDataValue.signature value;
-        message := Kudos.PublicDataValue.resourceRelationship value;
+        signature :=  trace "signaure" >-> Kudos.PublicDataValue.signature value;
+        message := trace "message" >-> Kudos.PublicDataValue.resourceRelationship value;
       in trace "isAuthorizedBy"
         >-> anomaVerifyDetached
             (Signature.unSignature
