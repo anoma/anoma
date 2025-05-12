@@ -100,7 +100,8 @@ module Kudos;
     otherPublic (args : Logic.Args) : Kudos.PublicData :=
       Debug.trace "in other-public" >->
       let
-        m : Map RawTag AnomaAtom := AppData.toMap1 (Logic.Args.appData args);
+        d := (Logic.Args.appData args);
+        m : Map RawTag AnomaAtom := Debug.trace "toMap" >-> AppData.toMap1 d;
         selfTag : RawTag := Debug.trace "self tag" >-> RawTag.fromTag (Logic.Args.selfTag args);
       in case Map.lookup selfTag m of
            | nothing := failwith "Kudos public data missing from AppData"
