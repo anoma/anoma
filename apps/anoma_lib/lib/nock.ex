@@ -403,7 +403,7 @@ defmodule Nock do
         Logger.debug("nock hint: #{inspect(hint_result)}")
 
       :stdio ->
-        IO.write(environment.stdio, "#{inspect(hint_result, limit: :infinity)}\n")
+        IO.write(environment.stdio, "#{inspect(hint_result)}\n")
 
       _ ->
         # hint_str = Noun.Format.print(hint_result)

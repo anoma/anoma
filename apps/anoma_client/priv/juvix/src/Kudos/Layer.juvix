@@ -83,7 +83,7 @@ actionWithAuthorizationAppData
     mkActionHelper@{
       consumed;
       created;
-      appData := AppData.fromMap1 map';
+      appData := Debug.trace "Turning map to list" >-> AppData.fromMap1 map';
     };
   };
 
