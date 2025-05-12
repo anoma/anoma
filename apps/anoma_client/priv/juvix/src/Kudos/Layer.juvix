@@ -98,14 +98,12 @@ module Kudos;
 
   module Instance;
     otherPublic (args : Logic.Args) : Kudos.PublicData :=
-      Debug.trace "in other-public" >->
       let
-        d := (Logic.Args.appData args);
-        m : Map RawTag AnomaAtom := Debug.trace "toMap" >-> AppData.toMap1 d;
-        selfTag : RawTag := Debug.trace "self tag" >-> RawTag.fromTag (Logic.Args.selfTag args);
-      in case Map.lookup selfTag m of
-           | nothing := failwith "Kudos public data missing from AppData"
-           | just r := builtinAnomaDecode (AnomaAtom.toNat r);
+        d : List AppData.Value := Logic.Args.appData args;
+      in case d of
+           | AppData.Value.mk atom _ :: _ :=
+             builtinAnomaDecode (AnomaAtom.toNat atom)
+           | nil := failwith "Kudos public data missing from AppData";
   end;
 
   module Resource;
