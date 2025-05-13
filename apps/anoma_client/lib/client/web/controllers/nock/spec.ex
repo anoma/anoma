@@ -73,6 +73,10 @@ defmodule Anoma.Client.Web.NockController.Spec do
         io: %Schema{
           type: :list,
           description: "List of IO hints during execution"
+        },
+        reason: %Schema{
+          type: :string,
+          description: "The failure reason"
         }
       },
       example: %{

@@ -760,7 +760,7 @@ defmodule Examples.ENock do
   """
 
   @spec rads_call(non_neg_integer(), non_neg_integer()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def rads_call(seed, range) do
     Nock.nock(rads_arm(), [9, 2, 10, [6, 1 | [seed | range]], 0 | 1])
   end
@@ -1574,7 +1574,7 @@ defmodule Examples.ENock do
     [arm, sample | Nock.Lib.rm_core()]
   end
 
-  @spec in_call(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec in_call(Noun.t()) :: {:error, Nock.error()} | {:ok, Noun.t()}
   def in_call(set) do
     Nock.nock(in_arm(), [9, 2, 10, [6, 1 | set], 0 | 1])
   end
@@ -1604,7 +1604,7 @@ defmodule Examples.ENock do
   end
 
   @spec put_with_core_call(Noun.t(), Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def put_with_core_call(core, elem) do
     Nock.nock(put_with_core(), [9, 2, 10, [6, 1 | [core | elem]], 0 | 1])
   end
@@ -1657,7 +1657,7 @@ defmodule Examples.ENock do
   end
 
   @spec wyt_with_core_call(Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def wyt_with_core_call(core) do
     Nock.nock(wyt_with_core(), [9, 2, 10, [6, 1 | core], 0 | 1])
   end
@@ -1694,7 +1694,7 @@ defmodule Examples.ENock do
   end
 
   @spec tap_in_with_core_call(Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def tap_in_with_core_call(core) do
     Nock.nock(tap_in_with_core(), [9, 2, 10, [6, 1 | core], 0 | 1])
   end
@@ -1734,7 +1734,7 @@ defmodule Examples.ENock do
   end
 
   @spec int_with_core_call(Noun.t(), Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def int_with_core_call(core, set) do
     Nock.nock(int_with_core(), [9, 2, 10, [6, 1 | [core | set]], 0 | 1])
   end
@@ -1780,7 +1780,7 @@ defmodule Examples.ENock do
   end
 
   @spec dif_with_core_call(Noun.t(), Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def dif_with_core_call(core, set) do
     Nock.nock(dif_with_core(), [9, 2, 10, [6, 1 | [core | set]], 0 | 1])
   end
@@ -1826,7 +1826,7 @@ defmodule Examples.ENock do
   end
 
   @spec has_with_core_call(Noun.t(), Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def has_with_core_call(core, elem) do
     Nock.nock(has_with_core(), [9, 2, 10, [6, 1 | [core | elem]], 0 | 1])
   end
@@ -1866,7 +1866,7 @@ defmodule Examples.ENock do
   end
 
   @spec uni_with_core_call(Noun.t(), Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def uni_with_core_call(core, set) do
     Nock.nock(uni_with_core(), [9, 2, 10, [6, 1 | [core | set]], 0 | 1])
   end
@@ -1912,7 +1912,7 @@ defmodule Examples.ENock do
   end
 
   @spec duni_with_core_call(Noun.t(), Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def duni_with_core_call(core, set) do
     Nock.nock(duni_with_core(), [9, 2, 10, [6, 1 | [core | set]], 0 | 1])
   end
@@ -1928,7 +1928,8 @@ defmodule Examples.ENock do
       |> MapSet.union(MapSet.new([5, 6]))
       |> Noun.Nounable.to_noun()
 
-    assert in_core |> duni_with_core_call(set2) == :error
+    assert {:error, {:jet_failed, {:duni, _}}} =
+             in_core |> duni_with_core_call(set2)
 
     assert in_core
            |> duni_with_core_call(set3)
@@ -1960,7 +1961,7 @@ defmodule Examples.ENock do
     [arm, sample | Nock.Lib.rm_core()]
   end
 
-  @spec by_call(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec by_call(Noun.t()) :: {:error, Nock.error()} | {:ok, Noun.t()}
   def by_call(set) do
     Nock.nock(by_arm(), [9, 2, 10, [6, 1 | set], 0 | 1])
   end
@@ -1990,7 +1991,7 @@ defmodule Examples.ENock do
   end
 
   @spec mput_with_core_call(Noun.t(), Noun.t(), Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def mput_with_core_call(core, key, val) do
     Nock.nock(mput_with_core(), [9, 2, 10, [6, 1 | [core, key | val]], 0 | 1])
   end
@@ -2033,7 +2034,7 @@ defmodule Examples.ENock do
   end
 
   @spec got_with_core_call(Noun.t(), Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def got_with_core_call(core, key) do
     Nock.nock(got_with_core(), [9, 2, 10, [6, 1 | [core | key]], 0 | 1])
   end
@@ -2070,7 +2071,7 @@ defmodule Examples.ENock do
   end
 
   @spec tap_by_with_core_call(Noun.t()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def tap_by_with_core_call(core) do
     Nock.nock(tap_by_with_core(), [9, 2, 10, [6, 1 | core], 0 | 1])
   end
@@ -2862,7 +2863,7 @@ defmodule Examples.ENock do
     [arm, sample | Nock.Lib.rm_core()]
   end
 
-  @spec og_call(non_neg_integer()) :: :error | {:ok, Noun.t()}
+  @spec og_call(non_neg_integer()) :: {:error, Nock.error()} | {:ok, Noun.t()}
   def og_call(seed) do
     Nock.nock(og_arm(), [9, 2, 10, [6, 1 | seed], 0 | 1])
   end
@@ -2892,7 +2893,7 @@ defmodule Examples.ENock do
   end
 
   @spec raws_with_core_call(non_neg_integer(), non_neg_integer()) ::
-          :error | {:ok, Noun.t()}
+          {:error, Nock.error()} | {:ok, Noun.t()}
   def raws_with_core_call(core, width) do
     Nock.nock(raws_with_core(), [9, 2, 10, [6, 1 | [core | width]], 0 | 1])
   end
@@ -2923,7 +2924,7 @@ defmodule Examples.ENock do
     [arm, sample | Nock.Lib.rm_core()]
   end
 
-  @spec split_call(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec split_call(Noun.t()) :: {:error, Nock.error()} | {:ok, Noun.t()}
   def split_call(core) do
     Nock.nock(split_arm(), [9, 2, 10, [6, 1 | core], 0 | 1])
   end
@@ -3183,7 +3184,7 @@ defmodule Examples.ENock do
   def nock_scry_crash() do
     code = [12, [1 | 0] | [1 | 0]]
 
-    :error =
+    {:error, :scry_no_return} =
       Nock.nock(0, code, %Nock{
         scry_function: fn _ -> raise("this is your last scry") end
       })
