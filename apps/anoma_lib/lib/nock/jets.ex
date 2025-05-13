@@ -80,6 +80,7 @@ defmodule Nock.Jets do
           | {:secp256k1_sign, Noun.t()}
           | {:secp256k1_verify, Noun.t()}
           | {:secp256k1_public_key, Noun.t()}
+          | {:keccak256, Noun.t()}
 
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
           non_neg_integer()
@@ -1162,6 +1163,15 @@ defmodule Nock.Jets do
       {:ok, key}
     else
       _ -> {:error, {:secp256k1_public_key, core}}
+    end
+  end
+
+  @spec keccak256(Noun.t()) :: :error | {:ok, Noun.t()}
+  def keccak256(core) do
+    with {:ok, msg} when is_noun_atom(msg) <- sample(core) do
+      {:ok, msg |> Noun.atom_integer_to_binary() |> ExKeccak.hash_256()}
+    else
+      _ -> {:error, {:keccak256, core}}
     end
   end
 

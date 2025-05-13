@@ -65,41 +65,39 @@ defmodule Nock.Jets.Mugs do
     :has => %{:index => 762, :layer => 10, :door => 21},
     :put_11 => %{:index => 340, :layer => 11, :door => 93},
     :got => %{:index => 701, :layer => 11, :door => 93},
-    :kind => %{:index => 11956, :layer => Nock.Lib.stdlib_layers()},
-    :delta_add => %{:index => 746, :layer => Nock.Lib.stdlib_layers()},
+    :secp256k1_sign => %{:index => 23, :layer => 12},
+    :secp256k1_verify => %{:index => 10, :layer => 12},
+    :secp256k1_pub_key => %{:index => 4, :layer => 12},
+    :keccak256 => %{:index => 22, :layer => 12},
+    :kind => %{:index => 5972, :layer => Nock.Lib.stdlib_layers()},
+    :delta_add => %{:index => 372, :layer => Nock.Lib.stdlib_layers()},
     :delta_sub => %{:index => 12013, :layer => Nock.Lib.stdlib_layers()},
-    :zero_delta => %{:index => 348, :layer => Nock.Lib.stdlib_layers()},
-    :resource_delta => %{:index => 1397, :layer => Nock.Lib.stdlib_layers()},
+    :zero_delta => %{:index => 174, :layer => Nock.Lib.stdlib_layers()},
+    :resource_delta => %{:index => 701, :layer => Nock.Lib.stdlib_layers()},
     :commitment => %{:index => 3002, :layer => Nock.Lib.stdlib_layers()},
     :is_commitment => %{:index => 12012, :layer => Nock.Lib.stdlib_layers()},
-    :nullifier => %{:index => 5599, :layer => Nock.Lib.stdlib_layers()},
-    :is_nullifier => %{:index => 11958, :layer => Nock.Lib.stdlib_layers()},
+    :nullifier => %{:index => 2815, :layer => Nock.Lib.stdlib_layers()},
+    :is_nullifier => %{:index => 5974, :layer => Nock.Lib.stdlib_layers()},
     :compliance_unit_delta => %{
-      :index => 1398,
+      :index => 702,
       :layer => Nock.Lib.stdlib_layers()
     },
     :action_delta => %{:index => 4, :layer => Nock.Lib.stdlib_layers()},
-    :make_delta => %{:index => 23919, :layer => Nock.Lib.stdlib_layers()},
-    :action_create => %{:index => 766, :layer => Nock.Lib.stdlib_layers()},
+    :make_delta => %{:index => 11951, :layer => Nock.Lib.stdlib_layers()},
+    :action_create => %{:index => 382, :layer => Nock.Lib.stdlib_layers()},
     :trm_compliance_key => %{
       :index => 1502,
       :layer => Nock.Lib.stdlib_layers()
     },
     :trm_delta_key => %{:index => 374, :layer => Nock.Lib.stdlib_layers()},
-    :t_compose => %{:index => 767, :layer => Nock.Lib.stdlib_layers()},
+    :t_compose => %{:index => 383, :layer => Nock.Lib.stdlib_layers()},
     :cairo_compose => %{:index => 92, :layer => Nock.Lib.stdlib_layers()},
     :cairo_create_from_cus => %{
-      :index => 2798,
+      :index => 1406,
       :layer => Nock.Lib.stdlib_layers()
     },
     :cairo_prove_delta => %{
       :index => 1503,
-      :layer => Nock.Lib.stdlib_layers()
-    },
-    :secp256k1_sign => %{:index => 190, :layer => Nock.Lib.stdlib_layers()},
-    :secp256k1_verify => %{:index => 175, :layer => Nock.Lib.stdlib_layers()},
-    :secp256k1_pub_key => %{
-      :index => 372,
       :layer => Nock.Lib.stdlib_layers()
     }
   }
@@ -187,7 +185,8 @@ defmodule Nock.Jets.Mugs do
                     {:secp256k1_verify, &Nock.Jets.secp256k1_verify/1,
                      :enabled, 10},
                     {:secp256k1_pub_key, &Nock.Jets.secp256k1_public_key/1,
-                     :enabled, 10}
+                     :enabled, 10},
+                    {:keccak256, &Nock.Jets.keccak256/1, :enabled, 10}
                   ]
                 )
 
