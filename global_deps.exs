@@ -28,6 +28,7 @@
   {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
   {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
   {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
+  {:ex_secp256k1, "~> 0.7.4"},
   {:unclog,
    git: "https://github.com/m1dnight/unclog",
    branch: "main",

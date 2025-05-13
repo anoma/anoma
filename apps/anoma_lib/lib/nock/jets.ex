@@ -112,26 +112,16 @@ defmodule Nock.Jets do
     |> Noun.mug()
   end
 
-  @spec calculate_mug_of_param_layer(non_neg_integer(), non_neg_integer()) ::
-          non_neg_integer()
-  @doc """
-  Like `calculate_mug_of_layer/1` except we work over a parameterized core.
-
-  ### Example
-
-      > Nock.Jets.calculate_mug_of_param_layer(10, 4)
-      11284470320276584209
-  """
-  def calculate_mug_of_param_layer(core_index, parent_layer) do
-    core_index |> calculate_param_layer(parent_layer) |> Noun.mug()
-  end
-
   @doc """
   I find the door cores, i.e. parametrized layers.
   """
-  @spec calculate_param_layer(non_neg_integer(), non_neg_integer) :: Noun.t()
-  def calculate_param_layer(core_index, parent_layer) do
-    with core <- calculate_core_param(core_index, 4, parent_layer),
+  @spec calculate_param_layer(
+          non_neg_integer(),
+          non_neg_integer(),
+          non_neg_integer
+        ) :: Noun.t()
+  def calculate_param_layer(core_index, door_index, parent_layer) do
+    with core <- calculate_core_param(core_index, door_index, parent_layer),
          {:ok, parent} <- Noun.axis(14, core) do
       parent
     end
@@ -175,6 +165,54 @@ defmodule Nock.Jets do
            ]) do
       res
     end
+  end
+
+  @spec generate_registry(
+          %{
+            atom() => %{
+              :index => non_neg_integer(),
+              :label => non_neg_integer,
+              optional(:door) => non_neg_integer
+            }
+          },
+          list(
+            {atom(), (Noun.t() -> {:ok, Noun.t()} | :error),
+             :enabled | :disabled | :check, non_neg_integer()}
+          )
+        ) :: map()
+  def generate_registry(index_map, list) do
+    Enum.into(list, %{}, fn {name, jet, status, gas} ->
+      map_value = Map.get(index_map, name)
+
+      core_calculations =
+        if Map.has_key?(map_value, :door) do
+          %{
+            :logic =>
+              calculate_core_param(
+                map_value.index,
+                map_value.door,
+                map_value.layer
+              ),
+            :parent =>
+              calculate_param_layer(
+                map_value.index,
+                map_value.door,
+                map_value.layer
+              ),
+            :parent_index => 14
+          }
+        else
+          %{
+            :logic => calculate_core(map_value.index, map_value.layer),
+            :parent => calculate_layer(map_value.layer),
+            :parent_index => 7
+          }
+        end
+
+      {core_calculations.logic |> hd(),
+       {Atom.to_string(name), core_calculations.parent_index,
+        core_calculations.parent, jet, status, gas}}
+    end)
   end
 
   @spec layer_offset(non_neg_integer) :: non_neg_integer
@@ -884,10 +922,10 @@ defmodule Nock.Jets do
          {:ok, data} <- Noun.Nounable.Map.from_noun(data),
          con_res <-
            con
-           |> Enum.map(fn [key, res | root] ->
+           |> Enum.map(fn [[size | key], res | root] ->
              {:ok, res} = Resource.from_noun(res)
 
-             {Noun.atom_integer_to_binary(key, 32), res,
+             {Noun.atom_integer_to_binary(key, size), res,
               Noun.atom_binary_to_integer(root)}
            end),
          cre_res <-
@@ -1011,6 +1049,56 @@ defmodule Nock.Jets do
     with {:ok, sample} <- sample(core),
          {:ok, cairo_tx} <- CairoResource.Transaction.from_noun(sample) do
       {:ok, CairoResource.Transaction.prove_delta(cairo_tx)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec secp256k1_sign(Noun.t()) :: :error | {:ok, Noun.t()}
+  def secp256k1_sign(core) do
+    with {:ok, [msg | key]} when is_noun_atom(msg) and is_noun_atom(key) <-
+           sample(core),
+         {:ok, res} <-
+           ExSecp256k1.sign_compact(
+             Noun.atom_integer_to_binary(msg, 32),
+             Noun.atom_integer_to_binary(key, 32)
+           ) do
+      {:ok, Noun.Nounable.to_noun(res)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec secp256k1_verify(Noun.t()) :: :error | {:ok, Noun.t()}
+  def secp256k1_verify(core) do
+    with {:ok, [msg, sign | key]}
+         when is_noun_atom(msg) and is_noun_atom(sign) and is_noun_atom(key) <-
+           sample(core) do
+      res =
+        case ExSecp256k1.verify(
+               Noun.atom_integer_to_binary(msg, 32),
+               Noun.atom_integer_to_binary(sign, 64),
+               Noun.atom_integer_to_binary(key, 65)
+             ) do
+          :ok -> 0
+          _ -> 1
+        end
+
+      {:ok, res}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec secp256k1_public_key(Noun.t()) :: :error | {:ok, Noun.t()}
+  def secp256k1_public_key(core) do
+    with {:ok, priv_key} when is_noun_atom(priv_key) <-
+           sample(core),
+         {:ok, key} <-
+           priv_key
+           |> Noun.atom_integer_to_binary(32)
+           |> ExSecp256k1.create_public_key() do
+      {:ok, key}
     else
       _ -> :error
     end

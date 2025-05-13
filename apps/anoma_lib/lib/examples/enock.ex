@@ -8,6 +8,7 @@ defmodule Examples.ENock do
   alias Examples.ETransparent.EAction
   alias Examples.ETransparent.EResource
   alias Examples.ETransparent.ETransaction
+  alias Nock.Jets.Mugs
 
   require ExUnit.Assertions
 
@@ -50,7 +51,7 @@ defmodule Examples.ENock do
   def counter_logic() do
     [
       counter_arm(),
-      0 | Nock.Lib.logics_core()
+      0 | Nock.Lib.rm_core()
     ]
   end
 
@@ -182,8 +183,13 @@ defmodule Examples.ENock do
   ####################################################################
 
   @spec example_layer_depth(non_neg_integer) :: non_neg_integer
-  defp example_layer_depth(layer),
-    do: (Nock.Lib.stdlib_layers() - layer + 4) |> Noun.index_to_offset()
+  defp example_layer_depth(layer) do
+    # the layer position in rm_layer is just layer_offset(layer)
+    # yet we need the index to refer to the position inside the
+    # core [arm sample rm_layer]
+    # in other words the layer is 2 layers deeper for this
+    Noun.index_to_offset(Nock.Lib.stdlib_layers() - layer + 1 + 2)
+  end
 
   @doc """
   The decrement arm in the tests core.
@@ -192,16 +198,18 @@ defmodule Examples.ENock do
   """
   @spec dec_arm() :: Noun.t()
   def dec_arm() do
-    layer_depth = example_layer_depth(1)
+    arm_info = Mugs.index_map().dec
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 342 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec dec() :: Noun.t()
   def dec() do
     sample = 999
-    core = [dec_arm(), sample | Nock.Lib.logics_core()]
+    core = [dec_arm(), sample | Nock.Lib.rm_core()]
 
     assert Nock.nock(core, [9, 2, 0 | 1]) |> elem(1) |> Noun.equal?(998)
 
@@ -218,79 +226,85 @@ defmodule Examples.ENock do
   end
 
   @doc """
-  A cue arm for taking cue:anoma out of the logics core environment.
+  A cue arm for taking cue:anoma out of the resource-machine core environment.
 
   Can be gotten by defining gate locally as
 
-  =localcue   =>  logics  |=  a=@  (cue a)
+  =localcue   =>  resource-machine  |=  a=@  (cue a)
 
   and then grabbing the arm of localcue.
   """
 
   @spec cue_arm() :: Noun.t()
   def cue_arm() do
-    layer_depth = example_layer_depth(5)
+    arm_info = Mugs.index_map().cue
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 94 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec cue() :: Noun.t()
   def cue() do
     sample = 999
-    core = [cue_arm(), sample | Nock.Lib.logics_core()]
+    core = [cue_arm(), sample | Nock.Lib.rm_core()]
 
     core
   end
 
   @doc """
-  A cue arm for taking jam:anoma out of the logics core environment.
+  A cue arm for taking jam:anoma out of the resource-machine core environment.
 
   Can be gotten by defining gate locally as
 
-  =localjam   =>  logics  |=  a=@  (jam a)
+  =localjam   =>  resource-machine  |=  a=@  (jam a)
 
   and then grabbing the arm of localjam.
   """
 
   @spec jam_arm() :: Noun.t()
   def jam_arm() do
-    layer_depth = example_layer_depth(5)
+    arm_info = Mugs.index_map().jam
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec jam() :: Noun.t()
   def jam() do
     sample = 999
-    core = [jam_arm(), sample | Nock.Lib.logics_core()]
+    core = [jam_arm(), sample | Nock.Lib.rm_core()]
 
     core
   end
 
   @doc """
-  The sign arm for taking sign:anoma from the logics core environment.
+  The sign arm for taking sign:anoma from the resource-machine core environment.
 
   Can be gotten by defining gate locally as:
 
-  =localsign   =>  logics  |=  [a=@ b=@]  (sign [a b])
+  =localsign   =>  resource-machine  |=  [a=@ b=@]  (sign [a b])
 
   and then grabbing the arm of localsign.
   """
 
   @spec sign_arm() :: Noun.t()
   def sign_arm() do
-    layer_depth = example_layer_depth(6)
+    arm_info = Mugs.index_map().sign
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 10 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec sign() :: Noun.t()
   def sign() do
     sample = [999 | 888]
-    core = [sign_arm(), sample | Nock.Lib.logics_core()]
+    core = [sign_arm(), sample | Nock.Lib.rm_core()]
 
     valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
 
@@ -302,27 +316,29 @@ defmodule Examples.ENock do
   end
 
   @doc """
-  The verify arm for taking verify:anoma from the logics core environment.
+  The verify arm for taking verify:anoma from the resource-machine core environment.
 
   Can be gotten by defining gate locally as:
 
-  =localverify   =>  logics  |=  [a=@ b=@]  (verify [a b])
+  =localverify   =>  resource-machine  |=  [a=@ b=@]  (verify [a b])
 
   and then grabbing the arm of localverify.
   """
 
   @spec verify_arm() :: Noun.t()
   def verify_arm() do
-    layer_depth = example_layer_depth(6)
+    arm_info = Mugs.index_map().verify
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec verify() :: Noun.t()
   def verify() do
     sample = [999 | 888]
-    core = [verify_arm(), sample | Nock.Lib.logics_core()]
+    core = [verify_arm(), sample | Nock.Lib.rm_core()]
 
     valid_args = [ECrypto.blood_l_signed() | ECrypto.londo().external.sign]
     invalid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
@@ -340,27 +356,29 @@ defmodule Examples.ENock do
   end
 
   @doc """
-  The sign-detatched arm for taking sign-detached:anoma from the logics core environment.
+  The sign-detatched arm for taking sign-detached:anoma from the resource-machine core environment.
 
   Can be gotten by defining gate locally as:
 
-  =localsigndetached   =>  logics  |=  [a=@ b=@]  (sign-detached [a b])
+  =localsigndetached   =>  resource-machine  |=  [a=@ b=@]  (sign-detached [a b])
 
   and then grabbing the arm of localsighdetached.
   """
 
   @spec sign_detatched_arm() :: Noun.t()
   def sign_detatched_arm() do
-    layer_depth = example_layer_depth(6)
+    arm_info = Mugs.index_map().sign_detatched
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 23 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec sign_detatched() :: Noun.t()
   def sign_detatched() do
     sample = [999 | 888]
-    core = [sign_detatched_arm(), sample | Nock.Lib.logics_core()]
+    core = [sign_detatched_arm(), sample | Nock.Lib.rm_core()]
 
     valid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
 
@@ -372,27 +390,29 @@ defmodule Examples.ENock do
   end
 
   @doc """
-  The verify-detatched arm for taking verify-detached:anoma from the logics core environment.
+  The verify-detatched arm for taking verify-detached:anoma from the resource-machine core environment.
 
   Can be gotten by defining gate locally as:
 
-  =localverifydetached   =>  logics  |=  [a=@ b=@ c=@]  (verify-detached [a b])
+  =localverifydetached   =>  resource-machine  |=  [a=@ b=@ c=@]  (verify-detached [a b])
 
   and then grabbing the arm of localverifydetached.
   """
 
   @spec verify_detatched_arm() :: Noun.t()
   def verify_detatched_arm() do
-    layer_depth = example_layer_depth(6)
+    arm_info = Mugs.index_map().verify_detatched
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec verify_detatched() :: Noun.t()
   def verify_detatched() do
     sample = [999 | 888]
-    core = [verify_detatched_arm(), sample | Nock.Lib.logics_core()]
+    core = [verify_detatched_arm(), sample | Nock.Lib.rm_core()]
 
     sign = ECrypto.blood_l_signed_detached()
     valid = [sign, ECrypto.blood_msg() | ECrypto.londo().external.sign]
@@ -433,27 +453,29 @@ defmodule Examples.ENock do
   end
 
   @doc """
-  The bex arm for taking bex:anoma from the logics core environment.
+  The bex arm for taking bex:anoma from the resource-machine core environment.
 
   Can be gotten by defining gate locally as:
 
-  =localbex   =>  logics  |=  a=@  (bex a)
+  =localbex   =>  resource-machine  |=  a=@  (bex a)
 
   and then grabbing the arm of localbex.
   """
 
   @spec bex_arm() :: Noun.t()
   def bex_arm() do
-    layer_depth = example_layer_depth(4)
+    arm_info = Mugs.index_map().bex
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec bex() :: Noun.t()
   def bex() do
     sample = 888
-    core = [bex_arm(), sample | Nock.Lib.logics_core()]
+    core = [bex_arm(), sample | Nock.Lib.rm_core()]
 
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 2], 0 | 1])
            |> elem(1)
@@ -471,27 +493,29 @@ defmodule Examples.ENock do
   end
 
   @doc """
-  The mix arm for taking mix:anoma from the logics core environment.
+  The mix arm for taking mix:anoma from the resource-machine core environment.
 
   Can be gotten by defining gate locally as:
 
-  =localmix   =>  logics  |=  [a=@ b=@]  (mix [a b])
+  =localmix   =>  resource-machine  |=  [a=@ b=@]  (mix [a b])
 
   and then grabbing the arm of locamix.
   """
 
   @spec mix_arm() :: Noun.t()
   def mix_arm() do
-    layer_depth = example_layer_depth(5)
+    arm_info = Mugs.index_map().mix
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec mix() :: Noun.t()
   def mix() do
     sample = [0 | 0]
-    core = [mix_arm(), sample | Nock.Lib.logics_core()]
+    core = [mix_arm(), sample | Nock.Lib.rm_core()]
 
     assert Nock.nock(core, [9, 2, 10, [6, 1, 3 | 5], 0 | 1])
            |> elem(1)
@@ -505,20 +529,22 @@ defmodule Examples.ENock do
   end
 
   @doc """
-  The mat arm for taking mat:anoma from the logics core environment.
+  The mat arm for taking mat:anoma from the resource-machine core environment.
 
   Can be gotten by defining gate locally as:
 
-  =localmat   =>  logics  |=  a  (mat a)
+  =localmat   =>  resource-machine  |=  a  (mat a)
 
   and then grabbing the arm of locamix.
   """
 
   @spec mat_arm() :: Noun.t()
   def mat_arm() do
-    layer_depth = example_layer_depth(5)
+    arm_info = Mugs.index_map().mat
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 43 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -526,33 +552,35 @@ defmodule Examples.ENock do
   @spec mat() :: Noun.t()
   def mat() do
     sample = 0
-    core = [mat_arm(), sample | Nock.Lib.logics_core()]
+    core = [mat_arm(), sample | Nock.Lib.rm_core()]
 
     core
   end
 
   @doc """
-  The shax arm for taking shax:anoma from the logics core environment.
+  The shax arm for taking shax:anoma from the resource-machine core environment.
 
   Can be gotten by defining gate locally as:
 
-  =localshax   =>  logics  |=  a=@  (shax a)
+  =localshax   =>  resource-machine  |=  a=@  (shax a)
 
   and then grabbing the arm of localshax.
   """
 
   @spec shax_arm() :: Noun.t()
   def shax_arm() do
-    layer_depth = example_layer_depth(7)
+    arm_info = Mugs.index_map().shax
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec shax() :: Noun.t()
   def shax() do
     sample = 0
-    core = [shax_arm(), sample | Nock.Lib.logics_core()]
+    core = [shax_arm(), sample | Nock.Lib.rm_core()]
 
     assert Nock.nock(core, [9, 2, 0 | 1])
            |> elem(1)
@@ -578,20 +606,23 @@ defmodule Examples.ENock do
 
   Can be gotten by defining
 
-  =lraw   =>  logics  |=   [a=@ b=@]  (~(raw og a) b)
+  =lraw   =>  resource-machine  |=   [a=@ b=@]  (~(raw og a) b)
   """
 
   @spec raw_arm() :: Noun.t()
   def raw_arm() do
-    layer_depth = example_layer_depth(7)
+    arm_info = Mugs.index_map().raw
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+    door_index = arm_info.door
 
     arm =
-      "[8 [8 [9 47 0 #{layer_depth}] 9 23 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 #{door_index} 0 #{layer_depth}] 9 #{arm_index} 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @doc """
@@ -617,20 +648,23 @@ defmodule Examples.ENock do
 
   Can be gotten by defining
 
-  =lraw   =>  logics  |=   [a=@ b=@]  (~(raws og a) b)
+  =lraw   =>  resource-machine  |=   [a=@ b=@]  (~(raws og a) b)
   """
 
   @spec raws_arm() :: Noun.t()
   def raws_arm() do
-    layer_depth = example_layer_depth(7)
+    arm_info = Mugs.index_map().raws
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+    door_index = arm_info.door
 
     arm =
-      "[8 [8 [9 47 0 #{layer_depth}] 9 4 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 #{door_index} 0 #{layer_depth}] 9 #{arm_index} 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @doc """
@@ -657,20 +691,23 @@ defmodule Examples.ENock do
 
   Can be gotten by defining
 
-  =lrad   =>  logics  |=   [a=@ b=@]  (~(rad og a) b)
+  =lrad   =>  resource-machine  |=   [a=@ b=@]  (~(rad og a) b)
   """
 
   @spec rad_arm() :: Noun.t()
   def rad_arm() do
-    layer_depth = example_layer_depth(7)
+    arm_info = Mugs.index_map().rad
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+    door_index = arm_info.door
 
     arm =
-      "[8 [8 [9 47 0 #{layer_depth}] 9 20 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 #{door_index} 0 #{layer_depth}] 9 #{arm_index} 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @doc """
@@ -698,20 +735,23 @@ defmodule Examples.ENock do
 
   Can be gotten by defining
 
-  =lrad   =>  logics  |=   [a=@ b=@]  (~(rads og a) b)
+  =lrad   =>  resource-machine  |=   [a=@ b=@]  (~(rads og a) b)
   """
 
   @spec rads_arm() :: Noun.t()
   def rads_arm() do
-    layer_depth = example_layer_depth(7)
+    arm_info = Mugs.index_map().rads
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+    door_index = arm_info.door
 
     arm =
-      "[8 [8 [9 47 0 #{layer_depth}] 9 22 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
+      "[8 [8 [9 #{door_index} 0 #{layer_depth}] 9 #{arm_index} 10 [6 0 28] 0 2] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @doc """
@@ -739,9 +779,11 @@ defmodule Examples.ENock do
 
   @spec abs_arm() :: Noun.t()
   def abs_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().abs
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 1.515 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -749,7 +791,7 @@ defmodule Examples.ENock do
   def abs() do
     arm = abs_arm()
     sample = 888
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # abs(--0) == 0
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1])
@@ -774,7 +816,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =ldif =>  logics  |=   [a=@ b=@]  (dif [a b])
+  =ldif =>  resource-machine  |=   [a=@ b=@]  (dif [a b])
 
   and computing
 
@@ -782,9 +824,11 @@ defmodule Examples.ENock do
   """
   @spec dif_arm() :: Noun.t()
   def dif_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().dif_8
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 759 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -792,7 +836,7 @@ defmodule Examples.ENock do
   def dif() do
     arm = dif_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # --3 - -2 == --5
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [6 | 3]], 0 | 1])
@@ -812,7 +856,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =ldul =>  logics  |=   [a=@s b=@]  (dul [a b])
+  =ldul =>  resource-machine  |=   [a=@s b=@]  (dul [a b])
 
   and computing
 
@@ -820,9 +864,11 @@ defmodule Examples.ENock do
   """
   @spec dul_arm() :: Noun.t()
   def dul_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().dul
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -830,7 +876,7 @@ defmodule Examples.ENock do
   def dul() do
     arm = dul_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # dul(-1, --5) == 9
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 10]], 0 | 1])
@@ -855,7 +901,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lfra =>  logics  |=   [a=@s b=@s]  (fra [a b])
+  =lfra =>  resource-machine  |=   [a=@s b=@s]  (fra [a b])
 
   and computing
 
@@ -863,9 +909,11 @@ defmodule Examples.ENock do
   """
   @spec fra_arm() :: Noun.t()
   def fra_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().fra
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 190 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -873,7 +921,7 @@ defmodule Examples.ENock do
   def fra() do
     arm = fra_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # -1 / -1 == --1
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 1]], 0 | 1])
@@ -903,7 +951,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lnew =>  logics  |=   [a=? b=@]  (new [a b])
+  =lnew =>  resource-machine  |=   [a=? b=@]  (new [a b])
 
   and computing
 
@@ -911,9 +959,11 @@ defmodule Examples.ENock do
   """
   @spec new_arm() :: Noun.t()
   def new_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().new
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 758 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -921,7 +971,7 @@ defmodule Examples.ENock do
   def new() do
     arm = new_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # new(%.n, 2) == -2
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [1 | 2]], 0 | 1])
@@ -941,7 +991,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lold =>  logics  |=   [a=@s]  (old a)
+  =lold =>  resource-machine  |=   [a=@s]  (old a)
 
   and computing
 
@@ -949,9 +999,11 @@ defmodule Examples.ENock do
   """
   @spec old_arm() :: Noun.t()
   def old_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().old
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 756 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -959,7 +1011,7 @@ defmodule Examples.ENock do
   def old() do
     arm = old_arm()
     sample = 888
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # old(-2) == [%.n, 2]
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 3], 0 | 1])
@@ -979,7 +1031,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lpro =>  logics  |=   [a=@s b=@s]  (pro [a b])
+  =lpro =>  resource-machine  |=   [a=@s b=@s]  (pro [a b])
 
   and computing
 
@@ -987,9 +1039,11 @@ defmodule Examples.ENock do
   """
   @spec pro_arm() :: Noun.t()
   def pro_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().pro
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 46 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -997,7 +1051,7 @@ defmodule Examples.ENock do
   def pro() do
     arm = pro_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # -3 * --3 == -9
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [5 | 6]], 0 | 1])
@@ -1017,7 +1071,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lrem =>  logics  |=   [a=@s b=@s]  (rem [a b])
+  =lrem =>  resource-machine  |=   [a=@s b=@s]  (rem [a b])
 
   and computing
 
@@ -1025,9 +1079,11 @@ defmodule Examples.ENock do
   """
   @spec rem_arm() :: Noun.t()
   def rem_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().rem
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 6.058 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1035,7 +1091,7 @@ defmodule Examples.ENock do
   def rem() do
     arm = rem_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # -17 % -3 == -2
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [33 | 5]], 0 | 1])
@@ -1065,7 +1121,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lsum =>  logics  |=   [a=@s b=@s]  (sum [a b])
+  =lsum =>  resource-machine  |=   [a=@s b=@s]  (sum [a b])
 
   and computing
 
@@ -1073,9 +1129,11 @@ defmodule Examples.ENock do
   """
   @spec sum_arm() :: Noun.t()
   def sum_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().sum
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1083,7 +1141,7 @@ defmodule Examples.ENock do
   def sum() do
     arm = sum_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # -11 + --2 == -9
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [21 | 4]], 0 | 1])
@@ -1100,9 +1158,11 @@ defmodule Examples.ENock do
 
   @spec sun_arm() :: Noun.t()
   def sun_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().sun
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 10 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1110,7 +1170,7 @@ defmodule Examples.ENock do
   def sun() do
     arm = sun_arm()
     sample = 888
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # sun(90) == 180
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 90], 0 | 1])
@@ -1122,9 +1182,11 @@ defmodule Examples.ENock do
 
   @spec syn_arm() :: Noun.t()
   def syn_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().syn
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 188 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1132,7 +1194,7 @@ defmodule Examples.ENock do
   def syn() do
     arm = syn_arm()
     sample = 888
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # syn(--0) == %.y
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 0], 0 | 1])
@@ -1157,7 +1219,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lcmp =>  logics  |=   [a=@s b=@s]  (cmp [a b])
+  =lcmp =>  resource-machine  |=   [a=@s b=@s]  (cmp [a b])
 
   and computing
 
@@ -1165,9 +1227,11 @@ defmodule Examples.ENock do
   """
   @spec cmp_arm() :: Noun.t()
   def cmp_arm() do
-    layer_depth = example_layer_depth(8)
+    arm_info = Mugs.index_map().cmp
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 191 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
@@ -1175,7 +1239,7 @@ defmodule Examples.ENock do
   def cmp() do
     arm = cmp_arm()
     sample = [888 | 999]
-    core = [arm, sample | Nock.Lib.logics_core()]
+    core = [arm, sample | Nock.Lib.rm_core()]
 
     # cmp(-2, --1) == -1
     assert Nock.nock(core, [9, 2, 10, [6, 1 | [3 | 2]], 0 | 1])
@@ -1205,7 +1269,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lmug =>  logics  |=   a=*  (mug a)
+  =lmug =>  resource-machine  |=   a=*  (mug a)
 
   and computing
 
@@ -1213,19 +1277,21 @@ defmodule Examples.ENock do
   """
   @spec mug_arm() :: Noun.t()
   def mug_arm() do
-    layer_depth = example_layer_depth(9)
+    arm_info = Mugs.index_map().mug
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 189 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @doc """
-  I am the full mug gate with specified sample and logics context.
+  I am the full mug gate with specified sample and resource-machine context.
   """
   @spec mug_call(Noun.t()) :: Noun.t()
   def mug_call(noun) do
     sample = noun
-    [mug_arm(), sample | Nock.Lib.logics_core()]
+    [mug_arm(), sample | Nock.Lib.rm_core()]
   end
 
   @spec mug_test() :: bool()
@@ -1260,7 +1326,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =ldor =>  logics  |=   [a=* b=*]  (dor a b)
+  =ldor =>  resource-machine  |=   [a=* b=*]  (dor a b)
 
   and computing
 
@@ -1268,19 +1334,21 @@ defmodule Examples.ENock do
   """
   @spec dor_arm() :: Noun.t()
   def dor_arm() do
-    layer_depth = example_layer_depth(9)
+    arm_info = Mugs.index_map().dor
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 765 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @doc """
-  I am the full dor gate with specified sample and logics context.
+  I am the full dor gate with specified sample and resource-machine context.
   """
   @spec dor_call(Noun.t(), Noun.t()) :: Noun.t()
   def dor_call(a, b) do
     sample = [a | b]
-    [dor_arm(), sample | Nock.Lib.logics_core()]
+    [dor_arm(), sample | Nock.Lib.rm_core()]
   end
 
   @spec dor_test() :: bool()
@@ -1311,7 +1379,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lgor =>  logics  |=   [a=* b=*]  (gor a b)
+  =lgor =>  resource-machine  |=   [a=* b=*]  (gor a b)
 
   and computing
 
@@ -1319,19 +1387,21 @@ defmodule Examples.ENock do
   """
   @spec gor_arm() :: Noun.t()
   def gor_arm() do
-    layer_depth = example_layer_depth(9)
+    arm_info = Mugs.index_map().gor
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 190 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @doc """
-  I am the full gor gate with specified sample and logics context.
+  I am the full gor gate with specified sample and resource-machine context.
   """
   @spec gor_call(Noun.t(), Noun.t()) :: Noun.t()
   def gor_call(a, b) do
     sample = [a | b]
-    [gor_arm(), sample | Nock.Lib.logics_core()]
+    [gor_arm(), sample | Nock.Lib.rm_core()]
   end
 
   @spec gor_test() :: bool()
@@ -1357,7 +1427,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lmor =>  logics  |=   [a=* b=*]  (mor a b)
+  =lmor =>  resource-machine  |=   [a=* b=*]  (mor a b)
 
   and computing
 
@@ -1365,19 +1435,21 @@ defmodule Examples.ENock do
   """
   @spec mor_arm() :: Noun.t()
   def mor_arm() do
-    layer_depth = example_layer_depth(9)
+    arm_info = Mugs.index_map().mor
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 10 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 [0 28] 0 29] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @doc """
-  I am the full mor gate with specified sample and logics context.
+  I am the full mor gate with specified sample and resource-machine context.
   """
   @spec mor_call(Noun.t(), Noun.t()) :: Noun.t()
   def mor_call(a, b) do
     sample = [a | b]
-    [mor_arm(), sample | Nock.Lib.logics_core()]
+    [mor_arm(), sample | Nock.Lib.rm_core()]
   end
 
   @spec mor_test() :: bool()
@@ -1403,7 +1475,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =llte =>  logics  |=   [a=@s b=@s]  (lte [a b])
+  =llte =>  resource-machine  |=   [a=@s b=@s]  (lte [a b])
 
   and computing
 
@@ -1411,16 +1483,18 @@ defmodule Examples.ENock do
   """
   @spec lte_arm() :: Noun.t()
   def lte_arm() do
-    layer_depth = example_layer_depth(1)
+    arm_info = Mugs.index_map().lte
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 84 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   @spec lte() :: Noun.t()
   def lte() do
     sample = [888 | 999]
-    core = [lte_arm(), sample | Nock.Lib.logics_core()]
+    core = [lte_arm(), sample | Nock.Lib.rm_core()]
 
     max_test_val = 4
 
@@ -1440,7 +1514,7 @@ defmodule Examples.ENock do
 
   Can be obtained by defining
 
-  =lsilt =>  logics  |=   a=(list)  (silt a)
+  =lsilt =>  resource-machine  |=   a=(list)  (silt a)
 
   and computing
 
@@ -1448,15 +1522,17 @@ defmodule Examples.ENock do
   """
   @spec silt_arm() :: Noun.t()
   def silt_arm() do
-    layer_depth = example_layer_depth(10)
+    arm_info = Mugs.index_map().silt
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 22 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def silt_call(list) do
     sample = list
-    [silt_arm(), sample | Nock.Lib.logics_core()]
+    [silt_arm(), sample | Nock.Lib.rm_core()]
   end
 
   def silt_test() do
@@ -1479,20 +1555,23 @@ defmodule Examples.ENock do
 
   Can be gotten by defining
 
-  =l   =>  logics  |=  a=(set)  ~(. in a)
+  =l   =>  resource-machine  |=  a=(set)  ~(. in a)
 
   and getting it's arm with [0 2]
   """
   @spec in_arm() :: Noun.t()
   def in_arm() do
-    layer_depth = example_layer_depth(10)
+    # just get the index of any arm in the door, e.g. put
+    arm_info = Mugs.index_map().put_10
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.door
 
     arm =
-      "[8 [9 21 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      "[8 [9 #{arm_index} 0 #{layer_depth}] 10 [6 0 14] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = 0
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec in_call(Noun.t()) :: :error | {:ok, Noun.t()}
@@ -1506,19 +1585,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  [a=_in b=*]  (put:in b)
+  =l    =>  resource-machine  |=  [a=_in b=*]  (put:in b)
 
   and grabbing the arm with [0 2]
   """
   @spec put_with_core() :: Noun.t()
   def put_with_core() do
+    arm_info = Mugs.index_map().put_10
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 84 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec put_with_core_call(Noun.t(), Noun.t()) ::
@@ -1556,19 +1638,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  a=_in  wyt:a
+  =l    =>  resource-machine  |=  a=_in  wyt:a
 
   and grabbing the arm with [0 2]
   """
   @spec wyt_with_core() :: Noun.t()
   def wyt_with_core() do
+    arm_info = Mugs.index_map().wyt
+    arm_index = arm_info.index
+
     arm =
-      "[7 [0 6] 9 92 0 1]"
+      "[7 [0 6] 9 #{arm_index} 0 1]"
       |> Noun.Format.parse_always()
 
     sample = 0
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec wyt_with_core_call(Noun.t()) ::
@@ -1590,19 +1675,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  a=_in  tap:a
+  =l    =>  resource-machine  |=  a=_in  tap:a
 
   and grabbing the arm with [0 2]
   """
   @spec tap_in_with_core() :: Noun.t()
   def tap_in_with_core() do
+    arm_info = Mugs.index_map().tap
+    arm_index = arm_info.index
+
     arm =
-      "[7 [0 6] 9 186 0 1]"
+      "[7 [0 6] 9 #{arm_index} 0 1]"
       |> Noun.Format.parse_always()
 
     sample = 0
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec tap_in_with_core_call(Noun.t()) ::
@@ -1627,19 +1715,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  [a=_in b=(set)]  (int:a b)
+  =l    =>  resource-machine  |=  [a=_in b=(set)]  (int:a b)
 
   and grabbing the arm with [0 2]
   """
   @spec int_with_core() :: Noun.t()
   def int_with_core() do
+    arm_info = Mugs.index_map().int
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 85 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec int_with_core_call(Noun.t(), Noun.t()) ::
@@ -1670,19 +1761,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  [a=_in b=(set)]  (dif:a b)
+  =l    =>  resource-machine  |=  [a=_in b=(set)]  (dif:a b)
 
   and grabbing the arm with [0 2]
   """
   @spec dif_with_core() :: Noun.t()
   def dif_with_core() do
+    arm_info = Mugs.index_map().dif_10
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 175 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec dif_with_core_call(Noun.t(), Noun.t()) ::
@@ -1713,19 +1807,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  [a=_in b=(set)]  (has:a b)
+  =l    =>  resource-machine  |=  [a=_in b=(set)]  (has:a b)
 
   and grabbing the arm with [0 2]
   """
   @spec has_with_core() :: Noun.t()
   def has_with_core() do
+    arm_info = Mugs.index_map().has
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 762 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec has_with_core_call(Noun.t(), Noun.t()) ::
@@ -1750,19 +1847,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  [a=_in b=(set)]  (uni:a b)
+  =l    =>  resource-machine  |=  [a=_in b=(set)]  (uni:a b)
 
   and grabbing the arm with [0 2]
   """
   @spec uni_with_core() :: Noun.t()
   def uni_with_core() do
+    arm_info = Mugs.index_map().uni
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 174 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec uni_with_core_call(Noun.t(), Noun.t()) ::
@@ -1793,19 +1893,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  [a=_in b=(set)]  (duni:a b)
+  =l    =>  resource-machine  |=  [a=_in b=(set)]  (duni:a b)
 
   and grabbing the arm with [0 2]
   """
   @spec duni_with_core() :: Noun.t()
   def duni_with_core() do
+    arm_info = Mugs.index_map().duni
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 763 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec duni_with_core_call(Noun.t(), Noun.t()) ::
@@ -1838,20 +1941,23 @@ defmodule Examples.ENock do
 
   Can be gotten by defining
 
-  =l   =>  logics  |=  a=(set)  ~(. by a)
+  =l   =>  resource-machine  |=  a=(set)  ~(. by a)
 
   and getting it's arm with [0 2]
   """
   @spec by_arm() :: Noun.t()
   def by_arm() do
-    layer_depth = example_layer_depth(11)
+    # just take any arm in the foor, e.g. put
+    arm_info = Mugs.index_map().put_11
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.door
 
     arm =
-      "[8 [9 93 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      "[8 [9 #{arm_index} 0 #{layer_depth}] 10 [6 0 14] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = 0
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec by_call(Noun.t()) :: :error | {:ok, Noun.t()}
@@ -1865,19 +1971,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  [a=_by b=(pair)]  (put:a b)
+  =l    =>  resource-machine  |=  [a=_by b=(pair)]  (put:a b)
 
   and grabbing the arm with [0 2]
   """
   @spec mput_with_core() :: Noun.t()
   def mput_with_core() do
+    arm_info = Mugs.index_map().put_11
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 340 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec mput_with_core_call(Noun.t(), Noun.t(), Noun.t()) ::
@@ -1905,19 +2014,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  [a=_by b=*]  (got:a b)
+  =l    =>  resource-machine  |=  [a=_by b=*]  (got:a b)
 
   and grabbing the arm with [0 2]
   """
   @spec got_with_core() :: Noun.t()
   def got_with_core() do
+    arm_info = Mugs.index_map().got
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 701 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0 | 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec got_with_core_call(Noun.t(), Noun.t()) ::
@@ -1942,7 +2054,7 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  a=_by  tap:a
+  =l    =>  resource-machine  |=  a=_by  tap:a
 
   and grabbing the arm with [0 2]
   """
@@ -1954,7 +2066,7 @@ defmodule Examples.ENock do
 
     sample = 0
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec tap_by_with_core_call(Noun.t()) ::
@@ -1974,15 +2086,17 @@ defmodule Examples.ENock do
   end
 
   def kind_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().kind
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 5972 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def kind_call(resource) do
     sample = resource
-    [kind_arm(), sample | Nock.Lib.logics_core()]
+    [kind_arm(), sample | Nock.Lib.rm_core()]
   end
 
   def kind_test() do
@@ -2000,15 +2114,17 @@ defmodule Examples.ENock do
   end
 
   def delta_add_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().delta_add
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 372 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def delta_add_call(delta1, delta2) do
     sample = [delta1 | delta2]
-    [delta_add_arm(), sample | Nock.Lib.logics_core()]
+    [delta_add_arm(), sample | Nock.Lib.rm_core()]
   end
 
   def delta_add_test() do
@@ -2026,15 +2142,17 @@ defmodule Examples.ENock do
   end
 
   def delta_sub_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().delta_sub
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 12013 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def delta_sub_call(delta1, delta2) do
     sample = [delta1 | delta2]
-    [delta_sub_arm(), sample | Nock.Lib.logics_core()]
+    [delta_sub_arm(), sample | Nock.Lib.rm_core()]
   end
 
   def delta_sub_test() do
@@ -2054,7 +2172,10 @@ defmodule Examples.ENock do
   end
 
   def zero_delta_arm() do
-    "[9 174 0 7]" |> Noun.Format.parse_always()
+    arm_info = Mugs.index_map().zero_delta
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+    "[9 #{arm_index} 0 #{layer_depth}]" |> Noun.Format.parse_always()
   end
 
   def zero_delta_call() do
@@ -2072,16 +2193,18 @@ defmodule Examples.ENock do
   end
 
   def resource_delta_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().resource_delta
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 701 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def resource_delta_call(res) do
     sample = res
 
-    [resource_delta_arm(), sample | Nock.Lib.logics_core()]
+    [resource_delta_arm(), sample | Nock.Lib.rm_core()]
     |> Nock.nock([9, 2, 0 | 1])
   end
 
@@ -2094,15 +2217,17 @@ defmodule Examples.ENock do
   end
 
   def action_delta_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().action_delta
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 4 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def action_delta_call(action) do
     sample = action
-    [action_delta_arm(), sample | Nock.Lib.logics_core()]
+    [action_delta_arm(), sample | Nock.Lib.rm_core()]
   end
 
   def action_delta_test() do
@@ -2117,15 +2242,17 @@ defmodule Examples.ENock do
   end
 
   def make_delta_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().make_delta
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 11951 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def make_delta_call(actions) do
     sample = actions
-    [make_delta_arm(), sample | Nock.Lib.logics_core()]
+    [make_delta_arm(), sample | Nock.Lib.rm_core()]
   end
 
   def make_delta_test() do
@@ -2140,16 +2267,18 @@ defmodule Examples.ENock do
   end
 
   def commitment_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().commitment
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 3002 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def make_commitment_call(res) do
     sample = res
 
-    [commitment_arm(), sample | Nock.Lib.logics_core()]
+    [commitment_arm(), sample | Nock.Lib.rm_core()]
     |> Nock.nock([9, 2, 0 | 1])
   end
 
@@ -2162,15 +2291,17 @@ defmodule Examples.ENock do
   end
 
   def is_commitment_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().is_commitment
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 12012 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def make_is_commitment_call(atom) do
     sample = atom
-    [is_commitment_arm(), sample | Nock.Lib.logics_core()]
+    [is_commitment_arm(), sample | Nock.Lib.rm_core()]
   end
 
   def is_commitment_test() do
@@ -2195,16 +2326,18 @@ defmodule Examples.ENock do
   end
 
   def nullifier_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().nullifier
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 2815 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def make_nullifier_call(res) do
     sample = res
 
-    [nullifier_arm(), sample | Nock.Lib.logics_core()]
+    [nullifier_arm(), sample | Nock.Lib.rm_core()]
     |> Nock.nock([9, 2, 0 | 1])
   end
 
@@ -2221,15 +2354,17 @@ defmodule Examples.ENock do
   end
 
   def is_nullifier_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().is_nullifier
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 5974 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def make_is_nullifier_call(atom) do
     sample = atom
-    [is_nullifier_arm(), sample | Nock.Lib.logics_core()]
+    [is_nullifier_arm(), sample | Nock.Lib.rm_core()]
   end
 
   def is_nullifier_test() do
@@ -2254,16 +2389,18 @@ defmodule Examples.ENock do
   end
 
   def action_create_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().action_create
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 382 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def action_create_call(created, consumed, appdata) do
     sample = [created, consumed | appdata]
 
-    [action_create_arm(), sample | Nock.Lib.logics_core()]
+    [action_create_arm(), sample | Nock.Lib.rm_core()]
     |> Nock.nock([9, 2, 0 | 1])
   end
 
@@ -2273,7 +2410,7 @@ defmodule Examples.ENock do
     cm = consumed |> Resource.commitment_hash()
     root = MapSet.new([cm]) |> CommitmentAccumulator.value()
 
-    consumed_list = Noun.Nounable.to_noun([{<<0::256>>, consumed, root}])
+    consumed_list = Noun.Nounable.to_noun([{{0, 0}, consumed, root}])
     created_list = Noun.Nounable.to_noun([created])
 
     {:ok, res} =
@@ -2302,16 +2439,18 @@ defmodule Examples.ENock do
   end
 
   def t_compose_arm() do
-    layer_depth = Nock.Lib.stdlib_layers() |> example_layer_depth()
+    arm_info = Mugs.index_map().t_compose
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
 
-    "[8 [9 383 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
     |> Noun.Format.parse_always()
   end
 
   def t_compose_call(tx1, tx2) do
     sample = [tx1 | tx2]
 
-    [t_compose_arm(), sample | Nock.Lib.logics_core()]
+    [t_compose_arm(), sample | Nock.Lib.rm_core()]
     |> Nock.nock([9, 2, 0 | 1])
   end
 
@@ -2324,6 +2463,82 @@ defmodule Examples.ENock do
     assert ETransaction.swap_from_actions() == tx
   end
 
+  def secp_sign_arm() do
+    arm_info = Mugs.index_map().secp256k1_sign
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] 0 13] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def secp_sign_call(msg, key) do
+    sample = [msg | key]
+
+    [secp_sign_arm(), sample | Nock.Lib.rm_core()]
+    |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def secp_sign_test(
+        msg \\ :crypto.strong_rand_bytes(32),
+        key \\ :crypto.strong_rand_bytes(32)
+      ) do
+    {:ok, res} = secp_sign_call(msg, key)
+    {:ok, res2} = ExSecp256k1.sign_compact(msg, key)
+
+    assert Noun.equal?(Noun.Nounable.to_noun(res2), res)
+  end
+
+  def secp_public_key_arm() do
+    arm_info = Mugs.index_map().secp256k1_pub_key
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 0 14] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def secp_public_key_call(priv_key) do
+    sample = priv_key
+
+    [secp_public_key_arm(), sample | Nock.Lib.rm_core()]
+    |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def secp_public_key_test(key \\ :crypto.strong_rand_bytes(32)) do
+    {:ok, res} = secp_public_key_call(key)
+    {:ok, res2} = ExSecp256k1.create_public_key(key)
+
+    assert res2 == res
+  end
+
+  def secp_verify_arm() do
+    arm_info = Mugs.index_map().secp256k1_verify
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.index
+
+    "[8 [9 #{arm_index} 0 #{layer_depth}] 9 2 10 [6 7 [0 3] [0 12] [0 26] 0 27] 0 2]"
+    |> Noun.Format.parse_always()
+  end
+
+  def secp_verify_call(msg, sig, key) do
+    sample = [msg, sig | key]
+
+    [secp_verify_arm(), sample | Nock.Lib.rm_core()]
+    |> Nock.nock([9, 2, 0 | 1])
+  end
+
+  def secp_verify_test(
+        msg \\ :crypto.strong_rand_bytes(32),
+        key \\ :crypto.strong_rand_bytes(32)
+      ) do
+    {:ok, [sign | _r]} = secp_sign_call(msg, key)
+    {:ok, pub_key} = secp_public_key_call(key)
+    {:ok, bool} = secp_verify_call(msg, sign, pub_key)
+
+    assert Noun.equal?(bool, 0)
+  end
+
   ############################################################
   ##                      Block Cores                       ##
   ############################################################
@@ -2332,48 +2547,56 @@ defmodule Examples.ENock do
   I am an lash arm in the block door.
 
   My index inside the door can be seen by asking to dump the logic of
-  =llsh   =>  logics  |=  a=@  lsh:block
+  =llsh   =>  resource-machine  |=  a=@  lsh:block
   """
 
   @spec lsh(Noun.t()) :: Noun.t()
   def lsh(value) do
-    block_calling_biop(value, 90)
+    arm_info = Mugs.index_map().lsh
+    arm_index = arm_info.index
+    block_calling_biop(value, arm_index)
   end
 
   @doc """
   I am an lash arm in the block door.
 
   My index inside the door can be seen by asking to dump the logic of
-  =lmet   =>  logics  |=  a=@  met:block
+  =lmet   =>  resource-machine  |=  a=@  met:block
   """
 
   @spec met(Noun.t()) :: Noun.t()
   def met(value) do
-    block_calling_mono(value, 190)
+    arm_info = Mugs.index_map().met
+    arm_index = arm_info.index
+    block_calling_mono(value, arm_index)
   end
 
   @doc """
   I am an lash arm in the block door.
 
   My index inside the door can be seen by asking to dump the logic of
-  =luend   =>  logics  |=  a=@  luend:block
+  =luend   =>  resource-machine  |=  a=@  luend:block
   """
 
   @spec uend(Noun.t()) :: Noun.t()
   def uend(value) do
-    block_calling_biop(value, 367)
+    arm_info = Mugs.index_map().end
+    arm_index = arm_info.index
+    block_calling_biop(value, arm_index)
   end
 
   @doc """
   I am an lash arm in the block door.
 
   My index inside the door can be seen by asking to dump the logic of
-  =rsh   =>  logics  |=  a=@  rsh:block
+  =rsh   =>  resource-machine  |=  a=@  rsh:block
   """
 
   @spec rsh(Noun.t()) :: Noun.t()
   def rsh(value) do
-    block_calling_biop(value, 767)
+    arm_info = Mugs.index_map().rsh
+    arm_index = arm_info.index
+    block_calling_biop(value, arm_index)
   end
 
   @doc """
@@ -2600,20 +2823,23 @@ defmodule Examples.ENock do
 
   Can be gotten by defining
 
-  =l   =>  logics  |=  [seed=@]  ~(. og seed)
+  =l   =>  resource-machine  |=  [seed=@]  ~(. og seed)
 
   and getting it's arm with [0 2]
   """
   @spec og_arm() :: Noun.t()
   def og_arm() do
-    layer_depth = example_layer_depth(7)
+    # get a random arm inside the door, e.g. raw
+    arm_info = Mugs.index_map().raw
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.door
 
     arm =
-      "[8 [9 47 0 #{layer_depth}] 10 [6 0 14] 0 2]"
+      "[8 [9 #{arm_index} 0 #{layer_depth}] 10 [6 0 14] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = 0
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec og_call(non_neg_integer()) :: :error | {:ok, Noun.t()}
@@ -2627,19 +2853,22 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  [rng=_og width=@]  (raws:rng width)
+  =l    =>  resource-machine  |=  [rng=_og width=@]  (raws:rng width)
 
   and grabbing the arm with [0 2]
   """
   @spec raws_with_core() :: Noun.t()
   def raws_with_core() do
+    arm_info = Mugs.index_map().raws
+    arm_index = arm_info.index
+
     arm =
-      "[8 [7 [0 12] 9 4 0 1] 9 2 10 [6 0 29] 0 2]"
+      "[8 [7 [0 12] 9 #{arm_index} 0 1] 9 2 10 [6 0 29] 0 2]"
       |> Noun.Format.parse_always()
 
     sample = [0, 0]
 
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec raws_with_core_call(non_neg_integer(), non_neg_integer()) ::
@@ -2661,15 +2890,17 @@ defmodule Examples.ENock do
 
   Can be gotten by defining locally
 
-  =l    =>  logics  |=  [rng=_og]  split:rng
+  =l    =>  resource-machine  |=  [rng=_og]  split:rng
 
   and grabbing the arm with [0 2]
   """
   @spec split_arm() :: Noun.t()
   def split_arm() do
-    arm = "[7 [0 6] 9 21 0 1]" |> Noun.Format.parse_always()
+    arm_info = Mugs.index_map().split
+    arm_index = arm_info.index
+    arm = "[7 [0 6] 9 #{arm_index} 0 1]" |> Noun.Format.parse_always()
     sample = 0
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec split_call(Noun.t()) :: :error | {:ok, Noun.t()}
@@ -2704,7 +2935,7 @@ defmodule Examples.ENock do
 
   @spec factorial_arm() :: Noun.t()
   def factorial_arm() do
-    layer_depth = (Nock.Lib.stdlib_layers() + 5) |> Noun.index_to_offset()
+    layer_depth = (Nock.Lib.stdlib_layers() + 4) |> Noun.index_to_offset()
     "
     [ 8
       [1 1 0]
@@ -2732,7 +2963,7 @@ defmodule Examples.ENock do
   @spec factorial() :: Noun.t()
   def factorial() do
     sample = 1
-    core = [factorial_arm(), sample | Nock.Lib.logics_core()]
+    core = [factorial_arm(), sample | Nock.Lib.rm_core()]
 
     assert Nock.nock(core, [9, 2, 10, [6, 1 | 7], 0 | 1])
            |> elem(1)
@@ -2752,21 +2983,25 @@ defmodule Examples.ENock do
     # `index` at a block door evaluated with block size value `value`
 
     # check the index of the block by defining block locally
-    # =lblock   =>  logics  |=  a=@  block
+    # =lblock   =>  resource-machine  |=  a=@  block
     # then check the gate index by dumping
-    # =lgateblock   =>  logics  |=  a=@  gate:block
+    # =lgateblock   =>  resource-machine  |=  a=@  gate:block
     # finally check how the door inputs its block-size by evaluating
-    # =>  logics  !=(~(gate block val))
+    # =>  resource-machine  !=(~(gate block val))
     # with different values
-    layer_depth = example_layer_depth(4)
+
+    # take an arbitrary arm in the door e.g. met
+    arm_info = Mugs.index_map().met
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.door
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 #{layer_depth}] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
+        "[8 [8 [9 #{arm_index} 0 #{layer_depth}] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
       )
 
     sample = [999 | 888]
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec block_calling_mono(Noun.t(), Noun.t()) :: Noun.t()
@@ -2775,28 +3010,32 @@ defmodule Examples.ENock do
     # `index` at a block door evaluated with block size value `value`
 
     # check the index of the block by defining block locally
-    # =lblock   =>  logics  |=  a=@  block
+    # =lblock   =>  resource-machine  |=  a=@  block
     # then check the gate index by dumping
-    # =lgateblock   =>  logics  |=  a=@  gate:block
+    # =lgateblock   =>  resource-machine  |=  a=@  gate:block
     # finally check how the door inputs its block-size by evaluating
-    # =>  logics  !=(~(gate block val))
+    # =>  resource-machine  !=(~(gate block val))
     # with different values
-    layer_depth = example_layer_depth(4)
+
+    # take an arbitrary arm in the door e.g. met
+    arm_info = Mugs.index_map().met
+    layer_depth = example_layer_depth(arm_info.layer)
+    arm_index = arm_info.door
 
     arm =
       Noun.Format.parse_always(
-        "[8 [8 [9 10 0 #{layer_depth}] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
+        "[8 [8 [9 #{arm_index} 0 #{layer_depth}] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
       )
 
     sample = 999
-    [arm, sample | Nock.Lib.logics_core()]
+    [arm, sample | Nock.Lib.rm_core()]
   end
 
   @spec increment_counter_val(Noun.t()) :: Noun.t()
   def increment_counter_val(val) do
     arm = [[1 | val], 4, 12, [1 | 0], [0 | 6], 1, val | 0]
     sample = 0
-    [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.Lib.logics_core()]
+    [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.Lib.rm_core()]
   end
 
   # [%ctr 0]
@@ -2804,7 +3043,7 @@ defmodule Examples.ENock do
   def zero_counter(val) do
     arm = [1, val | 0]
     sample = 0
-    [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.Lib.logics_core()]
+    [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.Lib.rm_core()]
   end
 
   ####################################################################
