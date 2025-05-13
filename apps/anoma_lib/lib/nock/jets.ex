@@ -16,6 +16,71 @@ defmodule Nock.Jets do
   import Bitwise
   import Noun
 
+  @type error() ::
+          {:dec, Noun.t()}
+          | {:add, Noun.t()}
+          | {:sub, Noun.t()}
+          | {:lth, Noun.t()}
+          | {:lte, Noun.t()}
+          | {:gth, Noun.t()}
+          | {:gte, Noun.t()}
+          | {:mul, Noun.t()}
+          | {:div, Noun.t()}
+          | {:mod, Noun.t()}
+          | {:sign, Noun.t()}
+          | {:verify, Noun.t()}
+          | {:sign_detatched, Noun.t()}
+          | {:verify_detatched, Noun.t()}
+          | {:bex, Noun.t()}
+          | {:mix, Noun.t()}
+          | {:lsh, Noun.t()}
+          | {:rsh, Noun.t()}
+          | {:bex, Noun.t()}
+          | {:nend, Noun.t()}
+          | {:met, Noun.t()}
+          | {:jam, Noun.t()}
+          | {:cue, Noun.t()}
+          | {:shax, Noun.t()}
+          | {:abs, Noun.t()}
+          | {:dif, Noun.t()}
+          | {:dul, Noun.t()}
+          | {:fra, Noun.t()}
+          | {:pro, Noun.t()}
+          | {:rem, Noun.t()}
+          | {:sum, Noun.t()}
+          | {:sun, Noun.t()}
+          | {:syn, Noun.t()}
+          | {:cmp, Noun.t()}
+          | {:nmug, Noun.t()}
+          | {:dor, Noun.t()}
+          | {:gor, Noun.t()}
+          | {:mor, Noun.t()}
+          | {:silt, Noun.t()}
+          | {:put, Noun.t()}
+          | {:uni, Noun.t()}
+          | {:int, Noun.t()}
+          | {:sdif, Noun.t()}
+          | {:has, Noun.t()}
+          | {:mput, Noun.t()}
+          | {:got, Noun.t()}
+          | {:kind, Noun.t()}
+          | {:delta_add, Noun.t()}
+          | {:delta_sub, Noun.t()}
+          | {:resource_delta, Noun.t()}
+          | {:compliance_delta, Noun.t()}
+          | {:action_delta, Noun.t()}
+          | {:make_delta, Noun.t()}
+          | {:action_create, Noun.t()}
+          | {:trm_compliance_key, Noun.t()}
+          | {:trm_delta_key, Noun.t()}
+          | {:t_compose, Noun.t()}
+          | {:cairo_compose, Noun.t()}
+          | {:cairo_create_from_cus, Noun.t()}
+          | {:cairo_prove_delta, Noun.t()}
+          | {:secp256k1_sign, Noun.t()}
+          | {:secp256k1_verify, Noun.t()}
+          | {:secp256k1_public_key, Noun.t()}
+
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
           non_neg_integer()
   @doc """
@@ -235,37 +300,37 @@ defmodule Nock.Jets do
   @spec an_integer(Noun.t()) :: Noun.t()
   defp an_integer(x), do: Noun.atom_binary_to_integer(x)
 
-  @spec dec(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec dec(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def dec(core) do
     with {:ok, noun} when is_noun_atom(noun) <- sample(core),
          sample when sample > 0 <- an_integer(noun) do
       {:ok, sample - 1}
     else
-      _ -> :error
+      _ -> {:error, {:dec, core}}
     end
   end
 
-  @spec add(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec add(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def add(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
       {:ok, an_integer(a) + an_integer(b)}
     else
-      _ -> :error
+      _ -> {:error, {:add, core}}
     end
   end
 
-  @spec sub(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec sub(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def sub(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
       partial_sub(an_integer(a), an_integer(b))
     else
-      _ -> :error
+      _ -> {:error, {:sub, core}}
     end
   end
 
-  @spec lth(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec lth(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def lth(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
@@ -276,11 +341,11 @@ defmodule Nock.Jets do
         {:ok, 1}
       end
     else
-      _ -> :error
+      _ -> {:error, {:lth, core}}
     end
   end
 
-  @spec lte(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec lte(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def lte(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
@@ -291,11 +356,11 @@ defmodule Nock.Jets do
         {:ok, 1}
       end
     else
-      _ -> :error
+      _ -> {:error, {:lte, core}}
     end
   end
 
-  @spec gth(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec gth(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def gth(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
@@ -306,11 +371,11 @@ defmodule Nock.Jets do
         {:ok, 1}
       end
     else
-      _ -> :error
+      _ -> {:error, {:gth, core}}
     end
   end
 
-  @spec gte(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec gte(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def gte(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
@@ -321,11 +386,11 @@ defmodule Nock.Jets do
         {:ok, 1}
       end
     else
-      _ -> :error
+      _ -> {:error, {:gte, core}}
     end
   end
 
-  @spec mul(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec mul(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def mul(core) do
     maybe_sample = sample(core)
 
@@ -334,33 +399,33 @@ defmodule Nock.Jets do
         {:ok, an_integer(a) * an_integer(b)}
 
       _ ->
-        :error
+        {:error, {:mul, core}}
     end
   end
 
-  @spec div(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec div(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def div(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
          {c, d} when d != 0 <- {an_integer(a), an_integer(b)} do
       {:ok, Kernel.div(c, d)}
     else
-      _ -> :error
+      _ -> {:error, {:div, core}}
     end
   end
 
-  @spec mod(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec mod(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def mod(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core),
          {c, d} when d != 0 <- {an_integer(a), an_integer(b)} do
       {:ok, Kernel.rem(c, d)}
     else
-      _ -> :error
+      _ -> {:error, {:mod, core}}
     end
   end
 
-  @spec verify_detatched(Noun.t()) :: :error | {:ok, 0 | 1}
+  @spec verify_detatched(Noun.t()) :: {:error, error()} | {:ok, 0 | 1}
   def verify_detatched(core) do
     maybe_sample = sample(core)
 
@@ -382,11 +447,11 @@ defmodule Nock.Jets do
         end
 
       _ ->
-        :error
+        {:error, {:verify_detatched, core}}
     end
   end
 
-  @spec verify(Noun.t()) :: :error | {:ok, binary()}
+  @spec verify(Noun.t()) :: {:error, error()} | {:ok, binary()}
   def verify(core) do
     maybe_sample = sample(core)
 
@@ -405,26 +470,27 @@ defmodule Nock.Jets do
         end
 
       _ ->
-        :error
+        {:error, {:verify, core}}
     end
   end
 
-  @spec sign(Noun.t()) :: :error | {:ok, binary()}
+  @spec sign(Noun.t()) :: {:error, error()} | {:ok, binary()}
   def sign(core) do
-    on_binary(&Sign.sign/2, core)
+    on_binary(&Sign.sign/2, core, :sign)
   end
 
-  @spec sign_detatched(Noun.t()) :: :error | {:ok, binary()}
+  @spec sign_detatched(Noun.t()) :: {:error, error()} | {:ok, binary()}
   def sign_detatched(core) do
-    on_binary(&Sign.sign_detached/2, core)
+    on_binary(&Sign.sign_detached/2, core, :sign_detatched)
   end
 
   @spec on_binary(
           (Noun.noun_atom(), Noun.noun_atom() -> Noun.noun_atom()),
-          Noun.t()
+          Noun.t(),
+          atom()
         ) ::
-          :error | {:ok, binary()}
-  defp on_binary(sign_fn, core) do
+          {:error, error()} | {:ok, binary()}
+  defp on_binary(sign_fn, core, error_atom) do
     maybe_sample = sample(core)
 
     case maybe_sample do
@@ -436,25 +502,25 @@ defmodule Nock.Jets do
              Noun.atom_integer_to_binary(b, 64)
            )}
         rescue
-          _ in ArgumentError -> :error
+          _ in ArgumentError -> {:error, {error_atom, core}}
         end
 
       _ ->
-        :error
+        {:error, {error_atom, core}}
     end
   end
 
-  @spec bex(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec bex(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def bex(core) do
     with {:ok, a} when is_noun_atom(a) <- sample(core) do
       a = an_integer(a)
       {:ok, 2 ** a}
     else
-      _ -> :error
+      _ -> {:error, {:bex, core}}
     end
   end
 
-  @spec mix(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec mix(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def mix(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
@@ -462,11 +528,11 @@ defmodule Nock.Jets do
       b = an_integer(b)
       {:ok, bxor(a, b)}
     else
-      _ -> :error
+      _ -> {:error, {:mix, core}}
     end
   end
 
-  @spec lsh(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec lsh(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def lsh(core) do
     with {:ok, [count | val]} when is_noun_atom(count) and is_noun_atom(val) <-
            sample(core),
@@ -475,11 +541,11 @@ defmodule Nock.Jets do
       {:ok,
        an_integer(val) <<< (an_integer(count) <<< an_integer(block_size))}
     else
-      _ -> :error
+      _ -> {:error, {:lsh, core}}
     end
   end
 
-  @spec rsh(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec rsh(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def rsh(core) do
     with {:ok, [count | val]} when is_noun_atom(count) and is_noun_atom(val) <-
            sample(core),
@@ -488,11 +554,11 @@ defmodule Nock.Jets do
       {:ok,
        an_integer(val) >>> (an_integer(count) <<< an_integer(block_size))}
     else
-      _ -> :error
+      _ -> {:error, {:rsh, core}}
     end
   end
 
-  @spec nend(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec nend(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def nend(core) do
     with {:ok, [count | val]} when is_noun_atom(count) and is_noun_atom(val) <-
            sample(core),
@@ -503,22 +569,22 @@ defmodule Nock.Jets do
       mask = (1 <<< (an_integer(count) <<< an_integer(block_size))) - 1
       {:ok, an_integer(val) &&& mask}
     else
-      _ -> :error
+      _ -> {:error, {:nend, core}}
     end
   end
 
-  @spec met(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec met(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def met(core) do
     with {:ok, sample} when is_noun_atom(sample) <- sample(core),
          {:ok, block_size} when is_noun_atom(block_size) <-
            Noun.axis(30, core) do
       {:ok, Noun.Bits.num_bits(sample, block_size)}
     else
-      _ -> :error
+      _ -> {:error, {:met, core}}
     end
   end
 
-  @spec jam(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec jam(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def jam(core) do
     maybe_sample = sample(core)
 
@@ -527,57 +593,54 @@ defmodule Nock.Jets do
         {:ok, Noun.Jam.jam(sample)}
 
       _ ->
-        :error
+        {:error, {:jam, core}}
     end
   end
 
-  @spec cue(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec cue(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def cue(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, sample} when is_noun_atom(sample) ->
-        Noun.Jam.cue(sample)
-
-      _ ->
-        :error
+    with {:ok, sample} when is_noun_atom(sample) <- sample(core),
+         {:ok, result} <- Noun.Jam.cue(sample) do
+      {:ok, result}
+    else
+      _ -> {:error, {:cue, core}}
     end
   end
 
-  @spec shax(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec shax(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def shax(core) do
     with {:ok, noun} when is_noun_atom(noun) <- sample(core),
          sample <- Noun.atom_integer_to_binary(noun) do
       {:ok, :crypto.hash(:sha256, sample)}
     else
-      _ -> :error
+      _ -> {:error, {:shax, core}}
     end
   end
 
   ### Signed integer arithmetic
 
-  @spec abs(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec abs(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def abs(core) do
     with {:ok, noun} when is_noun_atom(noun) <- sample(core) do
       res = a_signed_integer(noun) |> Kernel.abs()
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:abs, core}}
     end
   end
 
-  @spec dif(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec dif(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def dif(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
       {c, d} = {a_signed_integer(a), a_signed_integer(b)}
       {:ok, (c - d) |> encode_signed}
     else
-      _ -> :error
+      _ -> {:error, {:dif, core}}
     end
   end
 
-  @spec dul(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec dul(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def dul(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
@@ -588,149 +651,149 @@ defmodule Nock.Jets do
         c < 0 -> partial_sub(d, Kernel.abs(c))
       end
     else
-      _ -> :error
+      _ -> {:error, {:dul, core}}
     end
   end
 
-  @spec fra(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec fra(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def fra(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
       {c, d} = {a_signed_integer(a), a_signed_integer(b)}
       {:ok, div(c, d) |> encode_signed}
     else
-      _ -> :error
+      _ -> {:error, {:fra, core}}
     end
   end
 
-  @spec pro(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec pro(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def pro(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
       {c, d} = {a_signed_integer(a), a_signed_integer(b)}
       {:ok, (c * d) |> encode_signed}
     else
-      _ -> :error
+      _ -> {:error, {:pro, core}}
     end
   end
 
-  @spec rem(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec rem(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def rem(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
       {c, d} = {a_signed_integer(a), a_signed_integer(b)}
       {:ok, rem(c, d) |> encode_signed}
     else
-      _ -> :error
+      _ -> {:error, {:rem, core}}
     end
   end
 
-  @spec sum(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec sum(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def sum(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
       {c, d} = {a_signed_integer(a), a_signed_integer(b)}
       {:ok, (c + d) |> encode_signed}
     else
-      _ -> :error
+      _ -> {:error, {:sum, core}}
     end
   end
 
-  @spec sun(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec sun(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def sun(core) do
     with {:ok, noun} when is_noun_atom(noun) <- sample(core) do
       {:ok, 2 * an_integer(noun)}
     else
-      _ -> :error
+      _ -> {:error, {:sun, core}}
     end
   end
 
-  @spec syn(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec syn(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def syn(core) do
     with {:ok, noun} when is_noun_atom(noun) <- sample(core) do
       res = if a_signed_integer(noun) < 0, do: 1, else: 0
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:syn, core}}
     end
   end
 
-  @spec cmp(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec cmp(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def cmp(core) do
     with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
            sample(core) do
       {c, d} = {a_signed_integer(a), a_signed_integer(b)}
       {:ok, compare(c, d) |> encode_signed}
     else
-      _ -> :error
+      _ -> {:error, {:cmp, core}}
     end
   end
 
-  @spec nmug(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec nmug(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def nmug(core) do
     with {:ok, a} <- sample(core) do
       {:ok, Noun.mug(a)}
     else
-      _ -> :error
+      _ -> {:error, {:nmug, core}}
     end
   end
 
   defp a_signed_integer(x), do: Noun.atom_binary_to_signed_integer(x)
 
-  @spec dor(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec dor(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def dor(core) do
     with {:ok, [a | b]} <- sample(core) do
       res = Noun.Order.dor(a, b) |> Noun.bool_to_noun()
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:dor, core}}
     end
   end
 
-  @spec gor(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec gor(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def gor(core) do
     with {:ok, [a | b]} <- sample(core) do
       res = Noun.Order.gor(a, b) |> Noun.bool_to_noun()
 
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:gor, core}}
     end
   end
 
-  @spec mor(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec mor(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def mor(core) do
     with {:ok, [a | b]} <- sample(core) do
       res = Noun.Order.mor(a, b) |> Noun.bool_to_noun()
 
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:mor, core}}
     end
   end
 
-  @spec silt(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec silt(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def silt(core) do
     with {:ok, a} <- sample(core),
          {:ok, list} <- Noun.Nounable.List.from_noun(a) do
       {:ok, list |> MapSet.new() |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:silt, core}}
     end
   end
 
-  @spec put(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec put(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def put(core) do
     with {:ok, elem} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
          {:ok, set} <- Noun.Nounable.MapSet.from_noun(door_set) do
       {:ok, set |> MapSet.put(elem) |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:put, core}}
     end
   end
 
-  @spec uni(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec uni(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def uni(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
@@ -738,11 +801,11 @@ defmodule Nock.Jets do
          {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set) do
       {:ok, set1 |> MapSet.union(set2) |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:uni, core}}
     end
   end
 
-  @spec int(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec int(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def int(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
@@ -750,11 +813,11 @@ defmodule Nock.Jets do
          {:ok, set2} <- Noun.Nounable.MapSet.from_noun(door_set) do
       {:ok, set1 |> MapSet.intersection(set2) |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:int, core}}
     end
   end
 
-  @spec sdif(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec sdif(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def sdif(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
@@ -762,11 +825,11 @@ defmodule Nock.Jets do
          {:ok, set2} <- Noun.Nounable.MapSet.from_noun(set_arg) do
       {:ok, set1 |> MapSet.difference(set2) |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:sdif, core}}
     end
   end
 
-  @spec duni(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec duni(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def duni(core) do
     with {:ok, set_arg} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
@@ -775,33 +838,33 @@ defmodule Nock.Jets do
          true <- MapSet.disjoint?(set1, set2) do
       {:ok, set1 |> MapSet.union(set2) |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:duni, core}}
     end
   end
 
-  @spec has(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec has(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def has(core) do
     with {:ok, elem} <- sample(core),
          {:ok, door_set} <- Noun.axis(30, core),
          {:ok, set} <- Noun.Nounable.MapSet.from_noun(door_set) do
       {:ok, set |> MapSet.member?(elem) |> Noun.bool_to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:has, core}}
     end
   end
 
-  @spec mput(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec mput(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def mput(core) do
     with {:ok, [key | value]} <- sample(core),
          {:ok, door_map} <- Noun.axis(30, core),
          {:ok, map} <- Noun.Nounable.Map.from_noun(door_map) do
       {:ok, map |> Map.put(key, value) |> Noun.Nounable.Map.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:mput, core}}
     end
   end
 
-  @spec got(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec got(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def got(core) do
     with {:ok, key} <- sample(core),
          {:ok, door_map} <- Noun.axis(30, core),
@@ -809,23 +872,22 @@ defmodule Nock.Jets do
          res <- Map.get(map, key) do
       {:ok, Noun.Nounable.to_noun(res)}
     else
-      _ -> :error
+      _ -> {:error, {:got, core}}
     end
   end
 
-  @spec kind(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec kind(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def kind(core) do
     with {:ok, a} when is_noun_cell(a) <- sample(core),
          {:ok, resource} <- Resource.from_noun(a) do
       res = Resource.kind(resource)
       {:ok, res}
     else
-      _ ->
-        :error
+      _ -> {:error, {:kind, core}}
     end
   end
 
-  @spec delta_add(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec delta_add(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def delta_add(core) do
     with {:ok, [a | b]} <- sample(core),
          {:ok, cue_a} <- Noun.atom_integer_to_binary(a) |> Noun.Jam.cue(),
@@ -840,12 +902,11 @@ defmodule Nock.Jets do
 
       {:ok, res}
     else
-      _ ->
-        :error
+      _ -> {:error, {:delta_add, core}}
     end
   end
 
-  @spec delta_sub(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec delta_sub(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def delta_sub(core) do
     with {:ok, [a | b]} <- sample(core),
          {:ok, cue_a} <- Noun.atom_integer_to_binary(a) |> Noun.Jam.cue(),
@@ -860,44 +921,44 @@ defmodule Nock.Jets do
 
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:delta_sub, core}}
     end
   end
 
-  @spec resource_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec resource_delta(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def resource_delta(core) do
     with {:ok, a} <- sample(core),
          {:ok, action} <- Resource.from_noun(a) do
       res = action |> Resource.delta()
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:resource_delta, core}}
     end
   end
 
-  @spec compliance_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec compliance_delta(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def compliance_delta(core) do
     with {:ok, a} <- sample(core),
          {:ok, action} <- ComplianceUnit.from_noun(a) do
       res = action |> ComplianceUnit.delta()
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:compliance_delta, core}}
     end
   end
 
-  @spec action_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec action_delta(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def action_delta(core) do
     with {:ok, a} <- sample(core),
          {:ok, action} <- Action.from_noun(a) do
       res = action |> Action.delta()
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:action_delta, core}}
     end
   end
 
-  @spec make_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec make_delta(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def make_delta(core) do
     with {:ok, a} <- sample(core),
          {:ok, set} <- Noun.Nounable.MapSet.from_noun(a),
@@ -910,11 +971,11 @@ defmodule Nock.Jets do
 
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:make_delta, core}}
     end
   end
 
-  @spec action_create(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec action_create(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def action_create(core) do
     with {:ok, [con, cre | data]} <- sample(core),
          {:ok, con} <- Noun.Nounable.List.from_noun(con),
@@ -947,11 +1008,11 @@ defmodule Nock.Jets do
       {:ok,
        Action.create(con_res, cre_res, data_res) |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:action_create, core}}
     end
   end
 
-  @spec trm_compliance_key(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec trm_compliance_key(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def trm_compliance_key(core) do
     with {:ok, sample} <- sample(core),
          {:ok, instance} <- CPS.Instance.from_noun(sample) do
@@ -963,11 +1024,11 @@ defmodule Nock.Jets do
        )
        |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:trm_compliance_key, core}}
     end
   end
 
-  @spec trm_delta_key(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec trm_delta_key(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def trm_delta_key(core) do
     with {:ok, sample} <- sample(core),
          {:ok, instance} <- DPS.Instance.from_noun(sample) do
@@ -975,11 +1036,11 @@ defmodule Nock.Jets do
        DPS.verify_jet(instance.delta, instance.expected_balance)
        |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:trm_delta_key, core}}
     end
   end
 
-  @spec t_compose(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec t_compose(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def t_compose(core) do
     with {:ok, [tx1 | tx2]} <- sample(core),
          {:ok, cairo_tx1} <- Transaction.from_noun(tx1),
@@ -988,11 +1049,11 @@ defmodule Nock.Jets do
        Transaction.compose(cairo_tx1, cairo_tx2)
        |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:t_compose, core}}
     end
   end
 
-  @spec cairo_compose(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec cairo_compose(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def cairo_compose(core) do
     with {:ok, [tx1 | tx2]} <- sample(core),
          {:ok, cairo_tx1} <- CairoResource.Transaction.from_noun(tx1),
@@ -1001,11 +1062,11 @@ defmodule Nock.Jets do
        CairoResource.Transaction.compose(cairo_tx1, cairo_tx2)
        |> Noun.Nounable.to_noun()}
     else
-      _ -> :error
+      _ -> {:error, {:cair_compose, core}}
     end
   end
 
-  @spec cairo_create_from_cus(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec cairo_create_from_cus(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def cairo_create_from_cus(core) do
     with {:ok, [json1, bin1, json2, bin2 | json3]} <- sample(core),
          {:ok, json1_list} <- Noun.Nounable.List.from_noun(json1),
@@ -1040,17 +1101,17 @@ defmodule Nock.Jets do
            ) do
       {:ok, Noun.Nounable.to_noun(tx)}
     else
-      _ -> :error
+      _ -> {:error, {:cairo_create_from_cus, core}}
     end
   end
 
-  @spec cairo_prove_delta(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec cairo_prove_delta(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def cairo_prove_delta(core) do
     with {:ok, sample} <- sample(core),
          {:ok, cairo_tx} <- CairoResource.Transaction.from_noun(sample) do
       {:ok, CairoResource.Transaction.prove_delta(cairo_tx)}
     else
-      _ -> :error
+      _ -> {:error, {:cairo_prove_delta, core}}
     end
   end
 
@@ -1065,7 +1126,7 @@ defmodule Nock.Jets do
            ) do
       {:ok, Noun.Nounable.to_noun(res)}
     else
-      _ -> :error
+      _ -> {:error, {:secp256k1_sign, core}}
     end
   end
 
@@ -1086,7 +1147,7 @@ defmodule Nock.Jets do
 
       {:ok, res}
     else
-      _ -> :error
+      _ -> {:error, {:secp256k1_verify, core}}
     end
   end
 
@@ -1100,7 +1161,7 @@ defmodule Nock.Jets do
            |> ExSecp256k1.create_public_key() do
       {:ok, key}
     else
-      _ -> :error
+      _ -> {:error, {:secp256k1_public_key, core}}
     end
   end
 
