@@ -17,4 +17,4 @@ end
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/compile_protoc>.
+be found at <https://github.com/anoma/anoma/tree/base/apps/compile_protoc>.
