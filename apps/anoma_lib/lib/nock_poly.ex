@@ -56,7 +56,7 @@ defmodule NockPoly do
     # A functor which generates _open_ terms -- that is, terms
     # which may contain variables drawn from a type parameter.
     @typedoc "I generate open terms:  terms of `t` potentially containing variables."
-    @type termfv(ctor, v, x) :: v | termf(ctor, x)
+    @type termfv(ctor, v, x) :: {:tvar, v} | {:tcom, termf(ctor, x)}
 
     @doc "I am the morphism-map component of the bifunctor `termfv(ctor)`."
     @spec termfv_bimap((v -> w), (x -> y), termfv(ctor, v, x)) ::
@@ -64,11 +64,11 @@ defmodule NockPoly do
           when ctor: term, v: term, w: term, x: term, y: term
     def termfv_bimap(f, g, term) do
       case term do
-        {c, children} when is_list(children) ->
-          termf_map(g, {c, children})
+        {:tcom, {c, children}} ->
+          {:tcom, termf_map(g, {c, children})}
 
-        var ->
-          f.(var)
+        {:tvar, var} ->
+          {:tvar, f.(var)}
       end
     end
 
@@ -85,9 +85,8 @@ defmodule NockPoly do
     # My implementation is trivial; I am here only to make it explicit
     # that `tv` _is_ an algebra.
     #
-    # Because `termfv` uses Elixir's union types, I can accept either
-    # a constructor term or a variable term without any kind of tag.
-    # The two cases each correspond to universal morphisms:
+    # The `termfv` type uses tagged variants to distinguish between variable terms
+    # and constructor terms:
     #  - My application to a variable term is the unit of the
     #    free/forgetful adjunction between the category of algebras
     #    of `termfv` (on the left) and Elixir's base category (on the right)
@@ -163,27 +162,44 @@ defmodule NockPoly do
           when ctor: term, v: term, r: term
     def eval(algebra, subst, term) do
       case term do
-        {ctor, children} when is_list(children) ->
+        {:tcom, {ctor, children}} ->
           results = Enum.map(children, &eval(algebra, subst, &1))
           algebra.({ctor, results})
 
-        var ->
+        {:tvar, var} ->
           subst.(var)
       end
+    end
+
+    # I am the algebra used to implement `tcmap` below.
+    @spec tcmap_alg((ctor1 -> ctor2), termf(ctor1, tv(ctor2, a))) ::
+            tv(ctor2, a)
+          when ctor1: term, ctor2: term, a: term
+    def tcmap_alg(f, {ctor, children}) do
+      {:tcom, {f.(ctor), children}}
+    end
+
+    # I am the morphism-map component of the left adjoint of the
+    # free-algebra adjunction of `termfv` (the object-map component
+    # is `in_tv` above).
+    @spec tcmap((ctor1 -> ctor2), tv(ctor1, a)) :: tv(ctor2, a)
+          when ctor1: term, ctor2: term, a: term
+    def tcmap(f, x) do
+      eval(&tcmap_alg(f, &1), &Function.identity/1, x)
     end
 
     # I am the algebra used to implement `tvmap` below.
     @spec tvmap_alg(termf(ctor, tv(ctor, b))) :: tv(ctor, b)
           when ctor: term, b: term
-    def tvmap_alg(x) do
-      in_tv(x)
+    def tvmap_alg(t) do
+      {:tcom, t}
     end
 
     # I am the substitution used to implement `tvmap` below.
     @spec tvmap_subst((a -> b), a) :: tv(ctor, b)
           when ctor: term, a: term, b: term
     def tvmap_subst(f, x) do
-      f.(x)
+      {:tvar, f.(x)}
     end
 
     # I am the morphism-map component of the left adjoint of the
@@ -204,7 +220,8 @@ defmodule NockPoly do
     @spec tv_comult(tv(ctor, v)) :: tv(ctor, tv(ctor, v))
           when ctor: term, v: term
     def tv_comult(term) do
-      tvmap(&in_tv/1, term)
+      # Apply tvmap with a function that wraps the variable in a :tvar tag
+      tvmap(fn v -> {:tvar, v} end, term)
     end
 
     @doc """
@@ -216,11 +233,13 @@ defmodule NockPoly do
     @spec tv_mult(tv(ctor, tv(ctor, v))) :: tv(ctor, v)
           when ctor: term, v: term
     def tv_mult(term) do
-      eval(
-        fn {ctor, children} -> {ctor, children} end,
-        &Function.identity/1,
-        term
-      )
+      # Define an algebra for flattening nested structures
+      flatten_algebra = fn {ctor, children} ->
+        {:tcom, {ctor, children}}
+      end
+
+      # For variables, use the identity function to extract the inner variable
+      eval(flatten_algebra, &Function.identity/1, term)
     end
 
     @doc """
@@ -1142,23 +1161,20 @@ defmodule NockPoly do
 
     Returns either {:ok, type_index} or {:error, reason}.
     """
-    @spec typecheck(Term.tv(any(), any()), ind_ind_f()) ::
+    @spec typecheck(Term.tv(any(), none()), ind_ind_f()) ::
             {:ok, non_neg_integer()} | {:error, any()}
     def typecheck(term, ind_ind_f) do
       case Term.out_tv(term) do
-        {{:base, pos}, fields} ->
+        {:tcom, {{:base, pos}, fields}} ->
           typecheck_base_constructor(pos, fields, ind_ind_f)
 
-        {{:dep, pos}, fields} ->
+        {:tcom, {{:dep, pos}, fields}} ->
           typecheck_dep_constructor(pos, fields, ind_ind_f)
 
-        {ctor, _} ->
+        {:tcom, {ctor, _}} ->
           {:error,
            {:invalid_constructor_format, ctor,
             "Expected {:base, pos} or {:dep, pos}"}}
-
-        _ ->
-          {:error, {:invalid_term_format}}
       end
     end
 
@@ -1336,12 +1352,12 @@ defmodule NockPoly do
     def from_noun(noun) do
       cond do
         Noun.is_noun_atom(noun) ->
-          {{:atom, noun}, []}
+          {:tcom, {{:atom, noun}, []}}
 
         Noun.is_noun_cell(noun) ->
           case noun do
             [left | right] ->
-              {:cell, [from_noun(left), from_noun(right)]}
+              {:tcom, {:cell, [from_noun(left), from_noun(right)]}}
           end
       end
     end

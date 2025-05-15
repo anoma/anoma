@@ -153,72 +153,81 @@ defmodule ExtNock do
     def compile_algebra do
       fn
         {:slot, [addr]} ->
-          {:cell, [{{:atom, 0}, []}, addr]}
+          {:tcom, {:cell, [{:tcom, {{:atom, 0}, []}}, addr]}}
 
         {:constant, [val]} ->
-          {:cell, [{{:atom, 1}, []}, val]}
+          {:tcom, {:cell, [{:tcom, {{:atom, 1}, []}}, val]}}
 
         {:evaluate, [b, c]} ->
           # Structure: [2 b c] which is really [2 [b c]]
           # This compiles to *[a 2 b c] -> *[*[a b] *[a c]]
-          {:cell, [{{:atom, 2}, []}, {:cell, [b, c]}]}
+          {:tcom,
+           {:cell, [{:tcom, {{:atom, 2}, []}}, {:tcom, {:cell, [b, c]}}]}}
 
         {:cell_test, [a]} ->
           # Structure: [3 a]
           # This compiles to *[a 3 b] -> ?*[a b]
           # Returns 0 if the result of *[a b] is a cell, 1 if it's an atom
-          {:cell, [{{:atom, 3}, []}, a]}
+          {:tcom, {:cell, [{:tcom, {{:atom, 3}, []}}, a]}}
 
         {:incr, [a]} ->
           # Structure: [4 a]
           # This compiles to *[a 4 b] -> +*[a b]
           # Returns the atom that results from incrementing *[a b] by 1
-          {:cell, [{{:atom, 4}, []}, a]}
+          {:tcom, {:cell, [{:tcom, {{:atom, 4}, []}}, a]}}
 
         {:eq, [a, b]} ->
           # Structure: [5 a b]
           # This compiles to *[a 5 b c] -> =(*[a b] *[a c])
           # Returns 0 if *[a b] equals *[a c], 1 otherwise
-          {:cell, [{{:atom, 5}, []}, {:cell, [a, b]}]}
+          {:tcom,
+           {:cell, [{:tcom, {{:atom, 5}, []}}, {:tcom, {:cell, [a, b]}}]}}
 
         {:ife, [test, then_branch, else_branch]} ->
           # Structure: [6 test 0-case 1-case]
           # *[a 6 b c d] is equivalent to *[a *[[c d] 0 *[[2 3] 0 *[a 4 4 b]]]]
           # If *[a b] equals 0, returns *[a c]; if 1, returns *[a d]
-          {:cell,
-           [
-             {{:atom, 6}, []},
-             {:cell, [test, {:cell, [then_branch, else_branch]}]}
-           ]}
+          {:tcom,
+           {:cell,
+            [
+              {:tcom, {{:atom, 6}, []}},
+              {:tcom,
+               {:cell, [test, {:tcom, {:cell, [then_branch, else_branch]}}]}}
+            ]}}
 
         {:compose, [b, c]} ->
           # Structure: [7 b c]
           # This compiles to *[a 7 b c] -> *[*[a b] c]
           # First applies b to the subject (a), then applies c to the result
-          {:cell, [{{:atom, 7}, []}, {:cell, [b, c]}]}
+          {:tcom,
+           {:cell, [{:tcom, {{:atom, 7}, []}}, {:tcom, {:cell, [b, c]}}]}}
 
         {:push, [b, c]} ->
           # Structure: [8 b c]
           # This compiles to *[a 8 b c] -> *[[*[a b] a] c]
           # First evaluates b on subject to get a value
           # Then builds a cell [value subject] and evaluates c on that cell
-          {:cell, [{{:atom, 8}, []}, {:cell, [b, c]}]}
+          {:tcom,
+           {:cell, [{:tcom, {{:atom, 8}, []}}, {:tcom, {:cell, [b, c]}}]}}
 
         {:invoke, [b, c]} ->
           # Structure: [9 b c]
           # This compiles to *[a 9 b c] -> *[*[a c] 2 [0 1] 0 b]
           # Creates a core (by evaluating c), then pulls arm b from that core
-          {:cell, [{{:atom, 9}, []}, {:cell, [b, c]}]}
+          {:tcom,
+           {:cell, [{:tcom, {{:atom, 9}, []}}, {:tcom, {:cell, [b, c]}}]}}
 
         {:replace, [axis, replacement, subject]} ->
           # Structure: [10 [axis replacement] subject]
           # This compiles to *[a 10 [b c] d] -> #[b *[a c] *[a d]]
           # Replaces at axis b in *[a d] with the result of *[a c]
-          {:cell,
-           [
-             {{:atom, 10}, []},
-             {:cell, [{:cell, [axis, replacement]}, subject]}
-           ]}
+          {:tcom,
+           {:cell,
+            [
+              {:tcom, {{:atom, 10}, []}},
+              {:tcom,
+               {:cell, [{:tcom, {:cell, [axis, replacement]}}, subject]}}
+            ]}}
 
         {:hint, [hint, formula]} ->
           # Structure: [11 hint formula]
@@ -231,11 +240,12 @@ defmodule ExtNock do
           # component of it is evaluated against the subject to produce the
           # hint which the interpreter may consider -- and that evaluation
           # might in particular crash!
-          {:cell,
-           [
-             {{:atom, 11}, []},
-             {:cell, [hint, formula]}
-           ]}
+          {:tcom,
+           {:cell,
+            [
+              {:tcom, {{:atom, 11}, []}},
+              {:tcom, {:cell, [hint, formula]}}
+            ]}}
 
         # This is the simplest core-creation instruction we define.
         # It is a core which, when invoked, generates a core, with a battery
@@ -246,126 +256,163 @@ defmodule ExtNock do
         # below, it pushes all of that onto the stack and then the core that
         # it creates is invoked (with the default argument substituted into).
         {:create_core_1, [formula, default_arg, payload]} ->
-          {:cell,
-           [
-             # This is the battery.  It is a list of length three, so
-             # when invoked it produces a list of length three, with each
-             # element produced by invocation of the corresponding element
-             # of the battery against the subject.
-             #
-             # The element simply uses the constant instruction (ignoring the
-             # subject).  That constant is code-valued, and is passed in to
-             # the instruction as an argument.
-             {:cell,
-              [
-                {:cell,
-                 [
-                   {{:atom, 1}, []},
-                   formula
-                 ]},
-                {:cell,
-                 [
-                   default_arg,
-                   {:cell, [{{:atom, 0}, []}, {{:atom, 2}, []}]}
-                   # The result of evaluating this battery against a subject
-                   # is `[(formula) (default arg) (slot 2 of the subject)]`.
-                   # Since, when invoked by :call_core_1, the core itself is
-                   # the subject, slot 2 will be this battery itself.
-                 ]}
-              ]},
-             # payload
-             payload
-           ]}
+          {:tcom,
+           {:cell,
+            [
+              # This is the battery.  It is a list of length three, so
+              # when invoked it produces a list of length three, with each
+              # element produced by invocation of the corresponding element
+              # of the battery against the subject.
+              #
+              # The element simply uses the constant instruction (ignoring the
+              # subject).  That constant is code-valued, and is passed in to
+              # the instruction as an argument.
+              {:tcom,
+               {:cell,
+                [
+                  {:tcom,
+                   {:cell,
+                    [
+                      {:tcom, {{:atom, 1}, []}},
+                      formula
+                    ]}},
+                  {:tcom,
+                   {:cell,
+                    [
+                      default_arg,
+                      {:tcom,
+                       {:cell,
+                        [{:tcom, {{:atom, 0}, []}}, {:tcom, {{:atom, 2}, []}}]}}
+                      # The result of evaluating this battery against a subject
+                      # is `[(formula) (default arg) (slot 2 of the subject)]`.
+                      # Since, when invoked by :call_core_1, the core itself is
+                      # the subject, slot 2 will be this battery itself.
+                    ]}}
+                ]}},
+              # payload
+              payload
+            ]}}
 
         {:call_core_1, [arg_value]} ->
-          {:cell,
-           [
-             # The "call" as a whole is a push -- it uses the subject to
-             # build a formula, then pushes that formula onto the subject,
-             # thus extending the subject before calling a formula on it.
-             {{:atom, 8}, []},
-             {:cell,
-              [
-                cell: [
-                  # The first argument to the push is the formula which acts
-                  # on the subject to produce the noun to push onto the subject.
-                  # That formula is a core creation and invocation; the core
-                  # is made from slot 1 -- i.e. the entire subject -- and the
-                  # arm pulled from it is axis 2 (which is the entire battery,
-                  # so the expected subject is a one-arm core). Thus, the effect of
-                  # the :push is to extend the subject by the result of treating it as
-                  # a one-armed core and firing it, then calling the next formula
-                  # below.  We have seen the result of firing the arm of the
-                  # core created by `create_core_1` which will be used as the
-                  # subject, and when we invoke it as a core, its subject is
-                  # itself, so the noun pushed onto the subject by the :push
-                  # is `[(formula) (default argument) (battery of subject core)]`.
-                  {{:atom, 9}, []},
-                  {:cell,
-                   [
-                     {{:atom, 2}, []},
-                     {:cell, [{{:atom, 0}, []}, {{:atom, 1}, []}]}
-                   ]}
-                ],
-                cell: [
-                  # Below is the formula invoked by the :push instruction after
-                  # extending the subject.  Like the formula which extends the
-                  # subject above, it creates a core and fires it, meaning it
-                  # evaluates its battery against the whole core itself.
-                  # However, its core creation is more involved than simply
-                  # "take the whole subject".
-                  {{:atom, 9}, []},
-                  {:cell,
-                   [
-                     {{:atom, 2}, []},
-                     {:cell,
-                      [
-                        {{:atom, 10}, []},
-                        {:cell,
-                         [
-                           # This code creates the core invoked by the :push instruction.
-                           # It is a replacement of axis 6 of slot 2 of the subject; because
-                           # we just extended the subject, its slot 2 is precisely the
-                           # extension that we created.  That extension, in turn, as
-                           # described above, is the result of treating the subject as a
-                           # one-armed core and firing it.
-                           #
-                           # Consequently, we expect the subject to be a one-armed core
-                           # which creates something at axis 6 which we intend to replace.
-                           # That is the sample -- the placeholder where the arguments
-                           # will be plugged in.
-                           cell: [
-                             {{:atom, 6}, []},
-                             # And this is how we generate the arguments which we plug in to
-                             # the sample:  we take slot 3 of the subject, which, since we
-                             # just extended the subject, is the _original_ subject, before
-                             # the push.  Then we operate on that subject with some formula.
-                             # In this specific case, as it turns out, we ignore the
-                             # subject -- the formula just produces a constant atom whose
-                             # value is `inc_call_arg`.  That is, we are presuming the
-                             # subject to be a one-armed core with one argument, which
-                             # has a sample at axis 6 to be replaced with the value of
-                             # the argument for a particular invocation.
-                             {:cell,
-                              [
-                                {{:atom, 7}, []},
-                                {:cell,
-                                 [
-                                   cell: [{{:atom, 0}, []}, {{:atom, 3}, []}],
-                                   cell: [
-                                     {{:atom, 1}, []},
-                                     arg_value
-                                   ]
-                                 ]}
-                              ]}
-                           ],
-                           cell: [{{:atom, 0}, []}, {{:atom, 2}, []}]
-                         ]}
-                      ]}
-                   ]}
-                ]
-              ]}
-           ]}
+          {:tcom,
+           {:cell,
+            [
+              # The "call" as a whole is a push -- it uses the subject to
+              # build a formula, then pushes that formula onto the subject,
+              # thus extending the subject before calling a formula on it.
+              {:tcom, {{:atom, 8}, []}},
+              {:tcom,
+               {:cell,
+                [
+                  {:tcom,
+                   {:cell,
+                    [
+                      # The first argument to the push is the formula which acts
+                      # on the subject to produce the noun to push onto the subject.
+                      # That formula is a core creation and invocation; the core
+                      # is made from slot 1 -- i.e. the entire subject -- and the
+                      # arm pulled from it is axis 2 (which is the entire battery,
+                      # so the expected subject is a one-arm core). Thus, the effect of
+                      # the :push is to extend the subject by the result of treating it as
+                      # a one-armed core and firing it, then calling the next formula
+                      # below.  We have seen the result of firing the arm of the
+                      # core created by `create_core_1` which will be used as the
+                      # subject, and when we invoke it as a core, its subject is
+                      # itself, so the noun pushed onto the subject by the :push
+                      # is `[(formula) (default argument) (battery of subject core)]`.
+                      {:tcom, {{:atom, 9}, []}},
+                      {:tcom,
+                       {:cell,
+                        [
+                          {:tcom, {{:atom, 2}, []}},
+                          {:tcom,
+                           {:cell,
+                            [
+                              {:tcom, {{:atom, 0}, []}},
+                              {:tcom, {{:atom, 1}, []}}
+                            ]}}
+                        ]}}
+                    ]}},
+                  {:tcom,
+                   {:cell,
+                    [
+                      # Below is the formula invoked by the :push instruction after
+                      # extending the subject.  Like the formula which extends the
+                      # subject above, it creates a core and fires it, meaning it
+                      # evaluates its battery against the whole core itself.
+                      # However, its core creation is more involved than simply
+                      # "take the whole subject".
+                      {:tcom, {{:atom, 9}, []}},
+                      {:tcom,
+                       {:cell,
+                        [
+                          {:tcom, {{:atom, 2}, []}},
+                          {:tcom,
+                           {:cell,
+                            [
+                              {:tcom, {{:atom, 10}, []}},
+                              {:tcom,
+                               {:cell,
+                                [
+                                  # This code creates the core invoked by the :push instruction.
+                                  # It is a replacement of axis 6 of slot 2 of the subject; because
+                                  # we just extended the subject, its slot 2 is precisely the
+                                  # extension that we created.  That extension, in turn, as
+                                  # described above, is the result of treating the subject as a
+                                  # one-armed core and firing it.
+                                  #
+                                  # Consequently, we expect the subject to be a one-armed core
+                                  # which creates something at axis 6 which we intend to replace.
+                                  # That is the sample -- the placeholder where the arguments
+                                  # will be plugged in.
+                                  {:tcom,
+                                   {:cell,
+                                    [
+                                      {:tcom, {{:atom, 6}, []}},
+                                      # And this is how we generate the arguments which we plug in to
+                                      # the sample:  we take slot 3 of the subject, which, since we
+                                      # just extended the subject, is the _original_ subject, before
+                                      # the push.  Then we operate on that subject with some formula.
+                                      # In this specific case, as it turns out, we ignore the
+                                      # subject -- the formula just produces a constant atom whose
+                                      # value is `inc_call_arg`.  That is, we are presuming the
+                                      # subject to be a one-armed core with one argument, which
+                                      # has a sample at axis 6 to be replaced with the value of
+                                      # the argument for a particular invocation.
+                                      {:tcom,
+                                       {:cell,
+                                        [
+                                          {:tcom, {{:atom, 7}, []}},
+                                          {:tcom,
+                                           {:cell,
+                                            [
+                                              {:tcom,
+                                               {:cell,
+                                                [
+                                                  {:tcom, {{:atom, 0}, []}},
+                                                  {:tcom, {{:atom, 3}, []}}
+                                                ]}},
+                                              {:tcom,
+                                               {:cell,
+                                                [
+                                                  {:tcom, {{:atom, 1}, []}},
+                                                  arg_value
+                                                ]}}
+                                            ]}}
+                                        ]}}
+                                    ]}},
+                                  {:tcom,
+                                   {:cell,
+                                    [
+                                      {:tcom, {{:atom, 0}, []}},
+                                      {:tcom, {{:atom, 2}, []}}
+                                    ]}}
+                                ]}}
+                            ]}}
+                        ]}}
+                    ]}}
+                ]}}
+            ]}}
 
         # When we put together our descriptions of :create_core_1 and
         # :call_core_1, we find that the overall effect of evaluating
@@ -397,9 +444,9 @@ defmodule ExtNock do
         #   core as the subject, with slot 6 of that entire core being the
         #   replacement value.
 
-        # For standard Nock constructors, keep them as-is
+        # For standard Nock constructors, keep them as-is but wrap in :tcom tag
         {ctor, children} ->
-          {ctor, children}
+          {:tcom, {ctor, children}}
       end
     end
 
@@ -578,7 +625,7 @@ defmodule ExtNock do
         # Variable case
         match?({:var, _}, sexpr) ->
           {:var, v} = sexpr
-          {:ok, v}
+          {:ok, {:tvar, v}}
 
         # Generic handling for any extended constructor
         is_tuple(sexpr) and tuple_size(sexpr) == 2 and is_atom(elem(sexpr, 0)) and
@@ -598,7 +645,7 @@ defmodule ExtNock do
                   converted_args =
                     Enum.map(args_result, fn {:ok, term} -> term end)
 
-                  {:ok, {ctor, converted_args}}
+                  {:ok, {:tcom, {ctor, converted_args}}}
                 end
               end
           end
@@ -621,13 +668,13 @@ defmodule ExtNock do
 
           with {:ok, head_term} <- from_sexpr(head),
                {:ok, tail_term} <- from_sexpr(tail) do
-            {:ok, {:cell, [head_term, tail_term]}}
+            {:ok, {:tcom, {:cell, [head_term, tail_term]}}}
           else
             _ -> :error
           end
 
         Noun.is_noun_atom(sexpr) ->
-          {:ok, {{:atom, sexpr}, []}}
+          {:ok, {:tcom, {{:atom, sexpr}, []}}}
 
         true ->
           :error

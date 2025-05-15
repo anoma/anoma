@@ -20,7 +20,7 @@ defmodule Examples.EExtNock do
   def nock_poly_sexpr_atom_test() do
     val = 42
     term = ExtNockTerms.from_sexpr!(val)
-    assert term == {{:atom, val}, []}
+    assert term == {:tcom, {{:atom, val}, []}}
     term
   end
 
@@ -32,7 +32,7 @@ defmodule Examples.EExtNock do
     val = 7
     var = {:var, val}
     term = ExtNockTerms.from_sexpr!(var)
-    assert term == val
+    assert term == {:tvar, val}
     term
   end
 
@@ -43,7 +43,10 @@ defmodule Examples.EExtNock do
   def nock_poly_sexpr_cell_test() do
     sexpr = [1, 2]
     term = ExtNockTerms.from_sexpr!(sexpr)
-    expected = {:cell, [{{:atom, 1}, []}, {{:atom, 2}, []}]}
+
+    expected =
+      {:tcom, {:cell, [{:tcom, {{:atom, 1}, []}}, {:tcom, {{:atom, 2}, []}}]}}
+
     assert term == expected
     expected_noun = Noun.Format.parse_always("[1 2]")
     assert ExtNockTerms.to_noun!(term) == expected_noun
@@ -57,11 +60,21 @@ defmodule Examples.EExtNock do
   def nock_poly_sexpr_nested_test() do
     sexpr = [[4, 5], [12, 13], 7]
     term = ExtNockTerms.from_sexpr!(sexpr)
-    expected_inner1 = {:cell, [{{:atom, 4}, []}, {{:atom, 5}, []}]}
-    expected_inner2 = {:cell, [{{:atom, 12}, []}, {{:atom, 13}, []}]}
+
+    expected_inner1 =
+      {:tcom, {:cell, [{:tcom, {{:atom, 4}, []}}, {:tcom, {{:atom, 5}, []}}]}}
+
+    expected_inner2 =
+      {:tcom,
+       {:cell, [{:tcom, {{:atom, 12}, []}}, {:tcom, {{:atom, 13}, []}}]}}
 
     expected =
-      {:cell, [expected_inner1, {:cell, [expected_inner2, {{:atom, 7}, []}]}]}
+      {:tcom,
+       {:cell,
+        [
+          expected_inner1,
+          {:tcom, {:cell, [expected_inner2, {:tcom, {{:atom, 7}, []}}]}}
+        ]}}
 
     assert term == expected
     expected_noun = Noun.Format.parse_always("[[4 5] [12 13] 7]")
@@ -76,11 +89,11 @@ defmodule Examples.EExtNock do
   def nock_poly_sexpr_with_variables_test() do
     sexpr = [{:var, 7}, 99]
     term = ExtNockTerms.from_sexpr!(sexpr)
-    expected = {:cell, [7, {{:atom, 99}, []}]}
+    expected = {:tcom, {:cell, [{:tvar, 7}, {:tcom, {{:atom, 99}, []}}]}}
     assert term == expected
 
     closed_term =
-      ExtNockTerms.substitute(term, fn v -> {{:atom, v * 10}, []} end)
+      ExtNockTerms.substitute(term, fn v -> {:tcom, {{:atom, v * 10}, []}} end)
 
     expected_noun = Noun.Format.parse_always("[70 99]")
     assert ExtNockTerms.to_noun!(closed_term) == expected_noun
@@ -211,7 +224,7 @@ defmodule Examples.EExtNock do
     end
 
     # Malformed term structure for typechecking
-    malformed_term = {:slot, []}
+    malformed_term = {:tcom, {:slot, []}}
 
     assert {:error, _errors} =
              ExtNockTerms.compile_to_nock_term(malformed_term)
@@ -252,7 +265,7 @@ defmodule Examples.EExtNock do
     end
 
     # Malformed term structure for typechecking
-    malformed_term = {:constant, []}
+    malformed_term = {:tcom, {:constant, []}}
 
     assert {:error, _errors} =
              ExtNockTerms.compile_to_nock_term(malformed_term)
@@ -703,13 +716,15 @@ defmodule Examples.EExtNock do
   """
   def compile_to_nock_term_success_test() do
     # Create a simple extended term
-    term = {:slot, [{{:atom, 2}, []}]}
+    term = {:tcom, {:slot, [{:tcom, {{:atom, 2}, []}}]}}
 
     # Test successful compilation
     compiled = ExtNockTerms.compile_to_nock_term!(term)
 
     # Verify the structure
-    expected = {:cell, [{{:atom, 0}, []}, {{:atom, 2}, []}]}
+    expected =
+      {:tcom, {:cell, [{:tcom, {{:atom, 0}, []}}, {:tcom, {{:atom, 2}, []}}]}}
+
     assert compiled == expected
 
     term
