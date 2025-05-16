@@ -79,7 +79,7 @@ defmodule NockPoly do
     #
     # Viewed as a type constructor, I am the free monad of `termf`.
     @typedoc "A generic open polynomial term parameterized on constructor and variable types."
-    @type tv(ctor, v) :: termfv(ctor, v, tv(ctor, v))
+    @type tv(ctor, v) :: {:in_tv, termfv(ctor, v, tv(ctor, v))}
 
     # I am the action of the initial algebra of `termfv(ctor, v)`.
     # My implementation is trivial; I am here only to make it explicit
@@ -95,7 +95,7 @@ defmodule NockPoly do
     @spec in_tv(termfv(ctor, v, tv(ctor, v))) :: tv(ctor, v)
           when ctor: term, v: term
     def in_tv(x) do
-      x
+      {:in_tv, x}
     end
 
     # I am the inverse of the action of of the initial algebra of
@@ -107,8 +107,42 @@ defmodule NockPoly do
     # that `in_tv` has an inverse.
     @spec out_tv(tv(ctor, v)) :: termfv(ctor, v, tv(ctor, v))
           when ctor: term, v: term
-    def out_tv(x) do
+    def out_tv({:in_tv, x}) do
       x
+    end
+
+    @doc """
+    I create a variable term of type `termfv` by wrapping a variable in the `:tvar` tag.
+    """
+    @spec var_termfv(v) :: {:tvar, v} when v: term
+    def var_termfv(v) do
+      {:tvar, v}
+    end
+
+    @doc """
+    I create a constructor term of type `termfv` by wrapping a constructor and children
+    in the `:tcom` tag.
+    """
+    @spec com_termfv(ctor, [x]) :: {:tcom, {ctor, [x]}}
+          when ctor: term, x: term
+    def com_termfv(ctor, children) do
+      {:tcom, {ctor, children}}
+    end
+
+    @doc """
+    I create a variable term of type `tv` by composing `in_tv` with `var_termfv`.
+    """
+    @spec var_tv(v) :: tv(ctor, v) when ctor: term, v: term
+    def var_tv(v) do
+      in_tv(var_termfv(v))
+    end
+
+    @doc """
+    I create a constructor term of type `tv` by composing `in_tv` with `com_termfv`.
+    """
+    @spec com_tv(ctor, [tv(ctor, v)]) :: tv(ctor, v) when ctor: term, v: term
+    def com_tv(ctor, children) do
+      in_tv(com_termfv(ctor, children))
     end
 
     # I am the initial algebra of `termf`, which is guaranteed to have
@@ -161,7 +195,7 @@ defmodule NockPoly do
     @spec eval(termalg(ctor, r), (v -> r), tv(ctor, v)) :: r
           when ctor: term, v: term, r: term
     def eval(algebra, subst, term) do
-      case term do
+      case out_tv(term) do
         {:tcom, {ctor, children}} ->
           results = Enum.map(children, &eval(algebra, subst, &1))
           algebra.({ctor, results})
@@ -176,7 +210,7 @@ defmodule NockPoly do
             tv(ctor2, a)
           when ctor1: term, ctor2: term, a: term
     def tcmap_alg(f, {ctor, children}) do
-      {:tcom, {f.(ctor), children}}
+      com_tv(f.(ctor), children)
     end
 
     # I am the morphism-map component of the left adjoint of the
@@ -191,15 +225,15 @@ defmodule NockPoly do
     # I am the algebra used to implement `tvmap` below.
     @spec tvmap_alg(termf(ctor, tv(ctor, b))) :: tv(ctor, b)
           when ctor: term, b: term
-    def tvmap_alg(t) do
-      {:tcom, t}
+    def tvmap_alg({ctor, children}) do
+      com_tv(ctor, children)
     end
 
     # I am the substitution used to implement `tvmap` below.
     @spec tvmap_subst((a -> b), a) :: tv(ctor, b)
           when ctor: term, a: term, b: term
     def tvmap_subst(f, x) do
-      {:tvar, f.(x)}
+      var_tv(f.(x))
     end
 
     # I am the morphism-map component of the left adjoint of the
@@ -220,8 +254,8 @@ defmodule NockPoly do
     @spec tv_comult(tv(ctor, v)) :: tv(ctor, tv(ctor, v))
           when ctor: term, v: term
     def tv_comult(term) do
-      # Apply tvmap with a function that wraps the variable in a :tvar tag
-      tvmap(fn v -> {:tvar, v} end, term)
+      # Apply tvmap with a function that creates a variable term using var_tv
+      tvmap(&var_tv/1, term)
     end
 
     @doc """
@@ -235,7 +269,7 @@ defmodule NockPoly do
     def tv_mult(term) do
       # Define an algebra for flattening nested structures
       flatten_algebra = fn {ctor, children} ->
-        {:tcom, {ctor, children}}
+        com_tv(ctor, children)
       end
 
       # For variables, use the identity function to extract the inner variable
@@ -1352,12 +1386,12 @@ defmodule NockPoly do
     def from_noun(noun) do
       cond do
         Noun.is_noun_atom(noun) ->
-          {:tcom, {{:atom, noun}, []}}
+          Term.com_tv({:atom, noun}, [])
 
         Noun.is_noun_cell(noun) ->
           case noun do
             [left | right] ->
-              {:tcom, {:cell, [from_noun(left), from_noun(right)]}}
+              Term.com_tv(:cell, [from_noun(left), from_noun(right)])
           end
       end
     end
