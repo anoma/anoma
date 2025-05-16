@@ -171,7 +171,9 @@ defmodule Examples.ENockPoly do
     res = term_test_t7()
     out = Term.out_tv(res)
     # The assertion verifies that out_tv reveals the internal structure
-    assert out == {:tcom, {:d, [Term.com_tv(:e, []), Term.com_tv(:f, [])]}}
+    assert out ==
+             Term.com_termfv(:d, [Term.com_tv(:e, []), Term.com_tv(:f, [])])
+
     out
   end
 
@@ -1697,12 +1699,12 @@ defmodule Examples.ENockPoly do
   I test `tv_bind` on a hybrid term.
 
   We construct a term using a variable term and a constructor term:
-    - `var_term` is obtained from `termfv_bimap_variable_test()` (yielding {:tvar, 4}).
-    - `cons_term` is obtained from `termfv_bimap_constructor_test()` (yielding {:tcom, {:a, [6, 8]}}).
-  Then we define `m = {:tcom, {:c, [var_term, cons_term]}}`.
-  We let `f` map any variable `x` to `in_tv({:tcom, {:b, [{:tvar, x}, {:tvar, x + 10}]}})`.
+    - `var_term` is obtained from `termfv_bimap_variable_test()` (yielding a variable term with value 4).
+    - `cons_term` is obtained from `termfv_bimap_constructor_test()` (yielding a constructor term of type :a with children [6, 8]).
+  Then we define `m = T.com_tv(:c, [var_term, cons_term])`.
+  We let `f` map any variable `x` to `T.com_tv(:b, [T.var_tv(x), T.var_tv(x + 10)])`.
   Thus:
-    - For the variable branch (4), f returns a term that flattens to `{:tcom, {:b, [{:tvar, 4}, {:tvar, 14}]}}`.
+    - For the variable branch (4), f returns a term with a constructor :b containing two variables with values 4 and 14.
     - For the constructor branch, the function is applied recursively to its children, transforming them accordingly.
   """
   def tv_bind_hybrid_test() do

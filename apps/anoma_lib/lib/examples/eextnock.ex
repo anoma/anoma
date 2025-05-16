@@ -236,7 +236,7 @@ defmodule Examples.EExtNock do
     end
 
     # Malformed term structure for typechecking
-    malformed_term = T.in_tv({:tcom, {:slot, []}})
+    malformed_term = T.com_tv(:slot, [])
 
     assert {:error, _errors} =
              ExtNockTerms.compile_to_nock_term(malformed_term)
@@ -278,7 +278,7 @@ defmodule Examples.EExtNock do
     end
 
     # Malformed term structure for typechecking
-    malformed_term = T.in_tv({:tcom, {:constant, []}})
+    malformed_term = T.com_tv(:constant, [])
 
     assert {:error, _errors} =
              ExtNockTerms.compile_to_nock_term(malformed_term)
