@@ -18,7 +18,11 @@ defmodule AnomaLib.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       test_coverage: [
-        ignore_modules: [NockPoly.Term.Unreachable, ExtNock.MacroDefs]
+        ignore_modules: [
+          NockPoly.Term.Unreachable,
+          NockPoly.Term.MacroDefs,
+          ExtNock.MacroDefs
+        ]
       ]
     ]
   end

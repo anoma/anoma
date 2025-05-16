@@ -345,6 +345,16 @@ defmodule NockPoly do
         term
       )
     end
+
+    defmodule MacroDefs do
+      @moduledoc """
+
+      Macro definitions -- and macros definitions only -- in their own
+      separate module to distinguish them for the purpose of ignoring code
+      coverage (which does not know how to tell whether a macro has been
+      expanded and executed).
+      """
+    end
   end
 
   defmodule FinPolyF do
