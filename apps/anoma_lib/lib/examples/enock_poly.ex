@@ -49,7 +49,7 @@ defmodule Examples.ENockPoly do
   t2: a closed term with two children.
   """
   def term_test_t2() do
-    res = Term.com_tv(:a, [Term.com_tv(:a, []), Term.com_tv(:b, [])])
+    res = tvc(:a, [tvc0(:a), tvc0(:b)])
     assert Term.depth(res) == 2
     assert Term.size(res) == 3
     res
@@ -59,7 +59,7 @@ defmodule Examples.ENockPoly do
   t3: a nested closed term.
   """
   def term_test_t3() do
-    res = Term.com_tv(:x, [Term.com_tv(:y, [Term.com_tv(:z, [])])])
+    res = tvc(:x, [tvc(:y, [tvc0(:z)])])
     assert Term.depth(res) == 3
     assert Term.size(res) == 3
     res
@@ -70,12 +70,12 @@ defmodule Examples.ENockPoly do
   """
   def term_test_t4() do
     res =
-      Term.com_tv(
+      tvc(
         0,
         [
           term_test_t1(),
-          Term.com_tv(2, [Term.com_tv(3, []), Term.com_tv(4, [])]),
-          Term.com_tv(5, [])
+          tvc(2, [tvc0(3), tvc0(4)]),
+          tvc0(5)
         ]
       )
 
@@ -96,7 +96,7 @@ defmodule Examples.ENockPoly do
   """
   def term_test_t8() do
     res =
-      Term.com_tv("root", [Term.com_tv("left", []), Term.com_tv("right", [])])
+      tvc("root", [tvc0("left"), tvc0("right")])
 
     algebra = fn {ctor, children} ->
       to_string(ctor) <> Enum.join(children, "")
@@ -131,7 +131,7 @@ defmodule Examples.ENockPoly do
   t5: an open term whose child is a variable.
   """
   def term_test_t5() do
-    res = Term.com_tv(:a, [Term.var_tv("x")])
+    res = tvc(:a, [tvv("x")])
     assert Term.depth(res) == 1
     assert Term.size(res) == 1
     res
@@ -142,11 +142,11 @@ defmodule Examples.ENockPoly do
   """
   def term_test_t6() do
     res =
-      Term.com_tv(
+      tvc(
         :b,
         [
-          Term.var_tv("x"),
-          Term.com_tv(:c, [Term.var_tv("y"), Term.var_tv("z")])
+          tvv("x"),
+          tvc(:c, [tvv("y"), tvv("z")])
         ]
       )
 
@@ -159,7 +159,7 @@ defmodule Examples.ENockPoly do
   t7: an open term with no variables (a closed term viewed as open).
   """
   def term_test_t7() do
-    res = Term.com_tv(:d, [Term.com_tv(:e, []), Term.com_tv(:f, [])])
+    res = tvc(:d, [tvc0(:e), tvc0(:f)])
     assert Term.depth(res) == 2
     assert Term.size(res) == 3
     res
@@ -184,7 +184,7 @@ defmodule Examples.ENockPoly do
   poly_term_test_valid: A valid term using a string-based tspec.
   """
   def poly_term_test_valid() do
-    res = Term.com_tv("one", [Term.com_tv("zero", [])])
+    res = tvc("one", [tvc0("zero")])
     assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) == :ok
     res
   end
@@ -193,7 +193,7 @@ defmodule Examples.ENockPoly do
   poly_term_test_arity: Term with an arity mismatch.
   """
   def poly_term_test_arity() do
-    res = Term.com_tv("one", [])
+    res = tvc0("one")
 
     assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) ==
              {:error, [{:invalid_arity, "one", 1, 0}]}
@@ -205,7 +205,7 @@ defmodule Examples.ENockPoly do
   poly_term_test_ctor: Term with an invalid constructor.
   """
   def poly_term_test_ctor() do
-    res = Term.com_tv("three", [])
+    res = tvc0("three")
 
     assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) ==
              {:error, [{:invalid_constructor, "three"}]}
@@ -217,7 +217,7 @@ defmodule Examples.ENockPoly do
   poly_term_test_valid_variable: A valid variable term.
   """
   def poly_term_test_valid_variable() do
-    res = Term.var_tv(2)
+    res = tvv(2)
     assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) == :ok
     res
   end
@@ -226,7 +226,7 @@ defmodule Examples.ENockPoly do
   poly_term_test_invalid_variable: A term with an invalid variable.
   """
   def poly_term_test_invalid_variable() do
-    res = Term.var_tv(10)
+    res = tvv(10)
 
     assert FinPolyF.typecheck_v(res, {common_tspec(), common_vspec()}) ==
              {:error, [{:invalid_variable, 10}]}
@@ -238,7 +238,7 @@ defmodule Examples.ENockPoly do
   poly_term_test_vspec_ok: Using vspec_ok to always succeed.
   """
   def poly_term_test_vspec_ok() do
-    res = Term.var_tv(10)
+    res = tvv(10)
 
     assert FinPolyF.typecheck_v(res, {common_tspec(), &FinPolyF.vspec_ok/1}) ==
              :ok
@@ -250,7 +250,7 @@ defmodule Examples.ENockPoly do
   poly_term_test_multi: A term accumulating multiple errors.
   """
   def poly_term_test_multi() do
-    res = Term.com_tv("two", [Term.var_tv(10), Term.com_tv("three", [])])
+    res = tvc("two", [tvv(10), tvc0("three")])
 
     expected_errors = [
       {:invalid_variable, 10},
@@ -375,19 +375,19 @@ defmodule Examples.ENockPoly do
     tspec = create_expr_tspec()
 
     # Zero (representing the number 0)
-    zero_term = T.com_tv({:zero}, [])
+    zero_term = tvc0({:zero})
     assert {:ok, 0} = SliceF.typecheck(zero_term, typespec, tspec)
 
     # Successor(Zero) (representing the number 1)
-    one_term = T.com_tv({:succ}, [zero_term])
+    one_term = tvc({:succ}, [zero_term])
     assert {:ok, 0} = SliceF.typecheck(one_term, typespec, tspec)
 
     # Successor(One) (representing the number 2)
-    two_term = T.com_tv({:succ}, [one_term])
+    two_term = tvc({:succ}, [one_term])
     assert {:ok, 0} = SliceF.typecheck(two_term, typespec, tspec)
 
     # Add(One, One) (representing 1+1)
-    add_term = T.com_tv({:add}, [one_term, one_term])
+    add_term = tvc({:add}, [one_term, one_term])
     assert {:ok, 0} = SliceF.typecheck(add_term, typespec, tspec)
 
     add_term
@@ -402,23 +402,23 @@ defmodule Examples.ENockPoly do
     tspec = create_expr_tspec()
 
     # True (boolean constant)
-    true_term = T.com_tv({true}, [])
+    true_term = tvc0({true})
     assert {:ok, 1} = SliceF.typecheck(true_term, typespec, tspec)
 
     # False (boolean constant)
-    false_term = T.com_tv({false}, [])
+    false_term = tvc0({false})
     assert {:ok, 1} = SliceF.typecheck(false_term, typespec, tspec)
 
     # Get number terms for comparisons
-    zero_term = T.com_tv({:zero}, [])
-    one_term = T.com_tv({:succ}, [zero_term])
+    zero_term = tvc0({:zero})
+    one_term = tvc({:succ}, [zero_term])
 
     # Less(Zero, One) (representing 0 < 1)
-    less_term = T.com_tv({:less}, [zero_term, one_term])
+    less_term = tvc({:less}, [zero_term, one_term])
     assert {:ok, 1} = SliceF.typecheck(less_term, typespec, tspec)
 
     # And(True, False) (representing true AND false)
-    and_term = T.com_tv({:and}, [true_term, false_term])
+    and_term = tvc({:and}, [true_term, false_term])
     assert {:ok, 1} = SliceF.typecheck(and_term, typespec, tspec)
 
     and_term
@@ -433,19 +433,19 @@ defmodule Examples.ENockPoly do
     tspec = create_expr_tspec()
 
     # Create our base number terms
-    zero_term = T.com_tv({:zero}, [])
-    one_term = T.com_tv({:succ}, [zero_term])
-    two_term = T.com_tv({:succ}, [one_term])
+    zero_term = tvc0({:zero})
+    one_term = tvc({:succ}, [zero_term])
+    two_term = tvc({:succ}, [one_term])
 
     # IfThenElse(Less(One, Two), Zero, Add(One, Two))
     if_term =
-      T.com_tv({:if_then_else}, [
+      tvc({:if_then_else}, [
         # condition: Less(One, Two)
-        T.com_tv({:less}, [one_term, two_term]),
+        tvc({:less}, [one_term, two_term]),
         # then branch: Zero
         zero_term,
         # else branch: Add(One, Two)
-        T.com_tv({:add}, [one_term, two_term])
+        tvc({:add}, [one_term, two_term])
       ])
 
     assert {:ok, 0} = SliceF.typecheck(if_term, typespec, tspec)
@@ -462,12 +462,12 @@ defmodule Examples.ENockPoly do
     tspec = create_expr_tspec()
 
     # Create base terms
-    zero_term = T.com_tv({:zero}, [])
-    true_term = T.com_tv({true}, [])
+    zero_term = tvc0({:zero})
+    true_term = tvc0({true})
 
     # Error: Add takes arithmetic expressions, not boolean expressions
     # Add(Zero, True) - second parameter has wrong type
-    invalid_term = T.com_tv({:add}, [zero_term, true_term])
+    invalid_term = tvc({:add}, [zero_term, true_term])
 
     {:error, errors} = SliceF.typecheck(invalid_term, typespec, tspec)
     # We expect a single parameter type error
@@ -487,10 +487,10 @@ defmodule Examples.ENockPoly do
     tspec = create_expr_tspec()
 
     # Create base term
-    zero_term = T.com_tv({:zero}, [])
+    zero_term = tvc0({:zero})
 
     # Error: Add should have 2 parameters but has 1
-    invalid_term = T.com_tv({:add}, [zero_term])
+    invalid_term = tvc({:add}, [zero_term])
 
     {:error, errors} = SliceF.typecheck(invalid_term, typespec, tspec)
     assert length(errors) == 1
@@ -508,17 +508,17 @@ defmodule Examples.ENockPoly do
     tspec = create_expr_tspec()
 
     # Create base terms
-    zero_term = T.com_tv({:zero}, [])
-    true_term = T.com_tv({true}, [])
+    zero_term = tvc0({:zero})
+    true_term = tvc0({true})
 
     # Error: And should take 2 BoolExpr, but has 1 BoolExpr and 1 ArithExpr
     # Also, the Add has wrong parameter count (1 instead of 2)
     invalid_term =
-      T.com_tv({:and}, [
+      tvc({:and}, [
         # This is a valid BoolExpr
         true_term,
         # This is an ArithExpr with wrong param count
-        T.com_tv({:add}, [zero_term])
+        tvc({:add}, [zero_term])
       ])
 
     {:error, errors} = SliceF.typecheck(invalid_term, typespec, tspec)
@@ -603,9 +603,9 @@ defmodule Examples.ENockPoly do
   def evaluate_expr_test() do
     # Create our base terms
     alias NockPoly.Term, as: T
-    zero_term = T.com_tv({:zero}, [])
-    one_term = T.com_tv({:succ}, [zero_term])
-    two_term = T.com_tv({:succ}, [one_term])
+    zero_term = tvc0({:zero})
+    one_term = tvc({:succ}, [zero_term])
+    two_term = tvc({:succ}, [one_term])
 
     # Test arithmetic expressions
     assert evaluate_expr(zero_term) == 0
@@ -613,39 +613,39 @@ defmodule Examples.ENockPoly do
     assert evaluate_expr(two_term) == 2
 
     # Test addition
-    add_term = T.com_tv({:add}, [one_term, two_term])
+    add_term = tvc({:add}, [one_term, two_term])
     assert evaluate_expr(add_term) == 3
 
     # Test boolean expressions
-    true_term = T.com_tv({true}, [])
-    false_term = T.com_tv({false}, [])
+    true_term = tvc0({true})
+    false_term = tvc0({false})
     assert evaluate_expr(true_term) == true
     assert evaluate_expr(false_term) == false
 
     # Test comparison
-    less_term = T.com_tv({:less}, [one_term, two_term])
+    less_term = tvc({:less}, [one_term, two_term])
     assert evaluate_expr(less_term) == true
 
-    not_less_term = T.com_tv({:less}, [two_term, one_term])
+    not_less_term = tvc({:less}, [two_term, one_term])
     assert evaluate_expr(not_less_term) == false
 
     # Test logical AND
-    and_term = T.com_tv({:and}, [true_term, false_term])
+    and_term = tvc({:and}, [true_term, false_term])
     assert evaluate_expr(and_term) == false
 
-    and_true_term = T.com_tv({:and}, [true_term, true_term])
+    and_true_term = tvc({:and}, [true_term, true_term])
     assert evaluate_expr(and_true_term) == true
 
     # Test complex conditional expression
     # if (1 < 2) then 0 else (1 + 2)
     if_term =
-      T.com_tv({:if_then_else}, [
+      tvc({:if_then_else}, [
         # condition: Less(One, Two)
-        T.com_tv({:less}, [one_term, two_term]),
+        tvc({:less}, [one_term, two_term]),
         # then branch: Zero
         zero_term,
         # else branch: Add(One, Two)
-        T.com_tv({:add}, [one_term, two_term])
+        tvc({:add}, [one_term, two_term])
       ])
 
     # Since 1 < 2 is true, this should evaluate to 0
@@ -654,13 +654,13 @@ defmodule Examples.ENockPoly do
     # Now let's create an expression where the condition is false
     # if (2 < 1) then 0 else (1 + 2)
     if_false_term =
-      T.com_tv({:if_then_else}, [
+      tvc({:if_then_else}, [
         # condition: Less(Two, One) - false
-        T.com_tv({:less}, [two_term, one_term]),
+        tvc({:less}, [two_term, one_term]),
         # then branch: Zero
         zero_term,
         # else branch: Add(One, Two)
-        T.com_tv({:add}, [one_term, two_term])
+        tvc({:add}, [one_term, two_term])
       ])
 
     # Since 2 < 1 is false, this should evaluate to 1 + 2 = 3
@@ -737,22 +737,22 @@ defmodule Examples.ENockPoly do
     alias NockPoly.Term, as: T
     # Valid term with type0_ctor and a type1 variable
     valid_term_with_var =
-      T.com_tv({:type0_ctor}, [T.var_tv({{:var_type1}, 1})])
+      tvc({:type0_ctor}, [tvv({{:var_type1}, 1})])
 
     # Valid term with type1_ctor and a type0 variable
-    valid_term_type1 = T.com_tv({:type1_ctor}, [T.var_tv({{:var_type0}, 0})])
+    valid_term_type1 = tvc({:type1_ctor}, [tvv({{:var_type0}, 0})])
 
     # Invalid term with wrong variable type
     invalid_term_with_wrong_type =
-      T.com_tv({:type0_ctor}, [T.var_tv({{:var_type0}, 1})])
+      tvc({:type0_ctor}, [tvv({{:var_type0}, 1})])
 
     # Term with invalid variable
     term_with_invalid_var =
-      T.com_tv({:type0_ctor}, [T.var_tv({{:unknown_var}, 1})])
+      tvc({:type0_ctor}, [tvv({{:unknown_var}, 1})])
 
     # Term with invalid constructor
     term_with_invalid_ctor =
-      T.com_tv({:unknown_ctor}, [T.var_tv({{:var_type1}, 1})])
+      tvc({:unknown_ctor}, [tvv({{:var_type1}, 1})])
 
     # Tests
     # Valid terms should typecheck correctly
@@ -850,7 +850,7 @@ defmodule Examples.ENockPoly do
 
     alias NockPoly.Term, as: T
     # Create a simple term
-    term = T.com_tv({:zero}, [])
+    term = tvc0({:zero})
 
     # Test that typecheck_v properly handles the invalid_constructor error
     {:error, errors} =
@@ -862,7 +862,7 @@ defmodule Examples.ENockPoly do
 
     # Now also test a path that uses ctor_types
     # Create a valid constructor term to trigger ctor_types
-    valid_term = T.com_tv({:valid_ctor}, [])
+    valid_term = tvc0({:valid_ctor})
 
     # This will pass the tspec check and then use ctor_types to verify parameters
     assert {:ok, 0} =
@@ -1092,31 +1092,31 @@ defmodule Examples.ENockPoly do
 
     alias NockPoly.Term, as: T
     # Base type constructor 0: no parameters
-    base0_term = T.com_tv({:base, 0}, [])
+    base0_term = tvc0({:base, 0})
     assert {:ok, 0} = IndIndF.typecheck(base0_term, stmlf)
 
     # Base type constructor 1: two base type parameters
-    base1_term = T.com_tv({:base, 1}, [base0_term, base0_term])
+    base1_term = tvc({:base, 1}, [base0_term, base0_term])
     assert {:ok, 0} = IndIndF.typecheck(base1_term, stmlf)
 
     # Create and verify terms of the dependent type
     # Using {:dep, pos} constructor format to explicitly tag the type
 
     # Dependent type constructor 0: no parameters
-    dep0_term = T.com_tv({:dep, 0}, [])
+    dep0_term = tvc0({:dep, 0})
     assert {:ok, 1} = IndIndF.typecheck(dep0_term, stmlf)
 
     # Dependent type constructor 1: two base fields and two dependent fields
     # First two fields are base type, next two are dependent type (1 for each base field)
     dep1_term =
-      T.com_tv({:dep, 1}, [base0_term, base0_term, dep0_term, dep0_term])
+      tvc({:dep, 1}, [base0_term, base0_term, dep0_term, dep0_term])
 
     assert {:ok, 1} = IndIndF.typecheck(dep1_term, stmlf)
 
     # Create a more complex term that uses both types
     # Base constructor 2: three base fields, each with one dependent field
     complex_term =
-      T.com_tv({:base, 2}, [
+      tvc({:base, 2}, [
         base0_term,
         base0_term,
         base0_term,
@@ -1128,7 +1128,7 @@ defmodule Examples.ENockPoly do
     assert {:ok, 0} = IndIndF.typecheck(complex_term, stmlf)
 
     # Test an invalid term with a non-existent constructor
-    invalid_term = T.com_tv({:base, 3}, [])
+    invalid_term = tvc0({:base, 3})
 
     assert match?(
              {:error, {:invalid_constructor, _}},
@@ -1137,7 +1137,7 @@ defmodule Examples.ENockPoly do
 
     # Test an invalid format (using plain integer instead of tagged constructor)
     invalid_format_term =
-      T.com_tv(2, [
+      tvc(2, [
         base0_term,
         base0_term,
         base0_term,
@@ -1408,31 +1408,31 @@ defmodule Examples.ENockPoly do
 
     alias NockPoly.Term, as: T
     # Valid terms for testing
-    base0_term = T.com_tv({:base, 0}, [])
-    dep0_term = T.com_tv({:dep, 0}, [])
+    base0_term = tvc0({:base, 0})
+    dep0_term = tvc0({:dep, 0})
 
     # Test field count errors in base constructor
     # Should have 2 fields
-    invalid_field_count_base = T.com_tv({:base, 1}, [base0_term])
+    invalid_field_count_base = tvc({:base, 1}, [base0_term])
 
     assert {:error, {:invalid_field_count, _, 2, 1}} =
              IndIndF.typecheck(invalid_field_count_base, stmlf)
 
     # Test field count errors in dependent constructor
     # Should have 4 fields (2 base + 2 dep)
-    invalid_field_count_dep = T.com_tv({:dep, 1}, [base0_term])
+    invalid_field_count_dep = tvc({:dep, 1}, [base0_term])
 
     assert {:error, {:invalid_field_count, _, 4, 1}} =
              IndIndF.typecheck(invalid_field_count_dep, stmlf)
 
     # Create a valid constructor with fields of correct type
-    valid_base_term = T.com_tv({:base, 1}, [base0_term, base0_term])
+    valid_base_term = tvc({:base, 1}, [base0_term, base0_term])
     assert {:ok, 0} = IndIndF.typecheck(valid_base_term, stmlf)
 
     # Create a term with mixed base and dependent type terms
     # This should fail type checking because dep0_term is not allowed as a field
     # in a base type constructor
-    invalid_type_term = T.com_tv({:base, 1}, [base0_term, dep0_term])
+    invalid_type_term = tvc({:base, 1}, [base0_term, dep0_term])
     {:error, error_info} = IndIndF.typecheck(invalid_type_term, stmlf)
 
     # Verify the error is of the form {:invalid_fields, _}
@@ -1440,7 +1440,7 @@ defmodule Examples.ENockPoly do
 
     # Test invalid term format - using a term with an invalid structure
     # but still with the proper tagged variant format
-    invalid_term_format = T.in_tv({:tcom, {:unknown_format, []}})
+    invalid_term_format = {:in_tv, {:tcom, {:unknown_format, []}}}
 
     assert match?(
              {:error, {:invalid_constructor_format, _, _}},
@@ -1450,11 +1450,11 @@ defmodule Examples.ENockPoly do
     # Test error propagation with check_fields function
     # Create an invalid field that will fail typecheck
     # Constructor index 5 doesn't exist
-    invalid_field = T.com_tv({:base, 5}, [])
+    invalid_field = tvc0({:base, 5})
 
     # Use the invalid field in a valid constructor
     term_with_invalid_field =
-      T.com_tv({:base, 1}, [invalid_field, invalid_field])
+      tvc({:base, 1}, [invalid_field, invalid_field])
 
     assert {:error, {:invalid_fields, _}} =
              IndIndF.typecheck(term_with_invalid_field, stmlf)
@@ -1556,11 +1556,11 @@ defmodule Examples.ENockPoly do
   I test the application of `termfv_bimap` to a variable term.
   """
   def termfv_bimap_variable_test() do
-    term = Term.var_tv(3)
+    term = tvv(3)
     # Unwrap the :in_tv tag with out_tv before applying termfv_bimap
     res = NockPoly.Term.termfv_bimap(&add1/1, &times2/1, Term.out_tv(term))
     # The result should be wrapped back in :in_tv tag for comparison
-    assert res == Term.out_tv(Term.var_tv(4))
+    assert res == Term.out_tv(tvv(4))
     Term.in_tv(res)
   end
 
@@ -1571,7 +1571,7 @@ defmodule Examples.ENockPoly do
           NockPoly.Term.nat_tv(non_neg_integer())
   def termfv_bimap_constructor_test() do
     # Create a term with natural number constructor and integer-term children
-    term = Term.com_tv(3, [Term.com_tv(1, []), Term.com_tv(2, [])])
+    term = tvc(3, [tvc0(1), tvc0(2)])
 
     # Unwrap the :in_tv tag with out_tv before applying termfv_bimap
     unwrapped_term = Term.out_tv(term)
@@ -1585,7 +1585,7 @@ defmodule Examples.ENockPoly do
 
     # Expect the internal nodes to have been transformed with times2
     expected =
-      Term.out_tv(Term.com_tv(3, [Term.com_tv(2, []), Term.com_tv(4, [])]))
+      Term.out_tv(tvc(3, [tvc0(2), tvc0(4)]))
 
     assert res == expected
 
@@ -1598,14 +1598,14 @@ defmodule Examples.ENockPoly do
   """
   def tvmap_test() do
     term =
-      Term.com_tv(:a, [Term.var_tv(3), Term.com_tv(:b, [Term.var_tv(4)])])
+      tvc(:a, [tvv(3), tvc(:b, [tvv(4)])])
 
     res = NockPoly.Term.tvmap(&add1/1, term)
 
     assert res ==
-             Term.com_tv(:a, [
-               Term.var_tv(4),
-               Term.com_tv(:b, [Term.var_tv(5)])
+             tvc(:a, [
+               tvv(4),
+               tvc(:b, [tvv(5)])
              ])
 
     res
@@ -1626,7 +1626,7 @@ defmodule Examples.ENockPoly do
 
     # For a variable term, comult produces a variable term containing the original term
     # The term equality assertion checks that duplicated is properly structured
-    assert duplicated == Term.var_tv(term)
+    assert duplicated == tvv(term)
 
     duplicated
   end
@@ -1683,7 +1683,7 @@ defmodule Examples.ENockPoly do
 
     # Define a binding function that increments the variable
     # Uses the utility function to create a variable term
-    f = fn x -> Term.var_tv(x + 1) end
+    f = fn x -> tvv(x + 1) end
 
     # Apply bind
     bound = NockPoly.Term.tv_bind(f, term)
@@ -1691,7 +1691,7 @@ defmodule Examples.ENockPoly do
     # Verify that the binding and transformation worked
     # We know from termfv_bimap_variable_test that the original value is 4
     # So after incrementing, it should match a variable term with value 5
-    assert bound == Term.var_tv(5)
+    assert bound == tvv(5)
     bound
   end
 
@@ -1710,19 +1710,19 @@ defmodule Examples.ENockPoly do
   def tv_bind_hybrid_test() do
     var_term = termfv_bimap_variable_test()
     cons_term = termfv_bimap_constructor_test()
-    m = Term.com_tv(:c, [var_term, cons_term])
+    m = tvc(:c, [var_term, cons_term])
 
     f = fn x ->
-      Term.com_tv(:b, [Term.var_tv(x), Term.var_tv(x + 10)])
+      tvc(:b, [tvv(x), tvv(x + 10)])
     end
 
     bound = NockPoly.Term.tv_bind(f, m)
 
     expected =
-      Term.com_tv(
+      tvc(
         :c,
         [
-          Term.com_tv(:b, [Term.var_tv(4), Term.var_tv(14)]),
+          tvc(:b, [tvv(4), tvv(14)]),
           cons_term
         ]
       )
@@ -1732,11 +1732,11 @@ defmodule Examples.ENockPoly do
   end
 
   def substitute_test_variable() do
-    open_term = Term.var_tv(7)
+    open_term = tvv(7)
 
     closed_term =
       NockTerms.substitute(open_term, fn var ->
-        Term.com_tv({:atom, var + 1}, [])
+        tvc0({:atom, var + 1})
       end)
 
     noun = NockTerms.to_noun(closed_term)
@@ -1746,13 +1746,13 @@ defmodule Examples.ENockPoly do
 
   def substitute_test_cell() do
     open_term =
-      Term.com_tv(:cell, [Term.var_tv(7), Term.com_tv({:atom, 99}, [])])
+      tvc(:cell, [tvv(7), tvc0({:atom, 99})])
 
     {:ok, expected} = Noun.Format.parse("[70 99]")
 
     closed_term =
       NockTerms.substitute(open_term, fn v ->
-        Term.com_tv({:atom, v * 10}, [])
+        tvc0({:atom, v * 10})
       end)
 
     noun = NockTerms.to_noun(closed_term)

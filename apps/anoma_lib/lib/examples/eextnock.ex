@@ -13,6 +13,9 @@ defmodule Examples.EExtNock do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias NockPoly.Term
+  import Term.MacroDefs
+
   @doc """
   I test conversion from the sexpr representation to open_nock_poly_term
   for a lone atom.
@@ -20,7 +23,7 @@ defmodule Examples.EExtNock do
   def nock_poly_sexpr_atom_test() do
     val = 42
     term = ExtNockTerms.from_sexpr!(val)
-    assert term == NockPoly.Term.com_tv({:atom, val}, [])
+    assert term == tvc0({:atom, val})
     term
   end
 
@@ -32,7 +35,7 @@ defmodule Examples.EExtNock do
     val = 7
     var = {:var, val}
     term = ExtNockTerms.from_sexpr!(var)
-    assert term == NockPoly.Term.var_tv(val)
+    assert term == tvv(val)
     term
   end
 
@@ -45,9 +48,9 @@ defmodule Examples.EExtNock do
     term = ExtNockTerms.from_sexpr!(sexpr)
 
     expected =
-      NockPoly.Term.com_tv(:cell, [
-        NockPoly.Term.com_tv({:atom, 1}, []),
-        NockPoly.Term.com_tv({:atom, 2}, [])
+      tvc(:cell, [
+        tvc0({:atom, 1}),
+        tvc0({:atom, 2})
       ])
 
     assert term == expected
@@ -61,28 +64,27 @@ defmodule Examples.EExtNock do
   nested expression.
   """
   def nock_poly_sexpr_nested_test() do
-    alias NockPoly.Term, as: T
     sexpr = [[4, 5], [12, 13], 7]
     term = ExtNockTerms.from_sexpr!(sexpr)
 
     expected_inner1 =
-      T.com_tv(:cell, [
-        T.com_tv({:atom, 4}, []),
-        T.com_tv({:atom, 5}, [])
+      tvc(:cell, [
+        tvc0({:atom, 4}),
+        tvc0({:atom, 5})
       ])
 
     expected_inner2 =
-      T.com_tv(:cell, [
-        T.com_tv({:atom, 12}, []),
-        T.com_tv({:atom, 13}, [])
+      tvc(:cell, [
+        tvc0({:atom, 12}),
+        tvc0({:atom, 13})
       ])
 
     expected =
-      T.com_tv(:cell, [
+      tvc(:cell, [
         expected_inner1,
-        T.com_tv(:cell, [
+        tvc(:cell, [
           expected_inner2,
-          T.com_tv({:atom, 7}, [])
+          tvc0({:atom, 7})
         ])
       ])
 
@@ -97,14 +99,13 @@ defmodule Examples.EExtNock do
   term with variables.
   """
   def nock_poly_sexpr_with_variables_test() do
-    alias NockPoly.Term, as: T
     sexpr = [{:var, 7}, 99]
     term = ExtNockTerms.from_sexpr!(sexpr)
-    expected = T.com_tv(:cell, [T.var_tv(7), T.com_tv({:atom, 99}, [])])
+    expected = tvc(:cell, [tvv(7), tvc0({:atom, 99})])
     assert term == expected
 
     closed_term =
-      ExtNockTerms.substitute(term, fn v -> T.com_tv({:atom, v * 10}, []) end)
+      ExtNockTerms.substitute(term, fn v -> tvc0({:atom, v * 10}) end)
 
     expected_noun = Noun.Format.parse_always("[70 99]")
     assert ExtNockTerms.to_noun!(closed_term) == expected_noun
@@ -217,7 +218,6 @@ defmodule Examples.EExtNock do
   and operations on malformed slot terms.
   """
   def slot_constructor_error_test() do
-    alias NockPoly.Term, as: T
     # Empty argument list
     assert ExtNockTerms.from_sexpr({:slot, []}) == :error
 
@@ -236,7 +236,7 @@ defmodule Examples.EExtNock do
     end
 
     # Malformed term structure for typechecking
-    malformed_term = T.com_tv(:slot, [])
+    malformed_term = tvc0(:slot)
 
     assert {:error, _errors} =
              ExtNockTerms.compile_to_nock_term(malformed_term)
@@ -262,7 +262,6 @@ defmodule Examples.EExtNock do
   and operations on malformed constant terms.
   """
   def constant_constructor_error_test() do
-    alias NockPoly.Term, as: T
     # Empty argument list
     assert ExtNockTerms.from_sexpr({:constant, []}) == :error
 
@@ -278,7 +277,7 @@ defmodule Examples.EExtNock do
     end
 
     # Malformed term structure for typechecking
-    malformed_term = T.com_tv(:constant, [])
+    malformed_term = tvc0(:constant)
 
     assert {:error, _errors} =
              ExtNockTerms.compile_to_nock_term(malformed_term)
@@ -728,17 +727,15 @@ defmodule Examples.EExtNock do
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
-    alias NockPoly.Term, as: T
-
     # Create a simple extended term
-    term = T.com_tv(:slot, [T.com_tv({:atom, 2}, [])])
+    term = tvc(:slot, [tvc0({:atom, 2})])
 
     # Test successful compilation
     compiled = ExtNockTerms.compile_to_nock_term!(term)
 
     # Verify the structure
     expected =
-      T.com_tv(:cell, [T.com_tv({:atom, 0}, []), T.com_tv({:atom, 2}, [])])
+      tvc(:cell, [tvc0({:atom, 0}), tvc0({:atom, 2})])
 
     assert compiled == expected
 
