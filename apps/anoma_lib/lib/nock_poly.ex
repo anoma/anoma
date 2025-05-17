@@ -348,12 +348,101 @@ defmodule NockPoly do
 
     defmodule MacroDefs do
       @moduledoc """
-
       Macro definitions -- and macros definitions only -- in their own
       separate module to distinguish them for the purpose of ignoring code
       coverage (which does not know how to tell whether a macro has been
       expanded and executed).
       """
+
+      @doc """
+      I create a variable term of type `termfv`.
+
+      ## Examples
+
+          iex> import NockPoly.Term.MacroDefs
+          iex> tfv(42)
+          {:tvar, 42}
+      """
+      defmacro tfv(var) do
+        quote do
+          Term.var_termfv(unquote(var))
+        end
+      end
+
+      @doc """
+      I create a constructor expression term of type `termfv` with children.
+
+      ## Examples
+
+          iex> import NockPoly.Term.MacroDefs
+          iex> tfc(:foo, [tfv(42)])
+          {:tcom, {:foo, [{:tvar, 42}]}}
+      """
+      defmacro tfc(ctor, children) do
+        quote do
+          Term.com_termfv(unquote(ctor), unquote(children))
+        end
+      end
+
+      @doc """
+      I create a constructor expression term of type `termfv` with no children.
+
+      ## Examples
+
+          iex> import NockPoly.Term.MacroDefs
+          iex> tfc0(:foo)
+          {:tcom, {:foo, []}}
+      """
+      defmacro tfc0(ctor) do
+        quote do
+          Term.com_termfv(unquote(ctor), [])
+        end
+      end
+
+      @doc """
+      I create a variable term of type `tv`.
+
+      ## Examples
+
+          iex> import NockPoly.Term.MacroDefs
+          iex> tvv(42)
+          {:in_tv, {:tvar, 42}}
+      """
+      defmacro tvv(var) do
+        quote do
+          Term.var_tv(unquote(var))
+        end
+      end
+
+      @doc """
+      I create a constructor expression term of type `tv` with children.
+
+      ## Examples
+
+          iex> import NockPoly.Term.MacroDefs
+          iex> tvc(:foo, [tvv(42)])
+          {:in_tv, {:tcom, {:foo, [{:in_tv, {:tvar, 42}}]}}}
+      """
+      defmacro tvc(ctor, children) do
+        quote do
+          Term.com_tv(unquote(ctor), unquote(children))
+        end
+      end
+
+      @doc """
+      I create a constructor expression term of type `tv` with no children.
+
+      ## Examples
+
+          iex> import NockPoly.Term.MacroDefs
+          iex> tvc0(:foo)
+          {:in_tv, {:tcom, {:foo, []}}}
+      """
+      defmacro tvc0(ctor) do
+        quote do
+          Term.com_tv(unquote(ctor), [])
+        end
+      end
     end
   end
 

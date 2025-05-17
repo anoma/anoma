@@ -5,6 +5,7 @@ defmodule Examples.ENockPoly do
   import ExUnit.Assertions
   import NockPoly
   alias NockPoly.Term, as: Term
+  import NockPoly.Term.MacroDefs
   alias NockPoly.FinPolyF
   alias NockPoly.FinSlicePolyF, as: SliceF
   alias NockPoly.FinIndIndPolyF, as: IndIndF
@@ -38,7 +39,7 @@ defmodule Examples.ENockPoly do
   t1: a closed term with no children.
   """
   def term_test_t1() do
-    res = Term.com_tv(1, [])
+    res = tvc0(1)
     assert Term.depth(res) == 1
     assert Term.size(res) == 1
     res
@@ -109,7 +110,7 @@ defmodule Examples.ENockPoly do
   v1: a single variable (an open term), which has depth and size 0.
   """
   def term_test_v1() do
-    res = Term.var_tv("x")
+    res = tvv("x")
     assert Term.depth(res) == 0
     assert Term.size(res) == 0
     res
@@ -171,8 +172,7 @@ defmodule Examples.ENockPoly do
     res = term_test_t7()
     out = Term.out_tv(res)
     # The assertion verifies that out_tv reveals the internal structure
-    assert out ==
-             Term.com_termfv(:d, [Term.com_tv(:e, []), Term.com_tv(:f, [])])
+    assert out == tfc(:d, [tvc(:e, []), tvc(:f, [])])
 
     out
   end
