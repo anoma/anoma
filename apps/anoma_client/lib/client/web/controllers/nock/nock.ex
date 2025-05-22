@@ -48,7 +48,7 @@ defmodule Anoma.Client.Web.NockController do
 
     with {:ok, program} <- Base.decode64(program),
          {:ok, program} <- program_to_noun(program),
-         {inputs, []} <- inputs_to_noun(inputs),
+         {inputs, []} <- parse_inputs(inputs),
          {:ok, result, io} <- Runner.prove(program, inputs),
          io <- Enum.map(io, &Noun.Jam.jam/1),
          jammed <- Noun.Jam.jam(result) do
@@ -75,8 +75,8 @@ defmodule Anoma.Client.Web.NockController do
 
     with {:ok, program} <- Base.decode64(program),
          {:ok, program} <- program_to_noun(program),
-         {prv_inputs, []} <- inputs_to_noun(priv_inputs),
-         {pub_inputs, []} <- inputs_to_noun(publ_inputs),
+         {prv_inputs, []} <- parse_inputs(priv_inputs),
+         {pub_inputs, []} <- parse_inputs(publ_inputs),
          {:ok, result, io} <- Runner.prove(program, pub_inputs ++ prv_inputs),
          io <- Enum.map(io, &Noun.Jam.jam/1),
          jammed <- Noun.Jam.jam(result) do
@@ -118,11 +118,11 @@ defmodule Anoma.Client.Web.NockController do
 
   # I return a tuple with the successful and failed conversions.
   # """
-  @spec inputs_to_noun([String.t()]) :: {list(Noun.t()), list(Noun.t())}
-  defp inputs_to_noun(inputs) do
+  @spec parse_inputs([String.t()]) ::
+          {[Noun.t() | binary()], [Noun.t() | binary()]}
+  defp parse_inputs(inputs) do
     inputs
-    |> Enum.map(&Base.decode64!/1)
-    |> Enum.map(&input_to_noun/1)
+    |> Enum.map(&parse_input/1)
     |> Enum.reduce({[], []}, fn input, {valid, invalid} ->
       case input do
         {:ok, input} ->
@@ -137,18 +137,35 @@ defmodule Anoma.Client.Web.NockController do
     end)
   end
 
-  # @doc """
-  # I turn an input into a noun.
-  # """
-  @spec input_to_noun(binary()) ::
-          {:ok, Noun.t()} | {:error, :invalid_input, any()}
-  defp input_to_noun(input) do
-    case Noun.Jam.cue(input) do
-      {:ok, noun} ->
-        {:ok, noun}
+  @doc """
+  Parses an input to either a noun, or a raw binary.
+  """
+  @spec parse_input(%{String.t() => term()}) ::
+          {:ok, Noun.t() | binary()}
+          | {:error, :invalid_base_encoding | :invalid_jammed_noun, term()}
+  defp parse_input(%{"raw" => input}) do
+    case Base.decode64(input) do
+      {:ok, binary} ->
+        {:ok, binary}
 
-      _ ->
-        {:error, :invalid_input, input}
+      :error ->
+        {:error, :invalid_base_encoding, input}
+    end
+  end
+
+  defp parse_input(%{"noun" => input}) do
+    case Base.decode64(input) do
+      {:ok, decoded} ->
+        case Noun.Jam.cue(decoded) do
+          {:ok, noun} ->
+            {:ok, noun}
+
+          _ ->
+            {:error, :invalid_jammed_noun, input}
+
+          :error ->
+            {:error, :invalid_base_encoding, input}
+        end
     end
   end
 end
