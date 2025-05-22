@@ -127,7 +127,11 @@ defmodule Anoma.Client.Examples.EClient.Nock.Prove do
 
     expected_result = "error"
 
-    assert data == %{"io" => expected_io, "result" => expected_result}
+    assert data == %{
+             "io" => expected_io,
+             "result" => expected_result,
+             "reason" => "jet_failed"
+           }
 
     client
   end
@@ -150,7 +154,11 @@ defmodule Anoma.Client.Examples.EClient.Nock.Prove do
 
     expected_result = "error"
 
-    assert data == %{"io" => expected_io, "result" => expected_result}
+    assert data == %{
+             "io" => expected_io,
+             "result" => expected_result,
+             "reason" => "instruction_match_error"
+           }
 
     client
   end
