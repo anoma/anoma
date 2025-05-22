@@ -29,6 +29,7 @@ defmodule Anoma.Node.Transaction.Executor.Events do
   end
 
   typedstruct enforce: true, module: TaskCrash do
+    @derive Jason.Encoder
     @typedoc """
     I am a crash event for a task that failed.
     """
@@ -36,6 +37,25 @@ defmodule Anoma.Node.Transaction.Executor.Events do
   end
 
   ############################################################
-  #                           Filters                        #
+  #                           Json Encoding                  #
   ############################################################
+
+  defimpl Jason.Encoder, for: ExecutionEvent do
+    def encode(%ExecutionEvent{} = event, opts) do
+      event
+      |> Map.update!(
+        :result,
+        &Enum.map(&1, fn result ->
+          case result do
+            {:error, id} ->
+              %{result: "error", id: id}
+
+            {{:ok, %Anoma.RM.Transparent.Transaction{} = tx}, id} ->
+              %{result: tx, id: id}
+          end
+        end)
+      )
+      |> Jason.Encode.map(opts)
+    end
+  end
 end
