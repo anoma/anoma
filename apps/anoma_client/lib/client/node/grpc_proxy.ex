@@ -111,11 +111,11 @@ defmodule Anoma.Client.Node.GRPCProxy do
     GenServer.call(__MODULE__, {:add_intent, intent})
   end
 
-  @spec add_transaction(binary(), atom()) :: any()
-  def add_transaction(jammed_nock, transaction_type) do
+  @spec add_transaction(binary(), atom(), boolean()) :: any()
+  def add_transaction(jammed_nock, transaction_type, wrap? \\ false) do
     GenServer.call(
       __MODULE__,
-      {:add_transaction, jammed_nock, transaction_type}
+      {:add_transaction, jammed_nock, transaction_type, wrap?}
     )
   end
 
@@ -205,17 +205,14 @@ defmodule Anoma.Client.Node.GRPCProxy do
     {:reply, result, state}
   end
 
-  def handle_call(
-        {:add_transaction, transaction, transaction_type},
-        _from,
-        state
-      ) do
+  def handle_call({:add_transaction, transaction, type, wrap}, _from, state) do
     result =
       RPC.add_transaction(
         state.channel,
         state.node_id,
         transaction,
-        transaction_type
+        type,
+        wrap
       )
 
     {:reply, result, state}
