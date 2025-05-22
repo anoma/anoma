@@ -14,7 +14,7 @@ defmodule Anoma.Node.Examples.Serializing.Events.Backends do
   """
   @spec result_event_error :: Events.ResultEvent.t()
   def result_event_error do
-    result_event = %Events.ResultEvent{tx_id: "foo", vm_result: :error}
+    result_event = %Events.ResultEvent{tx_id: "foo", vm_result: :vm_error}
     _json = Jason.encode!(result_event)
     result_event
   end

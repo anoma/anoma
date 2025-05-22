@@ -26,7 +26,7 @@ defmodule Anoma.Node.Examples.ETransaction do
     field(:id, binary())
     field(:backend, Backends.backend())
     field(:noun, Noun.t())
-    field(:result, Mempool.vm_result())
+    field(:result, Mempool.tx_result())
   end
 
   ############################################################

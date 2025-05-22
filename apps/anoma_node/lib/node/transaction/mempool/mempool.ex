@@ -46,7 +46,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   @typedoc """
   I am the type of the Nock VM result.
   """
-  @type vm_result :: {:ok, Noun.t()} | :error | :in_progress
+  @type vm_result :: {:ok, Noun.t()} | :vm_error | :in_progress
 
   @typedoc """
   I am the type of the transaction result.
