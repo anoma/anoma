@@ -978,6 +978,7 @@ defmodule Nock.Jets do
 
   @spec action_create(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def action_create(core) do
+    IO.puts "HELLO"
     with {:ok, [con, cre | data]} <- sample(core),
          {:ok, con} <- Noun.Nounable.List.from_noun(con),
          {:ok, cre} <- Noun.Nounable.List.from_noun(cre),

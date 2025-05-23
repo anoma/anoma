@@ -31,6 +31,7 @@ defmodule Anoma.Client.Runner do
 
     result = Nock.nock(core, eval_call, nock_environment)
 
+    IO.inspect result, label: "nock result"
     # close the IO sink
     {:ok, hints} = close_io_sink(io_sink)
 
