@@ -3,7 +3,9 @@ import Config
 config :logger,
   level: :error,
   handle_otp_reports: false,
-  handle_sasl_reports: false
+  handle_sasl_reports: false,
+  truncate: :infinity,
+  translator_inspect_opts:  [limit: :infinity]
 
 # ----------------------------------------------------------------------------
 # Endpoint
