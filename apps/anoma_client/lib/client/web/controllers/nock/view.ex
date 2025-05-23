@@ -1,10 +1,10 @@
 defmodule Anoma.Client.Web.NockJSON do
   def render("run.json", %{result: res, io: io}) do
-    %{result: Base.encode64(res), io: Enum.map(io, &Base.encode64/1)}
+    %{result: Base.encode64(res), io: io}
   end
 
   def render("prove.json", %{result: res, io: io}) do
-    %{result: Base.encode64(res), io: Enum.map(io, &Base.encode64/1)}
+    %{result: Base.encode64(res), io: io}
   end
 
   def render("error.json", %{io: io, reason: reason}) do
@@ -16,6 +16,6 @@ defmodule Anoma.Client.Web.NockJSON do
         reason -> reason
       end
 
-    %{result: "error", io: Enum.map(io, &Base.encode64/1), reason: trunc}
+    %{result: "error", io: io, reason: trunc}
   end
 end

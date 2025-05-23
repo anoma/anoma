@@ -10,7 +10,7 @@ defmodule Anoma.Client.Runner do
   I run the given Nock program with its inputs and return the result.
   """
   @spec prove(Noun.t(), [Noun.t()]) ::
-          {:ok, Noun.t(), [Noun.t()]}
+          {:ok, Noun.t(), [String.t()]}
           | {:error, :failed_to_prove, Nock.error(), [Noun.t()]}
   def prove(program, inputs) do
     core =
@@ -106,11 +106,10 @@ defmodule Anoma.Client.Runner do
   @spec capture(list(term())) :: any()
   defp capture(acc \\ []) do
     receive do
-      {:io_request, from, ref, {:put_chars, _, noun_str}} ->
+      {:io_request, from, ref, {:put_chars, _, hint}} ->
         send(from, {:io_reply, ref, :ok})
         # noun = Noun.Format.parse_always(noun_str)
-        noun = Base.decode64!(noun_str) |> Noun.Jam.cue!()
-        capture([noun | acc])
+        capture([hint | acc])
 
       {:quit, from, ref} ->
         output = acc |> Enum.reverse()

@@ -50,7 +50,6 @@ defmodule Anoma.Client.Web.NockController do
          {:ok, program} <- program_to_noun(program),
          {inputs, []} <- parse_inputs(inputs),
          {:ok, result, io} <- Runner.prove(program, inputs),
-         io <- Enum.map(io, &Noun.Jam.jam/1),
          jammed <- Noun.Jam.jam(result) do
       render(conn, "run.json", result: jammed, io: io)
     else
@@ -78,13 +77,13 @@ defmodule Anoma.Client.Web.NockController do
          {prv_inputs, []} <- parse_inputs(priv_inputs),
          {pub_inputs, []} <- parse_inputs(publ_inputs),
          {:ok, result, io} <- Runner.prove(program, pub_inputs ++ prv_inputs),
-         io <- Enum.map(io, &Noun.Jam.jam/1),
          jammed <- Noun.Jam.jam(result) do
+
       render(conn, "prove.json", result: jammed, io: io)
     else
       {:error, :failed_to_prove, reason, hints} ->
         render(conn, "error.json",
-          io: Enum.map(hints, &Noun.Jam.jam/1),
+          io: hints,
           reason: reason
         )
 
