@@ -16,13 +16,12 @@ defmodule Examples.ETransparent.ETransaction do
 
   @spec single_swap() :: Transaction.t()
   def single_swap() do
-    res1 = %{empty() | actions: MapSet.new([EAction.trivial_swap_action()])}
-    res2 = %{res1 | roots: Transaction.roots(res1)}
+    res = %{empty() | actions: MapSet.new([EAction.trivial_swap_action()])}
 
-    assert Transaction.verify(res2)
-    assert Transaction.compose(res2, res2) == res2
+    assert Transaction.verify(res)
+    assert Transaction.compose(res, res) == res
 
-    res2
+    res
   end
 
   @spec commit_intent() :: Transaction.t()
@@ -31,10 +30,9 @@ defmodule Examples.ETransparent.ETransaction do
       MapSet.new([EAction.trivial_true_commit_action()])
 
     res1 = %Transaction{empty() | actions: actions}
-    res2 = %Transaction{res1 | roots: Transaction.roots(res1)}
     # unbalanced
-    refute Transaction.verify(res2)
-    res2
+    refute Transaction.verify(res1)
+    res1
   end
 
   @spec nullify_intent_eph() :: Transaction.t()
@@ -43,12 +41,11 @@ defmodule Examples.ETransparent.ETransaction do
       MapSet.new([EAction.trivial_true_eph_nullifier_action()])
 
     res1 = %Transaction{empty() | actions: actions}
-    res2 = %Transaction{res1 | roots: Transaction.roots(res1)}
 
     # unbalanced
-    refute Transaction.verify(res2)
+    refute Transaction.verify(res1)
 
-    res2
+    res1
   end
 
   @spec nullify_intent() :: Transaction.t()
@@ -57,12 +54,11 @@ defmodule Examples.ETransparent.ETransaction do
       MapSet.new([EAction.trivial_true_2_nullifier_action()])
 
     res1 = %Transaction{empty() | actions: actions}
-    res2 = %Transaction{res1 | roots: Transaction.roots(res1)}
 
     # unbalanced
-    refute Transaction.verify(res2)
+    refute Transaction.verify(res1)
 
-    res2
+    res1
   end
 
   @spec swap_from_actions() :: Transaction.t()

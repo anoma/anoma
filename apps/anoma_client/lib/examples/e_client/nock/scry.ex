@@ -11,7 +11,6 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
   alias Anoma.Client.Storage
   alias Anoma.Node.Tables
   alias Anoma.Node.Transaction.Storage, as: NodeStorage
-  alias Anoma.RM.Transparent.Action
   alias Anoma.RM.Transparent.Transaction
   alias Noun.Jam
   alias Noun.Nounable
@@ -23,14 +22,14 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
   def prove_with_internal_scry_call(client \\ setup()) do
     :ok = Tables.reset_tables_for_client()
 
-    string = "i am scried"
+    action =
+      Examples.ETransparent.EAction.trivial_swap_action_with_extra_data()
 
-    action = %Action{app_data: %{<<123>> => [{string, true}]}}
-
-    tx = %Transaction{actions: MapSet.new([action])} |> Nounable.to_noun()
+    tx = %Transaction{actions: MapSet.new([action])}
+    [{string, true}] = Transaction.app_data(tx)
 
     key = ["anoma", "blob", "key"]
-    Storage.write({key, tx})
+    Storage.write({key, Noun.Nounable.to_noun(tx)})
     program = [[12, [1], 1 | ["id" | key]]] |> Jam.jam() |> Base.encode64()
 
     # the json payload the endpoint expects
@@ -45,11 +44,10 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
       |> post(~p"/nock/prove", payload)
       |> json_response(200)
 
-    # jam the transaction for comparison, because cue'ing the result leads to a different result:
-    # [0, [[0, 0, 0, 0, ["{", ["i am scried" | 0] | 0], 0 | 0], 0 | 0] | ""]
-    # vs
-    # ["", [["", "", "", "", ["{", ["i am scried" | ""] | ""], "" | ""], "" | ""] | ""]
-    assert Jam.jam(tx) == Base.decode64!(result)
+    assert result
+           |> Base.decode64!()
+           |> Noun.Jam.cue!()
+           |> Noun.equal?(Noun.Nounable.to_noun(tx))
 
     # assert the storage value
     assert {:ok, string} ==

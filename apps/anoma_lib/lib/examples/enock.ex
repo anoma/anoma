@@ -2260,8 +2260,8 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
-  def action_create_call(created, consumed, appdata) do
-    sample = [created, consumed | appdata]
+  def action_create_call(created, consumed) do
+    sample = [created | consumed]
 
     [action_create_arm(), sample | Nock.Lib.logics_core()]
     |> Nock.nock([9, 2, 0 | 1])
@@ -2273,32 +2273,22 @@ defmodule Examples.ENock do
     cm = consumed |> Resource.commitment_hash()
     root = MapSet.new([cm]) |> CommitmentAccumulator.value()
 
-    consumed_list = Noun.Nounable.to_noun([{<<0::256>>, consumed, root}])
-    created_list = Noun.Nounable.to_noun([created])
+    consumed_list =
+      Noun.Nounable.to_noun([
+        {<<0::256>>, consumed, {32, 0}, <<>>, root, [], 0}
+      ])
+
+    created_list = Noun.Nounable.to_noun([{created, {32, 0}, [], 0}])
 
     {:ok, res} =
       action_create_call(
         consumed_list,
-        created_list,
-        Noun.Nounable.to_noun(%{})
+        created_list
       )
 
     {:ok, action} = Action.from_noun(res)
 
     assert EAction.trivial_swap_action() == action
-
-    {:ok, res2} =
-      action_create_call(
-        consumed_list,
-        created_list,
-        Noun.Nounable.to_noun(
-          EAction.trivial_swap_action_with_extra_data().app_data
-        )
-      )
-
-    {:ok, action2} = Action.from_noun(res2)
-
-    assert EAction.trivial_swap_action_with_extra_data() == action2
   end
 
   def t_compose_arm() do

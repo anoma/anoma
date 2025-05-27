@@ -51,7 +51,7 @@ defmodule Anoma.Client.Runner do
   ############################################################
 
   @spec write_transaction_app_data(Noun.t()) :: :ok
-  defp write_transaction_app_data(noun = [_, _ | _]) do
+  defp write_transaction_app_data(noun = [_, _, _ | _]) do
     case Transaction.from_noun(noun) do
       {:ok, tx} ->
         tx

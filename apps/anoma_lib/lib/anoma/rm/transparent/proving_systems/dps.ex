@@ -17,22 +17,24 @@ defmodule Anoma.RM.Transparent.ProvingSystem.DPS.Instance do
 
   use TypedStruct
 
+  import Noun
+
   typedstruct enforce: true do
     # the jam of the delta map computed from compliance unit deltas
     field(:delta, integer(), default: 2)
     # 2 is the empty map
     # if we expect expected balance to be somehow changable, we should
     # store expected balance somewhere
-    field(:expected_balance, 2, default: 2)
+    field(:expected_balance, integer(), default: 0)
   end
 
   @spec(from_noun(Noun.t()) :: {:ok, t()}, :error)
   def from_noun([delta | expected_balance]) do
-    with true <- expected_balance == 2 do
+    with true <- is_noun_atom(expected_balance) and is_noun_atom(delta) do
       {:ok,
        %__MODULE__{
          delta: Noun.atom_binary_to_integer(delta),
-         expected_balance: 2
+         expected_balance: Noun.atom_binary_to_integer(expected_balance)
        }}
     else
       _ -> :error
@@ -65,6 +67,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.DPS do
   - `verify/3`
   """
   alias Anoma.RM.Transparent.ProvingSystem.DPS.Instance
+  alias Anoma.RM.Transparent.Primitive.DeltaHash
   alias __MODULE__
   use TypedStruct
 
@@ -151,12 +154,19 @@ defmodule Anoma.RM.Transparent.ProvingSystem.DPS do
   """
   @spec verify_jet(integer(), integer()) :: boolean()
   def verify_jet(delta, expected_balance) do
-    delta == expected_balance
+    balance =
+      delta
+      |> DeltaHash.decode()
+      |> Enum.reduce(0, fn {_kind, q}, acc ->
+        q |> Kernel.abs() |> Kernel.+(acc)
+      end)
+
+    balance == expected_balance
   end
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([pk, vk, instance, witness, proof]) do
-    with true <- Noun.atom_integer_to_binary(pk) == key(),
+    with true <- Noun.equal?(pk, 0),
          true <- Noun.atom_integer_to_binary(vk) == key(),
          {:ok, instance} <- Instance.from_noun(instance),
          true <- Noun.equal?(witness, 0),

@@ -160,35 +160,23 @@ defmodule Anoma.Node.Transaction.Backends do
          true <- TTransaction.verify(tx),
          # possibly also add check for CU roots
          true <- storage_check(node_id, id, tx),
-         true <- verify_tx_root(node_id, tx) do
-      map =
-        for action <- tx.actions,
-            reduce: %{
-              commitments: MapSet.new(),
-              nullifiers: MapSet.new(),
-              blobs: []
-            } do
-          %{commitments: cms, nullifiers: nlfs, blobs: blobs} ->
-            %{
-              commitments: MapSet.union(cms, MapSet.new(action.created)),
-              nullifiers: MapSet.union(nlfs, MapSet.new(action.consumed)),
-              blobs:
-                for {_tag, list} <- action.app_data, reduce: blobs do
-                  acc ->
-                    for {binary, bool} <- list, reduce: [] do
-                      local_acc ->
-                        if bool do
-                          [
-                            {["anoma", "blob", :crypto.hash(:sha256, binary)],
-                             binary}
-                            | local_acc
-                          ]
-                        else
-                          local_acc
-                        end
-                    end ++ acc
-                end
-            }
+         true <- verify_tx_root(node_id, tx),
+         true <- tx.expected_balance == 0,
+         true <- tx.delta_vk == Anoma.RM.Transparent.ProvingSystem.DPS.key() do
+      commitments = TTransaction.commitments(tx)
+      nullifiers = TTransaction.nullifiers(tx)
+
+      blobs =
+        for {binary, bool} <- TTransaction.app_data(tx), reduce: [] do
+          acc ->
+            if bool do
+              [
+                {["anoma", "blob", :crypto.hash(:sha256, binary)], binary}
+                | acc
+              ]
+            else
+              acc
+            end
         end
 
       old_cms =
@@ -201,11 +189,11 @@ defmodule Anoma.Node.Transaction.Backends do
         {anoma_keyspace("anchor"),
          TAcc.value(
            MapSet.union(
-             map.commitments,
+             commitments,
              old_cms
            )
          )}
-        | map.blobs
+        | blobs
       ]
 
       Ordering.add(
@@ -213,14 +201,14 @@ defmodule Anoma.Node.Transaction.Backends do
         {id,
          %{
            append: [
-             {anoma_keyspace("nullifiers"), map.nullifiers},
-             {anoma_keyspace("commitments"), map.commitments}
+             {anoma_keyspace("nullifiers"), nullifiers},
+             {anoma_keyspace("commitments"), commitments}
            ],
            write: writes
          }}
       )
 
-      transparent_rm_event(map.commitments, map.nullifiers, node_id)
+      transparent_rm_event(commitments, nullifiers, node_id)
 
       {:ok, tx}
     else
@@ -265,9 +253,15 @@ defmodule Anoma.Node.Transaction.Backends do
     {:ok, precis} = TTransaction.action_precis(trans)
 
     with true <-
-           any_nullifiers_already_exist?(stored_nullifiers, precis.consumed),
+           any_nullifiers_already_exist?(
+             stored_nullifiers,
+             MapSet.new(precis.consumed)
+           ),
          true <-
-           any_commitments_already_exist?(stored_commitments, precis.created) do
+           any_commitments_already_exist?(
+             stored_commitments,
+             MapSet.new(precis.created)
+           ) do
       true
     else
       {:error, msg} -> {:error, msg}

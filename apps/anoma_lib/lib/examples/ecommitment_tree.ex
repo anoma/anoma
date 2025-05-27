@@ -55,7 +55,7 @@ defmodule Examples.ECommitmentTree do
         commits |> Enum.map(&Noun.atom_integer_to_binary/1)
       )
 
-    assert tree.size == MapSet.size(commits)
+    assert tree.size == Enum.count(commits)
 
     {tree, anchor}
   end
