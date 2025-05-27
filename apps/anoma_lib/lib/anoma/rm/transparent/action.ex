@@ -15,7 +15,8 @@ defmodule Anoma.RM.Transparent.Action do
   - `partition_check/1`
   - `created_logic_check/2`
   - `consumed_logic_check/2`
-  - `create/3`
+  - `create/2`
+  - `to_instance/2`
   """
   alias Anoma.RM.Transparent.Resource
   alias Anoma.RM.Transparent.ComplianceUnit
