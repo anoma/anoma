@@ -601,7 +601,8 @@ defmodule Nock.Jets do
   @spec cue(Noun.t()) :: {:error, error()} | {:ok, Noun.t()}
   def cue(core) do
     with {:ok, sample} when is_noun_atom(sample) <- sample(core),
-         {:ok, result} <- Noun.Jam.cue(sample) do
+         {:ok, result} <-
+           Noun.Jam.cue(sample |> Noun.atom_integer_to_binary()) do
       {:ok, result}
     else
       _ -> {:error, {:cue, core}}
