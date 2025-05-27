@@ -54,8 +54,11 @@ defmodule Anoma.Client.Web.NockController do
          jammed <- Noun.Jam.jam(result) do
       render(conn, "run.json", result: jammed, io: io)
     else
-      {:error, :failed_to_prove, hints} ->
-        render(conn, "error.json", io: Enum.map(hints, &Noun.Jam.jam/1))
+      {:error, :failed_to_prove, reason, hints} ->
+        render(conn, "error.json",
+          io: Enum.map(hints, &Noun.Jam.jam/1),
+          reason: reason
+        )
 
       e ->
         e
@@ -79,8 +82,11 @@ defmodule Anoma.Client.Web.NockController do
          jammed <- Noun.Jam.jam(result) do
       render(conn, "prove.json", result: jammed, io: io)
     else
-      {:error, :failed_to_prove, hints} ->
-        render(conn, "error.json", io: Enum.map(hints, &Noun.Jam.jam/1))
+      {:error, :failed_to_prove, reason, hints} ->
+        render(conn, "error.json",
+          io: Enum.map(hints, &Noun.Jam.jam/1),
+          reason: reason
+        )
 
       e ->
         e

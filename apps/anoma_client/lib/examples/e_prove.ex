@@ -22,7 +22,9 @@ defmodule Anoma.Client.Examples.EProve do
       |> File.read!()
       |> Noun.Jam.cue()
 
-    assert {:error, :failed_to_prove, []} == Runner.prove(program, [])
+    assert {:error, :failed_to_prove, {:jet_failed, {:div, _}}, []} =
+             Runner.prove(program, [])
+
     {:ok, :error, []}
   end
 
@@ -39,7 +41,8 @@ defmodule Anoma.Client.Examples.EProve do
       |> File.read!()
       |> Noun.Jam.cue()
 
-    assert {:error, :failed_to_prove, ["A"]} == Runner.prove(program, [])
+    assert {:error, :failed_to_prove, :instruction_match_error, ["A"]} =
+             Runner.prove(program, [])
 
     {:ok, :error, ["A"]}
   end
