@@ -24,9 +24,8 @@ defmodule Examples.ETransparent.EAction do
 
     res =
       Action.create(
-        [{<<0::256>>, consumed, root}],
-        [created],
-        %{}
+        [{<<0::256>>, consumed, <<0::256>>, <<>>, root, [], ""}],
+        [{created, <<0::256>>, [], ""}]
       )
 
     assert 2 = Action.delta(res)
@@ -44,9 +43,8 @@ defmodule Examples.ETransparent.EAction do
 
     res =
       Action.create(
-        [{<<0::256>>, consumed, root}],
-        [created],
-        %{Resource.commitment_hash(created) => [{"blah", true}]}
+        [{<<0::256>>, consumed, <<0::256>>, <<>>, root, [], ""}],
+        [{created, <<0::256>>, [{"blah", true}], ""}]
       )
 
     assert 2 = Action.delta(res)
@@ -59,7 +57,7 @@ defmodule Examples.ETransparent.EAction do
   def trivial_true_commit_action() do
     created = EResource.trivial_true_resource()
     # not balanced
-    res = Action.create([], [created], %{})
+    res = Action.create([], [{created, <<0::256>>, [], ""}])
     # even if unbalanced, the verify goes through
     # the action check does not do that
     assert Action.verify(res)
@@ -80,7 +78,10 @@ defmodule Examples.ETransparent.EAction do
     root = MapSet.new([cm]) |> CommitmentAccumulator.value()
 
     res =
-      Action.create([{<<0::256>>, consumed, root}], [], %{})
+      Action.create(
+        [{<<0::256>>, consumed, <<0::256>>, <<>>, root, [], ""}],
+        []
+      )
 
     assert Action.verify(res)
     res
@@ -93,7 +94,10 @@ defmodule Examples.ETransparent.EAction do
     root = MapSet.new([cm]) |> CommitmentAccumulator.value()
 
     res =
-      Action.create([{<<0::256>>, consumed, root}], [], %{})
+      Action.create(
+        [{<<0::256>>, consumed, <<0::256>>, <<>>, root, [], ""}],
+        []
+      )
 
     assert Action.verify(res)
 

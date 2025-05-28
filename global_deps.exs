@@ -11,8 +11,9 @@
   {:grpc_reflection, "~> 0.1.0"},
   {:kino_kroki, "~> 0.1.0"},
   {:memoize, "~> 1.4.3"},
-  {:mnesia_rocksdb, git: "https://github.com/aeternity/mnesia_rocksdb"},
-  {:mock, "~> 0.3.0"},
+  {:mnesia_rocksdb,
+   git: "https://github.com/m1dnight/mnesia_rocksdb",
+   branch: "upgrade-rocksdb"},
   {:msgpack, "~> 0.8.1"},
   {:murmur, "~> 2.0"},
   {:optimus, "~> 0.2"},
@@ -27,6 +28,13 @@
   {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
   {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
   {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
+  {:unclog,
+   git: "https://github.com/m1dnight/unclog",
+   branch: "main",
+   only: [:dev],
+   runtime: false},
+  # for unclog
+  {:parse_trans, "~> 3.4.2"},
   {:ex_secp256k1, "~> 0.7.4"},
   {:ex_keccak, "~> 0.7.6"}
 ]

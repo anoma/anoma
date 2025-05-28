@@ -15,7 +15,8 @@ defmodule Anoma.RM.Transparent.Action do
   - `partition_check/1`
   - `created_logic_check/2`
   - `consumed_logic_check/2`
-  - `create/3`
+  - `create/2`
+  - `to_instance/2`
   """
   alias Anoma.RM.Transparent.Resource
   alias Anoma.RM.Transparent.ComplianceUnit
@@ -28,21 +29,24 @@ defmodule Anoma.RM.Transparent.Action do
   require Logger
   use TypedStruct
 
+  @type appdata :: list({binary(), boolean()})
+  @type consume_data ::
+          list(
+            {<<_::256>>, Resource.t(), <<_::256>>, <<>>, integer(), appdata(),
+             binary()}
+          )
+  @type create_data :: list({Resource.t(), <<_::256>>, appdata(), binary()})
+
   typedstruct enforce: true do
-    field(:created, list(integer()), default: [])
-    field(:consumed, list(integer()), default: [])
-
-    field(:resource_logic_proofs, %{integer() => {integer(), <<>>}},
+    # map from tag to flag, logic, appdata, and proof
+    field(
+      :resource_logic_proofs,
+      %{integer() => {boolean(), integer(), appdata(), <<>>}},
       default: %{}
     )
 
-    field(:compliance_units, MapSet.t(ComplianceUnit.t()),
-      default: MapSet.new([])
-    )
-
-    field(:app_data, %{integer() => list({binary(), boolean()})},
-      default: %{}
-    )
+    # list of compliance units
+    field(:compliance_units, [ComplianceUnit.t()], default: [])
   end
 
   @doc """
@@ -52,36 +56,31 @@ defmodule Anoma.RM.Transparent.Action do
   a given list of nullified and created resources, then put the rest into
   appropriate structure slots.
   """
-  # use lists here if order really matters (?)
-  @spec create(
-          list({<<_::256>>, Resource.t(), integer()}),
-          list(Resource.t()),
-          %{integer() => list({binary(), boolean()})}
-        ) :: t()
-  def create(to_nullify, to_commit, app_data) do
+  @spec create(consume_data, create_data) :: t()
+  def create(to_nullify, to_commit) do
     consumed =
       Enum.map(
         to_nullify,
-        fn {nfkey, resource, acc} ->
-          {Resource.nullifier_hash(nfkey, resource), acc, resource.logicref}
+        fn {nfkey, resource, _extra, _path, root, _appdata, _appwitness} ->
+          {Resource.nullifier_hash(nfkey, resource), root, resource.logicref}
         end
       )
 
     created =
       to_commit
-      |> Enum.map(fn resource ->
+      |> Enum.map(fn {resource, _extra, _appdata, _appwitness} ->
         {Resource.commitment_hash(resource), resource.logicref}
       end)
 
     consumed_delta =
       to_nullify
-      |> Enum.reduce(2, fn {_, res, _}, acc ->
+      |> Enum.reduce(2, fn {_, res, _, _, _, _, _}, acc ->
         DeltaHash.delta_add(acc, Resource.delta(res))
       end)
 
     created_delta =
       to_commit
-      |> Enum.reduce(2, fn res, acc ->
+      |> Enum.reduce(2, fn {res, _, _, _}, acc ->
         DeltaHash.delta_add(acc, Resource.delta(res))
       end)
 
@@ -91,19 +90,16 @@ defmodule Anoma.RM.Transparent.Action do
       unit_delta: DeltaHash.delta_sub(consumed_delta, created_delta)
     }
 
-    cu_set =
+    cus =
       if cu_instance == %Instance{} do
-        MapSet.new()
+        []
       else
-        MapSet.new([ComplianceUnit.create(CPS.key(), cu_instance, <<>>)])
+        [ComplianceUnit.create(<<>>, CPS.key(), cu_instance, <<>>)]
       end
 
     %__MODULE__{
-      created: created |> Enum.map(&elem(&1, 0)),
-      consumed: consumed |> Enum.map(&elem(&1, 0)),
       resource_logic_proofs: generate_proofs(to_nullify, to_commit),
-      compliance_units: cu_set,
-      app_data: app_data
+      compliance_units: cus
     }
   end
 
@@ -132,9 +128,9 @@ defmodule Anoma.RM.Transparent.Action do
     # 3
     with true <- cu_check(t),
          # Extra
-         {:ok, _} <- is_list_unique(t.consumed),
+         {:ok, _} <- t |> consumed() |> is_list_unique(),
          # Extra
-         {:ok, _} <- is_list_unique(t.created),
+         {:ok, _} <- t |> created() |> is_list_unique(),
          # Extra
          {:ok, true} <- partition_check(t),
          # 2
@@ -143,8 +139,49 @@ defmodule Anoma.RM.Transparent.Action do
          true <- created_logic_check(t) do
       true
     else
-      {:error, msg} -> Logger.error(msg)
-      _ -> false
+      {:error, msg} ->
+        Logger.error(msg)
+        false
+
+      _ ->
+        false
+    end
+  end
+
+  @doc """
+  I am a function generating an instance for a resource logic given its tag
+  and appropriate action containing it
+  """
+  @spec to_instance(Action.t(), integer()) ::
+          {:ok, RLPS.Instance.t()} | :error
+  def to_instance(t, tag) do
+    with {:ok, %{created: created, consumed: consumed}} <- cu_precis(t) do
+      case Map.get(t.resource_logic_proofs, tag) do
+        {true, _logic, app_data, <<>>} ->
+          {:ok,
+           %RLPS.Instance{
+             tag: tag,
+             flag: true,
+             consumed: consumed |> Enum.reject(&(&1 == tag)),
+             created: created,
+             app_data: app_data
+           }}
+
+        {false, _logic, app_data, <<>>} ->
+          {:ok,
+           %RLPS.Instance{
+             tag: tag,
+             flag: false,
+             consumed: consumed,
+             created: created |> Enum.reject(&(&1 == tag)),
+             app_data: app_data
+           }}
+
+        nil ->
+          :error
+      end
+    else
+      _ -> :error
     end
   end
 
@@ -168,8 +205,9 @@ defmodule Anoma.RM.Transparent.Action do
   """
   @spec app_data(t()) :: [{binary(), bool()}]
   def app_data(t) do
-    for {_key, value} <- t.app_data, reduce: [] do
-      acc -> value ++ acc
+    for {_tag, {_flag, _logic, appdata, <<>>}} <- t.resource_logic_proofs,
+        reduce: [] do
+      acc -> appdata ++ acc
     end
   end
 
@@ -192,17 +230,14 @@ defmodule Anoma.RM.Transparent.Action do
   """
   @spec created_logic_check(t()) :: bool()
   def created_logic_check(t) do
-    Enum.all?(t.created, fn cm ->
-      with {:ok, resource} <- RLPS.match_resource(cm, false) do
+    t
+    |> created()
+    |> Enum.all?(fn cm ->
+      with {:ok, resource} <- RLPS.match_resource(cm, false),
+           {:ok, instance} <- to_instance(t, cm) do
         RLPS.verify(
           Noun.atom_integer_to_binary(resource.logicref),
-          %RLPS.Instance{
-            tag: cm,
-            flag: false,
-            consumed: t.consumed,
-            created: t.created,
-            app_data: Map.get(t.app_data, cm)
-          },
+          instance,
           <<>>
         )
       else
@@ -219,17 +254,14 @@ defmodule Anoma.RM.Transparent.Action do
   """
   @spec consumed_logic_check(t()) :: boolean()
   def consumed_logic_check(t) do
-    Enum.all?(t.consumed, fn nf ->
-      with {:ok, resource} <- RLPS.match_resource(nf, true) do
+    t
+    |> consumed()
+    |> Enum.all?(fn nf ->
+      with {:ok, resource} <- RLPS.match_resource(nf, true),
+           {:ok, instance} <- to_instance(t, nf) do
         RLPS.verify(
           Noun.atom_integer_to_binary(resource.logicref),
-          %RLPS.Instance{
-            tag: nf,
-            flag: true,
-            consumed: t.consumed,
-            created: t.created,
-            app_data: Map.get(t.app_data, nf)
-          },
+          instance,
           <<>>
         )
       else
@@ -245,11 +277,46 @@ defmodule Anoma.RM.Transparent.Action do
   """
   @spec partition_check(t()) :: {:ok, bool()} | {:error, String.t()}
   def partition_check(t) do
-    with {:ok, %{created: created, consumed: consumed}} <- cu_precis(t) do
-      {:ok,
-       MapSet.new(t.created) == created and MapSet.new(t.consumed) == consumed}
+    with {:ok, %{created: created, consumed: consumed}} <- cu_precis(t),
+         true <-
+           t |> created() |> MapSet.new() == MapSet.new(created) and
+             t |> consumed |> MapSet.new() == MapSet.new(consumed) do
+      {:ok, true}
     else
       {:error, msg} -> {:error, msg}
+      false -> {:error, "Resources at Action and Compliance level differ"}
+    end
+  end
+
+  @doc """
+  I provide a list of created resources by looking through the logic proofs
+  field
+  """
+  @spec created(t()) :: list(integer())
+  def created(action) do
+    for {tag, {flag, _, _, _}} <- action.resource_logic_proofs, reduce: [] do
+      acc ->
+        if flag do
+          acc
+        else
+          [tag | acc]
+        end
+    end
+  end
+
+  @doc """
+  I provide a list of consumed resources by looking through the logic proofs
+  field
+  """
+  @spec consumed(t()) :: list(integer())
+  def consumed(action) do
+    for {tag, {flag, _, _, _}} <- action.resource_logic_proofs, reduce: [] do
+      acc ->
+        unless flag do
+          acc
+        else
+          [tag | acc]
+        end
     end
   end
 
@@ -261,36 +328,33 @@ defmodule Anoma.RM.Transparent.Action do
   disjoint across, provind an error in the opposite case.
   """
   @spec cu_precis(t()) ::
-          {:ok, %{consumed: MapSet.t(), created: MapSet.t()}}
+          {:ok, %{consumed: [], created: []}}
           | {:error, String.t()}
   def cu_precis(t) do
-    Enum.reduce_while(
-      t.compliance_units,
-      {:ok, %{created: MapSet.new(), consumed: MapSet.new()}},
-      fn cu, {:ok, acc} ->
-        created = ComplianceUnit.created(cu)
-        consumed = ComplianceUnit.consumed(cu)
+    %{created: created, consumed: consumed} =
+      Enum.reduce(t.compliance_units, %{created: [], consumed: []}, fn cu,
+                                                                       acc ->
+        %{
+          created: acc.created ++ ComplianceUnit.created(cu),
+          consumed: acc.consumed ++ ComplianceUnit.consumed(cu)
+        }
+      end)
 
-        if (MapSet.size(acc.created) == 0 or
-              MapSet.disjoint?(acc.created, created)) and
-             (MapSet.size(acc.consumed) == 0 or
-                MapSet.disjoint?(acc.consumed, consumed)) do
-          {:cont,
-           {:ok,
-            %{
-              created: MapSet.union(acc.created, created),
-              consumed: MapSet.union(acc.consumed, consumed)
-            }}}
-        else
-          {:halt,
-           {:error,
-            "Not disjoint Compliance Units. Repeated created:\n" <>
-              "#{inspect(MapSet.intersection(created, acc.created), pretty: true)}\n" <>
-              "Repeated consumed:\n" <>
-              "#{inspect(MapSet.intersection(consumed, acc.consumed))}"}}
-        end
-      end
-    )
+    created_dup =
+      created |> Enum.frequencies() |> Enum.reject(&(elem(&1, 1) == 1))
+
+    consumed_dup =
+      consumed |> Enum.frequencies() |> Enum.reject(&(elem(&1, 1) == 1))
+
+    if Enum.empty?(created_dup ++ consumed_dup) do
+      {:ok, %{created: created, consumed: consumed}}
+    else
+      {:error,
+       "Not disjoint Compliance Units. Repeated created:\n" <>
+         "#{inspect(Enum.map(created_dup, &elem(&1, 0)), pretty: true)}\n" <>
+         "Repeated consumed:\n" <>
+         "#{inspect(Enum.map(consumed_dup, &elem(&1, 0)), pretty: true)}"}
+    end
   end
 
   @spec is_list_unique(list()) :: {:ok, list()} | {:error, String.t()}
@@ -307,51 +371,51 @@ defmodule Anoma.RM.Transparent.Action do
     end)
   end
 
-  @spec generate_proofs(
-          list({<<_::256>>, Resource.t(), integer()}),
-          list(Resource.t())
-        ) :: %{integer() => {<<_::256>>, <<>>}}
+  @spec generate_proofs(consume_data, create_data) :: %{
+          integer() => {bool, integer(), appdata(), <<>>}
+        }
   defp generate_proofs(to_nullify, to_commit) do
     map =
-      for {nlf_key, res, _} <- to_nullify, reduce: %{} do
+      for {nlf_key, res, _, _, _, appdata, _} <- to_nullify, reduce: %{} do
         acc ->
           Map.put(
             acc,
             Resource.nullifier_hash(nlf_key, res),
-            {res.logicref, <<>>}
+            {true, res.logicref, appdata, <<>>}
           )
       end
 
-    for res <- to_commit, reduce: map do
-      acc -> Map.put(acc, Resource.commitment_hash(res), {res.logicref, <<>>})
+    for {res, _extra, appdata, _} <- to_commit, reduce: map do
+      acc ->
+        Map.put(
+          acc,
+          Resource.commitment_hash(res),
+          {false, res.logicref, appdata, <<>>}
+        )
     end
   end
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([created, consumed, rl_proofs, cus | app_data]) do
-    with {:ok, list_created} <- Noun.Nounable.List.from_noun(created),
-         {:ok, list_consumed} <- Noun.Nounable.List.from_noun(consumed),
-         {:ok, proof_map} <- Noun.Nounable.Map.from_noun(rl_proofs),
-         {:ok, cu_map} <- Noun.Nounable.MapSet.from_noun(cus),
-         {:ok, appdata} <- Noun.Nounable.Map.from_noun(app_data),
-         lst <- match_appdata(appdata) do
-      {:ok,
-       %__MODULE__{
-         created: list_created |> Enum.map(&Noun.atom_binary_to_integer/1),
-         consumed: list_consumed |> Enum.map(&Noun.atom_binary_to_integer/1),
-         resource_logic_proofs:
+  def from_noun([rl_proofs | cus]) do
+    with {:ok, proof_map} <- Noun.Nounable.Map.from_noun(rl_proofs),
+         {:ok, cus} <- Noun.Nounable.List.from_noun(cus),
+         proof_map_elixir <-
            proof_map
-           |> Enum.into(%{}, fn {tag, [bin | proof]} ->
+           |> Enum.into(%{}, fn {tag, [bool, logic, appdata | prf]} ->
              {Noun.atom_binary_to_integer(tag),
-              {Noun.atom_binary_to_integer(bin), proof}}
+              {Noun.equal?(0, bool), Noun.atom_binary_to_integer(logic),
+               match_appdata(appdata), prf}}
            end),
-         compliance_units:
-           cu_map
-           |> Enum.into(MapSet.new(), fn x ->
+         cus_list_elixir <-
+           cus
+           |> Enum.map(fn x ->
              {:ok, cu} = ComplianceUnit.from_noun(x)
              cu
-           end),
-         app_data: lst
+           end) do
+      {:ok,
+       %__MODULE__{
+         resource_logic_proofs: proof_map_elixir,
+         compliance_units: cus_list_elixir
        }}
     else
       _ -> :error
@@ -362,25 +426,21 @@ defmodule Anoma.RM.Transparent.Action do
     @impl true
     def to_noun(t = %Action{}) do
       [
-        Noun.Nounable.to_noun(t.created),
-        Noun.Nounable.to_noun(t.consumed),
-        Noun.Nounable.to_noun(t.resource_logic_proofs),
-        Noun.Nounable.to_noun(t.compliance_units)
-        | Noun.Nounable.to_noun(t.app_data)
+        Noun.Nounable.to_noun(t.resource_logic_proofs)
+        | Noun.Nounable.to_noun(t.compliance_units)
       ]
     end
   end
 
-  defp match_appdata(appdata) do
-    Enum.into(appdata, %{}, fn {tag, list} ->
-      {:ok, list_data} = Noun.Nounable.List.from_noun(list)
+  @doc """
+  I match a given nock appdata into an elixir appdata
+  """
+  @spec match_appdata(Noun.t()) :: appdata()
+  def match_appdata(appdata) do
+    {:ok, list_data} = Noun.Nounable.List.from_noun(appdata)
 
-      list_of_appdata =
-        Enum.map(list_data, fn [bin | bool] ->
-          {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}
-        end)
-
-      {Noun.atom_binary_to_integer(tag), list_of_appdata}
+    Enum.map(list_data, fn [bin | bool] ->
+      {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}
     end)
   end
 end

@@ -17,7 +17,7 @@ defmodule Anoma.CairoResource.Tree do
 
   @spec construct(CommitmentTree.Spec.t(), list(binary())) :: t()
   def construct(spec, leaves) do
-    empty_rt = CommitmentTree.new(spec, nil)
+    empty_rt = CommitmentTree.new(spec)
     {rt, anchor} = CommitmentTree.add(empty_rt, leaves)
 
     %__MODULE__{

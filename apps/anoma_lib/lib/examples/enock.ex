@@ -2386,11 +2386,15 @@ defmodule Examples.ENock do
   end
 
   def nullifier_test(n \\ :rand.uniform(10000)) do
-    res = %Resource{quantity: n} |> Noun.Nounable.to_noun()
+    resource = %Resource{quantity: n}
 
-    {:ok, res} = make_nullifier_call(res)
+    {:ok, res} = make_nullifier_call([0 | Noun.Nounable.to_noun(resource)])
 
-    <<"NF_", _rest::bitstring>> = Noun.atom_integer_to_binary(res)
+    <<"NF_", rest::bitstring>> = Noun.atom_integer_to_binary(res)
+
+    {:ok, unnouned} = rest |> Noun.Jam.cue!() |> Resource.from_noun()
+
+    assert unnouned == resource
   end
 
   def is_nullifier_arm() do
@@ -2437,8 +2441,8 @@ defmodule Examples.ENock do
     |> Noun.Format.parse_always()
   end
 
-  def action_create_call(created, consumed, appdata) do
-    sample = [created, consumed | appdata]
+  def action_create_call(created, consumed) do
+    sample = [created | consumed]
 
     [action_create_arm(), sample | Nock.Lib.rm_core()]
     |> Nock.nock([9, 2, 0 | 1])
@@ -2450,32 +2454,22 @@ defmodule Examples.ENock do
     cm = consumed |> Resource.commitment_hash()
     root = MapSet.new([cm]) |> CommitmentAccumulator.value()
 
-    consumed_list = Noun.Nounable.to_noun([{{0, 0}, consumed, root}])
-    created_list = Noun.Nounable.to_noun([created])
+    consumed_list =
+      Noun.Nounable.to_noun([
+        {{32, 0}, consumed, {32, 0}, <<>>, root, [], 0}
+      ])
+
+    created_list = Noun.Nounable.to_noun([{created, {32, 0}, [], 0}])
 
     {:ok, res} =
       action_create_call(
         consumed_list,
-        created_list,
-        Noun.Nounable.to_noun(%{})
+        created_list
       )
 
     {:ok, action} = Action.from_noun(res)
 
     assert EAction.trivial_swap_action() == action
-
-    {:ok, res2} =
-      action_create_call(
-        consumed_list,
-        created_list,
-        Noun.Nounable.to_noun(
-          EAction.trivial_swap_action_with_extra_data().app_data
-        )
-      )
-
-    {:ok, action2} = Action.from_noun(res2)
-
-    assert EAction.trivial_swap_action_with_extra_data() == action2
   end
 
   def t_compose_arm() do

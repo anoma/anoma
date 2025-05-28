@@ -26,11 +26,10 @@ defmodule Anoma.RM.Transparent.Transaction do
   use TypedStruct
 
   typedstruct enforce: true do
-    # why do we need roots this high up?
-    # why not just let them rest in compliance units?
-    field(:roots, MapSet.t(integer()), default: MapSet.new())
     field(:actions, MapSet.t(Action.t()), default: MapSet.new())
     field(:delta_proof, <<>>, default: <<>>)
+    field(:delta_vk, binary(), default: DPS.key())
+    field(:expected_balance, integer(), default: 0)
   end
 
   @doc """
@@ -38,11 +37,15 @@ defmodule Anoma.RM.Transparent.Transaction do
 
   Given roots and actions, I create an appropriate transaction.
   """
-  @spec create(MapSet.t(integer()), MapSet.t(Action.t())) :: t()
-  def create(roots, actions) do
-    # specs not updated
-    # it has transaction deltas
-    %__MODULE__{roots: roots, actions: actions}
+  @spec create(MapSet.t(Action.t()), <<>>, DPS.Instance.t(), <<>>) :: t()
+  def create(actions, pk, instance, witness) do
+    proof = DPS.prove(pk, instance, witness)
+
+    %__MODULE__{
+      actions: actions,
+      delta_proof: proof,
+      expected_balance: instance.expected_balance
+    }
   end
 
   @doc """
@@ -53,9 +56,14 @@ defmodule Anoma.RM.Transparent.Transaction do
   @spec compose(t(), t()) :: t()
   def compose(t1, t2) do
     # interface not updated tx.transactiondelta
-    roots = MapSet.union(t1.roots, t2.roots)
     actions = MapSet.union(t1.actions, t2.actions)
-    create(roots, actions)
+    proof = DPS.aggregate(t1.delta_proof, t2.delta_proof)
+
+    %__MODULE__{
+      actions: actions,
+      delta_proof: proof,
+      expected_balance: t1.expected_balance + t2.expected_balance
+    }
   end
 
   @doc """
@@ -92,8 +100,11 @@ defmodule Anoma.RM.Transparent.Transaction do
          # 2 partition of state
          true <-
            DPS.verify(
-             DPS.key(),
-             %DPS.Instance{delta: delta(t)},
+             t.delta_vk,
+             %DPS.Instance{
+               delta: delta(t),
+               expected_balance: t.expected_balance
+             },
              t.delta_proof
            ) do
       true
@@ -122,7 +133,7 @@ defmodule Anoma.RM.Transparent.Transaction do
   @spec commitments(t()) :: MapSet.t(integer())
   def commitments(t) do
     {:ok, precis} = Transaction.action_precis(t)
-    precis.created
+    precis.created |> MapSet.new()
   end
 
   @doc """
@@ -132,7 +143,7 @@ defmodule Anoma.RM.Transparent.Transaction do
   @spec nullifiers(t()) :: MapSet.t(integer())
   def nullifiers(t) do
     {:ok, precis} = Transaction.action_precis(t)
-    precis.consumed
+    precis.consumed |> MapSet.new()
   end
 
   @doc """
@@ -186,54 +197,50 @@ defmodule Anoma.RM.Transparent.Transaction do
   I error.
   """
   @spec action_precis(t()) ::
-          {:ok,
-           %{created: MapSet.t(integer()), consumed: MapSet.t(integer())}}
+          {:ok, %{created: [integer()], consumed: [integer()]}}
           | {:error, String.t()}
   def action_precis(t) do
-    Enum.reduce_while(
-      t.actions,
-      {:ok, %{created: MapSet.new(), consumed: MapSet.new()}},
-      fn action, {:ok, acc} ->
-        created = action.created |> MapSet.new()
-        consumed = action.consumed |> MapSet.new()
+    %{created: created, consumed: consumed} =
+      Enum.reduce(t.actions, %{created: [], consumed: []}, fn cu, acc ->
+        %{
+          created: acc.created ++ Action.created(cu),
+          consumed: acc.consumed ++ Action.consumed(cu)
+        }
+      end)
 
-        if MapSet.disjoint?(acc.created, created) and
-             MapSet.disjoint?(acc.consumed, consumed) do
-          {:cont,
-           {:ok,
-            %{
-              created: MapSet.union(acc.created, created),
-              consumed: MapSet.union(acc.consumed, consumed)
-            }}}
-        else
-          {:halt,
-           {:error,
-            "Not disjoint actions. Repeating commitments:\n" <>
-              "#{inspect(MapSet.intersection(acc.created, created), pretty: true)}\n" <>
-              "Repeating nullifiers:\n" <>
-              "#{inspect(MapSet.intersection(acc.consumed, consumed), pretty: true)}"}}
-        end
-      end
-    )
+    created_dup =
+      created |> Enum.frequencies() |> Enum.reject(&(elem(&1, 1) == 1))
+
+    consumed_dup =
+      consumed |> Enum.frequencies() |> Enum.reject(&(elem(&1, 1) == 1))
+
+    if Enum.empty?(created_dup ++ consumed_dup) do
+      {:ok, %{created: created, consumed: consumed}}
+    else
+      {:error,
+       "Not disjoint Actions. Repeated created:\n" <>
+         "#{inspect(Enum.map(created_dup, &elem(&1, 0)), pretty: true)}\n" <>
+         "Repeated consumed:\n" <>
+         "#{inspect(Enum.map(consumed_dup, &elem(&1, 0)), pretty: true)}"}
+    end
   end
 
   @spec from_noun(Noun.t()) :: {:ok, t()} | :error
-  def from_noun([roots, actions | delta_proof]) do
-    with {:ok, roots} <- Noun.Nounable.MapSet.from_noun(roots),
-         {:ok, action_nouns} <- Noun.Nounable.MapSet.from_noun(actions),
+  def from_noun([actions, delta_proof, delta_vk | balance]) do
+    with {:ok, action_nouns} <- Noun.Nounable.MapSet.from_noun(actions),
          list_actions <- Enum.map(action_nouns, &Action.from_noun/1),
          true <-
            Enum.all?(list_actions, fn
              {:ok, _res} -> true
              :error -> false
            end),
-         true <- Noun.equal?(delta_proof, 0) do
+         true <- Noun.equal?(delta_proof, 0),
+         true <- Noun.equal?(delta_vk, DPS.key()) do
       {:ok,
        %__MODULE__{
-         roots:
-           roots |> Enum.into(MapSet.new(), &Noun.atom_binary_to_integer/1),
          actions:
-           list_actions |> Enum.into(MapSet.new(), fn {:ok, res} -> res end)
+           list_actions |> Enum.into(MapSet.new(), fn {:ok, res} -> res end),
+         expected_balance: Noun.atom_binary_to_integer(balance)
        }}
     else
       _ -> :error
@@ -244,8 +251,9 @@ defmodule Anoma.RM.Transparent.Transaction do
     @impl true
     def to_noun(t) do
       [
-        Noun.Nounable.to_noun(t.roots),
-        Noun.Nounable.to_noun(t.actions) | <<>>
+        Noun.Nounable.to_noun(t.actions),
+        <<>>,
+        t.delta_vk | t.expected_balance
       ]
     end
   end

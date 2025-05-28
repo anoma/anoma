@@ -100,7 +100,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
   typedstruct enforce: true do
     # pk and vk is the jam of the gate calling CPS.verify_jet
     # empty for now
-    field(:proving_key, cps_key, default: @cps_key)
+    field(:proving_key, <<>>, default: <<>>)
     field(:verifying_key, cps_key, default: @cps_key)
     # structured data for running delta checks
     # inherently ordered by the key orders in definition

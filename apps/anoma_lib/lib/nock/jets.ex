@@ -931,36 +931,39 @@ defmodule Nock.Jets do
 
   @spec action_create(Noun.t()) :: :error | {:ok, Noun.t()}
   def action_create(core) do
-    with {:ok, [con, cre | data]} <- sample(core),
-         {:ok, con} <- Noun.Nounable.List.from_noun(con),
-         {:ok, cre} <- Noun.Nounable.List.from_noun(cre),
-         {:ok, data} <- Noun.Nounable.Map.from_noun(data),
+    with {:ok, [consumed | created]} <- sample(core),
+         {:ok, consumed} <- Noun.Nounable.List.from_noun(consumed),
+         {:ok, created} <- Noun.Nounable.List.from_noun(created),
          con_res <-
-           con
-           |> Enum.map(fn [[size | key], res | root] ->
+           consumed
+           |> Enum.map(fn [
+                            [size | key],
+                            res,
+                            [size | deltainput],
+                            path,
+                            root,
+                            appdata | witness
+                          ] ->
              {:ok, res} = Resource.from_noun(res)
 
              {Noun.atom_integer_to_binary(key, size), res,
-              Noun.atom_binary_to_integer(root)}
+              Noun.atom_integer_to_binary(deltainput, size), path,
+              Noun.atom_binary_to_integer(root),
+              Action.match_appdata(appdata),
+              Noun.atom_integer_to_binary(witness)}
            end),
          cre_res <-
-           cre
-           |> Enum.map(fn res ->
-             {:ok, res} = Resource.from_noun(res)
-             res
-           end),
-         data_res <-
-           data
-           |> Enum.into(%{}, fn {key, list_noun} ->
-             with {:ok, list} <- Noun.Nounable.List.from_noun(list_noun) do
-               {Noun.atom_binary_to_integer(key),
-                Enum.map(list, fn [bin | bool] ->
-                  {Noun.atom_integer_to_binary(bin), Noun.equal?(bool, 0)}
-                end)}
-             end
+           created
+           |> Enum.map(fn [res, [size | deltainput], appdata | witness] ->
+             {:ok, resource} = Resource.from_noun(res)
+
+             {resource, Noun.atom_integer_to_binary(deltainput, size),
+              Action.match_appdata(appdata),
+              Noun.atom_integer_to_binary(witness)}
            end) do
       {:ok,
-       Action.create(con_res, cre_res, data_res) |> Noun.Nounable.to_noun()}
+       Action.create(con_res, cre_res)
+       |> Noun.Nounable.to_noun()}
     else
       _ -> :error
     end

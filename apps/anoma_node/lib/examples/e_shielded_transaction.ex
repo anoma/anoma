@@ -35,7 +35,7 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> Anoma.CairoResource.Resource.commitment()
 
     {tree, anchor} =
-      Examples.ECommitmentTree.memory_backed_ct_with_trivial_cairo_tx([
+      Examples.ECommitmentTree.ct_with_trivial_cairo_tx([
         output_resource_cm
       ])
 
@@ -98,7 +98,7 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> Anoma.CairoResource.Resource.commitment()
 
     {tree, anchor} =
-      Examples.ECommitmentTree.memory_backed_ct_with_trivial_cairo_tx([
+      Examples.ECommitmentTree.ct_with_trivial_cairo_tx([
         output_cm_1,
         output_cm_2
       ])
@@ -161,12 +161,12 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> Anoma.CairoResource.Resource.commitment()
 
     {_, anchor_1} =
-      Examples.ECommitmentTree.memory_backed_ct_with_trivial_cairo_tx([
+      Examples.ECommitmentTree.ct_with_trivial_cairo_tx([
         output_cm_1
       ])
 
     {tree, anchor_2} =
-      Examples.ECommitmentTree.memory_backed_ct_with_trivial_cairo_tx([
+      Examples.ECommitmentTree.ct_with_trivial_cairo_tx([
         output_cm_1,
         output_cm_2
       ])

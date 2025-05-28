@@ -41,9 +41,9 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   I access the created field in a given instance of the unit and collect
   the result in a set.
   """
-  @spec created(t()) :: MapSet.t(integer())
+  @spec created(t()) :: [integer()]
   def created(t) do
-    t.instance.created |> Enum.map(&elem(&1, 0)) |> MapSet.new()
+    t.instance.created |> Enum.map(&elem(&1, 0))
   end
 
   @doc """
@@ -52,9 +52,9 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   I access the consumed field in a given instance of the unit and collect
   the result in a set.
   """
-  @spec consumed(t()) :: MapSet.t(integer())
+  @spec consumed(t()) :: [integer()]
   def consumed(t) do
-    t.instance.consumed |> Enum.map(&elem(&1, 0)) |> MapSet.new()
+    t.instance.consumed |> Enum.map(&elem(&1, 0))
   end
 
   @doc """
@@ -83,12 +83,16 @@ defmodule Anoma.RM.Transparent.ComplianceUnit do
   @doc """
   I am the creation API for the compliance unit of the TRM.
 
-  Given a key, instance, and proof for the unit, I put them as appropriate
-  arguments to the unit.
+  Given proving, verifying keys alongside compliance instance and
+  witness, I create a compliance unit.
   """
-  @spec create(CPS.cps_key(), Instance.t(), <<>>) :: t()
-  def create(key, instance, proof) do
-    %__MODULE__{instance: instance, vk: key, proof: proof}
+  @spec create(<<>>, CPS.cps_key(), Instance.t(), <<>>) :: t()
+  def create(pk, vk, instance, witness) do
+    %__MODULE__{
+      instance: instance,
+      vk: vk,
+      proof: CPS.prove(pk, instance, witness)
+    }
   end
 
   @doc """
