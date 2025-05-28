@@ -88,18 +88,12 @@
   ==
 +$  t-action
   $~  :*
-    created=~
-    consumed=~
     resource-logic-proofs=~
     compliance-units=~
-    app-data=~
   ==
   $:
-    created=(list t-commitment)                                   ::  commitment list
-    consumed=(list t-nullifier)                                   ::  nullifier list
-    resource-logic-proofs=(map t-tag (pair @ t-compliance-unit))  ::  proof set
+    resource-logic-proofs=(map t-tag [? @ (list (pair @ ?) @)])   ::  proof map
     compliance-units=(list t-compliance-unit)                     ::  compliance units
-    app-data=(map t-tag (list (pair @ ?)))                        ::  tags with blobs
   ==
 +$  cairo-action
   $~  :*
@@ -118,14 +112,16 @@
   ==
 +$  t-transaction
   $~  :*
-    roots=~
     actions=~
     delta-proof=*t-proof
+    delta-vk=*@
+    expected-balance=*@
   ==
   $:
-    roots=(set @)           ::  root set for spent resources
     actions=(set t-action)  ::  action set
     delta-proof=t-proof     ::  delta proof (trivial)
+    delta-vk=@              ::  delta verifying key
+    expected-balance=@      ::  expected balance
   ==
 +$  cairo-transaction
   $~  :*
@@ -205,7 +201,7 @@
   !!
 ++  action-create  ::  create interface for actions
   ~/  %action-create
-  |=  [consumed=(list [[@ @] t-resource t-root]) created=(list t-resource) data=(map t-tag (list (pair @ ?)))]
+  |=  [consumed=(list [[@ @] t-resource [@ @] @ t-root (list (pair @ ?)) @]) created=(list t-resource [@ @] (list (pair @ ?)) @)]
   =+  c=%action-create
   ^-  t-action
   !!
