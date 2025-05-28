@@ -6,7 +6,7 @@ import Config
 # Configures the endpoint
 config :anoma_client, Anoma.Client.Web.Endpoint,
   http: [
-    ip: {127, 0, 0, 1},
+    ip: {0, 0, 0, 0},
     port: String.to_integer(System.get_env("CLIENT_HTTP_PORT") || "4000")
   ]
 
