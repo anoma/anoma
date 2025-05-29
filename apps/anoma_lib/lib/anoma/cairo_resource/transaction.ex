@@ -7,6 +7,8 @@ defmodule Anoma.CairoResource.Transaction do
 
   alias __MODULE__
   alias Anoma.CairoResource.Action
+  alias Anoma.CairoResource.Delta.ProvingSystem, as: DeltaProvingSystem
+  alias Anoma.CairoResource.Delta.Instance, as: DeltaInstance
 
   use TypedStruct
 
@@ -17,6 +19,14 @@ defmodule Anoma.CairoResource.Transaction do
     # private keys. When the tx is finalized/signed, the delta_proof is the
     # binding signature/proof
     field(:delta_proof, binary(), default: <<>>)
+
+    # delta_vk is trivial and not used.
+    field(:delta_vk, <<>>, default: <<>>)
+
+    # Only zero balance is allowed for delta in shielded RM. Expected_balance is
+    # not currently used. If the expected_balance is concealed, it is a 256-bit
+    # curve point type; otherwise, it is a list of kind-quantity pairs.
+    field(:expected_balance, <<_::256>>, default: <<0::256>>)
   end
 
   @spec create(MapSet.t(Action.t()), binary()) :: t()
@@ -53,7 +63,16 @@ defmodule Anoma.CairoResource.Transaction do
 
   @spec prove_delta(Transaction.t()) :: Transaction.t()
   def prove_delta(tx = %Transaction{}) do
-    tx |> sign()
+    delta_instance = tx.actions |> DeltaInstance.to_instance()
+
+    delta_proof =
+      DeltaProvingSystem.prove(
+        DeltaProvingSystem.key(),
+        delta_instance,
+        tx.delta_proof
+      )
+
+    %Transaction{tx | delta_proof: delta_proof}
   end
 
   @spec verify(t()) :: true | {:error, String.t()}
@@ -101,23 +120,15 @@ defmodule Anoma.CairoResource.Transaction do
       {:error, "Compliance proofs or logic proofs verification failure"}
   end
 
-  @spec verify_delta(Transaction.t()) ::
-          true | {:error, String.t()}
+  @spec verify_delta(Transaction.t()) :: true | {:error, String.t()}
   defp verify_delta(tx) do
-    # Collect binding public keys
-    binding_pub_keys = delta(tx)
+    instance = tx.actions |> DeltaInstance.to_instance()
 
-    # Collect binding signature msgs
-    binding_messages = get_binding_messages(tx)
-
-    case Cairo.sig_verify(
-           binding_pub_keys,
-           binding_messages,
-           tx.delta_proof |> :binary.bin_to_list()
-         ) do
-      true -> true
-      _ -> {:error, "Delta proof verification failure"}
-    end
+    DeltaProvingSystem.verify(
+      DeltaProvingSystem.key(),
+      instance,
+      tx.delta_proof
+    )
   end
 
   @spec verify_duplicate_nfs(Transaction.t()) ::
@@ -130,38 +141,6 @@ defmodule Anoma.CairoResource.Transaction do
     else
       {:error, "Duplicate nullifiers error"}
     end
-  end
-
-  @spec delta(Transaction.t()) :: list(byte())
-  defp delta(tx) do
-    tx.actions
-    |> Enum.flat_map(fn action ->
-      Action.delta(action)
-    end)
-    |> Enum.reduce(
-      [],
-      &[:binary.bin_to_list(&1) | &2]
-    )
-  end
-
-  @spec get_binding_messages(Transaction.t()) :: list(list(byte()))
-  defp get_binding_messages(tx = %Transaction{}) do
-    (Transaction.nullifiers(tx) ++
-       Transaction.commitments(tx))
-    |> Enum.map(&:binary.bin_to_list/1)
-  end
-
-  @spec sign(Transaction.t()) :: Transaction.t()
-  defp sign(tx = %Transaction{}) do
-    msgs = get_binding_messages(tx)
-
-    binding_signature =
-      tx.delta_proof
-      |> :binary.bin_to_list()
-      |> Cairo.sign(msgs)
-      |> :binary.list_to_bin()
-
-    %Transaction{tx | delta_proof: binding_signature}
   end
 
   @spec from_noun(Noun.t()) :: {:ok, Transaction.t()} | :error
