@@ -1950,33 +1950,62 @@ defmodule NockPoly do
     @type forest_algebra(r) :: (forest_ctor(), [r], forest_spec() -> r)
 
     @doc """
-    Catamorphism (fold) for forest terms.
+    Evaluate a forest term with a substitution function for variables.
 
-    This is the elimination principle for forest types. It allows pattern matching
-    and computation over forest terms while respecting the type structure.
+    This is the general elimination principle for open forest terms (terms that
+    may contain variables). It allows pattern matching and computation while
+    respecting the type structure.
 
     Parameters:
-    - `term`: The forest term to eliminate
+    - `term`: The forest term to evaluate
     - `algebra`: Function that handles each constructor
-    - `var_handler`: Function that handles variables
+    - `var_handler`: Function that handles variables (substitution)
     - `spec`: The forest specification (passed to algebra for context)
 
-    Returns the result of folding the term with the algebra.
+    Returns the result of evaluating the term with the algebra.
     """
-    @spec cata(
+    @spec eval(
             Term.tv(forest_ctor(), v),
             forest_algebra(r),
             (v -> r),
             forest_spec()
           ) :: r
           when v: term, r: term
-    def cata(term, algebra, var_handler, spec) do
+    def eval(term, algebra, var_handler, spec) do
       Term.eval(
         fn {ctor, child_results} ->
           algebra.(ctor, child_results, spec)
         end,
         var_handler,
         term
+      )
+    end
+
+    @doc """
+    Catamorphism (fold) for closed forest terms.
+
+    This is the elimination principle for closed forest terms (terms with no
+    variables). It's a special case of eval where variables cause an error.
+
+    Parameters:
+    - `term`: The closed forest term to fold
+    - `algebra`: Function that handles each constructor
+    - `spec`: The forest specification (passed to algebra for context)
+
+    Returns the result of folding the term with the algebra.
+    """
+    @spec cata(
+            Term.t(forest_ctor()),
+            forest_algebra(r),
+            forest_spec()
+          ) :: r
+          when r: term
+    def cata(term, algebra, spec) do
+      Term.cata(
+        term,
+        fn {ctor, child_results} ->
+          algebra.(ctor, child_results, spec)
+        end
       )
     end
 

@@ -2356,12 +2356,13 @@ defmodule Examples.ENockPoly do
   end
 
   @doc """
-  I demonstrate pattern matching/elimination on forest terms using cata.
+  I demonstrate pattern matching/elimination on forest terms using cata and eval.
 
   This test shows how to:
   - Extract values from terms
   - Transform proof terms
   - Compute over inductive-inductive structures
+  - Work with both closed terms (cata) and open terms (eval)
   """
   def forest_elimination_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
@@ -2389,19 +2390,12 @@ defmodule Examples.ENockPoly do
       {:base, 0, 0}, [], _spec -> 0
       # succ
       {:base, 0, 1}, [pred_val], _spec -> pred_val + 1
-      # Other constructors return nil (we're only interested in Nat)
-      _, _, _spec -> nil
     end
 
-    # Test extracting values
-    assert Forest.cata(zero, nat_value_algebra, fn _ -> nil end, expr_spec) ==
-             0
-
-    assert Forest.cata(one, nat_value_algebra, fn _ -> nil end, expr_spec) ==
-             1
-
-    assert Forest.cata(two, nat_value_algebra, fn _ -> nil end, expr_spec) ==
-             2
+    # Test extracting values using cata (for closed terms)
+    assert Forest.cata(zero, nat_value_algebra, expr_spec) == 0
+    assert Forest.cata(one, nat_value_algebra, expr_spec) == 1
+    assert Forest.cata(two, nat_value_algebra, expr_spec) == 2
 
     # Example 2: Extract the nat from a NatWithParity term
     extract_nat_algebra = fn
@@ -2413,23 +2407,13 @@ defmodule Examples.ENockPoly do
       # For nat constructors, compute their value
       {:base, 0, 0}, [], _spec -> 0
       {:base, 0, 1}, [pred_val], _spec -> pred_val + 1
-      # For other constructors, return nil
-      _, _, _spec -> nil
+      # For dep constructors (proofs), we can return 0 as a dummy value
+      # since they won't appear in the result when extracting from NatWithParity
+      {:dep, _, _, _}, _, _spec -> 0
     end
 
-    assert Forest.cata(
-             zero_with_even,
-             extract_nat_algebra,
-             fn _ -> nil end,
-             expr_spec
-           ) == 0
-
-    assert Forest.cata(
-             one_with_odd,
-             extract_nat_algebra,
-             fn _ -> nil end,
-             expr_spec
-           ) == 1
+    assert Forest.cata(zero_with_even, extract_nat_algebra, expr_spec) == 0
+    assert Forest.cata(one_with_odd, extract_nat_algebra, expr_spec) == 1
 
     # Example 3: Count the depth of a proof
     proof_depth_algebra = fn
@@ -2449,28 +2433,19 @@ defmodule Examples.ENockPoly do
       # For nat constructors, take max of children
       {:base, 0, _}, children, _spec ->
         if Enum.empty?(children), do: 0, else: Enum.max(children)
-
-      # For other constructors
-      _, _, _spec ->
-        0
     end
 
-    assert Forest.cata(
-             even_zero,
-             proof_depth_algebra,
-             fn _ -> 0 end,
-             expr_spec
-           ) == 0
+    assert Forest.cata(even_zero, proof_depth_algebra, expr_spec) == 0
+    assert Forest.cata(odd_one, proof_depth_algebra, expr_spec) == 1
+    assert Forest.cata(even_two, proof_depth_algebra, expr_spec) == 2
 
-    assert Forest.cata(odd_one, proof_depth_algebra, fn _ -> 0 end, expr_spec) ==
-             1
-
-    assert Forest.cata(
-             even_two,
-             proof_depth_algebra,
-             fn _ -> 0 end,
-             expr_spec
-           ) == 2
+    # Test the nat constructor cases
+    # Empty children
+    assert Forest.cata(zero, proof_depth_algebra, expr_spec) == 0
+    # Max of [0]
+    assert Forest.cata(one, proof_depth_algebra, expr_spec) == 0
+    # Max of [0]
+    assert Forest.cata(two, proof_depth_algebra, expr_spec) == 0
 
     # Example 4: Transform a term - double all nat values
     double_nat_algebra = fn
@@ -2484,22 +2459,89 @@ defmodule Examples.ENockPoly do
         Term.com_tv({:base, 0, 1}, [
           Term.com_tv({:base, 0, 1}, [doubled_pred])
         ])
-
-      # Pass through other constructors unchanged
-      ctor, children, _spec ->
-        Term.com_tv(ctor, children)
     end
 
-    doubled_two =
-      Forest.cata(two, double_nat_algebra, &Term.var_tv/1, expr_spec)
-
+    doubled_two = Forest.cata(two, double_nat_algebra, expr_spec)
     # Verify it's 4 by extracting the value
-    assert Forest.cata(
-             doubled_two,
-             nat_value_algebra,
-             fn _ -> nil end,
-             expr_spec
-           ) == 4
+    assert Forest.cata(doubled_two, nat_value_algebra, expr_spec) == 4
+
+    # Example 5: Using eval with open terms containing variables
+    # Create an open term: succ(x) where x is a variable
+    open_succ_term = Term.com_tv({:base, 0, 1}, [Term.var_tv(:x)])
+
+    # Substitution that replaces :x with the value 3
+    substitution = fn
+      # We'll substitute the value 3 for variable x
+      :x -> 3
+    end
+
+    # Evaluate the open term with substitution
+    result =
+      Forest.eval(open_succ_term, nat_value_algebra, substitution, expr_spec)
+
+    # succ(3) = 4
+    assert result == 4
+
+    # Example 6: Transform open terms with variables
+    # Create an open term: with_even(x, y) where x and y are variables
+    open_parity_term =
+      Term.com_tv({:base, 1, 0}, [
+        Term.var_tv(:nat_var),
+        Term.var_tv(:proof_var)
+      ])
+
+    # Algebra that extracts and doubles the nat value
+    # This algebra is only applied to base type terms (Nat and NatWithParity)
+    # so we don't need cases for dep constructors
+    double_extract_algebra = fn
+      {:base, 1, 0}, [nat_val, _proof], _spec -> nat_val * 2
+      {:base, 1, 1}, [nat_val, _proof], _spec -> nat_val * 2
+      {:base, 0, 0}, [], _spec -> 0
+      {:base, 0, 1}, [pred_val], _spec -> pred_val + 1
+    end
+
+    # Substitution that provides values for our variables
+    var_substitution = fn
+      # The nat value is 2
+      :nat_var -> 2
+      # Dummy proof value (algebra ignores it)
+      :proof_var -> 0
+    end
+
+    # Evaluate the open term
+    result2 =
+      Forest.eval(
+        open_parity_term,
+        double_extract_algebra,
+        var_substitution,
+        expr_spec
+      )
+
+    # Doubled the nat value 2 to get 4
+    assert result2 == 4
+
+    # Test the other cases in double_extract_algebra
+    # Test with_odd constructor
+    open_odd_parity =
+      Term.com_tv({:base, 1, 1}, [
+        Term.var_tv(:nat_var),
+        Term.var_tv(:proof_var)
+      ])
+
+    result3 =
+      Forest.eval(
+        open_odd_parity,
+        double_extract_algebra,
+        var_substitution,
+        expr_spec
+      )
+
+    # Also doubles the nat value
+    assert result3 == 4
+
+    # Test nat constructors directly
+    assert Forest.cata(zero, double_extract_algebra, expr_spec) == 0
+    assert Forest.cata(one, double_extract_algebra, expr_spec) == 1
 
     :ok
   end
