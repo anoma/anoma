@@ -1937,6 +1937,49 @@ defmodule NockPoly do
       {:dep, base_idx, dep_idx}
     end
 
+    @typedoc """
+    An algebra for eliminating forest terms.
+
+    The algebra receives:
+    - The constructor
+    - The results of recursively processing the children
+    - The forest spec (for context)
+
+    And produces a result of type `r`.
+    """
+    @type forest_algebra(r) :: (forest_ctor(), [r], forest_spec() -> r)
+
+    @doc """
+    Catamorphism (fold) for forest terms.
+
+    This is the elimination principle for forest types. It allows pattern matching
+    and computation over forest terms while respecting the type structure.
+
+    Parameters:
+    - `term`: The forest term to eliminate
+    - `algebra`: Function that handles each constructor
+    - `var_handler`: Function that handles variables
+    - `spec`: The forest specification (passed to algebra for context)
+
+    Returns the result of folding the term with the algebra.
+    """
+    @spec cata(
+            Term.tv(forest_ctor(), v),
+            forest_algebra(r),
+            (v -> r),
+            forest_spec()
+          ) :: r
+          when v: term, r: term
+    def cata(term, algebra, var_handler, spec) do
+      Term.eval(
+        fn {ctor, child_results} ->
+          algebra.(ctor, child_results, spec)
+        end,
+        var_handler,
+        term
+      )
+    end
+
     @doc """
     Typecheck a term against a forest specification.
 

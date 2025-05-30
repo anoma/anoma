@@ -2186,6 +2186,40 @@ defmodule Examples.ENockPoly do
     :ok
   end
 
+  # Helper function to create the Nat/Even/Odd/NatWithParity forest spec
+  defp nat_parity_forest_spec() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+
+    Forest.create_forest_spec(
+      # Nat has 2 deps (Even and Odd), NatWithParity has 0 deps
+      [2, 0],
+      [
+        # Nat constructors: zero, succ
+        [[], [{:base, 0}]],
+        # NatWithParity constructors: with_even, with_odd
+        # with_even takes a Nat and an Even proof
+        [
+          [{:base, 0}, {:dep, 0, 0}],
+          # with_odd takes a Nat and an Odd proof
+          [{:base, 0}, {:dep, 0, 1}]
+        ]
+      ],
+      [
+        # Nat's dependent constructors (all in one list):
+        [
+          # Index 0: even_zero (no params)
+          [],
+          # Index 1: even_succ (takes Odd)
+          [{:dep, 0, 1}],
+          # Index 2: odd_succ (takes Even)
+          [{:dep, 0, 0}]
+        ],
+        # NatWithParity has no dependent types
+        []
+      ]
+    )
+  end
+
   @doc """
   I demonstrate a forest with dependent types for even and odd proofs.
 
@@ -2218,36 +2252,8 @@ defmodule Examples.ENockPoly do
     alias NockPoly.Fin2ForestPolyF, as: Forest
     alias Term
 
-    # Forest: Nat has Even and Odd dependents, NatWithParity has no dependents
-    expr_spec =
-      Forest.create_forest_spec(
-        # Nat has 2 deps (Even and Odd), NatWithParity has 0 deps
-        [2, 0],
-        [
-          # Nat constructors: zero, succ
-          [[], [{:base, 0}]],
-          # NatWithParity constructors: with_even, with_odd
-          # with_even takes a Nat and an Even proof
-          [
-            [{:base, 0}, {:dep, 0, 0}],
-            # with_odd takes a Nat and an Odd proof
-            [{:base, 0}, {:dep, 0, 1}]
-          ]
-        ],
-        [
-          # Nat's dependent constructors (all in one list):
-          [
-            # Index 0: even_zero (no params)
-            [],
-            # Index 1: even_succ (takes Odd)
-            [{:dep, 0, 1}],
-            # Index 2: odd_succ (takes Even)
-            [{:dep, 0, 0}]
-          ],
-          # NatWithParity has no dependent types
-          []
-        ]
-      )
+    # Get the shared forest spec
+    expr_spec = nat_parity_forest_spec()
 
     assert Forest.validate_forest_spec(expr_spec) == :ok
 
@@ -2345,6 +2351,155 @@ defmodule Examples.ENockPoly do
     assert Enum.any?(errors5, fn e ->
              match?({:invalid_param_type, {:base, 1, 0}, 1, {:dep, 0, 1}}, e)
            end)
+
+    :ok
+  end
+
+  @doc """
+  I demonstrate pattern matching/elimination on forest terms using cata.
+
+  This test shows how to:
+  - Extract values from terms
+  - Transform proof terms
+  - Compute over inductive-inductive structures
+  """
+  def forest_elimination_test() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+    alias Term
+
+    # Get the shared forest spec
+    expr_spec = nat_parity_forest_spec()
+
+    # Create some terms
+    zero = Term.com_tv({:base, 0, 0}, [])
+    one = Term.com_tv({:base, 0, 1}, [zero])
+    two = Term.com_tv({:base, 0, 1}, [one])
+
+    even_zero = Term.com_tv({:dep, 0, 0, 0}, [])
+    odd_one = Term.com_tv({:dep, 0, 1, 2}, [even_zero])
+    even_two = Term.com_tv({:dep, 0, 0, 1}, [odd_one])
+
+    zero_with_even = Term.com_tv({:base, 1, 0}, [zero, even_zero])
+    one_with_odd = Term.com_tv({:base, 1, 1}, [one, odd_one])
+
+    # Example 1: Extract the natural number value from a Nat term
+    nat_value_algebra = fn
+      # Base type 0 (Nat) constructors
+      # zero
+      {:base, 0, 0}, [], _spec -> 0
+      # succ
+      {:base, 0, 1}, [pred_val], _spec -> pred_val + 1
+      # Other constructors return nil (we're only interested in Nat)
+      _, _, _spec -> nil
+    end
+
+    # Test extracting values
+    assert Forest.cata(zero, nat_value_algebra, fn _ -> nil end, expr_spec) ==
+             0
+
+    assert Forest.cata(one, nat_value_algebra, fn _ -> nil end, expr_spec) ==
+             1
+
+    assert Forest.cata(two, nat_value_algebra, fn _ -> nil end, expr_spec) ==
+             2
+
+    # Example 2: Extract the nat from a NatWithParity term
+    extract_nat_algebra = fn
+      # NatWithParity constructors
+      # with_even
+      {:base, 1, 0}, [nat_val, _proof], _spec -> nat_val
+      # with_odd
+      {:base, 1, 1}, [nat_val, _proof], _spec -> nat_val
+      # For nat constructors, compute their value
+      {:base, 0, 0}, [], _spec -> 0
+      {:base, 0, 1}, [pred_val], _spec -> pred_val + 1
+      # For other constructors, return nil
+      _, _, _spec -> nil
+    end
+
+    assert Forest.cata(
+             zero_with_even,
+             extract_nat_algebra,
+             fn _ -> nil end,
+             expr_spec
+           ) == 0
+
+    assert Forest.cata(
+             one_with_odd,
+             extract_nat_algebra,
+             fn _ -> nil end,
+             expr_spec
+           ) == 1
+
+    # Example 3: Count the depth of a proof
+    proof_depth_algebra = fn
+      # Even/Odd proofs
+      # even_zero has depth 0
+      {:dep, 0, 0, 0}, [], _spec ->
+        0
+
+      # even_succ
+      {:dep, 0, 0, 1}, [odd_depth], _spec ->
+        odd_depth + 1
+
+      # odd_succ
+      {:dep, 0, 1, 2}, [even_depth], _spec ->
+        even_depth + 1
+
+      # For nat constructors, take max of children
+      {:base, 0, _}, children, _spec ->
+        if Enum.empty?(children), do: 0, else: Enum.max(children)
+
+      # For other constructors
+      _, _, _spec ->
+        0
+    end
+
+    assert Forest.cata(
+             even_zero,
+             proof_depth_algebra,
+             fn _ -> 0 end,
+             expr_spec
+           ) == 0
+
+    assert Forest.cata(odd_one, proof_depth_algebra, fn _ -> 0 end, expr_spec) ==
+             1
+
+    assert Forest.cata(
+             even_two,
+             proof_depth_algebra,
+             fn _ -> 0 end,
+             expr_spec
+           ) == 2
+
+    # Example 4: Transform a term - double all nat values
+    double_nat_algebra = fn
+      # Transform Nat constructors
+      {:base, 0, 0}, [], _spec ->
+        # zero → zero
+        Term.com_tv({:base, 0, 0}, [])
+
+      {:base, 0, 1}, [doubled_pred], _spec ->
+        # succ(n) → succ(succ(doubled(n)))
+        Term.com_tv({:base, 0, 1}, [
+          Term.com_tv({:base, 0, 1}, [doubled_pred])
+        ])
+
+      # Pass through other constructors unchanged
+      ctor, children, _spec ->
+        Term.com_tv(ctor, children)
+    end
+
+    doubled_two =
+      Forest.cata(two, double_nat_algebra, &Term.var_tv/1, expr_spec)
+
+    # Verify it's 4 by extracting the value
+    assert Forest.cata(
+             doubled_two,
+             nat_value_algebra,
+             fn _ -> nil end,
+             expr_spec
+           ) == 4
 
     :ok
   end
