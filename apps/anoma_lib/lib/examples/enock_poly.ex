@@ -2275,6 +2275,61 @@ defmodule Examples.ENockPoly do
     assert Forest.typecheck(two_with_even, expr_spec) == {:ok, {:base, 1}}
     assert Forest.typecheck(three_with_odd, expr_spec) == {:ok, {:base, 1}}
 
+    # Test soundness: invalid proofs should be rejected
+    # Try to prove 1 is even using even_succ with wrong proof type (should fail)
+    # even_succ expects Odd, but we give it Even
+    invalid_one_even = Term.com_tv({:dep, 0, 0, 1}, [even_zero])
+    result = Forest.typecheck(invalid_one_even, expr_spec)
+    assert {:error, errors} = result
+
+    assert Enum.any?(errors, fn e ->
+             match?(
+               {:invalid_param_type, {:dep, 0, 0, 1}, 0, {:dep, 0, 0}},
+               e
+             )
+           end)
+
+    # Try to prove 2 is odd using odd_succ with wrong proof type (should fail)
+    # odd_succ expects Even, but we give it Odd
+    invalid_two_odd = Term.com_tv({:dep, 0, 1, 2}, [odd_one])
+    result2 = Forest.typecheck(invalid_two_odd, expr_spec)
+    assert {:error, errors2} = result2
+
+    assert Enum.any?(errors2, fn e ->
+             match?(
+               {:invalid_param_type, {:dep, 0, 1, 2}, 0, {:dep, 0, 1}},
+               e
+             )
+           end)
+
+    # Try to create even_zero with a parameter (should fail - wrong arity)
+    invalid_even_zero_with_param = Term.com_tv({:dep, 0, 0, 0}, [zero])
+    result3 = Forest.typecheck(invalid_even_zero_with_param, expr_spec)
+    assert {:error, errors3} = result3
+
+    assert Enum.any?(errors3, fn e ->
+             match?({:invalid_arity, {:dep, 0, 0, 0}, 0, 1}, e)
+           end)
+
+    # Try to create NatWithParity with mismatched proof
+    # zero with odd proof (should fail)
+    invalid_zero_with_odd = Term.com_tv({:base, 1, 1}, [zero, even_zero])
+    result4 = Forest.typecheck(invalid_zero_with_odd, expr_spec)
+    assert {:error, errors4} = result4
+
+    assert Enum.any?(errors4, fn e ->
+             match?({:invalid_param_type, {:base, 1, 1}, 1, {:dep, 0, 0}}, e)
+           end)
+
+    # one with even proof (should fail)
+    invalid_one_with_even = Term.com_tv({:base, 1, 0}, [one, odd_one])
+    result5 = Forest.typecheck(invalid_one_with_even, expr_spec)
+    assert {:error, errors5} = result5
+
+    assert Enum.any?(errors5, fn e ->
+             match?({:invalid_param_type, {:base, 1, 0}, 1, {:dep, 0, 1}}, e)
+           end)
+
     :ok
   end
 
