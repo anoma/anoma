@@ -1693,6 +1693,382 @@ defmodule NockPoly do
     end
   end
 
+  defmodule Fin2ForestPolyF do
+    @moduledoc """
+    I implement finitary polynomial functors over finite two-level forests.
+
+    A finite two-level forest represents a two-level type system where:
+    - Base types form the first level
+    - Each base type can have dependent types that form the second level
+    - Each dependent type has exactly one parent base type
+
+    This generalizes both:
+    - FinSlicePolyF: Multiple types with typed parameters
+    - FinIndIndPolyF: Inductive-inductive types with dependencies
+
+    The forest is represented as a list of natural numbers where:
+    - Length = number of base types
+    - Each element = number of dependent types for that base type
+
+    Example: [2, 0, 3] represents:
+    - 3 base types (indexed 0, 1, 2)
+    - Base type 0 has 2 dependent types
+    - Base type 1 has 0 dependent types
+    - Base type 2 has 3 dependent types
+    """
+
+    alias Term
+
+    @typedoc """
+    A finite two-level forest specification.
+
+    A list where each element specifies how many dependent types depend on
+    that base type.
+    """
+    @type fin2_forest :: [non_neg_integer()]
+
+    @typedoc """
+    An object in the forest is either a base type or a dependent type.
+
+    - `{:base, index}` - A base type with the given index
+    - `{:dep, base_index, dep_index}` - A dependent type of the given base
+    """
+    @type forest_obj ::
+            {:base, non_neg_integer()}
+            | {:dep, non_neg_integer(), non_neg_integer()}
+
+    @typedoc """
+    A position (constructor) representation in the forest.
+
+    For each position, we specify:
+    - Which forest objects are parameters (list of forest_obj)
+    - The parameter list determines both arity and types
+    """
+    @type position_spec :: [forest_obj()]
+
+    @typedoc """
+    A position map assigns position specs to each constructor.
+
+    This is a map from position indices to their specifications.
+    """
+    @type position_map :: %{non_neg_integer() => position_spec()}
+
+    @typedoc """
+    A forest type specification.
+
+    Consists of:
+    - `forest`: The forest structure (list of dependent counts)
+    - `base_positions`: Positions for base type constructors
+    - `dep_positions`: List of position maps for dependent types (one per base)
+    """
+    @type forest_spec :: %{
+            forest: fin2_forest(),
+            base_positions: [position_map()],
+            dep_positions: [position_map()]
+          }
+
+    @doc """
+    Get the number of base types in a forest.
+    """
+    @spec num_base_types(fin2_forest()) :: non_neg_integer()
+    def num_base_types(forest), do: length(forest)
+
+    @doc """
+    Get the number of dependent types for a specific base type.
+    """
+    @spec num_dep_types(fin2_forest(), non_neg_integer()) :: non_neg_integer()
+    def num_dep_types(forest, base_idx) when base_idx >= 0 do
+      Enum.at(forest, base_idx, 0)
+    end
+
+    @doc """
+    Validate that a forest object is valid for the given forest.
+    """
+    @spec validate_forest_obj(forest_obj(), fin2_forest()) ::
+            :ok | {:error, atom()}
+    def validate_forest_obj({:base, idx}, forest) do
+      if idx >= 0 and idx < num_base_types(forest) do
+        :ok
+      else
+        {:error, :invalid_base_index}
+      end
+    end
+
+    def validate_forest_obj({:dep, base_idx, dep_idx}, forest) do
+      cond do
+        base_idx < 0 or base_idx >= num_base_types(forest) ->
+          {:error, :invalid_base_index}
+
+        dep_idx < 0 or dep_idx >= num_dep_types(forest, base_idx) ->
+          {:error, :invalid_dep_index}
+
+        true ->
+          :ok
+      end
+    end
+
+    @doc """
+    Validate a forest specification.
+    """
+    @spec validate_forest_spec(forest_spec()) :: :ok | {:error, atom()}
+    def validate_forest_spec(spec) do
+      %{
+        forest: forest,
+        base_positions: base_positions,
+        dep_positions: dep_positions
+      } = spec
+
+      num_bases = num_base_types(forest)
+
+      cond do
+        length(base_positions) != num_bases ->
+          {:error, :base_positions_length_mismatch}
+
+        length(dep_positions) != num_bases ->
+          {:error, :dep_positions_length_mismatch}
+
+        !validate_all_positions(spec) ->
+          {:error, :invalid_position_specs}
+
+        true ->
+          :ok
+      end
+    end
+
+    # Validate all position specifications
+    @spec validate_all_positions(forest_spec()) :: boolean()
+    defp validate_all_positions(spec) do
+      %{
+        forest: forest,
+        base_positions: base_positions,
+        dep_positions: dep_positions
+      } = spec
+
+      # Check all base positions
+      base_valid =
+        Enum.with_index(base_positions)
+        |> Enum.all?(fn {pos_map, _base_idx} ->
+          Enum.all?(pos_map, fn {_pos_idx, param_list} ->
+            Enum.all?(param_list, &(validate_forest_obj(&1, forest) == :ok))
+          end)
+        end)
+
+      # Check all dependent positions
+      dep_valid =
+        Enum.with_index(dep_positions)
+        |> Enum.all?(fn {pos_map, base_idx} ->
+          expected_deps = num_dep_types(forest, base_idx)
+
+          if map_size(pos_map) > 0 and expected_deps == 0 do
+            false
+          else
+            Enum.all?(pos_map, fn {_pos_idx, param_list} ->
+              Enum.all?(param_list, &(validate_forest_obj(&1, forest) == :ok))
+            end)
+          end
+        end)
+
+      base_valid and dep_valid
+    end
+
+    @typedoc """
+    A constructor in the forest type system.
+
+    - `{:base, type_idx, ctor_idx}` - Constructor for a base type
+    - `{:dep, base_idx, dep_idx, ctor_idx}` - Constructor for a dependent type
+    """
+    @type forest_ctor ::
+            {:base, non_neg_integer(), non_neg_integer()}
+            | {:dep, non_neg_integer(), non_neg_integer(), non_neg_integer()}
+
+    @typedoc """
+    Typecheck errors specific to forest types.
+    """
+    @type typecheck_error(v) ::
+            {:invalid_constructor, forest_ctor()}
+            | {:invalid_arity, forest_ctor(), non_neg_integer(),
+               non_neg_integer()}
+            | {:invalid_param_type, forest_ctor(), non_neg_integer(),
+               forest_obj()}
+            | {:invalid_variable, v}
+
+    @doc """
+    Get the expected parameters for a constructor.
+
+    Returns {:ok, [forest_obj]} or {:error, reason}.
+    """
+    @spec get_ctor_params(forest_spec(), forest_ctor()) ::
+            {:ok, [forest_obj()]} | {:error, atom()}
+    def get_ctor_params(spec, {:base, type_idx, ctor_idx}) do
+      case Enum.at(spec.base_positions, type_idx) do
+        nil ->
+          {:error, :invalid_type_index}
+
+        pos_map ->
+          case Map.get(pos_map, ctor_idx) do
+            nil -> {:error, :invalid_ctor_index}
+            params -> {:ok, params}
+          end
+      end
+    end
+
+    def get_ctor_params(spec, {:dep, base_idx, _dep_idx, ctor_idx}) do
+      case Enum.at(spec.dep_positions, base_idx) do
+        nil ->
+          {:error, :invalid_base_index}
+
+        pos_map ->
+          case Map.get(pos_map, ctor_idx) do
+            nil -> {:error, :invalid_ctor_index}
+            params -> {:ok, params}
+          end
+      end
+    end
+
+    @doc """
+    Get the type of a constructor (which forest object it constructs).
+    """
+    @spec get_ctor_type(forest_ctor()) :: forest_obj()
+    def get_ctor_type({:base, type_idx, _ctor_idx}) do
+      {:base, type_idx}
+    end
+
+    def get_ctor_type({:dep, base_idx, dep_idx, _ctor_idx}) do
+      {:dep, base_idx, dep_idx}
+    end
+
+    @doc """
+    Typecheck a term against a forest specification.
+
+    Returns {:ok, forest_obj} with the type of the term, or {:error, errors}.
+    """
+    @spec typecheck(Term.tv(forest_ctor(), v), forest_spec()) ::
+            {:ok, forest_obj()} | {:error, [typecheck_error(v)]}
+          when v: term
+    def typecheck(term, spec) do
+      Term.eval(
+        # Constructor case
+        fn {ctor, child_results} ->
+          case get_ctor_params(spec, ctor) do
+            {:error, _reason} ->
+              {:error, [{:invalid_constructor, ctor}]}
+
+            {:ok, expected_params} ->
+              expected_arity = length(expected_params)
+              actual_arity = length(child_results)
+
+              if expected_arity != actual_arity do
+                {:error,
+                 [{:invalid_arity, ctor, expected_arity, actual_arity}]}
+              else
+                # Check parameter types
+                param_errors =
+                  Enum.zip(child_results, Enum.with_index(expected_params))
+                  |> Enum.flat_map(fn
+                    {{:ok, actual_type}, {expected_type, idx}} ->
+                      if actual_type == expected_type do
+                        []
+                      else
+                        [{:invalid_param_type, ctor, idx, actual_type}]
+                      end
+
+                    {{:error, errs}, _} ->
+                      errs
+                  end)
+
+                if param_errors == [] do
+                  {:ok, get_ctor_type(ctor)}
+                else
+                  {:error, param_errors}
+                end
+              end
+          end
+        end,
+        # Variable case
+        fn var ->
+          {:error, [{:invalid_variable, var}]}
+        end,
+        term
+      )
+    end
+
+    @doc """
+    Create a simple forest specification from constructor arities.
+
+    This is a convenience function for simple cases where:
+    - There's only one base type
+    - All parameters are of the base type
+    - No dependent types
+
+    Example: simple_forest_spec([2, 0, 1]) creates a single base type with
+    three constructors having 2, 0, and 1 parameters respectively.
+    """
+    @spec simple_forest_spec([non_neg_integer()]) :: forest_spec()
+    def simple_forest_spec(ctor_arities) do
+      base_positions =
+        ctor_arities
+        |> Enum.with_index()
+        |> Enum.map(fn {arity, idx} ->
+          {idx, List.duplicate({:base, 0}, arity)}
+        end)
+        |> Map.new()
+
+      %{
+        # One base type, no dependents
+        forest: [0],
+        base_positions: [base_positions],
+        dep_positions: [%{}]
+      }
+    end
+
+    @doc """
+    Create a forest spec from separate base and dependent constructor specs.
+
+    Args:
+    - forest: The forest structure [dep_counts...]
+    - base_ctor_specs: For each base type, a list of parameter lists
+    - dep_ctor_specs: For each base type's deps, a list of parameter lists
+
+    Example:
+    ```
+    create_forest_spec(
+      [1, 0],  # Base 0 has 1 dep, base 1 has 0 deps
+      [        # Base constructors
+        [[{:base, 0}, {:base, 1}]],  # Base 0, ctor 0: takes two base params
+        [[]]                          # Base 1, ctor 0: takes no params
+      ],
+      [        # Dependent constructors
+        [[{:dep, 0, 0}]],  # Dep 0 of base 0, ctor 0: takes one dep param
+        []                  # Base 1 has no deps
+      ]
+    )
+    ```
+    """
+    @spec create_forest_spec(
+            fin2_forest(),
+            [[position_spec()]],
+            [[position_spec()]]
+          ) :: forest_spec()
+    def create_forest_spec(forest, base_ctor_specs, dep_ctor_specs) do
+      # Convert lists to position maps
+      to_pos_map = fn ctor_list ->
+        ctor_list
+        |> Enum.with_index()
+        |> Enum.map(fn {params, idx} -> {idx, params} end)
+        |> Map.new()
+      end
+
+      base_positions = Enum.map(base_ctor_specs, to_pos_map)
+      dep_positions = Enum.map(dep_ctor_specs, to_pos_map)
+
+      %{
+        forest: forest,
+        base_positions: base_positions,
+        dep_positions: dep_positions
+      }
+    end
+  end
+
   defmodule NockTerms do
     @moduledoc """
     I am a polynomial specification for Nock terms.

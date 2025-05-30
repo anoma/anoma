@@ -2013,4 +2013,382 @@ defmodule Examples.ENockPoly do
     ExUnit.Assertions.assert(noun == expected)
     closed_term
   end
+
+  @doc """
+  I demonstrate the Fin2ForestPolyF module for unified polynomial functors.
+
+  This module unifies:
+  - FinSlicePolyF: Multiple types with typed parameters
+  - FinIndIndPolyF: Inductive-inductive types with dependencies
+  """
+  def fin2_forest_basic_test() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+
+    # Test basic forest structure
+    forest = [2, 0, 3]
+    assert Forest.num_base_types(forest) == 3
+    assert Forest.num_dep_types(forest, 0) == 2
+    assert Forest.num_dep_types(forest, 1) == 0
+    assert Forest.num_dep_types(forest, 2) == 3
+
+    # Test forest object validation
+    assert Forest.validate_forest_obj({:base, 0}, forest) == :ok
+    assert Forest.validate_forest_obj({:base, 2}, forest) == :ok
+
+    assert Forest.validate_forest_obj({:base, 3}, forest) ==
+             {:error, :invalid_base_index}
+
+    assert Forest.validate_forest_obj({:dep, 0, 1}, forest) == :ok
+
+    assert Forest.validate_forest_obj({:dep, 0, 2}, forest) ==
+             {:error, :invalid_dep_index}
+
+    assert Forest.validate_forest_obj({:dep, 1, 0}, forest) ==
+             {:error, :invalid_dep_index}
+
+    assert Forest.validate_forest_obj({:dep, 2, 2}, forest) == :ok
+
+    :ok
+  end
+
+  @doc """
+  I test creating and validating forest specifications.
+  """
+  def fin2_forest_spec_test() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+
+    # Simple spec with one base type
+    simple_spec = Forest.simple_forest_spec([2, 0, 1])
+    assert Forest.validate_forest_spec(simple_spec) == :ok
+
+    # Complex spec with dependent types
+    # Forest [1, 0] means: base 0 has 1 dep, base 1 has 0 deps
+    complex_spec =
+      Forest.create_forest_spec(
+        [1, 0],
+        [
+          # Base type 0: constructor takes two base params
+          [[{:base, 0}, {:base, 1}]],
+          # Base type 1: constructor takes no params
+          [[]]
+        ],
+        [
+          # Dependent type 0 of base 0: constructor takes one dep param
+          [[{:dep, 0, 0}]],
+          # Base type 1 has no dependent types
+          []
+        ]
+      )
+
+    assert Forest.validate_forest_spec(complex_spec) == :ok
+
+    # Test getting constructor params
+    assert Forest.get_ctor_params(complex_spec, {:base, 0, 0}) ==
+             {:ok, [{:base, 0}, {:base, 1}]}
+
+    assert Forest.get_ctor_params(complex_spec, {:base, 1, 0}) ==
+             {:ok, []}
+
+    assert Forest.get_ctor_params(complex_spec, {:dep, 0, 0, 0}) ==
+             {:ok, [{:dep, 0, 0}]}
+
+    # Test getting constructor types
+    assert Forest.get_ctor_type({:base, 0, 0}) == {:base, 0}
+    assert Forest.get_ctor_type({:dep, 0, 0, 1}) == {:dep, 0, 0}
+
+    :ok
+  end
+
+  @doc """
+  I test typechecking terms with the forest type system.
+  """
+  def fin2_forest_typecheck_test() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+    alias Term
+
+    # Create a spec for natural numbers with zero and successor
+    # zero: 0 args, succ: 1 arg
+    nat_spec = Forest.simple_forest_spec([0, 1])
+
+    # Create terms
+    # zero constructor
+    zero = Term.com_tv({:base, 0, 0}, [])
+    # succ(zero)
+    one = Term.com_tv({:base, 0, 1}, [zero])
+    # succ(succ(zero))
+    two = Term.com_tv({:base, 0, 1}, [one])
+
+    # Test typechecking
+    assert Forest.typecheck(zero, nat_spec) == {:ok, {:base, 0}}
+    assert Forest.typecheck(one, nat_spec) == {:ok, {:base, 0}}
+    assert Forest.typecheck(two, nat_spec) == {:ok, {:base, 0}}
+
+    # Test error cases
+    # zero with an argument
+    bad_arity = Term.com_tv({:base, 0, 0}, [zero])
+
+    assert {:error, [{:invalid_arity, {:base, 0, 0}, 0, 1}]} =
+             Forest.typecheck(bad_arity, nat_spec)
+
+    # Non-existent constructor
+    bad_ctor = Term.com_tv({:base, 0, 2}, [])
+
+    assert {:error, [{:invalid_constructor, {:base, 0, 2}}]} =
+             Forest.typecheck(bad_ctor, nat_spec)
+
+    :ok
+  end
+
+  @doc """
+  I demonstrate using Fin2ForestPolyF to model the walking arrow category.
+
+  The walking arrow is the simplest non-trivial forest: [1]
+  - One base type with one dependent type
+  """
+  def fin2_forest_walking_arrow_test() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+    alias Term
+
+    # Walking arrow forest: one base, one dependent
+    walking_arrow_spec =
+      Forest.create_forest_spec(
+        # One base type with one dependent
+        [1],
+        [
+          # Base type has one constructor with no params
+          [[]]
+        ],
+        [
+          # Dependent type has one constructor that takes a base param
+          [[{:base, 0}]]
+        ]
+      )
+
+    assert Forest.validate_forest_spec(walking_arrow_spec) == :ok
+
+    # Create terms
+    base_obj = Term.com_tv({:base, 0, 0}, [])
+    dep_obj = Term.com_tv({:dep, 0, 0, 0}, [base_obj])
+
+    # Typecheck
+    assert Forest.typecheck(base_obj, walking_arrow_spec) == {:ok, {:base, 0}}
+
+    assert Forest.typecheck(dep_obj, walking_arrow_spec) ==
+             {:ok, {:dep, 0, 0}}
+
+    # Error: dependent constructor with wrong param type
+    # Should take base, not dep
+    bad_dep = Term.com_tv({:dep, 0, 0, 0}, [dep_obj])
+
+    assert {:error, [{:invalid_param_type, {:dep, 0, 0, 0}, 0, {:dep, 0, 0}}]} =
+             Forest.typecheck(bad_dep, walking_arrow_spec)
+
+    :ok
+  end
+
+  @doc """
+  I demonstrate a more complex forest with multiple interdependent types.
+
+  This models a simple expression language:
+  - Base type 0: Nat (numbers)
+  - Base type 1: Bool (booleans)
+  - Dependent type on Nat: Even (proof that a nat is even)
+  """
+  def fin2_forest_complex_test() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+    alias Term
+
+    # Forest: Nat has Even dependent, Bool has no dependents
+    expr_spec =
+      Forest.create_forest_spec(
+        # Nat has 1 dep (Even), Bool has 0 deps
+        [1, 0],
+        [
+          # Nat constructors: zero, succ
+          [[], [{:base, 0}]],
+          # Bool constructors: true, false
+          [[], []]
+        ],
+        [
+          # Even constructors: even_zero, even_succ_succ
+          # even_zero: no params, even_succ_succ: takes Even
+          [[], [{:dep, 0, 0}]],
+          # Bool has no dependent types
+          []
+        ]
+      )
+
+    assert Forest.validate_forest_spec(expr_spec) == :ok
+
+    # Create nat terms
+    zero = Term.com_tv({:base, 0, 0}, [])
+    one = Term.com_tv({:base, 0, 1}, [zero])
+    two = Term.com_tv({:base, 0, 1}, [one])
+
+    # Create bool terms
+    true_val = Term.com_tv({:base, 1, 0}, [])
+    false_val = Term.com_tv({:base, 1, 1}, [])
+
+    # Create even proofs
+    # Proof that zero is even
+    even_zero = Term.com_tv({:dep, 0, 0, 0}, [])
+    # Proof that two is even
+    even_two = Term.com_tv({:dep, 0, 0, 1}, [even_zero])
+
+    # Typecheck everything
+    assert Forest.typecheck(zero, expr_spec) == {:ok, {:base, 0}}
+    assert Forest.typecheck(two, expr_spec) == {:ok, {:base, 0}}
+    assert Forest.typecheck(true_val, expr_spec) == {:ok, {:base, 1}}
+    assert Forest.typecheck(false_val, expr_spec) == {:ok, {:base, 1}}
+    assert Forest.typecheck(even_zero, expr_spec) == {:ok, {:dep, 0, 0}}
+    assert Forest.typecheck(even_two, expr_spec) == {:ok, {:dep, 0, 0}}
+
+    :ok
+  end
+
+  @doc """
+  I test forest spec validation errors.
+  """
+  def fin2_forest_spec_validation_errors_test() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+
+    # Test base_positions length mismatch
+    invalid_spec = %{
+      # 2 base types
+      forest: [1, 0],
+      # Only 1 position map
+      base_positions: [%{0 => []}],
+      dep_positions: [%{}, %{}]
+    }
+
+    assert Forest.validate_forest_spec(invalid_spec) ==
+             {:error, :base_positions_length_mismatch}
+
+    # Test dep_positions length mismatch
+    invalid_spec2 = %{
+      # 2 base types
+      forest: [1, 0],
+      base_positions: [%{}, %{}],
+      # Only 1 dep position map
+      dep_positions: [%{}]
+    }
+
+    assert Forest.validate_forest_spec(invalid_spec2) ==
+             {:error, :dep_positions_length_mismatch}
+
+    # Test invalid position specs - defining dep constructors for base with no deps
+    invalid_spec3 = %{
+      # Base 0 has 1 dep, base 1 has 0 deps
+      forest: [1, 0],
+      base_positions: [%{0 => []}, %{0 => []}],
+      # Base 1 should have no dep constructors, but we define one
+      dep_positions: [%{0 => []}, %{0 => [{:dep, 1, 0}]}]
+    }
+
+    assert Forest.validate_forest_spec(invalid_spec3) ==
+             {:error, :invalid_position_specs}
+
+    # Test invalid position specs - invalid forest object in parameter list
+    invalid_spec4 = %{
+      # 2 base types, first has 1 dep
+      forest: [1, 0],
+      # Base constructor has invalid parameter reference (base 2 doesn't exist)
+      base_positions: [%{0 => [{:base, 2}]}, %{0 => []}],
+      dep_positions: [%{}, %{}]
+    }
+
+    assert Forest.validate_forest_spec(invalid_spec4) ==
+             {:error, :invalid_position_specs}
+
+    # Test invalid position specs - invalid dep reference in parameter list
+    invalid_spec5 = %{
+      # Base 0 has 1 dep, base 1 has 0 deps
+      forest: [1, 0],
+      base_positions: [%{0 => []}, %{0 => []}],
+      # Dep constructor references invalid dep (base 0 only has dep 0, not dep 1)
+      dep_positions: [%{0 => [{:dep, 0, 1}]}, %{}]
+    }
+
+    assert Forest.validate_forest_spec(invalid_spec5) ==
+             {:error, :invalid_position_specs}
+
+    :ok
+  end
+
+  @doc """
+  I test get_ctor_params error cases.
+  """
+  def fin2_forest_get_ctor_params_errors_test() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+
+    spec = Forest.simple_forest_spec([0, 1])
+
+    # Test invalid type index for base constructor
+    assert Forest.get_ctor_params(spec, {:base, 2, 0}) ==
+             {:error, :invalid_type_index}
+
+    # Test invalid base index for dependent constructor
+    assert Forest.get_ctor_params(spec, {:dep, 2, 0, 0}) ==
+             {:error, :invalid_base_index}
+
+    assert Forest.get_ctor_params(spec, {:base, 0, 5}) ==
+             {:error, :invalid_ctor_index}
+
+    dep_spec =
+      Forest.create_forest_spec(
+        [1],
+        [[[]]],
+        [[[{:base, 0}]]]
+      )
+
+    assert Forest.get_ctor_params(dep_spec, {:dep, 0, 0, 5}) ==
+             {:error, :invalid_ctor_index}
+
+    :ok
+  end
+
+  @doc """
+  I test typecheck with child errors to ensure error propagation.
+  """
+  def fin2_forest_typecheck_child_errors_test() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+    alias Term
+
+    spec = Forest.simple_forest_spec([1, 1])
+
+    # Create a term with an invalid child that will propagate errors
+    # Constructor 5 doesn't exist, so this will create an error
+    invalid_child = Term.com_tv({:base, 0, 5}, [])
+
+    # Use the invalid child in a valid constructor
+    parent_term = Term.com_tv({:base, 0, 1}, [invalid_child])
+
+    {:error, errors} = Forest.typecheck(parent_term, spec)
+
+    # Verify we get the propagated error from the child
+    assert Enum.any?(errors, fn e ->
+             match?({:invalid_constructor, {:base, 0, 5}}, e)
+           end)
+
+    :ok
+  end
+
+  @doc """
+  I test typecheck with variables.
+  """
+  def fin2_forest_typecheck_variable_test() do
+    alias NockPoly.Fin2ForestPolyF, as: Forest
+    alias Term
+
+    spec = Forest.simple_forest_spec([0, 1])
+
+    # Create a term with a variable
+    var_term = Term.var_tv(:x)
+
+    {:error, errors} = Forest.typecheck(var_term, spec)
+
+    assert errors == [{:invalid_variable, :x}]
+
+    :ok
+  end
 end
