@@ -1422,15 +1422,15 @@ defmodule Examples.ENockPoly do
   def inductive_types_validation_test() do
     # Test validate_fin_mapping
     # Valid mapping
-    assert :ok = IndIndF.validate_fin_mapping([0, 1, 2], 3, 3)
+    assert :ok = Term.validate_fin_mapping([0, 1, 2], 3, 3)
 
     # Invalid mapping length
     assert {:error, :invalid_mapping_length} =
-             IndIndF.validate_fin_mapping([0, 1], 3, 3)
+             Term.validate_fin_mapping([0, 1], 3, 3)
 
     # Mapping out of range
     assert {:error, :mapping_out_of_range} =
-             IndIndF.validate_fin_mapping([0, 3, 1], 3, 3)
+             Term.validate_fin_mapping([0, 3, 1], 3, 3)
 
     # Create base specs for further validation testing
     # Remember: in a natural transformation, we map from dependent (source) to base (target)
