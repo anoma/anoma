@@ -2187,22 +2187,23 @@ defmodule Examples.ENockPoly do
   end
 
   @doc """
-  I demonstrate a more complex forest with multiple interdependent types.
+  I demonstrate a forest with dependent types for even and odd proofs.
 
-  This models a simple expression language:
+  This models:
   - Base type 0: Nat (numbers)
   - Base type 1: Bool (booleans)
-  - Dependent type on Nat: Even (proof that a nat is even)
+  - Dependent type 0 on Nat: Even (proof that a nat is even)
+  - Dependent type 1 on Nat: Odd (proof that a nat is odd)
   """
-  def fin2_forest_complex_test() do
+  def forest_nat_even_odd_proof_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
     alias Term
 
-    # Forest: Nat has Even dependent, Bool has no dependents
+    # Forest: Nat has Even and Odd dependents, Bool has no dependents
     expr_spec =
       Forest.create_forest_spec(
-        # Nat has 1 dep (Even), Bool has 0 deps
-        [1, 0],
+        # Nat has 2 deps (Even and Odd), Bool has 0 deps
+        [2, 0],
         [
           # Nat constructors: zero, succ
           [[], [{:base, 0}]],
@@ -2210,9 +2211,15 @@ defmodule Examples.ENockPoly do
           [[], []]
         ],
         [
-          # Even constructors: even_zero, even_succ_succ
-          # even_zero: no params, even_succ_succ: takes Even
-          [[], [{:dep, 0, 0}]],
+          # Nat's dependent constructors (all in one list):
+          [
+            # Index 0: even_zero (no params)
+            [],
+            # Index 1: even_succ (takes Odd)
+            [{:dep, 0, 1}],
+            # Index 2: odd_succ (takes Even)
+            [{:dep, 0, 0}]
+          ],
           # Bool has no dependent types
           []
         ]
@@ -2229,19 +2236,30 @@ defmodule Examples.ENockPoly do
     true_val = Term.com_tv({:base, 1, 0}, [])
     false_val = Term.com_tv({:base, 1, 1}, [])
 
-    # Create even proofs
-    # Proof that zero is even
+    # Create even/odd proofs
+    # Proof that zero is even (constructor index 0: even_zero)
     even_zero = Term.com_tv({:dep, 0, 0, 0}, [])
-    # Proof that two is even
-    even_two = Term.com_tv({:dep, 0, 0, 1}, [even_zero])
+    # Proof that one is odd (constructor index 2: odd_succ takes even_zero)
+    odd_one = Term.com_tv({:dep, 0, 1, 2}, [even_zero])
+    # Proof that two is even (constructor index 1: even_succ takes odd_one)
+    even_two = Term.com_tv({:dep, 0, 0, 1}, [odd_one])
+    # Proof that three is odd (constructor index 2: odd_succ takes even_two)
+    odd_three = Term.com_tv({:dep, 0, 1, 2}, [even_two])
+
+    # Create three for completeness
+    three = Term.com_tv({:base, 0, 1}, [two])
 
     # Typecheck everything
     assert Forest.typecheck(zero, expr_spec) == {:ok, {:base, 0}}
+    assert Forest.typecheck(one, expr_spec) == {:ok, {:base, 0}}
     assert Forest.typecheck(two, expr_spec) == {:ok, {:base, 0}}
+    assert Forest.typecheck(three, expr_spec) == {:ok, {:base, 0}}
     assert Forest.typecheck(true_val, expr_spec) == {:ok, {:base, 1}}
     assert Forest.typecheck(false_val, expr_spec) == {:ok, {:base, 1}}
     assert Forest.typecheck(even_zero, expr_spec) == {:ok, {:dep, 0, 0}}
+    assert Forest.typecheck(odd_one, expr_spec) == {:ok, {:dep, 0, 1}}
     assert Forest.typecheck(even_two, expr_spec) == {:ok, {:dep, 0, 0}}
+    assert Forest.typecheck(odd_three, expr_spec) == {:ok, {:dep, 0, 1}}
 
     :ok
   end
