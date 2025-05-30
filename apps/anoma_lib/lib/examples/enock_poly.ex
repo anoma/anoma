@@ -2197,6 +2197,22 @@ defmodule Examples.ENockPoly do
 
   This is an inductive-inductive type because NatWithParity (a base type)
   contains terms of Even and Odd (dependent types).
+
+  mutual
+  data FTestNat : Type where
+    FTNz : FTestNat
+    FTNs : FTestNat -> FTestNat
+
+  data FTestNatWithParity : Type where
+    FTNPeven : (n : FTestNat) -> FTestNatEven n -> FTestNatWithParity
+    FTNPodd : (n : FTestNat) -> FTestNatOdd n -> FTestNatWithParity
+
+  data FTestNatEven : FTestNat -> Type where
+    FTNEvenZero : FTestNatEven FTNz
+    FTNEvenSuccOdd : (n : FTestNat) -> FTestNatOdd n -> FTestNatEven (FTNs n)
+
+  data FTestNatOdd : FTestNat -> Type where
+    FTNOddSuccEven : (n : FTestNat) -> FTestNatEven n -> FTestNatOdd (FTNs n)
   """
   def forest_nat_even_odd_proof_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
