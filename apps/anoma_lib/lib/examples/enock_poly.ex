@@ -2191,24 +2191,32 @@ defmodule Examples.ENockPoly do
 
   This models:
   - Base type 0: Nat (numbers)
-  - Base type 1: Bool (booleans)
+  - Base type 1: NatWithParity (a nat with its parity proof)
   - Dependent type 0 on Nat: Even (proof that a nat is even)
   - Dependent type 1 on Nat: Odd (proof that a nat is odd)
+
+  This is an inductive-inductive type because NatWithParity (a base type)
+  contains terms of Even and Odd (dependent types).
   """
   def forest_nat_even_odd_proof_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
     alias Term
 
-    # Forest: Nat has Even and Odd dependents, Bool has no dependents
+    # Forest: Nat has Even and Odd dependents, NatWithParity has no dependents
     expr_spec =
       Forest.create_forest_spec(
-        # Nat has 2 deps (Even and Odd), Bool has 0 deps
+        # Nat has 2 deps (Even and Odd), NatWithParity has 0 deps
         [2, 0],
         [
           # Nat constructors: zero, succ
           [[], [{:base, 0}]],
-          # Bool constructors: true, false
-          [[], []]
+          # NatWithParity constructors: with_even, with_odd
+          # with_even takes a Nat and an Even proof
+          [
+            [{:base, 0}, {:dep, 0, 0}],
+            # with_odd takes a Nat and an Odd proof
+            [{:base, 0}, {:dep, 0, 1}]
+          ]
         ],
         [
           # Nat's dependent constructors (all in one list):
@@ -2220,7 +2228,7 @@ defmodule Examples.ENockPoly do
             # Index 2: odd_succ (takes Even)
             [{:dep, 0, 0}]
           ],
-          # Bool has no dependent types
+          # NatWithParity has no dependent types
           []
         ]
       )
@@ -2231,10 +2239,7 @@ defmodule Examples.ENockPoly do
     zero = Term.com_tv({:base, 0, 0}, [])
     one = Term.com_tv({:base, 0, 1}, [zero])
     two = Term.com_tv({:base, 0, 1}, [one])
-
-    # Create bool terms
-    true_val = Term.com_tv({:base, 1, 0}, [])
-    false_val = Term.com_tv({:base, 1, 1}, [])
+    three = Term.com_tv({:base, 0, 1}, [two])
 
     # Create even/odd proofs
     # Proof that zero is even (constructor index 0: even_zero)
@@ -2246,20 +2251,29 @@ defmodule Examples.ENockPoly do
     # Proof that three is odd (constructor index 2: odd_succ takes even_two)
     odd_three = Term.com_tv({:dep, 0, 1, 2}, [even_two])
 
-    # Create three for completeness
-    three = Term.com_tv({:base, 0, 1}, [two])
+    # Create NatWithParity terms (these use the proofs created above)
+    # with_even: zero with proof it's even
+    zero_with_even = Term.com_tv({:base, 1, 0}, [zero, even_zero])
+    # with_odd: one with proof it's odd
+    one_with_odd = Term.com_tv({:base, 1, 1}, [one, odd_one])
+    # with_even: two with proof it's even
+    two_with_even = Term.com_tv({:base, 1, 0}, [two, even_two])
+    # with_odd: three with proof it's odd
+    three_with_odd = Term.com_tv({:base, 1, 1}, [three, odd_three])
 
     # Typecheck everything
     assert Forest.typecheck(zero, expr_spec) == {:ok, {:base, 0}}
     assert Forest.typecheck(one, expr_spec) == {:ok, {:base, 0}}
     assert Forest.typecheck(two, expr_spec) == {:ok, {:base, 0}}
     assert Forest.typecheck(three, expr_spec) == {:ok, {:base, 0}}
-    assert Forest.typecheck(true_val, expr_spec) == {:ok, {:base, 1}}
-    assert Forest.typecheck(false_val, expr_spec) == {:ok, {:base, 1}}
     assert Forest.typecheck(even_zero, expr_spec) == {:ok, {:dep, 0, 0}}
     assert Forest.typecheck(odd_one, expr_spec) == {:ok, {:dep, 0, 1}}
     assert Forest.typecheck(even_two, expr_spec) == {:ok, {:dep, 0, 0}}
     assert Forest.typecheck(odd_three, expr_spec) == {:ok, {:dep, 0, 1}}
+    assert Forest.typecheck(zero_with_even, expr_spec) == {:ok, {:base, 1}}
+    assert Forest.typecheck(one_with_odd, expr_spec) == {:ok, {:base, 1}}
+    assert Forest.typecheck(two_with_even, expr_spec) == {:ok, {:base, 1}}
+    assert Forest.typecheck(three_with_odd, expr_spec) == {:ok, {:base, 1}}
 
     :ok
   end
