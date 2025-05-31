@@ -2656,6 +2656,11 @@ defmodule Examples.ENockPoly do
     assert Forest.get_ctor_params(dep_spec, {:dep, 0, 0, 5}) ==
              {:error, :invalid_ctor_index}
 
+    # Test invalid dep index for dependent constructor
+    # Base 0 has only 1 dependent (at index 0), so index 1 is invalid
+    assert Forest.get_ctor_params(dep_spec, {:dep, 0, 1, 0}) ==
+             {:error, :invalid_dep_index}
+
     :ok
   end
 
