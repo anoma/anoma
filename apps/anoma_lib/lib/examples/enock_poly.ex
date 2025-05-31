@@ -2073,9 +2073,12 @@ defmodule Examples.ENockPoly do
           [[]]
         ],
         [
-          # Dependent type 0 of base 0: constructor takes one dep param
-          [[{:dep, 0, 0}]],
-          # Base type 1 has no dependent types
+          # Base 0 has 1 dependent
+          [
+            # Dependent 0's constructors
+            [[{:dep, 0, 0}]]
+          ],
+          # Base 1 has no dependent types
           []
         ]
       )
@@ -2159,8 +2162,11 @@ defmodule Examples.ENockPoly do
           [[]]
         ],
         [
-          # Dependent type has one constructor that takes a base param
-          [[{:base, 0}]]
+          # Base 0 has 1 dependent
+          [
+            # Dependent 0's constructors
+            [[{:base, 0}]]
+          ]
         ]
       )
 
@@ -2205,16 +2211,22 @@ defmodule Examples.ENockPoly do
         ]
       ],
       [
-        # Nat's dependent constructors (all in one list):
+        # Base 0 (Nat) has 2 dependents
         [
-          # Index 0: even_zero (no params)
-          [],
-          # Index 1: even_succ (takes Odd)
-          [{:dep, 0, 1}],
-          # Index 2: odd_succ (takes Even)
-          [{:dep, 0, 0}]
+          # Even's constructors
+          [
+            # even_zero (no params)
+            [],
+            # even_succ (takes Odd)
+            [{:dep, 0, 1}]
+          ],
+          # Odd's constructors
+          [
+            # odd_succ (takes Even)
+            [{:dep, 0, 0}]
+          ]
         ],
-        # NatWithParity has no dependent types
+        # Base 1 (NatWithParity) has no dependent types
         []
       ]
     )
@@ -2264,14 +2276,14 @@ defmodule Examples.ENockPoly do
     three = Term.com_tv({:base, 0, 1}, [two])
 
     # Create even/odd proofs
-    # Proof that zero is even (constructor index 0: even_zero)
+    # Proof that zero is even (Even constructor 0: even_zero)
     even_zero = Term.com_tv({:dep, 0, 0, 0}, [])
-    # Proof that one is odd (constructor index 2: odd_succ takes even_zero)
-    odd_one = Term.com_tv({:dep, 0, 1, 2}, [even_zero])
-    # Proof that two is even (constructor index 1: even_succ takes odd_one)
+    # Proof that one is odd (Odd constructor 0: odd_succ takes even_zero)
+    odd_one = Term.com_tv({:dep, 0, 1, 0}, [even_zero])
+    # Proof that two is even (Even constructor 1: even_succ takes odd_one)
     even_two = Term.com_tv({:dep, 0, 0, 1}, [odd_one])
-    # Proof that three is odd (constructor index 2: odd_succ takes even_two)
-    odd_three = Term.com_tv({:dep, 0, 1, 2}, [even_two])
+    # Proof that three is odd (Odd constructor 0: odd_succ takes even_two)
+    odd_three = Term.com_tv({:dep, 0, 1, 0}, [even_two])
 
     # Create NatWithParity terms (these use the proofs created above)
     # with_even: zero with proof it's even
@@ -2313,13 +2325,13 @@ defmodule Examples.ENockPoly do
 
     # Try to prove 2 is odd using odd_succ with wrong proof type (should fail)
     # odd_succ expects Even, but we give it Odd
-    invalid_two_odd = Term.com_tv({:dep, 0, 1, 2}, [odd_one])
+    invalid_two_odd = Term.com_tv({:dep, 0, 1, 0}, [odd_one])
     result2 = Forest.typecheck(invalid_two_odd, expr_spec)
     assert {:error, errors2} = result2
 
     assert Enum.any?(errors2, fn e ->
              match?(
-               {:invalid_param_type, {:dep, 0, 1, 2}, 0, {:dep, 0, 1}},
+               {:invalid_param_type, {:dep, 0, 1, 0}, 0, {:dep, 0, 1}},
                e
              )
            end)
@@ -2377,7 +2389,7 @@ defmodule Examples.ENockPoly do
     two = Term.com_tv({:base, 0, 1}, [one])
 
     even_zero = Term.com_tv({:dep, 0, 0, 0}, [])
-    odd_one = Term.com_tv({:dep, 0, 1, 2}, [even_zero])
+    odd_one = Term.com_tv({:dep, 0, 1, 0}, [even_zero])
     even_two = Term.com_tv({:dep, 0, 0, 1}, [odd_one])
 
     zero_with_even = Term.com_tv({:base, 1, 0}, [zero, even_zero])
@@ -2427,7 +2439,7 @@ defmodule Examples.ENockPoly do
         odd_depth + 1
 
       # odd_succ
-      {:dep, 0, 1, 2}, [even_depth], _spec ->
+      {:dep, 0, 1, 0}, [even_depth], _spec ->
         even_depth + 1
 
       # For nat constructors, take max of children
@@ -2558,7 +2570,7 @@ defmodule Examples.ENockPoly do
       forest: [1, 0],
       # Only 1 position map
       base_positions: [%{0 => []}],
-      dep_positions: [%{}, %{}]
+      dep_positions: [[%{0 => []}], []]
     }
 
     assert Forest.validate_forest_spec(invalid_spec) ==
@@ -2569,20 +2581,20 @@ defmodule Examples.ENockPoly do
       # 2 base types
       forest: [1, 0],
       base_positions: [%{}, %{}],
-      # Only 1 dep position map
-      dep_positions: [%{}]
+      # Only 1 dep position list
+      dep_positions: [[%{0 => []}]]
     }
 
     assert Forest.validate_forest_spec(invalid_spec2) ==
              {:error, :dep_positions_length_mismatch}
 
-    # Test invalid position specs - defining dep constructors for base with no deps
+    # Test invalid position specs - wrong number of dep position maps
     invalid_spec3 = %{
       # Base 0 has 1 dep, base 1 has 0 deps
       forest: [1, 0],
       base_positions: [%{0 => []}, %{0 => []}],
-      # Base 1 should have no dep constructors, but we define one
-      dep_positions: [%{0 => []}, %{0 => [{:dep, 1, 0}]}]
+      # Base 0 should have 1 dep position map, but we give 2
+      dep_positions: [[%{0 => []}, %{0 => []}], []]
     }
 
     assert Forest.validate_forest_spec(invalid_spec3) ==
@@ -2594,7 +2606,7 @@ defmodule Examples.ENockPoly do
       forest: [1, 0],
       # Base constructor has invalid parameter reference (base 2 doesn't exist)
       base_positions: [%{0 => [{:base, 2}]}, %{0 => []}],
-      dep_positions: [%{}, %{}]
+      dep_positions: [[%{0 => []}], []]
     }
 
     assert Forest.validate_forest_spec(invalid_spec4) ==
@@ -2606,7 +2618,7 @@ defmodule Examples.ENockPoly do
       forest: [1, 0],
       base_positions: [%{0 => []}, %{0 => []}],
       # Dep constructor references invalid dep (base 0 only has dep 0, not dep 1)
-      dep_positions: [%{0 => [{:dep, 0, 1}]}, %{}]
+      dep_positions: [[%{0 => [{:dep, 0, 1}]}], []]
     }
 
     assert Forest.validate_forest_spec(invalid_spec5) ==
@@ -2638,7 +2650,7 @@ defmodule Examples.ENockPoly do
       Forest.create_forest_spec(
         [1],
         [[[]]],
-        [[[{:base, 0}]]]
+        [[[[{:base, 0}]]]]
       )
 
     assert Forest.get_ctor_params(dep_spec, {:dep, 0, 0, 5}) ==

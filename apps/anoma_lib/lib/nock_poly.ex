@@ -1781,13 +1781,15 @@ defmodule NockPoly do
 
     Consists of:
     - `forest`: The forest structure (list of dependent counts)
-    - `base_positions`: Positions for base type constructors
-    - `dep_positions`: List of position maps for dependent types (one per base)
+    - `base_positions`: List of position maps, one per base type
+    - `dep_positions`: List of lists of position maps. For each base type,
+      there's a list containing one position map per dependent type of that base.
+      If a base has no dependents, its list is empty.
     """
     @type forest_spec :: %{
             forest: fin2_forest(),
             base_positions: [position_map()],
-            dep_positions: [position_map()]
+            dep_positions: [[position_map()]]
           }
 
     @doc """
@@ -1876,17 +1878,21 @@ defmodule NockPoly do
           end)
         end)
 
-      # Check all dependent positions
       dep_valid =
         Enum.with_index(dep_positions)
-        |> Enum.all?(fn {pos_map, base_idx} ->
+        |> Enum.all?(fn {dep_list, base_idx} ->
           expected_deps = num_dep_types(forest, base_idx)
 
-          if map_size(pos_map) > 0 and expected_deps == 0 do
+          if length(dep_list) != expected_deps do
             false
           else
-            Enum.all?(pos_map, fn {_pos_idx, param_list} ->
-              Enum.all?(param_list, &(validate_forest_obj(&1, forest) == :ok))
+            Enum.all?(dep_list, fn pos_map ->
+              Enum.all?(pos_map, fn {_pos_idx, param_list} ->
+                Enum.all?(
+                  param_list,
+                  &(validate_forest_obj(&1, forest) == :ok)
+                )
+              end)
             end)
           end
         end)
@@ -1935,15 +1941,21 @@ defmodule NockPoly do
       end
     end
 
-    def get_ctor_params(spec, {:dep, base_idx, _dep_idx, ctor_idx}) do
+    def get_ctor_params(spec, {:dep, base_idx, dep_idx, ctor_idx}) do
       case Enum.at(spec.dep_positions, base_idx) do
         nil ->
           {:error, :invalid_base_index}
 
-        pos_map ->
-          case Map.get(pos_map, ctor_idx) do
-            nil -> {:error, :invalid_ctor_index}
-            params -> {:ok, params}
+        dep_list ->
+          case Enum.at(dep_list, dep_idx) do
+            nil ->
+              {:error, :invalid_dep_index}
+
+            pos_map ->
+              case Map.get(pos_map, ctor_idx) do
+                nil -> {:error, :invalid_ctor_index}
+                params -> {:ok, params}
+              end
           end
       end
     end
@@ -2112,7 +2124,7 @@ defmodule NockPoly do
         # One base type, no dependents
         forest: [0],
         base_positions: [base_positions],
-        dep_positions: [%{}]
+        dep_positions: [[]]
       }
     end
 
@@ -2122,19 +2134,23 @@ defmodule NockPoly do
     Args:
     - forest: The forest structure [dep_counts...]
     - base_ctor_specs: For each base type, a list of parameter lists
-    - dep_ctor_specs: For each base type's deps, a list of parameter lists
+    - dep_ctor_specs: For each base type, a list of lists. Each inner list
+      contains parameter lists for one dependent type's constructors.
 
     Example:
     ```
     create_forest_spec(
-      [1, 0],  # Base 0 has 1 dep, base 1 has 0 deps
+      [2, 0],  # Base 0 has 2 deps, base 1 has 0 deps
       [        # Base constructors
         [[{:base, 0}, {:base, 1}]],  # Base 0, ctor 0: takes two base params
         [[]]                          # Base 1, ctor 0: takes no params
       ],
-      [        # Dependent constructors
-        [[{:dep, 0, 0}]],  # Dep 0 of base 0, ctor 0: takes one dep param
-        []                  # Base 1 has no deps
+      [        # Dependent constructors for each base
+        [      # Base 0's dependents
+          [[{:dep, 0, 0}]],           # Dep 0, ctor 0: takes one param
+          [[{:base, 0}], []]          # Dep 1, ctor 0 and 1
+        ],
+        []     # Base 1 has no deps
       ]
     )
     ```
@@ -2142,7 +2158,7 @@ defmodule NockPoly do
     @spec create_forest_spec(
             fin2_forest(),
             [[position_spec()]],
-            [[position_spec()]]
+            [[[position_spec()]]]
           ) :: forest_spec()
     def create_forest_spec(forest, base_ctor_specs, dep_ctor_specs) do
       # Convert lists to position maps
@@ -2154,7 +2170,11 @@ defmodule NockPoly do
       end
 
       base_positions = Enum.map(base_ctor_specs, to_pos_map)
-      dep_positions = Enum.map(dep_ctor_specs, to_pos_map)
+
+      dep_positions =
+        Enum.map(dep_ctor_specs, fn dep_list ->
+          Enum.map(dep_list, to_pos_map)
+        end)
 
       %{
         forest: forest,
