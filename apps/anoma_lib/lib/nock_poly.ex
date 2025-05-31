@@ -1715,6 +1715,17 @@ defmodule NockPoly do
     - Base type 0 has 2 dependent types
     - Base type 1 has 0 dependent types
     - Base type 2 has 3 dependent types
+
+    ## Relation to Parametric Right Adjoints (PRA)
+
+    This module implements PRA functors as described in:
+    https://ncatlab.org/nlab/show/parametric+right+adjoint#generic_morphisms
+
+    Our finite two-level forests represent index categories where morphisms
+    only exist from dependent objects to their parent base objects (plus identities).
+    The polynomial functors we define here are instances of PRA functors between
+    presheaf categories. When the forest is [1] (one base with one dependent),
+    we get the walking arrow category, the simplest non-trivial PRA functor case.
     """
 
     alias Term
@@ -1724,6 +1735,13 @@ defmodule NockPoly do
 
     A list where each element specifies how many dependent types depend on
     that base type.
+
+    In PRA theory, this represents the structure of an index category. For a
+    PRA functor [C^op, Set] → [D^op, Set], both C and D would be represented
+    as fin2_forest structures. The forest determines the objects and morphisms
+    of the index category. A type dependency is expressed as a morphism from
+    the dependent type to the base type, which is a standard category-theoretic
+    use of a morphism as a fibration.
     """
     @type fin2_forest :: [non_neg_integer()]
 
@@ -1732,6 +1750,11 @@ defmodule NockPoly do
 
     - `{:base, index}` - A base type with the given index
     - `{:dep, base_index, dep_index}` - A dependent type of the given base
+
+    These correspond to objects in the index category. In the context of
+    PRA functors and the nLab article's el(T1), these are the objects that
+    copresheaves assign sets (or types) to. The morphisms in this category
+    are identities plus unique morphisms from each dependent object to its base.
     """
     @type forest_obj ::
             {:base, non_neg_integer()}
