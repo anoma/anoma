@@ -1933,10 +1933,20 @@ defmodule NockPoly do
     end
 
     @typedoc """
-    A constructor in the forest type system.
+    A constructor tag for generic terms in the forest polynomial functor.
 
-    - `{:base, type_idx, ctor_idx}` - Constructor for a base type
-    - `{:dep, base_idx, dep_idx, ctor_idx}` - Constructor for a dependent type
+    These are the labels that appear at nodes of `Term.t(forest_ctor())` and
+    `Term.tv(forest_ctor(), v)`. Each constructor specifies:
+    - Which type it constructs (base or dependent)
+    - Which specific constructor it is for that type
+
+    Formats:
+    - `{:base, type_idx, ctor_idx}` - The ctor_idx'th constructor of base type type_idx
+    - `{:dep, base_idx, dep_idx, ctor_idx}` - The ctor_idx'th constructor of the
+      dep_idx'th dependent type of base type base_idx
+
+    These constructor tags, combined with a forest_poly_spec, determine the arity
+    and parameter types expected for each node in a term.
     """
     @type forest_ctor ::
             {:base, non_neg_integer(), non_neg_integer()}
