@@ -1766,6 +1766,16 @@ defmodule NockPoly do
     For each position, we specify:
     - Which forest objects are parameters (list of forest_obj)
     - The parameter list determines both arity and types
+
+    In PRA functor theory, this corresponds to a position in a polynomial
+    functor P(X) = Σ_{p ∈ Pos} X^{Dir(p)}. Each position_spec defines:
+    - The position p (implicitly, by its location in the position_map)
+    - The direction type Dir(p) via the list of parameter types
+    - The arity |Dir(p)| is the length of the parameter list
+
+    For example, [{:base, 0}, {:dep, 0, 1}] represents a position whose
+    direction type requires two inputs: one from base type 0 and one from
+    dependent type 1 of base 0.
     """
     @type position_spec :: [forest_obj()]
 
@@ -1773,6 +1783,19 @@ defmodule NockPoly do
     A position map assigns position specs to each constructor.
 
     This is a map from position indices to their specifications.
+
+    In PRA functor theory, this represents the position type (Pos) of a
+    polynomial functor. The map structure gives us:
+    - A finite set of positions (the keys 0, 1, 2, ...)
+    - For each position, its direction type specification
+
+    When building polynomial functors over our index category, each type
+    (base or dependent) has its own position map that defines the constructors
+    for building elements of that type.
+
+    Example: %{0 => [], 1 => [{:base, 0}]} defines a polynomial with two
+    positions: position 0 has no parameters (constant), and position 1 has
+    one parameter from base type 0.
     """
     @type position_map :: %{non_neg_integer() => position_spec()}
 
