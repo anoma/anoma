@@ -1800,16 +1800,25 @@ defmodule NockPoly do
     @type position_map :: %{non_neg_integer() => position_spec()}
 
     @typedoc """
-    A forest type specification.
+    A polynomial functor specification over a finite two-level forest.
 
-    Consists of:
-    - `forest`: The forest structure (list of dependent counts)
-    - `base_positions`: List of position maps, one per base type
-    - `dep_positions`: List of lists of position maps. For each base type,
-      there's a list containing one position map per dependent type of that base.
-      If a base has no dependents, its list is empty.
+    This specifies a PRA (parametric right adjoint) endofunctor on the copresheaf
+    category determined by the forest structure. In the context of the nLab article
+    on PRA functors, this represents:
+
+    - The polynomial functor P(X) = Σ_{p ∈ Pos} X^{Dir(p)}
+    - Where Pos is the disjoint union of all position sets (one per type)
+    - And Dir(p) specifies the parameter types for position p
+
+    The specification consists of:
+    - `forest`: The forest structure defining the index category
+    - `base_positions`: Position maps for base type constructors
+    - `dep_positions`: Position maps for dependent type constructors
+
+    Together, these define how to build new elements of each type from existing
+    elements, which is precisely what a polynomial endofunctor does.
     """
-    @type forest_spec :: %{
+    @type forest_poly_spec :: %{
             forest: fin2_forest(),
             base_positions: [position_map()],
             dep_positions: [[position_map()]]
@@ -1858,7 +1867,7 @@ defmodule NockPoly do
     @doc """
     Validate a forest specification.
     """
-    @spec validate_forest_spec(forest_spec()) :: :ok | {:error, atom()}
+    @spec validate_forest_spec(forest_poly_spec()) :: :ok | {:error, atom()}
     def validate_forest_spec(spec) do
       %{
         forest: forest,
@@ -1884,7 +1893,7 @@ defmodule NockPoly do
     end
 
     # Validate all position specifications
-    @spec validate_all_positions(forest_spec()) :: boolean()
+    @spec validate_all_positions(forest_poly_spec()) :: boolean()
     defp validate_all_positions(spec) do
       %{
         forest: forest,
@@ -1949,7 +1958,7 @@ defmodule NockPoly do
 
     Returns {:ok, [forest_obj]} or {:error, reason}.
     """
-    @spec get_ctor_params(forest_spec(), forest_ctor()) ::
+    @spec get_ctor_params(forest_poly_spec(), forest_ctor()) ::
             {:ok, [forest_obj()]} | {:error, atom()}
     def get_ctor_params(spec, {:base, type_idx, ctor_idx}) do
       case Enum.at(spec.base_positions, type_idx) do
@@ -2005,7 +2014,7 @@ defmodule NockPoly do
 
     And produces a result of type `r`.
     """
-    @type forest_algebra(r) :: (forest_ctor(), [r], forest_spec() -> r)
+    @type forest_algebra(r) :: (forest_ctor(), [r], forest_poly_spec() -> r)
 
     @doc """
     Evaluate a forest term with a substitution function for variables.
@@ -2026,7 +2035,7 @@ defmodule NockPoly do
             Term.tv(forest_ctor(), v),
             forest_algebra(r),
             (v -> r),
-            forest_spec()
+            forest_poly_spec()
           ) :: r
           when v: term, r: term
     def eval(term, algebra, var_handler, spec) do
@@ -2055,7 +2064,7 @@ defmodule NockPoly do
     @spec cata(
             Term.t(forest_ctor()),
             forest_algebra(r),
-            forest_spec()
+            forest_poly_spec()
           ) :: r
           when r: term
     def cata(term, algebra, spec) do
@@ -2072,7 +2081,7 @@ defmodule NockPoly do
 
     Returns {:ok, forest_obj} with the type of the term, or {:error, errors}.
     """
-    @spec typecheck(Term.tv(forest_ctor(), v), forest_spec()) ::
+    @spec typecheck(Term.tv(forest_ctor(), v), forest_poly_spec()) ::
             {:ok, forest_obj()} | {:error, [typecheck_error(v)]}
           when v: term
     def typecheck(term, spec) do
@@ -2133,7 +2142,7 @@ defmodule NockPoly do
     Example: simple_forest_spec([2, 0, 1]) creates a single base type with
     three constructors having 2, 0, and 1 parameters respectively.
     """
-    @spec simple_forest_spec([non_neg_integer()]) :: forest_spec()
+    @spec simple_forest_spec([non_neg_integer()]) :: forest_poly_spec()
     def simple_forest_spec(ctor_arities) do
       base_positions =
         ctor_arities
@@ -2152,13 +2161,21 @@ defmodule NockPoly do
     end
 
     @doc """
-    Create a forest spec from separate base and dependent constructor specs.
+    Create a polynomial functor specification from constructor specifications.
+
+    This constructs a PRA endofunctor on the copresheaf category of the given forest.
+    In categorical terms, we're defining:
+    - A polynomial functor P: [C^op, Set] → [C^op, Set]
+    - Where C is the index category determined by the forest
+    - The functor maps each copresheaf X to P(X) = Σ_{p ∈ Pos} X^{Dir(p)}
+
+    The position types (Pos) are partitioned by object in the index category,
+    and the direction function Dir assigns to each position its list of parameter types.
 
     Args:
-    - forest: The forest structure [dep_counts...]
-    - base_ctor_specs: For each base type, a list of parameter lists
-    - dep_ctor_specs: For each base type, a list of lists. Each inner list
-      contains parameter lists for one dependent type's constructors.
+    - forest: The forest structure defining the index category
+    - base_ctor_specs: For each base type, a list of parameter specifications
+    - dep_ctor_specs: For each base type, dependent constructor specifications
 
     Example:
     ```
@@ -2177,12 +2194,17 @@ defmodule NockPoly do
       ]
     )
     ```
+
+    This specification defines the data needed to:
+    1. Construct terms (via positions and their parameter types)
+    2. Type-check terms (via expected parameter types)
+    3. Eliminate terms (via pattern matching with algebras)
     """
     @spec create_forest_spec(
             fin2_forest(),
             [[position_spec()]],
             [[[position_spec()]]]
-          ) :: forest_spec()
+          ) :: forest_poly_spec()
     def create_forest_spec(forest, base_ctor_specs, dep_ctor_specs) do
       # Convert lists to position maps
       to_pos_map = fn ctor_list ->

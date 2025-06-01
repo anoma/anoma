@@ -2054,7 +2054,7 @@ defmodule Examples.ENockPoly do
   @doc """
   I test creating and validating forest specifications.
   """
-  def fin2_forest_spec_test() do
+  def fin2_forest_poly_spec_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
 
     # Simple spec with one base type
@@ -2193,7 +2193,7 @@ defmodule Examples.ENockPoly do
   end
 
   # Helper function to create the Nat/Even/Odd/NatWithParity forest spec
-  defp nat_parity_forest_spec() do
+  defp nat_parity_forest_poly_spec() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
 
     Forest.create_forest_spec(
@@ -2265,7 +2265,7 @@ defmodule Examples.ENockPoly do
     alias Term
 
     # Get the shared forest spec
-    expr_spec = nat_parity_forest_spec()
+    expr_spec = nat_parity_forest_poly_spec()
 
     assert Forest.validate_forest_spec(expr_spec) == :ok
 
@@ -2381,7 +2381,7 @@ defmodule Examples.ENockPoly do
     alias Term
 
     # Get the shared forest spec
-    expr_spec = nat_parity_forest_spec()
+    expr_spec = nat_parity_forest_poly_spec()
 
     # Create some terms
     zero = Term.com_tv({:base, 0, 0}, [])
@@ -2561,7 +2561,7 @@ defmodule Examples.ENockPoly do
   @doc """
   I test forest spec validation errors.
   """
-  def fin2_forest_spec_validation_errors_test() do
+  def fin2_forest_poly_spec_validation_errors_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
 
     # Test base_positions length mismatch
