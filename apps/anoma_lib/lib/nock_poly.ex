@@ -2017,12 +2017,17 @@ defmodule NockPoly do
     @typedoc """
     An algebra for eliminating forest terms.
 
-    The algebra receives:
-    - The constructor
-    - The results of recursively processing the children
-    - The forest spec (for context)
+    This is a standard term algebra extended with the forest polynomial specification
+    as additional context. Where a regular term algebra receives (constructor, child_results),
+    a forest algebra receives (constructor, child_results, spec).
 
-    And produces a result of type `r`.
+    The spec parameter provides access to the polynomial functor specification,
+    allowing the algebra to:
+    - Look up constructor arities and parameter types
+    - Access the forest structure
+    - Make decisions based on the type system context
+
+    Type signature: (forest_ctor(), [r], forest_poly_spec()) -> r
     """
     @type forest_algebra(r) :: (forest_ctor(), [r], forest_poly_spec() -> r)
 
