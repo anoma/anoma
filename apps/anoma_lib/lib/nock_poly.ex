@@ -1796,6 +1796,18 @@ defmodule NockPoly do
     Example: %{0 => [], 1 => [{:base, 0}]} defines a polynomial with two
     positions: position 0 has no parameters (constant), and position 1 has
     one parameter from base type 0.
+
+    ## Role in Polynomial Functors
+
+    In the polynomial formula P(X) = Σ_{p ∈ Pos} X^{Dir(p)}:
+    - The map keys form the position set Pos
+    - Each value (position_spec) defines Dir(p), the "direction type" or "arity"
+    - X^{Dir(p)} means we need |Dir(p)| inputs of the appropriate types
+
+    This realizes the "generic morphism" aspect of PRA functors: each position
+    represents a way to construct an element, and the position spec tells us
+    what inputs we need. The polynomial functor sums over all possible ways
+    (positions) to construct elements.
     """
     @type position_map :: %{non_neg_integer() => position_spec()}
 
@@ -1817,6 +1829,24 @@ defmodule NockPoly do
 
     Together, these define how to build new elements of each type from existing
     elements, which is precisely what a polynomial endofunctor does.
+
+    ## Relation to PRA Theory
+
+    In parametric right adjoint theory, a functor T : [C^op, Set] → [D^op, Set]
+    is uniquely determined by:
+    1. An object T1 ∈ [D^op, Set] (a copresheaf on the target category)
+    2. A functor E_T : el(T1)^op → [C^op, Set] from the opposite of T1's category
+       of elements
+
+    The action is given by: T(Z)(j) = Σ_{i ∈ T1(j)} Hom[C^op, Set](E_T(j,i), Z)
+
+    In our polynomial functor representation:
+    - The position maps collectively define T1: for each object j in the forest,
+      T1(j) is the set of positions (constructors) available at that type
+    - The parameter specifications in each position define E_T: for each position
+      p at object j, E_T(j,p) specifies what inputs are needed
+    - The polynomial structure P(X) = Σ_{p ∈ Pos} X^{Dir(p)} directly implements
+      the PRA formula above
     """
     @type forest_poly_spec :: %{
             forest: fin2_forest(),
@@ -2028,6 +2058,22 @@ defmodule NockPoly do
     - Make decisions based on the type system context
 
     Type signature: (forest_ctor(), [r], forest_poly_spec()) -> r
+
+    ## Computational Interpretation
+
+    A forest algebra defines how to compute a result of type `r` from a term tree:
+    - Each constructor (position) represents a computation pattern
+    - The child_results are the already-computed results from subterms
+    - The algebra combines these results according to the constructor's meaning
+
+    For example, an algebra evaluating arithmetic expressions might:
+    - Map {:base, 0, 0} (a "zero" constructor) to the number 0
+    - Map {:base, 0, 1} (a "successor" constructor) to child_result + 1
+    - Map {:base, 0, 2} (an "add" constructor) to sum(child_results)
+
+    The spec parameter allows the algebra to be generic over different polynomial
+    functors, making decisions based on the structure of the type system rather
+    than hard-coding specific constructors.
     """
     @type forest_algebra(r) :: (forest_ctor(), [r], forest_poly_spec() -> r)
 
