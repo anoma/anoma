@@ -20,7 +20,7 @@ defmodule Anoma.Node.Replay do
   The mock node is removed from the system.
   """
   alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
   alias Anoma.Node.Replay.State
 
   require Logger

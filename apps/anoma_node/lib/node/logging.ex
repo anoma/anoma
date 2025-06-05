@@ -28,7 +28,7 @@ defmodule Anoma.Node.Logging do
   alias Anoma.Node
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
 
   require Logger
   require Node.Event

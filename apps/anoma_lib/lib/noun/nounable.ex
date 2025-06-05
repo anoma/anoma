@@ -269,7 +269,10 @@ defimpl Nounable, for: Jason.OrderedObject do
     do: {:ok, %Jason.OrderedObject{}}
 
   def from_noun(o) do
-    from_json_noun(o)
+    case from_json_noun(o) do
+      :error -> :error
+      jason -> {:ok, jason}
+    end
   end
 
   defp from_json_noun(["o" | list]) do

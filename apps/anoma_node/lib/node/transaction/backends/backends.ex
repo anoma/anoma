@@ -425,8 +425,8 @@ defmodule Anoma.Node.Transaction.Backends do
       )
 
       cairo_rm_event(
-        MapSet.new(tx.commitments),
-        MapSet.new(tx.nullifiers),
+        MapSet.new(commitments),
+        tx.nullifiers,
         node_id
       )
 

@@ -103,9 +103,9 @@ defmodule Anoma.Client.Node.RPC do
   I make a call to a GRPC endpoint to add a transaction to the mempool of the
   node.
   """
-  @spec add_transaction(any(), String.t(), binary(), atom()) ::
+  @spec add_transaction(any(), String.t(), binary(), atom(), boolean()) ::
           {:ok, :added} | {:error, :add_transaction_failed, String.t()}
-  def add_transaction(channel, node_id, transaction, transaction_type) do
+  def add_transaction(channel, node_id, transaction, transaction_type, wrap) do
     node = %Node{id: node_id}
 
     transaction = %Transaction{transaction: transaction}
@@ -113,7 +113,8 @@ defmodule Anoma.Client.Node.RPC do
     request = %Mempool.Add.Request{
       node: node,
       transaction: transaction,
-      transaction_type: transaction_type
+      transaction_type: transaction_type,
+      wrap: wrap
     }
 
     case MempoolService.Stub.add(channel, request) do

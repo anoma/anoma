@@ -13,7 +13,7 @@ defmodule Anoma.Supervisor do
 
   alias Anoma.Node
   alias Anoma.Node.Replay.State
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
   alias Anoma.Node.Transport
 
   ############################################################
@@ -31,7 +31,7 @@ defmodule Anoma.Supervisor do
 
     grpc_port = Application.get_env(:anoma_node, :grpc_port)
 
-    :ok = Anoma.Node.Tables.initialize_storage()
+    :ok = Anoma.Tables.initialize_storage()
 
     children = [
       {Elixir.Registry, keys: :unique, name: Anoma.Node.Registry},

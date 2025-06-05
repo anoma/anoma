@@ -118,14 +118,44 @@ defmodule Anoma.Node.Utility.Indexer do
         :after -> :>
       end
 
-    {:atomic, res} =
+    {:atomic, res1} =
       :mnesia.transaction(fn ->
         :mnesia.select(table, [
-          {{table, :"$1", :"$2"}, [{op, :"$1", height}], [:"$$"]}
+          {{table, [:_, :_, :"$1"], :"$2"}, [{op, :"$1", height}], [:"$$"]}
         ])
       end)
 
-    {:reply, res, state}
+    res2 =
+      Enum.map(res1, fn [height, list] ->
+        [
+          height,
+          Enum.map(list, fn [tx_res, vm_res, back | code] ->
+            %Anoma.Node.Transaction.Mempool.Tx{
+              code: code,
+              tx_result:
+                with ["ok" | res] <- tx_res do
+                  {:ok, res}
+                else
+                  _ -> :error
+                end,
+              vm_result:
+                with ["ok" | res] <- vm_res do
+                  {:ok, res}
+                else
+                  _ -> :error
+                end,
+              backend:
+                if back == "read" do
+                  :debug_read_term
+                else
+                  String.to_atom(back)
+                end
+            }
+          end)
+        ]
+      end)
+
+    {:reply, res2, state}
   end
 
   @spec res_from_coms(MapSet.t()) :: MapSet.t()
@@ -177,9 +207,12 @@ defmodule Anoma.Node.Utility.Indexer do
 
     {:atomic, res} =
       :mnesia.transaction(fn ->
-        case :mnesia.all_keys(table) |> Enum.sort(:desc) do
+        case :mnesia.all_keys(table)
+             |> Enum.sort(fn ["anoma", "block", x1], ["anoma", "block", x2] ->
+               x1 >= x2
+             end) do
           [] -> :absent
-          [hd | _tl] -> hd
+          [["anoma", "block", hd] | _tl] -> hd
         end
       end)
 

@@ -9,7 +9,7 @@ defmodule Anoma.Client.Application do
   """
   alias Anoma.Client
   alias Anoma.Client.ConnectionSupervisor
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
 
   use Application
 
@@ -23,7 +23,7 @@ defmodule Anoma.Client.Application do
     grpc_port = Application.get_env(:anoma_client, :grpc_port)
 
     # initialize the mnesia tables for the client
-    :ok = Anoma.Node.Tables.initialize_storage()
+    :ok = Anoma.Tables.initialize_storage()
     {:ok, _} = Tables.initialize_tables_for_client()
 
     children = [

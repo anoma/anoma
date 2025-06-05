@@ -18,7 +18,7 @@ defmodule Nock do
 
   """
   typedstruct do
-    field(:scry_function, (term() -> {:ok, term()} | :error),
+    field(:scry_function, (term() -> {:ok, term()} | {:error, any()}),
       default: &__MODULE__.scry_forbidden/1
     )
 
@@ -29,12 +29,30 @@ defmodule Nock do
 
   @dialyzer :no_improper_lists
 
+  @type error() ::
+          :crash_bang
+          | :scry_no_return
+          | :scry_forbidden
+          | :jet_does_not_match
+          | :invalid_instruction
+          | :instruction_match_error
+          | {:jet_failed, Nock.Jets.error()}
+          | {:scry_failure, any()}
+          | {:scry_failure_formula, error()}
+          | {:invalid_formula, Noun.t()}
+          | {:inc_non_atom, Noun.t()}
+          | {:gas, non_neg_integer()}
+          | {:axis, Noun.t(), Noun.t()}
+          | {:invalid_formula, Noun.t()}
+          | {:replace, Noun.t(), Noun.t(), Noun.t()}
+          | {:gas_error, error(), non_neg_integer()}
+
   # temporary stub functions for jet scaffolding
   @spec get_jet(Noun.t()) ::
           {:ok,
            {String.t(), non_neg_integer(), non_neg_integer(),
-            (Noun.t() -> :error | {:ok, Noun.t()}), atom(),
-            non_neg_integer()}}
+            (Noun.t() -> {:error, Nock.Jets.error()} | {:ok, Noun.t()}),
+            atom(), non_neg_integer()}}
           | :error
   def get_jet(battery_mug) do
     case Enum.find(Nock.Jets.Mugs.jet_registry(), fn {head, _etc} ->
@@ -53,7 +71,7 @@ defmodule Nock do
   # top-level nock 4k interpreter.
 
   # direct calls should be jetted
-  @spec nock(Noun.t(), Noun.t()) :: {:ok, Noun.t()} | :error
+  @spec nock(Noun.t(), Noun.t()) :: {:ok, Noun.t()} | {:error, error()}
   def nock(subject, formula) do
     nock(subject, formula, %Nock{})
   end
@@ -95,7 +113,10 @@ defmodule Nock do
                     send(env.meter_pid, {:gas, cost})
                   end
 
-                  jet_function.(core)
+                  case jet_function.(core) do
+                    {:error, reason} -> {:error, {:jet_failed, reason}}
+                    {:ok, result} -> {:ok, result}
+                  end
 
                 :check ->
                   {jet_usecs, jet_result} =
@@ -127,7 +148,7 @@ defmodule Nock do
                   if validity do
                     jet_result
                   else
-                    :error
+                    {:error, :jet_does_not_match}
                   end
               end
             else
@@ -147,35 +168,39 @@ defmodule Nock do
     with {:ok, _type_result} <- nock(subject, type_formula, env),
          {:ok, sub_result} <- nock(subject, sub_formula, env) do
       try do
-        env.scry_function.(sub_result)
+        case env.scry_function.(sub_result) do
+          {:ok, term} -> {:ok, term}
+          {:error, reason} -> {:error, {:scry_failure, reason}}
+        end
       rescue
-        _ -> :error
+        _ -> {:error, :scry_no_return}
       end
     else
-      _ -> :error
+      {:error, err} -> {:error, {:scry_failure_formula, err}}
     end
   end
 
   # generic case: use naive nock to reduce once.
-  @spec nock(Noun.t(), Noun.t(), t()) :: {:ok, Noun.t()} | :error
+  @spec nock(Noun.t(), Noun.t(), t()) :: {:ok, Noun.t()} | {:error, error()}
   def nock(subject, formula, environment) do
     naive_nock(subject, formula, environment)
   end
 
-  @spec scry_forbidden(Noun.t()) :: :error | {:ok, Noun.t()}
+  @spec scry_forbidden(Noun.t()) ::
+          {:error, :scry_forbidden} | {:ok, Noun.t()}
   def scry_forbidden(_) do
-    :error
+    {:error, :scry_forbidden}
   end
 
   # metered nock: a hack until nock VMs become their own agents.
   @spec metered_nock(Noun.t(), Noun.t()) ::
-          {:ok, Noun.t(), non_neg_integer()} | {:error, non_neg_integer()}
+          {:ok, Noun.t(), non_neg_integer()} | {:error, error()}
   def metered_nock(subject, formula) do
     metered_nock(subject, formula, %Nock{})
   end
 
   @spec metered_nock(Noun.t(), Noun.t(), t()) ::
-          {:ok, Noun.t(), non_neg_integer()} | {:error, non_neg_integer()}
+          {:ok, Noun.t(), non_neg_integer()} | {:error, error()}
   def metered_nock(subject, formula, environment) do
     meter =
       if environment.gas_limit do
@@ -192,8 +217,8 @@ defmodule Nock do
       {:ok, noun} ->
         {:ok, noun, gas_cost}
 
-      :error ->
-        {:error, gas_cost}
+      {:error, error} ->
+        {:error, {:gas_error, error, gas_cost}}
     end
   end
 
@@ -232,12 +257,13 @@ defmodule Nock do
   # note: this must recurse into nock/2 (or nock/3), not itself.
 
   # direct calls of naive_nock should be unjetted
-  @spec naive_nock(Noun.t(), Noun.t()) :: {:ok, Noun.t()} | :error
+  @spec naive_nock(Noun.t(), Noun.t()) :: {:ok, Noun.t()} | {:error, error()}
   def naive_nock(subject, formula) do
     naive_nock(subject, formula, %Nock{})
   end
 
-  @spec naive_nock(Noun.t(), Noun.t(), t()) :: {:ok, Noun.t()} | :error
+  @spec naive_nock(Noun.t(), Noun.t(), t()) ::
+          {:ok, Noun.t()} | {:error, error()}
   def naive_nock(subject, formula, environment) do
     if environment.meter_pid != nil do
       send(environment.meter_pid, {:gas, 1})
@@ -255,14 +281,20 @@ defmodule Nock do
         # 0: read from subject
         # *[a 0 b]            /[b a]
         [zero | axis] when zero in [0, <<>>, []] and is_integer(axis) ->
-          Noun.axis(axis, subject)
+          case Noun.axis(axis, subject) do
+            :error -> {:error, {:axis, axis, subject}}
+            {:ok, result} -> {:ok, result}
+          end
 
         [zero | axis] when zero in [0, <<>>, []] and is_binary(axis) ->
-          Noun.axis(Noun.atom_binary_to_integer(axis), subject)
+          case Noun.axis(Noun.atom_binary_to_integer(axis), subject) do
+            :error -> {:error, {:axis, axis, subject}}
+            {:ok, result} -> {:ok, result}
+          end
 
         # [0 0] is the canonical crash; so take a shortcut
         [zero | axis] when zero in [0, <<>>, []] and axis == [] ->
-          :error
+          {:error, :crash_bang}
 
         # 1: constant
         # *[a 1 b]            b
@@ -303,7 +335,7 @@ defmodule Nock do
               {:ok, Noun.atom_binary_to_integer(sub_result) + 1}
 
             true ->
-              :error
+              {:error, {:inc_non_atom, sub_result}}
           end
 
         # 5: noun equality
@@ -356,11 +388,14 @@ defmodule Nock do
           {:ok, replacement} = nock(subject, replacement_formula, environment)
           {:ok, sub_result} = nock(subject, sub_formula, environment)
 
-          Noun.replace(
-            Noun.atom_binary_to_integer(axis),
-            replacement,
-            sub_result
-          )
+          case Noun.replace(
+                 Noun.atom_binary_to_integer(axis),
+                 replacement,
+                 sub_result
+               ) do
+            :error -> {:error, {:replace, axis, replacement, sub_result}}
+            {:ok, v} -> {:ok, v}
+          end
 
         # 11: hint (spec macro)
         # *[a 11 [b c] d]     *[[*[a c] *[a d]] 0 3]
@@ -379,10 +414,10 @@ defmodule Nock do
 
         # else, error
         _ ->
-          :error
+          {:error, {:invalid_formula, formula}}
       end
     rescue
-      _ in MatchError -> :error
+      _ in MatchError -> {:error, :instruction_match_error}
     end
   end
 

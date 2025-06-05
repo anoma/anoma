@@ -40,10 +40,11 @@ defmodule Anoma.Client.Web.MempoolController do
   @spec add_transaction(any(), nil | maybe_improper_list() | map()) :: any()
   def add_transaction(conn, params) do
     with %{"transaction" => tx} <- params,
+         wrap? <- Map.get(params, "wrap", false),
          type <- String.to_existing_atom(params["transaction_type"]),
          {:ok, transaction} <- Base.decode64(tx),
          {:ok, :added} <-
-           GRPCProxy.add_transaction(transaction, type) do
+           GRPCProxy.add_transaction(transaction, type, wrap?) do
       render(conn, "add_transaction.json")
     end
   end

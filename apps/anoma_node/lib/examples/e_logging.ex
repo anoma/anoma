@@ -1,7 +1,7 @@
 defmodule Anoma.Node.Examples.ELogging do
   alias Anoma.Node
   alias Anoma.Node.Examples.ENode
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Mempool
 

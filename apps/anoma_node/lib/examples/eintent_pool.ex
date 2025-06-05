@@ -6,7 +6,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   alias Anoma.Node
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Intents.IntentPool
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
   alias Anoma.RM.DumbIntent
   alias Anoma.RM.Intent
 

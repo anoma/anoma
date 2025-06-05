@@ -12,7 +12,7 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
   alias Anoma.Node.Logging
   alias Anoma.Node.Registry
   alias Anoma.Node.Replay.State
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
   alias Anoma.Node.Transaction.Mempool
 
   import ExUnit.Assertions

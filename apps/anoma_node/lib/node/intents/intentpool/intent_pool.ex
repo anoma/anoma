@@ -10,7 +10,7 @@ defmodule Anoma.Node.Intents.IntentPool do
   alias Anoma.Node.Transaction.Backends
   alias Anoma.RM.Intent
   alias EventBroker.Broker
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
   alias Anoma.Node.Intents.IntentPool.Events
 
   require EventBroker.Event

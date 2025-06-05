@@ -1,6 +1,6 @@
 defmodule Anoma.Client.Examples.EStorage do
   alias Anoma.Client.Storage
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
 
   @type storage_result :: list({:key, any()} | {:value, any()})
 

@@ -69,7 +69,7 @@ defmodule Anoma.Node.Transaction.Backends.Events do
                               {:ok, value} tuple.
     """
     field(:tx_id, binary())
-    field(:tx_result, Mempool.vm_result())
+    field(:tx_result, Mempool.tx_result())
   end
 
   defimpl Jason.Encoder, for: CompleteEvent do

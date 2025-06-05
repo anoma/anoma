@@ -48,7 +48,7 @@ defmodule Anoma.Node.Transaction.Storage do
   """
 
   alias Anoma.Node
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Storage.Events
 
@@ -452,7 +452,11 @@ defmodule Anoma.Node.Transaction.Storage do
         :mnesia.write({updates_table(state.node_id), key, new_updates})
       end
 
-      :mnesia.write({blocks_table(state.node_id), round, writes})
+      noun_writes = Enum.map(writes, &Noun.Nounable.to_noun/1)
+
+      :mnesia.write(
+        {blocks_table(state.node_id), ["anoma", "block", round], noun_writes}
+      )
     end
 
     :mnesia.transaction(mnesia_tx)

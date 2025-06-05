@@ -19,7 +19,7 @@ defmodule Anoma.Client.Storage do
   - write/2
   """
 
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
 
   use TypedStruct
 

@@ -9,7 +9,7 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
 
   alias Anoma.Client.Examples.EClient
   alias Anoma.Client.Storage
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
   alias Anoma.Node.Transaction.Storage, as: NodeStorage
   alias Anoma.RM.Transparent.Action
   alias Anoma.RM.Transparent.Transaction
@@ -53,7 +53,10 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
 
     # assert the storage value
     assert {:ok, string} ==
-             Storage.read({System.os_time(), :crypto.hash(:sha256, string)})
+             Storage.read(
+               {System.os_time(),
+                ["anoma", "blob", :crypto.hash(:sha256, string)]}
+             )
 
     client
   end
