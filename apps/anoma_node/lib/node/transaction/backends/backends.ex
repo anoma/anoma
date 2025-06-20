@@ -31,7 +31,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   @type backend() ::
           :debug_term_storage
-          | {:read_only, pid}
+          | :read_only
           | :transparent_resource
           | :cairo_resource
 
@@ -44,7 +44,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   First, I execute the transaction code on the Anoma VM. Next, I apply processing
   logic to the resulting value, dependent on the selected backend.
-  - For read-only backend, the value is sent directly to specified recepient.
+  - For read-only backend, the value is broadcasted via the ResultEvent.
   - For the key-value and blob store executions, the obtained value is stored
   and a Complete Event is issued.
   - For the transparent Resource Machine (RM) execution, I verify the
@@ -65,7 +65,7 @@ defmodule Anoma.Node.Transaction.Backends do
           with [id, key] <- list |> Noun.list_nock_to_erlang(),
                {:ok, value} <-
                  (case backend do
-                    {:read_only, _pid} ->
+                    :read_only ->
                       Storage.read(
                         node_id,
                         {time, key |> Noun.list_nock_to_erlang()}
@@ -141,8 +141,8 @@ defmodule Anoma.Node.Transaction.Backends do
     store_value(node_id, id, vm_res)
   end
 
-  defp backend_logic({:read_only, pid}, _node_id, _id, vm_res, opts) do
-    send_value(vm_res, pid, opts)
+  defp backend_logic(:read_only, node_id, id, vm_res, _opts) do
+    emit_value(node_id, id, vm_res)
   end
 
   defp backend_logic(:transparent_resource, node_id, id, vm_res, _opts) do
@@ -333,11 +333,20 @@ defmodule Anoma.Node.Transaction.Backends do
     end)
   end
 
-  @spec send_value(Noun.t(), pid(), list()) ::
-          {:ok, any()}
-  defp send_value(result, reply_to, opts) do
-    send(reply_to, {opts[:time], result})
-    {:ok, result}
+  def emit_value(node_id, id, result) do
+    wrapped_result =
+      case result do
+        :error -> :error
+        res -> {:ok, res}
+      end
+
+    event =
+      Node.Event.new_with_body(node_id, %Events.ROEvent{
+        tx_id: id,
+        read_result: wrapped_result
+      })
+
+    EventBroker.event(event)
   end
 
   @spec store_value(String.t(), binary(), Noun.t()) :: {:ok, any} | :error
@@ -360,7 +369,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   @spec empty_write(backend(), String.t(), binary()) :: :ok
-  defp empty_write({:read_only, _}, _node_id, _id) do
+  defp empty_write(:read_only, _node_id, _id) do
     :ok
   end
 
@@ -537,7 +546,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   @spec event(backend(), EventBroker.Event.t()) :: :ok
-  defp event({:read_only, _}, _event) do
+  defp event(:read_only, _event) do
     :ok
   end
 

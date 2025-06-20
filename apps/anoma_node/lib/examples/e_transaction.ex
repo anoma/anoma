@@ -2,7 +2,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Executor
+  alias Anoma.Node.Transaction.Backends.Events.ROEvent
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Storage
@@ -16,6 +16,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   import ExUnit.Assertions
   import ExUnit.CaptureLog
 
+  use EventBroker.WithSubscription
   use TypedStruct
 
   ############################################################
@@ -23,7 +24,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   ############################################################
 
   typedstruct do
-    field(:id, binary())
+    field(:id, binary() | nil)
     field(:backend, Backends.backend())
     field(:noun, Noun.t())
     field(:result, Mempool.tx_result())
@@ -341,12 +342,12 @@ defmodule Anoma.Node.Examples.ETransaction do
   @doc """
   I return an ETransaction struct that holds an example transaction.
   """
-  @spec simple_transaction(String.t()) :: __MODULE__.t()
-  def simple_transaction(id \\ random_transaction_id()) do
+  @spec simple_transaction() :: __MODULE__.t()
+  def simple_transaction() do
     {backend, noun} = zero()
 
     %__MODULE__{
-      id: id,
+      id: nil,
       backend: backend,
       noun: noun,
       result: {:ok, [[["key"] | 0]]}
@@ -386,7 +387,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     EventBroker.subscribe_me([])
 
-    Mempool.tx(node_id, code, "id 1")
+    Mempool.tx(node_id, code)
     Mempool.execute(node_id, Mempool.tx_dump(node_id))
 
     recieve_round_event(node_id, 0)
@@ -422,7 +423,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     log =
       capture_log(fn ->
-        Mempool.tx(node_id, code, "id 2")
+        Mempool.tx(node_id, code)
         Mempool.execute(node_id, Mempool.tx_dump(node_id))
         recieve_logger_failure(node_id, "already exist")
       end)
@@ -444,7 +445,7 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     log =
       capture_log(fn ->
-        Mempool.tx(node_id, code, "id 1")
+        Mempool.tx(node_id, code)
         Mempool.execute(node_id, Mempool.tx_dump(node_id))
         recieve_logger_failure(node_id, "Root does not exist")
       end)
@@ -462,9 +463,11 @@ defmodule Anoma.Node.Examples.ETransaction do
     start_tx_module(node_id)
     {back, zero} = zero(key)
 
-    Mempool.tx(node_id, {back, zero}, "id 1")
+    id = Mempool.tx(node_id, {back, zero})
     :mnesia.subscribe({:table, Storage.blocks_table(node_id), :simple})
     dump = Mempool.tx_dump(node_id)
+
+    assert dump == [id]
     Mempool.execute(node_id, dump)
 
     blocks_table = Storage.blocks_table(node_id)
@@ -505,11 +508,10 @@ defmodule Anoma.Node.Examples.ETransaction do
     {back1, zero} = zero(key)
     {back2, inc} = inc(key)
 
-    Mempool.tx(node_id, {back1, zero}, "id 1")
-    Mempool.tx(node_id, {back2, inc}, "id 2")
+    id1 = Mempool.tx(node_id, {back1, zero})
+    id2 = Mempool.tx(node_id, {back2, inc})
     :mnesia.subscribe({:table, blocks_table, :simple})
-    dump = Mempool.tx_dump(node_id)
-    Mempool.execute(node_id, dump)
+    Mempool.execute(node_id, [id1, id2])
 
     assert_receive(
       {:mnesia_table_event,
@@ -556,9 +558,9 @@ defmodule Anoma.Node.Examples.ETransaction do
     key = "key"
     zero_counter_submit(node_id)
     {back, inc} = inc(key)
-    Mempool.tx(node_id, {back, inc}, "id 2")
+    id1 = Mempool.tx(node_id, {back, inc})
     :mnesia.subscribe({:table, blocks_table, :simple})
-    Mempool.execute(node_id, ["id 2"])
+    Mempool.execute(node_id, [id1])
 
     assert_receive(
       {:mnesia_table_event,
@@ -601,9 +603,9 @@ defmodule Anoma.Node.Examples.ETransaction do
     start_tx_module(node_id)
     # todo: ideally we wait for the event broker message
     # before execution
-    Mempool.tx(node_id, {:debug_term_storage, bluf()}, "id 1")
+    id1 = Mempool.tx(node_id, {:debug_term_storage, bluf()})
     :mnesia.subscribe({:table, blocks_table, :simple})
-    Mempool.execute(node_id, ["id 1"])
+    Mempool.execute(node_id, [id1])
 
     assert_receive(
       {:mnesia_table_event,
@@ -641,9 +643,21 @@ defmodule Anoma.Node.Examples.ETransaction do
     start_tx_module(node_id)
     {_backend, code} = zero(key)
 
-    Executor.launch(node_id, {{:read_only, self()}, code})
+    with_subscription [[]] do
+      id = Mempool.tx(node_id, {:read_only, code})
 
-    assert_receive({0, [[[^key] | 0] | 0]}, 5000)
+      res = [[[key] | 0] | 0]
+
+      assert_receive(
+        %EventBroker.Event{
+          body: %Node.Event{
+            node_id: ^node_id,
+            body: %ROEvent{tx_id: ^id, read_result: {:ok, ^res}}
+          }
+        },
+        5000
+      )
+    end
 
     [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
     [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
@@ -659,9 +673,20 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     zero_counter_submit(node_id)
 
-    Executor.launch(node_id, {{:read_only, self()}, code})
+    with_subscription [[]] do
+      id = Mempool.tx(node_id, {:read_only, code})
+      res = [[[key] | 1] | 0]
 
-    assert_receive({1, [[[^key] | 1] | 0]}, 5000)
+      assert_receive(
+        %EventBroker.Event{
+          body: %Node.Event{
+            node_id: ^node_id,
+            body: %ROEvent{tx_id: ^id, read_result: {:ok, ^res}}
+          }
+        },
+        5000
+      )
+    end
 
     node_id
   end
@@ -675,9 +700,20 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     inc_counter_submit_with_zero(node_id)
 
-    Executor.launch(node_id, {{:read_only, self()}, code})
+    with_subscription [[]] do
+      id = Mempool.tx(node_id, {:read_only, code})
+      res = [[[key] | 2] | 0]
 
-    assert_receive({2, [[[^key] | 2] | 0]}, 5000)
+      assert_receive(
+        %EventBroker.Event{
+          body: %Node.Event{
+            node_id: ^node_id,
+            body: %ROEvent{tx_id: ^id, read_result: {:ok, ^res}}
+          }
+        },
+        5000
+      )
+    end
 
     node_id
   end
@@ -690,10 +726,10 @@ defmodule Anoma.Node.Examples.ETransaction do
     # this example also creates a block, so the next round is 2.
     zero_counter_submit(node_id)
     {back, inc} = inc(key)
-    Mempool.tx(node_id, {:debug_term_storage, bluf()}, "id 2")
-    Mempool.tx(node_id, inc(key), "id 3")
+    id2 = Mempool.tx(node_id, {:debug_term_storage, bluf()})
+    id3 = Mempool.tx(node_id, inc(key))
     :mnesia.subscribe({:table, blocks_table, :simple})
-    Mempool.execute(node_id, ["id 2", "id 3"])
+    Mempool.execute(node_id, [id2, id3])
 
     assert_receive(
       {:mnesia_table_event,

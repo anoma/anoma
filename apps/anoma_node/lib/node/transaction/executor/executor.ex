@@ -104,7 +104,7 @@ defmodule Anoma.Node.Transaction.Executor do
   """
 
   @spec launch(String.t(), {Backends.backend(), Noun.t()}, binary()) :: :ok
-  def launch(node_id, tw_w_backend, id \\ :crypto.strong_rand_bytes(16)) do
+  def launch(node_id, tw_w_backend, id) do
     GenServer.cast(
       Registry.via(node_id, __MODULE__),
       {:launch, tw_w_backend, id}

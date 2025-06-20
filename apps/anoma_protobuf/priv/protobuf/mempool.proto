@@ -8,6 +8,7 @@ import "node.proto";
 enum TransactionType {
   transparent_resource = 0;
   cairo_resource = 1;
+  read_only = 2;
 }
 
 /*
