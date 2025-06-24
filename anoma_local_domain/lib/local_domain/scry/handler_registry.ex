@@ -28,16 +28,74 @@ defmodule Anoma.LocalDomain.HandlerRegistry do
   If we chop off the front of the key, app-1 can't be used by other keyspaces.
   """
 
-  def initialize_tables(_) do
-    # always populate the default /anoma/local and /anoma/controller handlers
-    # then read the preferences of the user for any others
+  use GenServer
+
+  def start_link() do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  end
+
+  def match(prev_prefixes, key) do
+    GenServer.call(__MODULE__, {:match, prev_prefixes, key})
   end
 
   def register(prefix, fun) do
-    # register a new prefix handler
+    GenServer.cast(__MODULE__, {:register, prefix, fun})
   end
 
   def deregister(prefix) do
-    # deregister the handler for some prefix
+    GenServer.cast(__MODULE__, {:deregister, prefix})
+  end
+
+  # callbacks
+
+  @impl true
+  def init(_arg) do
+    # todo: more searchable backend
+    map = %{
+      {[], ["anoma", "local"]} => &Anoma.LocalDomain.Scry.scry_local/2,
+      {[], ["anoma", "controller"]} => &Anoma.LocalDomain.Scry.scry_controller/2
+    }
+
+    {:ok, map}
+  end
+
+  @impl true
+  def handle_cast({:register, prefix, fun}, state) do
+    {:noreply, Map.put(state, prefix, fun)}
+  end
+
+  @impl true
+  def handle_cast({:deregister, prefix}, state) do
+    {:noreply, Map.delete(state, prefix)}
+  end
+
+  @impl true
+  def handle_call({:match, prev_prefixes, key}, _from, state) do
+    matches = state
+    |> Map.filter(
+        fn {{k_prev_prefixes, _}, _} -> k_prev_prefixes == prev_prefixes end
+      )
+    |> Map.filter(
+        fn {{_, prefix}, _} -> is_prefix?(prefix, key) end
+       )
+
+    # todo: match longest prefix
+    if Enum.count(matches) == 1 do
+      [{{_, prefix}, handler}] = Map.to_list(matches)
+      {:reply, {prefix, handler}, state}
+    else
+      {:reply, :error, state}
+    end
+  end
+
+  defp is_prefix?([], _) do true end
+  defp is_prefix?(_, []) do false end
+
+  defp is_prefix?([p_head | p_tail], [l_head | l_tail]) do
+    if p_head == l_head do
+      is_prefix?(p_tail, l_tail)
+    else
+      false
+    end
   end
 end
