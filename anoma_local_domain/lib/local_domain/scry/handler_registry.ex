@@ -28,6 +28,7 @@ defmodule Anoma.LocalDomain.HandlerRegistry do
   If we chop off the front of the key, app-1 can't be used by other keyspaces.
   """
 
+  use Anoma.LocalDomain
   use GenServer
 
   def start_link() do
@@ -52,8 +53,8 @@ defmodule Anoma.LocalDomain.HandlerRegistry do
   def init(_arg) do
     # todo: more searchable backend
     map = %{
-      {[], ["anoma", "local"]} => &Anoma.LocalDomain.Scry.scry_local/2,
-      {[], ["anoma", "controller"]} => &Anoma.LocalDomain.Scry.scry_controller/2
+      {[], ~k"/anoma/local"} => &Anoma.LocalDomain.Scry.scry_local/2,
+      {[], ~k"/anoma/controller"} => &Anoma.LocalDomain.Scry.scry_controller/2
     }
 
     {:ok, map}
@@ -71,13 +72,10 @@ defmodule Anoma.LocalDomain.HandlerRegistry do
 
   @impl true
   def handle_call({:match, prev_prefixes, key}, _from, state) do
-    matches = state
-    |> Map.filter(
-        fn {{k_prev_prefixes, _}, _} -> k_prev_prefixes == prev_prefixes end
-      )
-    |> Map.filter(
-        fn {{_, prefix}, _} -> is_prefix?(prefix, key) end
-       )
+    matches =
+      state
+      |> Map.filter(fn {{k_prev_prefixes, _}, _} -> k_prev_prefixes == prev_prefixes end)
+      |> Map.filter(fn {{_, prefix}, _} -> is_prefix?(prefix, key) end)
 
     # todo: match longest prefix
     if Enum.count(matches) == 1 do
@@ -88,8 +86,13 @@ defmodule Anoma.LocalDomain.HandlerRegistry do
     end
   end
 
-  defp is_prefix?([], _) do true end
-  defp is_prefix?(_, []) do false end
+  defp is_prefix?([], _) do
+    true
+  end
+
+  defp is_prefix?(_, []) do
+    false
+  end
 
   defp is_prefix?([p_head | p_tail], [l_head | l_tail]) do
     if p_head == l_head do

@@ -6,6 +6,7 @@ defmodule Anoma.LocalDomain.Storage do
   Writes to all subspaces, but the main API writes to /anoma/local/[local id]/.
   """
 
+  use Anoma.LocalDomain
   use GenServer
   use TypedStruct
 
@@ -70,6 +71,7 @@ defmodule Anoma.LocalDomain.Storage do
     with [{^full_key, value}] <- :ets.lookup(state.table, full_key) do
       {:reply, value, state}
     else
+      [] -> {:reply, :absent, state}
       e -> {:reply, {:error, e}, state}
     end
   end
@@ -77,15 +79,14 @@ defmodule Anoma.LocalDomain.Storage do
   @impl true
   def handle_call({:read_local, key}, _from, state) do
     # prefix the key
-    key = [
-      "anoma", "local",
-      Atom.to_string(__MODULE__),
-      Integer.to_string(state.time)
-    ] ++ key
+    local_id = Atom.to_string(__MODULE__)
+    time_string = Integer.to_string(state.time)
+    key = ~k"/anoma/local/!local_id/!time_string" ++ key
 
     with [{^key, value}] <- :ets.lookup(state.table, key) do
       {:reply, value, state}
     else
+      [] -> {:reply, :absent, state}
       e -> {:reply, {:error, e}, state}
     end
   end
@@ -99,11 +100,9 @@ defmodule Anoma.LocalDomain.Storage do
   @impl true
   def handle_cast({:write, key, value}, state) do
     # prefix the key
-    key = [
-      "anoma", "local",
-      Atom.to_string(__MODULE__),
-      Integer.to_string(state.time + 1)
-    ] ++ key
+    local_id = Atom.to_string(__MODULE__)
+    time_string = Integer.to_string(state.time + 1)
+    key = ~k"/anoma/local/!local_id/!time_string" ++ key
 
     :ets.insert(state.table, {key, value})
 
