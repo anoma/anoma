@@ -9,195 +9,153 @@ defmodule SparseMerkleTree do
   @type hash() :: <<_::256>>
   @type digest_map() :: %{bitstring() => hash()}
 
-  @present_constant <<1>>
-  @present_hash :crypto.hash(:sha256, @present_constant)
-  @absent_constant <<>>
-  @absent_hash :crypto.hash(:sha256, @absent_constant)
+  # A special sentinel value representing the absence of a node
+  @empty_hash <<0::256>>
 
   typedstruct enforce: true do
-    field(:leaves, MapSet.t(hash()), default: MapSet.new())
+    # The depth of the Merkle tree
+    field(:depth, non_neg_integer())
+    # A map from node paths (represented as bitstrings) to their digest
     field(:digests, digest_map(), default: %{})
-    field(:root, hash())
   end
 
   @spec new() :: t()
-  def new() do
-    %__MODULE__{
-      root: default_hash(0)
-    }
+  def new(opts \\ []) do
+    # Assume a default depth of 256
+    depth = Keyword.get(opts, :depth, 256)
+    %__MODULE__{ depth: depth }
   end
 
+  # Insert the given leaf into the tree
   @spec insert(t(), binary()) :: t()
   def insert(tree, leaf) do
-    digest = hash(leaf)
-
-    new_leaves = MapSet.put(tree.leaves, digest)
-    new_digests = put_digest(tree.digests, digest)
-    new_root = Map.get(new_digests, <<>>)
-
-    %__MODULE__{
-      leaves: new_leaves,
-      digests: new_digests,
-      root: new_root
-    }
+    # Only the prefix of the digest is used as the path
+    <<path::bitstring-size(tree.depth), _::bitstring>> = digest = hash(leaf)
+    # Store the leaf digest
+    digests = Map.put(tree.digests, path, digest)
+    # Update the Merkle tree digests
+    new_digests = update_digests(digests, path)
+    %__MODULE__{digests: new_digests, depth: tree.depth}
   end
 
+  # Compute the root hash of the given tree
+  def root(tree) do
+    # The root digest is stored at the empty path
+    Map.get(tree.digests, <<>>, @empty_hash)
+  end
+
+  # Check if the given leaf is present in the tree
   @spec present?(t(), binary()) :: bool()
   def present?(tree, leaf) do
-    MapSet.member?(tree.leaves, hash(leaf))
+    # Only the prefix of the digest is used as the path
+    <<path::bitstring-size(tree.depth), _::bitstring>> = digest = hash(leaf)
+    # Ensure that the stored digest matches the query
+    Map.get(tree.digests, path) == digest
   end
 
-  @spec prove_present(t(), binary()) :: {:ok, list(hash())} | :error
-  def prove_present(tree, leaf) do
-    prove(tree, leaf, &compute_digest/2)
+  # Prove that the given node is present or absent from the tree
+  defp prove_aux(_tree, <<>>, auth_path) do
+    # Reverse the path so that earlier elements represent lower hashes
+    Enum.reverse(auth_path)
   end
 
-  @spec prove_absent(t(), binary()) :: {:ok, list(hash())} | :error
-  def prove_absent(tree, leaf) do
-    prove(tree, leaf, &compute_absence_digest/2)
-  end
-
-  @spec prove(t(), binary(), (digest_map(), bitstring() -> hash())) ::
-          {:ok, list(hash())} | :error
-  defp prove(tree, leaf, fun) do
-    {proof, <<>>, _} =
-      for _ <- 256..0//-1, reduce: {[], hash(leaf), %{}} do
-        {hashes, bits, temp_digests} ->
-          new_digest = fun.(temp_digests, bits)
-
-          new_temp_digests = Map.put(temp_digests, bits, new_digest)
-
-          new_hashes = [new_digest | hashes]
-
-          new_bits =
-            case bits do
-              <<_::1, new_bits::bitstring>> -> new_bits
-              <<>> -> <<>>
-            end
-
-          {new_hashes, new_bits, new_temp_digests}
-      end
-
-    expected_root = tree.root
-
-    case proof do
-      [^expected_root | _rest_of_proof] ->
-        {:ok, proof}
-
-      _ ->
-        :error
+  defp prove_aux(tree, path, proof) do
+    <<path_hd::1, path_tl::bitstring>> = path
+    if Map.has_key?(tree.digests, path_tl) do
+      # Obtain the sibling hash in order to prove this node is in parent
+      sibling_path = <<(1-path_hd)::1, path_tl::bitstring>>
+      sibling_digest = get_digest(tree.digests, sibling_path)
+      # Prove that the parent node is also in the tree
+      prove_aux(tree, path_tl, [sibling_digest | proof])
+    else
+      # If the parent node not in tree, then sibling is not required
+      prove_aux(tree, path_tl, proof)
     end
   end
 
-  @spec put_digest(digest_map(), hash()) :: digest_map()
-  defp put_digest(digests, hash) do
-    {new_digests, <<>>} =
-      for _ <- 256..0//-1, reduce: {digests, hash} do
-        {digests, bits} ->
-          new_digests = Map.put(digests, bits, compute_digest(digests, bits))
-
-          new_bits =
-            case bits do
-              <<_::1, new_bits::bitstring>> -> new_bits
-              <<>> -> <<>>
-            end
-
-          {new_digests, new_bits}
-      end
-
-    new_digests
+  # Prove that the given leaf is present or absent from the tree
+  @spec prove(t(), binary()) :: {:ok, {bool(), list(hash())}} | :error
+  def prove(tree, leaf) do
+    # Only the prefix of the digest is used as the path
+    <<path::bitstring-size(tree.depth), _::bitstring>> = hash(leaf)
+    # Are we proving that the leaf is present or absent?        
+    present = Map.has_key?(tree.digests, path)
+    # Produce a Merkle proof for the given path
+    proof = prove_aux(tree, path, [])
+    # Indicate the presence of this leaf and a proof for it
+    {:ok, {present, proof}}
   end
 
-  @spec compute_digest(digest_map(), hash()) :: hash()
-  defp compute_digest(_digests, _bits = <<_::256>>) do
-    @present_hash
+  # Update the digests of the given node's ancestors
+  defp update_digests(digests, root_path = <<>>) do
+    digests
   end
 
-  @spec compute_digest(digest_map(), bitstring()) :: hash()
-  defp compute_digest(digests, bits) do
-    l_key = <<(<<0::1>>), bits::bitstring>>
-    r_key = <<(<<1::1>>), bits::bitstring>>
-
-    l_digest = get_digest(digests, l_key)
-    r_digest = get_digest(digests, r_key)
-
-    hash_pair(l_digest, r_digest)
+  defp update_digests(digests, <<_path_hd::1, path_tl::bitstring>> = path) do
+    # Store the digest for the current path
+    new_digests = Map.put(digests, path_tl, compute_digest(digests, path_tl))
+    # Store the digests for ancestors
+    update_digests(new_digests, path_tl)
   end
 
-  @spec compute_absence_digest(digest_map(), hash()) :: hash()
-  defp compute_absence_digest(_digests, _bits = <<_::256>>) do
-    @absent_hash
+  def verify_aux(root, node, <<>>, []) do
+    # For a zero length path, the root must equal the node
+    root == node
   end
 
-  @spec compute_absence_digest(digest_map, bitstring()) :: hash()
-  defp compute_absence_digest(digests, bits) do
-    compute_digest(digests, bits)
+  def verify_aux(root, node, <<path_hd::1, path_tl::bitstring>> = path, proof) do
+    # Use the proof's head to construct the next parent
+    [proof_hd | proof_tl] = proof
+    parent_node = if path_hd == 1 do
+      # If the node is in the right position, then hash accordingly
+      hash_pair(proof_hd, node)
+    else
+      # If the node is in the left position, then hash accordingly
+      hash_pair(node, proof_hd)
+    end
+    # Verify that the parent node is in the root hash
+    verify_aux(root, parent_node, path_tl, proof_tl)
   end
 
+  # Verify the leaf's membership in root using the proof
+  def verify(root, leaf, {present, proof}) do
+    proof_length = Enum.count(proof)
+    # Obtain the path suffix used in the proof
+    <<_::bitstring-size(256-proof_length), path::bitstring-size(proof_length)>> = hash(leaf)
+    # If it's an absence proof, then actually prove that empty hash is at path
+    leaf_digest = if present, do: hash(leaf), else: @empty_hash
+    # Finally actually prove that leaf is in root through the given path
+    verify_aux(root, leaf_digest, path, proof)
+  end
+
+  # Compute the digest for a parent node
+  @spec compute_digest(t(), bitstring()) :: hash()
+  defp compute_digest(digests, path) do
+    # Get the digest for the left child
+    left_path = <<0::1, path::bitstring>>
+    left_digest = get_digest(digests, left_path)
+    # Get the digest for the right child
+    right_path = <<1::1, path::bitstring>>
+    right_digest = get_digest(digests, right_path)
+    # Combine the child digests
+    hash_pair(left_digest, right_digest)
+  end
+
+  # Get the digest at the given path in the map
   @spec get_digest(digest_map(), bitstring()) :: hash()
-  defp get_digest(digests, bits) do
-    Map.get(digests, bits, default_hash(bit_size(bits)))
+  defp get_digest(digests, path) do
+    Map.get(digests, path, @empty_hash)
   end
 
-  defp default_hash(_depth) do
-    <<0::256>>
-  end
-
-  @spec hash_pair_specialized(hash(), hash()) :: hash()
-  def hash_pair_specialized(l, r) when l != <<0::256>> and r != <<0::256>> do
-    <<_::16, h::binary>> = hash_pair_sha256(l, r)
-    <<1::16>> <> h
-  end
-
-  def hash_pair_specialized(<<0::256>>, <<0::256>>) do
-    <<0::256>>
-  end
-
-  def hash_pair_specialized(l = <<1::1, _::255>>, r) do
-    <<_::16, h::binary>> = hash_pair_sha256(l, r)
-    <<1::16>> <> h
-  end
-
-  def hash_pair_specialized(l = <<0::16, _ :: 240>>, r) do
-    <<_::16, h::binary>> = hash_pair_sha256(l, r)
-    <<1::16>> <> h
-  end
-
-  def hash_pair_specialized(l, r = <<1::1, _::255>>) do
-    <<_::16, h::binary>> = hash_pair_sha256(l, r)
-    <<1::16>> <> h
-  end
-
-  def hash_pair_specialized(l, r = <<0::16, _ :: 240>>) do
-    <<_::16, h::binary>> = hash_pair_sha256(l, r)
-    <<1::16>> <> h
-  end
-
-  def hash_pair_specialized(l, <<0::256>>) do
-    <<l::255, 0::1>>
-  end
-
-  def hash_pair_specialized(<<0::256>>, r) do
-    <<r::255, 1::1>>
-  end
-
+  # Compute the digest for a leaf node
   @spec hash(binary()) :: hash()
   defp hash(bytes) do
-    hash_sha256(bytes)
-  end
-
-  @spec hash_pair(hash(), hash()) :: hash()
-  defp hash_pair(l, r) do
-    hash_pair_specialized(l, r)
-  end
-
-  @spec hash_pair_sha256(binary(), binary()) :: hash()
-  defp hash_pair_sha256(l, r) do
-    hash_sha256(l <> r)
-  end
-
-  @spec hash_sha256(binary()) :: hash()
-  defp hash_sha256(bytes) do
     :crypto.hash(:sha256, bytes)
+  end
+
+  # Compute digest of parent node from two children
+  @spec hash_pair(hash(), hash()) :: hash()
+  defp hash_pair(left, right) do
+    :crypto.hash(:sha256, left <> right)
   end
 end
