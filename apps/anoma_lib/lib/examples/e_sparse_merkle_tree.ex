@@ -35,37 +35,26 @@ defmodule Examples.ESparseMerkleTree do
 
   def prove_abc_present_in_abc() do
     tree = abc_tree()
-    {:ok, proof} = prove(tree, "abcd")
-    IO.inspect(proof)
-    verify(root(tree), "abcd", proof)
+    proof = {true, _} = prove(tree, "abc")
+    true = verify(root(tree), "abc", proof)
   end
 
   def prove_abc_present_in_abc_def() do
-    {:ok, _} = prove(abc_def_tree(), "abc")
+    tree = abc_def_tree()
+    proof = {true, _} = prove(tree, "abc")
+    true = verify(root(tree), "abc", proof)
   end
 
   def prove_abc_absent_in_def() do
-    {:ok, _} = prove(def_tree(), "abc")
+    tree = def_tree()
+    proof = {false, _} = prove(tree, "abc")
+    true = verify(root(tree), "abc", proof)
   end
 
   def prove_abc_absent_in_empty() do
-    {:ok, _} = prove(empty_tree(), "abc")
-  end
-
-  def dont_prove_abc_present_in_empty() do
-    :error = prove(empty_tree(), "abc")
-  end
-
-  def dont_prove_abc_present_in_def() do
-    :error = prove(def_tree(), "abc")
-  end
-
-  def dont_prove_abc_absent_in_abc_def() do
-    :error = prove(abc_def_tree(), "abc")
-  end
-
-  def dont_prove_abc_absent_in_abc() do
-    :error = prove(abc_tree(), "abc")
+    tree = empty_tree()
+    proof = {false, _} = prove(tree, "abc")
+    true = verify(root(tree), "abc", proof)
   end
 
   defmemo big_tree() do
