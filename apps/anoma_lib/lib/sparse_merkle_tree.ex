@@ -92,9 +92,12 @@ defmodule SparseMerkleTree do
   @spec prove(t(), binary()) :: {bool(), list(hash())}
   def prove(tree, leaf) do
     # Only the prefix of the digest is used as the path
-    <<path::bitstring-size(tree.depth), _::bitstring>> = hash(leaf)
-    # Are we proving that the leaf is present or absent?        
-    present = Map.has_key?(tree.digests, path)
+    <<path::bitstring-size(tree.depth), _::bitstring>> = digest = hash(leaf)
+    # Are we proving that the leaf is present or absent?
+    stored_digest = Map.get(tree.digests, path)
+    present = stored_digest != nil
+    # Ensure that the stored digest matches the query
+    if present && stored_digest != digest, do: raise "Detected hash conflict"
     # Produce a Merkle proof for the given path
     proof = prove_aux(tree, path, [])
     # Indicate the presence of this leaf and a proof for it
@@ -102,11 +105,11 @@ defmodule SparseMerkleTree do
   end
 
   # Update the digests of the given node's ancestors
-  defp update_digests(digests, root_path = <<>>) do
+  defp update_digests(digests, <<>>) do
     digests
   end
 
-  defp update_digests(digests, <<_path_hd::1, path_tl::bitstring>> = path) do
+  defp update_digests(digests, <<_path_hd::1, path_tl::bitstring>>) do
     new_digests = case compute_digest(digests, path_tl) do
       # Remove the parent entry because no children exist
       nil -> Map.delete(digests, path_tl)
@@ -122,7 +125,7 @@ defmodule SparseMerkleTree do
     root == node
   end
 
-  def verify_aux(root, node, <<path_hd::1, path_tl::bitstring>> = path, proof) do
+  def verify_aux(root, node, <<path_hd::1, path_tl::bitstring>>, proof) do
     # Use the proof's head to construct the next parent
     [proof_hd | proof_tl] = proof
     parent_node = if path_hd == 1 do
@@ -165,7 +168,7 @@ defmodule SparseMerkleTree do
 
   # Compute the digest for a leaf node
   @spec hash(binary()) :: hash()
-  defp hash(bytes) do
+  def hash(bytes) do
     :crypto.hash(:sha256, bytes)
   end
 
