@@ -36,7 +36,7 @@ defmodule SparseMerkleTree do
     # Store the leaf digest
     digests = Map.put(tree.digests, path, digest)
     # Update the Merkle tree digests
-    new_digests = update_digests(digests, path)
+    new_digests = update_digests(digests, path, digest)
     %__MODULE__{digests: new_digests, depth: tree.depth}
   end
 
@@ -49,7 +49,7 @@ defmodule SparseMerkleTree do
     # Remove the leaf
     digests = Map.delete(tree.digests, path)
     # Update the ancestor digests
-    new_digests = update_digests(digests, path)
+    new_digests = update_digests(digests, path, nil)
     %__MODULE__{digests: new_digests, depth: tree.depth}
   end
 
@@ -105,19 +105,22 @@ defmodule SparseMerkleTree do
   end
 
   # Update the digests of the given node's ancestors
-  defp update_digests(digests, <<>>) do
+  defp update_digests(digests, <<>>, _digest) do
     digests
   end
 
-  defp update_digests(digests, <<_path_hd::1, path_tl::bitstring>>) do
-    new_digests = case compute_digest(digests, path_tl) do
+  defp update_digests(digests, <<_path_hd::1, path_tl::bitstring>> = path, digest) do
+    # Compute the digest at the current path
+    tl_digest = compute_digest(digests, path, digest)
+    # Store the computed digest
+    new_digests = case tl_digest do
       # Remove the parent entry because no children exist
       nil -> Map.delete(digests, path_tl)
       # Store the digest for the current path
-      digest ->Map.put(digests, path_tl, digest)
+      tl_digest -> Map.put(digests, path_tl, tl_digest)
     end
     # Store the digests for ancestors
-    update_digests(new_digests, path_tl)
+    update_digests(new_digests, path_tl, tl_digest)
   end
 
   def verify_aux(root, node, <<>>, []) do
@@ -154,14 +157,18 @@ defmodule SparseMerkleTree do
   end
 
   # Compute the digest for a parent node
-  @spec compute_digest(t(), bitstring()) :: hash()
-  defp compute_digest(digests, path) do
-    # Get the digest for the left child
-    left_path = <<0::1, path::bitstring>>
-    left_digest = Map.get(digests, left_path)
+  defp compute_digest(digests, <<0::1, path_tl::bitstring>>, left_digest) do
     # Get the digest for the right child
-    right_path = <<1::1, path::bitstring>>
+    right_path = <<1::1, path_tl::bitstring>>
     right_digest = Map.get(digests, right_path)
+    # Combine the child digests
+    hash_pair(left_digest, right_digest)
+  end
+
+  defp compute_digest(digests, <<1::1, path_tl::bitstring>>, right_digest) do
+    # Get the digest for the left child
+    left_path = <<0::1, path_tl::bitstring>>
+    left_digest = Map.get(digests, left_path)
     # Combine the child digests
     hash_pair(left_digest, right_digest)
   end
@@ -173,7 +180,6 @@ defmodule SparseMerkleTree do
   end
 
   # Compute digest of parent node from two children
-  @spec hash_pair(hash(), hash()) :: hash()
   # No children means no hash
   defp hash_pair(nil, nil), do: nil
   # An empty right child is treated as the empty hash
