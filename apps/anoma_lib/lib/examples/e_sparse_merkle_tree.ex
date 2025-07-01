@@ -481,4 +481,13 @@ defmodule Examples.ESparseMerkleTree do
 
     tree
   end
+
+  def big_tree() do
+    tree = for n <- 1..(2 ** 16), reduce: SparseMerkleTree.new() do
+      tree ->
+        {:ok, {:inserted, tree}} = tree |> SparseMerkleTree.put(SparseMerkleTree.hash(Integer.to_string(n)))
+        tree
+    end
+    SparseMerkleTree.root_hash(SparseMerkleTree.rehash(tree))
+  end
 end

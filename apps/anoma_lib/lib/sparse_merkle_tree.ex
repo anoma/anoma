@@ -338,7 +338,7 @@ defmodule SparseMerkleTree do
     new_right = rehash_subtree(right)
 
     {
-      calculate_subtree_hash({:no_hash, left, right}),
+      calculate_subtree_hash({:no_hash, new_left, new_right}),
       new_left,
       new_right
     }
