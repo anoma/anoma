@@ -12,11 +12,13 @@ defmodule SparseMerkleTree do
   @type hash :: <<_::256>>
   @type branch_hash :: :no_hash | hash()
   @type tree :: :empty | {branch_hash(), tree(), tree()} | {:leaf, hash()}
-  @type path :: [:left | :right]
+  @type path :: bitstring
   @type proof_path :: [hash()]
   @type proof :: {:present, proof_path()} | {:absent, proof_path()}
 
   @empty_hash <<0::256>>
+  @left_position 0
+  @right_position 1
 
   typedstruct enforce: true do
     field(:depth, non_neg_integer())
@@ -250,17 +252,12 @@ defmodule SparseMerkleTree do
       _::bitstring
     >> = data_hash
 
-    for <<bit::1 <- path_bitstring>> do
-      case bit do
-        0 -> :left
-        1 -> :right
-      end
-    end
+    path_bitstring
   end
 
   @spec put_at_path(tree(), path(), hash()) ::
           {:inserted, tree()} | :present | {:collision, hash()}
-  defp put_at_path(:empty, [], data_hash) do
+  defp put_at_path(:empty, <<>>, data_hash) do
     {:inserted, {:leaf, data_hash}}
   end
 
@@ -270,27 +267,27 @@ defmodule SparseMerkleTree do
 
   defp put_at_path(
          {_branch_hash, left, right},
-         [path_direction | path_tail],
+         <<path_direction::1, path_tail::bitstring>>,
          data_hash
        ) do
     case path_direction do
-      :left ->
+      @left_position ->
         with {:inserted, subtree} <- put_at_path(left, path_tail, data_hash) do
           {:inserted, {:no_hash, subtree, right}}
         end
 
-      :right ->
+      @right_position ->
         with {:inserted, subtree} <- put_at_path(right, path_tail, data_hash) do
           {:inserted, {:no_hash, left, subtree}}
         end
     end
   end
 
-  defp put_at_path({:leaf, data_hash}, [], data_hash) do
+  defp put_at_path({:leaf, data_hash}, <<>>, data_hash) do
     :present
   end
 
-  defp put_at_path({:leaf, collision_hash}, [], data_hash)
+  defp put_at_path({:leaf, collision_hash}, <<>>, data_hash)
        when collision_hash != data_hash do
     {:collision, collision_hash}
   end
@@ -301,7 +298,7 @@ defmodule SparseMerkleTree do
 
   defp drop_at_path(
          {_branch_hash, left, right},
-         [path_direction | path_tail],
+         <<path_direction::1, path_tail::bitstring>>,
          data_hash
        ) do
     collapse_if_empty = fn
@@ -310,23 +307,23 @@ defmodule SparseMerkleTree do
     end
 
     case path_direction do
-      :left ->
+      @left_position ->
         with {:dropped, subtree} <- drop_at_path(left, path_tail, data_hash) do
           {:dropped, collapse_if_empty.({:no_hash, subtree, right})}
         end
 
-      :right ->
+      @right_position ->
         with {:dropped, subtree} <- drop_at_path(right, path_tail, data_hash) do
           {:dropped, collapse_if_empty.({:no_hash, left, subtree})}
         end
     end
   end
 
-  defp drop_at_path({:leaf, data_hash}, [], data_hash) do
+  defp drop_at_path({:leaf, data_hash}, <<>>, data_hash) do
     {:dropped, :empty}
   end
 
-  defp drop_at_path({:leaf, collision_hash}, [], data_hash)
+  defp drop_at_path({:leaf, collision_hash}, <<>>, data_hash)
        when collision_hash != data_hash do
     {:collision, collision_hash}
   end
@@ -384,13 +381,13 @@ defmodule SparseMerkleTree do
 
   defp subtree_proof(
          {_branch_hash, left, right},
-         [path_direction | path_tail],
+         <<path_direction::1, path_tail::bitstring>>,
          data_hash
        ) do
     {proof_path_element, subtree} =
       case path_direction do
-        :left -> {cached_subtree_hash!(right), left}
-        :right -> {cached_subtree_hash!(left), right}
+        @left_position -> {cached_subtree_hash!(right), left}
+        @right_position -> {cached_subtree_hash!(left), right}
       end
 
     case subtree_proof(subtree, path_tail, data_hash) do
@@ -403,9 +400,9 @@ defmodule SparseMerkleTree do
     end
   end
 
-  defp subtree_proof({:leaf, data_hash}, [], data_hash), do: {:present, []}
+  defp subtree_proof({:leaf, data_hash}, <<>>, data_hash), do: {:present, []}
 
-  defp subtree_proof({:leaf, collision_hash}, [], data_hash)
+  defp subtree_proof({:leaf, collision_hash}, <<>>, data_hash)
        when collision_hash != data_hash do
     {:collision, collision_hash}
   end
