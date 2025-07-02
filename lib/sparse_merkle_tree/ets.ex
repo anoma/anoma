@@ -54,7 +54,6 @@ defmodule SparseMerkleTree.ETS do
   @spec new() :: t()
   def new() do
     table = :ets.new(__MODULE__, [])
-    :ets.insert(table, {<<>>, @default_hashes[0]})
     %__MODULE__{table: table}
   end
 
@@ -72,8 +71,10 @@ defmodule SparseMerkleTree.ETS do
   """
   @spec root(t()) :: Hash.t()
   def root(tree) do
-    [{<<>>, root}] = :ets.lookup(tree.table, <<>>)
-    root
+    case :ets.lookup(tree.table, <<>>) do
+      [{<<>>, root}] -> root
+      [] -> @default_hashes[0]
+    end
   end
 
   @doc """
