@@ -50,7 +50,7 @@ defmodule Examples.ESparseMerkleTree do
     SparseMerkleTree.new()
     |> tap(fn tree ->
       assert %SparseMerkleTree{
-               root: :empty,
+               root: {:leaf, nil},
                depth: 256
              } == tree
     end)
@@ -60,13 +60,13 @@ defmodule Examples.ESparseMerkleTree do
     tree = SparseMerkleTree.new()
     first_hash = SparseMerkleTree.hash("first")
 
-    assert {:ok, {:inserted, tree}} = SparseMerkleTree.put(tree, first_hash)
-    assert {:ok, {:present, ^tree}} = SparseMerkleTree.put(tree, first_hash)
+    assert {:ok, tree} = SparseMerkleTree.put(tree, first_hash)
+    assert {:ok, ^tree} = SparseMerkleTree.put(tree, first_hash)
 
-    assert {:ok, {:inserted, tree}} =
+    assert {:ok, tree} =
              SparseMerkleTree.put(tree, SparseMerkleTree.hash("second"))
 
-    assert {:ok, {:inserted, tree}} =
+    assert {:ok, tree} =
              SparseMerkleTree.put(tree, @empty_hash)
 
     tree = SparseMerkleTree.rehash(tree)
@@ -123,7 +123,7 @@ defmodule Examples.ESparseMerkleTree do
 
   defp tree_depth_3_with_a() do
     tree = tree_depth_3()
-    assert {:ok, {:inserted, tree}} = SparseMerkleTree.put(tree, @data_hash_a)
+    assert {:ok, tree} = SparseMerkleTree.put(tree, @data_hash_a)
     tree
   end
 
@@ -132,13 +132,13 @@ defmodule Examples.ESparseMerkleTree do
       tree_depth_3_with_a()
       |> SparseMerkleTree.rehash()
 
-    assert {:ok, {:inserted, tree}} = SparseMerkleTree.put(tree, @data_hash_b)
+    assert {:ok, tree} = SparseMerkleTree.put(tree, @data_hash_b)
     tree
   end
 
   defp tree_depth_3_with_a_b_rehash() do
     tree = tree_depth_3_with_a()
-    assert {:ok, {:inserted, tree}} = SparseMerkleTree.put(tree, @data_hash_b)
+    assert {:ok, tree} = SparseMerkleTree.put(tree, @data_hash_b)
     SparseMerkleTree.rehash(tree)
   end
 
@@ -146,7 +146,7 @@ defmodule Examples.ESparseMerkleTree do
     tree = tree_depth_3()
 
     assert %SparseMerkleTree{
-             root: :empty,
+             root: {:leaf, nil},
              depth: 3
            } == tree
 
@@ -195,7 +195,7 @@ defmodule Examples.ESparseMerkleTree do
   def tree_depth_3_proof_for_empty_hash_works_for_presence_or_absence() do
     tree = tree_depth_3()
 
-    assert {:ok, {:inserted, tree}} =
+    assert {:ok, tree} =
              SparseMerkleTree.put(tree, @empty_hash)
 
     tree = SparseMerkleTree.rehash(tree)
@@ -222,13 +222,13 @@ defmodule Examples.ESparseMerkleTree do
   def tree_depth_3_drop() do
     tree = tree_depth_3()
 
-    assert {:ok, {:absent, tree}} ==
+    assert {:ok, tree} ==
              SparseMerkleTree.drop(tree, @data_hash_a)
 
-    assert {:ok, {:absent, tree}} ==
+    assert {:ok, tree} ==
              SparseMerkleTree.drop(tree, @data_hash_b)
 
-    assert {:ok, {:absent, tree}} ==
+    assert {:ok, tree} ==
              SparseMerkleTree.drop(tree, @empty_hash)
 
     tree
@@ -238,15 +238,15 @@ defmodule Examples.ESparseMerkleTree do
     tree = tree_depth_3_with_a()
 
     assert {
-             :no_hash,
-             :empty,
+             nil,
+             {:leaf, nil},
              {
-               :no_hash,
-               :empty,
+               nil,
+               {:leaf, nil},
                {
-                 :no_hash,
+                 nil,
                  {:leaf, @data_hash_a},
-                 :empty
+                 {:leaf, nil}
                }
              }
            } ==
@@ -264,14 +264,14 @@ defmodule Examples.ESparseMerkleTree do
              <<187, 120, 24, 192, 94, 25, 186, 99, 13, 178, 20, 83, 184, 38,
                229, 47, 71, 60, 210, 92, 138, 116, 30, 155, 185, 55, 133, 254,
                4, 152, 94, 219>>,
-             :empty,
+             {:leaf, nil},
              {
                @branch_hash_a1,
-               :empty,
+               {:leaf, nil},
                {
                  @branch_hash_a2,
                  {:leaf, @data_hash_a},
-                 :empty
+                 {:leaf, nil}
                }
              }
            } ==
@@ -283,16 +283,16 @@ defmodule Examples.ESparseMerkleTree do
   def tree_depth_3_with_a_drop() do
     tree = tree_depth_3_with_a()
 
-    assert {:ok, {:absent, tree}} ==
+    assert {:ok, tree} ==
              SparseMerkleTree.drop(tree, @data_hash_b)
 
-    assert {:ok, {:absent, tree}} ==
+    assert {:ok, tree} ==
              SparseMerkleTree.drop(tree, @empty_hash)
 
-    assert {:ok, {:dropped, tree}} =
+    assert {:ok, tree} =
              SparseMerkleTree.drop(tree, @data_hash_a)
 
-    assert :empty == tree.root
+    assert {:leaf, nil} == tree.root
     tree
   end
 
@@ -300,23 +300,23 @@ defmodule Examples.ESparseMerkleTree do
     tree = tree_depth_3_with_a_rehash_b()
 
     assert {
-             :no_hash,
+             nil,
              {
-               :no_hash,
+               nil,
                {
-                 :no_hash,
-                 :empty,
+                 nil,
+                 {:leaf, nil},
                  {:leaf, @data_hash_b}
                },
-               :empty
+               {:leaf, nil}
              },
              {
                @branch_hash_a1,
-               :empty,
+               {:leaf, nil},
                {
                  @branch_hash_a2,
                  {:leaf, @data_hash_a},
-                 :empty
+                 {:leaf, nil}
                }
              }
            } ==
@@ -328,7 +328,7 @@ defmodule Examples.ESparseMerkleTree do
   def tree_depth_3_with_a_rehash_b_duplicate_insert() do
     tree = tree_depth_3_with_a_rehash_b()
 
-    assert {:ok, {:present, ^tree}} =
+    assert {:ok, ^tree} =
              SparseMerkleTree.put(tree, @data_hash_b)
 
     tree
@@ -363,7 +363,7 @@ defmodule Examples.ESparseMerkleTree do
   def tree_depth_3_with_a_rehash_b_drop() do
     tree = tree_depth_3_with_a_rehash_b()
 
-    assert {:ok, {:absent, tree}} ==
+    assert {:ok, tree} ==
              SparseMerkleTree.drop(tree, @empty_hash)
 
     assert {:error,
@@ -372,28 +372,28 @@ defmodule Examples.ESparseMerkleTree do
               collision_hash: @data_hash_b
             }} == SparseMerkleTree.drop(tree, @data_hash_c)
 
-    assert {:ok, {:dropped, tree}} =
+    assert {:ok, tree} =
              SparseMerkleTree.drop(tree, @data_hash_a)
 
     assert {
-             :no_hash,
+             nil,
              {
-               :no_hash,
+               nil,
                {
-                 :no_hash,
-                 :empty,
+                 nil,
+                 {:leaf, nil},
                  {:leaf, @data_hash_b}
                },
-               :empty
+               {:leaf, nil}
              },
-             :empty
+             {:leaf, nil}
            } ==
              tree.root
 
-    assert {:ok, {:dropped, tree}} =
+    assert {:ok, tree} =
              SparseMerkleTree.drop(tree, @data_hash_b)
 
-    assert :empty == tree.root
+    assert {:leaf, nil} == tree.root
     tree
   end
 
@@ -415,18 +415,18 @@ defmodule Examples.ESparseMerkleTree do
                @branch_hash_b1,
                {
                  @branch_hash_b2,
-                 :empty,
+                 {:leaf, nil},
                  {:leaf, @data_hash_b}
                },
-               :empty
+               {:leaf, nil}
              },
              {
                @branch_hash_a1,
-               :empty,
+               {:leaf, nil},
                {
                  @branch_hash_a2,
                  {:leaf, @data_hash_a},
-                 :empty
+                 {:leaf, nil}
                }
              }
            } ==
@@ -485,7 +485,7 @@ defmodule Examples.ESparseMerkleTree do
   def big_tree() do
     tree = for n <- 1..(2 ** 16), reduce: SparseMerkleTree.new() do
       tree ->
-        {:ok, {:inserted, tree}} = tree |> SparseMerkleTree.put(SparseMerkleTree.hash(Integer.to_string(n)))
+        {:ok, tree} = tree |> SparseMerkleTree.put(SparseMerkleTree.hash(Integer.to_string(n)))
         tree
     end
     SparseMerkleTree.root_hash(SparseMerkleTree.rehash(tree))

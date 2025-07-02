@@ -10,19 +10,18 @@ defmodule SparseMerkleTree do
   @type opts :: [depth: non_neg_integer()]
 
   @type hash :: <<_::256>>
-  @type branch_hash :: :no_hash | hash()
-  @type tree :: :empty | {branch_hash(), tree(), tree()} | {:leaf, hash()}
+  @type tree :: {hash() | nil, tree(), tree()} | {:leaf, hash() | nil}
   @type path :: bitstring
   @type proof_path :: [hash()]
   @type proof :: {:present, proof_path()} | {:absent, proof_path()}
 
   @empty_hash <<0::256>>
-  @left_position 0
-  @right_position 1
+  @lpos 0
+  @rpos 1
 
   typedstruct enforce: true do
     field(:depth, non_neg_integer())
-    field(:root, tree(), default: :empty)
+    field(:root, tree(), default: {:leaf, nil})
   end
 
   defmodule CollisionError do
@@ -57,9 +56,7 @@ defmodule SparseMerkleTree do
   Hash arbitrary binary data. Used for all tree hashes.
   """
   @spec hash(binary()) :: binary()
-  def hash(data) when is_binary(data) do
-    :crypto.hash(:sha256, data)
-  end
+  def hash(data) when is_binary(data), do: :crypto.hash(:sha256, data)
 
   @doc """
   Returns an empty tree.
@@ -80,16 +77,13 @@ defmodule SparseMerkleTree do
   @spec root_hash(Self.t()) :: {:ok, hash()} | {:error, StaleTreeError.t()}
   def root_hash(%Self{} = self) do
     case cached_subtree_hash(self.root) do
-      {:ok, hash} -> {:ok, hash}
-      :none -> {:error, %StaleTreeError{}}
+      nil -> {:error, %StaleTreeError{}}
+      hash -> {:ok, hash}
     end
   end
 
   @spec root_hash!(Self.t()) :: hash()
-  def root_hash!(self) do
-    root_hash(self)
-    |> unwrap_result_or_raise!()
-  end
+  def root_hash!(self), do: root_hash(self) |> unwrap_result_or_raise!()
 
   @doc """
   Put the given data hash in the tree.
@@ -102,34 +96,19 @@ defmodule SparseMerkleTree do
   Note that inserting a value will cause calculated hashes to be invalidated.
   To recalculate hashes, use the rehash/1 function.
   """
-  @spec put(Self.t(), hash()) ::
-          {:ok, {leaf_status, Self.t()}} | {:error, CollisionError.t()}
-        when leaf_status: :inserted | :present
+  @spec put(Self.t(), hash()) :: {:ok, Self.t()} | {:error, CollisionError.t()}
   def put(%Self{} = self, <<_::256>> = data_hash) do
-    path = path_for_data_hash(data_hash, self.depth)
-
-    case put_at_path(self.root, path, data_hash) do
-      {:inserted, tree} ->
-        {:ok, {:inserted, %{self | root: tree}}}
-
-      :present ->
-        {:ok, {:present, self}}
-
-      {:collision, collision_hash} ->
-        {:error,
-         %CollisionError{
-           data_hash: data_hash,
-           collision_hash: collision_hash
-         }}
+    try do
+      put_aux(self.root, path_for_data_hash(data_hash, self.depth), data_hash)
+    rescue
+      error -> {:error, error}
+    else
+      tree -> {:ok, %{self | root: tree}}
     end
   end
 
-  @spec put!(Self.t(), hash()) :: {leaf_status, Self.t()}
-        when leaf_status: :inserted | :present
-  def put!(self, data_hash) do
-    put(self, data_hash)
-    |> unwrap_result_or_raise!()
-  end
+  @spec put!(Self.t(), hash()) :: Self.t()
+  def put!(self, digest), do: put(self, digest) |> unwrap_result_or_raise!()
 
   @doc """
   Drops the given data hash from the tree.
@@ -142,42 +121,27 @@ defmodule SparseMerkleTree do
   Note that inserting a value will cause calculated hashes to be invalidated.
   To recalculate hashes, use the rehash/1 function.
   """
-  @spec drop(Self.t(), hash()) ::
-          {:ok, {leaf_status, Self.t()}} | {:error, CollisionError.t()}
-        when leaf_status: :dropped | :absent
+  @spec drop(Self.t(), hash()) :: {:ok, Self.t()} | {:error, CollisionError.t()}
   def drop(%Self{} = self, <<_::256>> = data_hash) do
-    path = path_for_data_hash(data_hash, self.depth)
-
-    case drop_at_path(self.root, path, data_hash) do
-      {:dropped, tree} ->
-        {:ok, {:dropped, %{self | root: tree}}}
-
-      :absent ->
-        {:ok, {:absent, self}}
-
-      {:collision, collision_hash} ->
-        {:error,
-         %CollisionError{
-           data_hash: data_hash,
-           collision_hash: collision_hash
-         }}
+    try do
+      drop_aux(self.root, path_for_data_hash(data_hash, self.depth), data_hash)
+    rescue
+      error -> {:error, error}
+    else
+      tree -> {:ok, %{self | root: tree}}
     end
   end
-
-  @spec drop!(Self.t(), hash()) ::
-          {leaf_status, Self.t()} | {:error, CollisionError.t()}
-        when leaf_status: :dropped | :absent
-  def drop!(self, data_hash) do
-    drop(self, data_hash)
-    |> unwrap_result_or_raise!()
-  end
+  
+  @spec drop!(Self.t(), hash()) :: Self.t() | {:error, CollisionError.t()}
+  def drop!(self, digest), do: drop(self, digest) |> unwrap_result_or_raise!()
 
   @doc """
   Recalculates any missing hashes throughout the tree.
   """
   @spec rehash(Self.t()) :: Self.t()
   def rehash(%Self{} = self) do
-    %{self | root: rehash_subtree(self.root)}
+    {root, _root_hash} = rehash_subtree(self.root)
+    %{self | root: root}
   end
 
   @doc """
@@ -186,229 +150,189 @@ defmodule SparseMerkleTree do
   and the leaf node for the data hash. Each path element is the hash of the
   sibling branch at that node.
   """
-  @spec proof(Self.t(), hash()) ::
-          {:ok, proof()}
-          | {:error, StaleTreeError.t()}
-          | {:error, CollisionError.t()}
+  @spec proof(Self.t(), hash()) :: {:ok, proof()} | {:error, StaleTreeError.t()} | {:error, CollisionError.t()}
   def proof(%Self{} = self, <<_::256>> = data_hash) do
     path = path_for_data_hash(data_hash, self.depth)
-
-    with {:ok, _root_hash} <- root_hash(self) do
-      case subtree_proof(self.root, path, data_hash) do
-        {presence, proof} when presence in [:present, :absent] ->
-          {:ok, {presence, proof}}
-
-        {:collision, collision_hash} ->
-          {:error,
-           %CollisionError{
-             data_hash: data_hash,
-             collision_hash: collision_hash
-           }}
-      end
+    try do
+      subtree_proof(self.root, path, data_hash)
+    rescue
+      error -> {:error, error}
+    else
+      {presence, proof} -> {:ok, {presence, proof}}
     end
   end
 
   @spec proof!(Self.t(), hash()) :: proof()
-  def proof!(self, data_hash) do
-    proof(self, data_hash)
-    |> unwrap_result_or_raise!()
-  end
+  def proof!(self, digest), do: proof(self, digest) |> unwrap_result_or_raise!()
 
   @doc """
   Checks the validity of a proof as returned by the proof/2 function. This
   works both for presence proofs and absence proofs.
   """
   @spec valid_proof?(hash(), proof(), hash()) :: boolean()
-  def valid_proof?(
-        <<_::256>> = data_hash,
-        {presence, proof_path},
-        <<_::256>> = root_hash
-      )
-      when presence in [:present, :absent] and is_list(proof_path) do
+  def valid_proof?(<<_::256>> = data_hash, {presence, proof_path}, <<_::256>> = root_hash)
+  when presence in [:present, :absent] and is_list(proof_path) do
     max_tree_depth = Enum.count(proof_path)
-    path = path_for_data_hash(data_hash, max_tree_depth)
-
+    # For absence proofs we actually prove the membership of the empty hash
     initial_hash =
       case presence do
         :present -> data_hash
         :absent -> @empty_hash
       end
+    # Reverse the node path since we start from the leaf
+    rev_path = reverse_bits(path_for_data_hash(data_hash, max_tree_depth), <<>>)
+    # Reverse the proof path since we start from the leaf
+    rev_proof_path = Enum.reverse(proof_path)
+    # Ensure that the implied Merkle tree root is the correct one
+    root_hash == valid_proof_aux(initial_hash, rev_path, rev_proof_path)
+  end
 
-    expected_root_hash =
-      Enum.zip(path, proof_path)
-      |> Enum.reverse()
-      |> Enum.reduce(initial_hash, fn
-        {:left, sibling_hash}, acc_hash -> hash(acc_hash <> sibling_hash)
-        {:right, sibling_hash}, acc_hash -> hash(sibling_hash <> acc_hash)
-      end)
+  # Reversing an empty bitstring is trivial
+  def reverse_bits(<<>>, acc), do: acc
+  # Otherwise move current bit to the beginning of accumulator
+  def reverse_bits(<<hd::1, tl::bitstring>>, acc) do
+    reverse_bits(tl, <<hd::1, acc::bitstring>>)
+  end
 
-    expected_root_hash == root_hash
+  # Empty paths imply the trivial root hash
+  def valid_proof_aux(acc_hash, <<>>, []), do: acc_hash
+  # Combine a left node with a sibling from the right
+  def valid_proof_aux(acc_hash, <<@lpos::1, path_tl::bitstring>>, [sibling_hash | proof_path_tl]) do
+    valid_proof_aux(hash(acc_hash <> sibling_hash), path_tl, proof_path_tl)
+  end
+  # Combine a right node with a sibling from the left
+  def valid_proof_aux(acc_hash, <<@rpos::1, path_tl::bitstring>>, [sibling_hash | proof_path_tl]) do
+    valid_proof_aux(hash(sibling_hash <> acc_hash), path_tl, proof_path_tl)
   end
 
   @spec path_for_data_hash(binary(), non_neg_integer()) :: path()
+  # Turn the data hash into the path where it will be stored
   defp path_for_data_hash(data_hash, tree_depth) do
-    <<
-      path_bitstring::binary-unit(1)-size(tree_depth),
-      _::bitstring
-    >> = data_hash
-
-    path_bitstring
+    <<path::bitstring-size(tree_depth), _::bitstring>> = data_hash
+    path
   end
 
-  @spec put_at_path(tree(), path(), hash()) ::
-          {:inserted, tree()} | :present | {:collision, hash()}
-  defp put_at_path(:empty, <<>>, data_hash) do
-    {:inserted, {:leaf, data_hash}}
+  @spec put_aux(tree(), path(), hash()) :: tree()
+  # Inserting at empty leaf fills the leaf
+  defp put_aux({:leaf, nil}, <<>>, data_hash), do: {:leaf, data_hash}
+  # Inserting at identical leaf does nothing
+  defp put_aux(tree = {:leaf, digest}, <<>>, digest), do: tree
+  # Inserting at unmatched leaf raises exception
+  defp put_aux({:leaf, leaf_hash}, <<>>, digest) when leaf_hash != digest do
+    raise %CollisionError{data_hash: digest, collision_hash: leaf_hash}
+  end
+  # Make a left branch to put the data into
+  defp put_aux(empty = {:leaf, nil}, <<@lpos::1, path_tl::bitstring>>, data_hash) do
+    {nil, put_aux(empty, path_tl, data_hash), empty}
+  end
+  # Make a right branch to put the data into
+  defp put_aux(empty = {:leaf, nil}, <<@rpos::1, path_tl::bitstring>>, data_hash) do
+    {nil, empty, put_aux(empty, path_tl, data_hash)}
+  end
+  # Insert the data into the left branch
+  defp put_aux({_, left, right}, <<@lpos::1, path_tl::bitstring>>, digest) do
+    {nil, put_aux(left, path_tl, digest), right}
+  end
+  # Insert the data into the right branch
+  defp put_aux({_, left, right}, <<@rpos::1, path_tl::bitstring>>, digest) do
+    {nil, left, put_aux(right, path_tl, digest)}
   end
 
-  defp put_at_path(:empty, path, data_hash) do
-    put_at_path({:no_hash, :empty, :empty}, path, data_hash)
+  # Bring a branch with two empty children into canonical form
+  defp collapse_if_empty({nil, {:leaf, nil}, {:leaf, :nil}}), do: {:leaf, nil}
+  # Otherwise leave the branch as is
+  defp collapse_if_empty(tree), do: tree
+
+  @spec drop_aux(tree(), path(), hash()) :: tree()
+  # Dropping from an empty tree leaves it unchanged
+  defp drop_aux(empty = {:leaf, nil}, _path, _data_hash), do: empty
+  # Drop a digest from the left branch
+  defp drop_aux({_, left, right}, <<@lpos::1, path_tl::bitstring>>, digest) do
+    collapse_if_empty({nil, drop_aux(left, path_tl, digest), right})
   end
-
-  defp put_at_path(
-         {_branch_hash, left, right},
-         <<path_direction::1, path_tail::bitstring>>,
-         data_hash
-       ) do
-    case path_direction do
-      @left_position ->
-        with {:inserted, subtree} <- put_at_path(left, path_tail, data_hash) do
-          {:inserted, {:no_hash, subtree, right}}
-        end
-
-      @right_position ->
-        with {:inserted, subtree} <- put_at_path(right, path_tail, data_hash) do
-          {:inserted, {:no_hash, left, subtree}}
-        end
-    end
+  # Drop a digest from the right branch
+  defp drop_aux({_, left, right}, <<@rpos::1, path_tl::bitstring>>, digest) do
+    collapse_if_empty({nil, left, drop_aux(right, path_tl, digest)})
   end
-
-  defp put_at_path({:leaf, data_hash}, <<>>, data_hash) do
-    :present
-  end
-
-  defp put_at_path({:leaf, collision_hash}, <<>>, data_hash)
-       when collision_hash != data_hash do
-    {:collision, collision_hash}
-  end
-
-  @spec drop_at_path(tree(), path(), hash()) ::
-          {:dropped, tree()} | :absent | {:collision, hash()}
-  defp drop_at_path(:empty, _path, _data_hash), do: :absent
-
-  defp drop_at_path(
-         {_branch_hash, left, right},
-         <<path_direction::1, path_tail::bitstring>>,
-         data_hash
-       ) do
-    collapse_if_empty = fn
-      {:no_hash, :empty, :empty} -> :empty
-      other -> other
-    end
-
-    case path_direction do
-      @left_position ->
-        with {:dropped, subtree} <- drop_at_path(left, path_tail, data_hash) do
-          {:dropped, collapse_if_empty.({:no_hash, subtree, right})}
-        end
-
-      @right_position ->
-        with {:dropped, subtree} <- drop_at_path(right, path_tail, data_hash) do
-          {:dropped, collapse_if_empty.({:no_hash, left, subtree})}
-        end
-    end
-  end
-
-  defp drop_at_path({:leaf, data_hash}, <<>>, data_hash) do
-    {:dropped, :empty}
-  end
-
-  defp drop_at_path({:leaf, collision_hash}, <<>>, data_hash)
-       when collision_hash != data_hash do
-    {:collision, collision_hash}
+  # Tree becomes empty if its only digest is removed
+  defp drop_aux({:leaf, data_hash}, <<>>, data_hash), do: {:leaf, nil}
+  # Error out if a hash conflict is detected
+  defp drop_aux({:leaf, leaf_hash}, <<>>, digest) when leaf_hash != digest do
+    raise %CollisionError{data_hash: digest, collision_hash: leaf_hash}
   end
 
   # Refreshes the cached hashes in the given subtree.
-  @spec rehash_subtree(tree()) :: tree()
-  defp rehash_subtree({:no_hash, left, right}) do
-    new_left = rehash_subtree(left)
-    new_right = rehash_subtree(right)
+  @spec rehash_subtree(tree()) :: {tree(), hash()}
+  # Fill the branch hash when there is none     
+  defp rehash_subtree({nil, left, right}) do
+    {new_left, left_hash} = rehash_subtree(left)
+    {new_right, right_hash} = rehash_subtree(right)
+    new_hash = hash_pair(left_hash, right_hash)
+    new_tree = {new_hash, new_left, new_right}
+    {new_tree, new_hash}
+  end
+  # Extract the branch hash when there is one
+  defp rehash_subtree(tree = {hash, _left, _right}), do: {tree, hash}
+  # Return the empty hash for a blank leaf
+  defp rehash_subtree(empty = {:leaf, nil}), do: {empty, @empty_hash}
+  # Return the hash stored in the leaf
+  defp rehash_subtree(leaf = {:leaf, hash}), do: {leaf, hash}
 
-    {
-      calculate_subtree_hash({:no_hash, new_left, new_right}),
-      new_left,
-      new_right
-    }
+  @spec hash_pair(hash(), hash()) :: hash()
+  # Compute the hash for a Merkle tree branch
+  defp hash_pair(left, right) do
+    hash(left <> right)
   end
 
-  defp rehash_subtree(subtree), do: subtree
-
-  @spec subtree_hash(tree()) :: hash()
-  defp subtree_hash(subtree) do
-    case cached_subtree_hash(subtree) do
-      {:ok, hash} -> hash
-      :none -> calculate_subtree_hash(subtree)
-    end
-  end
-
-  @spec calculate_subtree_hash(tree()) :: hash()
-  defp calculate_subtree_hash({:no_hash, left, right}) do
-    hash(subtree_hash(left) <> subtree_hash(right))
-  end
-
-  @spec cached_subtree_hash(tree()) :: {:ok, hash()} | :none
-  defp cached_subtree_hash(:empty), do: {:ok, @empty_hash}
-
-  defp cached_subtree_hash({:no_hash, _left, _right}), do: :none
-
-  defp cached_subtree_hash({branch_hash, _left, _right})
-       when is_binary(branch_hash),
-       do: {:ok, branch_hash}
-
-  defp cached_subtree_hash({:leaf, data_hash}), do: {:ok, data_hash}
+  @spec cached_subtree_hash(tree()) :: hash() | nil
+  # The hash for a blank leaf is the empty hash
+  defp cached_subtree_hash({:leaf, nil}), do: @empty_hash
+  # Extract the branch hash from the branch
+  defp cached_subtree_hash({branch_hash, _left, _right}), do: branch_hash
+  # Extract the hash from a filled leaf
+  defp cached_subtree_hash({:leaf, data_hash}), do: data_hash
 
   @spec cached_subtree_hash!(tree()) :: hash()
+  # Extract hash from the given tree and throw exception if there's none
   defp cached_subtree_hash!(tree) do
     case cached_subtree_hash(tree) do
-      {:ok, hash} -> hash
-      :none -> raise %StaleTreeError{}
+      nil -> raise %StaleTreeError{}
+      hash -> hash
     end
   end
 
-  @spec subtree_proof(tree(), path(), hash()) ::
-          proof() | {:collision, hash()}
-  defp subtree_proof(:empty, _path, _data_hash), do: {:absent, []}
-
-  defp subtree_proof(
-         {_branch_hash, left, right},
-         <<path_direction::1, path_tail::bitstring>>,
-         data_hash
-       ) do
-    {proof_path_element, subtree} =
-      case path_direction do
-        @left_position -> {cached_subtree_hash!(right), left}
-        @right_position -> {cached_subtree_hash!(left), right}
-      end
-
-    case subtree_proof(subtree, path_tail, data_hash) do
-      {presence, proof_subpath}
-      when presence in [:present, :absent] and is_list(proof_subpath) ->
-        {presence, [proof_path_element | proof_subpath]}
-
-      {:collision, _collision_hash} = collision ->
-        collision
-    end
+  @spec subtree_proof(tree(), path(), hash()) :: proof() | {:collision, hash()}
+  # An empty tree always generates absence proofs
+  defp subtree_proof({:leaf, nil}, _path, _data_hash), do: {:absent, []}
+  # Prove the presence of the digest in the left subtree
+  defp subtree_proof({_, left, right}, <<@lpos::1, path_tl::bitstring>>, data_hash) do
+    # Get the sibling hash
+    proof_path_element = cached_subtree_hash!(right)
+    # Prove the presence of the digest in the left subtree
+    {presence, proof_subpath} = subtree_proof(left, path_tl, data_hash)
+    # Prefix the left subtree proof
+    {presence, [proof_path_element | proof_subpath]}
   end
-
+  # Prove the presence of the digest in the right subtree
+  defp subtree_proof({_, left, right}, <<@rpos::1, path_tl::bitstring>>, data_hash) do
+    # Get the sibling hash
+    proof_path_element = cached_subtree_hash!(left)
+    # Prove the presence of the digest in the right subtree
+    {presence, proof_subpath} = subtree_proof(right, path_tl, data_hash)
+    # Prefix the right subtree proof
+    {presence, [proof_path_element | proof_subpath]}
+  end
+  # If the tree is the queried digest, then it's trivially present
   defp subtree_proof({:leaf, data_hash}, <<>>, data_hash), do: {:present, []}
-
-  defp subtree_proof({:leaf, collision_hash}, <<>>, data_hash)
-       when collision_hash != data_hash do
-    {:collision, collision_hash}
+  # Encountered a hash conflict, so error out
+  defp subtree_proof({:leaf, leaf_hash}, <<>>, digest)
+       when leaf_hash != digest do
+    raise %CollisionError{data_hash: digest, collision_hash: leaf_hash}
   end
 
-  @spec unwrap_result_or_raise!({:ok, out} | {:error, Exception.t()}) :: out
-        when out: any()
+  @spec unwrap_result_or_raise!({:ok, out} | {:error, Exception.t()}) :: out when out: any()
+  # Convert ok result into the result itself
   defp unwrap_result_or_raise!({:ok, out}), do: out
+  # But turn an error result into an exception
   defp unwrap_result_or_raise!({:error, e}) when is_exception(e), do: raise(e)
 end
