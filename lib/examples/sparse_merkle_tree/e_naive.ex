@@ -1,59 +1,69 @@
 defmodule Examples.ESparseMerkleTree.ENaive do
-  import SparseMerkleTree.Naive
+  import SparseMerkleTree
+  import SparseMerkleTree.Proof
 
   def empty_tree() do
-    %{
-      root:
-        <<40, 126, 172, 2, 225, 203, 200, 220, 129, 46, 78, 65, 80, 109,
-          175, 176, 220, 208, 172, 231, 241, 135, 64, 235, 248, 191,
-          133, 194, 228, 47, 78, 83>>
-    } = new()
+    tree = SparseMerkleTree.Naive.new()
+
+    <<40, 126, 172, 2, 225, 203, 200, 220, 129, 46, 78, 65, 80, 109,
+      175, 176, 220, 208, 172, 231, 241, 135, 64, 235, 248, 191, 133,
+      194, 228, 47, 78, 83>> = root(tree)
+
+    tree
   end
 
   def abc_tree() do
-    %{
-      root:
-        <<22, 140, 227, 38, 13, 82, 190, 59, 111, 69, 53, 251, 39, 47,
-          187, 80, 33, 4, 53, 28, 121, 103, 191, 79, 160, 55, 201, 178,
-          246, 78, 164, 105>>
-    } = empty_tree() |> insert("abc")
+    tree = empty_tree() |> insert("abc")
+
+    <<22, 140, 227, 38, 13, 82, 190, 59, 111, 69, 53, 251, 39, 47, 187,
+      80, 33, 4, 53, 28, 121, 103, 191, 79, 160, 55, 201, 178, 246, 78,
+      164, 105>> = root(tree)
+
+    tree
   end
 
   def def_tree() do
-    %{
-      root:
-        <<67, 49, 10, 77, 155, 234, 33, 71, 100, 44, 159, 4, 218, 38,
-          188, 253, 213, 61, 148, 185, 45, 50, 39, 15, 194, 46, 249, 55,
-          207, 50, 244, 85>>
-    } = empty_tree() |> insert("def")
+    tree = empty_tree() |> insert("def")
+
+    <<67, 49, 10, 77, 155, 234, 33, 71, 100, 44, 159, 4, 218, 38, 188,
+      253, 213, 61, 148, 185, 45, 50, 39, 15, 194, 46, 249, 55, 207, 50,
+      244, 85>> = root(tree)
+
+    tree
   end
 
   def abc_def_tree() do
-    %{
-      root:
-        <<255, 6, 238, 194, 117, 166, 105, 95, 156, 157, 91, 95, 240,
-          201, 63, 210, 195, 205, 206, 113, 250, 76, 5, 161, 2, 189, 26,
-          46, 180, 206, 128, 150>>
-    } = empty_tree() |> insert("abc") |> insert("def")
+    tree = empty_tree() |> insert("abc") |> insert("def")
+
+    <<255, 6, 238, 194, 117, 166, 105, 95, 156, 157, 91, 95, 240, 201,
+      63, 210, 195, 205, 206, 113, 250, 76, 5, 161, 2, 189, 26, 46, 180,
+      206, 128, 150>> = root(tree)
+
+    tree
   end
 
   def def_abc_tree() do
-    %{
-      root:
-        <<255, 6, 238, 194, 117, 166, 105, 95, 156, 157, 91, 95, 240,
-          201, 63, 210, 195, 205, 206, 113, 250, 76, 5, 161, 2, 189, 26,
-          46, 180, 206, 128, 150>>
-    } = empty_tree() |> insert("def") |> insert("abc")
+    tree = empty_tree() |> insert("def") |> insert("abc")
+
+    <<255, 6, 238, 194, 117, 166, 105, 95, 156, 157, 91, 95, 240, 201,
+      63, 210, 195, 205, 206, 113, 250, 76, 5, 161, 2, 189, 26, 46, 180,
+      206, 128, 150>> = root(tree)
+
+    tree
   end
 
   def abc_def_equals_def_abc() do
     abc_def = abc_def_tree()
-    ^abc_def = def_abc_tree()
+    def_abc = def_abc_tree()
+    abc_def_root = root(abc_def)
+    ^abc_def_root = root(def_abc)
+    abc_def
   end
 
   def safe_double_insert() do
     abc = abc_tree()
-    ^abc = insert(abc, "abc")
+    abc_root = root(abc)
+    ^abc_root = root(insert(abc, "abc"))
   end
 
   def prove_abc_present_in_abc() do
@@ -62,7 +72,7 @@ defmodule Examples.ESparseMerkleTree.ENaive do
 
   def verify_abc_present_in_abc() do
     {:ok, proof} = prove_abc_present_in_abc()
-    true = verify_present(proof, abc_tree().root, "abc")
+    true = verify_present(proof, root(abc_tree()), "abc")
     proof
   end
 
@@ -72,7 +82,7 @@ defmodule Examples.ESparseMerkleTree.ENaive do
 
   def verify_abc_present_in_abc_def() do
     {:ok, proof} = prove_abc_present_in_abc_def()
-    true = verify_present(proof, abc_def_tree().root, "abc")
+    true = verify_present(proof, root(abc_def_tree()), "abc")
     proof
   end
 
@@ -82,7 +92,7 @@ defmodule Examples.ESparseMerkleTree.ENaive do
 
   def verify_abc_absent_in_def() do
     {:ok, proof} = prove_abc_absent_in_def()
-    true = verify_absent(proof, def_tree().root, "abc")
+    true = verify_absent(proof, root(def_tree()), "abc")
     proof
   end
 
@@ -92,7 +102,7 @@ defmodule Examples.ESparseMerkleTree.ENaive do
 
   def verify_abc_absent_in_empty() do
     {:ok, proof} = prove_abc_absent_in_empty()
-    true = verify_absent(proof, empty_tree().root, "abc")
+    true = verify_absent(proof, root(empty_tree()), "abc")
     proof
   end
 
@@ -126,7 +136,7 @@ defmodule Examples.ESparseMerkleTree.ENaive do
 
   def verify_123_present_in_big_tree() do
     {:ok, proof} = prove_123_present_in_big_tree()
-    true = verify_present(proof, big_tree().root, "123")
+    true = verify_present(proof, root(big_tree()), "123")
     proof
   end
 
@@ -139,7 +149,11 @@ defmodule Examples.ESparseMerkleTree.ENaive do
     {:ok, proof} = prove_big_number_absent_in_big_tree()
 
     true =
-      verify_absent(proof, big_tree().root, Integer.to_string(2 ** 192))
+      verify_absent(
+        proof,
+        root(big_tree()),
+        Integer.to_string(2 ** 192)
+      )
 
     proof
   end
