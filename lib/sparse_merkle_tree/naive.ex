@@ -1,3 +1,12 @@
+# As a hack to let us use the hash helper during the compilation of the
+# main module, predefine it in its own module first.
+defmodule SparseMerkleTree.Naive.Hash do
+  @spec hash(binary()) :: <<_::256>>
+  def hash(bytes) do
+    :crypto.hash(:sha256, bytes)
+  end
+end
+
 defmodule SparseMerkleTree.Naive do
   @moduledoc """
   I implement a sparse Merkle tree using SHA-256 as an Erlang term.
@@ -12,16 +21,17 @@ defmodule SparseMerkleTree.Naive do
 
   use TypedStruct
 
+  import SparseMerkleTree.Naive.Hash
+
   @type hash() :: <<_::256>>
   @type digest_map() :: %{bitstring() => hash()}
   @type proof() :: list(hash())
 
   # precompute all our default hashes at compile time.
-  # we can't use our hash/1 because it's not compiled yet!
   @present_constant "t"
-  @present_hash :crypto.hash(:sha256, @present_constant)
+  @present_hash hash(@present_constant)
   @absent_constant "f"
-  @absent_hash :crypto.hash(:sha256, @absent_constant)
+  @absent_hash hash(@absent_constant)
 
   @default_hashes (for depth <- 255..0//-1,
                        reduce: %{256 => @absent_hash} do
@@ -31,7 +41,7 @@ defmodule SparseMerkleTree.Naive do
                        Map.put(
                          acc,
                          depth,
-                         :crypto.hash(:sha256, hash_below <> hash_below)
+                         hash(hash_below <> hash_below)
                        )
                    end)
 
@@ -266,10 +276,5 @@ defmodule SparseMerkleTree.Naive do
   @spec default_hash(0..256) :: hash()
   defp default_hash(depth) do
     @default_hashes[depth]
-  end
-
-  @spec hash(binary()) :: hash()
-  defp hash(bytes) do
-    :crypto.hash(:sha256, bytes)
   end
 end
