@@ -72,9 +72,9 @@ defmodule Examples.ESparseMerkleTree do
     tree = SparseMerkleTree.rehash(tree)
 
     root_hash =
-      <<43, 186, 18, 123, 152, 194, 7, 239, 98, 188, 120, 98, 109, 139, 61,
+      {<<43, 186, 18, 123, 152, 194, 7, 239, 98, 188, 120, 98, 109, 139, 61,
         131, 142, 85, 140, 229, 158, 0, 12, 179, 122, 66, 98, 138, 146, 13, 7,
-        94>>
+        94>>, 256}
 
     assert {:ok, ^root_hash} = SparseMerkleTree.root_hash(tree)
 
@@ -341,7 +341,7 @@ defmodule Examples.ESparseMerkleTree do
              SparseMerkleTree.root_hash(tree)
 
     tree = SparseMerkleTree.rehash(tree)
-    assert {:ok, @root_hash_a_b} == SparseMerkleTree.root_hash(tree)
+    assert {:ok, {@root_hash_a_b, 3}} == SparseMerkleTree.root_hash(tree)
     tree
   end
 
@@ -437,7 +437,7 @@ defmodule Examples.ESparseMerkleTree do
 
   def tree_depth_3_with_a_b_rehash_root_hash() do
     tree = tree_depth_3_with_a_b_rehash()
-    assert {:ok, @root_hash_a_b} == SparseMerkleTree.root_hash(tree)
+    assert {:ok, {@root_hash_a_b, 3}} == SparseMerkleTree.root_hash(tree)
     tree
   end
 
