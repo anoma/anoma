@@ -18,7 +18,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS.Instance do
   use TypedStruct
 
   typedstruct enforce: true do
-    # lits of nullifiers with roots and logics
+    # list of nullifiers with roots and logics
     field(:consumed, list({integer(), integer(), integer()}), default: [])
     # list of commitments with logics
     field(:created, list({integer(), integer()}), default: [])
@@ -267,7 +267,7 @@ defmodule Anoma.RM.Transparent.ProvingSystem.CPS do
   end
 
   @doc """
-  A am the root verification function for the TRM compliance prooving system.
+  A am the root verification function for the TRM compliance proving system.
 
   Given a resource and a root of the accumulator, if the resource is not
   ephemeral, I decode the root to provide access to the underlying set and
