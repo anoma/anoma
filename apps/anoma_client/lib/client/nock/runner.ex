@@ -163,7 +163,19 @@ defmodule Anoma.Client.Runner do
 
     arm = [12, [1], [0 | 6] | [1, ref]]
 
-    [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
+    [
+      arm,
+      0,
+      [
+        8,
+        [1 | sample],
+        [1 | keyspace],
+        [1 | arm],
+        0 |
+        1
+      ],
+      999
+    ]
   end
 
   @spec send_candidate(Noun.t()) :: {:ok, Noun.t()} | :error

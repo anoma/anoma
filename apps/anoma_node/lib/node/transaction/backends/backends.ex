@@ -111,10 +111,9 @@ defmodule Anoma.Node.Transaction.Backends do
 
   @spec vm_execute(Noun.t(), Nock.t(), binary()) ::
           {:ok, Noun.t()} | :vm_error
-  defp vm_execute(tx_code, env, id) do
-    with {:ok, code} <- cue_when_atom(tx_code),
-         {:ok, [_ | stage_2_tx]} <- nock(code, [9, 2, 0 | 1], env),
-         {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
+  defp vm_execute(maybe_jammed_tx, env, id) do
+    with {:ok, tx} <- cue_when_atom(maybe_jammed_tx),
+         {:ok, ordered_tx} <- nock(tx, [10, [6, 1 | id], 0 | 1], env),
          {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
       {:ok, result}
     else
