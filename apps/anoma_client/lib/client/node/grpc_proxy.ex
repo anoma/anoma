@@ -133,6 +133,14 @@ defmodule Anoma.Client.Node.GRPCProxy do
     GenServer.call(__MODULE__, {:add_ro_transaction, jammed_nock})
   end
 
+  @spec run_scry(binary()) ::
+          {:ok, Noun.t()}
+          | {:error, :absent}
+          | {:error, :run_scry_failed, String.t()}
+  def run_scry(jammed_space) do
+    GenServer.call(__MODULE__, {:run_scry, jammed_space})
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -172,6 +180,13 @@ defmodule Anoma.Client.Node.GRPCProxy do
   def handle_call({:add_ro_transaction, transaction}, _from, state) do
     result =
       RPC.add_read_only_transaction(state.channel, state.node_id, transaction)
+
+    {:reply, result, state}
+  end
+
+def handle_call({:run_scry, space}, _from, state) do
+    result =
+      RPC.run_scry(state.channel, state.node_id, space)
 
     {:reply, result, state}
   end

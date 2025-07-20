@@ -7,6 +7,7 @@ defmodule Anoma.Client.Node.RPC do
   alias Anoma.Proto.Advertisement.GRPCAddress
   alias Anoma.Proto.AdvertisementService
   alias Anoma.Proto.Executor.AddROTransaction
+  alias Anoma.Proto.Executor.RunScry
   alias Anoma.Proto.ExecutorService
   alias Anoma.Proto.Intentpool
   alias Anoma.Proto.Intentpool.Intent
@@ -147,6 +148,38 @@ defmodule Anoma.Client.Node.RPC do
 
       {:error, %{status: _, message: err}} ->
         {:error, :add_read_only_transaction_failed, err}
+    end
+  end
+
+  @doc """
+  I make a call to a GRPC endpoint to run a scry.
+
+  The result of this call is either an error, or a jammed noun.
+  """
+  @spec run_scry(any(), String.t(), binary()) ::
+          {:ok, Noun.t()}
+          | {:error, :run_scry_failed, String.t()}
+          | {:error, :absent}
+  def run_scry(channel, node_id, space) do
+    node = %Node{id: node_id}
+
+    request = %RunScry.Request{
+      node: node,
+      space: space
+    }
+
+    case ExecutorService.Stub.run_scry(channel, request) do
+      {:ok, %RunScry.Response{result: result}} ->
+        case result do
+          {:success, %{result: jammed_nock}} ->
+            {:ok, Noun.Jam.cue!(jammed_nock)}
+
+          {:error, %{error: "absent"}} ->
+            {:error, :absent}
+        end
+
+      {:error, %{status: _, message: err}} ->
+        {:error, :run_scry_failed, err}
     end
   end
 
