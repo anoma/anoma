@@ -29,7 +29,7 @@ message AddROTransaction {
 message RunScry {
   message Request {
     Node node = 1;
-    bytes space = 2;
+    bytes key = 2;
   }
 
   message Response {

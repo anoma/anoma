@@ -157,8 +157,8 @@ defmodule Anoma.Client.Runner do
   end
 
   @spec send_scry(Noun.t()) :: {:ok, Noun.t()} | :error
-  defp send_scry(space) do
-    case GRPCProxy.run_scry(space |> Noun.Jam.jam()) do
+  defp send_scry(key) do
+    case GRPCProxy.run_scry(key |> Noun.Jam.jam()) do
       {:ok, noun} ->
         {:ok, noun}
 

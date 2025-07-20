@@ -61,18 +61,19 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Executor do
       raise_grpc_error!(:invalid_node_id)
     end
 
-    space_noun = request.space |> Noun.Jam.cue!()
+    key_noun = request.key |> Noun.Jam.cue!()
 
-    value = Executor.scry(
-      request.node.id,
-      :read_only,
-      space_noun
-    )
+    value =
+      Executor.scry(
+        request.node.id,
+        :read_only,
+        key_noun
+      )
 
     case value do
       :error ->
         %RunScry.Response{result: {:error, %Error{error: "absent"}}}
-	
+
       {:ok, result} ->
         %RunScry.Response{
           result: {:success, %Success{result: result |> Noun.Jam.jam()}}

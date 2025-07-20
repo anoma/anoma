@@ -160,12 +160,12 @@ defmodule Anoma.Client.Node.RPC do
           {:ok, Noun.t()}
           | {:error, :run_scry_failed, String.t()}
           | {:error, :absent}
-  def run_scry(channel, node_id, space) do
+  def run_scry(channel, node_id, key) do
     node = %Node{id: node_id}
 
     request = %RunScry.Request{
       node: node,
-      space: space
+      key: key
     }
 
     case ExecutorService.Stub.run_scry(channel, request) do

@@ -137,8 +137,8 @@ defmodule Anoma.Client.Node.GRPCProxy do
           {:ok, Noun.t()}
           | {:error, :absent}
           | {:error, :run_scry_failed, String.t()}
-  def run_scry(jammed_space) do
-    GenServer.call(__MODULE__, {:run_scry, jammed_space})
+  def run_scry(jammed_key) do
+    GenServer.call(__MODULE__, {:run_scry, jammed_key})
   end
 
   ############################################################
@@ -184,9 +184,9 @@ defmodule Anoma.Client.Node.GRPCProxy do
     {:reply, result, state}
   end
 
-def handle_call({:run_scry, space}, _from, state) do
+  def handle_call({:run_scry, key}, _from, state) do
     result =
-      RPC.run_scry(state.channel, state.node_id, space)
+      RPC.run_scry(state.channel, state.node_id, key)
 
     {:reply, result, state}
   end
