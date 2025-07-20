@@ -284,7 +284,7 @@ defmodule Anoma.Node.Intents.Solver do
   @spec submit(Intent.t(), String.t()) :: :ok
   def submit(tx = %Anoma.RM.Transparent.Transaction{}, node_id) do
     tx_noun = tx |> Noun.Nounable.to_noun()
-    tx_candidate = [[1 | tx_noun], 0 | 909]
+    tx_candidate = tx_noun
     tx_filter = [Node.Event.node_filter(node_id), %Mempool.Events.TxFilter{}]
 
     with_subscription [tx_filter] do

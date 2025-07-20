@@ -44,6 +44,6 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
   # """
   @spec wrap_transaction(Noun.t()) :: Noun.t()
   defp wrap_transaction(transaction) do
-    [[1 | transaction], 0 | 909]
+    transaction
   end
 end
