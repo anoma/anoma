@@ -79,7 +79,7 @@ alias Examples.ECrypto
 Examples.ECrypto
 ```
 
-Once this is had, we can simply run any example trivially!
+Once this is done, we can simply run any example trivially!
 
 ```elixir
 one_two()
