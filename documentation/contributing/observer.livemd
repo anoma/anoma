@@ -33,7 +33,7 @@ Instance. We can connect to other IEX instances in this way:
 
 ## Viewing Anoma
 
-One can view Anoma by going to the Applications view of the Observer pane and clicking on anoma
+One can view Anoma by going to the Applications view of the Observer pane and clicking on Anoma
 
 <!-- livebook:{"break_markdown":true} -->
 
