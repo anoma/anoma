@@ -38,7 +38,7 @@ With that disclaimer out of the way, let us talk about calling conventions.
 
 ## Basic Nock Calls
 
-There are a few ways to call Nock functions, recall that the structure of a functions look like this:
+There are a few ways to call Nock functions, recall that the structure of a function look like this:
 
 ```nock
 [function sample environment-defined-in]
@@ -108,7 +108,7 @@ In our example we know the function is indexed at 2, so thus we simply call the 
 
 `[9 2 0 1]` isn't too interesting on it's own, all we have managed to do, is make fancy default values.
 
-However, since the logic we are running indexs into the sample, all we have to do is fine a formula that replaces the sample with the desired value
+However, since the logic we are running indexes into the sample, all we have to do is find a formula that replaces the sample with the desired value
 
 ```hoon
 > .*  [[0 6] 777 999]  [9 2 10 [6 1 888] 0 1]
