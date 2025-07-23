@@ -49,7 +49,7 @@ We won't go into detail about calling functions in this section, however there i
 
 <!-- livebook:{"break_markdown":true} -->
 
-Speaking of functions, we should know just a few things about the layout of functions, and their important indicies.
+Speaking of functions, we should know just a few things about the layout of functions, and their important indices.
 
 Functions in Hoon are laid out as the following:
 
