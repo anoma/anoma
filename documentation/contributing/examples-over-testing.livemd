@@ -51,7 +51,7 @@ For the purposes of discussion, we can consider [SUnit](https://en.wikipedia.org
 
 ## Downsides of testing in Elixir
 
-To get a feeling for what `examples` can offer the codebase, we should first discuss the downsides with how `Anoma` interacts with tests.
+To get a feeling for what `examples` can offer the codebase, we should first discuss the downsides of how `Anoma` interacts with tests.
 
 1. Tests are not loaded into `IEx` at startup.
 2. To run tests by hand, we need to copy paste:
@@ -318,7 +318,7 @@ end
 
 This test has a few parts, one part is a `test_setup` and another part is the actual testing code itself.
 
-I will reimagine this module in two phases. The first respecting the fact that `setup_all` is unique and is efficient as it spawns only 1 network for the entire module. The second will instead make the node specific to each example that relies upon it. Returning the network as the interesting object.
+I will reimagine this module in two phases. The first respects the fact that `setup_all` is unique and is efficient as it spawns only 1 network for the entire module. The second will instead make the node specific to each example that relies upon it. Returning the network as the interesting object.
 
 ```elixir
 defmodule Example.Worker.Phase1 do
@@ -349,7 +349,7 @@ defmodule Example.Worker.Phase1 do
    %Nock{snapshot_path: Enock.snapshot_path(), ordering: ordering}
   end
 
-  # Let's get an unique number
+  # Let's get a unique number
   defmemo unique_id() do
     System.unique_integer([:positive])
   end
@@ -384,7 +384,7 @@ defmodule Example.Transaction do
       nullifiers: [ERsource.nullifier_space_bucks_b()],
       proofs: [proved_spacebucks_a(), proved_spacebucks_b()]
     }
-    # This wans't in the original test!
+    # This wasn't in the original test!
     assert verify(trans)
     trans
   end
