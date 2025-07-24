@@ -182,11 +182,11 @@ defimpl Validate, for: Anoma.Proto.Mempool.Transaction do
 end
 
 ############################################################
-#                       Read-Only Transaction              #
+#                       Scry                               #
 ############################################################
 
-defimpl Validate, for: [Anoma.Proto.Executor.AddROTransaction] do
-  @not_nil [:node, :transaction]
+defimpl Validate, for: [Anoma.Proto.Executor.RunScry] do
+  @not_nil [:node, :key]
 
   def valid?(request) do
     Validate.Helpers.validate(request, non_nil: @not_nil)

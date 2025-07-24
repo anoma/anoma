@@ -87,9 +87,6 @@ service PubSubService {
  * Add a read-only transaction to or run a scry on the executor.
  */
 service ExecutorService {
-  rpc Add(Anoma.Proto.Executor.AddROTransaction.Request)
-      returns (Anoma.Proto.Executor.AddROTransaction.Response) {}
-
   rpc RunScry(Anoma.Proto.Executor.RunScry.Request)
       returns (Anoma.Proto.Executor.RunScry.Response) {}
 }

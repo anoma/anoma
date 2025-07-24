@@ -161,34 +161,35 @@ defmodule Anoma.Node.Transaction.Executor do
   #                 Genserver Implementation                 #
   ############################################################
 
-  defp handle_scry(backend, id, list, state = %Executor{}) do
+  defp handle_scry(backend, id, list, state = %Executor{})
+       when is_list(list) do
     node_id = state.node_id
 
-    if list do
-      with key <- list |> Noun.list_nock_to_erlang(),
-           {:ok, value} <-
-             (case backend do
-                :read_only ->
-                  time = Storage.current_time(node_id)
+    with key <- list |> Noun.list_nock_to_erlang(),
+         {:ok, value} <-
+           (case backend do
+              :read_only ->
+                time = Storage.current_time(node_id)
 
-                  Storage.read(
-                    node_id,
-                    {time, key |> Noun.list_nock_to_erlang()}
-                  )
+                Storage.read(
+                  node_id,
+                  {time, key |> Noun.list_nock_to_erlang()}
+                )
 
-                _ ->
-                  Ordering.read(
-                    node_id,
-                    {id, key |> Noun.list_nock_to_erlang()}
-                  )
-              end) do
-        {:ok, value |> Noun.Nounable.to_noun()}
-      else
-        _ -> :error
-      end
+              _ ->
+                Ordering.read(
+                  node_id,
+                  {id, key |> Noun.list_nock_to_erlang()}
+                )
+            end) do
+      {:ok, value |> Noun.Nounable.to_noun()}
     else
-      :error
+      _ -> :error
     end
+  end
+
+  defp handle_scry(_backend, _id, _obj, _state = %Executor{}) do
+    :error
   end
 
   # @doc """

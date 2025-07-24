@@ -3,26 +3,25 @@ defmodule Anoma.Client.Web.ExecutorController.Spec do
 
   require OpenApiSpex
 
-  defmodule ReadOnlyTransaction do
-    @example_tx Anoma.Node.Examples.EExecutor.read_only_transaction()
-                |> Noun.Jam.jam()
-                |> Base.encode64()
+  defmodule ScryKey do
+    @example_key ["anoma", "blob", "key"]
+                 |> Noun.Jam.jam()
+                 |> Base.encode64()
 
     OpenApiSpex.schema(%{
       # The title is optional. It defaults to the last section of the module name.
       # So the derived title for MyApp.User is "User".
-      description:
-        "A Base64 encoded representation of a read-only transaction",
+      description: "A Base64 encoded representation of a scry key",
       type: :object,
       properties: %{
-        transaction: %Schema{
+        key: %Schema{
           type: :string,
-          description: "Base64 encoded, jammed transaction candidate"
+          description: "Base64 encoded, jammed scry key"
         }
       },
       required: [:program],
       example: %{
-        "transaction" => @example_tx
+        "key" => @example_key
       }
     })
   end
@@ -31,18 +30,17 @@ defmodule Anoma.Client.Web.ExecutorController.Spec do
     OpenApiSpex.schema(%{
       # The title is optional. It defaults to the last section of the module name.
       # So the derived title for MyApp.User is "User".
-      description: "Result of submitting the transaction",
+      description: "Result of running a scry",
       type: :object,
       properties: %{
-        transaction: %Schema{
+        value: %Schema{
           type: :string,
-          description:
-            "Base64 encoded, jammed result of read-only transaction"
+          description: "Base64 encoded, jammed result of running a scry"
         }
       },
       required: [:program],
       example: %{
-        "result" => "FfDWyvIq"
+        "result" => "AXzSQMLaQMJA5sroKQ=="
       }
     })
   end
