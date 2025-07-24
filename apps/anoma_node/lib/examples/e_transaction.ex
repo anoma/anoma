@@ -322,8 +322,8 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   @spec inc(String.t()) :: {Backends.backend(), Noun.t()}
-  def inc(key \\ "key") do
-    {:debug_term_storage, Examples.ENock.inc(key)}
+  def inc(key \\ "key", value \\ 0) do
+    {:debug_term_storage, Examples.ENock.inc(key, value)}
   end
 
   @spec trivial_transparent_transaction() :: {Backends.backend(), Noun.t()}
@@ -623,7 +623,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       %Mempool.Tx{
         code: [0 | 0],
         backend: :debug_term_storage,
-        vm_result: :vm_error,
+        vm_result: ["ok", 0 | 0],
         tx_result: :error
       }
       |> Noun.Nounable.to_noun()
@@ -671,7 +671,7 @@ defmodule Anoma.Node.Examples.ETransaction do
     read_txs_write_nothing(node_id)
     key = "key"
 
-    {_backend, code} = inc(key)
+    {_backend, code} = inc(key, 1)
 
     inc_counter_submit_with_zero(node_id)
 
@@ -708,7 +708,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       %Mempool.Tx{
         code: [0 | 0],
         backend: :debug_term_storage,
-        vm_result: :vm_error,
+        vm_result: ["ok", 0 | 0],
         tx_result: :error
       }
       |> Noun.Nounable.to_noun()

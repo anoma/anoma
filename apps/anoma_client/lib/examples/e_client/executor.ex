@@ -8,24 +8,32 @@ defmodule Anoma.Client.Examples.EClient.Executor do
   use TypedStruct
 
   alias Anoma.Client.Examples.EClient
-  alias Anoma.Node.Examples.EExecutor
+  alias Anoma.Node.Transaction.Storage, as: NodeStorage
 
   import ExUnit.Assertions
   import Anoma.Client.Examples.EClient
 
   @doc """
-  I add a read-only transaction using the client.
+  I run a scry using the client.
   """
-  @spec add_read_only_transaction(EClient.t()) :: {EClient.t(), String.t()}
-  def add_read_only_transaction(client \\ setup()) do
+  @spec run_scry(EClient.t()) :: {EClient.t(), String.t()}
+  def run_scry(client \\ setup()) do
+    val = MapSet.new(["i am a set"])
+    key = ["anoma", "blob", "key"]
+
+    NodeStorage.write(
+      client.node.node_id,
+      {1, [{key, val}]}
+    )
+
     # create an arbitrary read-only transaction and jam it
     transaction =
-      EExecutor.read_only_transaction()
+      ["anoma", "blob", "key"]
       |> Noun.Jam.jam()
       |> Base.encode64()
 
     # the json payload the endpoint expects
-    payload = %{"transaction" => transaction}
+    payload = %{"key" => transaction}
 
     data =
       client.conn
@@ -34,7 +42,7 @@ defmodule Anoma.Client.Examples.EClient.Executor do
 
     # this result is arbitrary and depends on the read only transaction submitted.
     # this could be fixed perhaps.
-    assert data == %{"result" => "FfDWyvIq"}
+    assert data == %{"result" => "AXzSQMLaQMJA5sroKQ=="}
 
     {client, transaction}
   end

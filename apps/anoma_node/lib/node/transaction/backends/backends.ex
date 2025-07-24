@@ -25,8 +25,6 @@ defmodule Anoma.Node.Transaction.Backends do
   require Node.Event
   require Noun
 
-  import Nock
-
   use TypedStruct
 
   @type backend() ::
@@ -56,38 +54,9 @@ defmodule Anoma.Node.Transaction.Backends do
         when id: binary(),
              node_id: String.t(),
              back: backend()
-  def execute(node_id, {backend, tx_code}, id) do
+  def execute(node_id, {backend, tx}, id) do
     time = Storage.current_time(node_id)
-
-    scry =
-      fn list ->
-        if list do
-          with [id, key] <- list |> Noun.list_nock_to_erlang(),
-               {:ok, value} <-
-                 (case backend do
-                    {:read_only, _pid} ->
-                      Storage.read(
-                        node_id,
-                        {time, key |> Noun.list_nock_to_erlang()}
-                      )
-
-                    _ ->
-                      Ordering.read(
-                        node_id,
-                        {id, key |> Noun.list_nock_to_erlang()}
-                      )
-                  end) do
-            {:ok, value |> Noun.Nounable.to_noun()}
-          else
-            _ -> :error
-          end
-        else
-          :error
-        end
-      end
-
-    env = %Nock{scry_function: scry}
-    vm_result = vm_execute(tx_code, env, id)
+    vm_result = cue_when_atom(tx)
     result_event(id, vm_result, node_id, backend)
 
     res =
@@ -109,26 +78,17 @@ defmodule Anoma.Node.Transaction.Backends do
   #                       VM Execution                       #
   ############################################################
 
-  @spec vm_execute(Noun.t(), Nock.t(), binary()) ::
-          {:ok, Noun.t()} | :vm_error
-  defp vm_execute(tx_code, env, id) do
-    with {:ok, code} <- cue_when_atom(tx_code),
-         {:ok, [_ | stage_2_tx]} <- nock(code, [9, 2, 0 | 1], env),
-         {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
-         {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
+  @spec cue_when_atom(Noun.t()) :: {:ok, Noun.t()} | :vm_error
+  defp cue_when_atom(tx) when Noun.is_noun_atom(tx) do
+    with {:ok, result} <- Noun.Jam.cue(tx) do
       {:ok, result}
     else
       _e -> :vm_error
     end
   end
 
-  @spec cue_when_atom(Noun.t()) :: :error | {:ok, Noun.t()}
-  defp cue_when_atom(tx_code) when Noun.is_noun_atom(tx_code) do
-    Noun.Jam.cue(tx_code)
-  end
-
-  defp cue_when_atom(tx_code) do
-    {:ok, tx_code}
+  defp cue_when_atom(tx) do
+    {:ok, tx}
   end
 
   ############################################################

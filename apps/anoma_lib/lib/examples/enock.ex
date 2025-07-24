@@ -59,21 +59,12 @@ defmodule Examples.ENock do
 
   @spec zero(Noun.t()) :: Noun.t()
   def zero(key \\ "key") do
-    zero_counter_arm = [1, [key] | 0]
-    arm = [10, [2 | zero_counter_arm], 1, 0 | 0]
-    sample = 0
-    keyspace = 0
-    [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
+    [[[key] | 0] | 0]
   end
 
   @spec inc(Noun.t()) :: Noun.t()
-  def inc(key \\ "key") do
-    increment_value_arm = [[1 | [key]], 4, 12, [1 | 0], [0 | 6], 1, [key] | 0]
-    # Place the result in a list
-    arm = [10, [2 | increment_value_arm], 1, 0 | 0]
-    sample = 0
-    keyspace = 0
-    [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
+  def inc(key \\ "key", value \\ 0) do
+    [[[key] | value + 1] | 0]
   end
 
   ####################################################################
@@ -171,9 +162,8 @@ defmodule Examples.ENock do
         tx_noun \\ Examples.ETransparent.ETransaction.swap_from_actions()
         |> Noun.Nounable.to_noun()
       ) do
-    trivial_swap_arm = [1 | tx_noun]
-    keyspace = 0
-    swap = [[1, keyspace, trivial_swap_arm, 0 | 909], 0 | 707]
+    trivial_swap_arm = tx_noun
+    swap = trivial_swap_arm
     swap
   end
 

@@ -24,6 +24,7 @@ defmodule Anoma.Node.Transaction.Executor do
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Executor.Events
+  alias Anoma.Node.Transaction.Storage
 
   require Node.Event
 
@@ -128,6 +129,13 @@ defmodule Anoma.Node.Transaction.Executor do
     GenServer.cast(Registry.via(node_id, __MODULE__), {:execute, consensus})
   end
 
+  def scry(node_id, backend, list, id \\ :crypto.strong_rand_bytes(16)) do
+    GenServer.call(
+      Registry.via(node_id, __MODULE__),
+      {:scry, backend, id, list}
+    )
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -143,9 +151,46 @@ defmodule Anoma.Node.Transaction.Executor do
     {:noreply, state}
   end
 
+  @impl true
+  def handle_call({:scry, backend, id, list}, _from, state) do
+    reply = handle_scry(backend, id, list, state)
+    {:reply, reply, state}
+  end
+
   ############################################################
   #                 Genserver Implementation                 #
   ############################################################
+
+  defp handle_scry(backend, id, list, state = %Executor{})
+       when is_list(list) do
+    node_id = state.node_id
+
+    with key <- list |> Noun.list_nock_to_erlang(),
+         {:ok, value} <-
+           (case backend do
+              :read_only ->
+                time = Storage.current_time(node_id)
+
+                Storage.read(
+                  node_id,
+                  {time, key |> Noun.list_nock_to_erlang()}
+                )
+
+              _ ->
+                Ordering.read(
+                  node_id,
+                  {id, key |> Noun.list_nock_to_erlang()}
+                )
+            end) do
+      {:ok, value |> Noun.Nounable.to_noun()}
+    else
+      _ -> :error
+    end
+  end
+
+  defp handle_scry(_backend, _id, _obj, _state = %Executor{}) do
+    :error
+  end
 
   # @doc """
   # I launch a transaction in its own Task to execute.

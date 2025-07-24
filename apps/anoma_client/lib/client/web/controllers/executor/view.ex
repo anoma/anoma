@@ -1,5 +1,5 @@
 defmodule Anoma.Client.Web.ExecutorJSON do
-  def render("add_read_only_transaction.json", %{result: result}) do
+  def render("run_scry.json", %{result: result}) do
     result = result |> Noun.Jam.jam() |> Base.encode64()
     %{result: result}
   end

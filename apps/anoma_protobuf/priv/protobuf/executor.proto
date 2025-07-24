@@ -7,12 +7,12 @@ import "nock.proto";
 import "mempool.proto";
 
 /*
- * Add a read-only transaction to the executor.
+ * Run a scry on the executor.
 */
-message AddROTransaction {
+message RunScry {
   message Request {
     Node node = 1;
-    Mempool.Transaction transaction = 2;
+    bytes key = 2;
   }
 
   message Response {

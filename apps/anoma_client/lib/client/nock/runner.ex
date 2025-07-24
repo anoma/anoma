@@ -141,7 +141,7 @@ defmodule Anoma.Client.Runner do
             {:ok, val}
 
           :absent ->
-            case send_candidate(space_list) do
+            case send_scry(space_list) do
               :error ->
                 :error
 
@@ -152,25 +152,13 @@ defmodule Anoma.Client.Runner do
         end
 
       _ ->
-        send_candidate(space_list)
+        send_scry(space_list)
     end
   end
 
-  @spec ro_tx_candidate(Noun.t()) :: Noun.t()
-  def ro_tx_candidate(ref) do
-    sample = 0
-    keyspace = 0
-
-    arm = [12, [1], [0 | 6] | [1, ref]]
-
-    [[8, [1 | sample], [1 | keyspace], [1 | arm], 0 | 1] | 999]
-  end
-
-  @spec send_candidate(Noun.t()) :: {:ok, Noun.t()} | :error
-  defp send_candidate(space) do
-    tx_candidate = space |> ro_tx_candidate() |> Noun.Jam.jam()
-
-    case GRPCProxy.add_read_only_transaction(tx_candidate) do
+  @spec send_scry(Noun.t()) :: {:ok, Noun.t()} | :error
+  defp send_scry(key) do
+    case GRPCProxy.run_scry(key |> Noun.Jam.jam()) do
       {:ok, noun} ->
         {:ok, noun}
 

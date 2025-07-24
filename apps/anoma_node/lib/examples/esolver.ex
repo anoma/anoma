@@ -116,10 +116,7 @@ defmodule Anoma.Node.Examples.ESolver do
 
     IntentPool.new_intent(node_id, tx)
 
-    tx_candidate = [
-      [1, 0, [1 | tx |> Noun.Nounable.to_noun()], 0 | 909],
-      0 | 707
-    ]
+    tx_candidate = tx |> Noun.Nounable.to_noun()
 
     tx_filter = [
       Anoma.Node.Event.node_filter(node_id),

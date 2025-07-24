@@ -2,7 +2,7 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Executor do
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Executor
   alias Anoma.Node.Transaction.Executor
-  alias Anoma.Proto.Executor.AddROTransaction
+  alias Anoma.Proto.Executor.RunScry
   alias Anoma.Proto.Nock.Error
   alias Anoma.Proto.Nock.Success
   alias GRPC.Server.Stream
@@ -13,9 +13,9 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Executor do
 
   require Logger
 
-  @spec add(AddROTransaction.Request.t(), Stream.t()) ::
-          AddROTransaction.Response.t()
-  def add(request, _stream) do
+  @spec run_scry(RunScry.Request.t(), Stream.t()) ::
+          RunScry.Response.t()
+  def run_scry(request, _stream) do
     Logger.debug("GRPC #{inspect(__ENV__.function)}: #{inspect(request)}")
 
     # validate the request. will raise if not valid.
@@ -26,22 +26,21 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Executor do
       raise_grpc_error!(:invalid_node_id)
     end
 
-    tx_noun = request.transaction.transaction |> Noun.Jam.cue!()
+    key_noun = request.key |> Noun.Jam.cue!()
 
-    Executor.launch(
-      request.node.id,
-      {{:read_only, self()}, tx_noun}
-    )
+    value =
+      Executor.scry(
+        request.node.id,
+        :read_only,
+        key_noun
+      )
 
-    # todo: GRPC/HTTP requests should not be long-lived. They should be as short
-    #       as possible. In the future this would return the tx id, and the
-    #       result of the transaction will be sent to the client via an event.
-    receive do
-      {_time, :error} ->
-        %AddROTransaction.Response{result: {:error, %Error{error: "absent"}}}
+    case value do
+      :error ->
+        %RunScry.Response{result: {:error, %Error{error: "absent"}}}
 
-      {_time, result} ->
-        %AddROTransaction.Response{
+      {:ok, result} ->
+        %RunScry.Response{
           result: {:success, %Success{result: result |> Noun.Jam.jam()}}
         }
     end
