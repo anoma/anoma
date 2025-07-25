@@ -1,6 +1,6 @@
 defmodule Anoma.Client.Node.Connection.Supervisor do
   @moduledoc """
-  I am the client supervisor. I monitor all the processed regarding a connection
+  I am the client supervisor. I monitor all the processes regarding a connection
   to a single remote node.
 
   I manage two connections. The GRPC endpoint for this client and the proxy for
