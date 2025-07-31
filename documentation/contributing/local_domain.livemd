@@ -1,0 +1,210 @@
+<!-- livebook:{"file_entries":[{"name":"anoma_local_domain_dep.png","type":"attachment"},{"name":"handler_registry_state_init.png","type":"attachment"}]} -->
+
+# Anoma Local Domain Developer Docs
+
+## Index
+
+1. [Toc](./../toc.livemd)
+2. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Style Guide](./../contributing/style-guide.livemd)
+   3. [Writing Documents](./../contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./../contributing/examples-over-testing.livemd)
+   5. [Git](./../contributing/git.livemd)
+   6. [Iex](./../contributing/iex.livemd)
+   7. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   8. [Observer](./../contributing/observer.livemd)
+   9. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+3. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+4. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+5. [Analysis](./../analysis.livemd)
+6. [Jam](./../jam.livemd)
+
+## How to Write Your Own Application
+
+Here's a basic example
+
+1. Add local domain as a mix dependency
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](files/anoma_local_domain_dep.png)
+
+<!-- livebook:{"break_markdown":true} -->
+
+1. Import necessary dependencies
+
+```elixir
+use Anoma.LocalDomain.Application, name: "factory"
+use Anoma.LocalDomain.DefScry
+```
+
+When using `Application`, the name of the application should be provided. A `scry` handler of that name will be registered in the `HandlerRegistry` and the application will be registered in `Clerk`.
+
+<!-- livebook:{"break_markdown":true} -->
+
+1. Define custom `scry` logic
+
+```elixir
+ @spec store(String.t(), String.t(), (term() -> term())) :: term()
+  def store(name, method, key) do
+    Anoma.LocalDomain.Storage.write_local(
+      ~k"/api_handler/!name/!method",
+      key
+    )
+  end
+
+  defscry do
+    _prev_prefixes, ~k"/!name/!method/&params" ->
+      with {:ok, api_handler} <-
+             Anoma.LocalDomain.Scry.scry(
+               ~k"/anoma/local/foo/bar/api_handler/!name/!method"
+             ) do
+        {:ok, apply(api_handler, params)}
+      end
+  end
+```
+
+In this case, we have a helper that can be used to write a `fn` to local storage that is found at `/api_handler/<name>/<method>`. The k-sigil reader macro is used in order to resolve the path into a list `['api_handler', name, method]`.
+
+Two things about the k-sigil:
+
+* ! indicates a singular variable
+* & indicates that the rest of the path should be captured into the variable as a list
+
+`defscry` is a macro that will take multiple `prev_prefixes, path -> logic`  clauses and defines a `scry/2` fn for each. In this case, we've defined a scry that looks up the `fn` stored at `api_handler/!name/!method`, then calls it with the parameters supplied in the path.
+
+<!-- livebook:{"break_markdown":true} -->
+
+1. (optional)
+   One thing you can also do is override `init`. This is made use of in a couple of places, namely `clerk` and `prover` to provide some extra initialisation logic. `super()` should be called as part of this overriden `init`.
+
+```elixir
+  @impl true
+  def init() do
+    super()
+
+    # if there is no set of applications registered, initialize with just
+    # this application.
+    case Anoma.LocalDomain.Storage.read_local(~k"/clerk/applications") do
+      {:ok, _} ->
+        :ok
+
+      :absent ->
+        Anoma.LocalDomain.Storage.write_local(
+          ~k"/clerk/applications",
+          MapSet.new([__MODULE__])
+        )
+
+        :ok
+    end
+  end
+```
+
+## Running Your Application
+
+It's important to `init` your application to that `scry` can find your application. `clerk`'s `register` will call the app's `init` so you can also just use that.
+
+Also, since scry begins at `anoma/local` and will be versioned by local id and time, right now a placeholder is required for these values.
+
+The entire cycle of initialising and using our application looks like this:
+
+```elixir
+  @spec factorial_api_handler() :: String.t()
+  def factorial_api_handler() do
+    Anoma.LocalDomain.Factory.init()
+
+    factorial_fn = fn
+      "1" ->
+        1
+
+      n ->
+        n1 = Integer.to_string(String.to_integer(n) - 1)
+
+        {:ok, result} =
+          Anoma.LocalDomain.Scry.scry(
+            ~k"/anoma/local/foo/bar/factory/factorial/get/!n1"
+          )
+
+        String.to_integer(n) * result
+    end
+
+    Factory.store("factorial", "get", factorial_fn)
+
+    Anoma.LocalDomain.Scry.scry(
+      ~k"/anoma/local/foo/bar/factory/factorial/get/5"
+    )
+  end
+```
+
+## What Goes On During Startup
+
+During startup, the `application_startup` task will be called which registers any applications stored locally by clerk. Currently local storage is managed by ets, but we expect that the same Mnesia as used within the core repo will be used eventually.
+
+Your handler registry should look like this:
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](files/handler_registry_state_init.png)
+
+## How Scry Works
+
+When `Anoma.LocalDomain.Scry.scry(path)` is called, `scry_inner` is called with the args `prev_prefixes=[]` and `key=path`.
+
+```elixir
+  @spec scry(list()) :: {:ok, term()} | :absent | {:error, term()}
+  def scry(path) when is_list(path) do
+    scry_inner([], path)
+  end
+
+  def scry_inner(prev_prefixes, key) do
+    with {matched_prefix, handler} <-
+           HandlerRegistry.match(prev_prefixes, key) do
+      prev_prefixes = prev_prefixes ++ [matched_prefix]
+      key = Enum.drop(key, Enum.count(matched_prefix))
+      handler.(prev_prefixes, key)
+    else
+      _ -> {:error, :no_handler}
+    end
+  end
+```
+
+`scry_inner` matches the `prev_prefixes` and key against the handler registry in order to find which handler should be called next. For example, in our example case, `scry_local` will be called next, with the `prev_prefixes` now being the `prev_prefixes` from before appended with the matched part of the key, and the key having dropped this matching part.
+
+E.G.,
+
+```
+[], ["anoma", "local", "id", "time", "api_handler", name, method]
+=> ["anoma", "local"], ["id", "time", "api_handler", name, method]
+```
+
+```elixir
+  def scry_local(prev_prefixes = [~k"/anoma/local"], key) do
+    # todo: local ids, time
+    [_local_id, _time | subkey] = key
+    # use the subkey's handler, if any
+    with {:ok, result} <- scry_inner(prev_prefixes, subkey) do
+      {:ok, result}
+    else
+      :absent ->
+        :absent
+
+      {:error, :no_handler} ->
+        Storage.read_local(subkey)
+
+      {:error, e} ->
+        {:error, e}
+    end
+  end
+
+```
+
+`scry_local` calls `scry_inner` once again after dropping the id and time-- if there was no handler, it simply reads from local storage as a fallback.
+
+Have a go at registering an application and proving to yourself that this makes sense.
