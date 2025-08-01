@@ -124,12 +124,12 @@ To work with Docker images, do the following:
     * `<IMAGE>` is your chosen image name
 4. Run the Anoma image: `docker run -it --network host <IMAGE> <SUBCOMMAND>`
     * `<IMAGE>` is the name of Anoma Docker image to be run
-    * `<SUBCOMMAND>`is interpreted by the Anoma binary
+    * `<SUBCOMMAND>` is interpreted by the Anoma binary
     * `--network host` will enable connections from the host
 
 ## Contributing
 
-Please read the [contributor's guide](./documentation/contributing.livemd) for in
+Please read the [contributors' guide](./documentation/contributing.livemd) for in
 depth details about the codebase.
 
 ## Known Issues
@@ -161,7 +161,7 @@ rustup toolchain add 1.76.0
 # for OSX you may try 1.76.0-aarch64-apple-darwin
 ```
 
-Once this is had, the Cairo issues should go away.
+Once this is done, the Cairo issues should go away.
 
 ### Git
 
@@ -170,7 +170,7 @@ This codebase follows a git style similar to
 [linux](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git).
 
 New code should be based on `base`, and no attempt to keep it up to
-sync with `main` should be had. When one's topic is ready, just submit
+sync with `main` should be made. When one's topic is ready, just submit
 a PR on github and a maintainer will handle any merge conflicts.
 
 There are bi-weekly releases, so do not be afraid if a maintainer says
@@ -179,6 +179,6 @@ into `next` or `main` and will be included in the next scheduled
 release.
 
 For more information on a smooth git experience check out the [git
-section in contributor's guide](./documentation/contributing/git.livemd)
+section in contributors' guide](./documentation/contributing/git.livemd)
 
 Happy hacking, and don't be afraid to submit patches.
