@@ -49,7 +49,7 @@ We won't go into detail about calling functions in this section, however there i
 
 <!-- livebook:{"break_markdown":true} -->
 
-Speaking of functions, we should know just a few things about the layout of functions, and their important indicies.
+Speaking of functions, we should know just a few things about the layout of functions, and their important indices.
 
 Functions in Hoon are laid out as the following:
 
@@ -108,7 +108,7 @@ Note that Hoon uses `function:module` (`f:mn:...:m1`) form.
 [6 [5 [1 0] 0 6] [0 0] 8 [1 0] 8 [1 6 [5 [0 30] 4 0 6] [0 6] 9 2 10 [6 4 0 6] 0 1] 9 2 0 1]
 ```
 
-The logic here doesn't particularly matter, but here we have the nock definiton of decrement, which is wonderful!
+The logic here doesn't particularly matter, but here we have the nock definition of decrement, which is wonderful!
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -138,7 +138,7 @@ A good way to visualize the dump, is by casting the result to nock
 
 the `p`'s and `q`'s are arguments and the `%9` and `%0` are the nock instructions being ran.
 
-From here, the [instruction set can be consluted for the meaning of any particular instruction](https://developers.urbit.org/reference/nock/definition#instructions).
+From here, the [instruction set can be consulted for the meaning of any particular instruction](https://developers.urbit.org/reference/nock/definition#instructions).
 
 ```hoon
 > ;;  nock  .*  dec.anoma  [0 2]
@@ -255,7 +255,7 @@ Which just gives the default values. If the result is hard to read, then no prob
 [[[0 15] [0 0 0 0 0 0 0] [0 0 0 0 0 0 0] 0] 0 0 0 0 0 0 0]
 ```
 
-Here we simply jsut cast it to the any type, forgetting all information, and we can now see the format of the empty resource.
+Here we simply just cast it to the any type, forgetting all information, and we can now see the format of the empty resource.
 
 ## Dump Modules
 
@@ -405,7 +405,7 @@ Let us start off simple with [zaptis(!=)](https://developers.urbit.org/reference
 [0 46]
 ```
 
-Interesting, we can see that saying anoma, indexs into the current environment by `46`. The current environment in Hoon can be conjured with `.`.
+Interesting, we can see that saying anoma, indexes into the current environment by `46`. The current environment in Hoon can be conjured with `.`.
 
 ```hoon
 > !=(.)
@@ -474,7 +474,7 @@ all we have to pay attention to is the `342` and the `15`, some more examples sh
 [7 [0 46] 9 42 0 7]
 ```
 
-Here for any non nested module we can see the layers and indexs quite plainly!
+Here for any non nested module we can see the layers and indexes quite plainly!
 
 <!-- livebook:{"branch_parent_index":7} -->
 

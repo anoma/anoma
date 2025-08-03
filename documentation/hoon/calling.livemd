@@ -181,7 +181,7 @@ In this case, it doesn't do much, but it makes sense if we look at a real exampl
 ]
 ```
 
-On this example I want to focus on the `dec` call `[8 [9 342 0 7] 9 2 10 ...]`. We know this is dec, as we already know it's offset inside layer 1 is `342`, but it's located at `7` as we've pushed `add` with its sample to the tree, making layer 1's index go to 7 (see the [section on how indicies change](./dumping.livemd#how-index-of-layers-change)) relative to `add`.
+On this example I want to focus on the `dec` call `[8 [9 342 0 7] 9 2 10 ...]`. We know this is dec, as we already know it's offset inside layer 1 is `342`, but it's located at `7` as we've pushed `add` with its sample to the tree, making layer 1's index go to 7 (see the [section on how indices  change](./dumping.livemd#how-index-of-layers-change)) relative to `add`.
 
 What is very interesting, is that since the [gate](https://developers.urbit.org/reference/glossary/gate) evaluates to the nock function we wish, we can follow it up with the simple `[9 2 10 [6 ...] 0 ...]` pattern we found before.
 
@@ -231,7 +231,7 @@ Which gives us the correct computation to run dec on Anoma.
 
 ## What a Hoon function call actually does
 
-So far this document has only outlined calling Hoon functions by hand, but what does the cannonical application form generate?
+So far this document has only outlined calling Hoon functions by hand, but what does the canonical application form generate?
 
 ```hoon
 > =>  anoma  (dec 3)
@@ -280,9 +280,9 @@ Let us break down this expression
 
 Thus as we can see, the calling convention of Hoon is not very complicated, and is mostly sensible about trying to preserve the environments things are called in.
 
-## Paramarterized Modules: Or How Gates are just Cores
+## Parameterized  Modules: Or How Gates are just Cores
 
-A common occurence in our standard library is the use of paramartized modules. However something interesting to note is that on the [gate](https://developers.urbit.org/reference/glossary/gate) documentation, it mentions
+A common occurrence  in our standard library is the use of parameterized  modules. However something interesting to note is that on the [gate](https://developers.urbit.org/reference/glossary/gate) documentation, it mentions
 
 > A [gate](https://developers.urbit.org/reference/glossary/gate) is [core](https://developers.urbit.org/reference/glossary/core) with one arm named $ (buc). They are often called Hoon functions because they have many of the same properties of functions from other programming languages.
 
@@ -310,9 +310,9 @@ We can see here that block is located at index `10` inside of the anoma environm
 
 next we check `lsh` which is located `90` within it, nothing out of the ordinary. We use `%7` to compose the indexing into the structure, which is reasonable.
 
-When we call `lsh` on `3` and `4` the result is exactly like we expect, we generate out the `%8` call that we disected above.
+When we call `lsh` on `3` and `4` the result is exactly like we expect, we generate out the `%8` call that we dissected above.
 
-So we can already call the `lsh` function as if no paramartized was had. This makes sense as we know that each [gate](https://developers.urbit.org/reference/glossary/gate) has a sample that it takes if no substitution is had.
+So we can already call the `lsh` function as if no parameterized was had. This makes sense as we know that each [gate](https://developers.urbit.org/reference/glossary/gate) has a sample that it takes if no substitution is had.
 
 Now let us replace the default block value with `999` (note you don't want to run this, it'll be too slow)
 
@@ -331,7 +331,7 @@ Now let us replace the default block value with `999` (note you don't want to ru
 
 The only difference that was had was in in  `[8 [9 10 0 1] 9 90 10 [6 7 [0 3] 1 999] 0 2]`. The rest of the formula stayed the same.
 
-However looking at this change, this should not be very shocking, as we have analyzed with the function above, we are simply pushing `block` to the front of the env with the `[8 [9 10 0 1] ...]`, leaing the environment being `[block anoma]`, then we simply wish to call `90` where `lsh` is located with the `6` index of the `block` environment being set to `999`.
+However looking at this change, this should not be very shocking, as we have analyzed with the function above, we are simply pushing `block` to the front of the env with the `[8 [9 10 0 1] ...]`, leaving the environment being `[block anoma]`, then we simply wish to call `90` where `lsh` is located with the `6` index of the `block` environment being set to `999`.
 
 Note the `6` index is a gate's argument which we can see with this call:
 

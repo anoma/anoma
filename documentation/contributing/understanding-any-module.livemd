@@ -52,7 +52,7 @@ module. Thankfully, the codebase is setup in such a way that one can
 always interactively play with any given module.
 
 This is done by simply checking out the examples folder, and finding the
-module you wish to learn to learn about.
+module you wish to learn about.
 
 For example, let us learn about the nock. In the codebase currently
 this can be found here:

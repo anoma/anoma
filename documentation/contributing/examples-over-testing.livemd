@@ -90,7 +90,7 @@ The translation of tests in classification `2.` into examples can be split into 
 
 <!-- livebook:{"branch_parent_index":4} -->
 
-## Examplifying non Actors
+## Exemplifying non Actors
 
 A good example we can use, is a test in our `resource` test file.
 
@@ -238,7 +238,7 @@ Further, if we were to not do a 1 to 1 extraction, we could factor some of the d
 
 <!-- livebook:{"branch_parent_index":4} -->
 
-## Examplifying stateful code
+## Exemplifying stateful code
 
 ```elixir
 defmodule AnomaTest.Node.Executor.Worker do
@@ -384,7 +384,7 @@ defmodule Example.Transaction do
       nullifiers: [ERsource.nullifier_space_bucks_b()],
       proofs: [proved_spacebucks_a(), proved_spacebucks_b()]
     }
-    # This wans't in the original test!
+    # This wasn't in the original test!
     assert verify(trans)
     trans
   end

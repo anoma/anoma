@@ -39,7 +39,7 @@ To better do this, the codebase as a few levels of documentations:
 
 `1.` is what specifies what `Anoma` is abstractly.
 
-`2.` serves the purpose of general knowledge transfer. Some documents serve to provide newcomers with information about various parts of Anoma's development process, others provide visual presentations to various parts of the codebase, while even others provide indepth analys of the codebase.
+`2.` serves the purpose of general knowledge transfer. Some documents serve to provide newcomers with information about various parts of Anoma's development process, others provide visual presentations to various parts of the codebase, while even others provide in-depth analysis of the codebase.
 
 `3.` is documents regarding module and function specifics. This is often augmented by `2.` for better context and examples.
 

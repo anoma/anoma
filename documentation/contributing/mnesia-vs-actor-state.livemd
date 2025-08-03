@@ -38,11 +38,11 @@ As discussed in the user data documentation, loading a `dump` file overwrites th
 
 ## Mnesia Storage
 
-The philosophy for what is stored in Mnesia should be: "Is this something the user should be able to query and write code over". Since Anoma is a distributed operating system project, many of the answers should be yes. The user should be able to make full fledged progrmas on Anoma and extend the system.
+The philosophy for what is stored in Mnesia should be: "Is this something the user should be able to query and write code over". Since Anoma is a distributed operating system project, many of the answers should be yes. The user should be able to make full fledged programs on Anoma and extend the system.
 
 ## Actor Storage
 
-Actor storage on the other hand are for things we don't wish the user to be able to query. Thus implementaiton details about the execution should be omitted from user visible storage, and would be better served stored on the Actor.
+Actor storage on the other hand are for things we don't wish the user to be able to query. Thus implementation details about the execution should be omitted from user visible storage, and would be better served stored on the Actor.
 
 A good example of this is the old ordering logic.
 

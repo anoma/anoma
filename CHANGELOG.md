@@ -113,17 +113,17 @@
   + [executor module](https://github.com/anoma/anoma/pull/622)
   + [worker module](https://github.com/anoma/anoma/pull/623)
 
-- Examplifying the codebase
-  + [Examplifying clock](https://github.com/anoma/anoma/pull/598)
-  + [Examplifying serialization](https://github.com/anoma/anoma/pull/587)
-  + [Examplifying blocks](https://github.com/anoma/anoma/pull/582)
-  + [Examplifying commitment trees](https://github.com/anoma/anoma/pull/583)
-  + [Examplifying nouns](https://github.com/anoma/anoma/pull/631)
-  + [Examplifying storage](https://github.com/anoma/anoma/pull/603)
-  + [Examplifying pinger](https://github.com/anoma/anoma/pull/611)
-  + [Examplifying intent](https://github.com/anoma/anoma/pull/605)
-  + [Examplifying the identity machine](https://github.com/anoma/anoma/pull/606)
-  + [Examplifying dumper](https://github.com/anoma/anoma/pull/613)
+- Exemplifying the codebase
+  + [Exemplifying clock](https://github.com/anoma/anoma/pull/598)
+  + [Exemplifying serialization](https://github.com/anoma/anoma/pull/587)
+  + [Exemplifying blocks](https://github.com/anoma/anoma/pull/582)
+  + [Exemplifying commitment trees](https://github.com/anoma/anoma/pull/583)
+  + [Exemplifying nouns](https://github.com/anoma/anoma/pull/631)
+  + [Exemplifying storage](https://github.com/anoma/anoma/pull/603)
+  + [Exemplifying pinger](https://github.com/anoma/anoma/pull/611)
+  + [Exemplifying intent](https://github.com/anoma/anoma/pull/605)
+  + [Exemplifying the identity machine](https://github.com/anoma/anoma/pull/606)
+  + [Exemplifying dumper](https://github.com/anoma/anoma/pull/613)
 
 
 
