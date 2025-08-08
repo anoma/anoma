@@ -73,11 +73,15 @@ defmodule Anoma.Supervisor do
   @doc """
   Given a node id, I stop that node completely.
   """
-  @spec stop_node(String.t()) :: :ok
+  @spec stop_node(String.t()) :: :ok | {:error, :not_found}
   def stop_node(node_id) do
-    Anoma.Node.Registry.via(node_id, Anoma.Node.Supervisor)
+    case Anoma.Node.Registry.whereis(node_id, Anoma.Node.Supervisor) do
+      nil ->
+        {:error, :not_found}
 
-    Supervisor.stop(Anoma.Node.Registry.via(node_id, Anoma.Node.Supervisor))
+      pid when is_pid(pid) ->
+        Supervisor.stop(pid)
+    end
   end
 
   ############################################################
