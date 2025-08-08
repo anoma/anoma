@@ -130,10 +130,6 @@ defmodule Anoma.Node.Intents.Solver do
     state
   end
 
-  # @doc """
-  # I handle a new event coming from the event broker.
-  # I am only interested in new intents.
-  # """
   @spec handle_event(Event.t(), t()) :: t()
   defp handle_event(event = %Event{}, state) do
     case event do
@@ -151,18 +147,11 @@ defmodule Anoma.Node.Intents.Solver do
     end
   end
 
-  # @doc """
-  # I return a list of all unsolved intents.
-  # """
   @spec handle_get_unsolved(t()) :: [Intent.t()]
   defp handle_get_unsolved(state) do
     Enum.to_list(state.unsolved)
   end
 
-  # @doc """
-  # I handle adding a new intent.
-  # I add the intent to the list of unsolved intents, and then attempt to solve.
-  # """
   @spec handle_new_intent(Intent.t(), t()) :: t()
   defp handle_new_intent(intent, state) do
     Logger.debug("solver received new intent: #{inspect(intent)}")
@@ -237,15 +226,16 @@ defmodule Anoma.Node.Intents.Solver do
     intents
     |> Enum.reduce(&Intent.compose/2)
     |> Intent.verify()
+    |> case do
+      true -> true
+      false -> {:error, :invalid}
+    end
   end
 
   ############################################################
   #                           Helpers                        #
   ############################################################
 
-  # @doc """
-  # I subscribe this process to the intent pool events.
-  # """
   @spec subscribe_to_new_intents(String.t()) :: :ok | String.t()
   defp subscribe_to_new_intents(node_id) do
     filter = %IntentPool.Events.IntentAddSuccessFilter{}
@@ -256,9 +246,6 @@ defmodule Anoma.Node.Intents.Solver do
     ])
   end
 
-  @doc """
-  I generate all possible subsets of a given list of elements as a stream.
-  """
   @spec subsets([Intent.t()]) :: Enumerable.t()
   def subsets([]), do: [[]]
 
@@ -303,11 +290,17 @@ defmodule Anoma.Node.Intents.Solver do
           }
         } ->
           :ok
+      after
+        5000 ->
+          Logger.warning("Timeout waiting for tx submission confirmation")
+          :ok
       end
     end
   end
 
   def submit(_, _) do
+    Logger.warning("Unsupported submission type provided to submit/2")
+    :ok
   end
 
   @spec unsolved_reject(MapSet.t(Intent.t()), Intent.t()) :: bool()
@@ -315,7 +308,10 @@ defmodule Anoma.Node.Intents.Solver do
     not MapSet.member?(solved, intent) and
       MapSet.disjoint?(
         solved,
-        MapSet.union(Intent.nullifiers(intent), Intent.commitments(intent))
+        MapSet.union(
+          MapSet.new(Intent.nullifiers(intent)),
+          MapSet.new(Intent.commitments(intent))
+        )
       )
   end
 end
