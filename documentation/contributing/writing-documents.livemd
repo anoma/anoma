@@ -31,7 +31,7 @@ One of the more important parts of the Anoma project is understanding how the co
 
 A good way to start on this process is by reading and writing documentation and making visual tools to better solidify knowledge for oneself and others.
 
-To better do this, the codebase as a few levels of documentations:
+To better do this, the codebase has a few levels of documentations:
 
 1. The specs (link TBA)
 2. These livebook documents
