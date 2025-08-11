@@ -25,7 +25,7 @@
 5. [Analysis](./../analysis.livemd)
 6. [Jam](./../jam.livemd)
 
-## Where should state be stored
+## Where should the state be stored
 
 One interesting thing about our system is that in the user data section of our documentation we talk about how Anoma's state is stored in [RocksDB](https://en.wikipedia.org/wiki/RocksDB) tables on disc. And that we have some kind of `dump` format that goes along with the tables.
 
