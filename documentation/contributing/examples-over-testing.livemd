@@ -65,7 +65,7 @@ To get a feeling for what `examples` can offer the codebase, we should first dis
 
 ## How would Examples work in Elixir?
 
-Before we go and talk about addressing the issues with testing, let us first envision how we would go about making examples. Below are rules that we can apply to creating our very first examples.
+Before we go and talk about addressing the issues with testing, let us first envision how we would go about making examples. Below are the rules that we can apply to creating our very first examples.
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -407,7 +407,7 @@ We can see the benefits examples offer even stateful tests:
 3. Rephrasing a test as an example doesn't lose any information. the actual example is simply not interesting!
 4. We can run the stateful tests from IEx and even pry into it without any issues!
 
-With these benefits of mind let us see if `Phase2` can improve point `3.` a bit:
+With these benefits in mind let us see if `Phase2` can improve point `3.` a bit:
 
 ```elixir
 defmodule Example.Worker.Phase2 do
@@ -443,7 +443,7 @@ defmodule Example.Worker.Phase2 do
     %Node{router: router, ordering: ordering(router, storage), storage: storage}
   end
 
-  # Let's get an unique number
+  # Let's get a unique number
   defmemo unique_id() do
     System.unique_integer([:positive])
   end
