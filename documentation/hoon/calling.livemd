@@ -38,7 +38,7 @@ With that disclaimer out of the way, let us talk about calling conventions.
 
 ## Basic Nock Calls
 
-There are a few ways to call Nock functions, recall that the structure of a functions look like this:
+There are a few ways to call Nock functions, recall that the structure of a function looks like this:
 
 ```nock
 [function sample environment-defined-in]
