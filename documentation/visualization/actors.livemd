@@ -56,7 +56,7 @@ classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
 ## Mempool
 
 A good view of visualizing Anoma can be seen through running the
-mempool, as it orchastrates the other actors in Anoma to act
+mempool, as it orchestrates the other actors in Anoma to act
 
 <!-- livebook:{"break_markdown":true} -->
 
