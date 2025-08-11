@@ -306,7 +306,7 @@ We next consume one fewer bit than $L_L$ to get the length, however, because hav
 
 Finally, once we have the length $L$ of the actual atom, we consume $L$ bits to get the atom; as before, least-significant remains least-significant.
 
-For an example, the diagram below shows the atom 10 (`0b1010`)'s encoding (not including the 0 bit tagging it as an atom):
+For example, the diagram below shows the atom 10 (`0b1010`)'s encoding (not including the 0 bit tagging it as an atom):
 
 ```elixir
 Kino.Kroki.new(
