@@ -27,8 +27,8 @@
 
 ## Datastructure Rules
 
-Any datastructure that is exposed outside of the boundaries of a single module
-should be represented as a struct. Representing compound datastructures this way
+Any data structure that is exposed outside of the boundaries of a single module
+should be represented as a struct. Representing compound data structures this way
 ensures that the structure is defined, documented, typed, and maintained in a
 single place in the codebase.
 
@@ -44,7 +44,7 @@ For example, a function that returns the result of evaluating a transaction migh
 @spec execute_transaction :: {:ok, Noun.t()} | :error | :in_progress
 ```
 
-Instead of using ad-hoc compound datastructures here, define a struct `TransactionResult` that captures the meaning of these values.
+Instead of using ad-hoc compound data structures here, define a struct `TransactionResult` that captures the meaning of these values.
 
 ```elixir
 typedstruct TransactionResult do
