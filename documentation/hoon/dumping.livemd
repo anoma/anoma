@@ -108,7 +108,7 @@ Note that Hoon uses `function:module` (`f:mn:...:m1`) form.
 [6 [5 [1 0] 0 6] [0 0] 8 [1 0] 8 [1 6 [5 [0 30] 4 0 6] [0 6] 9 2 10 [6 4 0 6] 0 1] 9 2 0 1]
 ```
 
-The logic here doesn't particularly matter, but here we have the nock definiton of decrement, which is wonderful!
+The logic here doesn't particularly matter, but here we have the nock definition of decrement, which is wonderful!
 
 <!-- livebook:{"break_markdown":true} -->
 
