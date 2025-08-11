@@ -40,7 +40,7 @@ From here we can setup the environment quite nicely
 |mount %anoma
 ```
 
-From here we want to remove all the uneeded files, get it to the following state:
+From here we want to remove all the unnecessary files, get it to the following state:
 
 <!-- livebook:{"break_markdown":true} -->
 
