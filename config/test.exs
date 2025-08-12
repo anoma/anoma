@@ -7,3 +7,5 @@ config :logger,
 config :anoma_node, :mnesia,
   persist_to_disk: false,
   rocksdb: false
+
+config :anoma_node, :grpc_port, 0

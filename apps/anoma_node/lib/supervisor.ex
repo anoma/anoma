@@ -75,9 +75,25 @@ defmodule Anoma.Supervisor do
   """
   @spec stop_node(String.t()) :: :ok
   def stop_node(node_id) do
-    Anoma.Node.Registry.via(node_id, Anoma.Node.Supervisor)
+    via = Anoma.Node.Registry.via(node_id, Anoma.Node.Supervisor)
 
-    Supervisor.stop(Anoma.Node.Registry.via(node_id, Anoma.Node.Supervisor))
+    case GenServer.whereis(via) do
+      nil ->
+        # Already stopped / never started
+        :ok
+
+      pid when is_pid(pid) ->
+        # Prefer DynamicSupervisor API so the child table is updated atomically
+        case DynamicSupervisor.terminate_child(Anoma.Node.NodeSupervisor, pid) do
+          :ok ->
+            :ok
+
+          # If it's no longer tracked by the DS (race), stop directly and treat as success
+          {:error, :not_found} ->
+            _ = Supervisor.stop(pid)
+            :ok
+        end
+    end
   end
 
   ############################################################

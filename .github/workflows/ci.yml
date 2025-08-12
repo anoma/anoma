@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir & Erlang
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.17.3'
+          otp-version: '25'
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler build-essential pkg-config clang
+
+      - name: Install protoc-gen-elixir
+        run: |
+          mix local.hex --force
+          mix escript.install hex protobuf --force
+          echo "$HOME/.mix/escripts" >> $GITHUB_PATH
+
+      - name: Show versions
+        run: |
+          elixir -v
+          mix -v
+          protoc --version
+          which protoc-gen-elixir
+
+      - name: Get deps
+        run: mix deps.get
+
+      - name: Compile (dev)
+        run: mix compile
+
+      - name: Compile (test)
+        env:
+          MIX_ENV: test
+        run: mix compile
+
+      - name: Run tests
+        env:
+          MIX_ENV: test
+        run: mix test
