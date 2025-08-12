@@ -179,6 +179,8 @@ the PR is merged but it's still open, this just means that it's merged
 into `next` or `main` and will be included in the next scheduled
 release.
 
+# Make
+
 For more information on a smooth git experience check out the [git
 section in contributor's guide](./documentation/contributing/git.livemd)
 
