@@ -32,7 +32,7 @@ jobs:
       fail-fast: false
     steps:
       - name: checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: setup deps and _build cache
         uses: actions/cache@v4
