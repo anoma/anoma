@@ -1,5 +1,5 @@
 # Anoma
-![CI](https://github.com/dxbr/anoma/actions/workflows/CI.yml/badge.svg)
+[![CI](https://github.com/dxbr/anoma/actions/workflows/ci.yml/badge.svg)](https://github.com/dxbr/anoma/actions/workflows/ci.yml)
 
 This is an implementation of the Anoma protocol, whose specs can be
 found [here](https://specs.anoma.net/latest).
