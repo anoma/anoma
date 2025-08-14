@@ -310,8 +310,14 @@ defmodule Noun.Jam do
                       __STACKTRACE__
           end
 
-        with {:ok, referenced_noun} <-
-               Map.fetch(cache, :binary.decode_unsigned(backref_key, :little)) do
+        backref_offset = :binary.decode_unsigned(backref_key, :little)
+
+        if backref_offset >= offset do
+          raise CueError,
+                "invalid backref at offset #{inspect(offset)}"
+        end
+
+        with {:ok, referenced_noun} <- Map.fetch(cache, backref_offset) do
           {referenced_noun, continuation, new_offset, cache}
         else
           _ ->
@@ -357,6 +363,13 @@ defmodule Noun.Jam do
     # now we have the actual length and can read that many bits off the
     # bitstream. shadowing bits and length once more.
     size = size - length
+    IO.puts("size: #{size}, length: #{length}")
+
+    if size < 0 do
+      raise CueError,
+            "invalid atom length at offset #{inspect(offset)}"
+    end
+
     <<bits::size(size)-bitstring, atom::size(length)-bitstring>> = bits
 
     # now pad the atom back into a binary.
