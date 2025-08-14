@@ -25,6 +25,7 @@ defmodule Anoma.LocalDomain.MixProject do
     [
       # library dependencies here
       {:anoma, git: "https://github.com/anoma/anoma", tag: "v0.34.0"},
+      {:req, "~> 0.5.0"},
       {:typed_struct, "~> 0.3.0"},
       # non-runtime dependencies here
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
