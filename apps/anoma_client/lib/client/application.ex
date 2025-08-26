@@ -4,7 +4,7 @@ defmodule Anoma.Client.Application do
 
   The client application is responsible for:
    - Connecting to a remote Anoma node.
-   - Proving (todo: explain this a bit better)
+   - Proving (handling zero-knowledge proof generation and verification for privacy-preserving transactions)
    - Forwarding requests to the Anoma node.
   """
   alias Anoma.Client
