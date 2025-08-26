@@ -25,7 +25,14 @@ defmodule Anoma.Node.Transport.GRPC.Servers.IntraNode do
 
     engine = String.to_atom(request.engine)
     name = Registry.via(request.node.id, engine)
-    message = :erlang.binary_to_term(request.message)
+
+    message =
+      try do
+        :erlang.binary_to_term(request.message, [:safe])
+      rescue
+        ArgumentError ->
+          raise_grpc_error!(:invalid_message)
+      end
 
     result = GenServer.call(name, message)
     %Call.Response{message: :erlang.term_to_binary(result)}
@@ -45,7 +52,14 @@ defmodule Anoma.Node.Transport.GRPC.Servers.IntraNode do
 
     engine = String.to_atom(request.engine)
     name = Registry.via(request.node.id, engine)
-    message = :erlang.binary_to_term(request.message)
+
+    message =
+      try do
+        :erlang.binary_to_term(request.message, [:safe])
+      rescue
+        ArgumentError ->
+          raise_grpc_error!(:invalid_message)
+      end
 
     GenServer.cast(name, message)
     %Cast.Response{}
