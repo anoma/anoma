@@ -68,6 +68,7 @@ defmodule EventBroker do
   """
 
   use Application
+  use EventBroker.EventStruct
 
   @impl true
   def start(_type, args \\ []) do
@@ -198,4 +199,30 @@ defmodule EventBroker do
   def unsubscribe_me(filter_spec_list, registry \\ EventBroker.Registry) do
     unsubscribe(self(), filter_spec_list, registry)
   end
+
+  ############################################################
+  #                    Example Usage                         #
+  ############################################################
+
+  # Example of using the new eventstruct macro
+  # This replaces the need for separate typedstruct and deffilter calls
+  eventstruct ExampleEvent do
+    field(:message, String.t())
+    field(:level, :info | :warning | :error)
+    field(:timestamp, DateTime.t())
+  end
+
+  # The above is equivalent to:
+  # typedstruct module: ExampleEvent do
+  #   field(:message, String.t())
+  #   field(:level, :info | :warning | :error)
+  #   field(:timestamp, DateTime.t())
+  # end
+  #
+  # deffilter ExampleEventFilter do
+  #   %EventBroker.Event{body: %Anoma.Node.Event{body: %ExampleEvent{}}} ->
+  #     true
+  #   _ ->
+  #     false
+  # end
 end
