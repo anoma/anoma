@@ -82,7 +82,7 @@ defmodule Anoma.Node.Examples.EIntentPool do
   I use `add_intent_transaction_nullifier` and then execute the trivial
   swap.
 
-  The nullifier of the ephemeral resource used gets trasmitted to the
+  The nullifier of the ephemeral resource used gets transmitted to the
   intent pool, hence removing the specified intent from the pool.
   """
   @spec remove_intents_with_nulllified_resources(ENode.t()) :: ENode.t()
