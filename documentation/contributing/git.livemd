@@ -52,9 +52,9 @@ This document is best viewed from within liveview, as the charts do not render o
 * `next` - a branch that has a superset of features that will be
   included in the next release
 
-* `maint` - a maintnance branch that will be updated if bugs are found
+* `maint` - a maintenance branch that will be updated if bugs are found
 
-* `integreation branch` - a topic that merges a bunch of other topics
+* `integration branch` - a topic that merges a bunch of other topics
 
 ## Naming conventions
 
@@ -183,7 +183,7 @@ checkout base
 merge Topic-Y id: "52b44a6"
 ```
 
-and your code hapens to be base on 52b44a6, then the history will look something like:
+and your code happens to be base on 52b44a6, then the history will look something like:
 
 ```mermaid
 %%{init:
@@ -263,7 +263,7 @@ In a textual form this looks like:
 ```
 0438922 *   main Merge branch 'topic-y'
         |\
-546a8f9 | * topic-y Added a feature that conflcits with X!
+546a8f9 | * topic-y Added a feature that conflicts with X!
 90d91e7 * |   Merge branch 'topic-x'
         |\ \
         | |/
