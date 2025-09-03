@@ -1,6 +1,6 @@
 defmodule Examples.EEventBroker.Subscribe do
   @moduledoc """
-  I define examples on how to susbcribe to topics in the event broker.
+  I define examples on how to subscribe to topics in the event broker.
   """
 
   alias Examples.EEVentBroker.EFilter
