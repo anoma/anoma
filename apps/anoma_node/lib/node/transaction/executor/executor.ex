@@ -42,7 +42,7 @@ defmodule Anoma.Node.Transaction.Executor do
 
     Currently I only keep information of the relevant node identitfication.
 
-    ### Fileds
+    ### Fields
 
     - `:node_id` - The ID of the node to which an Executor instantiation is
                    bound.
@@ -70,7 +70,7 @@ defmodule Anoma.Node.Transaction.Executor do
 
   @impl true
   @doc """
-  I am the intialization function for the Executor Engine.
+  I am the initialization function for the Executor Engine.
 
   Given the arguments containing a node ID, I subscribe to all messages
   which come from completed workers of that node and launch the Executor
