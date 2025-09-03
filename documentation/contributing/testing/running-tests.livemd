@@ -78,7 +78,7 @@ The error text hints at a suggestion on how to solve the problem.
 MIX_ENV=iex iex --sname mariari --cookie mariari -S mix
 ```
 
-I recommend using the `iex` environment over the `test` environment that is shwon in the error, as in the `Anoma` project, we set the `test` environment to have `Config.config/2` to have the following settings:
+I recommend using the `iex` environment over the `test` environment that is shown in the error, as in the `Anoma` project, we set the `test` environment to have `Config.config/2` to have the following settings:
 
 <!-- livebook:{"force_markdown":true} -->
 
