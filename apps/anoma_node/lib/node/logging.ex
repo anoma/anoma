@@ -42,7 +42,7 @@ defmodule Anoma.Node.Logging do
   ############################################################
 
   @typedoc """
-  I am the loggging message type flag.
+  I am the logging message type flag.
 
   I specify what logging levels are currently supported by the Logging
   Engine.
@@ -331,7 +331,7 @@ defmodule Anoma.Node.Logging do
       :mnesia.write({table, :round, round + 1})
     end)
 
-    log_fun({:info, "Block succesfully committed. Round: #{inspect(round)}"})
+    log_fun({:info, "Block successfully committed. Round: #{inspect(round)}"})
     state
   end
 
