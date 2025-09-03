@@ -33,7 +33,7 @@ defmodule Anoma.Node.Examples.Serializing.Events.Mempool do
   def tx_event_with_values do
     tx_event = tx_event()
 
-    # create a random transactoin
+    # create a random transaction
     transaction = ETransaction.simple_transaction()
     # create a tx event for this transaction
     tx_event =
@@ -50,7 +50,7 @@ defmodule Anoma.Node.Examples.Serializing.Events.Mempool do
     # encode the transaction into a json string
     json = Jason.encode!(tx_event)
 
-    # assert the result is what we exepct
+    # assert the result is what we expect
     expected_result =
       transaction.result |> elem(1) |> Noun.Jam.jam() |> Base.encode64()
 
