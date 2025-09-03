@@ -7,7 +7,7 @@ defmodule Anoma.Node.Transaction.Storage do
   last timestamp is.
 
   Any time before the next timestamp or at the timestamp itself is
-  considered the past. Anyting else is considered the future.
+  considered the past. Anything else is considered the future.
 
   The semantics for reads and writes are as follows:
 
