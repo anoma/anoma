@@ -119,7 +119,7 @@ Exceptions might exist but should be noted explicitly in PR and commit messages.
 If `foo` uses Router or GenServer functionality, it should be a `call` if and only if either
 
 1. The underlying state is unchanged by calling `foo`
-2. There are synchronizaton requirements that `foo` has to fullfill.
+2. There are synchronization requirements that `foo` has to fullfill.
 
 #### Rule 1.6
 
