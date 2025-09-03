@@ -109,7 +109,7 @@ To get started with Postman, look here: https://learning.postman.com/docs/sendin
 ## GRPCurl
 
 For those so inclined, `grpcurl` is a command-line tool to make GRPC requests.
-Instalation instructions can be found here: https://github.com/fullstorydev/grpcurl?tab=readme-ov-file#installation
+Installation instructions can be found here: https://github.com/fullstorydev/grpcurl?tab=readme-ov-file#installation
 
 ### Listing the root services
 
