@@ -1,9 +1,9 @@
 defmodule IntentHub.IntentRegistry do
   @moduledoc """
-  Intent Registry - Manages intent storage and retrieval using Anoma Tables.
-  
-  This module provides a GenServer-based registry that stores intents
-  in memory and provides efficient querying capabilities.
+  I manage intent storage and retrieval using in-memory storage.
+
+  I provide a GenServer-based registry that stores intents in memory
+  and provides efficient querying capabilities for the IntentHub system.
   """
 
   use GenServer
@@ -11,50 +11,110 @@ defmodule IntentHub.IntentRegistry do
 
   alias IntentHub.Intent
 
+  @type intent_id :: String.t()
+  @type user_address :: String.t()
+  @type intent_type :: Intent.intent_type()
+  @type intent_list :: [Intent.t()]
+  @type stats :: %{
+    total_intents: non_neg_integer(),
+    pending_intents: non_neg_integer(),
+    executed_intents: non_neg_integer(),
+    failed_intents: non_neg_integer()
+  }
+
   # Client API
 
+  @doc """
+  I start the IntentRegistry GenServer.
+
+  ## Parameters
+  - `opts` - GenServer start options
+
+  ## Returns
+  `{:ok, pid}` on success, `{:error, reason}` on failure.
+  """
+  @spec start_link(Keyword.t()) :: GenServer.on_start()
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, %{}, opts)
   end
 
   @doc """
-  Registers a new intent in the registry.
+  I register a new intent in the registry.
+
+  ## Parameters
+  - `intent` - The intent to register
+
+  ## Returns
+  `{:ok, intent}` on success, `{:error, reason}` on failure.
   """
+  @spec register(Intent.t()) :: {:ok, Intent.t()} | {:error, String.t()}
   def register(intent) do
     GenServer.call(__MODULE__, {:register, intent})
   end
 
   @doc """
-  Gets an intent by its ID.
+  I get an intent by its ID.
+
+  ## Parameters
+  - `intent_id` - The ID of the intent to retrieve
+
+  ## Returns
+  `{:ok, intent}` if found, `{:error, reason}` if not found.
   """
+  @spec get(intent_id()) :: {:ok, Intent.t()} | {:error, String.t()}
   def get(intent_id) do
     GenServer.call(__MODULE__, {:get, intent_id})
   end
 
   @doc """
-  Updates an existing intent.
+  I update an existing intent in the registry.
+
+  ## Parameters
+  - `intent` - The updated intent
+
+  ## Returns
+  `{:ok, intent}` on success, `{:error, reason}` on failure.
   """
+  @spec update(Intent.t()) :: {:ok, Intent.t()} | {:error, String.t()}
   def update(intent) do
     GenServer.call(__MODULE__, {:update, intent})
   end
 
   @doc """
-  Lists all intents for a specific user.
+  I list all intents for a specific user.
+
+  ## Parameters
+  - `user_address` - The address of the user
+
+  ## Returns
+  List of intents for the user.
   """
+  @spec list_by_user(user_address()) :: intent_list()
   def list_by_user(user_address) do
     GenServer.call(__MODULE__, {:list_by_user, user_address})
   end
 
   @doc """
-  Lists all intents of a specific type.
+  I list all intents of a specific type.
+
+  ## Parameters
+  - `intent_type` - The type of intents to list
+
+  ## Returns
+  List of intents of the specified type.
   """
+  @spec list_by_type(intent_type()) :: intent_list()
   def list_by_type(intent_type) do
     GenServer.call(__MODULE__, {:list_by_type, intent_type})
   end
 
   @doc """
-  Gets statistics about registered intents.
+  I get statistics about registered intents.
+
+  ## Returns
+  Map containing intent statistics.
   """
+  @spec get_stats() :: stats()
   def get_stats do
     GenServer.call(__MODULE__, :get_stats)
   end

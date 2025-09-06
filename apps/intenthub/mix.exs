@@ -20,7 +20,8 @@ defmodule IntentHub.MixProject do
 
   defp deps do
     [
-      {:anoma_lib, in_umbrella: true}
+      {:anoma_lib, in_umbrella: true},
+      {:typedstruct, "~> 0.3.0"}
     ]
   end
 end

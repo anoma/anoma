@@ -1,10 +1,10 @@
 # IntentHub
 
-IntentHub is an intent registry and management system built on top of Anoma's intent-centric architecture. It allows users to register, track, and execute their Web3 intentions in a decentralized manner.
+I am an intent registry and management system built on top of Anoma's intent-centric architecture. I allow users to register, track, and execute their Web3 intentions in a decentralized manner.
 
 ## Overview
 
-IntentHub provides a simple yet powerful interface for managing user intents in the Web3 ecosystem. Instead of manually executing blockchain transactions, users can declare their intentions and let the system handle the execution when conditions are met.
+I provide a simple yet powerful interface for managing user intents in the Web3 ecosystem. Instead of manually executing blockchain transactions, users can declare their intentions and let the system handle the execution when conditions are met.
 
 ## Features
 
