@@ -68,7 +68,6 @@ defmodule AnomaIntentLab.Matcher do
     is_nil(da) or is_nil(db) or da == db
   end
 
-  # basit kombinasyon üretici
   defp combinations(list, 0), do: [[ ] |> Enum.reverse()]
   defp combinations([], _k), do: []
   defp combinations([h | t], k) when k > 0 do
