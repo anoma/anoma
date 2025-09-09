@@ -329,7 +329,7 @@ defmodule Examples.EEventBroker do
 
   Given two lists of filter specs, I start the one gitten by appending both
   specs by first using `check_self_sub/1` on the first input and then the
-  `check_sub_no_usub/1` on the second. I then check that the the head of
+  `check_sub_no_usub/1` on the second. I then check that the head of
   the second input spec was indeed subscribed to the last element of the
   first input along with ourselves and that the PIDs match on initial
   filter startup and the final registry for the first input.
