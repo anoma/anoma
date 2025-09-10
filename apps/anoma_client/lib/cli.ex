@@ -149,7 +149,7 @@ defmodule Anoma.Client.CLI do
   end
 
   defp show_error({:error, {:missing_args, missing}}) do
-    argumnets =
+    arguments =
       Enum.map(missing, fn missing ->
         missing
         |> Atom.to_string()
@@ -158,7 +158,7 @@ defmodule Anoma.Client.CLI do
       end)
 
     """
-    Missing arguments: #{Enum.join(argumnets, ", ")}
+    Missing arguments: #{Enum.join(arguments, ", ")}
     """
   end
 
