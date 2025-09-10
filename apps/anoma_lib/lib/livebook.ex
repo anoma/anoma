@@ -262,7 +262,7 @@ defmodule Livebook do
           String.t()
   def change_header(markdown, header_level, start_header, new_text) do
     header_regex =
-      ~r/^#{header_level}\s+#{start_header}\s*$(.*?)(?=\n#{header_level}\s+|##|\z)/ms
+      ~r/^#{header_level}\s+#{start_header}\s*\n(.*?)(?=^#{header_level}\s+|\z)/ms
 
     updated_markdown =
       String.replace(
