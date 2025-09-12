@@ -12,7 +12,7 @@ defmodule Anoma.Protobuf.ErrorHandler do
 
   If it is not, I raise a GRPC error. If it is, I do nothing.
   """
-  @spec validate_request!(any()) :: :noop
+  @spec validate_request!(any()) :: :noop | no_return()
   def validate_request!(req) do
     case Validate.valid?(req) do
       {:ok, :valid} ->
@@ -109,5 +109,7 @@ defmodule Anoma.Protobuf.ErrorHandler do
     |> Enum.map(fn {field, errors} ->
       "#{inspect(field)} #{error_message(errors)}"
     end)
+    |> Enum.intersperse(", ")
+    |> Enum.join("")
   end
 end
