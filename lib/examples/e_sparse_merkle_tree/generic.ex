@@ -3,10 +3,19 @@ defmodule Examples.ESparseMerkleTree.Generic do
     implementation = Keyword.fetch!(opts, :implementation)
 
     quote do
+      use ExExample
       import SparseMerkleTree
       import SparseMerkleTree.Proof
 
-      def empty_tree() do
+      def copy(t = %SparseMerkleTree.ETS{}) do
+        t_copy = SparseMerkleTree.ETS.new()
+        true = :ets.insert(t_copy.table, :ets.tab2list(t.table))
+        t_copy
+      end
+
+      def copy(item), do: item
+
+      example empty_tree do
         tree = unquote(implementation).new()
 
         <<40, 126, 172, 2, 225, 203, 200, 220, 129, 46, 78, 65, 80, 109,
@@ -16,7 +25,7 @@ defmodule Examples.ESparseMerkleTree.Generic do
         tree
       end
 
-      def abc_tree() do
+      example abc_tree do
         tree = empty_tree() |> insert("abc")
 
         <<22, 140, 227, 38, 13, 82, 190, 59, 111, 69, 53, 251, 39, 47,
@@ -26,7 +35,7 @@ defmodule Examples.ESparseMerkleTree.Generic do
         tree
       end
 
-      def def_tree() do
+      example def_tree do
         tree = empty_tree() |> insert("def")
 
         <<67, 49, 10, 77, 155, 234, 33, 71, 100, 44, 159, 4, 218, 38,
@@ -36,7 +45,7 @@ defmodule Examples.ESparseMerkleTree.Generic do
         tree
       end
 
-      def abc_def_tree() do
+      example abc_def_tree do
         tree = empty_tree() |> insert("abc") |> insert("def")
 
         <<255, 6, 238, 194, 117, 166, 105, 95, 156, 157, 91, 95, 240,
@@ -46,7 +55,7 @@ defmodule Examples.ESparseMerkleTree.Generic do
         tree
       end
 
-      def def_abc_tree() do
+      example def_abc_tree do
         tree = empty_tree() |> insert("def") |> insert("abc")
 
         <<255, 6, 238, 194, 117, 166, 105, 95, 156, 157, 91, 95, 240,
@@ -56,7 +65,7 @@ defmodule Examples.ESparseMerkleTree.Generic do
         tree
       end
 
-      def abc_def_equals_def_abc() do
+      example abc_def_equals_def_abc do
         abc_def = abc_def_tree()
         def_abc = def_abc_tree()
         abc_def_root = root(abc_def)
@@ -64,92 +73,99 @@ defmodule Examples.ESparseMerkleTree.Generic do
         abc_def
       end
 
-      def safe_double_insert() do
+      example safe_double_insert do
         abc = abc_tree()
         abc_root = root(abc)
         ^abc_root = root(insert(abc, "abc"))
       end
 
-      def prove_abc_present_in_abc() do
+      example prove_abc_present_in_abc do
         {:ok, _} = prove_present(abc_tree(), "abc")
       end
 
-      def verify_abc_present_in_abc() do
+      example verify_abc_present_in_abc do
         {:ok, proof} = prove_abc_present_in_abc()
         true = verify_present(proof, root(abc_tree()), "abc")
         proof
       end
 
-      def prove_abc_present_in_abc_def() do
+      example prove_abc_present_in_abc_def do
         {:ok, _} = prove_present(abc_def_tree(), "abc")
       end
 
-      def verify_abc_present_in_abc_def() do
+      example verify_abc_present_in_abc_def do
         {:ok, proof} = prove_abc_present_in_abc_def()
         true = verify_present(proof, root(abc_def_tree()), "abc")
         proof
       end
 
-      def prove_abc_absent_in_def() do
+      example prove_abc_absent_in_def do
         {:ok, _} = prove_absent(def_tree(), "abc")
       end
 
-      def verify_abc_absent_in_def() do
+      example verify_abc_absent_in_def do
         {:ok, proof} = prove_abc_absent_in_def()
         true = verify_absent(proof, root(def_tree()), "abc")
         proof
       end
 
-      def prove_abc_absent_in_empty() do
+      example prove_abc_absent_in_empty do
         {:ok, _} = prove_absent(empty_tree(), "abc")
       end
 
-      def verify_abc_absent_in_empty() do
+      example verify_abc_absent_in_empty do
         {:ok, proof} = prove_abc_absent_in_empty()
         true = verify_absent(proof, root(empty_tree()), "abc")
         proof
       end
 
-      def dont_prove_abc_present_in_empty() do
+      example dont_prove_abc_present_in_empty do
         :error = prove_present(empty_tree(), "abc")
       end
 
-      def dont_prove_abc_present_in_def() do
+      example dont_prove_abc_present_in_def do
         :error = prove_present(def_tree(), "abc")
       end
 
-      def dont_prove_abc_absent_in_abc_def() do
+      example dont_prove_abc_absent_in_abc_def do
         :error = prove_absent(abc_def_tree(), "abc")
       end
 
-      def dont_prove_abc_absent_in_abc() do
+      example dont_prove_abc_absent_in_abc do
         :error = prove_absent(abc_tree(), "abc")
       end
 
-      def big_tree(exponent \\ 8) do
-        for n <- 1..(2 ** exponent), reduce: empty_tree() do
+      example big_tree do
+        for n <- 1..(2 ** 12), reduce: empty_tree() do
           tree ->
             tree |> insert(Integer.to_string(n))
         end
       end
 
+      #example big_tree(exponent \\ 8) do
+      #  for n <- 1..(2 ** exponent), reduce: empty_tree() do
+      #    tree ->
+      #      tree |> insert(Integer.to_string(n))
+      #  end
+      #end
+
       # note: don't reduce the big tree below 2^7!
-      def prove_123_present_in_big_tree() do
+      example prove_123_present_in_big_tree do
         {:ok, _} = prove_present(big_tree(), "123")
       end
 
-      def verify_123_present_in_big_tree() do
+      example verify_123_present_in_big_tree do
         {:ok, proof} = prove_123_present_in_big_tree()
         true = verify_present(proof, root(big_tree()), "123")
         proof
       end
 
       # or increase it above 2^191, lol
-      def prove_big_number_absent_in_big_tree() do
+      example prove_big_number_absent_in_big_tree do
         {:ok, _} = prove_absent(big_tree(), Integer.to_string(2 ** 192))
       end
 
-      def verify_big_number_absent_in_big_tree() do
+      example verify_big_number_absent_in_big_tree do
         {:ok, proof} = prove_big_number_absent_in_big_tree()
 
         true =

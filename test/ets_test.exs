@@ -1,8 +1,5 @@
 defmodule SparseMerkleTreeTest.ETS do
-  use TestHelper.TestMacro
-
-  use TestHelper.GenerateExampleTests,
-    for: Examples.ESparseMerkleTree.EETS
-
+  use ExUnit.Case
+  use ExExample.ExUnit, for: Examples.ESparseMerkleTree.EETS
   doctest SparseMerkleTree.ETS
 end

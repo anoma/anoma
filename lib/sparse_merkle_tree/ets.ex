@@ -32,6 +32,7 @@ defmodule SparseMerkleTree.ETS do
     """
 
     field(:table, :ets.tid())
+    field(:table_holder, pid())
   end
 
   # it's easier to define these in the module and use defdelegate to
@@ -53,8 +54,16 @@ defmodule SparseMerkleTree.ETS do
   """
   @spec new() :: t()
   def new() do
-    table = :ets.new(__MODULE__, [])
-    %__MODULE__{table: table}
+    {:ok, table_holder} =
+      Task.start(fn ->
+        receive do
+          :die -> :ok
+        end
+      end)
+
+    table = :ets.new(__MODULE__, [:public, {:heir, table_holder, nil}])
+    :ets.give_away(table, table_holder, nil)
+    %__MODULE__{table: table, table_holder: table_holder}
   end
 
   @doc """
@@ -63,6 +72,7 @@ defmodule SparseMerkleTree.ETS do
   @spec delete(t()) :: :ok
   def delete(tree) do
     true = :ets.delete(tree.table)
+    send(tree.table_holder, :die)
     :ok
   end
 
