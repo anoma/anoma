@@ -139,9 +139,6 @@ defmodule Anoma.RM.Transparent.ProvingSystem.RLPS do
       {:error, msg} ->
         Logger.error(msg)
         false
-
-      _ ->
-        false
     end
   end
 

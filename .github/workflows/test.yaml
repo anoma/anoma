@@ -44,6 +44,10 @@ jobs:
       - name: install apt packages
         uses: ./.github/actions/os_setup
 
+      - name: start erlang port mapper daemon
+        shell: bash
+        run: epmd -d -daemon
+
       - name: mix test
         shell: bash
         run: MIX_ENV=${{inputs.mix-env}} mix test

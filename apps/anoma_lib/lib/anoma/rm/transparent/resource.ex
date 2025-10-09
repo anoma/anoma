@@ -21,6 +21,8 @@ defmodule Anoma.RM.Transparent.Resource do
 
   use TypedStruct
 
+  require Logger
+
   typedstruct enforce: true do
     # the jam of a resource logic
     field(:logicref, integer(),
@@ -102,8 +104,8 @@ defmodule Anoma.RM.Transparent.Resource do
         resource.valueref,
         resource.quantity,
         Noun.Nounable.to_noun(resource.isephemeral),
-        resource.nonce,
-        resource.nullifierkeycommitment
+        [32 | resource.nonce],
+        [32 | resource.nullifierkeycommitment]
         | resource.randseed
       ]
     end
@@ -116,11 +118,12 @@ defmodule Anoma.RM.Transparent.Resource do
         valueref,
         quantity,
         ephemerality,
-        nonce,
-        nullifierkeycm
+        [size_nonce | nonce],
+        [size_nkcm | nullifierkeycm]
         | rseed
       ]) do
-    with {:ok, boolean} <- Noun.Nounable.Bool.from_noun(ephemerality) do
+    with {:ok, boolean} <- Noun.Nounable.Bool.from_noun(ephemerality),
+         true <- Noun.equal?(size_nonce, 32) and Noun.equal?(size_nkcm, 32) do
       {:ok,
        %__MODULE__{
          logicref: Noun.atom_binary_to_integer(logicref),
@@ -134,7 +137,12 @@ defmodule Anoma.RM.Transparent.Resource do
          randseed: Noun.atom_integer_to_binary(rseed)
        }}
     else
-      _ -> :error
+      false ->
+        Logger.error("Incorrect byte size")
+        :error
+
+      _ ->
+        :error
     end
   end
 

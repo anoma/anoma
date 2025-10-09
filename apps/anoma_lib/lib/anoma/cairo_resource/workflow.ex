@@ -17,7 +17,7 @@ defmodule Anoma.CairoResource.Workflow do
            Jason.decode(resource_logic_bin, objects: :ordered_objects),
          {:ok, program} <-
            resource_logic["data"]
-           |> Enum.map(&Utils.hex_to_n_byte_binary(&1, 32))
+           |> Enum.map(&Utils.integer_or_hex_to_n_byte_binary(&1, 32))
            |> Utils.check_list(),
          hash =
            Enum.drop(program, -2)
@@ -364,7 +364,7 @@ defmodule Anoma.CairoResource.Workflow do
   def create_private_keys(compliance_units) do
     with {:ok, priv_keys} <-
            Enum.map(compliance_units, & &1["rcv"])
-           |> Enum.map(&Utils.hex_to_n_byte_binary(&1, 32))
+           |> Enum.map(&Utils.integer_or_hex_to_n_byte_binary(&1, 32))
            |> Utils.check_list() do
       {:ok, priv_keys |> Enum.reduce(&<>/2)}
     else

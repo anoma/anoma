@@ -6,7 +6,7 @@ defmodule Anoma.Node.Examples.ETransaction do
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Storage
-  alias Anoma.Node.Tables
+  alias Anoma.Tables
   alias Anoma.RM.Transparent.Transaction
   alias Examples.ENock
   alias Examples.ETransparent.ETransaction
@@ -23,10 +23,10 @@ defmodule Anoma.Node.Examples.ETransaction do
   ############################################################
 
   typedstruct do
-    field(:id, String.t())
-    field(:backend, atom())
+    field(:id, binary())
+    field(:backend, Backends.backend())
     field(:noun, Noun.t())
-    field(:result, any())
+    field(:result, Mempool.tx_result())
   end
 
   ############################################################
@@ -470,28 +470,29 @@ defmodule Anoma.Node.Examples.ETransaction do
     blocks_table = Storage.blocks_table(node_id)
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
+      {:mnesia_table_event,
+       {:write, {^blocks_table, ["anoma", "block", 1], _}, _}},
       5000
     )
 
-    :mnesia.unsubscribe({:table, Storage.blocks_table(node_id), :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, Storage.blocks_table(node_id), :simple})
 
     {:atomic, block} =
       :mnesia.transaction(fn ->
-        :mnesia.read({Storage.blocks_table(node_id), 1})
+        :mnesia.read({Storage.blocks_table(node_id), ["anoma", "block", 1]})
       end)
 
-    [
-      {^blocks_table, 1,
-       [
-         %Mempool.Tx{
-           code: ^zero,
-           backend: ^back,
-           vm_result: {:ok, [[[^key] | 0] | 0]},
-           tx_result: {:ok, [[[^key] | 0]]}
-         }
-       ]}
-    ] = block
+    tx1 =
+      %Mempool.Tx{
+        code: zero,
+        backend: back,
+        vm_result: {:ok, [[[key] | 0] | 0]},
+        tx_result: {:ok, [[[key] | 0]]}
+      }
+      |> Noun.Nounable.to_noun()
+
+    [{^blocks_table, ["anoma", "block", 1], [^tx1]}] = block
 
     node_id
   end
@@ -511,31 +512,39 @@ defmodule Anoma.Node.Examples.ETransaction do
     Mempool.execute(node_id, dump)
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
+      {:mnesia_table_event,
+       {:write, {^blocks_table, ["anoma", "block", 1], _}, _}},
       5000
     )
 
-    :mnesia.unsubscribe({:table, blocks_table, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     {:atomic, block} =
-      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
+      :mnesia.transaction(fn ->
+        :mnesia.read({blocks_table, ["anoma", "block", 1]})
+      end)
+
+    tx1 =
+      %Mempool.Tx{
+        code: zero,
+        backend: back1,
+        vm_result: {:ok, [[[key] | 0] | 0]},
+        tx_result: {:ok, [[[key] | 0]]}
+      }
+      |> Noun.Nounable.to_noun()
+
+    tx2 =
+      %Mempool.Tx{
+        code: inc,
+        backend: back2,
+        vm_result: {:ok, [[[key] | 1] | 0]},
+        tx_result: {:ok, [[[key] | 1]]}
+      }
+      |> Noun.Nounable.to_noun()
 
     [
-      {^blocks_table, 1,
-       [
-         %Mempool.Tx{
-           code: ^zero,
-           backend: ^back1,
-           vm_result: {:ok, [[[^key] | 0] | 0]},
-           tx_result: {:ok, [[[^key] | 0]]}
-         },
-         %Mempool.Tx{
-           code: ^inc,
-           backend: ^back2,
-           vm_result: {:ok, [[[^key] | 1] | 0]},
-           tx_result: {:ok, [[[^key] | 1]]}
-         }
-       ]}
+      {^blocks_table, ["anoma", "block", 1], [^tx1, ^tx2]}
     ] = block
 
     node_id
@@ -552,25 +561,30 @@ defmodule Anoma.Node.Examples.ETransaction do
     Mempool.execute(node_id, ["id 2"])
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 2, _}, _}},
+      {:mnesia_table_event,
+       {:write, {^blocks_table, ["anoma", "block", 2], _}, _}},
       5000
     )
 
-    :mnesia.unsubscribe({:table, blocks_table, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     {:atomic, block} =
-      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 2}) end)
+      :mnesia.transaction(fn ->
+        :mnesia.read({blocks_table, ["anoma", "block", 2]})
+      end)
+
+    tx1 =
+      %Mempool.Tx{
+        code: inc,
+        backend: back,
+        vm_result: {:ok, [[[key] | 1] | 0]},
+        tx_result: {:ok, [[[key] | 1]]}
+      }
+      |> Noun.Nounable.to_noun()
 
     [
-      {^blocks_table, 2,
-       [
-         %Mempool.Tx{
-           code: ^inc,
-           backend: ^back,
-           vm_result: {:ok, [[[^key] | 1] | 0]},
-           tx_result: {:ok, [[[^key] | 1]]}
-         }
-       ]}
+      {^blocks_table, ["anoma", "block", 2], [^tx1]}
     ] = block
 
     node_id
@@ -592,25 +606,30 @@ defmodule Anoma.Node.Examples.ETransaction do
     Mempool.execute(node_id, ["id 1"])
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 1, _}, _}},
+      {:mnesia_table_event,
+       {:write, {^blocks_table, ["anoma", "block", 1], _}, _}},
       5000
     )
 
-    :mnesia.unsubscribe({:table, blocks_table, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, blocks_table, :simple})
 
     {:atomic, block} =
-      :mnesia.transaction(fn -> :mnesia.read({blocks_table, 1}) end)
+      :mnesia.transaction(fn ->
+        :mnesia.read({blocks_table, ["anoma", "block", 1]})
+      end)
+
+    tx1 =
+      %Mempool.Tx{
+        code: [0 | 0],
+        backend: :debug_term_storage,
+        vm_result: :vm_error,
+        tx_result: :error
+      }
+      |> Noun.Nounable.to_noun()
 
     [
-      {^blocks_table, 1,
-       [
-         %Mempool.Tx{
-           code: [0 | 0],
-           backend: :debug_term_storage,
-           vm_result: :vm_error,
-           tx_result: :error
-         }
-       ]}
+      {^blocks_table, ["anoma", "block", 1], [^tx1]}
     ] = block
 
     node_id
@@ -677,29 +696,34 @@ defmodule Anoma.Node.Examples.ETransaction do
     Mempool.execute(node_id, ["id 2", "id 3"])
 
     assert_receive(
-      {:mnesia_table_event, {:write, {^blocks_table, 2, _}, _}},
+      {:mnesia_table_event,
+       {:write, {^blocks_table, ["anoma", "block", 2], _}, _}},
       5000
     )
 
-    :mnesia.unsubscribe({:table, blocks_table, :simple})
+    # unsubscribing breaks nested example calls.
+    # :mnesia.unsubscribe({:table, blocks_table, :simple})
 
-    [
-      {^blocks_table, 2,
-       [
-         %Mempool.Tx{
-           code: [0 | 0],
-           backend: :debug_term_storage,
-           vm_result: :vm_error,
-           tx_result: :error
-         },
-         %Mempool.Tx{
-           code: ^inc,
-           backend: ^back,
-           vm_result: {:ok, [[[^key] | 1] | 0]},
-           tx_result: {:ok, [[[^key] | 1]]}
-         }
-       ]}
-    ] = :mnesia.dirty_read({blocks_table, 2})
+    tx1 =
+      %Mempool.Tx{
+        code: [0 | 0],
+        backend: :debug_term_storage,
+        vm_result: :vm_error,
+        tx_result: :error
+      }
+      |> Noun.Nounable.to_noun()
+
+    tx2 =
+      %Mempool.Tx{
+        code: inc,
+        backend: back,
+        vm_result: {:ok, [[[key] | 1] | 0]},
+        tx_result: {:ok, [[[key] | 1]]}
+      }
+      |> Noun.Nounable.to_noun()
+
+    [{^blocks_table, ["anoma", "block", 2], [^tx1, ^tx2]}] =
+      :mnesia.dirty_read({blocks_table, ["anoma", "block", 2]})
 
     node_id
   end
@@ -719,7 +743,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       %EventBroker.Event{
         body: %Node.Event{
           node_id: ^node_id,
-          body: %Mempool.BlockEvent{round: ^round}
+          body: %Mempool.Events.BlockEvent{round: ^round}
         }
       } ->
         :ok

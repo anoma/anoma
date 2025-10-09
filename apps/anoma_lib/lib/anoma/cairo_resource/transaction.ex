@@ -71,10 +71,7 @@ defmodule Anoma.CairoResource.Transaction do
   """
   @spec cm_tree() :: CommitmentTree.t()
   def cm_tree() do
-    CommitmentTree.new(
-      CommitmentTree.Spec.cairo_poseidon_cm_tree_spec(),
-      nil
-    )
+    CommitmentTree.new(CommitmentTree.Spec.cairo_poseidon_cm_tree_spec())
   end
 
   @doc """

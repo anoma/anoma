@@ -10,8 +10,6 @@ defmodule CommitmentTree do
 
   Fiats that empty subtrees have a hash of 0 for simplicity.
   """
-  alias Anoma.Node.Tables
-
   use TypedStruct
 
   typedstruct enforce: true do
@@ -21,60 +19,28 @@ defmodule CommitmentTree do
     field(:root, CommitmentTree.Node.t())
     # the current number of commitments in the tree
     field(:size, integer())
-
-    # the name of the mnesia table where the commitments will be stored.  may be nil
-    field(:table, term())
+    # map from commitments to their indices
+    field(:map, %{binary() => non_neg_integer()}, default: %{})
   end
 
   ############################################################
   #                         Public Functions                 #
   ############################################################
 
-  @spec init_storage(String.t()) :: :ok
-  def init_storage(node_id \\ "") do
-    {:ok, _} = Tables.initialize_tables_for_node(node_id)
-
-    :ok
-  end
-
   @doc """
   Creates a new `CommitmentTree` struct.
   """
-  @spec new(CommitmentTree.Spec.t(), term()) :: CommitmentTree.t()
-  def new(spec, table) do
+  @spec new(CommitmentTree.Spec.t()) :: CommitmentTree.t()
+  def new(spec) do
     # create an empty tree
-    tree = %CommitmentTree{
+    %CommitmentTree{
       spec: spec,
       size: 0,
       # technically, this gives us an initial anchor of H(zero, zero, zero...)
       # instead of zero, but it simplifies the logic, and you can't prove
       # anything against an empty tree anyway
-      root: CommitmentTree.Node.new_empty(spec),
-      table: table
+      root: CommitmentTree.Node.new_empty(spec)
     }
-
-    if table do
-      # read all the commitments out of the table and replay them into the tree
-      # there seems to not be a better way to do this
-      n = :mnesia.table_info(table, :size)
-
-      {:atomic, cms} =
-        :mnesia.transaction(fn ->
-          Enum.map(
-            0..(n - 1)//1,
-            fn i ->
-              :mnesia.read(table, i)
-              |> hd
-              |> elem(2)
-            end
-          )
-        end)
-
-      {tree, _anchor} = add_mem(tree, cms, n)
-      tree
-    else
-      tree
-    end
   end
 
   @doc """
@@ -84,25 +50,12 @@ defmodule CommitmentTree do
   @spec add(CommitmentTree.t(), list(binary())) :: tuple()
   def add(tree, cms) do
     n = length(cms)
-
-    if tree.table do
-      add_mnesia(tree, cms)
-    end
-
     add_mem(tree, cms, n)
-  end
-
-  defp add_mnesia(tree, cms) do
-    :mnesia.transaction(fn ->
-      Enum.reduce(cms, tree.size, fn cm, i ->
-        :mnesia.write({tree.table, i, cm})
-        i + 1
-      end)
-    end)
   end
 
   defp add_mem(tree, cms, n) do
     new_size = tree.size + n
+    map = Enum.with_index(cms, tree.size) |> Map.new(fn x -> x end)
 
     tree = %CommitmentTree{
       tree
@@ -115,14 +68,16 @@ defmodule CommitmentTree do
             tree.spec.splay_suff_prod,
             cms,
             n
-          )
+          ),
+        map: Map.merge(tree.map, map)
     }
 
     {tree, tree.root.hash}
   end
 
-  @spec prove(CommitmentTree.t(), integer()) :: CommitmentTree.Proof.t()
-  def prove(tree, i) do
+  @spec prove(CommitmentTree.t(), integer() | binary()) ::
+          CommitmentTree.Proof.t()
+  def prove(tree, i) when is_integer(i) do
     # cannot use Integer.digits because we need to pad this out to depth digits
     {_, path} =
       Enum.reduce(1..tree.spec.depth, {i, []}, fn _, {i, acc} ->
@@ -136,6 +91,10 @@ defmodule CommitmentTree do
       path,
       CommitmentTree.Node.prove(tree.spec, tree.root, i)
     )
+  end
+
+  def prove(tree, bin) when is_binary(bin) do
+    prove(tree, Map.get(tree.map, bin, 1))
   end
 
   # missing from standard library for some reason?
@@ -221,6 +180,45 @@ defmodule CommitmentTree do
         )
 
       CommitmentTree.Node.new(spec, children)
+    end
+  end
+
+  defimpl Noun.Nounable, for: CommitmentTree do
+    @impl true
+    def to_noun(tree = %CommitmentTree{}) do
+      [
+        Noun.Nounable.to_noun(tree.spec),
+        Noun.Nounable.to_noun(tree.root),
+        tree.size
+        | Enum.into(tree.map, %{}, fn {key, int} ->
+            {[:erlang.byte_size(key) | key], int}
+          end)
+          |> Noun.Nounable.to_noun()
+      ]
+    end
+  end
+
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
+  def from_noun([spec, root, size | map]) do
+    with {:ok, spec} <- CommitmentTree.Spec.from_noun(spec),
+         {:ok, root} <- CommitmentTree.Node.from_noun(root),
+         {:ok, map} <- Noun.Nounable.Map.from_noun(map),
+         final_map <-
+           Enum.into(map, %{}, fn {[size | data], value} ->
+             {Noun.atom_integer_to_binary(
+                data,
+                Noun.atom_binary_to_integer(size)
+              ), Noun.atom_binary_to_integer(value)}
+           end) do
+      {:ok,
+       %__MODULE__{
+         spec: spec,
+         root: root,
+         size: Noun.atom_binary_to_integer(size),
+         map: final_map
+       }}
+    else
+      _ -> :error
     end
   end
 end

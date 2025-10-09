@@ -1,11 +1,15 @@
 defmodule Noun.Bits do
   import Bitwise
 
-  @spec num_bits(Noun.noun_atom(), non_neg_integer()) ::
+  @spec num_bits(Noun.noun_atom(), Noun.noun_atom()) ::
           non_neg_integer()
   def num_bits(n, block_size) when is_binary(n) do
     size = block_size |> Noun.atom_binary_to_integer()
     n |> Noun.atom_binary_to_integer() |> num_bits(size)
+  end
+
+  def num_bits(n, block_size) when is_binary(block_size) do
+    num_bits(n, Noun.atom_binary_to_integer(block_size))
   end
 
   def num_bits(n, block_size) when n >= 0 do
