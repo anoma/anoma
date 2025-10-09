@@ -183,7 +183,7 @@ defmodule Examples.EExtNock do
 
     # Test invalid slot (should raise error)
     slot8_formula = ExtNockTerms.sexpr_to_noun!({:slot, [8]})
-    assert Nock.nock(nested_subject, slot8_formula) == :error
+    assert {:error, _} = Nock.nock(nested_subject, slot8_formula)
 
     {:slot, [1]}
   end
@@ -479,7 +479,7 @@ defmodule Examples.EExtNock do
          ]}
       )
 
-    assert Nock.nock([0, 1], ife_formula5) == :error
+    assert {:error, _} = Nock.nock([0, 1], ife_formula5)
 
     ife_formula1
   end
@@ -628,7 +628,7 @@ defmodule Examples.EExtNock do
          ]}
       )
 
-    assert Nock.nock(subject, replace4) == :error
+    assert {:error, _} = Nock.nock(subject, replace4)
 
     replace1
   end
@@ -661,13 +661,11 @@ defmodule Examples.EExtNock do
 
     assert result3 == 20
 
-    result4 =
+    {:error, _} =
       Nock.nock(
         [0 | 1],
         ExtNockTerms.sexpr_to_noun!({:hint, [[1, 0], {:constant, [1]}]})
       )
-
-    assert result4 == :error
   end
 
   @doc """
