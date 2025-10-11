@@ -2,7 +2,6 @@ defmodule Examples.ENockPoly.EFinPolyF do
   use Memoize
 
   import ExUnit.Assertions
-  alias NockPoly.Term
   import NockPoly.Term.MacroDefs
   alias NockPoly.FinPolyF
 
