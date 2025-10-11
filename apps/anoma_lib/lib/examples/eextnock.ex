@@ -10,7 +10,6 @@ defmodule Examples.EExtNock do
   import ExtNock
   alias ExtNock.ExtNockTerms
   use TypedStruct
-  require ExUnit.Assertions
   import ExUnit.Assertions
 
   alias NockPoly.Term

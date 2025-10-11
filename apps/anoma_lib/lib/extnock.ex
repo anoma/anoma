@@ -10,7 +10,6 @@ defmodule ExtNock do
   """
 
   require Noun
-  require NockPoly
 
   # I contain `defmacro`s (and `defmacros` only), to distinguish them
   # for ignoring code coverage (which does not know how to tell whether

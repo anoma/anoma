@@ -1,7 +1,6 @@
 defmodule Examples.ENockPoly do
   use Memoize
 
-  require ExUnit.Assertions
   import ExUnit.Assertions
   import NockPoly
   alias NockPoly.Term, as: Term

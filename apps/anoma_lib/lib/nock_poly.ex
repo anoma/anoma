@@ -5,8 +5,6 @@ defmodule NockPoly do
   """
 
   require Noun
-  require Nock
-  require Logger
 
   use TypedStruct
 
