@@ -20,35 +20,59 @@ defmodule Examples.ENockPoly.ENockTerms do
   nock_term_test_one_two: Tests conversion round-trip using a Nock term
   lifted from the one_two examples.
   """
+  def nock_term_test_one_two_noun() do
+    {:ok, noun} = Noun.Format.parse("[1 2]")
+    noun
+  end
+
   def nock_term_test_one_two() do
-    {:ok, noun_one_two} = Noun.Format.parse("[1 2]")
-    res = NockTerms.from_noun(noun_one_two)
-    assert NockTerms.typecheck(res) == :ok
-    rt = NockTerms.to_noun(res)
-    assert rt == noun_one_two
-    assert NockTerms.from_noun(rt) == res
-    res
+    NockTerms.from_noun(nock_term_test_one_two_noun())
+  end
+
+  def nock_term_test_one_two_typecheck() do
+    result = NockTerms.typecheck(nock_term_test_one_two())
+    assert result == :ok
+    result
+  end
+
+  def nock_term_test_one_two_round_trip() do
+    result = NockTerms.to_noun(nock_term_test_one_two())
+    assert result == nock_term_test_one_two_noun()
+    assert NockTerms.from_noun(result) == nock_term_test_one_two()
+    result
   end
 
   @doc """
   nock_term_test_indexed: Tests conversion round-trip using a Nock term
   lifted from the indexed_noun examples.
   """
+  def nock_term_test_indexed_noun() do
+    {:ok, noun} = Noun.Format.parse("[[4 5] [12 13] 7]")
+    noun
+  end
+
   def nock_term_test_indexed() do
-    {:ok, noun_indexed} = Noun.Format.parse("[[4 5] [12 13] 7]")
-    res = NockTerms.from_noun(noun_indexed)
-    assert NockTerms.typecheck(res) == :ok
-    rt = NockTerms.to_noun(res)
-    assert rt == noun_indexed
-    assert NockTerms.from_noun(rt) == res
-    res
+    NockTerms.from_noun(nock_term_test_indexed_noun())
+  end
+
+  def nock_term_test_indexed_typecheck() do
+    result = NockTerms.typecheck(nock_term_test_indexed())
+    assert result == :ok
+    result
+  end
+
+  def nock_term_test_indexed_round_trip() do
+    result = NockTerms.to_noun(nock_term_test_indexed())
+    assert result == nock_term_test_indexed_noun()
+    assert NockTerms.from_noun(result) == nock_term_test_indexed()
+    result
   end
 
   @doc """
   nock_term_test_counter_arm: Tests conversion round-trip using a Nock term
   lifted from the counter_arm examples.
   """
-  def nock_term_test_counter_arm() do
+  def nock_term_test_counter_arm_noun() do
     counter_arm = """
     [ 6
       [5 [1 1] 8 [9 1.406 0 1.023] 9 2 10 [6 0 118] 0 2]
@@ -58,13 +82,24 @@ defmodule Examples.ENockPoly.ENockTerms do
     ]
     """
 
-    noun_counter = Noun.Format.parse_always(counter_arm)
-    res = NockTerms.from_noun(noun_counter)
-    assert NockTerms.typecheck(res) == :ok
-    rt = NockTerms.to_noun(res)
-    assert rt == noun_counter
-    assert NockTerms.from_noun(rt) == res
-    res
+    Noun.Format.parse_always(counter_arm)
+  end
+
+  def nock_term_test_counter_arm() do
+    NockTerms.from_noun(nock_term_test_counter_arm_noun())
+  end
+
+  def nock_term_test_counter_arm_typecheck() do
+    result = NockTerms.typecheck(nock_term_test_counter_arm())
+    assert result == :ok
+    result
+  end
+
+  def nock_term_test_counter_arm_round_trip() do
+    result = NockTerms.to_noun(nock_term_test_counter_arm())
+    assert result == nock_term_test_counter_arm_noun()
+    assert NockTerms.from_noun(result) == nock_term_test_counter_arm()
+    result
   end
 
   @doc """

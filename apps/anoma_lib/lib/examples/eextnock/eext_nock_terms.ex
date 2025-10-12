@@ -40,19 +40,26 @@ defmodule Examples.EExtNock.EExtNockTerms do
   for a cell.
   """
   def nock_poly_sexpr_cell_test() do
-    sexpr = [1, 2]
-    term = ExtNockTerms.from_sexpr!(sexpr)
+    ExtNockTerms.from_sexpr!([1, 2])
+  end
 
+  def nock_poly_sexpr_cell_test_structure() do
     expected =
       tvc(:cell, [
         tvc0({:atom, 1}),
         tvc0({:atom, 2})
       ])
 
-    assert term == expected
+    result = nock_poly_sexpr_cell_test()
+    assert result == expected
+    result
+  end
+
+  def nock_poly_sexpr_cell_test_to_noun() do
     expected_noun = Noun.Format.parse_always("[1 2]")
-    assert ExtNockTerms.to_noun!(term) == expected_noun
-    term
+    result = ExtNockTerms.to_noun!(nock_poly_sexpr_cell_test())
+    assert result == expected_noun
+    result
   end
 
   @doc """
@@ -60,9 +67,10 @@ defmodule Examples.EExtNock.EExtNockTerms do
   nested expression.
   """
   def nock_poly_sexpr_nested_test() do
-    sexpr = [[4, 5], [12, 13], 7]
-    term = ExtNockTerms.from_sexpr!(sexpr)
+    ExtNockTerms.from_sexpr!([[4, 5], [12, 13], 7])
+  end
 
+  def nock_poly_sexpr_nested_test_structure() do
     expected_inner1 =
       tvc(:cell, [
         tvc0({:atom, 4}),
@@ -84,10 +92,16 @@ defmodule Examples.EExtNock.EExtNockTerms do
         ])
       ])
 
-    assert term == expected
+    result = nock_poly_sexpr_nested_test()
+    assert result == expected
+    result
+  end
+
+  def nock_poly_sexpr_nested_test_to_noun() do
     expected_noun = Noun.Format.parse_always("[[4 5] [12 13] 7]")
-    assert ExtNockTerms.to_noun!(term) == expected_noun
-    term
+    result = ExtNockTerms.to_noun!(nock_poly_sexpr_nested_test())
+    assert result == expected_noun
+    result
   end
 
   @doc """
@@ -95,17 +109,27 @@ defmodule Examples.EExtNock.EExtNockTerms do
   term with variables.
   """
   def nock_poly_sexpr_with_variables_test() do
-    sexpr = [{:var, 7}, 99]
-    term = ExtNockTerms.from_sexpr!(sexpr)
-    expected = tvc(:cell, [tvv(7), tvc0({:atom, 99})])
-    assert term == expected
+    ExtNockTerms.from_sexpr!([{:var, 7}, 99])
+  end
 
+  def nock_poly_sexpr_with_variables_test_structure() do
+    expected = tvc(:cell, [tvv(7), tvc0({:atom, 99})])
+    result = nock_poly_sexpr_with_variables_test()
+    assert result == expected
+    result
+  end
+
+  def nock_poly_sexpr_with_variables_test_substitute() do
     closed_term =
-      ExtNockTerms.substitute(term, fn v -> tvc0({:atom, v * 10}) end)
+      ExtNockTerms.substitute(
+        nock_poly_sexpr_with_variables_test(),
+        fn v -> tvc0({:atom, v * 10}) end
+      )
 
     expected_noun = Noun.Format.parse_always("[70 99]")
-    assert ExtNockTerms.to_noun!(closed_term) == expected_noun
-    term
+    result = ExtNockTerms.to_noun!(closed_term)
+    assert result == expected_noun
+    result
   end
 
   @doc """
@@ -139,72 +163,117 @@ defmodule Examples.EExtNock.EExtNockTerms do
   @doc """
   I test the :slot constructor which compiles to Nock formula 0 (slot).
   """
-  def slot_constructor_test() do
-    nested_subject = Noun.Format.parse_always("[[2 0] [3 1]]")
+  def slot_test_subject() do
+    Noun.Format.parse_always("[[2 0] [3 1]]")
+  end
 
-    # Test slot 1 (whole subject)
-    slot1_formula = ExtNockTerms.sexpr_to_noun!({:slot, [1]})
-    {:ok, result1} = Nock.nock(nested_subject, slot1_formula)
-    assert result1 == nested_subject
+  def slot_1_formula() do
+    ExtNockTerms.sexpr_to_noun!({:slot, [1]})
+  end
 
-    # Test slot 2 (head of subject)
-    slot2_formula = ExtNockTerms.sexpr_to_noun!({:slot, [2]})
-    {:ok, result2} = Nock.nock(nested_subject, slot2_formula)
-    assert result2 == [2 | 0]
+  def slot_1_result() do
+    {:ok, result} = Nock.nock(slot_test_subject(), slot_1_formula())
+    assert result == slot_test_subject()
+    result
+  end
 
-    # Test slot 3 (tail of subject)
-    slot3_formula = ExtNockTerms.sexpr_to_noun!({:slot, [3]})
-    {:ok, result3} = Nock.nock(nested_subject, slot3_formula)
-    assert result3 == [3 | 1]
+  def slot_2_formula() do
+    ExtNockTerms.sexpr_to_noun!({:slot, [2]})
+  end
 
-    # Test slot 4 (head of head)
-    slot4_formula = ExtNockTerms.sexpr_to_noun!({:slot, [4]})
-    {:ok, result4} = Nock.nock(nested_subject, slot4_formula)
-    assert result4 == 2
+  def slot_2_result() do
+    {:ok, result} = Nock.nock(slot_test_subject(), slot_2_formula())
+    assert result == [2 | 0]
+    result
+  end
 
-    # Test slot 5 (tail of head)
-    slot5_formula = ExtNockTerms.sexpr_to_noun!({:slot, [5]})
-    {:ok, result5} = Nock.nock(nested_subject, slot5_formula)
-    assert result5 == 0
+  def slot_3_formula() do
+    ExtNockTerms.sexpr_to_noun!({:slot, [3]})
+  end
 
-    # Test slot 6 (head of tail)
-    slot6_formula = ExtNockTerms.sexpr_to_noun!({:slot, [6]})
-    {:ok, result6} = Nock.nock(nested_subject, slot6_formula)
-    assert result6 == 3
+  def slot_3_result() do
+    {:ok, result} = Nock.nock(slot_test_subject(), slot_3_formula())
+    assert result == [3 | 1]
+    result
+  end
 
-    # Test slot 7 (tail of tail)
-    slot7_formula = ExtNockTerms.sexpr_to_noun!({:slot, [7]})
-    {:ok, result7} = Nock.nock(nested_subject, slot7_formula)
-    assert result7 == 1
+  def slot_4_formula() do
+    ExtNockTerms.sexpr_to_noun!({:slot, [4]})
+  end
 
-    # Test invalid slot (should raise error)
-    slot8_formula = ExtNockTerms.sexpr_to_noun!({:slot, [8]})
-    assert {:error, _} = Nock.nock(nested_subject, slot8_formula)
+  def slot_4_result() do
+    {:ok, result} = Nock.nock(slot_test_subject(), slot_4_formula())
+    assert result == 2
+    result
+  end
 
-    {:slot, [1]}
+  def slot_5_formula() do
+    ExtNockTerms.sexpr_to_noun!({:slot, [5]})
+  end
+
+  def slot_5_result() do
+    {:ok, result} = Nock.nock(slot_test_subject(), slot_5_formula())
+    assert result == 0
+    result
+  end
+
+  def slot_6_formula() do
+    ExtNockTerms.sexpr_to_noun!({:slot, [6]})
+  end
+
+  def slot_6_result() do
+    {:ok, result} = Nock.nock(slot_test_subject(), slot_6_formula())
+    assert result == 3
+    result
+  end
+
+  def slot_7_formula() do
+    ExtNockTerms.sexpr_to_noun!({:slot, [7]})
+  end
+
+  def slot_7_result() do
+    {:ok, result} = Nock.nock(slot_test_subject(), slot_7_formula())
+    assert result == 1
+    result
+  end
+
+  def slot_8_formula() do
+    ExtNockTerms.sexpr_to_noun!({:slot, [8]})
+  end
+
+  def slot_8_result_error() do
+    result = Nock.nock(slot_test_subject(), slot_8_formula())
+    assert {:error, _} = result
+    result
   end
 
   @doc """
   I test the :constant constructor which compiles to Nock formula 1 (constant).
   """
-  def constant_constructor_test() do
-    # Atom constant
-    const_formula = ExtNockTerms.sexpr_to_noun!({:constant, [42]})
+  def constant_atom_formula() do
+    ExtNockTerms.sexpr_to_noun!({:constant, [42]})
+  end
 
-    # Different subjects - should always return the constant
-    {:ok, result1} = Nock.nock(0, const_formula)
-    assert result1 == 42
+  def constant_atom_result_subject_0() do
+    {:ok, result} = Nock.nock(0, constant_atom_formula())
+    assert result == 42
+    result
+  end
 
-    {:ok, result2} = Nock.nock([1, 2], const_formula)
-    assert result2 == 42
+  def constant_atom_result_subject_cell() do
+    {:ok, result} = Nock.nock([1, 2], constant_atom_formula())
+    assert result == 42
+    result
+  end
 
-    # Cell constant
-    cell_const_formula = ExtNockTerms.sexpr_to_noun!({:constant, [[1, 2]]})
+  def constant_cell_formula() do
+    ExtNockTerms.sexpr_to_noun!({:constant, [[1, 2]]})
+  end
 
-    {:ok, cell_result} = Nock.nock(0, cell_const_formula)
-    assert cell_result == [1 | 2]
-
-    {:constant, [42]}
+  def constant_cell_result() do
+    {:ok, result} = Nock.nock(0, constant_cell_formula())
+    assert result == [1 | 2]
+    result
   end
 
   @doc """
@@ -303,243 +372,281 @@ defmodule Examples.EExtNock.EExtNockTerms do
   @doc """
   I test the :evaluate constructor (Nock formula 2).
   """
-  def evaluate_constructor_test() do
-    # Test case 1: f.evaluate(1, [[1, 2], [1, [0, 1]]]) => 2
-    eval_formula1 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:evaluate,
-         [
-           {:constant, [2]},
-           {:constant, [{:slot, [1]}]}
-         ]}
-      )
+  def evaluate_formula_1() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:evaluate,
+       [
+         {:constant, [2]},
+         {:constant, [{:slot, [1]}]}
+       ]}
+    )
+  end
 
-    {:ok, result1} = Nock.nock(1, eval_formula1)
-    assert result1 == 2
+  def evaluate_formula_1_result() do
+    {:ok, result} = Nock.nock(1, evaluate_formula_1())
+    assert result == 2
+    result
+  end
 
-    # Test case 2: f.evaluate(77, [[1, 42], [1, [1, 153]]]) => 153
-    eval_formula2 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:evaluate,
-         [
-           {:constant, [42]},
-           {:constant, [{:constant, [153]}]}
-         ]}
-      )
+  def evaluate_formula_2() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:evaluate,
+       [
+         {:constant, [42]},
+         {:constant, [{:constant, [153]}]}
+       ]}
+    )
+  end
 
-    {:ok, result2} = Nock.nock(77, eval_formula2)
-    assert result2 == 153
-
-    # Return a value for the example test system
-    {:evaluate,
-     [
-       {:constant, [2]},
-       {:constant, [{:slot, [1]}]}
-     ]}
+  def evaluate_formula_2_result() do
+    {:ok, result} = Nock.nock(77, evaluate_formula_2())
+    assert result == 153
+    result
   end
 
   @doc """
   I test the :cell_test constructor (Nock formula 3).
   """
-  def cell_test_constructor_test() do
-    cell_test_atom1 =
-      ExtNockTerms.sexpr_to_noun!({:cell_test, [{:constant, [1]}]})
+  def cell_test_atom_formula() do
+    ExtNockTerms.sexpr_to_noun!({:cell_test, [{:constant, [1]}]})
+  end
 
-    {:ok, result_atom1} = Nock.nock(0, cell_test_atom1)
-    assert result_atom1 == 1
+  def cell_test_atom_result() do
+    {:ok, result} = Nock.nock(0, cell_test_atom_formula())
+    assert result == 1
+    result
+  end
 
-    cell_test_cell1 =
-      ExtNockTerms.sexpr_to_noun!({:cell_test, [{:constant, [[1, 1]]}]})
+  def cell_test_cell_formula() do
+    ExtNockTerms.sexpr_to_noun!({:cell_test, [{:constant, [[1, 1]]}]})
+  end
 
-    {:ok, result_cell1} = Nock.nock(0, cell_test_cell1)
-    # 0 means is a cell
-    assert result_cell1 == 0
+  def cell_test_cell_result() do
+    {:ok, result} = Nock.nock(0, cell_test_cell_formula())
+    assert result == 0
+    result
+  end
 
-    cell_test_slot =
-      ExtNockTerms.sexpr_to_noun!({:cell_test, [{:slot, [1]}]})
+  def cell_test_slot_formula() do
+    ExtNockTerms.sexpr_to_noun!({:cell_test, [{:slot, [1]}]})
+  end
 
-    {:ok, result_slot_atom} = Nock.nock(1, cell_test_slot)
-    assert result_slot_atom == 1
+  def cell_test_slot_result_atom() do
+    {:ok, result} = Nock.nock(1, cell_test_slot_formula())
+    assert result == 1
+    result
+  end
 
-    {:ok, result_slot_cell} = Nock.nock([1, 1], cell_test_slot)
-    assert result_slot_cell == 0
-
-    cell_test_slot
+  def cell_test_slot_result_cell() do
+    {:ok, result} = Nock.nock([1, 1], cell_test_slot_formula())
+    assert result == 0
+    result
   end
 
   @doc """
   I test the :incr constructor (Nock formula 4).
   """
-  def incr_constructor_test() do
-    incr_formula1 =
-      ExtNockTerms.sexpr_to_noun!({:incr, [{:slot, [1]}]})
+  def incr_slot_formula() do
+    ExtNockTerms.sexpr_to_noun!({:incr, [{:slot, [1]}]})
+  end
 
-    {:ok, result1} = Nock.nock(1, incr_formula1)
-    assert result1 == 2
+  def incr_slot_result() do
+    {:ok, result} = Nock.nock(1, incr_slot_formula())
+    assert result == 2
+    result
+  end
 
-    incr_formula2 =
-      ExtNockTerms.sexpr_to_noun!({:incr, [{:cell_test, [{:slot, [1]}]}]})
+  def incr_cell_test_formula() do
+    ExtNockTerms.sexpr_to_noun!({:incr, [{:cell_test, [{:slot, [1]}]}]})
+  end
 
-    {:ok, result2} = Nock.nock([1, 1], incr_formula2)
-    assert result2 == 1
-
-    incr_formula1
+  def incr_cell_test_result() do
+    {:ok, result} = Nock.nock([1, 1], incr_cell_test_formula())
+    assert result == 1
+    result
   end
 
   @doc """
   I test the :eq constructor (Nock formula 5).
   """
-  def eq_constructor_test() do
-    eq_formula =
-      ExtNockTerms.sexpr_to_noun!(
-        {:eq,
-         [
-           {:slot, [2]},
-           {:slot, [3]}
-         ]}
-      )
+  def eq_formula() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:eq,
+       [
+         {:slot, [2]},
+         {:slot, [3]}
+       ]}
+    )
+  end
 
-    {:ok, result1} = Nock.nock([1 | 1], eq_formula)
-    assert result1 == 0
+  def eq_result_equal() do
+    {:ok, result} = Nock.nock([1 | 1], eq_formula())
+    assert result == 0
+    result
+  end
 
-    {:ok, result2} = Nock.nock([0 | 1], eq_formula)
-    assert result2 == 1
-
-    eq_formula
+  def eq_result_not_equal() do
+    {:ok, result} = Nock.nock([0 | 1], eq_formula())
+    assert result == 1
+    result
   end
 
   @doc """
   I test the :ife constructor (Nock formula 6).
   """
-  def ife_constructor_test() do
-    ife_formula1 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:ife,
-         [
-           {:constant, [0]},
-           {:constant, [8]},
-           {:constant, [9]}
-         ]}
-      )
+  def ife_formula_cond_0() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:ife,
+       [
+         {:constant, [0]},
+         {:constant, [8]},
+         {:constant, [9]}
+       ]}
+    )
+  end
 
-    {:ok, result1} = Nock.nock([0, 1], ife_formula1)
-    assert result1 == 8
+  def ife_formula_cond_0_result() do
+    {:ok, result} = Nock.nock([0, 1], ife_formula_cond_0())
+    assert result == 8
+    result
+  end
 
-    ife_formula2 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:ife,
-         [
-           {:constant, [1]},
-           {:constant, [8]},
-           {:constant, [9]}
-         ]}
-      )
+  def ife_formula_cond_1() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:ife,
+       [
+         {:constant, [1]},
+         {:constant, [8]},
+         {:constant, [9]}
+       ]}
+    )
+  end
 
-    {:ok, result2} = Nock.nock([0, 1], ife_formula2)
-    assert result2 == 9
+  def ife_formula_cond_1_result() do
+    {:ok, result} = Nock.nock([0, 1], ife_formula_cond_1())
+    assert result == 9
+    result
+  end
 
-    ife_formula3 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:ife,
-         [
-           {:eq, [{:constant, [1]}, {:constant, [1]}]},
-           {:constant, [8]},
-           {:constant, [9]}
-         ]}
-      )
+  def ife_formula_eq_true() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:ife,
+       [
+         {:eq, [{:constant, [1]}, {:constant, [1]}]},
+         {:constant, [8]},
+         {:constant, [9]}
+       ]}
+    )
+  end
 
-    {:ok, result3} = Nock.nock([0, 1], ife_formula3)
-    assert result3 == 8
+  def ife_formula_eq_true_result() do
+    {:ok, result} = Nock.nock([0, 1], ife_formula_eq_true())
+    assert result == 8
+    result
+  end
 
-    ife_formula4 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:ife,
-         [
-           {:eq, [{:constant, [1]}, {:constant, [0]}]},
-           {:constant, [8]},
-           {:constant, [9]}
-         ]}
-      )
+  def ife_formula_eq_false() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:ife,
+       [
+         {:eq, [{:constant, [1]}, {:constant, [0]}]},
+         {:constant, [8]},
+         {:constant, [9]}
+       ]}
+    )
+  end
 
-    {:ok, result4} = Nock.nock([0, 1], ife_formula4)
-    assert result4 == 9
+  def ife_formula_eq_false_result() do
+    {:ok, result} = Nock.nock([0, 1], ife_formula_eq_false())
+    assert result == 9
+    result
+  end
 
-    # Error case: condition is 2 (neither 0 nor 1)
-    ife_formula5 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:ife,
-         [
-           {:constant, [2]},
-           {:constant, [8]},
-           {:constant, [9]}
-         ]}
-      )
+  def ife_formula_cond_2() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:ife,
+       [
+         {:constant, [2]},
+         {:constant, [8]},
+         {:constant, [9]}
+       ]}
+    )
+  end
 
-    assert {:error, _} = Nock.nock([0, 1], ife_formula5)
-
-    ife_formula1
+  def ife_formula_cond_2_result_error() do
+    result = Nock.nock([0, 1], ife_formula_cond_2())
+    assert {:error, _} = result
+    result
   end
 
   @doc """
   I test the :compose constructor (Nock formula 7).
   """
-  def compose_constructor_test() do
-    compose_formula1 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:compose,
-         [
-           {:cell_test, [{:slot, [1]}]},
-           {:incr, [{:slot, [1]}]}
-         ]}
-      )
+  def compose_formula_1() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:compose,
+       [
+         {:cell_test, [{:slot, [1]}]},
+         {:incr, [{:slot, [1]}]}
+       ]}
+    )
+  end
 
-    {:ok, result1} = Nock.nock(42, compose_formula1)
-    assert result1 == 2
+  def compose_formula_1_result() do
+    {:ok, result} = Nock.nock(42, compose_formula_1())
+    assert result == 2
+    result
+  end
 
-    compose_formula2 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:compose,
-         [
-           {:incr, [{:slot, [1]}]},
-           {:incr, [{:slot, [1]}]}
-         ]}
-      )
+  def compose_formula_2() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:compose,
+       [
+         {:incr, [{:slot, [1]}]},
+         {:incr, [{:slot, [1]}]}
+       ]}
+    )
+  end
 
-    {:ok, result2} = Nock.nock(42, compose_formula2)
-    assert result2 == 44
-
-    compose_formula1
+  def compose_formula_2_result() do
+    {:ok, result} = Nock.nock(42, compose_formula_2())
+    assert result == 44
+    result
   end
 
   @doc """
   I test the :push constructor (Nock formula 8).
   """
-  def push_constructor_test() do
-    push_formula1 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:push,
-         [
-           {:incr, [{:slot, [1]}]},
-           {:slot, [1]}
-         ]}
-      )
+  def push_formula_1() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:push,
+       [
+         {:incr, [{:slot, [1]}]},
+         {:slot, [1]}
+       ]}
+    )
+  end
 
-    {:ok, result1} = Nock.nock(42, push_formula1)
-    assert result1 == [43 | 42]
+  def push_formula_1_result() do
+    {:ok, result} = Nock.nock(42, push_formula_1())
+    assert result == [43 | 42]
+    result
+  end
 
-    push_formula2 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:push,
-         [
-           {:incr, [{:slot, [1]}]},
-           {:incr, [{:slot, [3]}]}
-         ]}
-      )
+  def push_formula_2() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:push,
+       [
+         {:incr, [{:slot, [1]}]},
+         {:incr, [{:slot, [3]}]}
+       ]}
+    )
+  end
 
-    {:ok, result2} = Nock.nock(42, push_formula2)
-    assert result2 == 43
-
-    push_formula1
+  def push_formula_2_result() do
+    {:ok, result} = Nock.nock(42, push_formula_2())
+    assert result == 43
+    result
   end
 
   @doc """
@@ -566,116 +673,142 @@ defmodule Examples.EExtNock.EExtNockTerms do
   @doc """
   I test the :replace constructor (Nock formula 10).
   """
-  def replace_constructor_test() do
-    # Create a subject for our tests: [10 [20 30]]
-    subject = Noun.Format.parse_always("[10 [20 30]]")
+  def replace_test_subject() do
+    Noun.Format.parse_always("[10 [20 30]]")
+  end
 
-    # Replace at axis 2 (head) of the subject with value 99
-    replace1 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:replace,
-         [
-           2,
-           {:constant, [99]},
-           {:slot, [1]}
-         ]}
-      )
+  def replace_axis_2_formula() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:replace,
+       [
+         2,
+         {:constant, [99]},
+         {:slot, [1]}
+       ]}
+    )
+  end
 
-    {:ok, result1} = Nock.nock(subject, replace1)
-    assert result1 == [99 | [20 | 30]]
+  def replace_axis_2_result() do
+    {:ok, result} =
+      Nock.nock(replace_test_subject(), replace_axis_2_formula())
 
-    # Replace at axis 3 (tail) of the subject with value 88
-    replace2 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:replace,
-         [
-           3,
-           {:constant, [88]},
-           {:slot, [1]}
-         ]}
-      )
+    assert result == [99 | [20 | 30]]
+    result
+  end
 
-    {:ok, result2} = Nock.nock(subject, replace2)
-    assert result2 == [10 | 88]
+  def replace_axis_3_formula() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:replace,
+       [
+         3,
+         {:constant, [88]},
+         {:slot, [1]}
+       ]}
+    )
+  end
 
-    # Replace at axis 6 (head of tail) of the subject with value 77
-    replace3 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:replace,
-         [
-           6,
-           {:constant, [77]},
-           {:slot, [1]}
-         ]}
-      )
+  def replace_axis_3_result() do
+    {:ok, result} =
+      Nock.nock(replace_test_subject(), replace_axis_3_formula())
 
-    {:ok, result3} = Nock.nock(subject, replace3)
-    assert result3 == [10 | [77 | 30]]
+    assert result == [10 | 88]
+    result
+  end
 
-    # Replace at axis 4 (head of head) of the subject with value 42
-    # (we shall give it a subject with no such axis)
-    replace4 =
-      ExtNockTerms.sexpr_to_noun!(
-        {:replace,
-         [
-           4,
-           {:constant, [42]},
-           {:slot, [1]}
-         ]}
-      )
+  def replace_axis_6_formula() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:replace,
+       [
+         6,
+         {:constant, [77]},
+         {:slot, [1]}
+       ]}
+    )
+  end
 
-    assert {:error, _} = Nock.nock(subject, replace4)
+  def replace_axis_6_result() do
+    {:ok, result} =
+      Nock.nock(replace_test_subject(), replace_axis_6_formula())
 
-    replace1
+    assert result == [10 | [77 | 30]]
+    result
+  end
+
+  def replace_axis_4_formula() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:replace,
+       [
+         4,
+         {:constant, [42]},
+         {:slot, [1]}
+       ]}
+    )
+  end
+
+  def replace_axis_4_result_error() do
+    result = Nock.nock(replace_test_subject(), replace_axis_4_formula())
+    assert {:error, _} = result
+    result
   end
 
   @doc """
   I test the :hint constructor (Nock formula 11).
   """
-  def hint_constructor_test() do
-    {:ok, result1} =
-      Nock.nock(
-        [0 | 1],
-        ExtNockTerms.sexpr_to_noun!({:hint, [1, {:constant, [1]}]})
-      )
+  def hint_formula_1() do
+    ExtNockTerms.sexpr_to_noun!({:hint, [1, {:constant, [1]}]})
+  end
 
-    assert result1 == 1
+  def hint_formula_1_result() do
+    {:ok, result} = Nock.nock([0 | 1], hint_formula_1())
+    assert result == 1
+    result
+  end
 
-    {:ok, result2} =
-      Nock.nock(
-        [132 | 19],
-        ExtNockTerms.sexpr_to_noun!({:hint, [37, {:incr, [[0, 3]]}]})
-      )
+  def hint_formula_2() do
+    ExtNockTerms.sexpr_to_noun!({:hint, [37, {:incr, [[0, 3]]}]})
+  end
 
-    assert result2 == 20
+  def hint_formula_2_result() do
+    {:ok, result} = Nock.nock([132 | 19], hint_formula_2())
+    assert result == 20
+    result
+  end
 
-    {:ok, result3} =
-      Nock.nock(
-        [132 | 19],
-        ExtNockTerms.sexpr_to_noun!({:hint, [[37, 1, 0], {:incr, [[0, 3]]}]})
-      )
+  def hint_formula_3() do
+    ExtNockTerms.sexpr_to_noun!({:hint, [[37, 1, 0], {:incr, [[0, 3]]}]})
+  end
 
-    assert result3 == 20
+  def hint_formula_3_result() do
+    {:ok, result} = Nock.nock([132 | 19], hint_formula_3())
+    assert result == 20
+    result
+  end
 
-    {:error, _} =
-      Nock.nock(
-        [0 | 1],
-        ExtNockTerms.sexpr_to_noun!({:hint, [[1, 0], {:constant, [1]}]})
-      )
+  def hint_formula_error() do
+    ExtNockTerms.sexpr_to_noun!({:hint, [[1, 0], {:constant, [1]}]})
+  end
+
+  def hint_formula_error_result() do
+    result = Nock.nock([0 | 1], hint_formula_error())
+    assert {:error, _} = result
+    result
   end
 
   @doc """
   I test core production and activation.
   """
-  def core_production_activation_test() do
-    inc_sexpr = {:incr, [{:slot, [1]}]}
-    inc_formula = ExtNockTerms.sexpr_to_noun!(inc_sexpr)
-    {:ok, inc_result} = Nock.nock(100, inc_formula)
-    assert inc_result == 101
+  def inc_formula() do
+    ExtNockTerms.sexpr_to_noun!({:incr, [{:slot, [1]}]})
+  end
 
-    # The decrement formula from
-    # https://docs.urbit.org/language/nock/examples/decrement .
-    dec_sexpr = [
+  def inc_result() do
+    {:ok, result} = Nock.nock(100, inc_formula())
+    assert result == 101
+    result
+  end
+
+  def dec_formula() do
+    ExtNockTerms.sexpr_to_noun!([
       8,
       [1, 0],
       8,
@@ -684,55 +817,47 @@ defmodule Examples.EExtNock.EExtNockTerms do
       2,
       0,
       1
-    ]
+    ])
+  end
 
-    dec_formula =
-      ExtNockTerms.sexpr_to_noun!(dec_sexpr)
+  def dec_result() do
+    {:ok, result} = Nock.nock(100, dec_formula())
+    assert result == 99
+    result
+  end
 
-    {:ok, dec_result} = Nock.nock(100, dec_formula)
-    assert dec_result == 99
+  def inc_core_formula() do
+    ExtNockTerms.sexpr_to_noun!(
+      {:create_core_1, [{:incr, [{:slot, [6]}]}, {:constant, [0]}, 1729]}
+    )
+  end
 
-    # Commonly, the payload will be a library or chain of libraries.
-    # In the following example we don't use it, so we provide some
-    # random* payload.
-    inc_core_payload = 1729
-    inc_core_default_arg = {:constant, [0]}
+  def inc_core_formula_structure() do
+    result = inc_core_formula()
+    assert result == [[[1, 4, 0 | 6], [1 | 0], 0 | 2] | 1729]
+    result
+  end
 
-    inc_core_sexpr =
-      {:create_core_1,
-       [{:incr, [{:slot, [6]}]}, inc_core_default_arg, inc_core_payload]}
-
-    inc_core_formula = ExtNockTerms.sexpr_to_noun!(inc_core_sexpr)
-
-    assert inc_core_formula == [
-             [[1, 4, 0 | 6], [1 | 0], 0 | 2] | inc_core_payload
-           ]
-
-    inc_call_arg = 123
-
-    inc_call_formula =
-      ExtNockTerms.sexpr_to_noun!({:call_core_1, [inc_call_arg]})
-
-    {:ok, inc_core_result} = Nock.nock(inc_core_formula, inc_call_formula)
-    assert inc_core_result == inc_call_arg + 1
+  def inc_core_call_result() do
+    call_formula = ExtNockTerms.sexpr_to_noun!({:call_core_1, [123]})
+    {:ok, result} = Nock.nock(inc_core_formula(), call_formula)
+    assert result == 124
+    result
   end
 
   @doc """
   I test the compile_to_nock_term! function success case.
   """
   def compile_to_nock_term_success_test() do
-    # Create a simple extended term
-    term = tvc(:slot, [tvc0({:atom, 2})])
+    tvc(:slot, [tvc0({:atom, 2})])
+  end
 
-    # Test successful compilation
-    compiled = ExtNockTerms.compile_to_nock_term!(term)
+  def compile_to_nock_term_success_test_result() do
+    compiled =
+      ExtNockTerms.compile_to_nock_term!(compile_to_nock_term_success_test())
 
-    # Verify the structure
-    expected =
-      tvc(:cell, [tvc0({:atom, 0}), tvc0({:atom, 2})])
-
+    expected = tvc(:cell, [tvc0({:atom, 0}), tvc0({:atom, 2})])
     assert compiled == expected
-
-    term
+    compiled
   end
 end
