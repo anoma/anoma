@@ -1,4 +1,6 @@
 defmodule NockPoly.FinIndIndPolyF do
+  use TypedStruct
+
   @moduledoc """
   I implement finitary inductive-inductive polynomial functors, which enable
   the definition of mutually dependent types where one depends on the constructors
@@ -46,63 +48,75 @@ defmodule NockPoly.FinIndIndPolyF do
   """
   @type ind_ind_f1 :: [ind_ind_f1_rep()]
 
-  @typedoc """
-  I represent a natural transformation from a representable functor.
-  I consist of:
+  typedstruct module: RepresentableNt, enforce: true do
+    @typedoc """
+    I represent a natural transformation from a representable functor.
+    I consist of:
 
-  * `base_field_map` - Maps target base fields to source base fields:
-    - A mapping from target field indices to source field indices
-    - Length equals number of base fields in target
-    - Each element is a valid field index in source
+    * `base_field_map` - Maps target base fields to source base fields:
+      - A mapping from target field indices to source field indices
+      - Length equals number of base fields in target
+      - Each element is a valid field index in source
 
-  * `dep_field_maps` - Dependent field mappings:
-    - A list of mappings, one for each base field in source
-    - Each mapping maps target dependent fields to source dependent fields
-    - Length of inner mapping equals number of dependent fields for corresponding target field
-    - Each element is a valid dependent field index for the corresponding source field
-  """
-  @type representable_nt :: %{
-          base_field_map: Term.fin_mapping(),
-          dep_field_maps: [Term.fin_mapping()]
-        }
+    * `dep_field_maps` - Dependent field mappings:
+      - A list of mappings, one for each base field in source
+      - Each mapping maps target dependent fields to source dependent fields
+      - Length of inner mapping equals number of dependent fields for corresponding target field
+      - Each element is a valid dependent field index for the corresponding source field
+    """
 
-  @typedoc """
-  I represent a natural transformation between IndIndF1 structures.
-  I consist of:
+    field(:base_field_map, Term.fin_mapping())
+    field(:dep_field_maps, [Term.fin_mapping()])
+  end
 
-  * `pos_map` - Maps source positions to target positions:
-    - A mapping from source position indices to target position indices
-    - Length equals number of positions in source
-    - Each element is a valid position index in target
+  @type representable_nt :: RepresentableNt.t()
 
-  * `rep_transformations` - Transformations for each source position:
-    - A list of representable natural transformations, one for each source position
-    - Each transformation maps from the target position's fields to the source position's fields
-    - Length equals number of positions in source
-  """
-  @type ind_ind_f1_nt :: %{
-          pos_map: Term.fin_mapping(),
-          rep_transformations: [representable_nt()]
-        }
+  typedstruct module: IndIndF1Nt, enforce: true do
+    @typedoc """
+    I represent a natural transformation between IndIndF1 structures.
+    I consist of:
 
-  @typedoc """
-  I represent a slice over an IndIndF1, which is a pair of another IndIndF1
-  and a natural transformation to the base IndIndF1.
-  """
-  @type ind_ind_f1_slice :: %{
-          total: ind_ind_f1(),
-          projection: ind_ind_f1_nt()
-        }
+    * `pos_map` - Maps source positions to target positions:
+      - A mapping from source position indices to target position indices
+      - Length equals number of positions in source
+      - Each element is a valid position index in target
 
-  @typedoc """
-  I represent a complete finitary inductive-inductive polynomial functor.
+    * `rep_transformations` - Transformations for each source position:
+      - A list of representable natural transformations, one for each source position
+      - Each transformation maps from the target position's fields to the source position's fields
+      - Length equals number of positions in source
+    """
 
-  I consist of a base IndIndF1 and a slice over it (the dependent part).
-  """
-  @type ind_ind_f :: %{
-          base: ind_ind_f1(),
-          slice: ind_ind_f1_slice()
-        }
+    field(:pos_map, Term.fin_mapping())
+    field(:rep_transformations, [NockPoly.FinIndIndPolyF.representable_nt()])
+  end
+
+  @type ind_ind_f1_nt :: IndIndF1Nt.t()
+
+  typedstruct module: IndIndF1Slice, enforce: true do
+    @typedoc """
+    I represent a slice over an IndIndF1, which is a pair of another IndIndF1
+    and a natural transformation to the base IndIndF1.
+    """
+
+    field(:total, NockPoly.FinIndIndPolyF.ind_ind_f1())
+    field(:projection, NockPoly.FinIndIndPolyF.ind_ind_f1_nt())
+  end
+
+  @type ind_ind_f1_slice :: IndIndF1Slice.t()
+
+  typedstruct module: IndIndF, enforce: true do
+    @typedoc """
+    I represent a complete finitary inductive-inductive polynomial functor.
+
+    I consist of a base IndIndF1 and a slice over it (the dependent part).
+    """
+
+    field(:base, NockPoly.FinIndIndPolyF.ind_ind_f1())
+    field(:slice, NockPoly.FinIndIndPolyF.ind_ind_f1_slice())
+  end
+
+  @type ind_ind_f :: IndIndF.t()
 
   @doc """
   I validate a natural transformation from a representable functor.

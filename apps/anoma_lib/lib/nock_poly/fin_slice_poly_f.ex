@@ -1,4 +1,6 @@
 defmodule NockPoly.FinSlicePolyF do
+  use TypedStruct
+
   @moduledoc """
   I am an enhanced representation of finitary polynomial functors on slice categories.
 
@@ -33,24 +35,28 @@ defmodule NockPoly.FinSlicePolyF do
   """
   @type ctor_index :: non_neg_integer()
 
-  @typedoc """
-  A type specification for a multi-type system.
+  typedstruct enforce: true do
+    @typedoc """
+    A type specification for a multi-type system.
 
-  Consists of:
-  - `input_types`: The number of input types in the system
-  - `output_types`: The number of output types in the system
-  - `ctor_counts`: A list specifying how many constructors each output type has
-  - `ctor_types`: A function mapping (output_type_index, ctor_index) to a list of input type indices
+    Consists of:
+    - `input_types`: The number of input types in the system
+    - `output_types`: The number of output types in the system
+    - `ctor_counts`: A list specifying how many constructors each output type has
+    - `ctor_types`: A function mapping (output_type_index, ctor_index) to a list of input type indices
 
-  For initial algebras, input_types and output_types must be the same, but we allow
-  them to differ to support composition of functors.
-  """
-  @type typespec :: %{
-          input_types: non_neg_integer(),
-          output_types: non_neg_integer(),
-          ctor_counts: [non_neg_integer()],
-          ctor_types: ({type_index, ctor_index} -> [type_index])
-        }
+    For initial algebras, input_types and output_types must be the same, but we allow
+    them to differ to support composition of functors.
+    """
+
+    field(:input_types, non_neg_integer())
+    field(:output_types, non_neg_integer())
+    field(:ctor_counts, [non_neg_integer()])
+
+    field(:ctor_types, ({type_index(), ctor_index()} -> [type_index()]))
+  end
+
+  @type typespec :: t()
 
   @typedoc """
   A constructor in the slice-based type system.
@@ -325,7 +331,7 @@ defmodule NockPoly.FinSlicePolyF do
   def simple_type(ctor_arities) do
     ctor_count = length(ctor_arities)
 
-    %{
+    %__MODULE__{
       input_types: 1,
       output_types: 1,
       ctor_counts: [ctor_count],
@@ -404,7 +410,7 @@ defmodule NockPoly.FinSlicePolyF do
       end)
       |> Map.new()
 
-    %{
+    %__MODULE__{
       input_types: type_count,
       output_types: type_count,
       ctor_counts: ctor_counts,

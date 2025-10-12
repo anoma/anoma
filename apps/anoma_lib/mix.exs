@@ -21,7 +21,11 @@ defmodule AnomaLib.MixProject do
         ignore_modules: [
           NockPoly.Term.Unreachable,
           NockPoly.Term.MacroDefs,
-          ExtNock.MacroDefs
+          ExtNock.MacroDefs,
+          NockPoly.FinIndIndPolyF.RepresentableNt,
+          NockPoly.FinIndIndPolyF.IndIndF1Nt,
+          NockPoly.FinIndIndPolyF.IndIndF1Slice,
+          NockPoly.FinIndIndPolyF.IndIndF
         ]
       ]
     ]

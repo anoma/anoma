@@ -1,4 +1,6 @@
 defmodule NockPoly.Fin2ForestPolyF do
+  use TypedStruct
+
   alias NockPoly.Term
 
   @moduledoc """
@@ -118,48 +120,51 @@ defmodule NockPoly.Fin2ForestPolyF do
   """
   @type position_map :: %{non_neg_integer() => position_spec()}
 
-  @typedoc """
-  A polynomial functor specification over a finite two-level forest.
+  typedstruct enforce: true do
+    @typedoc """
+    A polynomial functor specification over a finite two-level forest.
 
-  This specifies a PRA (parametric right adjoint) endofunctor on the copresheaf
-  category determined by the forest structure. In the context of the nLab article
-  on PRA functors, this represents:
+    This specifies a PRA (parametric right adjoint) endofunctor on the copresheaf
+    category determined by the forest structure. In the context of the nLab article
+    on PRA functors, this represents:
 
-  - The polynomial functor P(X) = Σ_{p ∈ Pos} X^{Dir(p)}
-  - Where Pos is the disjoint union of all position sets (one per type)
-  - And Dir(p) specifies the parameter types for position p
+    - The polynomial functor P(X) = Σ_{p ∈ Pos} X^{Dir(p)}
+    - Where Pos is the disjoint union of all position sets (one per type)
+    - And Dir(p) specifies the parameter types for position p
 
-  The specification consists of:
-  - `forest`: The forest structure defining the index category
-  - `base_positions`: Position maps for base type constructors
-  - `dep_positions`: Position maps for dependent type constructors
+    The specification consists of:
+    - `forest`: The forest structure defining the index category
+    - `base_positions`: Position maps for base type constructors
+    - `dep_positions`: Position maps for dependent type constructors
 
-  Together, these define how to build new elements of each type from existing
-  elements, which is precisely what a polynomial endofunctor does.
+    Together, these define how to build new elements of each type from existing
+    elements, which is precisely what a polynomial endofunctor does.
 
-  ## Relation to PRA Theory
+    ## Relation to PRA Theory
 
-  In parametric right adjoint theory, a functor T : [C^op, Set] → [D^op, Set]
-  is uniquely determined by:
-  1. An object T1 ∈ [D^op, Set] (a copresheaf on the target category)
-  2. A functor E_T : el(T1)^op → [C^op, Set] from the opposite of T1's category
-     of elements
+    In parametric right adjoint theory, a functor T : [C^op, Set] → [D^op, Set]
+    is uniquely determined by:
+    1. An object T1 ∈ [D^op, Set] (a copresheaf on the target category)
+    2. A functor E_T : el(T1)^op → [C^op, Set] from the opposite of T1's category
+       of elements
 
-  The action is given by: T(Z)(j) = Σ_{i ∈ T1(j)} Hom[C^op, Set](E_T(j,i), Z)
+    The action is given by: T(Z)(j) = Σ_{i ∈ T1(j)} Hom[C^op, Set](E_T(j,i), Z)
 
-  In our polynomial functor representation:
-  - The position maps collectively define T1: for each object j in the forest,
-    T1(j) is the set of positions (constructors) available at that type
-  - The parameter specifications in each position define E_T: for each position
-    p at object j, E_T(j,p) specifies what inputs are needed
-  - The polynomial structure P(X) = Σ_{p ∈ Pos} X^{Dir(p)} directly implements
-    the PRA formula above
-  """
-  @type forest_poly_spec :: %{
-          forest: fin2_forest(),
-          base_positions: [position_map()],
-          dep_positions: [[position_map()]]
-        }
+    In our polynomial functor representation:
+    - The position maps collectively define T1: for each object j in the forest,
+      T1(j) is the set of positions (constructors) available at that type
+    - The parameter specifications in each position define E_T: for each position
+      p at object j, E_T(j,p) specifies what inputs are needed
+    - The polynomial structure P(X) = Σ_{p ∈ Pos} X^{Dir(p)} directly implements
+      the PRA formula above
+    """
+
+    field(:forest, fin2_forest())
+    field(:base_positions, [position_map()])
+    field(:dep_positions, [[position_map()]])
+  end
+
+  @type forest_poly_spec :: t()
 
   @doc """
   Get the number of base types in a forest.
@@ -517,7 +522,7 @@ defmodule NockPoly.Fin2ForestPolyF do
       end)
       |> Map.new()
 
-    %{
+    %__MODULE__{
       # One base type, no dependents
       forest: [0],
       base_positions: [base_positions],
@@ -586,7 +591,7 @@ defmodule NockPoly.Fin2ForestPolyF do
         Enum.map(dep_list, to_pos_map)
       end)
 
-    %{
+    %__MODULE__{
       forest: forest,
       base_positions: base_positions,
       dep_positions: dep_positions

@@ -43,22 +43,22 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     # Detail the field mappings between types for each constructor
     st_rep_transformations = [
       # For dependent constructor 0 (maps to base constructor 0)
-      %{
+      %IndIndF.RepresentableNt{
         base_field_map: [],
         dep_field_maps: []
       },
       # For dependent constructor 1 (maps to base constructor 1)
-      %{
+      %IndIndF.RepresentableNt{
         base_field_map: [0, 1],
         dep_field_maps: [[], []]
       },
       # For dependent constructor 2 (maps to base constructor 2)
-      %{
+      %IndIndF.RepresentableNt{
         base_field_map: [0, 1, 2],
         dep_field_maps: [[0], [0], [0]]
       },
       # For dependent constructor 3 (maps to base constructor 2)
-      %{
+      %IndIndF.RepresentableNt{
         base_field_map: [0, 0, 1],
         # Corrected the last entry to [0]
         dep_field_maps: [[0], [0], [0]]
@@ -66,19 +66,19 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     ]
 
     # Assemble the complete natural transformation
-    stnt = %{
+    stnt = %IndIndF.IndIndF1Nt{
       pos_map: stnt_pos_map,
       rep_transformations: st_rep_transformations
     }
 
     # Create the slice relating the dependent type to the base type
-    stf1sl = %{
+    stf1sl = %IndIndF.IndIndF1Slice{
       total: st1f_f1,
       projection: stnt
     }
 
     # Create the complete inductive-inductive type system
-    stmlf = %{
+    stmlf = %IndIndF.IndIndF{
       base: st0f_f1,
       slice: stf1sl
     }
@@ -184,7 +184,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     target_rep = [0, 0]
 
     # Valid representable NT
-    valid_rep_nt = %{
+    valid_rep_nt = %IndIndF.RepresentableNt{
       # Source field 0 -> Target field 0, Source field 1 -> Target field 1
       base_field_map: [0, 1],
       # Empty dep maps since target has no dependent fields
@@ -199,7 +199,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
              )
 
     # Invalid base field map length
-    invalid_rep_nt1 = %{
+    invalid_rep_nt1 = %IndIndF.RepresentableNt{
       base_field_map: [0],
       dep_field_maps: [[0], []]
     }
@@ -212,7 +212,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
              )
 
     # Invalid dep field maps length
-    invalid_rep_nt2 = %{
+    invalid_rep_nt2 = %IndIndF.RepresentableNt{
       base_field_map: [0, 1],
       # Only one dep map but need two
       dep_field_maps: [[]]
@@ -241,19 +241,19 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     ]
 
     # Valid ind_ind_f1_nt
-    valid_ind_f1_nt = %{
+    valid_ind_f1_nt = %IndIndF.IndIndF1Nt{
       # Source pos 0 -> Target pos 0, Source pos 1 -> Target pos 1
       pos_map: [0, 1],
       rep_transformations: [
         # For source pos 0 -> target pos 0
-        %{
+        %IndIndF.RepresentableNt{
           # Target base field 0 -> Source base field 0
           base_field_map: [0],
           # No dep fields for target
           dep_field_maps: [[]]
         },
         # For source pos 1 -> target pos 1
-        %{
+        %IndIndF.RepresentableNt{
           # Maps target fields to source fields
           base_field_map: [0, 1],
           # Dep maps for each target field
@@ -271,11 +271,11 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
              )
 
     # Invalid pos_map length
-    invalid_ind_f1_nt1 = %{
+    invalid_ind_f1_nt1 = %IndIndF.IndIndF1Nt{
       # Too short
       pos_map: [0],
       rep_transformations: [
-        %{
+        %IndIndF.RepresentableNt{
           base_field_map: [0],
           dep_field_maps: [[]]
         }
@@ -290,10 +290,10 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
              )
 
     # Invalid rep_transformations length
-    invalid_ind_f1_nt2 = %{
+    invalid_ind_f1_nt2 = %IndIndF.IndIndF1Nt{
       pos_map: [0, 1],
       rep_transformations: [
-        %{
+        %IndIndF.RepresentableNt{
           base_field_map: [0],
           dep_field_maps: [[]]
         }
@@ -316,17 +316,17 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     # Two constructors with 0 and 2 base fields, and dep fields
     dep_type = [[], [1, 1]]
 
-    valid_slice = %{
+    valid_slice = %IndIndF.IndIndF1Slice{
       total: dep_type,
-      projection: %{
+      projection: %IndIndF.IndIndF1Nt{
         pos_map: [0, 1],
         rep_transformations: [
-          %{
+          %IndIndF.RepresentableNt{
             base_field_map: [],
             # First constructor has no base fields
             dep_field_maps: []
           },
-          %{
+          %IndIndF.RepresentableNt{
             # Second constructor maps to base fields 0 and 1
             base_field_map: [0, 1],
             # One dep field for each base field
@@ -343,7 +343,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     assert :ok = IndIndF.validate_ind_ind_f1_slice(valid_slice, base_type)
 
     # Invalid source for projection
-    invalid_slice = %{
+    invalid_slice = %IndIndF.IndIndF1Slice{
       # Only one constructor, causing mismatch with projection
       total: [[]],
       # Projection expects two constructors
@@ -354,7 +354,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
              IndIndF.validate_ind_ind_f1_slice(invalid_slice, base_type)
 
     # Test validate_ind_ind_f
-    valid_ind_ind_f = %{
+    valid_ind_ind_f = %IndIndF.IndIndF{
       base: base_type,
       slice: valid_slice
     }
@@ -380,15 +380,15 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     dep_type = [[], [1, 1]]
 
     # Create the natural transformation
-    projection = %{
+    projection = %IndIndF.IndIndF1Nt{
       # Straightforward mapping
       pos_map: [0, 1],
       rep_transformations: [
-        %{
+        %IndIndF.RepresentableNt{
           base_field_map: [],
           dep_field_maps: []
         },
-        %{
+        %IndIndF.RepresentableNt{
           base_field_map: [0, 1],
           dep_field_maps: [[0], [0]]
         }
@@ -396,9 +396,9 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     }
 
     # Complete system
-    stmlf = %{
+    stmlf = %IndIndF.IndIndF{
       base: base_type,
-      slice: %{
+      slice: %IndIndF.IndIndF1Slice{
         total: dep_type,
         projection: projection
       }
