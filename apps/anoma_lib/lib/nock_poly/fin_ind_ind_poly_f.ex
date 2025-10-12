@@ -114,12 +114,14 @@ defmodule NockPoly.FinIndIndPolyF do
           # target
           ind_ind_f1_rep()
         ) :: :ok | {:error, atom()}
-  def validate_representable_nt(rep_nt, source_rep, target_rep) do
-    %{
-      base_field_map: base_field_map,
-      dep_field_maps: dep_field_maps
-    } = rep_nt
-
+  def validate_representable_nt(
+        %{
+          base_field_map: base_field_map,
+          dep_field_maps: dep_field_maps
+        },
+        source_rep,
+        target_rep
+      ) do
     source_base_field_count = length(source_rep)
     target_base_field_count = length(target_rep)
 
@@ -170,12 +172,14 @@ defmodule NockPoly.FinIndIndPolyF do
   """
   @spec validate_ind_ind_f1_nt(ind_ind_f1_nt(), ind_ind_f1(), ind_ind_f1()) ::
           :ok | {:error, atom()}
-  def validate_ind_ind_f1_nt(nt, source, target) do
-    %{
-      pos_map: pos_map,
-      rep_transformations: rep_transformations
-    } = nt
-
+  def validate_ind_ind_f1_nt(
+        %{
+          pos_map: pos_map,
+          rep_transformations: rep_transformations
+        },
+        source,
+        target
+      ) do
     source_pos_count = length(source)
     target_pos_count = length(target)
 
@@ -221,12 +225,7 @@ defmodule NockPoly.FinIndIndPolyF do
           ind_ind_f1()
         ) ::
           :ok | {:error, atom()}
-  def validate_ind_ind_f1_slice(slice, base) do
-    %{
-      total: total,
-      projection: projection
-    } = slice
-
+  def validate_ind_ind_f1_slice(%{total: total, projection: projection}, base) do
     validate_ind_ind_f1_nt(projection, total, base)
   end
 
@@ -234,12 +233,7 @@ defmodule NockPoly.FinIndIndPolyF do
   I validate a complete IndIndF to ensure all its parts are well-formed.
   """
   @spec validate_ind_ind_f(ind_ind_f()) :: :ok | {:error, atom()}
-  def validate_ind_ind_f(f) do
-    %{
-      base: base,
-      slice: slice
-    } = f
-
+  def validate_ind_ind_f(%{base: base, slice: slice}) do
     validate_ind_ind_f1_slice(slice, base)
   end
 

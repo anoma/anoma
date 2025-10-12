@@ -132,14 +132,12 @@ defmodule NockPoly.FinSlicePolyF do
   Returns :ok if valid, or {:error, reason} if invalid.
   """
   @spec validate_typespec(typespec) :: :ok | {:error, atom()}
-  def validate_typespec(typespec) do
-    %{
-      input_types: _input_types,
-      output_types: output_types,
-      ctor_counts: ctor_counts,
-      ctor_types: _ctor_types
-    } = typespec
-
+  def validate_typespec(
+        %{
+          output_types: output_types,
+          ctor_counts: ctor_counts
+        } = typespec
+      ) do
     cond do
       length(ctor_counts) != output_types ->
         {:error, :ctor_counts_length_mismatch}
@@ -157,14 +155,12 @@ defmodule NockPoly.FinSlicePolyF do
   end
 
   @spec validate_ctor_types(typespec) :: boolean()
-  defp validate_ctor_types(typespec) do
-    %{
-      input_types: input_types,
-      output_types: output_types,
-      ctor_counts: ctor_counts,
-      ctor_types: ctor_types
-    } = typespec
-
+  defp validate_ctor_types(%{
+         input_types: input_types,
+         output_types: output_types,
+         ctor_counts: ctor_counts,
+         ctor_types: ctor_types
+       }) do
     # For each output type and each of its constructors, check if ctor_types returns valid type indices
     Enum.all?(0..(output_types - 1), fn type_idx ->
       ctor_count = Enum.at(ctor_counts, type_idx)
@@ -198,14 +194,10 @@ defmodule NockPoly.FinSlicePolyF do
           spec(ctor, v)
         ) :: check_result(ctor, v)
         when ctor: term, v: term
-  def typecheck_v(term, {typespec, tspec, vspec}) do
-    %{
-      input_types: _input_types,
-      output_types: _output_types,
-      ctor_counts: ctor_counts,
-      ctor_types: ctor_types
-    } = typespec
-
+  def typecheck_v(
+        term,
+        {%{ctor_counts: ctor_counts, ctor_types: ctor_types}, tspec, vspec}
+      ) do
     Term.eval(
       # Constructor nodes
       fn {ctor, child_results} ->

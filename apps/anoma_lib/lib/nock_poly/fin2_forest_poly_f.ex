@@ -205,13 +205,13 @@ defmodule NockPoly.Fin2ForestPolyF do
   Validate a forest specification.
   """
   @spec validate_forest_spec(forest_poly_spec()) :: :ok | {:error, atom()}
-  def validate_forest_spec(spec) do
-    %{
-      forest: forest,
-      base_positions: base_positions,
-      dep_positions: dep_positions
-    } = spec
-
+  def validate_forest_spec(
+        %{
+          forest: forest,
+          base_positions: base_positions,
+          dep_positions: dep_positions
+        } = spec
+      ) do
     num_bases = num_base_types(forest)
 
     cond do
@@ -231,13 +231,11 @@ defmodule NockPoly.Fin2ForestPolyF do
 
   # Validate all position specifications
   @spec validate_all_positions(forest_poly_spec()) :: boolean()
-  defp validate_all_positions(spec) do
-    %{
-      forest: forest,
-      base_positions: base_positions,
-      dep_positions: dep_positions
-    } = spec
-
+  defp validate_all_positions(%{
+         forest: forest,
+         base_positions: base_positions,
+         dep_positions: dep_positions
+       }) do
     # Check all base positions
     base_valid =
       Enum.with_index(base_positions)
