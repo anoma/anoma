@@ -5,7 +5,6 @@ defmodule Examples.ENockPoly.ETerm do
   alias NockPoly.Term
   import NockPoly.Term.MacroDefs
   alias NockPoly.NockTerms
-  alias Noun
 
   use TypedStruct
 

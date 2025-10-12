@@ -3,7 +3,6 @@ defmodule Examples.ENockPoly.ENockTerms do
 
   import ExUnit.Assertions
   alias NockPoly.NockTerms
-  alias Noun
 
   ####################################################################
   #  Tests for NockTerms conversion and typecheck invariants using

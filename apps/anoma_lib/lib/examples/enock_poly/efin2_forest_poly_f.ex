@@ -99,7 +99,6 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
   """
   def fin2_forest_typecheck_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
-    alias Term
 
     # Create a spec for natural numbers with zero and successor
     # zero: 0 args, succ: 1 arg
@@ -142,7 +141,6 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
   """
   def fin2_forest_walking_arrow_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
-    alias Term
 
     # Walking arrow forest: one base, one dependent
     walking_arrow_spec =
@@ -254,7 +252,6 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
   """
   def forest_nat_even_odd_proof_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
-    alias Term
 
     # Get the shared forest spec
     expr_spec = nat_parity_forest_poly_spec()
@@ -370,7 +367,6 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
   """
   def forest_elimination_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
-    alias Term
 
     # Get the shared forest spec
     expr_spec = nat_parity_forest_poly_spec()
@@ -661,7 +657,6 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
   """
   def fin2_forest_typecheck_child_errors_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
-    alias Term
 
     spec = Forest.simple_forest_spec([1, 1])
 
@@ -687,7 +682,6 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
   """
   def fin2_forest_typecheck_variable_test() do
     alias NockPoly.Fin2ForestPolyF, as: Forest
-    alias Term
 
     spec = Forest.simple_forest_spec([0, 1])
 

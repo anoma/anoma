@@ -25,7 +25,6 @@ defmodule NockPoly do
     a valid Nock atom).
     """
 
-    alias Noun
     alias NockPoly.FinPolyF
 
     @type nock_term_ctor :: {:atom, Noun.noun_atom()} | :cell
