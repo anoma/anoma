@@ -13,11 +13,11 @@ defmodule NockPoly.FinPolyF do
 
   @typedoc "Typecheck function for constructors. Given a constructor of type `ctor`, returns either `{:error}` (invalid) or `{:ok, non_neg_integer()}` (valid, with the returned arity)."
   @type tspec(ctor) :: (ctor ->
-                          {:invalid_constructor}
+                          :invalid_constructor
                           | {:ok, non_neg_integer()})
 
   @typedoc "Typecheck function for variables. Given a variable of type `v`, returns either `:ok` (valid) or `{:error, [:invalid_variable]}`."
-  @type vspec(v) :: (v -> {:ok} | {:invalid_variable})
+  @type vspec(v) :: (v -> {:ok} | :invalid_variable)
 
   @doc "A `vspec` which always succeeds (returning `:ok`)."
   @spec vspec_ok(v) :: :ok when v: term
@@ -38,7 +38,7 @@ defmodule NockPoly.FinPolyF do
 
   * `{:invalid_constructor, ctor}` – the constructor is invalid.
   * `{:invalid_arity, ctor, expected, actual}` – the number of children does not match the expected arity.
-  * `{:invalid_variable}` – the variable failed its check.
+  * `:invalid_variable` – the variable failed its check.
   """
   @type typecheck_error(ctor, v) ::
           {:invalid_constructor, ctor}
@@ -83,7 +83,7 @@ defmodule NockPoly.FinPolyF do
 
         level_errors =
           case tspec.(ctor) do
-            {:invalid_constructor} ->
+            :invalid_constructor ->
               [{:invalid_constructor, ctor}]
 
             {:ok, expected} ->
@@ -113,7 +113,7 @@ defmodule NockPoly.FinPolyF do
       fn var ->
         case vspec.(var) do
           :ok -> :ok
-          {:invalid_variable} -> {:error, [{:invalid_variable, var}]}
+          :invalid_variable -> {:error, [{:invalid_variable, var}]}
         end
       end,
       term

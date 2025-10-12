@@ -96,19 +96,19 @@ defmodule NockPoly.FinSlicePolyF do
   Typecheck function for constructors.
 
   Given a constructor of type `ctor`, returns either:
-  - `{:invalid_constructor}` (invalid constructor), or
+  - `:invalid_constructor` (invalid constructor), or
   - `{:ok, typed_ctor}` (valid, with type and constructor indices)
   """
-  @type tspec(ctor) :: (ctor -> {:invalid_constructor} | {:ok, typed_ctor})
+  @type tspec(ctor) :: (ctor -> :invalid_constructor | {:ok, typed_ctor})
 
   @typedoc """
   Typecheck function for variables.
 
   Given a variable of type `v`, returns either:
   - `{:ok, type_index}` (valid, with its type index), or
-  - `{:invalid_variable}`
+  - `:invalid_variable`
   """
-  @type vspec(v) :: (v -> {:ok, type_index} | {:invalid_variable})
+  @type vspec(v) :: (v -> {:ok, type_index} | :invalid_variable)
 
   @typedoc """
   A combined specification for open terms in a typed system.
@@ -212,7 +212,7 @@ defmodule NockPoly.FinSlicePolyF do
         # Verify constructor validity and get its type info
         constructor_check =
           case tspec.(ctor) do
-            {:invalid_constructor} ->
+            :invalid_constructor ->
               {:error, [{:invalid_constructor, ctor}]}
 
             {:ok, {type_idx, ctor_idx}} ->
@@ -275,7 +275,7 @@ defmodule NockPoly.FinSlicePolyF do
       # Variable nodes
       fn {var, expected_type} ->
         case vspec.(var) do
-          {:invalid_variable} ->
+          :invalid_variable ->
             {:error, [{:invalid_variable_type, var, expected_type, nil}]}
 
           {:ok, actual_type} ->
@@ -312,7 +312,7 @@ defmodule NockPoly.FinSlicePolyF do
         when ctor: term
   def typecheck(term, typespec, tspec) do
     # For closed terms, we use a vspec that would fail if ever called
-    fail_vspec = fn _v -> {:invalid_variable} end
+    fail_vspec = fn _v -> :invalid_variable end
     typecheck_v(term, {typespec, tspec, fail_vspec})
   end
 
@@ -365,8 +365,8 @@ defmodule NockPoly.FinSlicePolyF do
   def adapt_fin_tspec(fin_tspec, ctor_indices) do
     fn ctor ->
       case fin_tspec.(ctor) do
-        {:invalid_constructor} ->
-          {:invalid_constructor}
+        :invalid_constructor ->
+          :invalid_constructor
 
         {:ok, _arity} ->
           ctor_idx = Map.get(ctor_indices, ctor)

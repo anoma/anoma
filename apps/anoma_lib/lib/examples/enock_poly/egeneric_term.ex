@@ -247,10 +247,10 @@ defmodule Examples.ENockPoly.EGenericTerm do
   end
 
   def generic_term_generic_tspec_invalid() do
-    assert GenericTerm.generic_tspec(:invalid) == {:invalid_constructor}
-    assert GenericTerm.generic_tspec({:coprod, -1}) == {:invalid_constructor}
-    assert GenericTerm.generic_tspec({:nat, -1}) == {:invalid_constructor}
-    assert GenericTerm.generic_tspec("string") == {:invalid_constructor}
+    assert GenericTerm.generic_tspec(:invalid) == :invalid_constructor
+    assert GenericTerm.generic_tspec({:coprod, -1}) == :invalid_constructor
+    assert GenericTerm.generic_tspec({:nat, -1}) == :invalid_constructor
+    assert GenericTerm.generic_tspec("string") == :invalid_constructor
     :ok
   end
 end

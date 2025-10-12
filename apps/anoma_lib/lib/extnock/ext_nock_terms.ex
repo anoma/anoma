@@ -83,7 +83,7 @@ defmodule ExtNock.ExtNockTerms do
   I delegate to the standard Nock term typespec function.
   """
   @spec ext_nock_poly_tspec(ext_nock_term_ctor()) ::
-          {:ok, non_neg_integer()} | {:invalid_constructor}
+          {:ok, non_neg_integer()} | :invalid_constructor
   def ext_nock_poly_tspec(ctor) do
     case ext_tspec(ctor) do
       {:ok, arity} ->

@@ -452,14 +452,14 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     tspec = fn
       {:type0_ctor} -> {:ok, {0, 0}}
       {:type1_ctor} -> {:ok, {1, 0}}
-      _ -> {:invalid_constructor}
+      _ -> :invalid_constructor
     end
 
     # Create a vspec function that accepts variables and assigns a type
     vspec = fn
       {:var_type0} -> {:ok, 0}
       {:var_type1} -> {:ok, 1}
-      _ -> {:invalid_variable}
+      _ -> :invalid_variable
     end
 
     # For the SlicePolyF.typecheck_v, variables must be pairs of {variable, expected_type}
@@ -529,7 +529,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     fin_tspec = fn
       :a -> {:ok, 0}
       :b -> {:ok, 2}
-      _ -> {:invalid_constructor}
+      _ -> :invalid_constructor
     end
 
     # Map constructors to indices
@@ -541,7 +541,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     # Test converted tspec
     assert slice_tspec.(:a) == {:ok, {0, 0}}
     assert slice_tspec.(:b) == {:ok, {0, 1}}
-    assert slice_tspec.(:c) == {:invalid_constructor}
+    assert slice_tspec.(:c) == :invalid_constructor
 
     slice_tspec
   end
@@ -571,7 +571,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
         {:ok, {0, 0}}
 
       _ ->
-        {:invalid_constructor}
+        :invalid_constructor
     end
 
     # Empty vspec function that should never be called for this test

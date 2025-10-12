@@ -77,7 +77,7 @@ defmodule NockPoly.GenericTerm do
   """
   @spec generic_tspec(term()) ::
           {:ok, non_neg_integer() | :variable_arity}
-          | {:invalid_constructor}
+          | :invalid_constructor
   def generic_tspec({:coprod, index})
       when is_integer(index) and index >= 0 do
     {:ok, 1}
@@ -94,7 +94,7 @@ defmodule NockPoly.GenericTerm do
   end
 
   def generic_tspec(_) do
-    {:invalid_constructor}
+    :invalid_constructor
   end
 
   @doc """

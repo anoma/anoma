@@ -13,7 +13,7 @@ defmodule Examples.ENockPoly.EFinPolyF do
       "zero" -> {:ok, 0}
       "one" -> {:ok, 1}
       "two" -> {:ok, 2}
-      _ -> {:invalid_constructor}
+      _ -> :invalid_constructor
     end
   end
 
@@ -21,7 +21,7 @@ defmodule Examples.ENockPoly.EFinPolyF do
   defp common_vspec() do
     fn
       v when is_integer(v) and v >= 0 and v <= 4 -> :ok
-      _ -> {:invalid_variable}
+      _ -> :invalid_variable
     end
   end
 
