@@ -1,4 +1,4 @@
-defmodule Examples.EExtNock do
+defmodule Examples.EExtNock.EExtNockTerms do
   @moduledoc """
   I include examples and tests for Nock macros.
 
