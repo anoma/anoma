@@ -120,7 +120,7 @@ defmodule NockPoly.Fin2ForestPolyF do
   """
   @type position_map :: %{non_neg_integer() => position_spec()}
 
-  typedstruct enforce: true do
+  typedstruct module: ForestPolySpec, enforce: true do
     @typedoc """
     A polynomial functor specification over a finite two-level forest.
 
@@ -159,12 +159,12 @@ defmodule NockPoly.Fin2ForestPolyF do
       the PRA formula above
     """
 
-    field(:forest, fin2_forest())
-    field(:base_positions, [position_map()])
-    field(:dep_positions, [[position_map()]])
+    field(:forest, NockPoly.Fin2ForestPolyF.fin2_forest())
+    field(:base_positions, [NockPoly.Fin2ForestPolyF.position_map()])
+    field(:dep_positions, [[NockPoly.Fin2ForestPolyF.position_map()]])
   end
 
-  @type forest_poly_spec :: t()
+  @type forest_poly_spec :: ForestPolySpec.t()
 
   @doc """
   Get the number of base types in a forest.
@@ -522,7 +522,7 @@ defmodule NockPoly.Fin2ForestPolyF do
       end)
       |> Map.new()
 
-    %__MODULE__{
+    %ForestPolySpec{
       # One base type, no dependents
       forest: [0],
       base_positions: [base_positions],
@@ -591,7 +591,7 @@ defmodule NockPoly.Fin2ForestPolyF do
         Enum.map(dep_list, to_pos_map)
       end)
 
-    %__MODULE__{
+    %ForestPolySpec{
       forest: forest,
       base_positions: base_positions,
       dep_positions: dep_positions

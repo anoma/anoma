@@ -35,7 +35,7 @@ defmodule NockPoly.FinSlicePolyF do
   """
   @type ctor_index :: non_neg_integer()
 
-  typedstruct enforce: true do
+  typedstruct module: Typespec, enforce: true do
     @typedoc """
     A type specification for a multi-type system.
 
@@ -49,14 +49,16 @@ defmodule NockPoly.FinSlicePolyF do
     them to differ to support composition of functors.
     """
 
-    field(:input_types, non_neg_integer())
-    field(:output_types, non_neg_integer())
+    field(:input_types, NockPoly.FinSlicePolyF.type_index())
+    field(:output_types, NockPoly.FinSlicePolyF.type_index())
     field(:ctor_counts, [non_neg_integer()])
 
-    field(:ctor_types, ({type_index(), ctor_index()} -> [type_index()]))
+    field(:ctor_types, ({NockPoly.FinSlicePolyF.type_index(),
+                         NockPoly.FinSlicePolyF.ctor_index()} ->
+                          [NockPoly.FinSlicePolyF.type_index()]))
   end
 
-  @type typespec :: t()
+  @type typespec :: Typespec.t()
 
   @typedoc """
   A constructor in the slice-based type system.
@@ -331,7 +333,7 @@ defmodule NockPoly.FinSlicePolyF do
   def simple_type(ctor_arities) do
     ctor_count = length(ctor_arities)
 
-    %__MODULE__{
+    %Typespec{
       input_types: 1,
       output_types: 1,
       ctor_counts: [ctor_count],
@@ -410,7 +412,7 @@ defmodule NockPoly.FinSlicePolyF do
       end)
       |> Map.new()
 
-    %__MODULE__{
+    %Typespec{
       input_types: type_count,
       output_types: type_count,
       ctor_counts: ctor_counts,

@@ -34,7 +34,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
   defp create_expr_typespec() do
     # Create a simplified typespec manually rather than using the helpers
     # This gives us more control for testing purposes
-    typespec = %SliceF{
+    typespec = %SliceF.Typespec{
       # Two types: ArithExpr (0) and BoolExpr (1)
       input_types: 2,
       # Same output types
@@ -99,7 +99,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
 
     # Test validation with invalid ctor_counts
     # Too short for our 2 types
-    invalid_typespec = %SliceF{typespec | ctor_counts: [3]}
+    invalid_typespec = %SliceF.Typespec{typespec | ctor_counts: [3]}
 
     assert SliceF.validate_typespec(invalid_typespec) ==
              {:error, :ctor_counts_length_mismatch}
@@ -436,7 +436,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
   """
   def slice_test_typecheck_v_with_variables() do
     # Create a simple typespec for two types
-    typespec = %SliceF{
+    typespec = %SliceF.Typespec{
       input_types: 2,
       output_types: 2,
       ctor_counts: [1, 1],
@@ -552,7 +552,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
   """
   def slice_test_invalid_constructor() do
     # Create a simple typespec
-    typespec = %SliceF{
+    typespec = %SliceF.Typespec{
       input_types: 1,
       output_types: 1,
       ctor_counts: [1],

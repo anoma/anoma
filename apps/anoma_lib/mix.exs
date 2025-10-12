@@ -22,6 +22,8 @@ defmodule AnomaLib.MixProject do
           NockPoly.Term.Unreachable,
           NockPoly.Term.MacroDefs,
           ExtNock.MacroDefs,
+          NockPoly.Fin2ForestPolyF.ForestPolySpec,
+          NockPoly.FinSlicePolyF.Typespec,
           NockPoly.FinIndIndPolyF.RepresentableNt,
           NockPoly.FinIndIndPolyF.IndIndF1Nt,
           NockPoly.FinIndIndPolyF.IndIndF1Slice,

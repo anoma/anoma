@@ -553,7 +553,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
     alias NockPoly.Fin2ForestPolyF, as: Forest
 
     # Test base_positions length mismatch
-    invalid_spec = %Forest{
+    invalid_spec = %Forest.ForestPolySpec{
       # 2 base types
       forest: [1, 0],
       # Only 1 position map
@@ -565,7 +565,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
              {:error, :base_positions_length_mismatch}
 
     # Test dep_positions length mismatch
-    invalid_spec2 = %Forest{
+    invalid_spec2 = %Forest.ForestPolySpec{
       # 2 base types
       forest: [1, 0],
       base_positions: [%{}, %{}],
@@ -577,7 +577,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
              {:error, :dep_positions_length_mismatch}
 
     # Test invalid position specs - wrong number of dep position maps
-    invalid_spec3 = %Forest{
+    invalid_spec3 = %Forest.ForestPolySpec{
       # Base 0 has 1 dep, base 1 has 0 deps
       forest: [1, 0],
       base_positions: [%{0 => []}, %{0 => []}],
@@ -589,7 +589,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
              {:error, :invalid_position_specs}
 
     # Test invalid position specs - invalid forest object in parameter list
-    invalid_spec4 = %Forest{
+    invalid_spec4 = %Forest.ForestPolySpec{
       # 2 base types, first has 1 dep
       forest: [1, 0],
       # Base constructor has invalid parameter reference (base 2 doesn't exist)
@@ -601,7 +601,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
              {:error, :invalid_position_specs}
 
     # Test invalid position specs - invalid dep reference in parameter list
-    invalid_spec5 = %Forest{
+    invalid_spec5 = %Forest.ForestPolySpec{
       # Base 0 has 1 dep, base 1 has 0 deps
       forest: [1, 0],
       base_positions: [%{0 => []}, %{0 => []}],
