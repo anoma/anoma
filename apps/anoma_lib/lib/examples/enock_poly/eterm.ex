@@ -15,49 +15,83 @@ defmodule Examples.ENockPoly.ETerm do
   t1: a closed term with no children.
   """
   def term_test_t1() do
-    res = tvc0(1)
-    assert Term.depth(res) == 1
-    assert Term.size(res) == 1
-    res
+    tvc0(1)
+  end
+
+  def term_test_t1_depth() do
+    result = Term.depth(term_test_t1())
+    assert result == 1
+    result
+  end
+
+  def term_test_t1_size() do
+    result = Term.size(term_test_t1())
+    assert result == 1
+    result
   end
 
   @doc """
   t2: a closed term with two children.
   """
   def term_test_t2() do
-    res = tvc(:a, [tvc0(:a), tvc0(:b)])
-    assert Term.depth(res) == 2
-    assert Term.size(res) == 3
-    res
+    tvc(:a, [tvc0(:a), tvc0(:b)])
+  end
+
+  def term_test_t2_depth() do
+    result = Term.depth(term_test_t2())
+    assert result == 2
+    result
+  end
+
+  def term_test_t2_size() do
+    result = Term.size(term_test_t2())
+    assert result == 3
+    result
   end
 
   @doc """
   t3: a nested closed term.
   """
   def term_test_t3() do
-    res = tvc(:x, [tvc(:y, [tvc0(:z)])])
-    assert Term.depth(res) == 3
-    assert Term.size(res) == 3
-    res
+    tvc(:x, [tvc(:y, [tvc0(:z)])])
+  end
+
+  def term_test_t3_depth() do
+    result = Term.depth(term_test_t3())
+    assert result == 3
+    result
+  end
+
+  def term_test_t3_size() do
+    result = Term.size(term_test_t3())
+    assert result == 3
+    result
   end
 
   @doc """
   t4: a more complex closed term.
   """
   def term_test_t4() do
-    res =
-      tvc(
-        0,
-        [
-          term_test_t1(),
-          tvc(2, [tvc0(3), tvc0(4)]),
-          tvc0(5)
-        ]
-      )
+    tvc(
+      0,
+      [
+        term_test_t1(),
+        tvc(2, [tvc0(3), tvc0(4)]),
+        tvc0(5)
+      ]
+    )
+  end
 
-    assert Term.depth(res) == 3
-    assert Term.size(res) == 6
-    res
+  def term_test_t4_depth() do
+    result = Term.depth(term_test_t4())
+    assert result == 3
+    result
+  end
+
+  def term_test_t4_size() do
+    result = Term.size(term_test_t4())
+    assert result == 6
+    result
   end
 
   @doc """
@@ -71,34 +105,43 @@ defmodule Examples.ENockPoly.ETerm do
   all the constructor names.
   """
   def term_test_t8() do
-    res =
-      tvc("root", [tvc0("left"), tvc0("right")])
+    tvc("root", [tvc0("left"), tvc0("right")])
+  end
 
+  def term_test_t8_cata_string_algebra() do
     algebra = fn {ctor, children} ->
       to_string(ctor) <> Enum.join(children, "")
     end
 
-    assert Term.cata(res, algebra) == "rootleftright"
-    res
+    result = Term.cata(term_test_t8(), algebra)
+    assert result == "rootleftright"
+    result
   end
 
   @doc """
   v1: a single variable (an open term), which has depth and size 0.
   """
   def term_test_v1() do
-    res = tvv("x")
-    assert Term.depth(res) == 0
-    assert Term.size(res) == 0
-    res
+    tvv("x")
+  end
+
+  def term_test_v1_depth() do
+    result = Term.depth(term_test_v1())
+    assert result == 0
+    result
+  end
+
+  def term_test_v1_size() do
+    result = Term.size(term_test_v1())
+    assert result == 0
+    result
   end
 
   @doc """
   I apply `out_tv` to a variable term to obtain the underlying representation.
   """
   def term_test_v1_out_tv() do
-    res = term_test_v1()
-    out = Term.out_tv(res)
-    # The assertion verifies that out_tv reveals the internal structure
+    out = Term.out_tv(term_test_v1())
     assert out == {:tvar, "x"}
     out
   end
@@ -107,49 +150,71 @@ defmodule Examples.ENockPoly.ETerm do
   t5: an open term whose child is a variable.
   """
   def term_test_t5() do
-    res = tvc(:a, [tvv("x")])
-    assert Term.depth(res) == 1
-    assert Term.size(res) == 1
-    res
+    tvc(:a, [tvv("x")])
+  end
+
+  def term_test_t5_depth() do
+    result = Term.depth(term_test_t5())
+    assert result == 1
+    result
+  end
+
+  def term_test_t5_size() do
+    result = Term.size(term_test_t5())
+    assert result == 1
+    result
   end
 
   @doc """
   t6: an open term with multiple variables (one nested).
   """
   def term_test_t6() do
-    res =
-      tvc(
-        :b,
-        [
-          tvv("x"),
-          tvc(:c, [tvv("y"), tvv("z")])
-        ]
-      )
+    tvc(
+      :b,
+      [
+        tvv("x"),
+        tvc(:c, [tvv("y"), tvv("z")])
+      ]
+    )
+  end
 
-    assert Term.depth(res) == 2
-    assert Term.size(res) == 2
-    res
+  def term_test_t6_depth() do
+    result = Term.depth(term_test_t6())
+    assert result == 2
+    result
+  end
+
+  def term_test_t6_size() do
+    result = Term.size(term_test_t6())
+    assert result == 2
+    result
   end
 
   @doc """
   t7: an open term with no variables (a closed term viewed as open).
   """
   def term_test_t7() do
-    res = tvc(:d, [tvc0(:e), tvc0(:f)])
-    assert Term.depth(res) == 2
-    assert Term.size(res) == 3
-    res
+    tvc(:d, [tvc0(:e), tvc0(:f)])
+  end
+
+  def term_test_t7_depth() do
+    result = Term.depth(term_test_t7())
+    assert result == 2
+    result
+  end
+
+  def term_test_t7_size() do
+    result = Term.size(term_test_t7())
+    assert result == 3
+    result
   end
 
   @doc """
   I apply `out_tv` to a constructor term to obtain the underlying representation.
   """
   def term_test_t7_out_tv() do
-    res = term_test_t7()
-    out = Term.out_tv(res)
-    # The assertion verifies that out_tv reveals the internal structure
+    out = Term.out_tv(term_test_t7())
     assert out == tfc(:d, [tvc(:e, []), tvc(:f, [])])
-
     out
   end
 
@@ -161,10 +226,9 @@ defmodule Examples.ENockPoly.ETerm do
   defp term_times2(term), do: NockPoly.Term.tcmap(&times2/1, term)
 
   def termfv_bimap_variable_test() do
-    term = tvv(3)
-    # Unwrap the :in_tv tag with out_tv before applying termfv_bimap
-    res = NockPoly.Term.termfv_bimap(&add1/1, &times2/1, Term.out_tv(term))
-    # The result should be wrapped back in :in_tv tag for comparison
+    res =
+      NockPoly.Term.termfv_bimap(&add1/1, &times2/1, Term.out_tv(tvv(3)))
+
     assert res == Term.out_tv(tvv(4))
     Term.in_tv(res)
   end
@@ -175,26 +239,15 @@ defmodule Examples.ENockPoly.ETerm do
   @spec termfv_bimap_constructor_test() ::
           NockPoly.Term.nat_tv(non_neg_integer())
   def termfv_bimap_constructor_test() do
-    # Create a term with natural number constructor and integer-term children
-    term = tvc(3, [tvc0(1), tvc0(2)])
-
-    # Unwrap the :in_tv tag with out_tv before applying termfv_bimap
-    unwrapped_term = Term.out_tv(term)
-
     res =
       NockPoly.Term.termfv_bimap(
         &add1/1,
         &term_times2/1,
-        unwrapped_term
+        Term.out_tv(tvc(3, [tvc0(1), tvc0(2)]))
       )
 
-    # Expect the internal nodes to have been transformed with times2
-    expected =
-      Term.out_tv(tvc(3, [tvc0(2), tvc0(4)]))
-
+    expected = Term.out_tv(tvc(3, [tvc0(2), tvc0(4)]))
     assert res == expected
-
-    # Wrap the result back in :in_tv
     Term.in_tv(res)
   end
 
@@ -202,10 +255,11 @@ defmodule Examples.ENockPoly.ETerm do
   I test the use of `tvmap` to transform variables within a term.
   """
   def tvmap_test() do
-    term =
-      tvc(:a, [tvv(3), tvc(:b, [tvv(4)])])
-
-    res = NockPoly.Term.tvmap(&add1/1, term)
+    res =
+      NockPoly.Term.tvmap(
+        &add1/1,
+        tvc(:a, [tvv(3), tvc(:b, [tvv(4)])])
+      )
 
     assert res ==
              tvc(:a, [
@@ -223,16 +277,10 @@ defmodule Examples.ENockPoly.ETerm do
       tvmap(out_tv, tv_comult(term)) == term
   """
   def tv_comult_variable_from_bimap_test() do
-    # Variable term with value 4
-    term = termfv_bimap_variable_test()
+    duplicated =
+      NockPoly.Term.tv_comult(termfv_bimap_variable_test())
 
-    # Apply tv_comult to get a nested term structure
-    duplicated = NockPoly.Term.tv_comult(term)
-
-    # For a variable term, comult produces a variable term containing the original term
-    # The term equality assertion checks that duplicated is properly structured
-    assert duplicated == tvv(term)
-
+    assert duplicated == tvv(termfv_bimap_variable_test())
     duplicated
   end
 
@@ -269,10 +317,13 @@ defmodule Examples.ENockPoly.ETerm do
   """
   def tv_mult_hybrid_test() do
     alias NockPoly.Term, as: T
-    var_term = termfv_bimap_variable_test()
-    cons_term = termfv_bimap_constructor_test()
-    deep_term = term_test_t6()
-    term = T.com_tv(:a, [var_term, T.com_tv(:b, [cons_term, deep_term])])
+
+    term =
+      T.com_tv(:a, [
+        termfv_bimap_variable_test(),
+        T.com_tv(:b, [termfv_bimap_constructor_test(), term_test_t6()])
+      ])
+
     duplicated = NockPoly.Term.tv_comult(term)
     flattened = NockPoly.Term.tv_mult(duplicated)
     assert flattened == term
@@ -283,19 +334,8 @@ defmodule Examples.ENockPoly.ETerm do
   I test `tv_bind` on a variable term.
   """
   def tv_bind_variable_test() do
-    # Variable term with value 4
-    term = termfv_bimap_variable_test()
-
-    # Define a binding function that increments the variable
-    # Uses the utility function to create a variable term
     f = fn x -> tvv(x + 1) end
-
-    # Apply bind
-    bound = NockPoly.Term.tv_bind(f, term)
-
-    # Verify that the binding and transformation worked
-    # We know from termfv_bimap_variable_test that the original value is 4
-    # So after incrementing, it should match a variable term with value 5
+    bound = NockPoly.Term.tv_bind(f, termfv_bimap_variable_test())
     assert bound == tvv(5)
     bound
   end
@@ -313,9 +353,10 @@ defmodule Examples.ENockPoly.ETerm do
     - For the constructor branch, the function is applied recursively to its children, transforming them accordingly.
   """
   def tv_bind_hybrid_test() do
-    var_term = termfv_bimap_variable_test()
     cons_term = termfv_bimap_constructor_test()
-    m = tvc(:c, [var_term, cons_term])
+
+    m =
+      tvc(:c, [termfv_bimap_variable_test(), cons_term])
 
     f = fn x ->
       tvc(:b, [tvv(x), tvv(x + 10)])
@@ -337,31 +378,26 @@ defmodule Examples.ENockPoly.ETerm do
   end
 
   def substitute_test_variable() do
-    open_term = tvv(7)
-
     closed_term =
-      NockTerms.substitute(open_term, fn var ->
+      NockTerms.substitute(tvv(7), fn var ->
         tvc0({:atom, var + 1})
       end)
 
     noun = NockTerms.to_noun(closed_term)
-    ExUnit.Assertions.assert(noun == 8)
+    assert noun == 8
     closed_term
   end
 
   def substitute_test_cell() do
-    open_term =
-      tvc(:cell, [tvv(7), tvc0({:atom, 99})])
+    closed_term =
+      NockTerms.substitute(
+        tvc(:cell, [tvv(7), tvc0({:atom, 99})]),
+        fn v -> tvc0({:atom, v * 10}) end
+      )
 
     {:ok, expected} = Noun.Format.parse("[70 99]")
-
-    closed_term =
-      NockTerms.substitute(open_term, fn v ->
-        tvc0({:atom, v * 10})
-      end)
-
     noun = NockTerms.to_noun(closed_term)
-    ExUnit.Assertions.assert(noun == expected)
+    assert noun == expected
     closed_term
   end
 end

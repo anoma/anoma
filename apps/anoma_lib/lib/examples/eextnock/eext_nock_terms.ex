@@ -20,9 +20,8 @@ defmodule Examples.EExtNock.EExtNockTerms do
   for a lone atom.
   """
   def nock_poly_sexpr_atom_test() do
-    val = 42
-    term = ExtNockTerms.from_sexpr!(val)
-    assert term == tvc0({:atom, val})
+    term = ExtNockTerms.from_sexpr!(42)
+    assert term == tvc0({:atom, 42})
     term
   end
 
@@ -31,10 +30,8 @@ defmodule Examples.EExtNock.EExtNockTerms do
   lone variable.
   """
   def nock_poly_sexpr_variable_test() do
-    val = 7
-    var = {:var, val}
-    term = ExtNockTerms.from_sexpr!(var)
-    assert term == tvv(val)
+    term = ExtNockTerms.from_sexpr!({:var, 7})
+    assert term == tvv(7)
     term
   end
 
