@@ -21,6 +21,8 @@ defmodule AnomaLib.MixProject do
         ignore_modules: [
           NockPoly.Term.Unreachable,
           NockPoly.Term.MacroDefs,
+          NockPoly.BinTree.Unreachable,
+          NockPoly.BinTree.MacroDefs,
           ExtNock.MacroDefs,
           NockPoly.Fin2ForestPolyF.ForestPolySpec,
           NockPoly.FinSlicePolyF.Typespec,
