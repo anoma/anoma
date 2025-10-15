@@ -620,6 +620,267 @@ defmodule SexprTest do
     end
   end
 
+  describe "closed_sexpr construction" do
+    test "nullary closed sexpr" do
+      closed = sx_closed0(:foo)
+      assert closed == {:foo, []}
+      closed
+    end
+
+    test "unary closed sexpr" do
+      closed = sx_closed(:f, [sx_closed0(:x)])
+      assert closed == {:f, [{:x, []}]}
+      closed
+    end
+
+    test "binary closed sexpr" do
+      closed = sx_closed(:f, [sx_closed0(:a), sx_closed0(:b)])
+      assert closed == {:f, [{:a, []}, {:b, []}]}
+      closed
+    end
+
+    test "nested closed sexpr" do
+      closed =
+        sx_closed(:root, [
+          sx_closed(:left, [sx_closed0(:a)]),
+          sx_closed(:right, [sx_closed0(:b)])
+        ])
+
+      assert closed == {:root, [{:left, [{:a, []}]}, {:right, [{:b, []}]}]}
+      closed
+    end
+  end
+
+  describe "closed_to_open and open_to_closed" do
+    test "closed to open for nullary" do
+      closed = sx_closed0(:foo)
+      open = Sexpr.closed_to_open(closed)
+      assert open == sx_atom0(:foo)
+      open
+    end
+
+    test "closed to open for unary" do
+      closed = sx_closed(:f, [sx_closed0(:x)])
+      open = Sexpr.closed_to_open(closed)
+      assert open == sx_atom(:f, [sx_atom0(:x)])
+      open
+    end
+
+    test "closed to open for nested" do
+      closed =
+        sx_closed(:root, [
+          sx_closed(:branch, [sx_closed0(:leaf)])
+        ])
+
+      open = Sexpr.closed_to_open(closed)
+
+      expected =
+        sx_atom(:root, [
+          sx_atom(:branch, [sx_atom0(:leaf)])
+        ])
+
+      assert open == expected
+      open
+    end
+
+    test "open to closed for nullary" do
+      open = sx_atom0(:foo)
+      closed = Sexpr.open_to_closed(open)
+      assert closed == sx_closed0(:foo)
+      closed
+    end
+
+    test "open to closed for unary" do
+      open = sx_atom(:f, [sx_atom0(:x)])
+      closed = Sexpr.open_to_closed(open)
+      assert closed == sx_closed(:f, [sx_closed0(:x)])
+      closed
+    end
+
+    test "open to closed for nested" do
+      open =
+        sx_atom(:root, [
+          sx_atom(:branch, [sx_atom0(:leaf)])
+        ])
+
+      closed = Sexpr.open_to_closed(open)
+
+      expected =
+        sx_closed(:root, [
+          sx_closed(:branch, [sx_closed0(:leaf)])
+        ])
+
+      assert closed == expected
+      closed
+    end
+  end
+
+  describe "closed_sexpr roundtrips" do
+    test "nullary roundtrips" do
+      closed = sx_closed0(:atom)
+      result = Sexpr.roundtrip_closed(closed)
+      assert result == closed
+      result
+    end
+
+    test "unary roundtrips" do
+      closed = sx_closed(:f, [sx_closed0(:x)])
+      result = Sexpr.roundtrip_closed(closed)
+      assert result == closed
+      result
+    end
+
+    test "binary roundtrips" do
+      closed = sx_closed(:f, [sx_closed0(:a), sx_closed0(:b)])
+      result = Sexpr.roundtrip_closed(closed)
+      assert result == closed
+      result
+    end
+
+    test "ternary roundtrips" do
+      closed = sx_closed(:f, [sx_closed0(:a), sx_closed0(:b), sx_closed0(:c)])
+      result = Sexpr.roundtrip_closed(closed)
+      assert result == closed
+      result
+    end
+
+    test "nested structure roundtrips" do
+      closed =
+        sx_closed(:root, [
+          sx_closed(:left, [sx_closed0(:a), sx_closed0(:b)]),
+          sx_closed(:right, [sx_closed0(:c)])
+        ])
+
+      result = Sexpr.roundtrip_closed(closed)
+      assert result == closed
+      result
+    end
+
+    test "deeply nested structure roundtrips" do
+      closed =
+        sx_closed(:a, [
+          sx_closed(:b, [
+            sx_closed(:c, [
+              sx_closed(:d, [
+                sx_closed0(:e)
+              ])
+            ])
+          ])
+        ])
+
+      result = Sexpr.roundtrip_closed(closed)
+      assert result == closed
+      result
+    end
+  end
+
+  describe "open_closed roundtrips" do
+    test "nullary open_closed roundtrips" do
+      open = sx_atom0(:atom)
+      result = Sexpr.roundtrip_open_closed(open)
+      assert result == open
+      result
+    end
+
+    test "unary open_closed roundtrips" do
+      open = sx_atom(:f, [sx_atom0(:x)])
+      result = Sexpr.roundtrip_open_closed(open)
+      assert result == open
+      result
+    end
+
+    test "binary open_closed roundtrips" do
+      open = sx_atom(:f, [sx_atom0(:a), sx_atom0(:b)])
+      result = Sexpr.roundtrip_open_closed(open)
+      assert result == open
+      result
+    end
+
+    test "nested structure open_closed roundtrips" do
+      open =
+        sx_atom(:root, [
+          sx_atom(:left, [sx_atom0(:a), sx_atom0(:b)]),
+          sx_atom(:right, [sx_atom0(:c)])
+        ])
+
+      result = Sexpr.roundtrip_open_closed(open)
+      assert result == open
+      result
+    end
+  end
+
+  describe "closed_sexpr edge cases" do
+    test "open_to_closed raises on variable" do
+      # This tests the error case: trying to convert an open sexpr with
+      # variables to a closed sexpr. This should raise an error.
+      # We construct this by manually creating a sexpr with :var tag
+      # (which shouldn't happen with sexpr(atom, none()) by construction)
+      open_with_var = {:var, :x}
+
+      assert_raise RuntimeError,
+                   "Unexpected variable in closed S-expression",
+                   fn ->
+                     Sexpr.open_to_closed(open_with_var)
+                   end
+    end
+  end
+
+  describe "closed_sexpr isomorphism properties" do
+    test "alternating roundtrips closed -> open -> closed" do
+      closed = sx_closed(:root, [sx_closed0(:a), sx_closed0(:b)])
+
+      open1 = Sexpr.closed_to_open(closed)
+      c1 = Sexpr.open_to_closed(open1)
+      open2 = Sexpr.closed_to_open(c1)
+      c2 = Sexpr.open_to_closed(open2)
+
+      assert open2 == open1
+      assert c1 == closed
+      assert c2 == closed
+      c2
+    end
+
+    test "alternating roundtrips open -> closed -> open" do
+      open = sx_atom(:root, [sx_atom0(:a), sx_atom0(:b)])
+
+      c1 = Sexpr.open_to_closed(open)
+      open1 = Sexpr.closed_to_open(c1)
+      c2 = Sexpr.open_to_closed(open1)
+      open2 = Sexpr.closed_to_open(c2)
+
+      assert c2 == c1
+      assert open1 == open
+      assert open2 == open
+      open2
+    end
+
+    test "multiple closed roundtrips reach fixpoint" do
+      closed = sx_closed(:f, [sx_closed(:g, [sx_closed0(:h)])])
+
+      r1 = Sexpr.roundtrip_closed(closed)
+      r2 = Sexpr.roundtrip_closed(r1)
+      r3 = Sexpr.roundtrip_closed(r2)
+
+      assert r1 == closed
+      assert r2 == closed
+      assert r3 == closed
+      r3
+    end
+
+    test "multiple open_closed roundtrips reach fixpoint" do
+      open = sx_atom(:f, [sx_atom(:g, [sx_atom0(:h)])])
+
+      r1 = Sexpr.roundtrip_open_closed(open)
+      r2 = Sexpr.roundtrip_open_closed(r1)
+      r3 = Sexpr.roundtrip_open_closed(r2)
+
+      assert r1 == open
+      assert r2 == open
+      assert r3 == open
+      r3
+    end
+  end
+
   describe "property: isomorphism" do
     test "multiple sexpr roundtrips reach fixpoint" do
       sexpr =
