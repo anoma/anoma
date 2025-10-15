@@ -88,10 +88,7 @@ defmodule Examples.ENockPoly.EBinTree do
   def eval_on_atom_tree() do
     tree = btva(:foo)
 
-    algebra = fn
-      {:atom, a} -> "atom: #{a}"
-      {:pair, l, r} -> "pair: #{l}, #{r}"
-    end
+    algebra = fn {:atom, a} -> "atom: #{a}" end
 
     subst = fn v -> "var: #{v}" end
 
@@ -103,10 +100,7 @@ defmodule Examples.ENockPoly.EBinTree do
   def eval_on_variable_tree() do
     tree = btvv(42)
 
-    algebra = fn
-      {:atom, a} -> "atom: #{a}"
-      {:pair, l, r} -> "pair: #{l}, #{r}"
-    end
+    algebra = fn _ -> raise "Should not be called on variable tree" end
 
     subst = fn v -> "var: #{v}" end
 
@@ -163,10 +157,7 @@ defmodule Examples.ENockPoly.EBinTree do
   def cata_on_atom_tree() do
     tree = btva(:test)
 
-    algebra = fn
-      {:atom, a} -> {:leaf, a}
-      {:pair, l, r} -> {:node, l, r}
-    end
+    algebra = fn {:atom, a} -> {:leaf, a} end
 
     result = BinTree.cata(tree, algebra)
     assert result == {:leaf, :test}
