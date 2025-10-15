@@ -344,11 +344,15 @@ defmodule NockPoly.Sexpr do
   @doc """
   I eliminate all variables in an S-expression by substitution.
 
-  This produces a closed S-expression from an open one, given a substitution
-  function for all variables.
+  This produces an S-expression with no variables from an open one, given a
+  substitution function for all variables.
+
+  Note: Despite the name, this returns `sexpr(atom, none())` rather than
+  `closed_sexpr(atom)` because it uses the tagged representation. Use
+  `open_to_closed` to convert to the untagged representation if needed.
   """
-  @spec close((v -> closed_sexpr(atom)), sexpr(atom, v)) ::
-          closed_sexpr(atom)
+  @spec close((v -> sexpr(atom, none())), sexpr(atom, v)) ::
+          sexpr(atom, none())
         when atom: term, v: term
   def close(f, sexpr) do
     subst(f, sexpr)
