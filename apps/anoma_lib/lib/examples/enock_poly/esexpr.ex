@@ -623,19 +623,19 @@ defmodule Examples.ENockPoly.ESexpr do
 
   def closed_sexpr_nullary() do
     closed = sx_closed0(:foo)
-    assert closed == {:foo, []}
+    assert closed == :foo
     closed
   end
 
   def closed_sexpr_unary() do
     closed = sx_closed(:f, [sx_closed0(:x)])
-    assert closed == {:f, [{:x, []}]}
+    assert closed == {:f, [:x]}
     closed
   end
 
   def closed_sexpr_binary() do
     closed = sx_closed(:f, [sx_closed0(:a), sx_closed0(:b)])
-    assert closed == {:f, [{:a, []}, {:b, []}]}
+    assert closed == {:f, [:a, :b]}
     closed
   end
 
@@ -646,7 +646,7 @@ defmodule Examples.ENockPoly.ESexpr do
         sx_closed(:right, [sx_closed0(:b)])
       ])
 
-    assert closed == {:root, [{:left, [{:a, []}]}, {:right, [{:b, []}]}]}
+    assert closed == {:root, [{:left, [:a]}, {:right, [:b]}]}
     closed
   end
 

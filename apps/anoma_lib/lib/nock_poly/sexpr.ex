@@ -51,13 +51,18 @@ defmodule NockPoly.Sexpr do
   I am a closed S-expression (with no variables).
 
   Since there are no variables, I don't need the `:var` tag, and I don't need
-  the `:atom` tag to distinguish atoms from variables. I am simply an atom
-  together with a list of children.
+  the `:atom` tag to distinguish atoms from variables. I am either:
+  - A bare atom (for nullary constructors with no children)
+  - A pair of an atom and a non-empty list of children
+
+  The distinction between atoms and tuples makes tags unnecessary, and the
+  empty-list case is represented by a bare atom, making the representation
+  more concise.
 
   This is a more convenient representation than `sexpr(atom, none())` because
-  it eliminates redundant tagging.
+  it eliminates redundant tagging and empty lists.
   """
-  @type closed_sexpr(atom) :: {atom, [closed_sexpr(atom)]}
+  @type closed_sexpr(atom) :: atom | {atom, nonempty_list(closed_sexpr(atom))}
 
   @typedoc """
   I am an S-expression with Nock atom labels.
@@ -83,20 +88,29 @@ defmodule NockPoly.Sexpr do
   I convert a closed S-expression to an open S-expression.
 
   This direction of the isomorphism adds the `:atom` tags to a `closed_sexpr`
-  to produce a `sexpr(atom, none())`.
+  to produce a `sexpr(atom, none())`. A bare atom becomes a nullary constructor,
+  and a pair becomes a constructor with children.
   """
   @spec closed_to_open(closed_sexpr(atom)) :: sexpr(atom, none())
         when atom: term
-  def closed_to_open({constructor, children}) do
-    open_children = Enum.map(children, &closed_to_open/1)
-    {:atom, constructor, open_children}
+  def closed_to_open(closed_sexpr) do
+    case closed_sexpr do
+      constructor when is_atom(constructor) ->
+        {:atom, constructor, []}
+
+      {constructor, children} ->
+        open_children = Enum.map(children, &closed_to_open/1)
+        {:atom, constructor, open_children}
+    end
   end
 
   @doc """
   I convert an open S-expression with no variables to a closed S-expression.
 
   This direction of the isomorphism removes the `:atom` tags from a
-  `sexpr(atom, none())` to produce a `closed_sexpr(atom)`.
+  `sexpr(atom, none())` to produce a `closed_sexpr(atom)`. A nullary
+  constructor (empty children list) becomes a bare atom, and a constructor
+  with children becomes a pair.
 
   Since the type is `sexpr(atom, none())` and `none()` is the empty type,
   there can never be a `:var` case by construction.
@@ -104,8 +118,14 @@ defmodule NockPoly.Sexpr do
   @spec open_to_closed(sexpr(atom, none())) :: closed_sexpr(atom)
         when atom: term
   def open_to_closed({:atom, constructor, children}) do
-    closed_children = Enum.map(children, &open_to_closed/1)
-    {constructor, closed_children}
+    case children do
+      [] ->
+        constructor
+
+      _ ->
+        closed_children = Enum.map(children, &open_to_closed/1)
+        {constructor, closed_children}
+    end
   end
 
   @doc """
@@ -234,9 +254,10 @@ defmodule NockPoly.Sexpr do
   I create a closed S-expression with children.
 
   This is a convenience function for constructing closed S-expressions
-  using the simpler untagged representation.
+  using the simpler untagged representation. Returns a pair when the
+  children list is non-empty.
   """
-  @spec closed(atom, [closed_sexpr(atom)]) :: closed_sexpr(atom)
+  @spec closed(atom, nonempty_list(closed_sexpr(atom))) :: closed_sexpr(atom)
         when atom: term
   def closed(constructor, children) do
     {constructor, children}
@@ -246,10 +267,11 @@ defmodule NockPoly.Sexpr do
   I create a closed S-expression with no children.
 
   This is a convenience function for constructing nullary closed S-expressions.
+  Returns a bare atom since there are no children.
   """
   @spec closed0(atom) :: closed_sexpr(atom) when atom: term
   def closed0(constructor) do
-    {constructor, []}
+    constructor
   end
 
   @doc """
@@ -419,7 +441,7 @@ defmodule NockPoly.Sexpr do
 
         iex> import NockPoly.Sexpr.MacroDefs
         iex> sx_closed(:foo, [sx_closed0(:bar)])
-        {:foo, [{:bar, []}]}
+        {:foo, [:bar]}
     """
     defmacro sx_closed(constructor, children) do
       quote do
@@ -434,7 +456,7 @@ defmodule NockPoly.Sexpr do
 
         iex> import NockPoly.Sexpr.MacroDefs
         iex> sx_closed0(:foo)
-        {:foo, []}
+        :foo
     """
     defmacro sx_closed0(constructor) do
       quote do
