@@ -809,22 +809,6 @@ defmodule SexprTest do
     end
   end
 
-  describe "closed_sexpr edge cases" do
-    test "open_to_closed raises on variable" do
-      # This tests the error case: trying to convert an open sexpr with
-      # variables to a closed sexpr. This should raise an error.
-      # We construct this by manually creating a sexpr with :var tag
-      # (which shouldn't happen with sexpr(atom, none()) by construction)
-      open_with_var = {:var, :x}
-
-      assert_raise RuntimeError,
-                   "Unexpected variable in closed S-expression",
-                   fn ->
-                     Sexpr.open_to_closed(open_with_var)
-                   end
-    end
-  end
-
   describe "closed_sexpr isomorphism properties" do
     test "alternating roundtrips closed -> open -> closed" do
       closed = sx_closed(:root, [sx_closed0(:a), sx_closed0(:b)])

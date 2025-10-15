@@ -98,21 +98,14 @@ defmodule NockPoly.Sexpr do
   This direction of the isomorphism removes the `:atom` tags from a
   `sexpr(atom, none())` to produce a `closed_sexpr(atom)`.
 
-  This function assumes the input has no `:var` nodes (since the type is
-  `sexpr(atom, none())`). If a `:var` node is encountered, it will raise
-  an error.
+  Since the type is `sexpr(atom, none())` and `none()` is the empty type,
+  there can never be a `:var` case by construction.
   """
   @spec open_to_closed(sexpr(atom, none())) :: closed_sexpr(atom)
         when atom: term
-  def open_to_closed(sexpr) do
-    case sexpr do
-      {:atom, constructor, children} ->
-        closed_children = Enum.map(children, &open_to_closed/1)
-        {constructor, closed_children}
-
-      {:var, _v} ->
-        raise "Unexpected variable in closed S-expression"
-    end
+  def open_to_closed({:atom, constructor, children}) do
+    closed_children = Enum.map(children, &open_to_closed/1)
+    {constructor, closed_children}
   end
 
   @doc """
