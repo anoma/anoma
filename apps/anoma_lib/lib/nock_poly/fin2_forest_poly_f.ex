@@ -34,7 +34,7 @@ defmodule NockPoly.Fin2ForestPolyF do
   only exist from dependent objects to their parent base objects (plus identities).
   The polynomial functors we define here are instances of PRA functors between
   presheaf categories. When the forest is [1] (one base with one dependent),
-  we get the walking arrow category, the simplest non-trivial PRA functor case.
+  we get the walking arrow category.
   """
 
   alias Term

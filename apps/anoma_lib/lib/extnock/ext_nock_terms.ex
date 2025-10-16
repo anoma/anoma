@@ -7,7 +7,7 @@ defmodule ExtNock.ExtNockTerms do
   I provide extended Nock term functionality, adding semantic constructors
   beyond the basic `:atom` and `:cell` constructors of standard Nock.
 
-  Extended terms comprise an internal supserset of Nock whch can be compiled
+  Extended terms comprise an internal superset of Nock which can be compiled
   down to standard Nock formulas for execution.
   """
   alias NockPoly.Term
