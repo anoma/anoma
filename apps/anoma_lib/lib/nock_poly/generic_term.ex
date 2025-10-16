@@ -8,7 +8,7 @@ defmodule NockPoly.GenericTerm do
   - `:prod` - Represents a product type with a list of component terms
   - `:nat` - Represents a natural number literal
 
-  This representation allows building complex nested structures without
+  This representation allows building nested structures without
   having to encode everything arithmetically as natural numbers. Terms
   of this type can be typechecked against both slice polynomial functors
   and inductive-inductive types.

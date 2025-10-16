@@ -348,7 +348,7 @@ defmodule NockPoly.FinSlicePolyF do
   Adapts a FinPolyF tspec to work with FinSlicePolyF.
 
   This allows code that uses the simpler FinPolyF constructor specification
-  to work with the more complex FinSlicePolyF type system.
+  to work with the FinSlicePolyF type system.
 
   Args:
     * `fin_tspec`: A tspec function from FinPolyF

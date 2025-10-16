@@ -7,7 +7,7 @@ defmodule NockPoly.BinTreeTerm do
   snoclist (reversed list) establishes a correspondence with the fixed
   point of the `termf` functor from `NockPoly.Term`.
 
-  The key insight is that `termf(ctor, x) = {ctor, [x]}` represents
+  The correspondence relies on the fact that `termf(ctor, x) = {ctor, [x]}` represents
   "constructor with list of children", which when viewed as a snoclist
   corresponds exactly to the structure of a binary tree built right-
   associatively via repeated pairing.

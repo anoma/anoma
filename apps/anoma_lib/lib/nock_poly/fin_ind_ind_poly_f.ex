@@ -12,7 +12,7 @@ defmodule NockPoly.FinIndIndPolyF do
   3. The second type can "see" the constructors of the first type
 
   This module extends the concepts from FinPolyF and FinSlicePolyF to support
-  these more complex type dependencies.
+  these type dependencies.
   """
 
   alias NockPoly.Term

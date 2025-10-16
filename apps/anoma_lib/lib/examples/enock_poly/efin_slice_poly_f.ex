@@ -265,7 +265,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
 
     # In this test we're only checking for the parameter count error.
     # Depending on the implementation, we might also see a type error, but
-    # it's not required - the important thing is that we detect the term is invalid
+    # it's not required - we must detect the term is invalid
     # and return at least one error.
 
     invalid_term
