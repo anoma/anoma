@@ -2,7 +2,6 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
   use Memoize
 
   import ExUnit.Assertions
-  import NockPoly
   alias NockPoly.Term, as: Term
   import NockPoly.Term.MacroDefs
   alias NockPoly.FinSlicePolyF, as: SliceF

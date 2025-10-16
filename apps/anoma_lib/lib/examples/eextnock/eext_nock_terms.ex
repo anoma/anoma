@@ -7,7 +7,6 @@ defmodule Examples.EExtNock.EExtNockTerms do
   reference implementation.
   """
 
-  import ExtNock
   alias ExtNock.ExtNockTerms
   use TypedStruct
   import ExUnit.Assertions

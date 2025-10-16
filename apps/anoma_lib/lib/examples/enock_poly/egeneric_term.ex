@@ -2,7 +2,6 @@ defmodule Examples.ENockPoly.EGenericTerm do
   use Memoize
 
   import ExUnit.Assertions
-  import NockPoly
   import NockPoly.Term.MacroDefs
   alias NockPoly.GenericTerm
 

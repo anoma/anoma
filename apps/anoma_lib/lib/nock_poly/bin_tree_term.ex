@@ -26,7 +26,7 @@ defmodule NockPoly.BinTreeTerm do
   becomes the rightmost leaf in the tree, and we build the tree right-associatively.
 
   An empty children list creates just an atom node.
-  A list `[x, y, z]` viewed as snoclist builds the tree structure
+  A pair `(atom, [x, y, z])` builds the tree structure
   `(((atom . z) . y) . x)` where each `.` is a pair.
   """
   @spec term_to_bintree(Term.t(ctor)) :: BinTree.bt(ctor) when ctor: term

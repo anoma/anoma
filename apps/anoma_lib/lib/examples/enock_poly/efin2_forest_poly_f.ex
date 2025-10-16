@@ -2,7 +2,6 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
   use Memoize
 
   import ExUnit.Assertions
-  import NockPoly
   alias NockPoly.Term
   alias NockPoly.Fin2ForestPolyF, as: Forest
 

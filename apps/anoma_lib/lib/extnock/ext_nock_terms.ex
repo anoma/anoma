@@ -1,3 +1,11 @@
+defmodule ExtNock.MacroDefs do
+  @moduledoc """
+  I contain `defmacro`s (and `defmacros` only), to distinguish them
+  for ignoring code coverage (which does not know how to tell whether
+  a macro has been expanded and executed).
+  """
+end
+
 defmodule ExtNock.ExtNockTerms do
   alias NockPoly.Term
   alias NockPoly.NockTerms
