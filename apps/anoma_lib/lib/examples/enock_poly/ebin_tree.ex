@@ -193,11 +193,11 @@ defmodule Examples.ENockPoly.EBinTree do
   defp slice_alg_atom_only() do
     %{
       atom: fn a -> {:atom_result, a} end,
-      pair: fn _l, _r ->
-        raise "pair should not be called on atom-only tree"
-      end,
+      pair: fn l, r -> {:pair_result, l, r} end,
       from_atom: fn atom_r -> {:tree_result, atom_r} end,
-      from_pair: fn pair_r -> {:tree_result, pair_r} end
+      from_pair: fn _pair_r ->
+        raise "from_pair should not be called on atom-only tree"
+      end
     }
   end
 
@@ -210,12 +210,12 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
-  def slice_eval_atom_only_alg_pair_raises() do
+  def slice_eval_atom_only_alg_from_pair_raises() do
     tree = btvp(btva(:a), btva(:b))
     subst = fn v -> {:var_result, v} end
 
     assert_raise RuntimeError,
-                 "pair should not be called on atom-only tree",
+                 "from_pair should not be called on atom-only tree",
                  fn ->
                    BinTree.slice_eval(slice_alg_atom_only(), subst, tree)
                  end
@@ -223,14 +223,14 @@ defmodule Examples.ENockPoly.EBinTree do
 
   defp slice_alg_variable_only() do
     %{
-      atom: fn _a ->
-        raise "atom should not be called on variable-only tree"
+      atom: fn a -> {:atom_result, a} end,
+      pair: fn l, r -> {:pair_result, l, r} end,
+      from_atom: fn _atom_r ->
+        raise "from_atom should not be called on variable-only tree"
       end,
-      pair: fn _l, _r ->
-        raise "pair should not be called on variable-only tree"
-      end,
-      from_atom: fn atom_r -> {:tree_result, atom_r} end,
-      from_pair: fn pair_r -> {:tree_result, pair_r} end
+      from_pair: fn _pair_r ->
+        raise "from_pair should not be called on variable-only tree"
+      end
     }
   end
 
@@ -243,23 +243,23 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
-  def slice_eval_variable_only_alg_atom_raises() do
+  def slice_eval_variable_only_alg_from_atom_raises() do
     tree = btva(:foo)
     subst = fn v -> {:var_result, v} end
 
     assert_raise RuntimeError,
-                 "atom should not be called on variable-only tree",
+                 "from_atom should not be called on variable-only tree",
                  fn ->
                    BinTree.slice_eval(slice_alg_variable_only(), subst, tree)
                  end
   end
 
-  def slice_eval_variable_only_alg_pair_raises() do
+  def slice_eval_variable_only_alg_from_pair_raises() do
     tree = btvp(btvv(1), btvv(2))
     subst = fn v -> {:var_result, v} end
 
     assert_raise RuntimeError,
-                 "pair should not be called on variable-only tree",
+                 "from_pair should not be called on variable-only tree",
                  fn ->
                    BinTree.slice_eval(slice_alg_variable_only(), subst, tree)
                  end
@@ -305,11 +305,11 @@ defmodule Examples.ENockPoly.EBinTree do
   defp slice_alg_cata_atom_only() do
     %{
       atom: fn a -> {:atom_data, a} end,
-      pair: fn _l, _r ->
-        raise "pair should not be called on atom-only cata"
-      end,
+      pair: fn l, r -> {:pair_data, l, r} end,
       from_atom: fn atom_r -> {:result, atom_r} end,
-      from_pair: fn pair_r -> {:result, pair_r} end
+      from_pair: fn _pair_r ->
+        raise "from_pair should not be called on atom-only cata"
+      end
     }
   end
 
@@ -321,11 +321,11 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
-  def slice_cata_atom_only_alg_pair_raises() do
+  def slice_cata_atom_only_alg_from_pair_raises() do
     tree = btvp(btva(:a), btva(:b))
 
     assert_raise RuntimeError,
-                 "pair should not be called on atom-only cata",
+                 "from_pair should not be called on atom-only cata",
                  fn ->
                    BinTree.slice_cata(tree, slice_alg_cata_atom_only())
                  end
