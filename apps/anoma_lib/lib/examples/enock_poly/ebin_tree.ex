@@ -190,38 +190,79 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
-  def slice_eval_on_atom_tree() do
-    tree = btva(:foo)
-
-    slice_alg = %{
+  defp slice_alg_atom_only() do
+    %{
       atom: fn a -> {:atom_result, a} end,
-      pair: fn _l, _r -> raise "Should not be called" end,
+      pair: fn _l, _r ->
+        raise "pair should not be called on atom-only tree"
+      end,
       from_atom: fn atom_r -> {:tree_result, atom_r} end,
       from_pair: fn pair_r -> {:tree_result, pair_r} end
     }
+  end
 
+  def slice_eval_on_atom_tree() do
+    tree = btva(:foo)
     subst = fn v -> {:var_result, v} end
 
-    result = BinTree.slice_eval(slice_alg, subst, tree)
+    result = BinTree.slice_eval(slice_alg_atom_only(), subst, tree)
     assert result == {:tree_result, {:atom_result, :foo}}
     result
   end
 
-  def slice_eval_on_variable_tree() do
-    tree = btvv(42)
+  def slice_eval_atom_only_alg_pair_raises() do
+    tree = btvp(btva(:a), btva(:b))
+    subst = fn v -> {:var_result, v} end
 
-    slice_alg = %{
-      atom: fn _a -> raise "Should not be called" end,
-      pair: fn _l, _r -> raise "Should not be called" end,
+    assert_raise RuntimeError,
+                 "pair should not be called on atom-only tree",
+                 fn ->
+                   BinTree.slice_eval(slice_alg_atom_only(), subst, tree)
+                 end
+  end
+
+  defp slice_alg_variable_only() do
+    %{
+      atom: fn _a ->
+        raise "atom should not be called on variable-only tree"
+      end,
+      pair: fn _l, _r ->
+        raise "pair should not be called on variable-only tree"
+      end,
       from_atom: fn atom_r -> {:tree_result, atom_r} end,
       from_pair: fn pair_r -> {:tree_result, pair_r} end
     }
+  end
 
+  def slice_eval_on_variable_tree() do
+    tree = btvv(42)
     subst = fn v -> {:var_result, v} end
 
-    result = BinTree.slice_eval(slice_alg, subst, tree)
+    result = BinTree.slice_eval(slice_alg_variable_only(), subst, tree)
     assert result == {:var_result, 42}
     result
+  end
+
+  def slice_eval_variable_only_alg_atom_raises() do
+    tree = btva(:foo)
+    subst = fn v -> {:var_result, v} end
+
+    assert_raise RuntimeError,
+                 "atom should not be called on variable-only tree",
+                 fn ->
+                   BinTree.slice_eval(slice_alg_variable_only(), subst, tree)
+                 end
+  end
+
+  def slice_eval_variable_only_alg_pair_raises() do
+    tree = btvp(btvv(1), btvv(2))
+    subst = fn v -> {:var_result, v} end
+
+    assert_raise RuntimeError,
+                 "pair should not be called on variable-only tree",
+                 fn ->
+                   BinTree.slice_eval(slice_alg_variable_only(), subst, tree)
+                 end
   end
 
   def slice_eval_on_pair_tree() do
@@ -261,19 +302,33 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
-  def slice_cata_on_atom_tree() do
-    tree = btva(:test)
-
-    slice_alg = %{
+  defp slice_alg_cata_atom_only() do
+    %{
       atom: fn a -> {:atom_data, a} end,
-      pair: fn _l, _r -> raise "Should not be called" end,
+      pair: fn _l, _r ->
+        raise "pair should not be called on atom-only cata"
+      end,
       from_atom: fn atom_r -> {:result, atom_r} end,
       from_pair: fn pair_r -> {:result, pair_r} end
     }
+  end
 
-    result = BinTree.slice_cata(tree, slice_alg)
+  def slice_cata_on_atom_tree() do
+    tree = btva(:test)
+
+    result = BinTree.slice_cata(tree, slice_alg_cata_atom_only())
     assert result == {:result, {:atom_data, :test}}
     result
+  end
+
+  def slice_cata_atom_only_alg_pair_raises() do
+    tree = btvp(btva(:a), btva(:b))
+
+    assert_raise RuntimeError,
+                 "pair should not be called on atom-only cata",
+                 fn ->
+                   BinTree.slice_cata(tree, slice_alg_cata_atom_only())
+                 end
   end
 
   def slice_cata_on_pair_tree() do
@@ -306,24 +361,40 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
-  def slice_eval_pair_builds_pair_result() do
-    left = btva(:left_atom)
-    right = btva(:right_atom)
-
-    slice_alg = %{
+  defp slice_alg_with_from_pair() do
+    %{
       atom: fn a -> {:atom, a} end,
       pair: fn l, r -> {:constructed_pair, l, r} end,
       from_atom: fn a_r -> {:tree, a_r} end,
       from_pair: fn p_r -> {:tree, p_r} end
     }
+  end
 
+  def slice_eval_pair_builds_pair_result() do
+    left = btva(:left_atom)
+    right = btva(:right_atom)
     subst = fn v -> {:var, v} end
 
-    result = BinTree.slice_eval_pair(slice_alg, subst, left, right)
+    result =
+      BinTree.slice_eval_pair(slice_alg_with_from_pair(), subst, left, right)
 
     assert result ==
              {:constructed_pair, {:tree, {:atom, :left_atom}},
               {:tree, {:atom, :right_atom}}}
+
+    result
+  end
+
+  def slice_eval_from_pair_called_on_pair_tree() do
+    tree = btvp(btva(:left_atom), btva(:right_atom))
+    subst = fn v -> {:var, v} end
+
+    result = BinTree.slice_eval(slice_alg_with_from_pair(), subst, tree)
+
+    assert result ==
+             {:tree,
+              {:constructed_pair, {:tree, {:atom, :left_atom}},
+               {:tree, {:atom, :right_atom}}}}
 
     result
   end
@@ -346,18 +417,30 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
-  def slice_cata_pair_on_two_atoms() do
-    left = btva(:x)
-    right = btva(:y)
-
-    slice_alg = %{
+  defp slice_alg_cata_with_from_pair() do
+    %{
       atom: fn a -> String.to_atom("processed_#{a}") end,
       pair: fn l, r -> [l, r] end,
       from_atom: fn a -> a end,
       from_pair: fn p -> p end
     }
+  end
 
-    result = BinTree.slice_cata_pair(left, right, slice_alg)
+  def slice_cata_pair_on_two_atoms() do
+    left = btva(:x)
+    right = btva(:y)
+
+    result =
+      BinTree.slice_cata_pair(left, right, slice_alg_cata_with_from_pair())
+
+    assert result == [:processed_x, :processed_y]
+    result
+  end
+
+  def slice_cata_from_pair_called_on_pair_tree() do
+    tree = btvp(btva(:x), btva(:y))
+
+    result = BinTree.slice_cata(tree, slice_alg_cata_with_from_pair())
     assert result == [:processed_x, :processed_y]
     result
   end
