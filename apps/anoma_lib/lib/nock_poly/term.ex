@@ -307,6 +307,144 @@ defmodule NockPoly.Term do
     eval(algebra, &Unreachable.unreachable_term/1, term)
   end
 
+  @typedoc """
+  I am a slice algebra for polynomial terms.
+
+  I provide separate result types for:
+  - `r_term`: the overall term result
+  - `r_ctor`: the result for a constructor (atom/position)
+  - `r_list`: the result for a list of child terms (possibly empty)
+  - `r_nelist`: the result for a non-empty list of child terms
+
+  The algebra decomposes both term structure and list structure:
+  - List constructors: `empty` and `nonempty`
+  - Non-empty list constructor: `cons`
+  - Term constructor: `term` (constructor + children list)
+  """
+  @type term_slice_alg(ctor, r_term, r_ctor, r_list, r_nelist) :: %{
+          ctor: (ctor -> r_ctor),
+          empty: r_list,
+          cons: (r_term, r_list -> r_nelist),
+          nonempty: (r_nelist -> r_list),
+          term: (r_ctor, r_list -> r_term)
+        }
+
+  @doc """
+  I am the slice eval morphism for polynomial terms with variables.
+
+  I recursively evaluate an open term by:
+  - For variables: applying the substitution function to get `r_term`
+  - For constructors: applying `ctor` to get `r_ctor`, recursively building
+    the children list using `empty`, `cons`, and `nonempty`, then applying
+    `term` to get `r_term`
+  """
+  @spec slice_eval(
+          term_slice_alg(ctor, r_term, r_ctor, r_list, r_nelist),
+          (v -> r_term),
+          tv(ctor, v)
+        ) :: r_term
+        when ctor: term,
+             v: term,
+             r_term: term,
+             r_ctor: term,
+             r_list: term,
+             r_nelist: term
+  def slice_eval(slice_alg, subst, term) do
+    non_slice_algebra = fn {ctor, children_results} ->
+      r_ctor = slice_alg.ctor.(ctor)
+      r_list = build_list(children_results, slice_alg)
+      slice_alg.term.(r_ctor, r_list)
+    end
+
+    eval(non_slice_algebra, subst, term)
+  end
+
+  @spec build_list(
+          [r_term],
+          term_slice_alg(ctor, r_term, r_ctor, r_list, r_nelist)
+        ) ::
+          r_list
+        when ctor: term,
+             r_term: term,
+             r_ctor: term,
+             r_list: term,
+             r_nelist: term
+  defp build_list([], slice_alg) do
+    slice_alg.empty
+  end
+
+  defp build_list([head | tail], slice_alg) do
+    r_tail = build_list(tail, slice_alg)
+    r_nelist = slice_alg.cons.(head, r_tail)
+    slice_alg.nonempty.(r_nelist)
+  end
+
+  @doc """
+  I am the slice catamorphism for closed polynomial terms.
+
+  I am `slice_eval` specialized to closed terms where the variable type is `none()`.
+  """
+  @spec slice_cata(
+          t(ctor),
+          term_slice_alg(ctor, r_term, r_ctor, r_list, r_nelist)
+        ) :: r_term
+        when ctor: term,
+             r_term: term,
+             r_ctor: term,
+             r_list: term,
+             r_nelist: term
+  def slice_cata(term, slice_alg) do
+    slice_eval(slice_alg, &Unreachable.unreachable_term/1, term)
+  end
+
+  @doc """
+  I am the slice eval morphism for a list of polynomial terms with variables.
+
+  I am a convenience wrapper around `slice_eval` that:
+  1. Recursively evaluates each term in the list to get `r_term` results
+  2. Builds the list using `empty`, `cons`, and `nonempty` to get `r_list`
+
+  This is useful when the caller is primarily interested in the list structure
+  rather than individual terms.
+  """
+  @spec slice_eval_list(
+          term_slice_alg(ctor, r_term, r_ctor, r_list, r_nelist),
+          (v -> r_term),
+          [tv(ctor, v)]
+        ) :: r_list
+        when ctor: term,
+             v: term,
+             r_term: term,
+             r_ctor: term,
+             r_list: term,
+             r_nelist: term
+  def slice_eval_list(slice_alg, subst, terms) do
+    term_results = Enum.map(terms, &slice_eval(slice_alg, subst, &1))
+    build_list(term_results, slice_alg)
+  end
+
+  @doc """
+  I am the slice catamorphism for a list of closed polynomial terms.
+
+  I am a convenience wrapper around `slice_cata` that:
+  1. Recursively evaluates each term in the list to get `r_term` results
+  2. Builds the list using `empty`, `cons`, and `nonempty` to get `r_list`
+
+  This is useful when performing induction on lists of closed terms.
+  """
+  @spec slice_cata_list(
+          [t(ctor)],
+          term_slice_alg(ctor, r_term, r_ctor, r_list, r_nelist)
+        ) :: r_list
+        when ctor: term,
+             r_term: term,
+             r_ctor: term,
+             r_list: term,
+             r_nelist: term
+  def slice_cata_list(terms, slice_alg) do
+    slice_eval_list(slice_alg, &Unreachable.unreachable_term/1, terms)
+  end
+
   @doc """
   I return the maximum depth of the term as a natural number.
 

@@ -917,4 +917,275 @@ defmodule Examples.ENockPoly.ESexpr do
     assert term2 == term
     term2
   end
+
+  defp slice_alg_nullary_only() do
+    %{
+      atom: fn a -> {:atom_result, a} end,
+      empty: {:empty_list},
+      cons: fn s, l -> {:cons_result, s, l} end,
+      nonempty: fn nel -> nel end,
+      sexpr: fn atom_r, list_r -> {:sexpr_result, atom_r, list_r} end
+    }
+  end
+
+  def sexpr_slice_eval_on_nullary() do
+    sexpr = sx_atom0(:foo)
+    subst = fn v -> {:var_result, v} end
+
+    result = Sexpr.slice_eval(slice_alg_nullary_only(), subst, sexpr)
+
+    assert result ==
+             {:sexpr_result, {:atom_result, :foo}, {:empty_list}}
+
+    result
+  end
+
+  def sexpr_slice_eval_nullary_alg_on_sexpr_with_children() do
+    sexpr = sx_atom(:root, [sx_atom0(:a), sx_atom0(:b)])
+    subst = fn v -> {:var_result, v} end
+
+    result = Sexpr.slice_eval(slice_alg_nullary_only(), subst, sexpr)
+
+    assert result ==
+             {:sexpr_result, {:atom_result, :root},
+              {:cons_result,
+               {:sexpr_result, {:atom_result, :a}, {:empty_list}},
+               {:cons_result,
+                {:sexpr_result, {:atom_result, :b}, {:empty_list}},
+                {:empty_list}}}}
+
+    result
+  end
+
+  defp slice_alg_variable_only() do
+    %{
+      atom: fn a -> {:atom_result, a} end,
+      empty: {:empty_list},
+      cons: fn s, l -> {:cons_result, s, l} end,
+      nonempty: fn nel -> nel end,
+      sexpr: fn atom_r, list_r -> {:sexpr_result, atom_r, list_r} end
+    }
+  end
+
+  def sexpr_slice_eval_on_variable() do
+    sexpr = sx_var(42)
+    subst = fn v -> {:var_result, v} end
+
+    result = Sexpr.slice_eval(slice_alg_variable_only(), subst, sexpr)
+
+    assert result == {:var_result, 42}
+    result
+  end
+
+  def sexpr_slice_eval_variable_alg_on_closed_sexpr() do
+    sexpr = sx_atom(:foo, [sx_atom0(:a), sx_atom0(:b)])
+    subst = fn v -> {:var_result, v} end
+
+    result = Sexpr.slice_eval(slice_alg_variable_only(), subst, sexpr)
+
+    assert result ==
+             {:sexpr_result, {:atom_result, :foo},
+              {:cons_result,
+               {:sexpr_result, {:atom_result, :a}, {:empty_list}},
+               {:cons_result,
+                {:sexpr_result, {:atom_result, :b}, {:empty_list}},
+                {:empty_list}}}}
+
+    result
+  end
+
+  defp slice_alg_with_children() do
+    %{
+      atom: fn a -> {:atom_val, a} end,
+      empty: [],
+      cons: fn s, l -> [s | l] end,
+      nonempty: fn nel -> nel end,
+      sexpr: fn atom_r, list_r -> {atom_r, list_r} end
+    }
+  end
+
+  def sexpr_slice_eval_on_binary_sexpr() do
+    sexpr = sx_atom(:root, [sx_atom0(:left), sx_atom0(:right)])
+    subst = fn v -> {:var, v} end
+
+    result = Sexpr.slice_eval(slice_alg_with_children(), subst, sexpr)
+
+    assert result ==
+             {{:atom_val, :root},
+              [{{:atom_val, :left}, []}, {{:atom_val, :right}, []}]}
+
+    result
+  end
+
+  def sexpr_slice_eval_tracking_list_structure() do
+    sexpr = sx_atom(:f, [sx_atom0(:a), sx_atom0(:b), sx_atom0(:c)])
+
+    slice_alg = %{
+      atom: fn a -> a end,
+      empty: :empty,
+      cons: fn s, l -> {:cons, s, l} end,
+      nonempty: fn nel -> {:nonempty, nel} end,
+      sexpr: fn a, l -> {:sexpr, a, l} end
+    }
+
+    subst = fn v -> {:var, v} end
+
+    result = Sexpr.slice_eval(slice_alg, subst, sexpr)
+
+    assert result ==
+             {:sexpr, :f,
+              {:nonempty,
+               {:cons, {:sexpr, :a, :empty},
+                {:nonempty,
+                 {:cons, {:sexpr, :b, :empty},
+                  {:nonempty, {:cons, {:sexpr, :c, :empty}, :empty}}}}}}}
+
+    result
+  end
+
+  defp slice_alg_for_cata_tests() do
+    %{
+      atom: fn a -> {:atom_data, a} end,
+      empty: nil,
+      cons: fn s, l -> [s | l] end,
+      nonempty: fn nel -> nel end,
+      sexpr: fn atom_r, list_r -> {:result, atom_r, list_r} end
+    }
+  end
+
+  def sexpr_slice_cata_on_nullary() do
+    sexpr = sx_atom0(:test)
+
+    result = Sexpr.slice_cata(sexpr, slice_alg_for_cata_tests())
+    assert result == {:result, {:atom_data, :test}, nil}
+    result
+  end
+
+  def sexpr_slice_cata_alg_on_sexpr_with_children() do
+    sexpr = sx_atom(:parent, [sx_atom0(:child1), sx_atom0(:child2)])
+
+    result = Sexpr.slice_cata(sexpr, slice_alg_for_cata_tests())
+
+    assert result ==
+             {:result, {:atom_data, :parent},
+              [
+                {:result, {:atom_data, :child1}, nil},
+                {:result, {:atom_data, :child2}, nil} | nil
+              ]}
+
+    result
+  end
+
+  def sexpr_slice_cata_on_binary_sexpr() do
+    sexpr = sx_atom(:pair, [sx_atom0(:left), sx_atom0(:right)])
+
+    slice_alg = %{
+      atom: fn a -> a end,
+      empty: [],
+      cons: fn s, l -> [s | l] end,
+      nonempty: fn nel -> nel end,
+      sexpr: fn a, l -> {a, l} end
+    }
+
+    result = Sexpr.slice_cata(sexpr, slice_alg)
+    assert result == {:pair, [{:left, []}, {:right, []}]}
+    result
+  end
+
+  defp slice_alg_for_list_tests() do
+    %{
+      atom: fn a -> a end,
+      empty: :empty_marker,
+      cons: fn s, l -> {:cons_marker, s, l} end,
+      nonempty: fn nel -> nel end,
+      sexpr: fn a, l -> {a, l} end
+    }
+  end
+
+  def sexpr_slice_eval_list_empty() do
+    sexprs = []
+    subst = fn v -> {:var, v} end
+
+    result = Sexpr.slice_eval_list(slice_alg_for_list_tests(), subst, sexprs)
+    assert result == :empty_marker
+    result
+  end
+
+  def sexpr_slice_eval_list_alg_on_nonempty_list() do
+    sexprs = [sx_atom0(:a), sx_atom0(:b)]
+    subst = fn v -> {:var, v} end
+
+    result = Sexpr.slice_eval_list(slice_alg_for_list_tests(), subst, sexprs)
+
+    assert result ==
+             {:cons_marker, {:a, :empty_marker},
+              {:cons_marker, {:b, :empty_marker}, :empty_marker}}
+
+    result
+  end
+
+  def sexpr_slice_eval_list_single() do
+    sexprs = [sx_atom0(:a)]
+
+    slice_alg = %{
+      atom: fn a -> a end,
+      empty: [],
+      cons: fn s, l -> [s | l] end,
+      nonempty: fn nel -> nel end,
+      sexpr: fn a, l -> {a, l} end
+    }
+
+    subst = fn v -> {:var, v} end
+
+    result = Sexpr.slice_eval_list(slice_alg, subst, sexprs)
+    assert result == [{:a, []}]
+    result
+  end
+
+  def sexpr_slice_eval_list_multiple() do
+    sexprs = [sx_atom0(:a), sx_atom0(:b), sx_atom0(:c)]
+
+    slice_alg = %{
+      atom: fn a -> a end,
+      empty: nil,
+      cons: fn s, l -> {:cons, s, l} end,
+      nonempty: fn nel -> nel end,
+      sexpr: fn a, l -> {a, l} end
+    }
+
+    subst = fn v -> {:var, v} end
+
+    result = Sexpr.slice_eval_list(slice_alg, subst, sexprs)
+
+    assert result ==
+             {:cons, {:a, nil}, {:cons, {:b, nil}, {:cons, {:c, nil}, nil}}}
+
+    result
+  end
+
+  def sexpr_slice_cata_list_multiple() do
+    sexprs = [sx_atom0(:x), sx_atom0(:y)]
+
+    slice_alg = %{
+      atom: fn a -> String.to_atom("processed_#{a}") end,
+      empty: [],
+      cons: fn s, l -> [s | l] end,
+      nonempty: fn nel -> nel end,
+      sexpr: fn a, l -> {a, l} end
+    }
+
+    result = Sexpr.slice_cata_list(sexprs, slice_alg)
+    assert result == [{:processed_x, []}, {:processed_y, []}]
+    result
+  end
+
+  def sexpr_to_term_uses_slice_algebra() do
+    sexpr = sx_atom(:test, [sx_atom0(:a), sx_atom0(:b)])
+
+    result = Sexpr.to_term(sexpr)
+    expected = tvc(:test, [tvc0(:a), tvc0(:b)])
+
+    assert result == expected
+    result
+  end
 end

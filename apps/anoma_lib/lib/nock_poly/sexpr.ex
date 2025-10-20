@@ -152,6 +152,34 @@ defmodule NockPoly.Sexpr do
   end
 
   @doc """
+  I provide the slice algebra for converting S-expressions to terms.
+
+  This algebra converts each component of an S-expression to the corresponding
+  term structure, using the same types throughout since terms and S-expressions
+  have isomorphic structure.
+  """
+  @spec to_term_slice_alg() ::
+          sexpr_slice_alg(
+            atom,
+            Term.tv(atom, v),
+            atom,
+            [Term.tv(atom, v)],
+            [Term.tv(atom, v)]
+          )
+        when atom: term, v: term
+  def to_term_slice_alg() do
+    %{
+      atom: fn constructor -> constructor end,
+      empty: [],
+      cons: fn term, list -> [term | list] end,
+      nonempty: fn nelist -> nelist end,
+      sexpr: fn constructor, children ->
+        Term.com_tv(constructor, children)
+      end
+    }
+  end
+
+  @doc """
   I convert an S-expression to a polynomial term.
 
   This is one direction of the isomorphism between `sexpr(atom, v)` and
@@ -160,14 +188,7 @@ defmodule NockPoly.Sexpr do
   @spec to_term(sexpr(atom, v)) :: Term.tv(atom, v)
         when atom: term, v: term
   def to_term(sexpr) do
-    case sexpr do
-      {:var, v} ->
-        Term.var_tv(v)
-
-      {:atom, constructor, children} ->
-        term_children = Enum.map(children, &to_term/1)
-        Term.com_tv(constructor, term_children)
-    end
+    slice_eval(to_term_slice_alg(), &Term.var_tv/1, sexpr)
   end
 
   @doc """
@@ -361,6 +382,172 @@ defmodule NockPoly.Sexpr do
       {:atom, constructor, children} ->
         {:atom, constructor, Enum.map(children, &subst(f, &1))}
     end
+  end
+
+  defmodule Unreachable do
+    @moduledoc """
+    I provide unreachable functions for closed S-expressions.
+
+    These functions are used as substitution functions when working with closed
+    S-expressions (where the variable type is `none()`). Since `none()` is
+    uninhabited, these functions can never actually be called.
+    """
+
+    @dialyzer {:nowarn_function, unreachable_sexpr: 1}
+    @spec unreachable_sexpr(none()) :: no_return()
+    def unreachable_sexpr(var) do
+      raise "unreachable: attempted to substitute variable #{inspect(var)} in closed sexpr"
+    end
+  end
+
+  @typedoc """
+  I am a slice algebra for S-expressions.
+
+  I provide separate result types for each component of the S-expression structure:
+  - `r_sexpr` - the overall result type for an S-expression
+  - `r_atom` - the result type for an atom (constructor)
+  - `r_list` - the result type for a list of S-expressions
+  - `r_nelist` - the result type for a non-empty list of S-expressions
+
+  The algebra has the following components:
+
+  Atom constructor:
+  - `atom` - processes an atom/constructor to produce `r_atom`
+
+  List constructors:
+  - `empty` - result for an empty list (constant of type `r_list`)
+  - `cons` - builds a cons cell from a sexpr result and a list result
+  - `nonempty` - wraps a non-empty list to produce the general list type
+
+  S-expression constructor:
+  - `sexpr` - combines an atom result and a list result to produce the final sexpr result
+  """
+  @type sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist) :: %{
+          atom: (atom -> r_atom),
+          empty: r_list,
+          cons: (r_sexpr, r_list -> r_nelist),
+          nonempty: (r_nelist -> r_list),
+          sexpr: (r_atom, r_list -> r_sexpr)
+        }
+
+  @spec build_list(
+          [r_sexpr],
+          sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist)
+        ) ::
+          r_list
+        when atom: term,
+             r_sexpr: term,
+             r_atom: term,
+             r_list: term,
+             r_nelist: term
+  defp build_list([], slice_alg) do
+    slice_alg.empty
+  end
+
+  defp build_list([head | tail], slice_alg) do
+    r_tail = build_list(tail, slice_alg)
+    r_nelist = slice_alg.cons.(head, r_tail)
+    slice_alg.nonempty.(r_nelist)
+  end
+
+  @doc """
+  I am the slice eval morphism for S-expressions with variables.
+
+  I evaluate an S-expression by:
+  1. Substituting variables using `subst` to produce `r_sexpr` results
+  2. Processing atoms using `atom` to produce `r_atom` results
+  3. Recursively evaluating child S-expressions
+  4. Building the list using `empty`, `cons`, and `nonempty` to get `r_list`
+  5. Combining atom and list results using `sexpr` to get the final `r_sexpr`
+
+  This exposes the full structure of both the S-expression and the list of children.
+  """
+  @spec slice_eval(
+          sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist),
+          (v -> r_sexpr),
+          sexpr(atom, v)
+        ) :: r_sexpr
+        when atom: term,
+             v: term,
+             r_sexpr: term,
+             r_atom: term,
+             r_list: term,
+             r_nelist: term
+  def slice_eval(slice_alg, subst_fn, sexpr) do
+    case sexpr do
+      {:var, v} ->
+        subst_fn.(v)
+
+      {:atom, constructor, children} ->
+        r_atom = slice_alg.atom.(constructor)
+        r_list = slice_eval_list(slice_alg, subst_fn, children)
+        slice_alg.sexpr.(r_atom, r_list)
+    end
+  end
+
+  @doc """
+  I am the slice catamorphism for closed S-expressions.
+
+  I am `slice_eval` specialized to closed S-expressions where the variable
+  type is `none()`. Since there are no variables, the variable substitution
+  function is never called and can be an unreachable function.
+  """
+  @spec slice_cata(
+          sexpr(atom, none()),
+          sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist)
+        ) :: r_sexpr
+        when atom: term,
+             r_sexpr: term,
+             r_atom: term,
+             r_list: term,
+             r_nelist: term
+  def slice_cata(sexpr, slice_alg) do
+    slice_eval(slice_alg, &Unreachable.unreachable_sexpr/1, sexpr)
+  end
+
+  @doc """
+  I am the slice eval morphism for a list of S-expressions with variables.
+
+  I am a convenience wrapper around `slice_eval` that:
+  1. Recursively evaluates each S-expression in the list to get `r_sexpr` results
+  2. Builds the list using `empty`, `cons`, and `nonempty` to get `r_list`
+
+  This is useful when the caller is primarily interested in the list structure
+  rather than individual S-expressions.
+  """
+  @spec slice_eval_list(
+          sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist),
+          (v -> r_sexpr),
+          [sexpr(atom, v)]
+        ) :: r_list
+        when atom: term,
+             v: term,
+             r_sexpr: term,
+             r_atom: term,
+             r_list: term,
+             r_nelist: term
+  def slice_eval_list(slice_alg, subst_fn, sexprs) do
+    sexpr_results = Enum.map(sexprs, &slice_eval(slice_alg, subst_fn, &1))
+    build_list(sexpr_results, slice_alg)
+  end
+
+  @doc """
+  I am the slice catamorphism for a list of closed S-expressions.
+
+  I am `slice_eval_list` specialized to closed S-expressions where the variable
+  type is `none()`.
+  """
+  @spec slice_cata_list(
+          [sexpr(atom, none())],
+          sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist)
+        ) :: r_list
+        when atom: term,
+             r_sexpr: term,
+             r_atom: term,
+             r_list: term,
+             r_nelist: term
+  def slice_cata_list(sexprs, slice_alg) do
+    slice_eval_list(slice_alg, &Unreachable.unreachable_sexpr/1, sexprs)
   end
 
   @doc """

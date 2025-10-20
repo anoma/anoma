@@ -20,6 +20,40 @@ defmodule NockPoly.BinTreeTerm do
   alias NockPoly.Term
 
   @doc """
+  I provide the slice algebra for converting terms to binary trees.
+
+  This algebra interprets the children list as a snoclist: the rightmost element
+  becomes the rightmost leaf in the tree, and we build the tree right-associatively.
+
+  An empty children list creates just an atom node.
+  A term `(ctor, [x, y, z])` builds the tree structure
+  `(((ctor . z) . y) . x)` where each `.` is a pair.
+  """
+  def term_to_bintree_slice_alg() do
+    %{
+      ctor: fn ctor -> ctor end,
+      empty: :empty_marker,
+      cons: fn tree, list_acc -> {:cons_marker, tree, list_acc} end,
+      nonempty: fn nelist -> nelist end,
+      term: fn ctor, list_result ->
+        build_snoclist_tree(BinTree.atom_btv(ctor), list_result)
+      end
+    }
+  end
+
+  @spec build_snoclist_tree(BinTree.btv(ctor, v), term) ::
+          BinTree.btv(ctor, v)
+        when ctor: term, v: term
+  defp build_snoclist_tree(acc, :empty_marker) do
+    acc
+  end
+
+  defp build_snoclist_tree(acc, {:cons_marker, tree, rest}) do
+    rest_tree = build_snoclist_tree(acc, rest)
+    BinTree.pair_btv(rest_tree, tree)
+  end
+
+  @doc """
   I convert a term with list of children to a binary tree via snoclist interpretation.
 
   The list of children is interpreted as a snoclist: the rightmost element
@@ -31,11 +65,7 @@ defmodule NockPoly.BinTreeTerm do
   """
   @spec term_to_bintree(Term.t(ctor)) :: BinTree.bt(ctor) when ctor: term
   def term_to_bintree(term) do
-    Term.eval(
-      &term_to_bintree_alg/1,
-      &Term.Unreachable.unreachable_term/1,
-      term
-    )
+    Term.slice_cata(term, term_to_bintree_slice_alg())
   end
 
   @doc """
@@ -46,34 +76,7 @@ defmodule NockPoly.BinTreeTerm do
   @spec termv_to_bintreev(Term.tv(ctor, v)) :: BinTree.btv(ctor, v)
         when ctor: term, v: term
   def termv_to_bintreev(term) do
-    Term.eval(&term_to_bintree_alg/1, &BinTree.var_btv/1, term)
-  end
-
-  @spec term_to_bintree_alg({ctor, [BinTree.btv(ctor, v)]}) ::
-          BinTree.btv(ctor, v)
-        when ctor: term, v: term
-  defp term_to_bintree_alg({ctor, children}) do
-    list_to_bintree_snoclist(ctor, children)
-  end
-
-  @spec list_to_bintree_snoclist(ctor, [BinTree.btv(ctor, v)]) ::
-          BinTree.btv(ctor, v)
-        when ctor: term, v: term
-  defp list_to_bintree_snoclist(ctor, children) do
-    reversed = Enum.reverse(children)
-    build_tree_from_snoclist(BinTree.atom_btv(ctor), reversed)
-  end
-
-  @spec build_tree_from_snoclist(BinTree.btv(ctor, v), [BinTree.btv(ctor, v)]) ::
-          BinTree.btv(ctor, v)
-        when ctor: term, v: term
-  defp build_tree_from_snoclist(acc, []) do
-    acc
-  end
-
-  defp build_tree_from_snoclist(acc, [head | tail]) do
-    new_acc = BinTree.pair_btv(acc, head)
-    build_tree_from_snoclist(new_acc, tail)
+    Term.slice_eval(term_to_bintree_slice_alg(), &BinTree.var_btv/1, term)
   end
 
   @doc """

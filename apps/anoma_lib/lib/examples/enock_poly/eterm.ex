@@ -118,6 +118,263 @@ defmodule Examples.ENockPoly.ETerm do
     result
   end
 
+  defp slice_alg_nullary_only() do
+    %{
+      ctor: fn c -> {:ctor, c} end,
+      empty: {:empty_list},
+      cons: fn t, l -> {:cons_result, t, l} end,
+      nonempty: fn nel -> nel end,
+      term: fn ctor_r, list_r -> {:term, ctor_r, list_r} end
+    }
+  end
+
+  def term_slice_eval_on_nullary() do
+    term = tvc0(:foo)
+    subst = fn v -> {:var, v} end
+
+    result = Term.slice_eval(slice_alg_nullary_only(), subst, term)
+
+    assert result == {:term, {:ctor, :foo}, {:empty_list}}
+    result
+  end
+
+  def term_slice_eval_nullary_alg_on_term_with_children() do
+    term = tvc(:root, [tvc0(:a), tvc0(:b)])
+    subst = fn v -> {:var, v} end
+
+    result = Term.slice_eval(slice_alg_nullary_only(), subst, term)
+
+    assert result ==
+             {:term, {:ctor, :root},
+              {:cons_result, {:term, {:ctor, :a}, {:empty_list}},
+               {:cons_result, {:term, {:ctor, :b}, {:empty_list}},
+                {:empty_list}}}}
+
+    result
+  end
+
+  defp slice_alg_variable_only() do
+    %{
+      ctor: fn c -> {:ctor_result, c} end,
+      empty: {:empty_list},
+      cons: fn t, l -> {:cons_result, t, l} end,
+      nonempty: fn nel -> nel end,
+      term: fn ctor_r, list_r -> {:term_result, ctor_r, list_r} end
+    }
+  end
+
+  def term_slice_eval_on_variable() do
+    term = tvv(42)
+    subst = fn v -> {:var_result, v} end
+
+    result = Term.slice_eval(slice_alg_variable_only(), subst, term)
+
+    assert result == {:var_result, 42}
+    result
+  end
+
+  def term_slice_eval_variable_alg_on_closed_term() do
+    term = tvc(:foo, [tvc0(:a), tvc0(:b)])
+    subst = fn v -> {:var_result, v} end
+
+    result = Term.slice_eval(slice_alg_variable_only(), subst, term)
+
+    assert result ==
+             {:term_result, {:ctor_result, :foo},
+              {:cons_result,
+               {:term_result, {:ctor_result, :a}, {:empty_list}},
+               {:cons_result,
+                {:term_result, {:ctor_result, :b}, {:empty_list}},
+                {:empty_list}}}}
+
+    result
+  end
+
+  defp slice_alg_with_children() do
+    %{
+      ctor: fn c -> {:ctor_val, c} end,
+      empty: [],
+      cons: fn term_r, list_r -> [term_r | list_r] end,
+      nonempty: fn nelist -> nelist end,
+      term: fn ctor_r, list_r -> {ctor_r, list_r} end
+    }
+  end
+
+  def term_slice_eval_on_binary_term() do
+    term = tvc(:root, [tvc0(:left), tvc0(:right)])
+    subst = fn v -> {:var, v} end
+
+    result = Term.slice_eval(slice_alg_with_children(), subst, term)
+
+    assert result ==
+             {{:ctor_val, :root},
+              [{{:ctor_val, :left}, []}, {{:ctor_val, :right}, []}]}
+
+    result
+  end
+
+  def term_slice_eval_tracking_list_structure() do
+    term = tvc(:f, [tvc0(:a), tvc0(:b), tvc0(:c)])
+
+    slice_alg = %{
+      ctor: fn c -> c end,
+      empty: :empty,
+      cons: fn t, l -> {:cons, t, l} end,
+      nonempty: fn nel -> {:nonempty, nel} end,
+      term: fn c, l -> {:term, c, l} end
+    }
+
+    subst = fn v -> {:var, v} end
+
+    result = Term.slice_eval(slice_alg, subst, term)
+
+    assert result ==
+             {:term, :f,
+              {:nonempty,
+               {:cons, {:term, :a, :empty},
+                {:nonempty,
+                 {:cons, {:term, :b, :empty},
+                  {:nonempty, {:cons, {:term, :c, :empty}, :empty}}}}}}}
+
+    result
+  end
+
+  defp slice_alg_for_cata_tests() do
+    %{
+      ctor: fn c -> {:ctor_data, c} end,
+      empty: nil,
+      cons: fn t, l -> [t | l] end,
+      nonempty: fn nel -> nel end,
+      term: fn ctor_r, list_r -> {:result, ctor_r, list_r} end
+    }
+  end
+
+  def term_slice_cata_on_nullary() do
+    term = tvc0(:test)
+
+    result = Term.slice_cata(term, slice_alg_for_cata_tests())
+    assert result == {:result, {:ctor_data, :test}, nil}
+    result
+  end
+
+  def term_slice_cata_alg_on_term_with_children() do
+    term = tvc(:parent, [tvc0(:child1), tvc0(:child2)])
+
+    result = Term.slice_cata(term, slice_alg_for_cata_tests())
+
+    assert result ==
+             {:result, {:ctor_data, :parent},
+              [
+                {:result, {:ctor_data, :child1}, nil},
+                {:result, {:ctor_data, :child2}, nil} | nil
+              ]}
+
+    result
+  end
+
+  def term_slice_cata_on_binary_term() do
+    term = tvc(:pair, [tvc0(:left), tvc0(:right)])
+
+    slice_alg = %{
+      ctor: fn c -> c end,
+      empty: [],
+      cons: fn t, l -> [t | l] end,
+      nonempty: fn nel -> nel end,
+      term: fn c, l -> {c, l} end
+    }
+
+    result = Term.slice_cata(term, slice_alg)
+    assert result == {:pair, [{:left, []}, {:right, []}]}
+    result
+  end
+
+  defp slice_alg_for_list_tests() do
+    %{
+      ctor: fn c -> c end,
+      empty: :empty_marker,
+      cons: fn t, l -> {:cons_marker, t, l} end,
+      nonempty: fn nel -> nel end,
+      term: fn c, l -> {c, l} end
+    }
+  end
+
+  def term_slice_eval_list_empty() do
+    terms = []
+    subst = fn v -> {:var, v} end
+
+    result = Term.slice_eval_list(slice_alg_for_list_tests(), subst, terms)
+    assert result == :empty_marker
+    result
+  end
+
+  def term_slice_eval_list_alg_on_nonempty_list() do
+    terms = [tvc0(:a), tvc0(:b)]
+    subst = fn v -> {:var, v} end
+
+    result = Term.slice_eval_list(slice_alg_for_list_tests(), subst, terms)
+
+    assert result ==
+             {:cons_marker, {:a, :empty_marker},
+              {:cons_marker, {:b, :empty_marker}, :empty_marker}}
+
+    result
+  end
+
+  def term_slice_eval_list_single() do
+    terms = [tvc0(:a)]
+
+    slice_alg = %{
+      ctor: fn c -> c end,
+      empty: [],
+      cons: fn t, l -> [t | l] end,
+      nonempty: fn nel -> nel end,
+      term: fn c, l -> {c, l} end
+    }
+
+    subst = fn v -> {:var, v} end
+
+    result = Term.slice_eval_list(slice_alg, subst, terms)
+    assert result == [{:a, []}]
+    result
+  end
+
+  def term_slice_eval_list_multiple() do
+    terms = [tvc0(:a), tvc0(:b), tvc0(:c)]
+
+    slice_alg = %{
+      ctor: fn c -> c end,
+      empty: nil,
+      cons: fn t, l -> {:cons, t, l} end,
+      nonempty: fn nel -> nel end,
+      term: fn c, l -> {c, l} end
+    }
+
+    subst = fn v -> {:var, v} end
+
+    result = Term.slice_eval_list(slice_alg, subst, terms)
+
+    assert result ==
+             {:cons, {:a, nil}, {:cons, {:b, nil}, {:cons, {:c, nil}, nil}}}
+
+    result
+  end
+
+  def term_slice_cata_list_multiple() do
+    terms = [tvc0(:x), tvc0(:y)]
+
+    slice_alg = %{
+      ctor: fn c -> String.to_atom("processed_#{c}") end,
+      empty: [],
+      cons: fn t, l -> [t | l] end,
+      nonempty: fn nel -> nel end,
+      term: fn c, l -> {c, l} end
+    }
+
+    result = Term.slice_cata_list(terms, slice_alg)
+    assert result == [{:processed_x, []}, {:processed_y, []}]
+    result
+  end
+
   @doc """
   v1: a single variable (an open term), which has depth and size 0.
   """

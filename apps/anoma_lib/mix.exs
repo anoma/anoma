@@ -23,6 +23,7 @@ defmodule AnomaLib.MixProject do
           NockPoly.Term.MacroDefs,
           NockPoly.BinTree.Unreachable,
           NockPoly.BinTree.MacroDefs,
+          NockPoly.Sexpr.Unreachable,
           NockPoly.Sexpr.MacroDefs,
           ExtNock.MacroDefs,
           NockPoly.Fin2ForestPolyF.ForestPolySpec,
