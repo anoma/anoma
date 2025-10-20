@@ -190,6 +190,223 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
+  def slice_eval_on_atom_tree() do
+    tree = btva(:foo)
+
+    slice_alg = %{
+      atom: fn a -> {:atom_result, a} end,
+      pair: fn _l, _r -> raise "Should not be called" end,
+      from_atom: fn atom_r -> {:tree_result, atom_r} end,
+      from_pair: fn pair_r -> {:tree_result, pair_r} end
+    }
+
+    subst = fn v -> {:var_result, v} end
+
+    result = BinTree.slice_eval(slice_alg, subst, tree)
+    assert result == {:tree_result, {:atom_result, :foo}}
+    result
+  end
+
+  def slice_eval_on_variable_tree() do
+    tree = btvv(42)
+
+    slice_alg = %{
+      atom: fn _a -> raise "Should not be called" end,
+      pair: fn _l, _r -> raise "Should not be called" end,
+      from_atom: fn atom_r -> {:tree_result, atom_r} end,
+      from_pair: fn pair_r -> {:tree_result, pair_r} end
+    }
+
+    subst = fn v -> {:var_result, v} end
+
+    result = BinTree.slice_eval(slice_alg, subst, tree)
+    assert result == {:var_result, 42}
+    result
+  end
+
+  def slice_eval_on_pair_tree() do
+    tree = btvp(btva(:a), btva(:b))
+
+    slice_alg = %{
+      atom: fn a -> String.to_atom("atom_#{a}") end,
+      pair: fn l, r -> {:pair_result, l, r} end,
+      from_atom: fn atom_r -> {:tree, atom_r} end,
+      from_pair: fn pair_r -> {:tree, pair_r} end
+    }
+
+    subst = fn v -> {:var, v} end
+
+    result = BinTree.slice_eval(slice_alg, subst, tree)
+
+    assert result ==
+             {:tree, {:pair_result, {:tree, :atom_a}, {:tree, :atom_b}}}
+
+    result
+  end
+
+  def slice_eval_tracking_intermediate_types() do
+    tree = btvp(btvp(btva(1), btva(2)), btva(3))
+
+    slice_alg = %{
+      atom: fn n -> {:atom_val, n} end,
+      pair: fn {:final, l}, {:final, r} -> {:pair_sum, l + r} end,
+      from_atom: fn {:atom_val, n} -> {:final, n} end,
+      from_pair: fn {:pair_sum, s} -> {:final, s} end
+    }
+
+    subst = fn v -> {:final, v} end
+
+    result = BinTree.slice_eval(slice_alg, subst, tree)
+    assert result == {:final, 6}
+    result
+  end
+
+  def slice_cata_on_atom_tree() do
+    tree = btva(:test)
+
+    slice_alg = %{
+      atom: fn a -> {:atom_data, a} end,
+      pair: fn _l, _r -> raise "Should not be called" end,
+      from_atom: fn atom_r -> {:result, atom_r} end,
+      from_pair: fn pair_r -> {:result, pair_r} end
+    }
+
+    result = BinTree.slice_cata(tree, slice_alg)
+    assert result == {:result, {:atom_data, :test}}
+    result
+  end
+
+  def slice_cata_on_pair_tree() do
+    tree = btvp(btva(:a), btva(:b))
+
+    slice_alg = %{
+      atom: fn a -> a end,
+      pair: fn l, r -> {l, r} end,
+      from_atom: fn a -> [:leaf, a] end,
+      from_pair: fn {l, r} -> [:node, l, r] end
+    }
+
+    result = BinTree.slice_cata(tree, slice_alg)
+    assert result == [:node, [:leaf, :a], [:leaf, :b]]
+    result
+  end
+
+  def slice_cata_sum_with_intermediate_types() do
+    tree = btvp(btvp(btva(10), btva(20)), btva(30))
+
+    slice_alg = %{
+      atom: fn n -> n end,
+      pair: fn sum_l, sum_r -> sum_l + sum_r end,
+      from_atom: fn n -> n end,
+      from_pair: fn sum -> sum end
+    }
+
+    result = BinTree.slice_cata(tree, slice_alg)
+    assert result == 60
+    result
+  end
+
+  def slice_eval_pair_builds_pair_result() do
+    left = btva(:left_atom)
+    right = btva(:right_atom)
+
+    slice_alg = %{
+      atom: fn a -> {:atom, a} end,
+      pair: fn l, r -> {:constructed_pair, l, r} end,
+      from_atom: fn a_r -> {:tree, a_r} end,
+      from_pair: fn p_r -> {:tree, p_r} end
+    }
+
+    subst = fn v -> {:var, v} end
+
+    result = BinTree.slice_eval_pair(slice_alg, subst, left, right)
+
+    assert result ==
+             {:constructed_pair, {:tree, {:atom, :left_atom}},
+              {:tree, {:atom, :right_atom}}}
+
+    result
+  end
+
+  def slice_eval_pair_with_nested_trees() do
+    left = btvp(btva(1), btva(2))
+    right = btva(3)
+
+    slice_alg = %{
+      atom: fn n -> n end,
+      pair: fn l, r -> l + r end,
+      from_atom: fn n -> n end,
+      from_pair: fn sum -> sum end
+    }
+
+    subst = fn v -> v end
+
+    result = BinTree.slice_eval_pair(slice_alg, subst, left, right)
+    assert result == 6
+    result
+  end
+
+  def slice_cata_pair_on_two_atoms() do
+    left = btva(:x)
+    right = btva(:y)
+
+    slice_alg = %{
+      atom: fn a -> String.to_atom("processed_#{a}") end,
+      pair: fn l, r -> [l, r] end,
+      from_atom: fn a -> a end,
+      from_pair: fn p -> p end
+    }
+
+    result = BinTree.slice_cata_pair(left, right, slice_alg)
+    assert result == [:processed_x, :processed_y]
+    result
+  end
+
+  def slice_cata_pair_sum_two_trees() do
+    left = btvp(btva(10), btva(20))
+    right = btvp(btva(30), btva(40))
+
+    slice_alg = %{
+      atom: fn n -> n end,
+      pair: fn l, r -> l + r end,
+      from_atom: fn n -> n end,
+      from_pair: fn sum -> sum end
+    }
+
+    result = BinTree.slice_cata_pair(left, right, slice_alg)
+    assert result == 100
+    result
+  end
+
+  def slice_algebra_enables_type_tracking() do
+    tree = btvp(btva(:a), btvp(btva(:b), btva(:c)))
+
+    slice_alg = %{
+      atom: fn a -> %{type: :atom, value: a} end,
+      pair: fn l, r -> %{type: :pair, left: l, right: r} end,
+      from_atom: fn atom_map -> Map.put(atom_map, :tree_type, :leaf) end,
+      from_pair: fn pair_map -> Map.put(pair_map, :tree_type, :branch) end
+    }
+
+    subst = fn _v -> %{type: :var, tree_type: :var} end
+
+    result = BinTree.slice_eval(slice_alg, subst, tree)
+
+    assert result == %{
+             type: :pair,
+             tree_type: :branch,
+             left: %{type: :atom, value: :a, tree_type: :leaf},
+             right: %{
+               type: :pair,
+               tree_type: :branch,
+               left: %{type: :atom, value: :b, tree_type: :leaf},
+               right: %{type: :atom, value: :c, tree_type: :leaf}
+             }
+           }
+
+    result
+  end
+
   def prod_eval_mon_simple_tree() do
     tree = btvp(btva(10), btva(20))
     prod_alg = fn {l, r} -> l + r end

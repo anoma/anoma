@@ -77,6 +77,29 @@ defmodule NockPoly.BinTreeTerm do
   end
 
   @doc """
+  I provide the slice algebra for converting binary trees to terms.
+
+  This algebra extracts the snoclist structure from a binary tree and
+  converts it to a term with a constructor and list of children.
+  """
+  @spec bintree_to_term_slice_alg() ::
+          BinTree.bintree_slice_alg(
+            ctor,
+            Term.tv(ctor, v),
+            ctor,
+            Term.tv(ctor, v)
+          )
+        when ctor: term, v: term
+  def bintree_to_term_slice_alg() do
+    %{
+      atom: fn ctor -> ctor end,
+      pair: &bintree_pair_to_term/2,
+      from_atom: fn ctor -> Term.com_tv(ctor, []) end,
+      from_pair: &Function.identity/1
+    }
+  end
+
+  @doc """
   I convert a binary tree to a term extracting the snoclist structure.
 
   This is the inverse of `term_to_bintree`. The binary tree is deconstructed
@@ -85,7 +108,7 @@ defmodule NockPoly.BinTreeTerm do
   """
   @spec bintree_to_term(BinTree.bt(ctor)) :: Term.t(ctor) when ctor: term
   def bintree_to_term(tree) do
-    BinTree.cata(tree, &bintree_to_term_alg/1)
+    BinTree.slice_cata(tree, bintree_to_term_slice_alg())
   end
 
   @doc """
@@ -96,20 +119,7 @@ defmodule NockPoly.BinTreeTerm do
   @spec bintreev_to_termv(BinTree.btv(ctor, v)) :: Term.tv(ctor, v)
         when ctor: term, v: term
   def bintreev_to_termv(tree) do
-    BinTree.eval(&bintree_to_term_alg/1, &Term.var_tv/1, tree)
-  end
-
-  @spec bintree_to_term_alg(BinTree.bintreef(ctor, Term.tv(ctor, v))) ::
-          Term.tv(ctor, v)
-        when ctor: term, v: term
-  defp bintree_to_term_alg(tree_f) do
-    case tree_f do
-      {:atom, ctor} ->
-        Term.com_tv(ctor, [])
-
-      {:pair, left, right} ->
-        bintree_pair_to_term(left, right)
-    end
+    BinTree.slice_eval(bintree_to_term_slice_alg(), &Term.var_tv/1, tree)
   end
 
   @spec bintree_pair_to_term(Term.tv(ctor, v), Term.tv(ctor, v)) ::

@@ -222,6 +222,112 @@ defmodule NockPoly.BinTree do
     eval(algebra, &Unreachable.unreachable_var/1, tree)
   end
 
+  @typedoc """
+  I am a slice algebra for binary trees.
+
+  I provide separate result types for:
+  - `r_bt`: the overall binary tree result
+  - `r_atom`: the result for atom leaves
+  - `r_pair`: the result for pair nodes
+
+  The `from_atom` and `from_pair` functions are the slice morphisms that
+  project from each constructor type to the overall result type.
+  """
+  @type bintree_slice_alg(atom, r_bt, r_atom, r_pair) :: %{
+          atom: (atom -> r_atom),
+          pair: (r_bt, r_bt -> r_pair),
+          from_atom: (r_atom -> r_bt),
+          from_pair: (r_pair -> r_bt)
+        }
+
+  @doc """
+  I am the slice eval morphism for binary trees with variables.
+
+  I recursively evaluate an open binary tree by:
+  - For variables: applying the substitution function to get `r_bt`
+  - For atoms: applying `atom` to get `r_atom`, then `from_atom` to get `r_bt`
+  - For pairs: recursively evaluating children to get `r_bt` results,
+    applying `pair` to get `r_pair`, then `from_pair` to get `r_bt`
+  """
+  @spec slice_eval(
+          bintree_slice_alg(atom, r_bt, r_atom, r_pair),
+          (v -> r_bt),
+          btv(atom, v)
+        ) :: r_bt
+        when atom: term, v: term, r_bt: term, r_atom: term, r_pair: term
+  def slice_eval(slice_alg, subst, tree) do
+    non_slice_algebra = fn
+      {:atom, ea} ->
+        slice_alg.from_atom.(slice_alg.atom.(ea))
+
+      {:pair, left_r, right_r} ->
+        slice_alg.from_pair.(slice_alg.pair.(left_r, right_r))
+    end
+
+    eval(non_slice_algebra, subst, tree)
+  end
+
+  @doc """
+  I am the slice catamorphism for closed binary trees.
+
+  I am `slice_eval` specialized to closed trees where the variable type is `none()`.
+  """
+  @spec slice_cata(
+          bt(atom),
+          bintree_slice_alg(atom, r_bt, r_atom, r_pair)
+        ) :: r_bt
+        when atom: term, r_bt: term, r_atom: term, r_pair: term
+  def slice_cata(tree, slice_alg) do
+    slice_eval(slice_alg, &Unreachable.unreachable_var/1, tree)
+  end
+
+  @doc """
+  I am the slice eval morphism for a pair of binary trees with variables.
+
+  I am a convenience wrapper around `slice_eval` that:
+  1. Recursively evaluates both trees to get `r_bt` results
+  2. Applies the `pair` component to get `r_pair`
+
+  This is useful when the caller is primarily interested in the pair structure
+  rather than the overall tree structure.
+  """
+  @spec slice_eval_pair(
+          bintree_slice_alg(atom, r_bt, r_atom, r_pair),
+          (v -> r_bt),
+          btv(atom, v),
+          btv(atom, v)
+        ) :: r_pair
+        when atom: term, v: term, r_bt: term, r_atom: term, r_pair: term
+  def slice_eval_pair(slice_alg, subst, left_tree, right_tree) do
+    left_r = slice_eval(slice_alg, subst, left_tree)
+    right_r = slice_eval(slice_alg, subst, right_tree)
+    slice_alg.pair.(left_r, right_r)
+  end
+
+  @doc """
+  I am the slice catamorphism for a pair of closed binary trees.
+
+  I am a convenience wrapper around `slice_cata` that:
+  1. Recursively evaluates both trees to get `r_bt` results
+  2. Applies the `pair` component to get `r_pair`
+
+  This is useful when performing simultaneous induction on pairs of closed binary trees.
+  """
+  @spec slice_cata_pair(
+          bt(atom),
+          bt(atom),
+          bintree_slice_alg(atom, r_bt, r_atom, r_pair)
+        ) :: r_pair
+        when atom: term, r_bt: term, r_atom: term, r_pair: term
+  def slice_cata_pair(left_tree, right_tree, slice_alg) do
+    slice_eval_pair(
+      slice_alg,
+      &Unreachable.unreachable_var/1,
+      left_tree,
+      right_tree
+    )
+  end
+
   @doc """
   I am the catamorphism specialized for product algebras on closed binary trees.
 
