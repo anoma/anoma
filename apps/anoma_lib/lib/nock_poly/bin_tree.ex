@@ -179,22 +179,23 @@ defmodule NockPoly.BinTree do
   Because the free monad of a binary tree is isomorphic to a binary tree
   with an `Either v atom` atom type, this is a binary tree catamorphism
   specialized to handle variables.
+
+  I am implemented by translating the algebra to a slice algebra and
+  delegating to `slice_eval`.
   """
   @spec eval(bintree_alg(atom, r), (v -> r), btv(atom, v)) :: r
         when atom: term, v: term, r: term
   def eval(algebra, subst, tree) do
-    case out_btv(tree) do
-      {:btvar, v} ->
-        subst.(v)
+    slice_alg = %{
+      atom: fn ea -> ea end,
+      pair: fn left_r, right_r -> {left_r, right_r} end,
+      from_atom: fn ea -> algebra.({:atom, ea}) end,
+      from_pair: fn {left_r, right_r} ->
+        algebra.({:pair, left_r, right_r})
+      end
+    }
 
-      {:btatom, ea} ->
-        algebra.({:atom, ea})
-
-      {:btpair, left, right} ->
-        left_result = eval(algebra, subst, left)
-        right_result = eval(algebra, subst, right)
-        algebra.({:pair, left_result, right_result})
-    end
+    slice_eval(slice_alg, subst, tree)
   end
 
   defmodule Unreachable do
@@ -246,8 +247,10 @@ defmodule NockPoly.BinTree do
   I recursively evaluate an open binary tree by:
   - For variables: applying the substitution function to get `r_bt`
   - For atoms: applying `atom` to get `r_atom`, then `from_atom` to get `r_bt`
-  - For pairs: recursively evaluating children to get `r_bt` results,
-    applying `pair` to get `r_pair`, then `from_pair` to get `r_bt`
+  - For pairs: delegating to `slice_eval_pair` to get `r_pair`, then
+    `from_pair` to get `r_bt`
+
+  I am mutually recursive with `slice_eval_pair`.
   """
   @spec slice_eval(
           bintree_slice_alg(atom, r_bt, r_atom, r_pair),
@@ -256,15 +259,17 @@ defmodule NockPoly.BinTree do
         ) :: r_bt
         when atom: term, v: term, r_bt: term, r_atom: term, r_pair: term
   def slice_eval(slice_alg, subst, tree) do
-    non_slice_algebra = fn
-      {:atom, ea} ->
+    case out_btv(tree) do
+      {:btvar, v} ->
+        subst.(v)
+
+      {:btatom, ea} ->
         slice_alg.from_atom.(slice_alg.atom.(ea))
 
-      {:pair, left_r, right_r} ->
-        slice_alg.from_pair.(slice_alg.pair.(left_r, right_r))
+      {:btpair, left, right} ->
+        pair_r = slice_eval_pair(slice_alg, subst, left, right)
+        slice_alg.from_pair.(pair_r)
     end
-
-    eval(non_slice_algebra, subst, tree)
   end
 
   @doc """
