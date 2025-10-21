@@ -179,18 +179,22 @@ defmodule NockPoly.Term do
   In addition to an open term, `eval` takes an algebra of the `termf`
   functor and a "substitution" function which maps variables to the return
   type.
+
+  I am implemented by translating the algebra to a slice algebra and
+  delegating to `slice_eval`.
   """
   @spec eval(termalg(ctor, r), (v -> r), tv(ctor, v)) :: r
         when ctor: term, v: term, r: term
   def eval(algebra, subst, term) do
-    case out_tv(term) do
-      {:tcom, {ctor, children}} ->
-        results = Enum.map(children, &eval(algebra, subst, &1))
-        algebra.({ctor, results})
+    slice_alg = %{
+      ctor: fn ctor -> ctor end,
+      empty: [],
+      cons: fn r_term, r_list -> [r_term | r_list] end,
+      nonempty: fn nelist -> nelist end,
+      term: fn ctor, children -> algebra.({ctor, children}) end
+    }
 
-      {:tvar, var} ->
-        subst.(var)
-    end
+    slice_eval(slice_alg, subst, term)
   end
 
   # I am the algebra used to implement `tcmap` below.
@@ -334,9 +338,11 @@ defmodule NockPoly.Term do
 
   I recursively evaluate an open term by:
   - For variables: applying the substitution function to get `r_term`
-  - For constructors: applying `ctor` to get `r_ctor`, recursively building
-    the children list using `empty`, `cons`, and `nonempty`, then applying
-    `term` to get `r_term`
+  - For constructors: applying `ctor` to get `r_ctor`, delegating to
+    `slice_eval_list` to build the children list, then applying `term`
+    to get `r_term`
+
+  I am mutually recursive with `slice_eval_list`.
   """
   @spec slice_eval(
           term_slice_alg(ctor, r_term, r_ctor, r_list, r_nelist),
@@ -350,33 +356,15 @@ defmodule NockPoly.Term do
              r_list: term,
              r_nelist: term
   def slice_eval(slice_alg, subst, term) do
-    non_slice_algebra = fn {ctor, children_results} ->
-      r_ctor = slice_alg.ctor.(ctor)
-      r_list = build_list(children_results, slice_alg)
-      slice_alg.term.(r_ctor, r_list)
+    case out_tv(term) do
+      {:tvar, var} ->
+        subst.(var)
+
+      {:tcom, {ctor, children}} ->
+        r_ctor = slice_alg.ctor.(ctor)
+        r_list = slice_eval_list(slice_alg, subst, children)
+        slice_alg.term.(r_ctor, r_list)
     end
-
-    eval(non_slice_algebra, subst, term)
-  end
-
-  @spec build_list(
-          [r_term],
-          term_slice_alg(ctor, r_term, r_ctor, r_list, r_nelist)
-        ) ::
-          r_list
-        when ctor: term,
-             r_term: term,
-             r_ctor: term,
-             r_list: term,
-             r_nelist: term
-  defp build_list([], slice_alg) do
-    slice_alg.empty
-  end
-
-  defp build_list([head | tail], slice_alg) do
-    r_tail = build_list(tail, slice_alg)
-    r_nelist = slice_alg.cons.(head, r_tail)
-    slice_alg.nonempty.(r_nelist)
   end
 
   @doc """
@@ -400,12 +388,13 @@ defmodule NockPoly.Term do
   @doc """
   I am the slice eval morphism for a list of polynomial terms with variables.
 
-  I am a convenience wrapper around `slice_eval` that:
-  1. Recursively evaluates each term in the list to get `r_term` results
-  2. Builds the list using `empty`, `cons`, and `nonempty` to get `r_list`
+  I recursively evaluate a list of terms by:
+  - For the empty list: returning `empty`
+  - For a non-empty list: recursively evaluating the head with `slice_eval`,
+    recursively evaluating the tail with `slice_eval_list`, combining them
+    with `cons` to get `r_nelist`, then applying `nonempty` to get `r_list`
 
-  This is useful when the caller is primarily interested in the list structure
-  rather than individual terms.
+  I am mutually recursive with `slice_eval`.
   """
   @spec slice_eval_list(
           term_slice_alg(ctor, r_term, r_ctor, r_list, r_nelist),
@@ -419,8 +408,16 @@ defmodule NockPoly.Term do
              r_list: term,
              r_nelist: term
   def slice_eval_list(slice_alg, subst, terms) do
-    term_results = Enum.map(terms, &slice_eval(slice_alg, subst, &1))
-    build_list(term_results, slice_alg)
+    case terms do
+      [] ->
+        slice_alg.empty
+
+      [head | tail] ->
+        r_head = slice_eval(slice_alg, subst, head)
+        r_tail = slice_eval_list(slice_alg, subst, tail)
+        r_nelist = slice_alg.cons.(r_head, r_tail)
+        slice_alg.nonempty.(r_nelist)
+    end
   end
 
   @doc """
