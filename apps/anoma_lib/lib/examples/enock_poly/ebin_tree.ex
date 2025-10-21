@@ -8,13 +8,13 @@ defmodule Examples.ENockPoly.EBinTree do
 
   def basic_atom_term() do
     tree = btva(:foo)
-    assert tree == {:in_btv, {:btatom, :foo}}
+    assert tree == {:in_bt, {:atom, {:btatom, :foo}}}
     tree
   end
 
   def basic_variable_term() do
     tree = btvv(42)
-    assert tree == {:in_btv, {:btvar, 42}}
+    assert tree == {:in_bt, {:atom, {:btvar, 42}}}
     tree
   end
 
@@ -22,8 +22,9 @@ defmodule Examples.ENockPoly.EBinTree do
     tree = btvp(btva(:a), btva(:b))
 
     assert tree ==
-             {:in_btv,
-              {:btpair, {:in_btv, {:btatom, :a}}, {:in_btv, {:btatom, :b}}}}
+             {:in_bt,
+              {:pair, {:in_bt, {:atom, {:btatom, :a}}},
+               {:in_bt, {:atom, {:btatom, :b}}}}}
 
     tree
   end
@@ -32,11 +33,12 @@ defmodule Examples.ENockPoly.EBinTree do
     tree = btvp(btvp(btva(:a), btva(:b)), btva(:c))
 
     assert tree ==
-             {:in_btv,
-              {:btpair,
-               {:in_btv,
-                {:btpair, {:in_btv, {:btatom, :a}}, {:in_btv, {:btatom, :b}}}},
-               {:in_btv, {:btatom, :c}}}}
+             {:in_bt,
+              {:pair,
+               {:in_bt,
+                {:pair, {:in_bt, {:atom, {:btatom, :a}}},
+                 {:in_bt, {:atom, {:btatom, :b}}}}},
+               {:in_bt, {:atom, {:btatom, :c}}}}}
 
     tree
   end
@@ -56,30 +58,30 @@ defmodule Examples.ENockPoly.EBinTree do
   end
 
   def functor_bintreefv_bimap_over_variable() do
-    tree_fv = {:btvar, 42}
+    tree_fv = {:atom, {:btvar, 42}}
     result = BinTree.bintreefv_bimap(&(&1 + 1), &(&1 * 10), tree_fv)
-    assert result == {:btvar, 43}
+    assert result == {:atom, {:btvar, 43}}
     result
   end
 
   def functor_bintreefv_bimap_over_atom() do
-    tree_fv = {:btatom, :foo}
+    tree_fv = {:atom, {:btatom, :foo}}
 
     result = BinTree.bintreefv_bimap(&(&1 + 1), &(&1 * 10), tree_fv)
 
-    assert result == {:btatom, :foo}
+    assert result == {:atom, {:btatom, :foo}}
     result
   end
 
   def functor_bintreefv_bimap_over_pair() do
-    tree_fv = {:btpair, 1, 2}
+    tree_fv = {:pair, 1, 2}
     result = BinTree.bintreefv_bimap(&(&1 + 1), &(&1 * 10), tree_fv)
-    assert result == {:btpair, 10, 20}
+    assert result == {:pair, 10, 20}
     result
   end
 
   def algebra_in_btv_and_out_btv_are_inverses() do
-    tree_fv = {:btatom, :test}
+    tree_fv = {:atom, {:btatom, :test}}
     tree = BinTree.in_btv(tree_fv)
     assert BinTree.out_btv(tree) == tree_fv
     tree

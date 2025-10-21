@@ -21,6 +21,14 @@ defmodule NockPoly.BinTree do
   """
 
   @typedoc """
+  I represent an either type for atom or variable labels.
+
+  This allows representing `bintreefv(atom, v, x)` as `bintreef(either(atom, v), x)`,
+  and `btv(atom, v)` as `bt(either(atom, v))`.
+  """
+  @type either(atom, v) :: {:btatom, atom} | {:btvar, v}
+
+  @typedoc """
   I generate a binary tree structure parameterized on atom and recursive types.
 
   I am the bifunctor `BinTreeF(atom, x) = Either atom (Product x x)`.
@@ -59,9 +67,11 @@ defmodule NockPoly.BinTree do
   I am the translate functor for the free monad of the product functor.
   For a binary tree, this is `BinTreeTrF(atom, v, x) = v + atom + (x, x)`,
   which can be written as `Either v (BinTreeF(atom, x))`.
+
+  I am implemented as `bintreef(either(atom, v), x)`, where the `{:btvar, v}`
+  and `{:btatom, atom}` cases are combined into `{:atom, either(atom, v)}`.
   """
-  @type bintreefv(atom, v, x) ::
-          {:btvar, v} | {:btatom, atom} | {:btpair, x, x}
+  @type bintreefv(atom, v, x) :: bintreef(either(atom, v), x)
 
   @doc "I am the morphism-map component of the bifunctor `bintreefv(atom)`."
   @spec bintreefv_bimap((v -> w), (x -> y), bintreefv(atom, v, x)) ::
@@ -69,15 +79,45 @@ defmodule NockPoly.BinTree do
         when atom: term, v: term, w: term, x: term, y: term
   def bintreefv_bimap(fv, fx, tree) do
     case tree do
-      {:btvar, v} ->
-        {:btvar, fv.(v)}
+      {:atom, {:btvar, v}} ->
+        {:atom, {:btvar, fv.(v)}}
 
-      {:btatom, ea} ->
-        {:btatom, ea}
+      {:atom, {:btatom, ea}} ->
+        {:atom, {:btatom, ea}}
 
-      {:btpair, left, right} ->
-        {:btpair, fx.(left), fx.(right)}
+      {:pair, left, right} ->
+        {:pair, fx.(left), fx.(right)}
     end
+  end
+
+  @typedoc """
+  I am a closed labeled binary tree (with no variables).
+
+  I am the carrier of the initial algebra of `bintreef(atom)`, which
+  is the free monad of the product functor with atom labels.
+  """
+  @type bt(atom) :: {:in_bt, bintreef(atom, bt(atom))}
+
+  @doc """
+  I am the action of the initial algebra of `bintreef(atom)`.
+
+  My implementation is trivial; I exist to make explicit that `bt`
+  is an algebra.
+  """
+  @spec in_bt(bintreef(atom, bt(atom))) :: bt(atom) when atom: term
+  def in_bt(x) do
+    {:in_bt, x}
+  end
+
+  @doc """
+  I am the inverse of the action of the initial algebra of `bintreef(atom)`.
+
+  I correspond to pattern-matching. Being the inverse of an algebra, I am
+  a coalgebra.
+  """
+  @spec out_bt(bt(atom)) :: bintreef(atom, bt(atom)) when atom: term
+  def out_bt({:in_bt, x}) do
+    x
   end
 
   @typedoc """
@@ -86,49 +126,53 @@ defmodule NockPoly.BinTree do
   I am the carrier of the initial algebra of `bintreefv(atom, v)`, which
   is the free monad of the product functor with atom labels. As a type
   constructor in the variable parameter, I am the free monad of `bintreef`.
+
+  I am implemented as `bt(either(atom, v))`, the fixed point of
+  `bintreef(either(atom, v), x)`.
   """
-  @type btv(atom, v) :: {:in_btv, bintreefv(atom, v, btv(atom, v))}
+  @type btv(atom, v) :: bt(either(atom, v))
 
   @doc """
   I am the action of the initial algebra of `bintreefv(atom, v)`.
 
-  My implementation is trivial; I exist to make explicit that `btv`
-  is an algebra.
+  I am implemented as `in_bt`.
   """
   @spec in_btv(bintreefv(atom, v, btv(atom, v))) :: btv(atom, v)
         when atom: term, v: term
   def in_btv(x) do
-    {:in_btv, x}
+    in_bt(x)
   end
 
   @doc """
   I am the inverse of the action of the initial algebra of `bintreefv(atom, v)`.
 
-  I correspond to pattern-matching. Being the inverse of an algebra, I am
-  a coalgebra.
+  I correspond to pattern-matching. I am implemented as `out_bt`.
   """
   @spec out_btv(btv(atom, v)) :: bintreefv(atom, v, btv(atom, v))
         when atom: term, v: term
-  def out_btv({:in_btv, x}) do
-    x
+  def out_btv(tree) do
+    out_bt(tree)
   end
 
   @doc "I create a variable term of type `bintreefv` by wrapping a variable."
-  @spec var_bintreefv(v) :: {:btvar, v} when v: term
+  @spec var_bintreefv(v) :: bintreefv(atom, v, x)
+        when atom: term, v: term, x: term
   def var_bintreefv(v) do
-    {:btvar, v}
+    {:atom, {:btvar, v}}
   end
 
   @doc "I create an atom term of type `bintreefv` by wrapping an atom."
-  @spec atom_bintreefv(atom) :: {:btatom, atom} when atom: term
+  @spec atom_bintreefv(atom) :: bintreefv(atom, v, x)
+        when atom: term, v: term, x: term
   def atom_bintreefv(ea) do
-    {:btatom, ea}
+    {:atom, {:btatom, ea}}
   end
 
   @doc "I create a pair term of type `bintreefv` by wrapping two children."
-  @spec pair_bintreefv(x, x) :: {:btpair, x, x} when x: term
+  @spec pair_bintreefv(x, x) :: bintreefv(atom, v, x)
+        when atom: term, v: term, x: term
   def pair_bintreefv(left, right) do
-    {:btpair, left, right}
+    {:pair, left, right}
   end
 
   @doc "I create a variable term of type `btv` by composing `in_btv` with `var_bintreefv`."
@@ -149,14 +193,6 @@ defmodule NockPoly.BinTree do
   def pair_btv(left, right) do
     in_btv(pair_bintreefv(left, right))
   end
-
-  @typedoc """
-  I am a closed binary tree (with no variables).
-
-  I can be equivalently generated by applying the free monad to the
-  initial object (the empty type).
-  """
-  @type bt(atom) :: btv(atom, none())
 
   @typedoc "An open binary tree with Nock atom labels and variables of type `v`."
   @type nock_atom_btv(v) :: btv(Noun.noun_atom(), v)
@@ -260,13 +296,13 @@ defmodule NockPoly.BinTree do
         when atom: term, v: term, r_bt: term, r_atom: term, r_pair: term
   def slice_eval(slice_alg, subst, tree) do
     case out_btv(tree) do
-      {:btvar, v} ->
+      {:atom, {:btvar, v}} ->
         subst.(v)
 
-      {:btatom, ea} ->
+      {:atom, {:btatom, ea}} ->
         slice_alg.from_atom.(slice_alg.atom.(ea))
 
-      {:btpair, left, right} ->
+      {:pair, left, right} ->
         pair_r = slice_eval_pair(slice_alg, subst, left, right)
         slice_alg.from_pair.(pair_r)
     end
@@ -500,7 +536,7 @@ defmodule NockPoly.BinTree do
 
         iex> import NockPoly.BinTree.MacroDefs
         iex> btfv(42)
-        {:btvar, 42}
+        {:atom, {:btvar, 42}}
     """
     defmacro btfv(var) do
       quote do
@@ -515,7 +551,7 @@ defmodule NockPoly.BinTree do
 
         iex> import NockPoly.BinTree.MacroDefs
         iex> btfa(:foo)
-        {:btatom, :foo}
+        {:atom, {:btatom, :foo}}
     """
     defmacro btfa(atom) do
       quote do
@@ -530,7 +566,7 @@ defmodule NockPoly.BinTree do
 
         iex> import NockPoly.BinTree.MacroDefs
         iex> btfp(btfa(:a), btfa(:b))
-        {:btpair, {:btatom, :a}, {:btatom, :b}}
+        {:pair, {:atom, {:btatom, :a}}, {:atom, {:btatom, :b}}}
     """
     defmacro btfp(left, right) do
       quote do
@@ -545,7 +581,7 @@ defmodule NockPoly.BinTree do
 
         iex> import NockPoly.BinTree.MacroDefs
         iex> btvv(42)
-        {:in_btv, {:btvar, 42}}
+        {:in_bt, {:atom, {:btvar, 42}}}
     """
     defmacro btvv(var) do
       quote do
@@ -560,7 +596,7 @@ defmodule NockPoly.BinTree do
 
         iex> import NockPoly.BinTree.MacroDefs
         iex> btva(:foo)
-        {:in_btv, {:btatom, :foo}}
+        {:in_bt, {:atom, {:btatom, :foo}}}
     """
     defmacro btva(atom) do
       quote do
@@ -575,7 +611,9 @@ defmodule NockPoly.BinTree do
 
         iex> import NockPoly.BinTree.MacroDefs
         iex> btvp(btva(:a), btva(:b))
-        {:in_btv, {:btpair, {:in_btv, {:btatom, :a}}, {:in_btv, {:btatom, :b}}}}
+        {:in_bt,
+         {:pair, {:in_bt, {:atom, {:btatom, :a}}},
+          {:in_bt, {:atom, {:btatom, :b}}}}}
     """
     defmacro btvp(left, right) do
       quote do
