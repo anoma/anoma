@@ -1179,6 +1179,50 @@ defmodule Examples.ENockPoly.ESexpr do
     result
   end
 
+  def sexpr_eval_list_empty() do
+    sexprs = []
+    alg = fn {a, _children} -> a end
+    subst = fn _v -> :replaced end
+
+    result = Sexpr.eval_list(alg, subst, sexprs)
+    assert result == []
+    result
+  end
+
+  def sexpr_eval_list_nonempty() do
+    sexprs = [sx_atom0(:x), sx_var(:v), sx_atom(:y, [sx_var(:w)])]
+    alg = fn {a, children} -> {a, children} end
+    subst = fn v -> {:replaced, v} end
+
+    result = Sexpr.eval_list(alg, subst, sexprs)
+
+    assert result == [
+             {:x, []},
+             {:replaced, :v},
+             {:y, [{:replaced, :w}]}
+           ]
+
+    result
+  end
+
+  def sexpr_cata_list_empty() do
+    sexprs = []
+    alg = fn {a, _children} -> a end
+
+    result = Sexpr.cata_list(sexprs, alg)
+    assert result == []
+    result
+  end
+
+  def sexpr_cata_list_nonempty() do
+    sexprs = [sx_atom0(:a), sx_atom(:b, [sx_atom0(:c)])]
+    alg = fn {a, children} -> {a, length(children)} end
+
+    result = Sexpr.cata_list(sexprs, alg)
+    assert result == [{:a, 0}, {:b, 1}]
+    result
+  end
+
   def sexpr_to_term_uses_slice_algebra() do
     sexpr = sx_atom(:test, [sx_atom0(:a), sx_atom0(:b)])
 

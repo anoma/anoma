@@ -99,8 +99,20 @@ defmodule NockPoly.Sexpr do
         {:atom, constructor, []}
 
       {constructor, children} ->
-        open_children = Enum.map(children, &closed_to_open/1)
+        open_children = closed_to_open_list(children)
         {:atom, constructor, open_children}
+    end
+  end
+
+  @spec closed_to_open_list([closed_sexpr(atom)]) :: [sexpr(atom, none())]
+        when atom: term
+  defp closed_to_open_list(closed_sexprs) do
+    case closed_sexprs do
+      [] ->
+        []
+
+      [head | tail] ->
+        [closed_to_open(head) | closed_to_open_list(tail)]
     end
   end
 
@@ -117,15 +129,16 @@ defmodule NockPoly.Sexpr do
   """
   @spec open_to_closed(sexpr(atom, none())) :: closed_sexpr(atom)
         when atom: term
-  def open_to_closed({:atom, constructor, children}) do
-    case children do
-      [] ->
-        constructor
-
-      _ ->
-        closed_children = Enum.map(children, &open_to_closed/1)
-        {constructor, closed_children}
-    end
+  def open_to_closed(sexpr) do
+    cata(
+      sexpr,
+      fn {constructor, children} ->
+        case children do
+          [] -> constructor
+          _ -> {constructor, children}
+        end
+      end
+    )
   end
 
   @doc """
@@ -303,16 +316,11 @@ defmodule NockPoly.Sexpr do
   @spec depth(sexpr(atom, v)) :: non_neg_integer()
         when atom: term, v: term
   def depth(sexpr) do
-    case sexpr do
-      {:var, _v} ->
-        0
-
-      {:atom, _constructor, children} ->
-        case children do
-          [] -> 1
-          _ -> 1 + Enum.max(Enum.map(children, &depth/1))
-        end
-    end
+    eval(
+      fn {_atom, child_depths} -> 1 + Enum.max([0 | child_depths]) end,
+      fn _var -> 0 end,
+      sexpr
+    )
   end
 
   @doc """
@@ -323,13 +331,11 @@ defmodule NockPoly.Sexpr do
   @spec size(sexpr(atom, v)) :: non_neg_integer()
         when atom: term, v: term
   def size(sexpr) do
-    case sexpr do
-      {:var, _v} ->
-        0
-
-      {:atom, _constructor, children} ->
-        1 + Enum.sum(Enum.map(children, &size/1))
-    end
+    eval(
+      fn {_atom, child_sizes} -> 1 + Enum.sum(child_sizes) end,
+      fn _var -> 0 end,
+      sexpr
+    )
   end
 
   @doc """
@@ -340,13 +346,11 @@ defmodule NockPoly.Sexpr do
   @spec map_atoms((atom1 -> atom2), sexpr(atom1, v)) :: sexpr(atom2, v)
         when atom1: term, atom2: term, v: term
   def map_atoms(f, sexpr) do
-    case sexpr do
-      {:var, v} ->
-        {:var, v}
-
-      {:atom, constructor, children} ->
-        {:atom, f.(constructor), Enum.map(children, &map_atoms(f, &1))}
-    end
+    eval(
+      fn {constructor, children} -> {:atom, f.(constructor), children} end,
+      fn v -> {:var, v} end,
+      sexpr
+    )
   end
 
   @doc """
@@ -357,13 +361,11 @@ defmodule NockPoly.Sexpr do
   @spec map_vars((v1 -> v2), sexpr(atom, v1)) :: sexpr(atom, v2)
         when atom: term, v1: term, v2: term
   def map_vars(f, sexpr) do
-    case sexpr do
-      {:var, v} ->
-        {:var, f.(v)}
-
-      {:atom, constructor, children} ->
-        {:atom, constructor, Enum.map(children, &map_vars(f, &1))}
-    end
+    eval(
+      fn {constructor, children} -> {:atom, constructor, children} end,
+      fn v -> {:var, f.(v)} end,
+      sexpr
+    )
   end
 
   @doc """
@@ -375,13 +377,42 @@ defmodule NockPoly.Sexpr do
   @spec subst((v1 -> sexpr(atom, v2)), sexpr(atom, v1)) :: sexpr(atom, v2)
         when atom: term, v1: term, v2: term
   def subst(f, sexpr) do
-    case sexpr do
-      {:var, v} ->
-        f.(v)
+    eval(
+      fn {constructor, children} -> {:atom, constructor, children} end,
+      f,
+      sexpr
+    )
+  end
 
-      {:atom, constructor, children} ->
-        {:atom, constructor, Enum.map(children, &subst(f, &1))}
-    end
+  @typedoc """
+  I am an algebra for S-expressions.
+
+  An algebra maps a constructor and its evaluated children to a result.
+  """
+  @type sexpr_alg(atom, r) :: ({atom, [r]} -> r)
+
+  @doc """
+  I am the `eval` universal morphism for S-expressions with variables.
+
+  I recursively evaluate an S-expression by applying the algebra to each
+  constructor along with the results from evaluating its children, and
+  applying the substitution function to variables.
+
+  I am implemented by translating the algebra to a slice algebra and
+  delegating to `slice_eval`.
+  """
+  @spec eval(sexpr_alg(atom, r), (v -> r), sexpr(atom, v)) :: r
+        when atom: term, v: term, r: term
+  def eval(algebra, subst, sexpr) do
+    slice_alg = %{
+      atom: fn a -> a end,
+      empty: [],
+      cons: fn r_sexpr, r_list -> [r_sexpr | r_list] end,
+      nonempty: fn nelist -> nelist end,
+      sexpr: fn atom, children -> algebra.({atom, children}) end
+    }
+
+    slice_eval(slice_alg, subst, sexpr)
   end
 
   defmodule Unreachable do
@@ -398,6 +429,48 @@ defmodule NockPoly.Sexpr do
     def unreachable_sexpr(var) do
       raise "unreachable: attempted to substitute variable #{inspect(var)} in closed sexpr"
     end
+  end
+
+  @doc """
+  I am the catamorphism for closed S-expressions.
+
+  I recursively fold a closed S-expression by applying the algebra to each
+  constructor along with the results from folding its children.
+  """
+  @spec cata(sexpr(atom, none()), sexpr_alg(atom, r)) :: r
+        when atom: term, r: term
+  def cata(sexpr, algebra) do
+    eval(algebra, &Unreachable.unreachable_sexpr/1, sexpr)
+  end
+
+  @doc """
+  I am the eval morphism for a list of S-expressions with variables.
+
+  I recursively evaluate each S-expression in the list and return the list
+  of results.
+  """
+  @spec eval_list(sexpr_alg(atom, r), (v -> r), [sexpr(atom, v)]) :: [r]
+        when atom: term, v: term, r: term
+  def eval_list(algebra, subst, sexprs) do
+    case sexprs do
+      [] ->
+        []
+
+      [head | tail] ->
+        [eval(algebra, subst, head) | eval_list(algebra, subst, tail)]
+    end
+  end
+
+  @doc """
+  I am the catamorphism for a list of closed S-expressions.
+
+  I recursively fold each S-expression in the list and return the list
+  of results.
+  """
+  @spec cata_list([sexpr(atom, none())], sexpr_alg(atom, r)) :: [r]
+        when atom: term, r: term
+  def cata_list(sexprs, algebra) do
+    eval_list(algebra, &Unreachable.unreachable_sexpr/1, sexprs)
   end
 
   @typedoc """
@@ -430,37 +503,15 @@ defmodule NockPoly.Sexpr do
           sexpr: (r_atom, r_list -> r_sexpr)
         }
 
-  @spec build_list(
-          [r_sexpr],
-          sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist)
-        ) ::
-          r_list
-        when atom: term,
-             r_sexpr: term,
-             r_atom: term,
-             r_list: term,
-             r_nelist: term
-  defp build_list([], slice_alg) do
-    slice_alg.empty
-  end
-
-  defp build_list([head | tail], slice_alg) do
-    r_tail = build_list(tail, slice_alg)
-    r_nelist = slice_alg.cons.(head, r_tail)
-    slice_alg.nonempty.(r_nelist)
-  end
-
   @doc """
   I am the slice eval morphism for S-expressions with variables.
 
   I evaluate an S-expression by:
-  1. Substituting variables using `subst` to produce `r_sexpr` results
-  2. Processing atoms using `atom` to produce `r_atom` results
-  3. Recursively evaluating child S-expressions
-  4. Building the list using `empty`, `cons`, and `nonempty` to get `r_list`
-  5. Combining atom and list results using `sexpr` to get the final `r_sexpr`
+  - For variables: applying the substitution function to get `r_sexpr`
+  - For atoms: applying `atom` to get `r_atom`, delegating to `slice_eval_list`
+    to build the children list, then applying `sexpr` to get `r_sexpr`
 
-  This exposes the full structure of both the S-expression and the list of children.
+  I am mutually recursive with `slice_eval_list`.
   """
   @spec slice_eval(
           sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist),
@@ -508,12 +559,13 @@ defmodule NockPoly.Sexpr do
   @doc """
   I am the slice eval morphism for a list of S-expressions with variables.
 
-  I am a convenience wrapper around `slice_eval` that:
-  1. Recursively evaluates each S-expression in the list to get `r_sexpr` results
-  2. Builds the list using `empty`, `cons`, and `nonempty` to get `r_list`
+  I recursively evaluate a list of S-expressions by:
+  - For the empty list: returning `empty`
+  - For a non-empty list: recursively evaluating the head with `slice_eval`,
+    recursively evaluating the tail with `slice_eval_list`, combining them
+    with `cons` to get `r_nelist`, then applying `nonempty` to get `r_list`
 
-  This is useful when the caller is primarily interested in the list structure
-  rather than individual S-expressions.
+  I am mutually recursive with `slice_eval`.
   """
   @spec slice_eval_list(
           sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist),
@@ -527,8 +579,16 @@ defmodule NockPoly.Sexpr do
              r_list: term,
              r_nelist: term
   def slice_eval_list(slice_alg, subst_fn, sexprs) do
-    sexpr_results = Enum.map(sexprs, &slice_eval(slice_alg, subst_fn, &1))
-    build_list(sexpr_results, slice_alg)
+    case sexprs do
+      [] ->
+        slice_alg.empty
+
+      [head | tail] ->
+        r_head = slice_eval(slice_alg, subst_fn, head)
+        r_tail = slice_eval_list(slice_alg, subst_fn, tail)
+        r_nelist = slice_alg.cons.(r_head, r_tail)
+        slice_alg.nonempty.(r_nelist)
+    end
   end
 
   @doc """
