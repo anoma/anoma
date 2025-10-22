@@ -636,4 +636,266 @@ defmodule Examples.ENockPoly.EBinTreeTerm do
     assert tree == expected
     tree
   end
+
+  def bintree_to_term_right_single_atom() do
+    tree = btva(:foo)
+    term = BinTreeTerm.bintree_to_term_right(tree)
+    assert term == tvc0(:foo)
+    term
+  end
+
+  def bintree_to_term_right_simple_pair() do
+    tree = btvp(btva(:foo), btva(:bar))
+    term = BinTreeTerm.bintree_to_term_right(tree)
+    expected = tvc(:foo, [tvc0(:bar)])
+    assert term == expected
+    term
+  end
+
+  def bintree_to_term_right_binary() do
+    tree = btvp(btva(:foo), btvp(btva(:a), btva(:b)))
+    term = BinTreeTerm.bintree_to_term_right(tree)
+    expected = tvc(:foo, [tvc0(:a), tvc0(:b)])
+    assert term == expected
+    term
+  end
+
+  def bintree_to_term_right_ternary() do
+    tree = btvp(btva(:f), btvp(btva(:x), btvp(btva(:y), btva(:z))))
+    term = BinTreeTerm.bintree_to_term_right(tree)
+    expected = tvc(:f, [tvc0(:x), tvc0(:y), tvc0(:z)])
+    assert term == expected
+    term
+  end
+
+  def bintree_to_term_right_nested() do
+    tree =
+      btvp(
+        btva(:f),
+        btvp(
+          btvp(btva(:g), btvp(btva(:a), btva(:b))),
+          btva(:c)
+        )
+      )
+
+    term = BinTreeTerm.bintree_to_term_right(tree)
+    expected = tvc(:f, [tvc(:g, [tvc0(:a), tvc0(:b)]), tvc0(:c)])
+    assert term == expected
+    term
+  end
+
+  def bintreev_to_termv_right_with_variables() do
+    tree =
+      btvp(
+        btva(:f),
+        btvp(
+          btvv(:x),
+          btvp(
+            btvp(btva(:g), btvv(:y)),
+            btva(:z)
+          )
+        )
+      )
+
+    term = BinTreeTerm.bintreev_to_termv_right(tree)
+    expected = tvc(:f, [tvv(:x), tvc(:g, [tvv(:y)]), tvc0(:z)])
+    assert term == expected
+    term
+  end
+
+  def interpretable_right_valid_tree_with_variable_in_right_position() do
+    tree = btvp(btva(:foo), btvv(:x))
+    result = BinTreeTerm.bintreev_interpretable_as_termv_right?(tree)
+    assert result == true
+    result
+  end
+
+  def interpretable_right_valid_tree_nullary() do
+    tree = btva(:foo)
+    result = BinTreeTerm.bintreev_interpretable_as_termv_right?(tree)
+    assert result == true
+    result
+  end
+
+  def interpretable_right_invalid_tree_variable_in_constructor_position() do
+    tree = btvp(btvv(:x), btva(:foo))
+    result = BinTreeTerm.bintreev_interpretable_as_termv_right?(tree)
+    assert result == false
+    result
+  end
+
+  def interpretable_right_invalid_tree_non_nullary_in_constructor_position() do
+    tree = btvp(btvp(btva(:f), btva(:g)), btva(:h))
+    result = BinTreeTerm.bintreev_interpretable_as_termv_right?(tree)
+    assert result == false
+    result
+  end
+
+  def roundtrip_termv_right_to_bintreev_always_interpretable() do
+    term = tvc(:f, [tvv(:x), tvc(:g, [tvv(:y)]), tvc0(:z)])
+    tree = BinTreeTerm.termv_to_bintreev_right(term)
+    result = BinTreeTerm.bintreev_interpretable_as_termv_right?(tree)
+    assert result == true
+
+    converted_term = BinTreeTerm.bintreev_to_termv_right(tree)
+    assert converted_term == term
+    result
+  end
+
+  def bintreev_to_termv_right_raises_on_variable_in_constructor_position() do
+    tree = btvp(btvv(:x), btva(:foo))
+
+    assert_raise ArgumentError, fn ->
+      BinTreeTerm.bintreev_to_termv_right(tree)
+    end
+
+    tree
+  end
+
+  def bintreev_to_termv_right_raises_on_non_nullary_term_in_constructor_position() do
+    tree = btvp(btvp(btva(:f), btva(:g)), btva(:h))
+
+    assert_raise ArgumentError, fn ->
+      BinTreeTerm.bintreev_to_termv_right(tree)
+    end
+
+    tree
+  end
+
+  def roundtrip_term_right_nullary() do
+    term = tvc0(:atom)
+    tree = BinTreeTerm.term_to_bintree_right(term)
+    result = BinTreeTerm.bintree_to_term_right(tree)
+    assert result == term
+    result
+  end
+
+  def roundtrip_term_right_unary() do
+    term = tvc(:f, [tvc0(:x)])
+    tree = BinTreeTerm.term_to_bintree_right(term)
+    result = BinTreeTerm.bintree_to_term_right(tree)
+    assert result == term
+    result
+  end
+
+  def roundtrip_term_right_binary() do
+    term = tvc(:f, [tvc0(:x), tvc0(:y)])
+    tree = BinTreeTerm.term_to_bintree_right(term)
+    result = BinTreeTerm.bintree_to_term_right(tree)
+    assert result == term
+    result
+  end
+
+  def roundtrip_term_right_ternary() do
+    term = tvc(:f, [tvc0(:a), tvc0(:b), tvc0(:c)])
+    tree = BinTreeTerm.term_to_bintree_right(term)
+    result = BinTreeTerm.bintree_to_term_right(tree)
+    assert result == term
+    result
+  end
+
+  def roundtrip_term_right_nested() do
+    term = tvc(:f, [tvc(:g, [tvc0(:a), tvc0(:b)]), tvc0(:c)])
+    tree = BinTreeTerm.term_to_bintree_right(term)
+    result = BinTreeTerm.bintree_to_term_right(tree)
+    assert result == term
+    result
+  end
+
+  def roundtrip_bintree_right_single_atom() do
+    tree = btva(:x)
+    term = BinTreeTerm.bintree_to_term_right(tree)
+    result = BinTreeTerm.term_to_bintree_right(term)
+    assert result == tree
+    result
+  end
+
+  def roundtrip_bintree_right_simple_pair() do
+    tree = btvp(btva(:a), btva(:b))
+    term = BinTreeTerm.bintree_to_term_right(tree)
+    result = BinTreeTerm.term_to_bintree_right(term)
+    assert result == tree
+    result
+  end
+
+  def roundtrip_bintree_right_binary() do
+    tree = btvp(btva(:foo), btvp(btva(:a), btva(:b)))
+    term = BinTreeTerm.bintree_to_term_right(tree)
+    result = BinTreeTerm.term_to_bintree_right(term)
+    assert result == tree
+    result
+  end
+
+  def roundtrip_bintree_right_ternary() do
+    tree = btvp(btva(:f), btvp(btva(:x), btvp(btva(:y), btva(:z))))
+    term = BinTreeTerm.bintree_to_term_right(tree)
+    result = BinTreeTerm.term_to_bintree_right(term)
+    assert result == tree
+    result
+  end
+
+  def roundtrip_bintree_right_nested() do
+    tree =
+      btvp(
+        btva(:f),
+        btvp(
+          btvp(btva(:g), btvp(btva(:a), btva(:b))),
+          btva(:c)
+        )
+      )
+
+    term = BinTreeTerm.bintree_to_term_right(tree)
+    result = BinTreeTerm.term_to_bintree_right(term)
+    assert result == tree
+    result
+  end
+
+  def roundtrip_termv_right_with_variables() do
+    term =
+      tvc(:foo, [
+        tvv(:x),
+        tvc(:bar, [tvv(:y), tvc0(:z)]),
+        tvv(:w)
+      ])
+
+    tree = BinTreeTerm.termv_to_bintreev_right(term)
+    result = BinTreeTerm.bintreev_to_termv_right(tree)
+    assert result == term
+    result
+  end
+
+  def roundtrip_bintreev_right_with_variables() do
+    tree =
+      btvp(
+        btva(:a),
+        btvp(
+          btvv(1),
+          btvp(
+            btvp(btva(:b), btvv(2)),
+            btvv(3)
+          )
+        )
+      )
+
+    term = BinTreeTerm.bintreev_to_termv_right(tree)
+    result = BinTreeTerm.termv_to_bintreev_right(term)
+    assert result == tree
+    result
+  end
+
+  def bintree_to_term_right_raises_on_non_nullary_in_constructor_position() do
+    tree = btvp(btvp(btva(:f), btva(:x)), btva(:y))
+
+    assert_raise ArgumentError, fn ->
+      BinTreeTerm.bintree_to_term_right(tree)
+    end
+  end
+
+  def bintreev_to_termv_right_raises_on_non_nullary_in_constructor_position() do
+    tree = btvp(btvp(btva(:f), btva(:x)), btva(:y))
+
+    assert_raise ArgumentError, fn ->
+      BinTreeTerm.bintreev_to_termv_right(tree)
+    end
+  end
 end

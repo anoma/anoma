@@ -138,7 +138,7 @@ defmodule NockPoly.BinTreeTerm do
   end
 
   @doc """
-  I provide the slice algebra for converting binary trees to terms.
+  I provide the slice algebra for converting binary trees to terms (left-associative).
 
   This algebra extracts the snoclist structure from a binary tree and
   converts it to a term with a constructor and list of children.
@@ -147,7 +147,7 @@ defmodule NockPoly.BinTreeTerm do
   to handle the case where a variable appears in application position, which
   cannot be represented as a term.
   """
-  @spec bintree_to_term_slice_alg_result() ::
+  @spec bintree_to_term_slice_alg_result_left() ::
           BinTree.bintree_slice_alg(
             ctor,
             {:ok, Term.tv(ctor, v)} | {:error, term},
@@ -155,21 +155,174 @@ defmodule NockPoly.BinTreeTerm do
             {:ok, Term.tv(ctor, v)} | {:error, term}
           )
         when ctor: term, v: term
-  def bintree_to_term_slice_alg_result() do
+  def bintree_to_term_slice_alg_result_left() do
     %{
       atom: fn ctor -> ctor end,
-      pair: &bintree_pair_to_term_result/2,
+      pair: &bintree_pair_to_term_result_left/2,
       from_atom: fn ctor -> {:ok, Term.com_tv(ctor, [])} end,
       from_pair: &Function.identity/1
     }
   end
 
-  @spec bintree_pair_to_term_result(
+  @doc """
+  I provide the slice algebra for converting binary trees to terms (right-associative).
+
+  This algebra uses higher-order functions to distinguish between different roles:
+  - The return type is a function `(role -> result)` where role is `:as_child` or `:in_spine`
+  - An atom returns a function that:
+    - In `:as_child` role: returns a nullary term with that constructor
+    - In `:in_spine` role: returns a singleton list containing a nullary term
+  - A pair returns a function that:
+    - In `:as_child` role: builds a term by extracting ctor from left, children from right
+    - In `:in_spine` role: prepends the left child to the right spine's list
+
+  The key insight: by using function-valued returns, we can defer the decision about
+  how to interpret a tree until we know its role in the parent context.
+  """
+  @type role :: :as_child | :in_spine
+  @type role_fn(ctor, v) ::
+          (role ->
+             {:ok, Term.tv(ctor, v)}
+             | {:ok, [Term.tv(ctor, v)]}
+             | {:error, term})
+
+  @spec bintree_to_term_slice_alg_result_right_fn() ::
+          BinTree.bintree_slice_alg(
+            ctor,
+            role_fn(ctor, none()),
+            ctor,
+            role_fn(ctor, none())
+          )
+        when ctor: term
+  def bintree_to_term_slice_alg_result_right_fn() do
+    %{
+      atom: &Function.identity/1,
+      pair: &bintree_pair_to_role_fn_right/2,
+      from_atom: fn ctor ->
+        fn role ->
+          case role do
+            :as_child -> {:ok, Term.com_tv(ctor, [])}
+            :in_spine -> {:ok, [Term.com_tv(ctor, [])]}
+          end
+        end
+      end,
+      from_pair: fn role_fn ->
+        # from_pair is called for EVERY pair, not just the root
+        # So it should also return a function that can handle different roles
+        # BUT: at the root level, slice_eval expects the final result type
+        # So we need to distinguish: if asked for final result, build the term
+        # If asked as part of spine, treat the pair as a single child
+
+        # Actually, the issue is that slice_eval ALWAYS calls from_pair at the top level
+        # to get the final result. So from_pair needs to return the final type.
+        # But for nested pairs, from_pair is also called during bottom-up traversal.
+
+        # The solution: from_pair should return a function when the pair is NOT at root,
+        # but the root level needs special handling.
+
+        # Wait - let me reconsider the types. The slice algebra type is:
+        # bintree_slice_alg(atom, r_bt, r_atom, r_pair)
+        # where from_atom: r_atom -> r_bt and from_pair: r_pair -> r_bt
+
+        # So from_pair converts r_pair to r_bt (the final result type).
+        # In our case, r_bt = {:ok, Term} and r_pair = role_fn
+        # So from_pair: role_fn -> {:ok, Term}
+
+        # But this means ALL pairs get converted to terms, which is wrong!
+        # The issue is that r_bt is used for INTERMEDIATE results in the recursion.
+
+        # Ah! The solution is to make r_bt = role_fn as well!
+        # Then atoms return role_fn, pairs return role_fn, and only at the ROOT
+        # do we call the function with a specific role.
+
+        # Let me restructure: r_bt = r_atom = r_pair = role_fn
+        # And we need a separate step to convert the final role_fn to a term.
+
+        # Actually, looking at slice_eval again:
+        # - For atoms: calls from_atom(atom(ea)) to get r_bt
+        # - For pairs: calls from_pair(pair(left_r_bt, right_r_bt)) to get r_bt
+        # So yes, r_bt is the common type, and it's returned at every level.
+
+        # The trick is: make r_bt = role_fn everywhere, and then at the TOP level
+        # (outside slice_eval), call the resulting function with :in_spine to get the term.
+
+        role_fn
+      end
+    }
+  end
+
+  defp bintree_pair_to_role_fn_right(left_fn, right_fn) do
+    fn role ->
+      case role do
+        :as_child ->
+          with {:ok, left_child} <- left_fn.(:as_child),
+               {:ok, right_spine} <- right_fn.(:in_spine) do
+            case Term.out_tv(left_child) do
+              {:tcom, {ctor, []}} ->
+                {:ok, Term.com_tv(ctor, right_spine)}
+
+              {:tcom, {_ctor, _children}} ->
+                {:error,
+                 {:non_nullary_term_in_constructor_position, left_child}}
+
+              {:tvar, v} ->
+                {:error, {:variable_in_constructor_position, v}}
+            end
+          end
+
+        :in_spine ->
+          with {:ok, left_child} <- left_fn.(:as_child),
+               {:ok, right_spine} <- right_fn.(:in_spine) do
+            {:ok, [left_child | right_spine]}
+          end
+      end
+    end
+  end
+
+  @spec bintreev_to_termv_slice_alg_result_right_fn() ::
+          BinTree.bintree_slice_alg(
+            ctor,
+            role_fn(ctor, v),
+            ctor | {:btvar, v},
+            role_fn(ctor, v)
+          )
+        when ctor: term, v: term
+  def bintreev_to_termv_slice_alg_result_right_fn() do
+    %{
+      # atom function receives either a raw constructor or {:btvar, v}
+      # but slice_eval unwraps {:btatom, ctor} to just ctor before calling atom
+      # So atom function receives: ctor (when from {:btatom, ctor}) or gets variable handling separately
+      # Actually, looking at slice_eval more carefully:
+      # {:atom, {:btvar, v}} -> subst.(v)  -- variables go to subst
+      # {:atom, {:btatom, ea}} -> from_atom.(atom.(ea))  -- atoms get unwrapped
+      # So atom function only receives raw constructors!
+      atom: &Function.identity/1,
+      pair: &bintree_pair_to_role_fn_right/2,
+      from_atom: fn ctor ->
+        # ctor is a raw constructor value (not wrapped)
+        fn role ->
+          case role do
+            :as_child ->
+              {:ok, Term.com_tv(ctor, [])}
+
+            :in_spine ->
+              {:ok, [Term.com_tv(ctor, [])]}
+          end
+        end
+      end,
+      from_pair: fn role_fn ->
+        # Just return the function as-is; it already handles both roles
+        role_fn
+      end
+    }
+  end
+
+  @spec bintree_pair_to_term_result_left(
           {:ok, Term.tv(ctor, v)} | {:error, term},
           {:ok, Term.tv(ctor, v)} | {:error, term}
         ) :: {:ok, Term.tv(ctor, v)} | {:error, term}
         when ctor: term, v: term
-  defp bintree_pair_to_term_result(left_result, right_result) do
+  defp bintree_pair_to_term_result_left(left_result, right_result) do
     with {:ok, left_term} <- left_result,
          {:ok, right_child} <- right_result do
       case Term.out_tv(left_term) do
@@ -193,7 +346,7 @@ defmodule NockPoly.BinTreeTerm do
   def bintreev_interpretable_as_termv?(tree) do
     result =
       BinTree.slice_eval(
-        bintree_to_term_slice_alg_result(),
+        bintree_to_term_slice_alg_result_left(),
         fn _v -> {:ok, Term.var_tv(:placeholder)} end,
         tree
       )
@@ -202,7 +355,7 @@ defmodule NockPoly.BinTreeTerm do
   end
 
   @doc """
-  I convert a binary tree to a term extracting the snoclist structure.
+  I convert a binary tree to a term extracting the snoclist structure (left-associative).
 
   This is the inverse of `term_to_bintree`. The binary tree is deconstructed
   into an atom and a list of children, where the list represents the snoclist
@@ -212,12 +365,14 @@ defmodule NockPoly.BinTreeTerm do
   """
   @spec bintree_to_term(BinTree.bt(ctor)) :: Term.t(ctor) when ctor: term
   def bintree_to_term(tree) do
-    {:ok, term} = BinTree.slice_cata(tree, bintree_to_term_slice_alg_result())
+    {:ok, term} =
+      BinTree.slice_cata(tree, bintree_to_term_slice_alg_result_left())
+
     term
   end
 
   @doc """
-  I convert a binary tree with variables to a term with variables.
+  I convert a binary tree with variables to a term with variables (left-associative).
 
   This conversion is only defined for binary trees where no variable appears
   in application position (i.e., as the left child of a pair). If such a
@@ -230,7 +385,7 @@ defmodule NockPoly.BinTreeTerm do
         when ctor: term, v: term
   def bintreev_to_termv(tree) do
     case BinTree.slice_eval(
-           bintree_to_term_slice_alg_result(),
+           bintree_to_term_slice_alg_result_left(),
            fn v -> {:ok, Term.var_tv(v)} end,
            tree
          ) do
@@ -241,6 +396,110 @@ defmodule NockPoly.BinTreeTerm do
         raise ArgumentError,
               "Cannot convert binary tree to term: variable #{inspect(v)} " <>
                 "appears in application position with argument #{inspect(right_child)}"
+    end
+  end
+
+  @doc """
+  I convert a binary tree to a term extracting the right-associative list structure.
+
+  This is the inverse of `term_to_bintree_right`. The binary tree is deconstructed
+  into an atom and a list of children, where the list is built right-associatively.
+
+  Since closed trees cannot contain variables, the conversion always succeeds.
+
+  This implementation uses a slice algebra with function-valued return types to
+  distinguish between constructor position and child position without explicit recursion.
+  """
+  @spec bintree_to_term_right(BinTree.bt(ctor)) :: Term.t(ctor)
+        when ctor: term
+  def bintree_to_term_right(tree) do
+    role_fn =
+      BinTree.slice_cata(tree, bintree_to_term_slice_alg_result_right_fn())
+
+    case role_fn.(:as_child) do
+      {:ok, term} ->
+        term
+
+      {:error, {:non_nullary_term_in_constructor_position, term}} ->
+        raise ArgumentError,
+              "Cannot convert binary tree to term: non-nullary term #{inspect(term)} " <>
+                "appears in constructor position"
+    end
+  end
+
+  @doc """
+  I convert a binary tree with variables to a term with variables (right-associative).
+
+  This conversion is only defined for binary trees where no variable or non-nullary term
+  appears in constructor position (i.e., as the left child of a pair). If such a
+  term is encountered, this function raises an error.
+
+  Use `bintreev_interpretable_as_termv_right?/1` to test whether a conversion
+  will succeed before calling this function.
+
+  This implementation uses a slice algebra with function-valued return types to
+  distinguish between constructor position and child position without explicit recursion.
+  """
+  @spec bintreev_to_termv_right(BinTree.btv(ctor, v)) :: Term.tv(ctor, v)
+        when ctor: term, v: term
+  def bintreev_to_termv_right(tree) do
+    role_fn =
+      BinTree.slice_eval(
+        bintreev_to_termv_slice_alg_result_right_fn(),
+        fn v ->
+          fn role ->
+            case role do
+              :as_child -> {:ok, Term.var_tv(v)}
+              :in_spine -> {:ok, [Term.var_tv(v)]}
+            end
+          end
+        end,
+        tree
+      )
+
+    case role_fn.(:as_child) do
+      {:ok, term} ->
+        term
+
+      {:error, {:non_nullary_term_in_constructor_position, term}} ->
+        raise ArgumentError,
+              "Cannot convert binary tree to term: non-nullary term #{inspect(term)} " <>
+                "appears in constructor position"
+
+      {:error, {:variable_in_constructor_position, v}} ->
+        raise ArgumentError,
+              "Cannot convert binary tree to term: variable #{inspect(v)} " <>
+                "appears in constructor position"
+    end
+  end
+
+  @doc """
+  I test whether a binary tree with variables can be interpreted as a term (right-associative).
+
+  A binary tree can be interpreted as a right-associative term if and only if no variable
+  or non-nullary term appears in constructor position (i.e., as the left child of a pair).
+  """
+  @spec bintreev_interpretable_as_termv_right?(BinTree.btv(ctor, v)) ::
+          boolean()
+        when ctor: term, v: term
+  def bintreev_interpretable_as_termv_right?(tree) do
+    role_fn =
+      BinTree.slice_eval(
+        bintreev_to_termv_slice_alg_result_right_fn(),
+        fn v ->
+          fn role ->
+            case role do
+              :as_child -> {:ok, Term.var_tv(v)}
+              :in_spine -> {:ok, [Term.var_tv(v)]}
+            end
+          end
+        end,
+        tree
+      )
+
+    case role_fn.(:as_child) do
+      {:ok, _term} -> true
+      {:error, _} -> false
     end
   end
 
