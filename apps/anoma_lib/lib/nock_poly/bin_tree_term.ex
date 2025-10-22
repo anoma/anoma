@@ -80,19 +80,10 @@ defmodule NockPoly.BinTreeTerm do
   end
 
   @doc """
-  I provide the slice algebra for converting terms to binary trees (left-associative).
-
-  This is an alias for `term_to_bintree_slice_alg_left/0` for backwards compatibility.
-  """
-  def term_to_bintree_slice_alg() do
-    term_to_bintree_slice_alg_left()
-  end
-
-  @doc """
   I convert a term with list of children to a binary tree via snoclist interpretation.
 
   The list of children is interpreted as a snoclist: the rightmost element
-  becomes the rightmost leaf in the tree, and we build the tree right-associatively.
+  becomes the rightmost leaf in the tree, and we build the tree left-associatively.
 
   An empty children list creates just an atom node.
   A pair `(atom, [x, y, z])` builds the tree structure
@@ -100,7 +91,7 @@ defmodule NockPoly.BinTreeTerm do
   """
   @spec term_to_bintree(Term.t(ctor)) :: BinTree.bt(ctor) when ctor: term
   def term_to_bintree(term) do
-    Term.slice_cata(term, term_to_bintree_slice_alg())
+    Term.slice_cata(term, term_to_bintree_slice_alg_left())
   end
 
   @doc """
