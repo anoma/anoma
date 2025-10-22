@@ -20,10 +20,10 @@ defmodule NockPoly.BinTreeTerm do
   alias NockPoly.Term
 
   @doc """
-  I provide the slice algebra for converting terms to binary trees.
+  I provide the slice algebra for converting terms to binary trees with left-associativity.
 
   This algebra interprets the children list as a snoclist: the rightmost element
-  becomes the rightmost leaf in the tree, and we build the tree right-associatively.
+  becomes the rightmost leaf in the tree, and we build the tree left-associatively.
 
   An empty children list creates just an atom node.
   A term `(ctor, [x, y, z])` builds the tree structure
@@ -35,7 +35,7 @@ defmodule NockPoly.BinTreeTerm do
   - Cons combines a tree with a list function to produce a new function
   - The term handler applies the function to the constructor to get the final tree
   """
-  def term_to_bintree_slice_alg() do
+  def term_to_bintree_slice_alg_left() do
     %{
       ctor: fn ctor -> ctor end,
       empty: fn ctor -> BinTree.atom_btv(ctor) end,
@@ -47,6 +47,45 @@ defmodule NockPoly.BinTreeTerm do
         list_fn.(ctor)
       end
     }
+  end
+
+  @doc """
+  I provide the slice algebra for converting terms to binary trees with right-associativity.
+
+  This algebra interprets the children list as a regular list: the leftmost element
+  is processed first, and we build the tree right-associatively.
+
+  An empty children list creates just an atom node.
+  A term `(ctor, [x, y, z])` builds the tree structure
+  `(ctor . (x . (y . z)))` where each `.` is a pair.
+
+  The algebra uses functions to build up the tree structure without explicit recursion:
+  - Lists of terms return functions `(tree -> BinTree.btv(ctor, v))`
+  - Empty list returns the identity function (base case)
+  - Cons combines a tree with a list function to chain the pairing
+  - The term handler applies the function to the constructor atom to get the final tree
+  """
+  def term_to_bintree_slice_alg_right() do
+    %{
+      ctor: fn ctor -> ctor end,
+      empty: fn tree -> tree end,
+      cons: fn tree, list_fn ->
+        fn base -> BinTree.pair_btv(base, list_fn.(tree)) end
+      end,
+      nonempty: fn nelist_fn -> nelist_fn end,
+      term: fn ctor, list_fn ->
+        list_fn.(BinTree.atom_btv(ctor))
+      end
+    }
+  end
+
+  @doc """
+  I provide the slice algebra for converting terms to binary trees (left-associative).
+
+  This is an alias for `term_to_bintree_slice_alg_left/0` for backwards compatibility.
+  """
+  def term_to_bintree_slice_alg() do
+    term_to_bintree_slice_alg_left()
   end
 
   @doc """
@@ -65,14 +104,46 @@ defmodule NockPoly.BinTreeTerm do
   end
 
   @doc """
-  I convert a term with variables to a binary tree with variables.
+  I convert a term with variables to a binary tree with variables (left-associative).
 
   This is the generalization of `term_to_bintree` that preserves variables.
   """
   @spec termv_to_bintreev(Term.tv(ctor, v)) :: BinTree.btv(ctor, v)
         when ctor: term, v: term
   def termv_to_bintreev(term) do
-    Term.slice_eval(term_to_bintree_slice_alg(), &BinTree.var_btv/1, term)
+    Term.slice_eval(
+      term_to_bintree_slice_alg_left(),
+      &BinTree.var_btv/1,
+      term
+    )
+  end
+
+  @doc """
+  I convert a term to a binary tree with right-associativity.
+
+  A term `(ctor, [x, y, z])` builds the tree structure
+  `(ctor . (x . (y . z)))` where each `.` is a pair.
+  """
+  @spec term_to_bintree_right(Term.t(ctor)) :: BinTree.bt(ctor)
+        when ctor: term
+  def term_to_bintree_right(term) do
+    Term.slice_cata(term, term_to_bintree_slice_alg_right())
+  end
+
+  @doc """
+  I convert a term with variables to a binary tree with variables (right-associative).
+
+  A term `(ctor, [x, y, z])` builds the tree structure
+  `(ctor . (x . (y . z)))` where each `.` is a pair.
+  """
+  @spec termv_to_bintreev_right(Term.tv(ctor, v)) :: BinTree.btv(ctor, v)
+        when ctor: term, v: term
+  def termv_to_bintreev_right(term) do
+    Term.slice_eval(
+      term_to_bintree_slice_alg_right(),
+      &BinTree.var_btv/1,
+      term
+    )
   end
 
   @doc """

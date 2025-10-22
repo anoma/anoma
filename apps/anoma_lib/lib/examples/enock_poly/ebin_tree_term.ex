@@ -568,4 +568,72 @@ defmodule Examples.ENockPoly.EBinTreeTerm do
 
     tree
   end
+
+  def term_to_bintree_right_nullary() do
+    term = tvc0(:foo)
+    tree = BinTreeTerm.term_to_bintree_right(term)
+    assert tree == btva(:foo)
+    tree
+  end
+
+  def term_to_bintree_right_unary() do
+    term = tvc(:foo, [tvc0(:bar)])
+    tree = BinTreeTerm.term_to_bintree_right(term)
+    expected = btvp(btva(:foo), btva(:bar))
+    assert tree == expected
+    tree
+  end
+
+  def term_to_bintree_right_binary() do
+    term = tvc(:foo, [tvc0(:a), tvc0(:b)])
+    tree = BinTreeTerm.term_to_bintree_right(term)
+    expected = btvp(btva(:foo), btvp(btva(:a), btva(:b)))
+    assert tree == expected
+    tree
+  end
+
+  def term_to_bintree_right_ternary() do
+    term = tvc(:f, [tvc0(:x), tvc0(:y), tvc0(:z)])
+    tree = BinTreeTerm.term_to_bintree_right(term)
+    expected = btvp(btva(:f), btvp(btva(:x), btvp(btva(:y), btva(:z))))
+    assert tree == expected
+    tree
+  end
+
+  def term_to_bintree_right_nested() do
+    term = tvc(:f, [tvc(:g, [tvc0(:a), tvc0(:b)]), tvc0(:c)])
+    tree = BinTreeTerm.term_to_bintree_right(term)
+
+    expected =
+      btvp(
+        btva(:f),
+        btvp(
+          btvp(btva(:g), btvp(btva(:a), btva(:b))),
+          btva(:c)
+        )
+      )
+
+    assert tree == expected
+    tree
+  end
+
+  def termv_to_bintreev_right_with_variables() do
+    term = tvc(:f, [tvv(:x), tvc(:g, [tvv(:y)]), tvc0(:z)])
+    tree = BinTreeTerm.termv_to_bintreev_right(term)
+
+    expected =
+      btvp(
+        btva(:f),
+        btvp(
+          btvv(:x),
+          btvp(
+            btvp(btva(:g), btvv(:y)),
+            btva(:z)
+          )
+        )
+      )
+
+    assert tree == expected
+    tree
+  end
 end
