@@ -28,29 +28,25 @@ defmodule NockPoly.BinTreeTerm do
   An empty children list creates just an atom node.
   A term `(ctor, [x, y, z])` builds the tree structure
   `(((ctor . z) . y) . x)` where each `.` is a pair.
+
+  The algebra uses functions to build up the tree structure without explicit recursion:
+  - Lists of terms return functions `(ctor -> BinTree.btv(ctor, v))`
+  - Empty list returns `fn ctor -> atom(ctor)` (base case)
+  - Cons combines a tree with a list function to produce a new function
+  - The term handler applies the function to the constructor to get the final tree
   """
   def term_to_bintree_slice_alg() do
     %{
       ctor: fn ctor -> ctor end,
-      empty: :empty_marker,
-      cons: fn tree, list_acc -> {:cons_marker, tree, list_acc} end,
-      nonempty: fn nelist -> nelist end,
-      term: fn ctor, list_result ->
-        build_snoclist_tree(BinTree.atom_btv(ctor), list_result)
+      empty: fn ctor -> BinTree.atom_btv(ctor) end,
+      cons: fn tree, list_fn ->
+        fn ctor -> BinTree.pair_btv(list_fn.(ctor), tree) end
+      end,
+      nonempty: fn nelist_fn -> nelist_fn end,
+      term: fn ctor, list_fn ->
+        list_fn.(ctor)
       end
     }
-  end
-
-  @spec build_snoclist_tree(BinTree.btv(ctor, v), term) ::
-          BinTree.btv(ctor, v)
-        when ctor: term, v: term
-  defp build_snoclist_tree(acc, :empty_marker) do
-    acc
-  end
-
-  defp build_snoclist_tree(acc, {:cons_marker, tree, rest}) do
-    rest_tree = build_snoclist_tree(acc, rest)
-    BinTree.pair_btv(rest_tree, tree)
   end
 
   @doc """
