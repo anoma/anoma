@@ -510,11 +510,62 @@ defmodule Examples.ENockPoly.EBinTreeTerm do
     t2
   end
 
-  def malformed_tree_variable_in_left_position() do
-    tree = btvp(btvv(:x), btva(:foo))
-    term = BinTreeTerm.bintreev_to_termv(tree)
+  def interpretable_valid_tree_with_variable_in_right_position() do
+    tree = btvp(btva(:foo), btvv(:x))
+    result = BinTreeTerm.bintreev_interpretable_as_termv?(tree)
+    assert result == true
+    result
+  end
 
-    assert term == tvv(:x)
-    term
+  def interpretable_valid_tree_nullary() do
+    tree = btva(:foo)
+    result = BinTreeTerm.bintreev_interpretable_as_termv?(tree)
+    assert result == true
+    result
+  end
+
+  def interpretable_invalid_tree_variable_in_left_position() do
+    tree = btvp(btvv(:x), btva(:foo))
+    result = BinTreeTerm.bintreev_interpretable_as_termv?(tree)
+    assert result == false
+    result
+  end
+
+  def interpretable_invalid_tree_variable_in_nested_left_position() do
+    tree = btvp(btvp(btvv(:x), btva(:bar)), btva(:foo))
+    result = BinTreeTerm.bintreev_interpretable_as_termv?(tree)
+    assert result == false
+    result
+  end
+
+  def roundtrip_termv_to_bintreev_always_interpretable() do
+    term = tvc(:f, [tvv(:x), tvc(:g, [tvv(:y)]), tvc0(:z)])
+    tree = BinTreeTerm.termv_to_bintreev(term)
+    result = BinTreeTerm.bintreev_interpretable_as_termv?(tree)
+    assert result == true
+
+    converted_term = BinTreeTerm.bintreev_to_termv(tree)
+    assert converted_term == term
+    result
+  end
+
+  def bintreev_to_termv_raises_on_variable_in_left_position() do
+    tree = btvp(btvv(:x), btva(:foo))
+
+    assert_raise ArgumentError, fn ->
+      BinTreeTerm.bintreev_to_termv(tree)
+    end
+
+    tree
+  end
+
+  def bintreev_to_termv_raises_on_nested_variable_in_left_position() do
+    tree = btvp(btvp(btva(:f), btva(:g)), btvp(btvv(:x), btva(:h)))
+
+    assert_raise ArgumentError, fn ->
+      BinTreeTerm.bintreev_to_termv(tree)
+    end
+
+    tree
   end
 end
