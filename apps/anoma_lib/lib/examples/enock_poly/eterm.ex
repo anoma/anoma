@@ -69,7 +69,7 @@ defmodule Examples.ENockPoly.ETerm do
   end
 
   @doc """
-  t4: a more complex closed term.
+  t4: a deeply nested closed term.
   """
   def term_test_t4() do
     tvc(

@@ -159,7 +159,7 @@ defmodule Examples.ENockPoly.EBinTreeTerm do
     tree
   end
 
-  def bintree_to_term_complex_nested_pairs() do
+  def bintree_to_term_deeply_nested_pairs() do
     tree =
       btvp(
         btvp(btvp(btva(:a), btva(:b)), btva(:c)),
@@ -383,7 +383,7 @@ defmodule Examples.ENockPoly.EBinTreeTerm do
     result
   end
 
-  def roundtrip_bintree_complex_nested() do
+  def roundtrip_bintree_deeply_nested() do
     tree =
       btvp(
         btvp(

@@ -52,9 +52,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
     simple_spec = Forest.simple_forest_spec([2, 0, 1])
     assert Forest.validate_forest_spec(simple_spec) == :ok
 
-    # Complex spec with dependent types
-    # Forest [1, 0] means: base 0 has 1 dep, base 1 has 0 deps
-    complex_spec =
+    dep_spec =
       Forest.create_forest_spec(
         [1, 0],
         [
@@ -74,16 +72,16 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
         ]
       )
 
-    assert Forest.validate_forest_spec(complex_spec) == :ok
+    assert Forest.validate_forest_spec(dep_spec) == :ok
 
     # Test getting constructor params
-    assert Forest.get_ctor_params(complex_spec, {:base, 0, 0}) ==
+    assert Forest.get_ctor_params(dep_spec, {:base, 0, 0}) ==
              {:ok, [{:base, 0}, {:base, 1}]}
 
-    assert Forest.get_ctor_params(complex_spec, {:base, 1, 0}) ==
+    assert Forest.get_ctor_params(dep_spec, {:base, 1, 0}) ==
              {:ok, []}
 
-    assert Forest.get_ctor_params(complex_spec, {:dep, 0, 0, 0}) ==
+    assert Forest.get_ctor_params(dep_spec, {:dep, 0, 0, 0}) ==
              {:ok, [{:dep, 0, 0}]}
 
     # Test getting constructor types

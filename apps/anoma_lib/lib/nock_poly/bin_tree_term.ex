@@ -176,8 +176,8 @@ defmodule NockPoly.BinTreeTerm do
     - In `:as_child` role: builds a term by extracting ctor from left, children from right
     - In `:in_spine` role: prepends the left child to the right spine's list
 
-  The key insight: by using function-valued returns, we can defer the decision about
-  how to interpret a tree until we know its role in the parent context.
+  By using function-valued returns, we defer the decision about how to interpret
+  a tree until we know its role in the parent context.
   """
   @type role :: :as_child | :in_spine
   @type role_fn(ctor, v) ::
@@ -206,48 +206,7 @@ defmodule NockPoly.BinTreeTerm do
           end
         end
       end,
-      from_pair: fn role_fn ->
-        # from_pair is called for EVERY pair, not just the root
-        # So it should also return a function that can handle different roles
-        # BUT: at the root level, slice_eval expects the final result type
-        # So we need to distinguish: if asked for final result, build the term
-        # If asked as part of spine, treat the pair as a single child
-
-        # Actually, the issue is that slice_eval ALWAYS calls from_pair at the top level
-        # to get the final result. So from_pair needs to return the final type.
-        # But for nested pairs, from_pair is also called during bottom-up traversal.
-
-        # The solution: from_pair should return a function when the pair is NOT at root,
-        # but the root level needs special handling.
-
-        # Wait - let me reconsider the types. The slice algebra type is:
-        # bintree_slice_alg(atom, r_bt, r_atom, r_pair)
-        # where from_atom: r_atom -> r_bt and from_pair: r_pair -> r_bt
-
-        # So from_pair converts r_pair to r_bt (the final result type).
-        # In our case, r_bt = {:ok, Term} and r_pair = role_fn
-        # So from_pair: role_fn -> {:ok, Term}
-
-        # But this means ALL pairs get converted to terms, which is wrong!
-        # The issue is that r_bt is used for INTERMEDIATE results in the recursion.
-
-        # Ah! The solution is to make r_bt = role_fn as well!
-        # Then atoms return role_fn, pairs return role_fn, and only at the ROOT
-        # do we call the function with a specific role.
-
-        # Let me restructure: r_bt = r_atom = r_pair = role_fn
-        # And we need a separate step to convert the final role_fn to a term.
-
-        # Actually, looking at slice_eval again:
-        # - For atoms: calls from_atom(atom(ea)) to get r_bt
-        # - For pairs: calls from_pair(pair(left_r_bt, right_r_bt)) to get r_bt
-        # So yes, r_bt is the common type, and it's returned at every level.
-
-        # The trick is: make r_bt = role_fn everywhere, and then at the TOP level
-        # (outside slice_eval), call the resulting function with :in_spine to get the term.
-
-        role_fn
-      end
+      from_pair: fn role_fn -> role_fn end
     }
   end
 

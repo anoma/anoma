@@ -163,9 +163,9 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
   end
 
   @doc """
-  slice_test_complex: Tests a complex expression with both arithmetic and boolean expressions.
+  slice_test_combined: Tests an expression combining arithmetic and boolean expressions.
   """
-  def slice_test_complex() do
+  def slice_test_combined() do
     typespec = create_expr_typespec()
     tspec = create_expr_tspec()
 
@@ -365,7 +365,6 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     and_true_term = tvc(:and, [true_term, true_term])
     assert evaluate_expr(and_true_term) == true
 
-    # Test complex conditional expression
     # if (1 < 2) then 0 else (1 + 2)
     if_term =
       tvc(:if_then_else, [
@@ -395,7 +394,6 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     # Since 2 < 1 is false, this should evaluate to 1 + 2 = 3
     assert evaluate_expr(if_false_term) == 3
 
-    # Return the most complex term as the result
     if_false_term
   end
 

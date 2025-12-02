@@ -603,7 +603,7 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
-  def bind_with_complex_substitution() do
+  def bind_with_pair_substitution() do
     tree = btvp(btvv(1), btva(:x))
 
     subst = fn 1 -> btvp(btva(:a), btva(:b)) end
@@ -642,7 +642,7 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
-  def full_subst_with_complex_trees() do
+  def full_subst_with_nested_trees() do
     tree = btvp(btvv(:a), btvv(:b))
 
     subst = fn
@@ -726,7 +726,7 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
-  def size_of_complex_tree() do
+  def size_of_nested_tree() do
     tree =
       btvp(
         btvp(btva(:a), btva(:b)),

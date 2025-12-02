@@ -362,8 +362,6 @@ defmodule NockPoly.FinIndIndPolyF do
     end
   end
 
-  # Helper function to check if a list of fields has the correct types.
-  # This ensures that base fields can only be base terms and dependent fields can only be dependent terms.
   @spec check_fields(
           [Term.tv(any(), any())],
           ind_ind_f(),
@@ -371,20 +369,16 @@ defmodule NockPoly.FinIndIndPolyF do
           non_neg_integer()
         ) :: :ok | {:error, any()}
   defp check_fields(fields, ind_ind_f, expected_type) do
-    # If no fields to check, return :ok immediately
     if Enum.empty?(fields) do
       :ok
     else
       field_check_results =
         Enum.map(fields, fn field ->
-          # Check each field using the main typecheck function
-          # which will dispatch based on the constructor tag
           case typecheck(field, ind_ind_f) do
             {:ok, actual_type} ->
               if actual_type == expected_type do
                 :ok
               else
-                # Field has valid type but not the right one for this position
                 {:error,
                  {:invalid_field_type, field, expected_type, actual_type}}
               end

@@ -106,17 +106,14 @@ defmodule NockPoly.GenericTerm do
   @spec typecheck(generic_term) ::
           FinPolyF.check_result(generic_ctor, none())
   def typecheck(term) do
-    # We need a custom typecheck because products have variable arity
     Term.cata(term, &typecheck_algebra/1)
   end
 
-  # Helper algebra for typechecking
   @spec typecheck_algebra(
           {generic_ctor, [FinPolyF.check_result(generic_ctor, none())]}
         ) ::
           FinPolyF.check_result(generic_ctor, none())
   defp typecheck_algebra({ctor, child_results}) do
-    # First collect any errors from children
     child_errors =
       child_results
       |> Enum.flat_map(fn
@@ -124,7 +121,6 @@ defmodule NockPoly.GenericTerm do
         {:error, errs} -> errs
       end)
 
-    # Then check this level
     level_result =
       case {ctor, length(child_results)} do
         {{:coprod, _index}, 1} ->
@@ -134,7 +130,6 @@ defmodule NockPoly.GenericTerm do
           {:error, [{:invalid_arity, {:coprod, index}, 1, count}]}
 
         {:prod, _count} ->
-          # Products can have any arity
           :ok
 
         {{:nat, _value}, 0} ->
@@ -147,7 +142,6 @@ defmodule NockPoly.GenericTerm do
           {:error, [{:invalid_constructor, ctor}]}
       end
 
-    # Combine errors
     all_errors =
       case level_result do
         :ok -> child_errors

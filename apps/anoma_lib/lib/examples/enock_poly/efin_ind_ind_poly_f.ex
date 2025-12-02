@@ -110,9 +110,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
 
     assert {:ok, 1} = IndIndF.typecheck(dep1_term, stmlf)
 
-    # Create a more complex term that uses both types
-    # Base constructor 2: three base fields, each with one dependent field
-    complex_term =
+    nested_term =
       tvc({:base, 2}, [
         base0_term,
         base0_term,
@@ -122,7 +120,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
         dep0_term
       ])
 
-    assert {:ok, 0} = IndIndF.typecheck(complex_term, stmlf)
+    assert {:ok, 0} = IndIndF.typecheck(nested_term, stmlf)
 
     # Test an invalid term with a non-existent constructor
     invalid_term = tvc0({:base, 3})
@@ -148,8 +146,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
              IndIndF.typecheck(invalid_format_term, stmlf)
            )
 
-    # Return the complex term demonstrating the mutual recursion
-    complex_term
+    nested_term
   end
 
   @doc """

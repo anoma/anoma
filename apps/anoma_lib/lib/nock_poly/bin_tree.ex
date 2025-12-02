@@ -236,8 +236,8 @@ defmodule NockPoly.BinTree do
 
   defmodule Unreachable do
     @moduledoc """
-    This module contains a function specifically expected to be unreachable.
-    We factor it out as a module so that we can tell test coverage to ignore it.
+    I contain a function expected to be unreachable, factored out as a module
+    so that test coverage can ignore it.
     """
 
     @dialyzer {:nowarn_function, unreachable_var: 1}
@@ -522,9 +522,8 @@ defmodule NockPoly.BinTree do
 
   defmodule MacroDefs do
     @moduledoc """
-    Macro definitions for convenient binary tree construction.
-    These are separated into their own module to distinguish them for
-    code coverage purposes.
+    I provide macro definitions for binary tree construction, separated into
+    a module so that test coverage can ignore them.
     """
 
     alias NockPoly.BinTree

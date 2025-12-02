@@ -543,7 +543,7 @@ defmodule Examples.ENockPoly.ESexpr do
     result
   end
 
-  def subst_with_complex_replacement() do
+  def subst_with_nested_replacement() do
     sexpr = sx_atom(:f, [sx_var(:x)])
 
     subst_fn = fn :x ->

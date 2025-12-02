@@ -281,8 +281,8 @@ defmodule NockPoly.Term do
 
   defmodule Unreachable do
     @moduledoc """
-    This module contains a function specifically expected to be unreachable.
-    We factor it out as a module so that we can tell test coverage to ignore it.
+    I contain a function expected to be unreachable, factored out as a module
+    so that test coverage can ignore it.
     """
 
     # A helper function for the specialization of `tv` to `t` which
@@ -471,10 +471,9 @@ defmodule NockPoly.Term do
 
   defmodule MacroDefs do
     @moduledoc """
-    Macro definitions -- and macros definitions only -- in their own
-    separate module to distinguish them for the purpose of ignoring code
-    coverage (which does not know how to tell whether a macro has been
-    expanded and executed).
+    I provide macro definitions in a separate module to distinguish them
+    for the purpose of ignoring code coverage (which does not know how to
+    tell whether a macro has been expanded and executed).
     """
 
     alias NockPoly.Term
