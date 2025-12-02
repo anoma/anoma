@@ -70,22 +70,22 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     fn
       # ArithExpr constructors
       # Zero (no parameters)
-      {:zero} -> {:ok, {0, 0}}
+      :zero -> {:ok, {0, 0}}
       # Successor (one ArithExpr parameter)
-      {:succ} -> {:ok, {0, 1}}
+      :succ -> {:ok, {0, 1}}
       # Add (two ArithExpr parameters)
-      {:add} -> {:ok, {0, 2}}
+      :add -> {:ok, {0, 2}}
       # IfThenElse (BoolExpr, ArithExpr, ArithExpr)
-      {:if_then_else} -> {:ok, {0, 3}}
+      :if_then_else -> {:ok, {0, 3}}
       # BoolExpr constructors
       # True (no parameters)
-      {true} -> {:ok, {1, 0}}
+      true -> {:ok, {1, 0}}
       # False (no parameters)
-      {false} -> {:ok, {1, 1}}
+      false -> {:ok, {1, 1}}
       # Less (two ArithExpr parameters)
-      {:less} -> {:ok, {1, 2}}
+      :less -> {:ok, {1, 2}}
       # And (two BoolExpr parameters)
-      {:and} -> {:ok, {1, 3}}
+      :and -> {:ok, {1, 3}}
     end
   end
 
@@ -114,19 +114,19 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     tspec = create_expr_tspec()
 
     # Zero (representing the number 0)
-    zero_term = tvc0({:zero})
+    zero_term = tvc0(:zero)
     assert {:ok, 0} = SliceF.typecheck(zero_term, typespec, tspec)
 
     # Successor(Zero) (representing the number 1)
-    one_term = tvc({:succ}, [zero_term])
+    one_term = tvc(:succ, [zero_term])
     assert {:ok, 0} = SliceF.typecheck(one_term, typespec, tspec)
 
     # Successor(One) (representing the number 2)
-    two_term = tvc({:succ}, [one_term])
+    two_term = tvc(:succ, [one_term])
     assert {:ok, 0} = SliceF.typecheck(two_term, typespec, tspec)
 
     # Add(One, One) (representing 1+1)
-    add_term = tvc({:add}, [one_term, one_term])
+    add_term = tvc(:add, [one_term, one_term])
     assert {:ok, 0} = SliceF.typecheck(add_term, typespec, tspec)
 
     add_term
@@ -140,23 +140,23 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     tspec = create_expr_tspec()
 
     # True (boolean constant)
-    true_term = tvc0({true})
+    true_term = tvc0(true)
     assert {:ok, 1} = SliceF.typecheck(true_term, typespec, tspec)
 
     # False (boolean constant)
-    false_term = tvc0({false})
+    false_term = tvc0(false)
     assert {:ok, 1} = SliceF.typecheck(false_term, typespec, tspec)
 
     # Get number terms for comparisons
-    zero_term = tvc0({:zero})
-    one_term = tvc({:succ}, [zero_term])
+    zero_term = tvc0(:zero)
+    one_term = tvc(:succ, [zero_term])
 
     # Less(Zero, One) (representing 0 < 1)
-    less_term = tvc({:less}, [zero_term, one_term])
+    less_term = tvc(:less, [zero_term, one_term])
     assert {:ok, 1} = SliceF.typecheck(less_term, typespec, tspec)
 
     # And(True, False) (representing true AND false)
-    and_term = tvc({:and}, [true_term, false_term])
+    and_term = tvc(:and, [true_term, false_term])
     assert {:ok, 1} = SliceF.typecheck(and_term, typespec, tspec)
 
     and_term
@@ -170,19 +170,19 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     tspec = create_expr_tspec()
 
     # Create our base number terms
-    zero_term = tvc0({:zero})
-    one_term = tvc({:succ}, [zero_term])
-    two_term = tvc({:succ}, [one_term])
+    zero_term = tvc0(:zero)
+    one_term = tvc(:succ, [zero_term])
+    two_term = tvc(:succ, [one_term])
 
     # IfThenElse(Less(One, Two), Zero, Add(One, Two))
     if_term =
-      tvc({:if_then_else}, [
+      tvc(:if_then_else, [
         # condition: Less(One, Two)
-        tvc({:less}, [one_term, two_term]),
+        tvc(:less, [one_term, two_term]),
         # then branch: Zero
         zero_term,
         # else branch: Add(One, Two)
-        tvc({:add}, [one_term, two_term])
+        tvc(:add, [one_term, two_term])
       ])
 
     assert {:ok, 0} = SliceF.typecheck(if_term, typespec, tspec)
@@ -198,12 +198,12 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     tspec = create_expr_tspec()
 
     # Create base terms
-    zero_term = tvc0({:zero})
-    true_term = tvc0({true})
+    zero_term = tvc0(:zero)
+    true_term = tvc0(true)
 
     # Error: Add takes arithmetic expressions, not boolean expressions
     # Add(Zero, True) - second parameter has wrong type
-    invalid_term = tvc({:add}, [zero_term, true_term])
+    invalid_term = tvc(:add, [zero_term, true_term])
 
     {:error, errors} = SliceF.typecheck(invalid_term, typespec, tspec)
     # We expect a single parameter type error
@@ -222,10 +222,10 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     tspec = create_expr_tspec()
 
     # Create base term
-    zero_term = tvc0({:zero})
+    zero_term = tvc0(:zero)
 
     # Error: Add should have 2 parameters but has 1
-    invalid_term = tvc({:add}, [zero_term])
+    invalid_term = tvc(:add, [zero_term])
 
     {:error, errors} = SliceF.typecheck(invalid_term, typespec, tspec)
     assert length(errors) == 1
@@ -242,17 +242,17 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     tspec = create_expr_tspec()
 
     # Create base terms
-    zero_term = tvc0({:zero})
-    true_term = tvc0({true})
+    zero_term = tvc0(:zero)
+    true_term = tvc0(true)
 
     # Error: And should take 2 BoolExpr, but has 1 BoolExpr and 1 ArithExpr
     # Also, the Add has wrong parameter count (1 instead of 2)
     invalid_term =
-      tvc({:and}, [
+      tvc(:and, [
         # This is a valid BoolExpr
         true_term,
         # This is an ArithExpr with wrong param count
-        tvc({:add}, [zero_term])
+        tvc(:add, [zero_term])
       ])
 
     {:error, errors} = SliceF.typecheck(invalid_term, typespec, tspec)
@@ -285,39 +285,39 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     algebra = fn {ctor, children} ->
       case ctor do
         # ArithExpr.Zero - represents 0
-        {:zero} ->
+        :zero ->
           0
 
         # ArithExpr.Successor - represents n+1
-        {:succ} ->
+        :succ ->
           [n] = children
           n + 1
 
         # ArithExpr.Add - represents addition
-        {:add} ->
+        :add ->
           [a, b] = children
           a + b
 
         # ArithExpr.IfThenElse - represents conditional
-        {:if_then_else} ->
+        :if_then_else ->
           [condition, then_branch, else_branch] = children
           if condition, do: then_branch, else: else_branch
 
         # BoolExpr.True - represents boolean true
-        {true} ->
+        true ->
           true
 
         # BoolExpr.False - represents boolean false
-        {false} ->
+        false ->
           false
 
         # BoolExpr.Less - represents < comparison
-        {:less} ->
+        :less ->
           [a, b] = children
           a < b
 
         # BoolExpr.And - represents logical AND
-        {:and} ->
+        :and ->
           [a, b] = children
           a and b
       end
@@ -332,9 +332,9 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
   """
   def evaluate_expr_test() do
     # Create our base terms
-    zero_term = tvc0({:zero})
-    one_term = tvc({:succ}, [zero_term])
-    two_term = tvc({:succ}, [one_term])
+    zero_term = tvc0(:zero)
+    one_term = tvc(:succ, [zero_term])
+    two_term = tvc(:succ, [one_term])
 
     # Test arithmetic expressions
     assert evaluate_expr(zero_term) == 0
@@ -342,39 +342,39 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     assert evaluate_expr(two_term) == 2
 
     # Test addition
-    add_term = tvc({:add}, [one_term, two_term])
+    add_term = tvc(:add, [one_term, two_term])
     assert evaluate_expr(add_term) == 3
 
     # Test boolean expressions
-    true_term = tvc0({true})
-    false_term = tvc0({false})
+    true_term = tvc0(true)
+    false_term = tvc0(false)
     assert evaluate_expr(true_term) == true
     assert evaluate_expr(false_term) == false
 
     # Test comparison
-    less_term = tvc({:less}, [one_term, two_term])
+    less_term = tvc(:less, [one_term, two_term])
     assert evaluate_expr(less_term) == true
 
-    not_less_term = tvc({:less}, [two_term, one_term])
+    not_less_term = tvc(:less, [two_term, one_term])
     assert evaluate_expr(not_less_term) == false
 
     # Test logical AND
-    and_term = tvc({:and}, [true_term, false_term])
+    and_term = tvc(:and, [true_term, false_term])
     assert evaluate_expr(and_term) == false
 
-    and_true_term = tvc({:and}, [true_term, true_term])
+    and_true_term = tvc(:and, [true_term, true_term])
     assert evaluate_expr(and_true_term) == true
 
     # Test complex conditional expression
     # if (1 < 2) then 0 else (1 + 2)
     if_term =
-      tvc({:if_then_else}, [
+      tvc(:if_then_else, [
         # condition: Less(One, Two)
-        tvc({:less}, [one_term, two_term]),
+        tvc(:less, [one_term, two_term]),
         # then branch: Zero
         zero_term,
         # else branch: Add(One, Two)
-        tvc({:add}, [one_term, two_term])
+        tvc(:add, [one_term, two_term])
       ])
 
     # Since 1 < 2 is true, this should evaluate to 0
@@ -383,13 +383,13 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     # Now let's create an expression where the condition is false
     # if (2 < 1) then 0 else (1 + 2)
     if_false_term =
-      tvc({:if_then_else}, [
+      tvc(:if_then_else, [
         # condition: Less(Two, One) - false
-        tvc({:less}, [two_term, one_term]),
+        tvc(:less, [two_term, one_term]),
         # then branch: Zero
         zero_term,
         # else branch: Add(One, Two)
-        tvc({:add}, [one_term, two_term])
+        tvc(:add, [one_term, two_term])
       ])
 
     # Since 2 < 1 is false, this should evaluate to 1 + 2 = 3
@@ -449,15 +449,15 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
 
     # Create a tspec function
     tspec = fn
-      {:type0_ctor} -> {:ok, {0, 0}}
-      {:type1_ctor} -> {:ok, {1, 0}}
+      :type0_ctor -> {:ok, {0, 0}}
+      :type1_ctor -> {:ok, {1, 0}}
       _ -> :invalid_constructor
     end
 
     # Create a vspec function that accepts variables and assigns a type
     vspec = fn
-      {:var_type0} -> {:ok, 0}
-      {:var_type1} -> {:ok, 1}
+      :var_type0 -> {:ok, 0}
+      :var_type1 -> {:ok, 1}
       _ -> :invalid_variable
     end
 
@@ -465,22 +465,22 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     # Create various test terms
     # Valid term with type0_ctor and a type1 variable
     valid_term_with_var =
-      tvc({:type0_ctor}, [tvv({{:var_type1}, 1})])
+      tvc(:type0_ctor, [tvv({:var_type1, 1})])
 
     # Valid term with type1_ctor and a type0 variable
-    valid_term_type1 = tvc({:type1_ctor}, [tvv({{:var_type0}, 0})])
+    valid_term_type1 = tvc(:type1_ctor, [tvv({:var_type0, 0})])
 
     # Invalid term with wrong variable type
     invalid_term_with_wrong_type =
-      tvc({:type0_ctor}, [tvv({{:var_type0}, 1})])
+      tvc(:type0_ctor, [tvv({:var_type0, 1})])
 
     # Term with invalid variable
     term_with_invalid_var =
-      tvc({:type0_ctor}, [tvv({{:unknown_var}, 1})])
+      tvc(:type0_ctor, [tvv({:unknown_var, 1})])
 
     # Term with invalid constructor
     term_with_invalid_ctor =
-      tvc({:unknown_ctor}, [tvv({{:var_type1}, 1})])
+      tvc(:unknown_ctor, [tvv({:var_type1, 1})])
 
     # Tests
     # Valid terms should typecheck correctly
@@ -498,7 +498,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
       )
 
     assert Enum.any?(errors1, fn
-             {:invalid_variable_type, {:var_type0}, 1, 0} -> true
+             {:invalid_variable_type, :var_type0, 1, 0} -> true
            end)
 
     # Test an invalid variable (one that vspec doesn't recognize)
@@ -506,7 +506,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
       SliceF.typecheck_v(term_with_invalid_var, {typespec, tspec, vspec})
 
     assert Enum.any?(errors2, fn
-             {:invalid_variable_type, {:unknown_var}, 1, nil} -> true
+             {:invalid_variable_type, :unknown_var, 1, nil} -> true
            end)
 
     # Test an invalid constructor
@@ -514,7 +514,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
       SliceF.typecheck_v(term_with_invalid_ctor, {typespec, tspec, vspec})
 
     assert Enum.any?(errors3, fn
-             {:invalid_constructor, {:unknown_ctor}} -> true
+             {:invalid_constructor, :unknown_ctor} -> true
            end)
 
     valid_term_with_var
@@ -565,7 +565,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     # 1. Returns valid constructor for :valid_ctor to test ctor_types usage
     # 2. Returns invalid_constructor for anything else
     test_tspec = fn
-      {:valid_ctor} ->
+      :valid_ctor ->
         # This will trigger a call to ctor_types with {0, 0}
         {:ok, {0, 0}}
 
@@ -577,7 +577,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     vspec = fn _ -> {:ok, 0} end
 
     # Create a simple term
-    term = tvc0({:zero})
+    term = tvc0(:zero)
 
     # Test that typecheck_v properly handles the invalid_constructor error
     {:error, errors} =
@@ -589,7 +589,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
 
     # Now also test a path that uses ctor_types
     # Create a valid constructor term to trigger ctor_types
-    valid_term = tvc0({:valid_ctor})
+    valid_term = tvc0(:valid_ctor)
 
     # This will pass the tspec check and then use ctor_types to verify parameters
     assert {:ok, 0} =

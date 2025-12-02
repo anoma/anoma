@@ -287,8 +287,7 @@ defmodule NockPoly.FinIndIndPolyF do
           ind_ind_f()
         ) ::
           {:ok, 0} | {:error, any()}
-  def typecheck_base_constructor(pos, fields, ind_ind_f) do
-    %{base: base} = ind_ind_f
+  def typecheck_base_constructor(pos, fields, %{base: base} = ind_ind_f) do
     positions = length(base)
 
     if pos < 0 or pos >= positions do
@@ -329,8 +328,11 @@ defmodule NockPoly.FinIndIndPolyF do
           ind_ind_f()
         ) ::
           {:ok, 1} | {:error, any()}
-  def typecheck_dep_constructor(pos, fields, ind_ind_f) do
-    %{slice: %{total: dep_type}} = ind_ind_f
+  def typecheck_dep_constructor(
+        pos,
+        fields,
+        %{slice: %{total: dep_type}} = ind_ind_f
+      ) do
     positions = length(dep_type)
 
     if pos < 0 or pos >= positions do

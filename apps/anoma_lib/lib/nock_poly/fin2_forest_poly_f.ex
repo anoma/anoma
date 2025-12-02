@@ -37,8 +37,6 @@ defmodule NockPoly.Fin2ForestPolyF do
   we get the walking arrow category.
   """
 
-  alias Term
-
   @typedoc """
   A finite two-level forest specification.
 

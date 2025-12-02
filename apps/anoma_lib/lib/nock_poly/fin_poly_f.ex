@@ -16,8 +16,8 @@ defmodule NockPoly.FinPolyF do
                           :invalid_constructor
                           | {:ok, non_neg_integer()})
 
-  @typedoc "Typecheck function for variables. Given a variable of type `v`, returns either `:ok` (valid) or `{:error, [:invalid_variable]}`."
-  @type vspec(v) :: (v -> {:ok} | :invalid_variable)
+  @typedoc "Typecheck function for variables. Given a variable of type `v`, returns either `:ok` (valid) or `:invalid_variable`."
+  @type vspec(v) :: (v -> :ok | :invalid_variable)
 
   @doc "A `vspec` which always succeeds (returning `:ok`)."
   @spec vspec_ok(v) :: :ok when v: term

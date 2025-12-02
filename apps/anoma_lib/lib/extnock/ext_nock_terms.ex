@@ -18,9 +18,6 @@ defmodule ExtNock.ExtNockTerms do
   Extended terms comprise an internal superset of Nock which can be compiled
   down to standard Nock formulas for execution.
   """
-  alias NockPoly.Term
-  alias NockPoly.NockTerms
-  # Alias utility functions for creating terms
   alias NockPoly.Term, as: T
 
   @typedoc """
