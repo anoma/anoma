@@ -27,15 +27,15 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
     assert Forest.validate_forest_obj({:base, 2}, forest) == :ok
 
     assert Forest.validate_forest_obj({:base, 3}, forest) ==
-             {:error, :invalid_base_index}
+             {:error, [:invalid_base_index]}
 
     assert Forest.validate_forest_obj({:dep, 0, 1}, forest) == :ok
 
     assert Forest.validate_forest_obj({:dep, 0, 2}, forest) ==
-             {:error, :invalid_dep_index}
+             {:error, [:invalid_dep_index]}
 
     assert Forest.validate_forest_obj({:dep, 1, 0}, forest) ==
-             {:error, :invalid_dep_index}
+             {:error, [:invalid_dep_index]}
 
     assert Forest.validate_forest_obj({:dep, 2, 2}, forest) == :ok
 
@@ -559,7 +559,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
     }
 
     assert Forest.validate_forest_spec(invalid_spec) ==
-             {:error, :base_positions_length_mismatch}
+             {:error, [:base_positions_length_mismatch]}
 
     # Test dep_positions length mismatch
     invalid_spec2 = %Forest.ForestPolySpec{
@@ -571,7 +571,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
     }
 
     assert Forest.validate_forest_spec(invalid_spec2) ==
-             {:error, :dep_positions_length_mismatch}
+             {:error, [:dep_positions_length_mismatch]}
 
     # Test invalid position specs - wrong number of dep position maps
     invalid_spec3 = %Forest.ForestPolySpec{
@@ -583,7 +583,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
     }
 
     assert Forest.validate_forest_spec(invalid_spec3) ==
-             {:error, :invalid_position_specs}
+             {:error, [:invalid_position_specs]}
 
     # Test invalid position specs - invalid forest object in parameter list
     invalid_spec4 = %Forest.ForestPolySpec{
@@ -595,7 +595,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
     }
 
     assert Forest.validate_forest_spec(invalid_spec4) ==
-             {:error, :invalid_position_specs}
+             {:error, [:invalid_position_specs]}
 
     # Test invalid position specs - invalid dep reference in parameter list
     invalid_spec5 = %Forest.ForestPolySpec{
@@ -607,7 +607,7 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
     }
 
     assert Forest.validate_forest_spec(invalid_spec5) ==
-             {:error, :invalid_position_specs}
+             {:error, [:invalid_position_specs]}
 
     :ok
   end
@@ -622,14 +622,14 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
 
     # Test invalid type index for base constructor
     assert Forest.get_ctor_params(spec, {:base, 2, 0}) ==
-             {:error, :invalid_type_index}
+             {:error, [:invalid_type_index]}
 
     # Test invalid base index for dependent constructor
     assert Forest.get_ctor_params(spec, {:dep, 2, 0, 0}) ==
-             {:error, :invalid_base_index}
+             {:error, [:invalid_base_index]}
 
     assert Forest.get_ctor_params(spec, {:base, 0, 5}) ==
-             {:error, :invalid_ctor_index}
+             {:error, [:invalid_ctor_index]}
 
     dep_spec =
       Forest.create_forest_spec(
@@ -639,12 +639,12 @@ defmodule Examples.ENockPoly.EFin2ForestPolyF do
       )
 
     assert Forest.get_ctor_params(dep_spec, {:dep, 0, 0, 5}) ==
-             {:error, :invalid_ctor_index}
+             {:error, [:invalid_ctor_index]}
 
     # Test invalid dep index for dependent constructor
     # Base 0 has only 1 dependent (at index 0), so index 1 is invalid
     assert Forest.get_ctor_params(dep_spec, {:dep, 0, 1, 0}) ==
-             {:error, :invalid_dep_index}
+             {:error, [:invalid_dep_index]}
 
     :ok
   end

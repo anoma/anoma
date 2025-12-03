@@ -143,16 +143,16 @@ defmodule NockPoly.BinTreeTerm do
   This algebra extracts the snoclist structure from a binary tree and
   converts it to a term with a constructor and list of children.
 
-  This is the internal version that returns `{:ok, term}` or `{:error, reason}`
+  This is the internal version that returns `{:ok, term}` or `{:error, errors}`
   to handle the case where a variable appears in application position, which
   cannot be represented as a term.
   """
   @spec bintree_to_term_slice_alg_result_left() ::
           BinTree.bintree_slice_alg(
             ctor,
-            {:ok, Term.tv(ctor, v)} | {:error, term},
+            {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())},
             ctor,
-            {:ok, Term.tv(ctor, v)} | {:error, term}
+            {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())}
           )
         when ctor: term, v: term
   def bintree_to_term_slice_alg_result_left() do
@@ -184,7 +184,7 @@ defmodule NockPoly.BinTreeTerm do
           (role ->
              {:ok, Term.tv(ctor, v)}
              | {:ok, [Term.tv(ctor, v)]}
-             | {:error, term})
+             | {:error, nonempty_list(term())})
 
   @spec bintree_to_term_slice_alg_result_right_fn() ::
           BinTree.bintree_slice_alg(
@@ -222,10 +222,10 @@ defmodule NockPoly.BinTreeTerm do
 
               {:tcom, {_ctor, _children}} ->
                 {:error,
-                 {:non_nullary_term_in_constructor_position, left_child}}
+                 [{:non_nullary_term_in_constructor_position, left_child}]}
 
               {:tvar, v} ->
-                {:error, {:variable_in_constructor_position, v}}
+                {:error, [{:variable_in_constructor_position, v}]}
             end
           end
 
@@ -277,9 +277,9 @@ defmodule NockPoly.BinTreeTerm do
   end
 
   @spec bintree_pair_to_term_result_left(
-          {:ok, Term.tv(ctor, v)} | {:error, term},
-          {:ok, Term.tv(ctor, v)} | {:error, term}
-        ) :: {:ok, Term.tv(ctor, v)} | {:error, term}
+          {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())},
+          {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())}
+        ) :: {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())}
         when ctor: term, v: term
   defp bintree_pair_to_term_result_left(left_result, right_result) do
     with {:ok, left_term} <- left_result,
@@ -289,7 +289,7 @@ defmodule NockPoly.BinTreeTerm do
           {:ok, Term.com_tv(ctor, [right_child | children])}
 
         {:tvar, v} ->
-          {:error, {:variable_in_application_position, v, right_child}}
+          {:error, [{:variable_in_application_position, v, right_child}]}
       end
     end
   end
@@ -351,7 +351,7 @@ defmodule NockPoly.BinTreeTerm do
       {:ok, term} ->
         term
 
-      {:error, {:variable_in_application_position, v, right_child}} ->
+      {:error, [{:variable_in_application_position, v, right_child}]} ->
         raise ArgumentError,
               "Cannot convert binary tree to term: variable #{inspect(v)} " <>
                 "appears in application position with argument #{inspect(right_child)}"
@@ -379,7 +379,7 @@ defmodule NockPoly.BinTreeTerm do
       {:ok, term} ->
         term
 
-      {:error, {:non_nullary_term_in_constructor_position, term}} ->
+      {:error, [{:non_nullary_term_in_constructor_position, term}]} ->
         raise ArgumentError,
               "Cannot convert binary tree to term: non-nullary term #{inspect(term)} " <>
                 "appears in constructor position"
@@ -420,12 +420,12 @@ defmodule NockPoly.BinTreeTerm do
       {:ok, term} ->
         term
 
-      {:error, {:non_nullary_term_in_constructor_position, term}} ->
+      {:error, [{:non_nullary_term_in_constructor_position, term}]} ->
         raise ArgumentError,
               "Cannot convert binary tree to term: non-nullary term #{inspect(term)} " <>
                 "appears in constructor position"
 
-      {:error, {:variable_in_constructor_position, v}} ->
+      {:error, [{:variable_in_constructor_position, v}]} ->
         raise ArgumentError,
               "Cannot convert binary tree to term: variable #{inspect(v)} " <>
                 "appears in constructor position"

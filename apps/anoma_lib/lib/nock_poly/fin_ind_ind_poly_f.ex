@@ -127,7 +127,7 @@ defmodule NockPoly.FinIndIndPolyF do
           ind_ind_f1_rep(),
           # target
           ind_ind_f1_rep()
-        ) :: :ok | {:error, atom()}
+        ) :: :ok | {:error, nonempty_list(term())}
   def validate_representable_nt(
         %{
           base_field_map: base_field_map,
@@ -139,29 +139,23 @@ defmodule NockPoly.FinIndIndPolyF do
     source_base_field_count = length(source_rep)
     target_base_field_count = length(target_rep)
 
-    # Validate base field mapping
     with :ok <-
            Term.validate_fin_mapping(
              base_field_map,
              target_base_field_count,
              source_base_field_count
            ) do
-      # Validate dependent field mappings
       if length(dep_field_maps) != target_base_field_count do
-        {:error, :invalid_dep_field_maps_length}
+        {:error, [:invalid_dep_field_maps_length]}
       else
-        # Check each dependent field mapping
         dep_mapping_results =
           Enum.with_index(dep_field_maps)
           |> Enum.map(fn {dep_map, target_idx} ->
-            # Get the source field this target field maps to
             source_idx = Enum.at(base_field_map, target_idx)
 
-            # Get dependent field counts for target and source
             target_dep_count = Enum.at(target_rep, target_idx)
             source_dep_count = Enum.at(source_rep, source_idx)
 
-            # Validate this dependent field mapping using fin_mapping
             Term.validate_fin_mapping(
               dep_map,
               target_dep_count,
@@ -169,13 +163,15 @@ defmodule NockPoly.FinIndIndPolyF do
             )
           end)
 
-        # Check for any errors in dependent mappings
-        errors = Enum.filter(dep_mapping_results, &(&1 != :ok))
+        errors =
+          dep_mapping_results
+          |> Enum.filter(&(&1 != :ok))
+          |> Enum.flat_map(fn {:error, errs} -> errs end)
 
         if Enum.empty?(errors) do
           :ok
         else
-          {:error, {:invalid_dependent_mappings, errors}}
+          {:error, errors}
         end
       end
     end
@@ -185,7 +181,7 @@ defmodule NockPoly.FinIndIndPolyF do
   I validate a natural transformation between IndIndF1 instances.
   """
   @spec validate_ind_ind_f1_nt(ind_ind_f1_nt(), ind_ind_f1(), ind_ind_f1()) ::
-          :ok | {:error, atom()}
+          :ok | {:error, nonempty_list(term())}
   def validate_ind_ind_f1_nt(
         %{
           pos_map: pos_map,
@@ -197,18 +193,15 @@ defmodule NockPoly.FinIndIndPolyF do
     source_pos_count = length(source)
     target_pos_count = length(target)
 
-    # Validate position mapping
     with :ok <-
            Term.validate_fin_mapping(
              pos_map,
              source_pos_count,
              target_pos_count
            ) do
-      # Validate length of rep_transformations
       if length(rep_transformations) != source_pos_count do
-        {:error, :invalid_rep_transformations_length}
+        {:error, [:invalid_rep_transformations_length]}
       else
-        # Validate each representable transformation
         rep_nt_results =
           Enum.with_index(rep_transformations)
           |> Enum.map(fn {rep_nt, source_idx} ->
@@ -219,13 +212,15 @@ defmodule NockPoly.FinIndIndPolyF do
             validate_representable_nt(rep_nt, source_rep, target_rep)
           end)
 
-        # Check for any errors in representable transformations
-        errors = Enum.filter(rep_nt_results, &(&1 != :ok))
+        errors =
+          rep_nt_results
+          |> Enum.filter(&(&1 != :ok))
+          |> Enum.flat_map(fn {:error, errs} -> errs end)
 
         if Enum.empty?(errors) do
           :ok
         else
-          {:error, {:invalid_representable_transformations, errors}}
+          {:error, errors}
         end
       end
     end
@@ -238,7 +233,7 @@ defmodule NockPoly.FinIndIndPolyF do
           ind_ind_f1_slice(),
           ind_ind_f1()
         ) ::
-          :ok | {:error, atom()}
+          :ok | {:error, nonempty_list(term())}
   def validate_ind_ind_f1_slice(%{total: total, projection: projection}, base) do
     validate_ind_ind_f1_nt(projection, total, base)
   end
@@ -246,7 +241,8 @@ defmodule NockPoly.FinIndIndPolyF do
   @doc """
   I validate a complete IndIndF to ensure all its parts are well-formed.
   """
-  @spec validate_ind_ind_f(ind_ind_f()) :: :ok | {:error, atom()}
+  @spec validate_ind_ind_f(ind_ind_f()) ::
+          :ok | {:error, nonempty_list(term())}
   def validate_ind_ind_f(%{base: base, slice: slice}) do
     validate_ind_ind_f1_slice(slice, base)
   end
@@ -257,10 +253,10 @@ defmodule NockPoly.FinIndIndPolyF do
   The term constructor must be either {:base, pos} or {:dep, pos} to explicitly
   indicate which type it belongs to.
 
-  Returns either {:ok, type_index} or {:error, reason}.
+  Returns either {:ok, type_index} or {:error, errors}.
   """
   @spec typecheck(Term.tv(any(), none()), ind_ind_f()) ::
-          {:ok, non_neg_integer()} | {:error, any()}
+          {:ok, non_neg_integer()} | {:error, nonempty_list(term())}
   def typecheck(term, ind_ind_f) do
     case Term.out_tv(term) do
       {:tcom, {{:base, pos}, fields}} ->
@@ -271,29 +267,30 @@ defmodule NockPoly.FinIndIndPolyF do
 
       {:tcom, {ctor, _}} ->
         {:error,
-         {:invalid_constructor_format, ctor,
-          "Expected {:base, pos} or {:dep, pos}"}}
+         [
+           {:invalid_constructor_format, ctor,
+            "Expected {:base, pos} or {:dep, pos}"}
+         ]}
     end
   end
 
   @doc """
   I validate a term with a base type constructor.
 
-  Returns either {:ok, 0} (for base type) or {:error, reason}.
+  Returns either {:ok, 0} (for base type) or {:error, errors}.
   """
   @spec typecheck_base_constructor(
           non_neg_integer(),
           [Term.tv(any(), any())],
           ind_ind_f()
         ) ::
-          {:ok, 0} | {:error, any()}
+          {:ok, 0} | {:error, nonempty_list(term())}
   def typecheck_base_constructor(pos, fields, %{base: base} = ind_ind_f) do
     positions = length(base)
 
     if pos < 0 or pos >= positions do
-      {:error, {:invalid_constructor, {:base, pos}}}
+      {:error, [{:invalid_constructor, {:base, pos}}]}
     else
-      # Get expected field count for this constructor
       ctor_rep = Enum.at(base, pos)
       base_field_count = length(ctor_rep)
       dep_field_count = Enum.sum(ctor_rep)
@@ -301,14 +298,14 @@ defmodule NockPoly.FinIndIndPolyF do
 
       if length(fields) != expected_field_count do
         {:error,
-         {:invalid_field_count, {:base, pos}, expected_field_count,
-          length(fields)}}
+         [
+           {:invalid_field_count, {:base, pos}, expected_field_count,
+            length(fields)}
+         ]}
       else
-        # Extract base and dependent fields
         base_fields = Enum.take(fields, base_field_count)
         dep_fields = Enum.drop(fields, base_field_count)
 
-        # Check fields and ensure they have the correct types
         with :ok <- check_fields(base_fields, ind_ind_f, 0),
              :ok <- check_fields(dep_fields, ind_ind_f, 1) do
           {:ok, 0}
@@ -320,14 +317,14 @@ defmodule NockPoly.FinIndIndPolyF do
   @doc """
   I validate a term with a dependent type constructor.
 
-  Returns either {:ok, 1} (for dependent type) or {:error, reason}.
+  Returns either {:ok, 1} (for dependent type) or {:error, errors}.
   """
   @spec typecheck_dep_constructor(
           non_neg_integer(),
           [Term.tv(any(), any())],
           ind_ind_f()
         ) ::
-          {:ok, 1} | {:error, any()}
+          {:ok, 1} | {:error, nonempty_list(term())}
   def typecheck_dep_constructor(
         pos,
         fields,
@@ -336,9 +333,8 @@ defmodule NockPoly.FinIndIndPolyF do
     positions = length(dep_type)
 
     if pos < 0 or pos >= positions do
-      {:error, {:invalid_constructor, {:dep, pos}}}
+      {:error, [{:invalid_constructor, {:dep, pos}}]}
     else
-      # Get expected field count for this constructor
       ctor_rep = Enum.at(dep_type, pos)
       base_field_count = length(ctor_rep)
       dep_field_count = Enum.sum(ctor_rep)
@@ -346,14 +342,14 @@ defmodule NockPoly.FinIndIndPolyF do
 
       if length(fields) != expected_field_count do
         {:error,
-         {:invalid_field_count, {:dep, pos}, expected_field_count,
-          length(fields)}}
+         [
+           {:invalid_field_count, {:dep, pos}, expected_field_count,
+            length(fields)}
+         ]}
       else
-        # Extract base and dependent fields
         base_fields = Enum.take(fields, base_field_count)
         dep_fields = Enum.drop(fields, base_field_count)
 
-        # Check fields and ensure they have the correct types
         with :ok <- check_fields(base_fields, ind_ind_f, 0),
              :ok <- check_fields(dep_fields, ind_ind_f, 1) do
           {:ok, 1}
@@ -365,9 +361,8 @@ defmodule NockPoly.FinIndIndPolyF do
   @spec check_fields(
           [Term.tv(any(), any())],
           ind_ind_f(),
-          # expected_type: 0 = base, 1 = dependent
           non_neg_integer()
-        ) :: :ok | {:error, any()}
+        ) :: :ok | {:error, nonempty_list(term())}
   defp check_fields(fields, ind_ind_f, expected_type) do
     if Enum.empty?(fields) do
       :ok
@@ -380,7 +375,7 @@ defmodule NockPoly.FinIndIndPolyF do
                 :ok
               else
                 {:error,
-                 {:invalid_field_type, field, expected_type, actual_type}}
+                 [{:invalid_field_type, field, expected_type, actual_type}]}
               end
 
             error ->
@@ -388,12 +383,15 @@ defmodule NockPoly.FinIndIndPolyF do
           end
         end)
 
-      errors = Enum.filter(field_check_results, &(&1 != :ok))
+      errors =
+        field_check_results
+        |> Enum.filter(&(&1 != :ok))
+        |> Enum.flat_map(fn {:error, errs} -> errs end)
 
       if Enum.empty?(errors) do
         :ok
       else
-        {:error, {:invalid_fields, errors}}
+        {:error, errors}
       end
     end
   end

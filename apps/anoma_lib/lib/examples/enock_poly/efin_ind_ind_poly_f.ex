@@ -126,7 +126,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     invalid_term = tvc0({:base, 3})
 
     assert match?(
-             {:error, {:invalid_constructor, _}},
+             {:error, [{:invalid_constructor, _}]},
              IndIndF.typecheck(invalid_term, stmlf)
            )
 
@@ -142,7 +142,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
       ])
 
     assert match?(
-             {:error, {:invalid_constructor_format, _, _}},
+             {:error, [{:invalid_constructor_format, _, _}]},
              IndIndF.typecheck(invalid_format_term, stmlf)
            )
 
@@ -165,11 +165,11 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     assert :ok = Term.validate_fin_mapping([0, 1, 2], 3, 3)
 
     # Invalid mapping length
-    assert {:error, :invalid_mapping_length} =
+    assert {:error, [:invalid_mapping_length]} =
              Term.validate_fin_mapping([0, 1], 3, 3)
 
     # Mapping out of range
-    assert {:error, :mapping_out_of_range} =
+    assert {:error, [:mapping_out_of_range]} =
              Term.validate_fin_mapping([0, 3, 1], 3, 3)
 
     # Create base specs for further validation testing
@@ -200,7 +200,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
       dep_field_maps: [[0], []]
     }
 
-    assert {:error, :invalid_mapping_length} =
+    assert {:error, [:invalid_mapping_length]} =
              IndIndF.validate_representable_nt(
                invalid_rep_nt1,
                source_rep,
@@ -214,11 +214,29 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
       dep_field_maps: [[]]
     }
 
-    assert {:error, :invalid_dep_field_maps_length} =
+    assert {:error, [:invalid_dep_field_maps_length]} =
              IndIndF.validate_representable_nt(
                invalid_rep_nt2,
                source_rep,
                target_rep
+             )
+
+    # Invalid dep field mapping (out of range)
+    # Use different source/target to have actual dependent fields to test
+    source_rep_with_deps = [2, 1]
+    target_rep_with_deps = [1, 1]
+
+    invalid_rep_nt3 = %IndIndF.RepresentableNt{
+      base_field_map: [0, 1],
+      # First dep map has out-of-range index (2 >= source dep count of 2)
+      dep_field_maps: [[2], [0]]
+    }
+
+    assert {:error, [:mapping_out_of_range]} =
+             IndIndF.validate_representable_nt(
+               invalid_rep_nt3,
+               source_rep_with_deps,
+               target_rep_with_deps
              )
 
     # Create specs for IndIndF1 natural transformation validation
@@ -278,7 +296,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
       ]
     }
 
-    assert {:error, :invalid_mapping_length} =
+    assert {:error, [:invalid_mapping_length]} =
              IndIndF.validate_ind_ind_f1_nt(
                invalid_ind_f1_nt1,
                source_ind_f1,
@@ -297,9 +315,34 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
       ]
     }
 
-    assert {:error, :invalid_rep_transformations_length} =
+    assert {:error, [:invalid_rep_transformations_length]} =
              IndIndF.validate_ind_ind_f1_nt(
                invalid_ind_f1_nt2,
+               source_ind_f1,
+               target_ind_f1
+             )
+
+    # Invalid rep_transformation internal mapping
+    invalid_ind_f1_nt3 = %IndIndF.IndIndF1Nt{
+      pos_map: [0, 1],
+      rep_transformations: [
+        # Valid first transformation
+        %IndIndF.RepresentableNt{
+          base_field_map: [0],
+          dep_field_maps: [[]]
+        },
+        # Invalid second transformation - dep map out of range
+        %IndIndF.RepresentableNt{
+          base_field_map: [0, 1],
+          # First dep map has out-of-range index (5 >= source dep count)
+          dep_field_maps: [[5], [0]]
+        }
+      ]
+    }
+
+    assert {:error, [:mapping_out_of_range]} =
+             IndIndF.validate_ind_ind_f1_nt(
+               invalid_ind_f1_nt3,
                source_ind_f1,
                target_ind_f1
              )
@@ -346,7 +389,7 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
       projection: valid_slice.projection
     }
 
-    assert {:error, :invalid_mapping_length} =
+    assert {:error, [:invalid_mapping_length]} =
              IndIndF.validate_ind_ind_f1_slice(invalid_slice, base_type)
 
     # Test validate_ind_ind_f
@@ -408,14 +451,14 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     # Should have 2 fields
     invalid_field_count_base = tvc({:base, 1}, [base0_term])
 
-    assert {:error, {:invalid_field_count, _, 2, 1}} =
+    assert {:error, [{:invalid_field_count, _, 2, 1}]} =
              IndIndF.typecheck(invalid_field_count_base, stmlf)
 
     # Test field count errors in dependent constructor
     # Should have 4 fields (2 base + 2 dep)
     invalid_field_count_dep = tvc({:dep, 1}, [base0_term])
 
-    assert {:error, {:invalid_field_count, _, 4, 1}} =
+    assert {:error, [{:invalid_field_count, _, 4, 1}]} =
              IndIndF.typecheck(invalid_field_count_dep, stmlf)
 
     # Create a valid constructor with fields of correct type
@@ -426,17 +469,19 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     # This should fail type checking because dep0_term is not allowed as a field
     # in a base type constructor
     invalid_type_term = tvc({:base, 1}, [base0_term, dep0_term])
-    {:error, error_info} = IndIndF.typecheck(invalid_type_term, stmlf)
+    {:error, errors} = IndIndF.typecheck(invalid_type_term, stmlf)
 
-    # Verify the error is of the form {:invalid_fields, _}
-    assert match?({:invalid_fields, _}, error_info)
+    # Verify errors list contains an invalid_field_type error
+    assert Enum.any?(errors, fn e ->
+             match?({:invalid_field_type, _, _, _}, e)
+           end)
 
     # Test invalid term format - using a term with an invalid structure
     # but still with the proper tagged variant format
     invalid_term_format = {:in_tv, {:tcom, {:unknown_format, []}}}
 
     assert match?(
-             {:error, {:invalid_constructor_format, _, _}},
+             {:error, [{:invalid_constructor_format, _, _}]},
              IndIndF.typecheck(invalid_term_format, stmlf)
            )
 
@@ -449,8 +494,11 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
     term_with_invalid_field =
       tvc({:base, 1}, [invalid_field, invalid_field])
 
-    assert {:error, {:invalid_fields, _}} =
-             IndIndF.typecheck(term_with_invalid_field, stmlf)
+    {:error, field_errors} = IndIndF.typecheck(term_with_invalid_field, stmlf)
+
+    assert Enum.any?(field_errors, fn e ->
+             match?({:invalid_constructor, _}, e)
+           end)
 
     stmlf
   end

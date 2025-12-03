@@ -137,9 +137,9 @@ defmodule NockPoly.FinSlicePolyF do
   3. Each entry in ctor_counts must be non-negative
   4. ctor_types must return valid type indices for each valid constructor
 
-  Returns :ok if valid, or {:error, reason} if invalid.
+  Returns :ok if valid, or {:error, errors} if invalid.
   """
-  @spec validate_typespec(typespec) :: :ok | {:error, atom()}
+  @spec validate_typespec(typespec) :: :ok | {:error, nonempty_list(atom())}
   def validate_typespec(
         %{
           output_types: output_types,
@@ -148,14 +148,13 @@ defmodule NockPoly.FinSlicePolyF do
       ) do
     cond do
       length(ctor_counts) != output_types ->
-        {:error, :ctor_counts_length_mismatch}
+        {:error, [:ctor_counts_length_mismatch]}
 
       Enum.any?(ctor_counts, &(&1 < 0)) ->
-        {:error, :negative_ctor_count}
+        {:error, [:negative_ctor_count]}
 
-      # Validate ctor_types for each valid type and constructor
       !validate_ctor_types(typespec) ->
-        {:error, :invalid_ctor_types}
+        {:error, [:invalid_ctor_types]}
 
       true ->
         :ok

@@ -101,7 +101,7 @@ defmodule Examples.ENockPoly.EFinSlicePolyF do
     invalid_typespec = %SliceF.Typespec{typespec | ctor_counts: [3]}
 
     assert SliceF.validate_typespec(invalid_typespec) ==
-             {:error, :ctor_counts_length_mismatch}
+             {:error, [:ctor_counts_length_mismatch]}
 
     typespec
   end

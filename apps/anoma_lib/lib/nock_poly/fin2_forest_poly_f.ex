@@ -182,22 +182,22 @@ defmodule NockPoly.Fin2ForestPolyF do
   Validate that a forest object is valid for the given forest.
   """
   @spec validate_forest_obj(forest_obj(), fin2_forest()) ::
-          :ok | {:error, atom()}
+          :ok | {:error, nonempty_list(atom())}
   def validate_forest_obj({:base, idx}, forest) do
     if idx >= 0 and idx < num_base_types(forest) do
       :ok
     else
-      {:error, :invalid_base_index}
+      {:error, [:invalid_base_index]}
     end
   end
 
   def validate_forest_obj({:dep, base_idx, dep_idx}, forest) do
     cond do
       base_idx < 0 or base_idx >= num_base_types(forest) ->
-        {:error, :invalid_base_index}
+        {:error, [:invalid_base_index]}
 
       dep_idx < 0 or dep_idx >= num_dep_types(forest, base_idx) ->
-        {:error, :invalid_dep_index}
+        {:error, [:invalid_dep_index]}
 
       true ->
         :ok
@@ -207,7 +207,8 @@ defmodule NockPoly.Fin2ForestPolyF do
   @doc """
   Validate a forest specification.
   """
-  @spec validate_forest_spec(forest_poly_spec()) :: :ok | {:error, atom()}
+  @spec validate_forest_spec(forest_poly_spec()) ::
+          :ok | {:error, nonempty_list(atom())}
   def validate_forest_spec(
         %{
           forest: forest,
@@ -219,13 +220,13 @@ defmodule NockPoly.Fin2ForestPolyF do
 
     cond do
       length(base_positions) != num_bases ->
-        {:error, :base_positions_length_mismatch}
+        {:error, [:base_positions_length_mismatch]}
 
       length(dep_positions) != num_bases ->
-        {:error, :dep_positions_length_mismatch}
+        {:error, [:dep_positions_length_mismatch]}
 
       !validate_all_positions(spec) ->
-        {:error, :invalid_position_specs}
+        {:error, [:invalid_position_specs]}
 
       true ->
         :ok
@@ -304,18 +305,18 @@ defmodule NockPoly.Fin2ForestPolyF do
   @doc """
   Get the expected parameters for a constructor.
 
-  Returns {:ok, [forest_obj]} or {:error, reason}.
+  Returns {:ok, [forest_obj]} or {:error, errors}.
   """
   @spec get_ctor_params(forest_poly_spec(), forest_ctor()) ::
-          {:ok, [forest_obj()]} | {:error, atom()}
+          {:ok, [forest_obj()]} | {:error, nonempty_list(atom())}
   def get_ctor_params(spec, {:base, type_idx, ctor_idx}) do
     case Enum.at(spec.base_positions, type_idx) do
       nil ->
-        {:error, :invalid_type_index}
+        {:error, [:invalid_type_index]}
 
       pos_map ->
         case Map.get(pos_map, ctor_idx) do
-          nil -> {:error, :invalid_ctor_index}
+          nil -> {:error, [:invalid_ctor_index]}
           params -> {:ok, params}
         end
     end
@@ -324,16 +325,16 @@ defmodule NockPoly.Fin2ForestPolyF do
   def get_ctor_params(spec, {:dep, base_idx, dep_idx, ctor_idx}) do
     case Enum.at(spec.dep_positions, base_idx) do
       nil ->
-        {:error, :invalid_base_index}
+        {:error, [:invalid_base_index]}
 
       dep_list ->
         case Enum.at(dep_list, dep_idx) do
           nil ->
-            {:error, :invalid_dep_index}
+            {:error, [:invalid_dep_index]}
 
           pos_map ->
             case Map.get(pos_map, ctor_idx) do
-              nil -> {:error, :invalid_ctor_index}
+              nil -> {:error, [:invalid_ctor_index]}
               params -> {:ok, params}
             end
         end
@@ -451,7 +452,7 @@ defmodule NockPoly.Fin2ForestPolyF do
   Returns {:ok, forest_obj} with the type of the term, or {:error, errors}.
   """
   @spec typecheck(Term.tv(forest_ctor(), v), forest_poly_spec()) ::
-          {:ok, forest_obj()} | {:error, [typecheck_error(v)]}
+          {:ok, forest_obj()} | {:error, nonempty_list(typecheck_error(v))}
         when v: term
   def typecheck(term, spec) do
     Term.eval(

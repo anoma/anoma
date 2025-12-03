@@ -591,14 +591,14 @@ defmodule NockPoly.Term do
           non_neg_integer(),
           non_neg_integer()
         ) ::
-          :ok | {:error, atom()}
+          :ok | {:error, nonempty_list(atom())}
   def validate_fin_mapping(mapping, domain_size, codomain_size) do
     cond do
       length(mapping) != domain_size ->
-        {:error, :invalid_mapping_length}
+        {:error, [:invalid_mapping_length]}
 
       Enum.any?(mapping, &(&1 >= codomain_size)) ->
-        {:error, :mapping_out_of_range}
+        {:error, [:mapping_out_of_range]}
 
       true ->
         :ok
