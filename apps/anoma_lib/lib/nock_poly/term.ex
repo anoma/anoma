@@ -31,11 +31,26 @@ defmodule NockPoly.Term do
   @typedoc "I generate a generic polynomial term parameterized on a constructor type."
   @type termf(ctor, x) :: {ctor, [x]}
 
-  @doc "I am the morphism-map component of the functor `termf`."
+  @doc "I am the morphism-map component of the bifunctor `termf` in the constructor parameter."
+  @spec termf_map_ctor((ctor1 -> ctor2), termf(ctor1, x)) :: termf(ctor2, x)
+        when ctor1: term, ctor2: term, x: term
+  def termf_map_ctor(fc, {c, children}) do
+    {fc.(c), children}
+  end
+
+  @doc "I am the morphism-map component of the bifunctor `termf` in the recursive parameter."
   @spec termf_map((a -> b), termf(ctor, a)) :: termf(ctor, b)
         when ctor: term, a: term, b: term
   def termf_map(f, {c, children}) do
     {c, Enum.map(children, f)}
+  end
+
+  @doc "I am the bimap for the bifunctor `termf`, mapping both constructor and recursive parameters."
+  @spec termf_bimap((ctor1 -> ctor2), (a -> b), termf(ctor1, a)) ::
+          termf(ctor2, b)
+        when ctor1: term, ctor2: term, a: term, b: term
+  def termf_bimap(fc, fx, term) do
+    termf_map(fx, termf_map_ctor(fc, term))
   end
 
   @typedoc "Type of algebras of `termf`."
@@ -46,18 +61,66 @@ defmodule NockPoly.Term do
   @typedoc "I generate open terms:  terms of `t` potentially containing variables."
   @type termfv(ctor, v, x) :: {:tvar, v} | {:tcom, termf(ctor, x)}
 
-  @doc "I am the morphism-map component of the bifunctor `termfv(ctor)`."
+  @doc "I am the morphism-map component of the trifunctor `termfv` in the constructor parameter."
+  @spec termfv_map_ctor((ctor1 -> ctor2), termfv(ctor1, v, x)) ::
+          termfv(ctor2, v, x)
+        when ctor1: term, ctor2: term, v: term, x: term
+  def termfv_map_ctor(fc, term) do
+    case term do
+      {:tcom, {c, children}} ->
+        {:tcom, {fc.(c), children}}
+
+      {:tvar, var} ->
+        {:tvar, var}
+    end
+  end
+
+  @doc "I am the morphism-map component of the trifunctor `termfv` in the variable parameter."
+  @spec termfv_map_var((v -> w), termfv(ctor, v, x)) ::
+          termfv(ctor, w, x)
+        when ctor: term, v: term, w: term, x: term
+  def termfv_map_var(fv, term) do
+    case term do
+      {:tcom, {c, children}} ->
+        {:tcom, {c, children}}
+
+      {:tvar, var} ->
+        {:tvar, fv.(var)}
+    end
+  end
+
+  @doc "I am the morphism-map component of the trifunctor `termfv` in the recursive parameter."
+  @spec termfv_map((x -> y), termfv(ctor, v, x)) ::
+          termfv(ctor, v, y)
+        when ctor: term, v: term, x: term, y: term
+  def termfv_map(fx, term) do
+    case term do
+      {:tcom, {c, children}} ->
+        {:tcom, termf_map(fx, {c, children})}
+
+      {:tvar, var} ->
+        {:tvar, var}
+    end
+  end
+
+  @doc "I am the bimap for the trifunctor `termfv`, mapping variable and recursive parameters."
   @spec termfv_bimap((v -> w), (x -> y), termfv(ctor, v, x)) ::
           termfv(ctor, w, y)
         when ctor: term, v: term, w: term, x: term, y: term
-  def termfv_bimap(f, g, term) do
-    case term do
-      {:tcom, {c, children}} ->
-        {:tcom, termf_map(g, {c, children})}
+  def termfv_bimap(fv, fx, term) do
+    termfv_map(fx, termfv_map_var(fv, term))
+  end
 
-      {:tvar, var} ->
-        {:tvar, f.(var)}
-    end
+  @doc "I am the trimap for the trifunctor `termfv`, mapping constructor, variable, and recursive parameters."
+  @spec termfv_trimap(
+          (ctor1 -> ctor2),
+          (v -> w),
+          (x -> y),
+          termfv(ctor1, v, x)
+        ) :: termfv(ctor2, w, y)
+        when ctor1: term, ctor2: term, v: term, w: term, x: term, y: term
+  def termfv_trimap(fc, fv, fx, term) do
+    termfv_map(fx, termfv_map_var(fv, termfv_map_ctor(fc, term)))
   end
 
   # I am the carrier of the initial algebra of `termfv(ctor, v)`, which is

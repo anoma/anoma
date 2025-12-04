@@ -482,6 +482,120 @@ defmodule Examples.ENockPoly.ETerm do
   # Helper function to transform terms
   defp term_times2(term), do: NockPoly.Term.tcmap(&times2/1, term)
 
+  def termf_map_ctor_test() do
+    term_f = {:foo, [1, 2, 3]}
+    result = Term.termf_map_ctor(&String.to_atom("mapped_#{&1}"), term_f)
+    assert result == {:mapped_foo, [1, 2, 3]}
+    result
+  end
+
+  def termf_map_ctor_empty_children_test() do
+    term_f = {:bar, []}
+    result = Term.termf_map_ctor(&String.to_atom("mapped_#{&1}"), term_f)
+    assert result == {:mapped_bar, []}
+    result
+  end
+
+  def termf_bimap_test() do
+    term_f = {:foo, [1, 2, 3]}
+
+    result =
+      Term.termf_bimap(
+        &String.to_atom("mapped_#{&1}"),
+        &(&1 * 10),
+        term_f
+      )
+
+    assert result == {:mapped_foo, [10, 20, 30]}
+    result
+  end
+
+  def termf_bimap_empty_children_test() do
+    term_f = {:bar, []}
+
+    result =
+      Term.termf_bimap(
+        &String.to_atom("mapped_#{&1}"),
+        &Function.identity/1,
+        term_f
+      )
+
+    assert result == {:mapped_bar, []}
+    result
+  end
+
+  def termfv_map_ctor_on_variable_test() do
+    term_fv = {:tvar, 42}
+    result = Term.termfv_map_ctor(&Function.identity/1, term_fv)
+    assert result == {:tvar, 42}
+    result
+  end
+
+  def termfv_map_ctor_on_constructor_test() do
+    term_fv = {:tcom, {:foo, [1, 2]}}
+    result = Term.termfv_map_ctor(&String.to_atom("mapped_#{&1}"), term_fv)
+    assert result == {:tcom, {:mapped_foo, [1, 2]}}
+    result
+  end
+
+  def termfv_map_var_on_variable_test() do
+    term_fv = {:tvar, 42}
+    result = Term.termfv_map_var(&(&1 + 1), term_fv)
+    assert result == {:tvar, 43}
+    result
+  end
+
+  def termfv_map_var_on_constructor_test() do
+    term_fv = {:tcom, {:foo, [1, 2]}}
+    result = Term.termfv_map_var(&Function.identity/1, term_fv)
+    assert result == {:tcom, {:foo, [1, 2]}}
+    result
+  end
+
+  def termfv_map_on_variable_test() do
+    term_fv = {:tvar, 42}
+    result = Term.termfv_map(&Function.identity/1, term_fv)
+    assert result == {:tvar, 42}
+    result
+  end
+
+  def termfv_map_on_constructor_test() do
+    term_fv = {:tcom, {:foo, [1, 2]}}
+    result = Term.termfv_map(&(&1 * 10), term_fv)
+    assert result == {:tcom, {:foo, [10, 20]}}
+    result
+  end
+
+  def termfv_trimap_on_variable_test() do
+    term_fv = {:tvar, 42}
+
+    result =
+      Term.termfv_trimap(
+        &Function.identity/1,
+        &(&1 + 1),
+        &Function.identity/1,
+        term_fv
+      )
+
+    assert result == {:tvar, 43}
+    result
+  end
+
+  def termfv_trimap_on_constructor_test() do
+    term_fv = {:tcom, {:foo, [1, 2]}}
+
+    result =
+      Term.termfv_trimap(
+        &String.to_atom("mapped_#{&1}"),
+        &Function.identity/1,
+        &(&1 * 10),
+        term_fv
+      )
+
+    assert result == {:tcom, {:mapped_foo, [10, 20]}}
+    result
+  end
+
   def termfv_bimap_variable_test() do
     res =
       NockPoly.Term.termfv_bimap(&add1/1, &times2/1, Term.out_tv(tvv(3)))
