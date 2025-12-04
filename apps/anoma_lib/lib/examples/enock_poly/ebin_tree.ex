@@ -43,6 +43,23 @@ defmodule Examples.ENockPoly.EBinTree do
     tree
   end
 
+  def functor_bintreef_map_atom_over_atom() do
+    tree_f = {:atom, :foo}
+
+    result =
+      BinTree.bintreef_map_atom(&String.to_atom("mapped_#{&1}"), tree_f)
+
+    assert result == {:atom, :mapped_foo}
+    result
+  end
+
+  def functor_bintreef_map_atom_over_pair() do
+    tree_f = {:pair, 1, 2}
+    result = BinTree.bintreef_map_atom(&Function.identity/1, tree_f)
+    assert result == {:pair, 1, 2}
+    result
+  end
+
   def functor_bintreef_map_over_atom() do
     tree_f = {:atom, :foo}
     result = BinTree.bintreef_map(&String.to_atom("mapped_#{&1}"), tree_f)
@@ -53,6 +70,100 @@ defmodule Examples.ENockPoly.EBinTree do
   def functor_bintreef_map_over_pair() do
     tree_f = {:pair, 1, 2}
     result = BinTree.bintreef_map(&(&1 * 10), tree_f)
+    assert result == {:pair, 10, 20}
+    result
+  end
+
+  def functor_bintreef_bimap_over_atom() do
+    tree_f = {:atom, :foo}
+
+    result =
+      BinTree.bintreef_bimap(
+        &String.to_atom("mapped_#{&1}"),
+        &Function.identity/1,
+        tree_f
+      )
+
+    assert result == {:atom, :mapped_foo}
+    result
+  end
+
+  def functor_bintreef_bimap_over_pair() do
+    tree_f = {:pair, 1, 2}
+
+    result =
+      BinTree.bintreef_bimap(
+        &Function.identity/1,
+        &(&1 * 10),
+        tree_f
+      )
+
+    assert result == {:pair, 10, 20}
+    result
+  end
+
+  def functor_bintreefv_map_atom_over_variable() do
+    tree_fv = {:atom, {:btvar, 42}}
+    result = BinTree.bintreefv_map_atom(&Function.identity/1, tree_fv)
+    assert result == {:atom, {:btvar, 42}}
+    result
+  end
+
+  def functor_bintreefv_map_atom_over_atom() do
+    tree_fv = {:atom, {:btatom, :foo}}
+
+    result =
+      BinTree.bintreefv_map_atom(&String.to_atom("mapped_#{&1}"), tree_fv)
+
+    assert result == {:atom, {:btatom, :mapped_foo}}
+    result
+  end
+
+  def functor_bintreefv_map_atom_over_pair() do
+    tree_fv = {:pair, 1, 2}
+    result = BinTree.bintreefv_map_atom(&Function.identity/1, tree_fv)
+    assert result == {:pair, 1, 2}
+    result
+  end
+
+  def functor_bintreefv_map_var_over_variable() do
+    tree_fv = {:atom, {:btvar, 42}}
+    result = BinTree.bintreefv_map_var(&(&1 + 1), tree_fv)
+    assert result == {:atom, {:btvar, 43}}
+    result
+  end
+
+  def functor_bintreefv_map_var_over_atom() do
+    tree_fv = {:atom, {:btatom, :foo}}
+    result = BinTree.bintreefv_map_var(&(&1 + 1), tree_fv)
+    assert result == {:atom, {:btatom, :foo}}
+    result
+  end
+
+  def functor_bintreefv_map_var_over_pair() do
+    tree_fv = {:pair, 1, 2}
+    result = BinTree.bintreefv_map_var(&(&1 + 1), tree_fv)
+    assert result == {:pair, 1, 2}
+    result
+  end
+
+  def functor_bintreefv_map_over_variable() do
+    tree_fv = {:atom, {:btvar, 42}}
+    result = BinTree.bintreefv_map(&(&1 * 10), tree_fv)
+    assert result == {:atom, {:btvar, 42}}
+    result
+  end
+
+  def functor_bintreefv_map_over_atom() do
+    tree_fv = {:atom, {:btatom, :foo}}
+    result = BinTree.bintreefv_map(&(&1 * 10), tree_fv)
+    assert result == {:atom, {:btatom, :foo}}
+    result
+  end
+
+  def functor_bintreefv_map_over_pair() do
+    tree_fv = {:pair, 1, 2}
+    result = BinTree.bintreefv_map(&(&1 * 10), tree_fv)
     assert result == {:pair, 10, 20}
     result
   end
@@ -76,6 +187,51 @@ defmodule Examples.ENockPoly.EBinTree do
   def functor_bintreefv_bimap_over_pair() do
     tree_fv = {:pair, 1, 2}
     result = BinTree.bintreefv_bimap(&(&1 + 1), &(&1 * 10), tree_fv)
+    assert result == {:pair, 10, 20}
+    result
+  end
+
+  def functor_bintreefv_trimap_over_variable() do
+    tree_fv = {:atom, {:btvar, 42}}
+
+    result =
+      BinTree.bintreefv_trimap(
+        &Function.identity/1,
+        &(&1 + 1),
+        &Function.identity/1,
+        tree_fv
+      )
+
+    assert result == {:atom, {:btvar, 43}}
+    result
+  end
+
+  def functor_bintreefv_trimap_over_atom() do
+    tree_fv = {:atom, {:btatom, :foo}}
+
+    result =
+      BinTree.bintreefv_trimap(
+        &String.to_atom("mapped_#{&1}"),
+        &Function.identity/1,
+        &Function.identity/1,
+        tree_fv
+      )
+
+    assert result == {:atom, {:btatom, :mapped_foo}}
+    result
+  end
+
+  def functor_bintreefv_trimap_over_pair() do
+    tree_fv = {:pair, 1, 2}
+
+    result =
+      BinTree.bintreefv_trimap(
+        &Function.identity/1,
+        &Function.identity/1,
+        &(&1 * 10),
+        tree_fv
+      )
+
     assert result == {:pair, 10, 20}
     result
   end

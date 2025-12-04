@@ -35,7 +35,21 @@ defmodule NockPoly.BinTree do
   """
   @type bintreef(atom, x) :: {:atom, atom} | {:pair, x, x}
 
-  @doc "I am the morphism-map component of the functor `bintreef`."
+  @doc "I am the morphism-map component of the bifunctor `bintreef` in the atom parameter."
+  @spec bintreef_map_atom((atom1 -> atom2), bintreef(atom1, x)) ::
+          bintreef(atom2, x)
+        when atom1: term, atom2: term, x: term
+  def bintreef_map_atom(fa, tree) do
+    case tree do
+      {:atom, ea} ->
+        {:atom, fa.(ea)}
+
+      {:pair, left, right} ->
+        {:pair, left, right}
+    end
+  end
+
+  @doc "I am the morphism-map component of the bifunctor `bintreef` in the recursive parameter."
   @spec bintreef_map((a -> b), bintreef(atom, a)) :: bintreef(atom, b)
         when atom: term, a: term, b: term
   def bintreef_map(f, tree) do
@@ -46,6 +60,14 @@ defmodule NockPoly.BinTree do
       {:pair, left, right} ->
         {:pair, f.(left), f.(right)}
     end
+  end
+
+  @doc "I am the bimap for the bifunctor `bintreef`, mapping both atom and recursive parameters."
+  @spec bintreef_bimap((atom1 -> atom2), (a -> b), bintreef(atom1, a)) ::
+          bintreef(atom2, b)
+        when atom1: term, atom2: term, a: term, b: term
+  def bintreef_bimap(fa, fx, tree) do
+    bintreef_map(fx, bintreef_map_atom(fa, tree))
   end
 
   @typedoc "Type of algebras of `bintreef`."
@@ -73,11 +95,28 @@ defmodule NockPoly.BinTree do
   """
   @type bintreefv(atom, v, x) :: bintreef(either(atom, v), x)
 
-  @doc "I am the morphism-map component of the bifunctor `bintreefv(atom)`."
-  @spec bintreefv_bimap((v -> w), (x -> y), bintreefv(atom, v, x)) ::
-          bintreefv(atom, w, y)
-        when atom: term, v: term, w: term, x: term, y: term
-  def bintreefv_bimap(fv, fx, tree) do
+  @doc "I am the morphism-map component of the trifunctor `bintreefv` in the atom parameter."
+  @spec bintreefv_map_atom((atom1 -> atom2), bintreefv(atom1, v, x)) ::
+          bintreefv(atom2, v, x)
+        when atom1: term, atom2: term, v: term, x: term
+  def bintreefv_map_atom(fa, tree) do
+    case tree do
+      {:atom, {:btvar, v}} ->
+        {:atom, {:btvar, v}}
+
+      {:atom, {:btatom, ea}} ->
+        {:atom, {:btatom, fa.(ea)}}
+
+      {:pair, left, right} ->
+        {:pair, left, right}
+    end
+  end
+
+  @doc "I am the morphism-map component of the trifunctor `bintreefv` in the variable parameter."
+  @spec bintreefv_map_var((v -> w), bintreefv(atom, v, x)) ::
+          bintreefv(atom, w, x)
+        when atom: term, v: term, w: term, x: term
+  def bintreefv_map_var(fv, tree) do
     case tree do
       {:atom, {:btvar, v}} ->
         {:atom, {:btvar, fv.(v)}}
@@ -86,8 +125,45 @@ defmodule NockPoly.BinTree do
         {:atom, {:btatom, ea}}
 
       {:pair, left, right} ->
+        {:pair, left, right}
+    end
+  end
+
+  @doc "I am the morphism-map component of the trifunctor `bintreefv` in the recursive parameter."
+  @spec bintreefv_map((x -> y), bintreefv(atom, v, x)) ::
+          bintreefv(atom, v, y)
+        when atom: term, v: term, x: term, y: term
+  def bintreefv_map(fx, tree) do
+    case tree do
+      {:atom, {:btvar, v}} ->
+        {:atom, {:btvar, v}}
+
+      {:atom, {:btatom, ea}} ->
+        {:atom, {:btatom, ea}}
+
+      {:pair, left, right} ->
         {:pair, fx.(left), fx.(right)}
     end
+  end
+
+  @doc "I am the bimap for the trifunctor `bintreefv`, mapping variable and recursive parameters."
+  @spec bintreefv_bimap((v -> w), (x -> y), bintreefv(atom, v, x)) ::
+          bintreefv(atom, w, y)
+        when atom: term, v: term, w: term, x: term, y: term
+  def bintreefv_bimap(fv, fx, tree) do
+    bintreefv_map(fx, bintreefv_map_var(fv, tree))
+  end
+
+  @doc "I am the trimap for the trifunctor `bintreefv`, mapping atom, variable, and recursive parameters."
+  @spec bintreefv_trimap(
+          (atom1 -> atom2),
+          (v -> w),
+          (x -> y),
+          bintreefv(atom1, v, x)
+        ) :: bintreefv(atom2, w, y)
+        when atom1: term, atom2: term, v: term, w: term, x: term, y: term
+  def bintreefv_trimap(fa, fv, fx, tree) do
+    bintreefv_map(fx, bintreefv_map_var(fv, bintreefv_map_atom(fa, tree)))
   end
 
   @typedoc """
