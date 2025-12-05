@@ -311,59 +311,6 @@ defmodule NockPoly.BinTree do
   @typedoc "A closed binary tree with Nock noun labels."
   @type nock_noun_bt :: bt(Noun.t())
 
-  @doc """
-  I am the `eval` universal morphism for the free monad of binary trees.
-
-  I am the right adjunct of the free/forgetful adjunction between the
-  category of algebras of `bintreef` and the base category.
-
-  Because the free monad of a binary tree is isomorphic to a binary tree
-  with an `Either v atom` atom type, this is a binary tree catamorphism
-  specialized to handle variables.
-
-  I am implemented by translating the algebra to a slice algebra and
-  delegating to `slice_eval`.
-  """
-  @spec eval(bintree_alg(atom, r), (v -> r), btv(atom, v)) :: r
-        when atom: term, v: term, r: term
-  def eval(algebra, subst, tree) do
-    slice_alg = %{
-      atom: fn ea -> ea end,
-      pair: fn left_r, right_r -> {left_r, right_r} end,
-      from_atom: fn ea -> algebra.({:atom, ea}) end,
-      from_pair: fn {left_r, right_r} ->
-        algebra.({:pair, left_r, right_r})
-      end
-    }
-
-    slice_eval(slice_alg, subst, tree)
-  end
-
-  defmodule Unreachable do
-    @moduledoc """
-    I contain a function expected to be unreachable, factored out as a module
-    so that test coverage can ignore it.
-    """
-
-    @dialyzer {:nowarn_function, unreachable_var: 1}
-    @spec unreachable_var(none()) :: no_return()
-    def unreachable_var(var) do
-      raise "Variable in closed binary tree encountered: #{inspect(var)}"
-    end
-  end
-
-  @doc """
-  I am the catamorphism for closed binary trees.
-
-  I recursively fold the tree by applying the given algebra function to
-  each constructor along with the results from folding its children.
-  """
-  @spec cata(bt(atom), bintree_alg(atom, r)) :: r
-        when atom: term, r: term
-  def cata(tree, algebra) do
-    eval(algebra, &Unreachable.unreachable_var/1, tree)
-  end
-
   @typedoc """
   I am a slice algebra for binary trees.
 
@@ -381,6 +328,42 @@ defmodule NockPoly.BinTree do
           from_atom: (r_atom -> r_bt),
           from_pair: (r_pair -> r_bt)
         }
+
+  defmodule Unreachable do
+    @moduledoc """
+    I contain a function expected to be unreachable, factored out as a module
+    so that test coverage can ignore it.
+    """
+
+    @dialyzer {:nowarn_function, unreachable_var: 1}
+    @spec unreachable_var(none()) :: no_return()
+    def unreachable_var(var) do
+      raise "Variable in closed binary tree encountered: #{inspect(var)}"
+    end
+  end
+
+  @doc """
+  I am the slice eval morphism for a pair of binary trees with variables.
+
+  I am a convenience wrapper around `slice_eval` that:
+  1. Recursively evaluates both trees to get `r_bt` results
+  2. Applies the `pair` component to get `r_pair`
+
+  This is useful when the caller is primarily interested in the pair structure
+  rather than the overall tree structure.
+  """
+  @spec slice_eval_pair(
+          bintree_slice_alg(atom, r_bt, r_atom, r_pair),
+          (v -> r_bt),
+          btv(atom, v),
+          btv(atom, v)
+        ) :: r_pair
+        when atom: term, v: term, r_bt: term, r_atom: term, r_pair: term
+  def slice_eval_pair(slice_alg, subst, left_tree, right_tree) do
+    left_r = slice_eval(slice_alg, subst, left_tree)
+    right_r = slice_eval(slice_alg, subst, right_tree)
+    slice_alg.pair.(left_r, right_r)
+  end
 
   @doc """
   I am the slice eval morphism for binary trees with variables.
@@ -428,29 +411,6 @@ defmodule NockPoly.BinTree do
   end
 
   @doc """
-  I am the slice eval morphism for a pair of binary trees with variables.
-
-  I am a convenience wrapper around `slice_eval` that:
-  1. Recursively evaluates both trees to get `r_bt` results
-  2. Applies the `pair` component to get `r_pair`
-
-  This is useful when the caller is primarily interested in the pair structure
-  rather than the overall tree structure.
-  """
-  @spec slice_eval_pair(
-          bintree_slice_alg(atom, r_bt, r_atom, r_pair),
-          (v -> r_bt),
-          btv(atom, v),
-          btv(atom, v)
-        ) :: r_pair
-        when atom: term, v: term, r_bt: term, r_atom: term, r_pair: term
-  def slice_eval_pair(slice_alg, subst, left_tree, right_tree) do
-    left_r = slice_eval(slice_alg, subst, left_tree)
-    right_r = slice_eval(slice_alg, subst, right_tree)
-    slice_alg.pair.(left_r, right_r)
-  end
-
-  @doc """
   I am the slice catamorphism for a pair of closed binary trees.
 
   I am a convenience wrapper around `slice_cata` that:
@@ -472,6 +432,46 @@ defmodule NockPoly.BinTree do
       left_tree,
       right_tree
     )
+  end
+
+  @doc """
+  I am the `eval` universal morphism for the free monad of binary trees.
+
+  I am the right adjunct of the free/forgetful adjunction between the
+  category of algebras of `bintreef` and the base category.
+
+  Because the free monad of a binary tree is isomorphic to a binary tree
+  with an `Either v atom` atom type, this is a binary tree catamorphism
+  specialized to handle variables.
+
+  I am implemented by translating the algebra to a slice algebra and
+  delegating to `slice_eval`.
+  """
+  @spec eval(bintree_alg(atom, r), (v -> r), btv(atom, v)) :: r
+        when atom: term, v: term, r: term
+  def eval(algebra, subst, tree) do
+    slice_alg = %{
+      atom: fn ea -> ea end,
+      pair: fn left_r, right_r -> {left_r, right_r} end,
+      from_atom: fn ea -> algebra.({:atom, ea}) end,
+      from_pair: fn {left_r, right_r} ->
+        algebra.({:pair, left_r, right_r})
+      end
+    }
+
+    slice_eval(slice_alg, subst, tree)
+  end
+
+  @doc """
+  I am the catamorphism for closed binary trees.
+
+  I recursively fold the tree by applying the given algebra function to
+  each constructor along with the results from folding its children.
+  """
+  @spec cata(bt(atom), bintree_alg(atom, r)) :: r
+        when atom: term, r: term
+  def cata(tree, algebra) do
+    eval(algebra, &Unreachable.unreachable_var/1, tree)
   end
 
   @doc """
