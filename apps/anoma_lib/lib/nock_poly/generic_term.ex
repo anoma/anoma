@@ -97,18 +97,6 @@ defmodule NockPoly.GenericTerm do
     :invalid_constructor
   end
 
-  @doc """
-  Typechecks a generic term to ensure it's well-formed.
-
-  This only checks the structure of the term itself, not whether it
-  conforms to any particular type specification.
-  """
-  @spec typecheck(generic_term) ::
-          FinPolyF.check_result(generic_ctor, none())
-  def typecheck(term) do
-    Term.cata(term, &typecheck_algebra/1)
-  end
-
   @spec typecheck_algebra(
           {generic_ctor, [FinPolyF.check_result(generic_ctor, none())]}
         ) ::
@@ -153,6 +141,18 @@ defmodule NockPoly.GenericTerm do
     else
       {:error, all_errors}
     end
+  end
+
+  @doc """
+  Typechecks a generic term to ensure it's well-formed.
+
+  This only checks the structure of the term itself, not whether it
+  conforms to any particular type specification.
+  """
+  @spec typecheck(generic_term) ::
+          FinPolyF.check_result(generic_ctor, none())
+  def typecheck(term) do
+    Term.cata(term, &typecheck_algebra/1)
   end
 
   @doc """
