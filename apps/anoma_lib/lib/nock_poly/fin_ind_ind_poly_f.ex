@@ -247,30 +247,41 @@ defmodule NockPoly.FinIndIndPolyF do
     validate_ind_ind_f1_slice(slice, base)
   end
 
-  @doc """
-  I check if a term has a valid type according to the inductive-inductive typespec.
+  @spec check_fields(
+          [Term.tv(any(), any())],
+          ind_ind_f(),
+          non_neg_integer()
+        ) :: :ok | {:error, nonempty_list(term())}
+  defp check_fields(fields, ind_ind_f, expected_type) do
+    if Enum.empty?(fields) do
+      :ok
+    else
+      field_check_results =
+        Enum.map(fields, fn field ->
+          case typecheck(field, ind_ind_f) do
+            {:ok, actual_type} ->
+              if actual_type == expected_type do
+                :ok
+              else
+                {:error,
+                 [{:invalid_field_type, field, expected_type, actual_type}]}
+              end
 
-  The term constructor must be either {:base, pos} or {:dep, pos} to explicitly
-  indicate which type it belongs to.
+            error ->
+              error
+          end
+        end)
 
-  Returns either {:ok, type_index} or {:error, errors}.
-  """
-  @spec typecheck(Term.tv(any(), none()), ind_ind_f()) ::
-          {:ok, non_neg_integer()} | {:error, nonempty_list(term())}
-  def typecheck(term, ind_ind_f) do
-    case Term.out_tv(term) do
-      {:tcom, {{:base, pos}, fields}} ->
-        typecheck_base_constructor(pos, fields, ind_ind_f)
+      errors =
+        field_check_results
+        |> Enum.filter(&(&1 != :ok))
+        |> Enum.flat_map(fn {:error, errs} -> errs end)
 
-      {:tcom, {{:dep, pos}, fields}} ->
-        typecheck_dep_constructor(pos, fields, ind_ind_f)
-
-      {:tcom, {ctor, _}} ->
-        {:error,
-         [
-           {:invalid_constructor_format, ctor,
-            "Expected {:base, pos} or {:dep, pos}"}
-         ]}
+      if Enum.empty?(errors) do
+        :ok
+      else
+        {:error, errors}
+      end
     end
   end
 
@@ -358,41 +369,30 @@ defmodule NockPoly.FinIndIndPolyF do
     end
   end
 
-  @spec check_fields(
-          [Term.tv(any(), any())],
-          ind_ind_f(),
-          non_neg_integer()
-        ) :: :ok | {:error, nonempty_list(term())}
-  defp check_fields(fields, ind_ind_f, expected_type) do
-    if Enum.empty?(fields) do
-      :ok
-    else
-      field_check_results =
-        Enum.map(fields, fn field ->
-          case typecheck(field, ind_ind_f) do
-            {:ok, actual_type} ->
-              if actual_type == expected_type do
-                :ok
-              else
-                {:error,
-                 [{:invalid_field_type, field, expected_type, actual_type}]}
-              end
+  @doc """
+  I check if a term has a valid type according to the inductive-inductive typespec.
 
-            error ->
-              error
-          end
-        end)
+  The term constructor must be either {:base, pos} or {:dep, pos} to explicitly
+  indicate which type it belongs to.
 
-      errors =
-        field_check_results
-        |> Enum.filter(&(&1 != :ok))
-        |> Enum.flat_map(fn {:error, errs} -> errs end)
+  Returns either {:ok, type_index} or {:error, errors}.
+  """
+  @spec typecheck(Term.tv(any(), none()), ind_ind_f()) ::
+          {:ok, non_neg_integer()} | {:error, nonempty_list(term())}
+  def typecheck(term, ind_ind_f) do
+    case Term.out_tv(term) do
+      {:tcom, {{:base, pos}, fields}} ->
+        typecheck_base_constructor(pos, fields, ind_ind_f)
 
-      if Enum.empty?(errors) do
-        :ok
-      else
-        {:error, errors}
-      end
+      {:tcom, {{:dep, pos}, fields}} ->
+        typecheck_dep_constructor(pos, fields, ind_ind_f)
+
+      {:tcom, {ctor, _}} ->
+        {:error,
+         [
+           {:invalid_constructor_format, ctor,
+            "Expected {:base, pos} or {:dep, pos}"}
+         ]}
     end
   end
 end
