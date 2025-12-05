@@ -137,6 +137,24 @@ defmodule NockPoly.BinTreeTerm do
     )
   end
 
+  @spec bintree_pair_to_term_result_left(
+          {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())},
+          {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())}
+        ) :: {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())}
+        when ctor: term, v: term
+  defp bintree_pair_to_term_result_left(left_result, right_result) do
+    with {:ok, left_term} <- left_result,
+         {:ok, right_child} <- right_result do
+      case Term.out_tv(left_term) do
+        {:tcom, {ctor, children}} ->
+          {:ok, Term.com_tv(ctor, [right_child | children])}
+
+        {:tvar, v} ->
+          {:error, [{:variable_in_application_position, v, right_child}]}
+      end
+    end
+  end
+
   @doc """
   I provide the slice algebra for converting binary trees to terms (left-associative).
 
@@ -164,51 +182,12 @@ defmodule NockPoly.BinTreeTerm do
     }
   end
 
-  @doc """
-  I provide the slice algebra for converting binary trees to terms (right-associative).
-
-  This algebra uses higher-order functions to distinguish between different roles:
-  - The return type is a function `(role -> result)` where role is `:as_child` or `:in_spine`
-  - An atom returns a function that:
-    - In `:as_child` role: returns a nullary term with that constructor
-    - In `:in_spine` role: returns a singleton list containing a nullary term
-  - A pair returns a function that:
-    - In `:as_child` role: builds a term by extracting ctor from left, children from right
-    - In `:in_spine` role: prepends the left child to the right spine's list
-
-  By using function-valued returns, we defer the decision about how to interpret
-  a tree until we know its role in the parent context.
-  """
   @type role :: :as_child | :in_spine
   @type role_fn(ctor, v) ::
           (role ->
              {:ok, Term.tv(ctor, v)}
              | {:ok, [Term.tv(ctor, v)]}
              | {:error, nonempty_list(term())})
-
-  @spec bintree_to_term_slice_alg_result_right_fn() ::
-          BinTree.bintree_slice_alg(
-            ctor,
-            role_fn(ctor, none()),
-            ctor,
-            role_fn(ctor, none())
-          )
-        when ctor: term
-  def bintree_to_term_slice_alg_result_right_fn() do
-    %{
-      atom: &Function.identity/1,
-      pair: &bintree_pair_to_role_fn_right/2,
-      from_atom: fn ctor ->
-        fn role ->
-          case role do
-            :as_child -> {:ok, Term.com_tv(ctor, [])}
-            :in_spine -> {:ok, [Term.com_tv(ctor, [])]}
-          end
-        end
-      end,
-      from_pair: fn role_fn -> role_fn end
-    }
-  end
 
   defp bintree_pair_to_role_fn_right(left_fn, right_fn) do
     fn role ->
@@ -236,6 +215,45 @@ defmodule NockPoly.BinTreeTerm do
           end
       end
     end
+  end
+
+  @doc """
+  I provide the slice algebra for converting binary trees to terms (right-associative).
+
+  This algebra uses higher-order functions to distinguish between different roles:
+  - The return type is a function `(role -> result)` where role is `:as_child` or `:in_spine`
+  - An atom returns a function that:
+    - In `:as_child` role: returns a nullary term with that constructor
+    - In `:in_spine` role: returns a singleton list containing a nullary term
+  - A pair returns a function that:
+    - In `:as_child` role: builds a term by extracting ctor from left, children from right
+    - In `:in_spine` role: prepends the left child to the right spine's list
+
+  By using function-valued returns, we defer the decision about how to interpret
+  a tree until we know its role in the parent context.
+  """
+  @spec bintree_to_term_slice_alg_result_right_fn() ::
+          BinTree.bintree_slice_alg(
+            ctor,
+            role_fn(ctor, none()),
+            ctor,
+            role_fn(ctor, none())
+          )
+        when ctor: term
+  def bintree_to_term_slice_alg_result_right_fn() do
+    %{
+      atom: &Function.identity/1,
+      pair: &bintree_pair_to_role_fn_right/2,
+      from_atom: fn ctor ->
+        fn role ->
+          case role do
+            :as_child -> {:ok, Term.com_tv(ctor, [])}
+            :in_spine -> {:ok, [Term.com_tv(ctor, [])]}
+          end
+        end
+      end,
+      from_pair: fn role_fn -> role_fn end
+    }
   end
 
   @spec bintreev_to_termv_slice_alg_result_right_fn() ::
@@ -274,24 +292,6 @@ defmodule NockPoly.BinTreeTerm do
         role_fn
       end
     }
-  end
-
-  @spec bintree_pair_to_term_result_left(
-          {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())},
-          {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())}
-        ) :: {:ok, Term.tv(ctor, v)} | {:error, nonempty_list(term())}
-        when ctor: term, v: term
-  defp bintree_pair_to_term_result_left(left_result, right_result) do
-    with {:ok, left_term} <- left_result,
-         {:ok, right_child} <- right_result do
-      case Term.out_tv(left_term) do
-        {:tcom, {ctor, children}} ->
-          {:ok, Term.com_tv(ctor, [right_child | children])}
-
-        {:tvar, v} ->
-          {:error, [{:variable_in_application_position, v, right_child}]}
-      end
-    end
   end
 
   @doc """
