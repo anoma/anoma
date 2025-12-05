@@ -343,29 +343,6 @@ defmodule NockPoly.BinTree do
   end
 
   @doc """
-  I am the slice eval morphism for a pair of binary trees with variables.
-
-  I am a convenience wrapper around `slice_eval` that:
-  1. Recursively evaluates both trees to get `r_bt` results
-  2. Applies the `pair` component to get `r_pair`
-
-  This is useful when the caller is primarily interested in the pair structure
-  rather than the overall tree structure.
-  """
-  @spec slice_eval_pair(
-          bintree_slice_alg(atom, r_bt, r_atom, r_pair),
-          (v -> r_bt),
-          btv(atom, v),
-          btv(atom, v)
-        ) :: r_pair
-        when atom: term, v: term, r_bt: term, r_atom: term, r_pair: term
-  def slice_eval_pair(slice_alg, subst, left_tree, right_tree) do
-    left_r = slice_eval(slice_alg, subst, left_tree)
-    right_r = slice_eval(slice_alg, subst, right_tree)
-    slice_alg.pair.(left_r, right_r)
-  end
-
-  @doc """
   I am the slice eval morphism for binary trees with variables.
 
   I recursively evaluate an open binary tree by:
@@ -394,6 +371,29 @@ defmodule NockPoly.BinTree do
         pair_r = slice_eval_pair(slice_alg, subst, left, right)
         slice_alg.from_pair.(pair_r)
     end
+  end
+
+  @doc """
+  I am the slice eval morphism for a pair of binary trees with variables.
+
+  I am a convenience wrapper around `slice_eval` that:
+  1. Recursively evaluates both trees to get `r_bt` results
+  2. Applies the `pair` component to get `r_pair`
+
+  This is useful when the caller is primarily interested in the pair structure
+  rather than the overall tree structure.
+  """
+  @spec slice_eval_pair(
+          bintree_slice_alg(atom, r_bt, r_atom, r_pair),
+          (v -> r_bt),
+          btv(atom, v),
+          btv(atom, v)
+        ) :: r_pair
+        when atom: term, v: term, r_bt: term, r_atom: term, r_pair: term
+  def slice_eval_pair(slice_alg, subst, left_tree, right_tree) do
+    left_r = slice_eval(slice_alg, subst, left_tree)
+    right_r = slice_eval(slice_alg, subst, right_tree)
+    slice_alg.pair.(left_r, right_r)
   end
 
   @doc """
