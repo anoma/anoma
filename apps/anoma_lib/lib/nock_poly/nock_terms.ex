@@ -38,25 +38,50 @@ defmodule NockPoly.NockTerms do
   end
 
   @doc """
+  I am the catamorphism for nouns.
+
+  I recursively fold a noun by:
+  - For an atom: applying the atom algebra to produce `r`
+  - For a cell: recursively folding both children, then applying the
+    cell algebra to the results to produce `r`
+
+  This is the universal morphism for the `Noun.t()` type, which is the
+  fixed point of the functor `F(r) = noun_atom | (r, r)`.
+  """
+  @spec noun_cata(Noun.t(), (Noun.noun_atom() -> r), (r, r -> r)) :: r
+        when r: term
+  def noun_cata(noun, atom_alg, cell_alg) do
+    cond do
+      Noun.is_noun_atom(noun) ->
+        atom_alg.(noun)
+
+      Noun.is_noun_cell(noun) ->
+        [left | right] = noun
+
+        cell_alg.(
+          noun_cata(left, atom_alg, cell_alg),
+          noun_cata(right, atom_alg, cell_alg)
+        )
+    end
+  end
+
+  @doc """
   I convert a Noun.t() into a Nock polynomial term (nock_poly_term).
 
   If `noun` satisfies Noun.is_noun_atom/1, it is wrapped as an atom;
   otherwise it must be a cell represented as a two-element list, which is
   recursively converted. This function always succeeds and produces a term
   that passes the Nock typecheck.
+
+  I am implemented using `noun_cata`.
   """
   @spec from_noun(Noun.t()) :: nock_poly_term
   def from_noun(noun) do
-    cond do
-      Noun.is_noun_atom(noun) ->
-        Term.com_tv({:atom, noun}, [])
-
-      Noun.is_noun_cell(noun) ->
-        case noun do
-          [left | right] ->
-            Term.com_tv(:cell, [from_noun(left), from_noun(right)])
-        end
-    end
+    noun_cata(
+      noun,
+      fn a -> Term.com_tv({:atom, a}, []) end,
+      fn l, r -> Term.com_tv(:cell, [l, r]) end
+    )
   end
 
   @spec to_noun_algebra({nock_term_ctor, [Noun.t()]}) :: Noun.t()

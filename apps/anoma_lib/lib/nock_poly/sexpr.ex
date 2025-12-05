@@ -84,16 +84,135 @@ defmodule NockPoly.Sexpr do
   """
   @type closed_nock_noun_sexpr :: closed_sexpr(Noun.t())
 
-  @spec closed_to_open_list([closed_sexpr(atom)]) :: [sexpr(atom, none())]
-        when atom: term
-  defp closed_to_open_list(closed_sexprs) do
+  @typedoc """
+  I am a slice algebra for closed S-expressions.
+
+  I provide separate result types for each component of the closed S-expression
+  structure:
+  - `r_sexpr` - the overall result type for a closed S-expression
+  - `r_atom` - the result type for an atom (constructor)
+  - `r_list` - the result type for a list of closed S-expressions
+  - `r_nelist` - the result type for a non-empty list of closed S-expressions
+
+  The algebra has the following components:
+
+  Atom constructor:
+  - `atom` - processes an atom/constructor to produce `r_atom`
+
+  List constructors:
+  - `empty` - result for an empty list (constant of type `r_list`)
+  - `cons` - builds a cons cell from a sexpr result and a list result
+  - `nonempty` - wraps a non-empty list to produce the general list type
+
+  S-expression constructors:
+  - `nullary` - processes a nullary constructor (bare atom) to produce `r_sexpr`
+  - `nary` - combines an atom result and a non-empty list result to produce `r_sexpr`
+  """
+  @type closed_sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist) :: %{
+          atom: (atom -> r_atom),
+          empty: r_list,
+          cons: (r_sexpr, r_list -> r_nelist),
+          nonempty: (r_nelist -> r_list),
+          nullary: (r_atom -> r_sexpr),
+          nary: (r_atom, r_list -> r_sexpr)
+        }
+
+  @doc """
+  I am the slice catamorphism for a list of closed S-expressions.
+
+  I recursively fold a list of closed S-expressions by:
+  - For the empty list: returning `empty`
+  - For a non-empty list: recursively folding the head with `closed_slice_cata`,
+    recursively folding the tail with `closed_slice_cata_list`, combining them
+    with `cons` to get `r_nelist`, then applying `nonempty` to get `r_list`
+
+  I am mutually recursive with `closed_slice_cata`.
+  """
+  @spec closed_slice_cata_list(
+          [closed_sexpr(atom)],
+          closed_sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist)
+        ) :: r_list
+        when atom: term,
+             r_sexpr: term,
+             r_atom: term,
+             r_list: term,
+             r_nelist: term
+  def closed_slice_cata_list(closed_sexprs, slice_alg) do
     case closed_sexprs do
       [] ->
-        []
+        slice_alg.empty
 
       [head | tail] ->
-        [closed_to_open(head) | closed_to_open_list(tail)]
+        r_head = closed_slice_cata(head, slice_alg)
+        r_tail = closed_slice_cata_list(tail, slice_alg)
+        r_nelist = slice_alg.cons.(r_head, r_tail)
+        slice_alg.nonempty.(r_nelist)
     end
+  end
+
+  @doc """
+  I am the slice catamorphism for closed S-expressions.
+
+  I recursively fold a closed S-expression by:
+  - For a bare atom (nullary constructor): applying `atom` to get `r_atom`,
+    then applying `nullary` to get `r_sexpr`
+  - For a pair (n-ary constructor): applying `atom` to get `r_atom`,
+    delegating to `closed_slice_cata_list` to fold the children,
+    then applying `nary` to get `r_sexpr`
+
+  I am mutually recursive with `closed_slice_cata_list`.
+  """
+  @spec closed_slice_cata(
+          closed_sexpr(atom),
+          closed_sexpr_slice_alg(atom, r_sexpr, r_atom, r_list, r_nelist)
+        ) :: r_sexpr
+        when atom: term,
+             r_sexpr: term,
+             r_atom: term,
+             r_list: term,
+             r_nelist: term
+  def closed_slice_cata(closed_sexpr, slice_alg) do
+    case closed_sexpr do
+      constructor when is_atom(constructor) ->
+        r_atom = slice_alg.atom.(constructor)
+        slice_alg.nullary.(r_atom)
+
+      {constructor, children} ->
+        r_atom = slice_alg.atom.(constructor)
+        r_list = closed_slice_cata_list(children, slice_alg)
+        slice_alg.nary.(r_atom, r_list)
+    end
+  end
+
+  @spec closed_to_open_slice_alg() ::
+          closed_sexpr_slice_alg(
+            atom,
+            sexpr(atom, none()),
+            atom,
+            [sexpr(atom, none())],
+            [sexpr(atom, none())]
+          )
+        when atom: term
+  defp closed_to_open_slice_alg do
+    %{
+      atom: fn a -> a end,
+      empty: [],
+      cons: fn r_sexpr, r_list -> [r_sexpr | r_list] end,
+      nonempty: fn nelist -> nelist end,
+      nullary: fn a -> {:atom, a, []} end,
+      nary: fn a, children -> {:atom, a, children} end
+    }
+  end
+
+  @doc """
+  I convert a list of closed S-expressions to a list of open S-expressions.
+
+  I am implemented using `closed_slice_cata_list`.
+  """
+  @spec closed_to_open_list([closed_sexpr(atom)]) :: [sexpr(atom, none())]
+        when atom: term
+  def closed_to_open_list(closed_sexprs) do
+    closed_slice_cata_list(closed_sexprs, closed_to_open_slice_alg())
   end
 
   @doc """
@@ -102,18 +221,13 @@ defmodule NockPoly.Sexpr do
   This direction of the isomorphism adds the `:atom` tags to a `closed_sexpr`
   to produce a `sexpr(atom, none())`. A bare atom becomes a nullary constructor,
   and a pair becomes a constructor with children.
+
+  I am implemented using `closed_slice_cata`.
   """
   @spec closed_to_open(closed_sexpr(atom)) :: sexpr(atom, none())
         when atom: term
   def closed_to_open(closed_sexpr) do
-    case closed_sexpr do
-      constructor when is_atom(constructor) ->
-        {:atom, constructor, []}
-
-      {constructor, children} ->
-        open_children = closed_to_open_list(children)
-        {:atom, constructor, open_children}
-    end
+    closed_slice_cata(closed_sexpr, closed_to_open_slice_alg())
   end
 
   @spec from_term_alg({atom, [sexpr(atom, v)]}) :: sexpr(atom, v)
@@ -461,17 +575,22 @@ defmodule NockPoly.Sexpr do
 
   I recursively evaluate each S-expression in the list and return the list
   of results.
+
+  I am implemented by translating the algebra to a slice algebra and
+  delegating to `slice_eval_list`.
   """
   @spec eval_list(sexpr_alg(atom, r), (v -> r), [sexpr(atom, v)]) :: [r]
         when atom: term, v: term, r: term
   def eval_list(algebra, subst, sexprs) do
-    case sexprs do
-      [] ->
-        []
+    slice_alg = %{
+      atom: fn a -> a end,
+      empty: [],
+      cons: fn r_sexpr, r_list -> [r_sexpr | r_list] end,
+      nonempty: fn nelist -> nelist end,
+      sexpr: fn atom, children -> algebra.({atom, children}) end
+    }
 
-      [head | tail] ->
-        [eval(algebra, subst, head) | eval_list(algebra, subst, tail)]
-    end
+    slice_eval_list(slice_alg, subst, sexprs)
   end
 
   @doc """

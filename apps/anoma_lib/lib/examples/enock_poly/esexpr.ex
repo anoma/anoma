@@ -738,6 +738,29 @@ defmodule Examples.ENockPoly.ESexpr do
     open
   end
 
+  def closed_to_open_list_empty() do
+    result = Sexpr.closed_to_open_list([])
+    assert result == []
+    result
+  end
+
+  def closed_to_open_list_nonempty() do
+    closed_list = [
+      sx_closed0(:a),
+      sx_closed(:b, [sx_closed0(:c)])
+    ]
+
+    result = Sexpr.closed_to_open_list(closed_list)
+
+    expected = [
+      sx_atom0(:a),
+      sx_atom(:b, [sx_atom0(:c)])
+    ]
+
+    assert result == expected
+    result
+  end
+
   def open_to_closed_nullary() do
     open = sx_atom0(:foo)
     closed = Sexpr.open_to_closed(open)
