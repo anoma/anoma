@@ -369,6 +369,18 @@ defmodule NockPoly.Sexpr do
   end
 
   @doc """
+  I am the bimap for S-expressions, mapping both atom and variable parameters.
+
+  This composes `map_atoms` and `map_vars` into a single operation.
+  """
+  @spec bimap((atom1 -> atom2), (v1 -> v2), sexpr(atom1, v1)) ::
+          sexpr(atom2, v2)
+        when atom1: term, atom2: term, v1: term, v2: term
+  def bimap(f_atom, f_var, sexpr) do
+    map_vars(f_var, map_atoms(f_atom, sexpr))
+  end
+
+  @doc """
   I substitute variables in an S-expression.
 
   Given a substitution function `f : v1 -> sexpr(atom, v2)`, I replace

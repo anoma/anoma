@@ -28,6 +28,35 @@ defmodule NockPoly.BinTree do
   """
   @type either(atom, v) :: {:btatom, atom} | {:btvar, v}
 
+  @doc "I am the morphism-map component of the bifunctor `either` in the atom parameter."
+  @spec either_map_atom((atom1 -> atom2), either(atom1, v)) ::
+          either(atom2, v)
+        when atom1: term, atom2: term, v: term
+  def either_map_atom(fa, either) do
+    case either do
+      {:btatom, a} -> {:btatom, fa.(a)}
+      {:btvar, v} -> {:btvar, v}
+    end
+  end
+
+  @doc "I am the morphism-map component of the bifunctor `either` in the variable parameter."
+  @spec either_map_var((v -> w), either(atom, v)) :: either(atom, w)
+        when atom: term, v: term, w: term
+  def either_map_var(fv, either) do
+    case either do
+      {:btatom, a} -> {:btatom, a}
+      {:btvar, v} -> {:btvar, fv.(v)}
+    end
+  end
+
+  @doc "I am the bimap for the bifunctor `either`, mapping both atom and variable parameters."
+  @spec either_bimap((atom1 -> atom2), (v -> w), either(atom1, v)) ::
+          either(atom2, w)
+        when atom1: term, atom2: term, v: term, w: term
+  def either_bimap(fa, fv, either) do
+    either_map_var(fv, either_map_atom(fa, either))
+  end
+
   @typedoc """
   I generate a binary tree structure parameterized on atom and recursive types.
 

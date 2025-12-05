@@ -522,6 +522,63 @@ defmodule Examples.ENockPoly.ESexpr do
     result
   end
 
+  def bimap_on_variable() do
+    sexpr = sx_var(:x)
+
+    result =
+      Sexpr.bimap(
+        &Function.identity/1,
+        &String.to_atom("var_#{&1}"),
+        sexpr
+      )
+
+    assert result == sx_var(:var_x)
+    result
+  end
+
+  def bimap_on_atom_only() do
+    sexpr = sx_atom(:foo, [sx_atom0(:a), sx_atom0(:b)])
+
+    result =
+      Sexpr.bimap(
+        &String.to_atom("mapped_#{&1}"),
+        &Function.identity/1,
+        sexpr
+      )
+
+    expected =
+      sx_atom(:mapped_foo, [sx_atom0(:mapped_a), sx_atom0(:mapped_b)])
+
+    assert result == expected
+    result
+  end
+
+  def bimap_on_mixed_structure() do
+    sexpr =
+      sx_atom(:root, [
+        sx_var(0),
+        sx_atom(:branch, [sx_var(1), sx_atom0(:leaf)]),
+        sx_var(2)
+      ])
+
+    result =
+      Sexpr.bimap(
+        &String.to_atom("a_#{&1}"),
+        &(&1 + 10),
+        sexpr
+      )
+
+    expected =
+      sx_atom(:a_root, [
+        sx_var(10),
+        sx_atom(:a_branch, [sx_var(11), sx_atom0(:a_leaf)]),
+        sx_var(12)
+      ])
+
+    assert result == expected
+    result
+  end
+
   def subst_single_variable() do
     sexpr = sx_var(:x)
     result = Sexpr.subst(fn :x -> sx_atom0(:foo) end, sexpr)

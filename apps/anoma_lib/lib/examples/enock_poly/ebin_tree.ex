@@ -43,6 +43,62 @@ defmodule Examples.ENockPoly.EBinTree do
     tree
   end
 
+  def either_map_atom_on_atom() do
+    either = {:btatom, :foo}
+    result = BinTree.either_map_atom(&String.to_atom("mapped_#{&1}"), either)
+    assert result == {:btatom, :mapped_foo}
+    result
+  end
+
+  def either_map_atom_on_var() do
+    either = {:btvar, 42}
+    result = BinTree.either_map_atom(&Function.identity/1, either)
+    assert result == {:btvar, 42}
+    result
+  end
+
+  def either_map_var_on_atom() do
+    either = {:btatom, :foo}
+    result = BinTree.either_map_var(&Function.identity/1, either)
+    assert result == {:btatom, :foo}
+    result
+  end
+
+  def either_map_var_on_var() do
+    either = {:btvar, 42}
+    result = BinTree.either_map_var(&(&1 + 1), either)
+    assert result == {:btvar, 43}
+    result
+  end
+
+  def either_bimap_on_atom() do
+    either = {:btatom, :foo}
+
+    result =
+      BinTree.either_bimap(
+        &String.to_atom("mapped_#{&1}"),
+        &Function.identity/1,
+        either
+      )
+
+    assert result == {:btatom, :mapped_foo}
+    result
+  end
+
+  def either_bimap_on_var() do
+    either = {:btvar, 42}
+
+    result =
+      BinTree.either_bimap(
+        &Function.identity/1,
+        &(&1 + 1),
+        either
+      )
+
+    assert result == {:btvar, 43}
+    result
+  end
+
   def functor_bintreef_map_atom_over_atom() do
     tree_f = {:atom, :foo}
 
