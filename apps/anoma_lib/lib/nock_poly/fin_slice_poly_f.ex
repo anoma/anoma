@@ -128,6 +128,28 @@ defmodule NockPoly.FinSlicePolyF do
   """
   @type spec(ctor, v) :: {typespec, tspec(ctor), vspec(v)}
 
+  @spec validate_ctor_types(typespec) :: boolean()
+  defp validate_ctor_types(%{
+         input_types: input_types,
+         output_types: output_types,
+         ctor_counts: ctor_counts,
+         ctor_types: ctor_types
+       }) do
+    # For each output type and each of its constructors, check if ctor_types returns valid type indices
+    Enum.all?(0..(output_types - 1), fn type_idx ->
+      ctor_count = Enum.at(ctor_counts, type_idx)
+
+      Enum.all?(0..(ctor_count - 1), fn ctor_idx ->
+        param_types = ctor_types.({type_idx, ctor_idx})
+
+        # Check if all parameter types are valid
+        Enum.all?(param_types, fn param_type ->
+          param_type >= 0 && param_type < input_types
+        end)
+      end)
+    end)
+  end
+
   @doc """
   Validates a typespec to ensure it's well-formed.
 
@@ -159,28 +181,6 @@ defmodule NockPoly.FinSlicePolyF do
       true ->
         :ok
     end
-  end
-
-  @spec validate_ctor_types(typespec) :: boolean()
-  defp validate_ctor_types(%{
-         input_types: input_types,
-         output_types: output_types,
-         ctor_counts: ctor_counts,
-         ctor_types: ctor_types
-       }) do
-    # For each output type and each of its constructors, check if ctor_types returns valid type indices
-    Enum.all?(0..(output_types - 1), fn type_idx ->
-      ctor_count = Enum.at(ctor_counts, type_idx)
-
-      Enum.all?(0..(ctor_count - 1), fn ctor_idx ->
-        param_types = ctor_types.({type_idx, ctor_idx})
-
-        # Check if all parameter types are valid
-        Enum.all?(param_types, fn param_type ->
-          param_type >= 0 && param_type < input_types
-        end)
-      end)
-    end)
   end
 
   @doc """
