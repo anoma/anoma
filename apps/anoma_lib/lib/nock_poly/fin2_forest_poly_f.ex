@@ -204,35 +204,6 @@ defmodule NockPoly.Fin2ForestPolyF do
     end
   end
 
-  @doc """
-  Validate a forest specification.
-  """
-  @spec validate_forest_spec(forest_poly_spec()) ::
-          :ok | {:error, nonempty_list(atom())}
-  def validate_forest_spec(
-        %{
-          forest: forest,
-          base_positions: base_positions,
-          dep_positions: dep_positions
-        } = spec
-      ) do
-    num_bases = num_base_types(forest)
-
-    cond do
-      length(base_positions) != num_bases ->
-        {:error, [:base_positions_length_mismatch]}
-
-      length(dep_positions) != num_bases ->
-        {:error, [:dep_positions_length_mismatch]}
-
-      !validate_all_positions(spec) ->
-        {:error, [:invalid_position_specs]}
-
-      true ->
-        :ok
-    end
-  end
-
   # Validate all position specifications
   @spec validate_all_positions(forest_poly_spec()) :: boolean()
   defp validate_all_positions(%{
@@ -269,6 +240,35 @@ defmodule NockPoly.Fin2ForestPolyF do
       end)
 
     base_valid and dep_valid
+  end
+
+  @doc """
+  Validate a forest specification.
+  """
+  @spec validate_forest_spec(forest_poly_spec()) ::
+          :ok | {:error, nonempty_list(atom())}
+  def validate_forest_spec(
+        %{
+          forest: forest,
+          base_positions: base_positions,
+          dep_positions: dep_positions
+        } = spec
+      ) do
+    num_bases = num_base_types(forest)
+
+    cond do
+      length(base_positions) != num_bases ->
+        {:error, [:base_positions_length_mismatch]}
+
+      length(dep_positions) != num_bases ->
+        {:error, [:dep_positions_length_mismatch]}
+
+      !validate_all_positions(spec) ->
+        {:error, [:invalid_position_specs]}
+
+      true ->
+        :ok
+    end
   end
 
   @typedoc """
