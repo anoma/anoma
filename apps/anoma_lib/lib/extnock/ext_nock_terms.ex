@@ -455,80 +455,6 @@ defmodule ExtNock.ExtNockTerms do
           {:ok, Noun.t()}
           | {:error, ext_nock_compile_error_list(v)}
 
-  @doc """
-  I convert an extended Nock term to a standard Nock noun by first compiling
-  any extended constructors, then converting to a noun.
-
-  I return {:ok, noun} on success or {:error, errors} if typechecking fails.
-
-  This is the main function for preparing extended terms for execution.
-  """
-  @spec to_noun(ext_nock_poly_term(v)) :: to_noun_result(v)
-        when v: term()
-  def to_noun(term) do
-    case compile_to_nock_term(term) do
-      {:ok, compiled} ->
-        {:ok, NockTerms.to_noun(compiled)}
-
-      {:error, errors} ->
-        {:error, errors}
-    end
-  end
-
-  @doc """
-  I convert an extended Nock term to a standard Nock noun, raising an error
-  if compilation fails.
-
-  This is a convenience wrapper around to_noun that unwraps the
-  {:ok, noun} result or raises an error with the typecheck failures.
-  """
-  @spec to_noun!(ext_nock_poly_term(v)) :: Noun.t()
-        when v: term()
-  def to_noun!(term) do
-    case to_noun(term) do
-      {:ok, noun} ->
-        noun
-
-      {:error, errors} ->
-        raise "Invalid extended Nock term: #{inspect(errors)}"
-    end
-  end
-
-  @doc """
-  I convert an s-expression directly to a Nock noun in one step.
-
-  This is a convenience function that combines from_sexpr and to_noun.
-  The s-expression must not contain any variables.
-  """
-  @spec sexpr_to_noun(nock_poly_sexpr(none())) :: {:ok, Noun.t()} | :error
-  def sexpr_to_noun(sexpr) do
-    with {:ok, term} <- from_sexpr(sexpr),
-         {:ok, noun} <- to_noun(term) do
-      {:ok, noun}
-    else
-      _ -> :error
-    end
-  end
-
-  @doc """
-  I convert an s-expression directly to a Nock noun, raising an error
-  if the conversion fails at any step.
-
-  This is a convenience wrapper around sexpr_to_noun that unwraps the
-  {:ok, noun} result or raises an error if conversion fails.
-  The s-expression must not contain any variables.
-  """
-  @spec sexpr_to_noun!(nock_poly_sexpr(none())) :: Noun.t()
-  def sexpr_to_noun!(sexpr) do
-    case sexpr_to_noun(sexpr) do
-      {:ok, noun} ->
-        noun
-
-      _ ->
-        raise "S-expression does not represent a Nock noun: #{inspect(sexpr)}"
-    end
-  end
-
   @typedoc """
   I am a convenience S-expression representation for Nock polynomial terms
   with variables of type `v`.
@@ -646,6 +572,80 @@ defmodule ExtNock.ExtNockTerms do
 
       :error ->
         raise "S-expression does not represent a Nock polynomial term: #{inspect(sexpr)}"
+    end
+  end
+
+  @doc """
+  I convert an extended Nock term to a standard Nock noun by first compiling
+  any extended constructors, then converting to a noun.
+
+  I return {:ok, noun} on success or {:error, errors} if typechecking fails.
+
+  This is the main function for preparing extended terms for execution.
+  """
+  @spec to_noun(ext_nock_poly_term(v)) :: to_noun_result(v)
+        when v: term()
+  def to_noun(term) do
+    case compile_to_nock_term(term) do
+      {:ok, compiled} ->
+        {:ok, NockTerms.to_noun(compiled)}
+
+      {:error, errors} ->
+        {:error, errors}
+    end
+  end
+
+  @doc """
+  I convert an extended Nock term to a standard Nock noun, raising an error
+  if compilation fails.
+
+  This is a convenience wrapper around to_noun that unwraps the
+  {:ok, noun} result or raises an error with the typecheck failures.
+  """
+  @spec to_noun!(ext_nock_poly_term(v)) :: Noun.t()
+        when v: term()
+  def to_noun!(term) do
+    case to_noun(term) do
+      {:ok, noun} ->
+        noun
+
+      {:error, errors} ->
+        raise "Invalid extended Nock term: #{inspect(errors)}"
+    end
+  end
+
+  @doc """
+  I convert an s-expression directly to a Nock noun in one step.
+
+  This is a convenience function that combines from_sexpr and to_noun.
+  The s-expression must not contain any variables.
+  """
+  @spec sexpr_to_noun(nock_poly_sexpr(none())) :: {:ok, Noun.t()} | :error
+  def sexpr_to_noun(sexpr) do
+    with {:ok, term} <- from_sexpr(sexpr),
+         {:ok, noun} <- to_noun(term) do
+      {:ok, noun}
+    else
+      _ -> :error
+    end
+  end
+
+  @doc """
+  I convert an s-expression directly to a Nock noun, raising an error
+  if the conversion fails at any step.
+
+  This is a convenience wrapper around sexpr_to_noun that unwraps the
+  {:ok, noun} result or raises an error if conversion fails.
+  The s-expression must not contain any variables.
+  """
+  @spec sexpr_to_noun!(nock_poly_sexpr(none())) :: Noun.t()
+  def sexpr_to_noun!(sexpr) do
+    case sexpr_to_noun(sexpr) do
+      {:ok, noun} ->
+        noun
+
+      _ ->
+        raise "S-expression does not represent a Nock noun: #{inspect(sexpr)}"
     end
   end
 end
