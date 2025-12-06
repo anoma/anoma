@@ -15,6 +15,7 @@ defmodule NockPoly.FinIndIndPolyF do
   these type dependencies.
   """
 
+  alias NockPoly.PolyLanguage
   alias NockPoly.Term
 
   @typedoc """
@@ -65,8 +66,8 @@ defmodule NockPoly.FinIndIndPolyF do
       - Each element is a valid dependent field index for the corresponding source field
     """
 
-    field(:base_field_map, Term.fin_mapping())
-    field(:dep_field_maps, [Term.fin_mapping()])
+    field(:base_field_map, PolyLanguage.fin_mapping())
+    field(:dep_field_maps, [PolyLanguage.fin_mapping()])
   end
 
   @type representable_nt :: RepresentableNt.t()
@@ -87,7 +88,7 @@ defmodule NockPoly.FinIndIndPolyF do
       - Length equals number of positions in source
     """
 
-    field(:pos_map, Term.fin_mapping())
+    field(:pos_map, PolyLanguage.fin_mapping())
     field(:rep_transformations, [NockPoly.FinIndIndPolyF.representable_nt()])
   end
 
@@ -140,7 +141,7 @@ defmodule NockPoly.FinIndIndPolyF do
     target_base_field_count = length(target_rep)
 
     with :ok <-
-           Term.validate_fin_mapping(
+           PolyLanguage.validate_fin_mapping(
              base_field_map,
              target_base_field_count,
              source_base_field_count
@@ -156,7 +157,7 @@ defmodule NockPoly.FinIndIndPolyF do
             target_dep_count = Enum.at(target_rep, target_idx)
             source_dep_count = Enum.at(source_rep, source_idx)
 
-            Term.validate_fin_mapping(
+            PolyLanguage.validate_fin_mapping(
               dep_map,
               target_dep_count,
               source_dep_count
@@ -194,7 +195,7 @@ defmodule NockPoly.FinIndIndPolyF do
     target_pos_count = length(target)
 
     with :ok <-
-           Term.validate_fin_mapping(
+           PolyLanguage.validate_fin_mapping(
              pos_map,
              source_pos_count,
              target_pos_count

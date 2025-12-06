@@ -3,7 +3,6 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
 
   import ExUnit.Assertions
   import NockPoly.Term.MacroDefs
-  alias NockPoly.Term
   alias NockPoly.FinIndIndPolyF, as: IndIndF
 
   @doc """
@@ -153,26 +152,13 @@ defmodule Examples.ENockPoly.EFinIndIndPolyF do
   Tests validation functions for the FinIndIndPolyF module.
 
   This test covers various validation functions:
-  - validate_fin_mapping
   - validate_representable_nt
   - validate_ind_ind_f1_nt
   - validate_ind_ind_f1_slice
   - validate_ind_ind_f
   """
   def inductive_types_validation_test() do
-    # Test validate_fin_mapping
-    # Valid mapping
-    assert :ok = Term.validate_fin_mapping([0, 1, 2], 3, 3)
-
-    # Invalid mapping length
-    assert {:error, [:invalid_mapping_length]} =
-             Term.validate_fin_mapping([0, 1], 3, 3)
-
-    # Mapping out of range
-    assert {:error, [:mapping_out_of_range]} =
-             Term.validate_fin_mapping([0, 3, 1], 3, 3)
-
-    # Create base specs for further validation testing
+    # Create base specs for validation testing
     # Remember: in a natural transformation, we map from dependent (source) to base (target)
     # Source with 2 base fields, each with 1 dependent field
     source_rep = [1, 1]

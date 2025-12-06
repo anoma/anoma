@@ -631,40 +631,4 @@ defmodule NockPoly.Term do
       end
     end
   end
-
-  @typedoc """
-  I represent a mapping from elements in a domain to elements in a codomain.
-  I am a list of non-negative integers where:
-  - Length = size of domain
-  - Each element = index in codomain (must be in range [0..(codomain_size-1)])
-
-  Example: [2, 0, 1] means:
-  - Domain size is 3
-  - Element 0 in domain maps to element 2 in codomain
-  - Element 1 in domain maps to element 0 in codomain
-  - Element 2 in domain maps to element 1 in codomain
-  """
-  @type fin_mapping :: [non_neg_integer()]
-
-  @doc """
-  I validate that a finite mapping is valid for given domain and codomain sizes.
-  """
-  @spec validate_fin_mapping(
-          fin_mapping(),
-          non_neg_integer(),
-          non_neg_integer()
-        ) ::
-          :ok | {:error, nonempty_list(atom())}
-  def validate_fin_mapping(mapping, domain_size, codomain_size) do
-    cond do
-      length(mapping) != domain_size ->
-        {:error, [:invalid_mapping_length]}
-
-      Enum.any?(mapping, &(&1 >= codomain_size)) ->
-        {:error, [:mapping_out_of_range]}
-
-      true ->
-        :ok
-    end
-  end
 end
