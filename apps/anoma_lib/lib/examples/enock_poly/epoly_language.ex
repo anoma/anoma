@@ -1,49 +1,71 @@
 defmodule Examples.ENockPoly.EPolyLanguage do
   @moduledoc """
   I provide examples for the NockPoly.PolyLanguage module.
-  """
-
-  use ExUnit.Case, async: true
-
-  alias NockPoly.PolyLanguage
-
-  @doc """
-  I test the `fin_mapping` type and `validate_fin_mapping` function.
 
   A `fin_mapping` represents a function between finite sets, encoded as a list
   where each position in the list (domain element) contains the index of the
   corresponding codomain element.
   """
-  def fin_mapping_test do
-    # Valid mapping: identity on 3 elements
-    assert :ok = PolyLanguage.validate_fin_mapping([0, 1, 2], 3, 3)
 
-    # Valid mapping: empty domain maps to any codomain
-    assert :ok = PolyLanguage.validate_fin_mapping([], 0, 5)
+  use Memoize
 
-    # Valid mapping: all domain elements map to same codomain element
-    assert :ok = PolyLanguage.validate_fin_mapping([0, 0, 0], 3, 1)
+  import ExUnit.Assertions
 
-    # Valid mapping: permutation
-    assert :ok = PolyLanguage.validate_fin_mapping([2, 0, 1], 3, 3)
+  alias NockPoly.PolyLanguage
 
-    # Invalid mapping: wrong length (too short)
-    assert {:error, [:invalid_mapping_length]} =
-             PolyLanguage.validate_fin_mapping([0, 1], 3, 3)
+  def identity_fin_mapping() do
+    mapping = [0, 1, 2]
+    result = PolyLanguage.validate_fin_mapping(mapping, 3, 3)
+    assert result == :ok
+    mapping
+  end
 
-    # Invalid mapping: wrong length (too long)
-    assert {:error, [:invalid_mapping_length]} =
-             PolyLanguage.validate_fin_mapping([0, 1, 2, 3], 3, 3)
+  def empty_domain_fin_mapping() do
+    mapping = []
+    result = PolyLanguage.validate_fin_mapping(mapping, 0, 5)
+    assert result == :ok
+    mapping
+  end
 
-    # Invalid mapping: index out of range
-    assert {:error, [:mapping_out_of_range]} =
-             PolyLanguage.validate_fin_mapping([0, 3, 1], 3, 3)
+  def constant_fin_mapping() do
+    mapping = [0, 0, 0]
+    result = PolyLanguage.validate_fin_mapping(mapping, 3, 1)
+    assert result == :ok
+    mapping
+  end
 
-    # Invalid mapping: negative conceptually impossible (type is non_neg_integer)
-    # but index exceeding codomain size is caught
-    assert {:error, [:mapping_out_of_range]} =
-             PolyLanguage.validate_fin_mapping([0, 1, 5], 3, 3)
+  def permutation_fin_mapping() do
+    mapping = [2, 0, 1]
+    result = PolyLanguage.validate_fin_mapping(mapping, 3, 3)
+    assert result == :ok
+    mapping
+  end
 
-    :ok
+  def invalid_fin_mapping_too_short() do
+    mapping = [0, 1]
+    result = PolyLanguage.validate_fin_mapping(mapping, 3, 3)
+    assert result == {:error, [:invalid_mapping_length]}
+    result
+  end
+
+  def invalid_fin_mapping_too_long() do
+    mapping = [0, 1, 2, 3]
+    result = PolyLanguage.validate_fin_mapping(mapping, 3, 3)
+    assert result == {:error, [:invalid_mapping_length]}
+    result
+  end
+
+  def invalid_fin_mapping_index_out_of_range() do
+    mapping = [0, 3, 1]
+    result = PolyLanguage.validate_fin_mapping(mapping, 3, 3)
+    assert result == {:error, [:mapping_out_of_range]}
+    result
+  end
+
+  def invalid_fin_mapping_exceeds_codomain() do
+    mapping = [0, 1, 5]
+    result = PolyLanguage.validate_fin_mapping(mapping, 3, 3)
+    assert result == {:error, [:mapping_out_of_range]}
+    result
   end
 end
