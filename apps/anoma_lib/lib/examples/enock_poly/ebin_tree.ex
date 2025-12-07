@@ -776,6 +776,38 @@ defmodule Examples.ENockPoly.EBinTree do
     result
   end
 
+  def bimap_maps_both_atoms_and_variables() do
+    tree = btvp(btva(:foo), btvv(1))
+
+    result =
+      BinTree.bimap(
+        &String.to_atom("mapped_#{&1}"),
+        &(&1 + 10),
+        tree
+      )
+
+    expected = btvp(btva(:mapped_foo), btvv(11))
+    assert result == expected
+    result
+  end
+
+  def bimap_on_nested_tree() do
+    tree = btvp(btvp(btva(:a), btvv(1)), btvp(btvv(2), btva(:b)))
+
+    result =
+      BinTree.bimap(
+        &String.to_atom("new_#{&1}"),
+        &(&1 * 10),
+        tree
+      )
+
+    expected =
+      btvp(btvp(btva(:new_a), btvv(10)), btvp(btvv(20), btva(:new_b)))
+
+    assert result == expected
+    result
+  end
+
   def btv_comult_creates_nested_structure() do
     tree = btvp(btva(:a), btvv(1))
     result = BinTree.btv_comult(tree)
@@ -864,6 +896,34 @@ defmodule Examples.ENockPoly.EBinTree do
 
     result = BinTree.full_subst(subst, tree)
     expected = btvp(btvp(btva(1), btva(2)), btva(3))
+    assert result == expected
+    result
+  end
+
+  def subst_replaces_variables_with_open_trees() do
+    tree = btvp(btvv(1), btvv(2))
+
+    f = fn
+      1 -> btvp(btva(:a), btvv(:x))
+      2 -> btvv(:y)
+    end
+
+    result = BinTree.subst(f, tree)
+    expected = btvp(btvp(btva(:a), btvv(:x)), btvv(:y))
+    assert result == expected
+    result
+  end
+
+  def subst_on_nested_structure() do
+    tree = btvp(btvp(btvv(1), btva(:c)), btvv(2))
+
+    f = fn
+      1 -> btvp(btvv(:new1), btva(:d))
+      2 -> btva(:e)
+    end
+
+    result = BinTree.subst(f, tree)
+    expected = btvp(btvp(btvp(btvv(:new1), btva(:d)), btva(:c)), btva(:e))
     assert result == expected
     result
   end

@@ -409,7 +409,7 @@ defmodule NockPoly.Term do
   @spec tcmap((ctor1 -> ctor2), tv(ctor1, a)) :: tv(ctor2, a)
         when ctor1: term, ctor2: term, a: term
   def tcmap(f, x) do
-    eval(&tcmap_alg(f, &1), &Function.identity/1, x)
+    eval(&tcmap_alg(f, &1), &var_tv/1, x)
   end
 
   # I am the algebra used to implement `tvmap` below.
@@ -433,6 +433,17 @@ defmodule NockPoly.Term do
         when ctor: term, a: term, b: term
   def tvmap(f, x) do
     eval(&tvmap_alg(&1), &tvmap_subst(f, &1), x)
+  end
+
+  @doc """
+  I am the bimap for polynomial terms, mapping both constructor and variable parameters.
+
+  I compose `tcmap` and `tvmap` into a single operation.
+  """
+  @spec bimap((ctor1 -> ctor2), (v1 -> v2), tv(ctor1, v1)) :: tv(ctor2, v2)
+        when ctor1: term, ctor2: term, v1: term, v2: term
+  def bimap(f_ctor, f_var, term) do
+    tvmap(f_var, tcmap(f_ctor, term))
   end
 
   @doc """
@@ -478,6 +489,29 @@ defmodule NockPoly.Term do
   end
 
   @doc """
+  I substitute variables in a polynomial term with open terms.
+
+  Given a substitution function `f : v -> tv(ctor, w)`, I replace all
+  variables in the term according to the function.
+  """
+  @spec subst((v -> tv(ctor, w)), tv(ctor, v)) :: tv(ctor, w)
+        when ctor: term, v: term, w: term
+  def subst(f, term) do
+    tv_bind(f, term)
+  end
+
+  @doc """
+  I substitute all variables in an open polynomial term with closed terms.
+
+  This produces a closed term by eliminating all variables.
+  """
+  @spec full_subst((v -> t(ctor)), tv(ctor, v)) :: t(ctor)
+        when ctor: term, v: term
+  def full_subst(subst, term) do
+    tv_bind(subst, term)
+  end
+
+  @doc """
   I am the catamorphism (fold) -- the universal morphism out of
   an initial algebra -- for `NockPoly.Term.t`.
 
@@ -491,6 +525,39 @@ defmodule NockPoly.Term do
   @spec cata(t(ctor), termalg(ctor, r)) :: r when ctor: term, r: term
   def cata(term, algebra) do
     eval(algebra, &Unreachable.unreachable_term/1, term)
+  end
+
+  @doc """
+  I am the eval morphism for a list of polynomial terms with variables.
+
+  I recursively evaluate each term in the list and return the list of results.
+
+  I am implemented by translating the algebra to a slice algebra and
+  delegating to `slice_eval_list`.
+  """
+  @spec eval_list(termalg(ctor, r), (v -> r), [tv(ctor, v)]) :: [r]
+        when ctor: term, v: term, r: term
+  def eval_list(algebra, subst, terms) do
+    slice_alg = %{
+      ctor: fn ctor -> ctor end,
+      empty: [],
+      cons: fn r_term, r_list -> [r_term | r_list] end,
+      nonempty: fn nelist -> nelist end,
+      term: fn ctor, children -> algebra.({ctor, children}) end
+    }
+
+    slice_eval_list(slice_alg, subst, terms)
+  end
+
+  @doc """
+  I am the catamorphism for a list of closed polynomial terms.
+
+  I recursively fold each term in the list and return the list of results.
+  """
+  @spec cata_list([t(ctor)], termalg(ctor, r)) :: [r]
+        when ctor: term, r: term
+  def cata_list(terms, algebra) do
+    eval_list(algebra, &Unreachable.unreachable_term/1, terms)
   end
 
   @doc """

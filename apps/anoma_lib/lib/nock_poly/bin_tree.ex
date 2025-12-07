@@ -499,7 +499,7 @@ defmodule NockPoly.BinTree do
   @spec btamap((atom1 -> atom2), btv(atom1, v)) :: btv(atom2, v)
         when atom1: term, atom2: term, v: term
   def btamap(f, tree) do
-    eval(&btamap_alg(f, &1), &Function.identity/1, tree)
+    eval(&btamap_alg(f, &1), &var_btv/1, tree)
   end
 
   @spec btvmap_alg(bintreef(atom, btv(atom, b))) :: btv(atom, b)
@@ -529,6 +529,17 @@ defmodule NockPoly.BinTree do
         when atom: term, a: term, b: term
   def btvmap(f, tree) do
     eval(&btvmap_alg/1, &btvmap_subst(f, &1), tree)
+  end
+
+  @doc """
+  I am the bimap for binary trees, mapping both atom and variable parameters.
+
+  I compose `btamap` and `btvmap` into a single operation.
+  """
+  @spec bimap((atom1 -> atom2), (v1 -> v2), btv(atom1, v1)) :: btv(atom2, v2)
+        when atom1: term, atom2: term, v1: term, v2: term
+  def bimap(f_atom, f_var, tree) do
+    btvmap(f_var, btamap(f_atom, tree))
   end
 
   @doc """
@@ -576,6 +587,18 @@ defmodule NockPoly.BinTree do
         when atom: term, v: term
   def full_subst(subst, tree) do
     btv_bind(subst, tree)
+  end
+
+  @doc """
+  I substitute variables in a binary tree with open binary trees.
+
+  Given a substitution function `f : v -> btv(atom, w)`, I replace all
+  variables in the tree according to the function.
+  """
+  @spec subst((v -> btv(atom, w)), btv(atom, v)) :: btv(atom, w)
+        when atom: term, v: term, w: term
+  def subst(f, tree) do
+    btv_bind(f, tree)
   end
 
   @doc """

@@ -642,6 +642,24 @@ defmodule Examples.ENockPoly.ETerm do
   end
 
   @doc """
+  I test `bimap` which maps both constructor and variable parameters.
+  """
+  def bimap_test() do
+    term = tvc(:foo, [tvv(1), tvc(:bar, [tvv(2)])])
+
+    result =
+      NockPoly.Term.bimap(
+        &String.to_atom("new_#{&1}"),
+        &(&1 * 10),
+        term
+      )
+
+    expected = tvc(:new_foo, [tvv(10), tvc(:new_bar, [tvv(20)])])
+    assert result == expected
+    result
+  end
+
+  @doc """
   I test `tv_comult` on the output of `termfv_bimap_variable_test`.
 
   The free monad law states that:
@@ -770,5 +788,74 @@ defmodule Examples.ENockPoly.ETerm do
     noun = NockTerms.to_noun(closed_term)
     assert noun == expected
     closed_term
+  end
+
+  @doc """
+  I test `subst` which substitutes variables with open terms.
+  """
+  def subst_test() do
+    term = tvc(:a, [tvv(1), tvv(2)])
+
+    f = fn
+      1 -> tvc(:b, [tvv(:x)])
+      2 -> tvv(:y)
+    end
+
+    result = NockPoly.Term.subst(f, term)
+    expected = tvc(:a, [tvc(:b, [tvv(:x)]), tvv(:y)])
+    assert result == expected
+    result
+  end
+
+  @doc """
+  I test `full_subst` which substitutes all variables with closed terms.
+  """
+  def full_subst_test() do
+    term = tvc(:a, [tvv(1), tvc(:b, [tvv(2)])])
+
+    f = fn
+      1 -> tvc0(:x)
+      2 -> tvc0(:y)
+    end
+
+    result = NockPoly.Term.full_subst(f, term)
+    expected = tvc(:a, [tvc0(:x), tvc(:b, [tvc0(:y)])])
+    assert result == expected
+    result
+  end
+
+  @doc """
+  I test `eval_list` which evaluates a list of terms with an algebra.
+  """
+  def eval_list_test() do
+    terms = [tvc(:a, [tvv(1)]), tvc(:b, [tvv(2), tvv(3)])]
+
+    algebra = fn {ctor, children} ->
+      {ctor, length(children)}
+    end
+
+    subst = fn v -> {:var, v} end
+
+    result = NockPoly.Term.eval_list(algebra, subst, terms)
+    expected = [{:a, 1}, {:b, 2}]
+    assert result == expected
+    result
+  end
+
+  @doc """
+  I test `cata_list` which folds a list of closed terms.
+  """
+  def cata_list_test() do
+    terms = [
+      tvc(:node, [tvc0(:leaf), tvc0(:leaf)]),
+      tvc0(:single)
+    ]
+
+    algebra = fn {_ctor, children} -> 1 + Enum.sum(children) end
+
+    result = NockPoly.Term.cata_list(terms, algebra)
+    expected = [3, 1]
+    assert result == expected
+    result
   end
 end
