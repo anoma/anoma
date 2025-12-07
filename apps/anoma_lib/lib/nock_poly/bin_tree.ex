@@ -259,18 +259,6 @@ defmodule NockPoly.BinTree do
     out_bt(tree)
   end
 
-  @typedoc "An open binary tree with Nock atom labels and variables of type `v`."
-  @type nock_atom_btv(v) :: btv(Noun.noun_atom(), v)
-
-  @typedoc "An open binary tree with Nock noun labels and variables of type `v`."
-  @type nock_noun_btv(v) :: btv(Noun.t(), v)
-
-  @typedoc "A closed binary tree with Nock atom labels."
-  @type nock_atom_bt :: bt(Noun.noun_atom())
-
-  @typedoc "A closed binary tree with Nock noun labels."
-  @type nock_noun_bt :: bt(Noun.t())
-
   @doc "I create a variable term of type `bintreefv` by wrapping a variable."
   @spec var_bintreefv(v) :: bintreefv(atom, v, x)
         when atom: term, v: term, x: term

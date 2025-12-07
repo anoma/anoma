@@ -16,7 +16,9 @@ defmodule NockPoly.NockTerms do
 
   use TypedStruct
 
+  alias NockPoly.BinTree
   alias NockPoly.Term
+  alias NockPoly.Sexpr
   alias NockPoly.FinPolyF
 
   @type nock_term_ctor :: {:atom, Noun.noun_atom()} | :cell
@@ -108,6 +110,48 @@ defmodule NockPoly.NockTerms do
 
   @typedoc "I am an open Nock polynomial term containing metavariables of type `v`."
   @type open_nock_poly_term(v) :: Term.tv(nock_term_ctor, v)
+
+  # BinTree Nock types
+
+  @typedoc "An open binary tree with Nock atom labels and variables of type `v`."
+  @type nock_atom_btv(v) :: BinTree.btv(Noun.noun_atom(), v)
+
+  @typedoc "An open binary tree with Nock noun labels and variables of type `v`."
+  @type nock_noun_btv(v) :: BinTree.btv(Noun.t(), v)
+
+  @typedoc "A closed binary tree with Nock atom labels."
+  @type nock_atom_bt :: BinTree.bt(Noun.noun_atom())
+
+  @typedoc "A closed binary tree with Nock noun labels."
+  @type nock_noun_bt :: BinTree.bt(Noun.t())
+
+  # Term Nock types
+
+  @typedoc "An open polynomial term with Nock atom constructors and variables of type `v`."
+  @type nock_atom_tv(v) :: Term.tv(Noun.noun_atom(), v)
+
+  @typedoc "An open polynomial term with Nock noun constructors and variables of type `v`."
+  @type nock_noun_tv(v) :: Term.tv(Noun.t(), v)
+
+  @typedoc "A generic polynomial term with Nock atom constructors."
+  @type nock_atom_term :: Term.t(Noun.noun_atom())
+
+  @typedoc "A generic polynomial term with Nock noun constructors."
+  @type nock_noun_term :: Term.t(Noun.t())
+
+  # Sexpr Nock types
+
+  @typedoc "An S-expression with Nock atom labels."
+  @type nock_atom_sexpr(v) :: Sexpr.sexpr(Noun.noun_atom(), v)
+
+  @typedoc "An S-expression with Nock noun labels."
+  @type nock_noun_sexpr(v) :: Sexpr.sexpr(Noun.t(), v)
+
+  @typedoc "A closed S-expression with Nock atom labels."
+  @type closed_nock_atom_sexpr :: Sexpr.closed_sexpr(Noun.noun_atom())
+
+  @typedoc "A closed S-expression with Nock noun labels."
+  @type closed_nock_noun_sexpr :: Sexpr.closed_sexpr(Noun.t())
 
   @doc """
   I substitute metavariables in an open Nock term using the provided

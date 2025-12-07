@@ -64,26 +64,6 @@ defmodule NockPoly.Sexpr do
   """
   @type closed_sexpr(atom) :: atom | {atom, nonempty_list(closed_sexpr(atom))}
 
-  @typedoc """
-  I am an S-expression with Nock atom labels.
-  """
-  @type nock_atom_sexpr(v) :: sexpr(Noun.noun_atom(), v)
-
-  @typedoc """
-  I am an S-expression with Nock noun labels.
-  """
-  @type nock_noun_sexpr(v) :: sexpr(Noun.t(), v)
-
-  @typedoc """
-  I am a closed S-expression with Nock atom labels.
-  """
-  @type closed_nock_atom_sexpr :: closed_sexpr(Noun.noun_atom())
-
-  @typedoc """
-  I am a closed S-expression with Nock noun labels.
-  """
-  @type closed_nock_noun_sexpr :: closed_sexpr(Noun.t())
-
   @doc """
   I create a variable S-expression.
 

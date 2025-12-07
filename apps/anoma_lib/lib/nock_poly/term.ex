@@ -179,23 +179,11 @@ defmodule NockPoly.Term do
   @typedoc "An open polynomial term with Elixir atom constructors and variables of type `v`."
   @type atom_tv(v) :: tv(atom(), v)
 
-  @typedoc "An open polynomial term with Nock atom constructors and variables of type `v`."
-  @type nock_atom_tv(v) :: tv(Noun.noun_atom(), v)
-
-  @typedoc "An open polynomial term with Nock noun constructors and variables of type `v`."
-  @type nock_noun_tv(v) :: tv(Noun.t(), v)
-
   @typedoc "A generic polynomial term with natural-number constructors."
   @type nat_term :: t(non_neg_integer())
 
   @typedoc "A generic polynomial term with Elixir atom constructors."
   @type atom_term :: t(atom())
-
-  @typedoc "A generic polynomial term with Nock atom constructors."
-  @type nock_atom_term :: t(Noun.noun_atom())
-
-  @typedoc "A generic polynomial term with Nock noun constructors."
-  @type nock_noun_term :: t(Noun.t())
 
   @doc """
   I create a variable term of type `termfv` by wrapping a variable in the `:tvar` tag.
