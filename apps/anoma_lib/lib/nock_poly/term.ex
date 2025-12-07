@@ -162,40 +162,6 @@ defmodule NockPoly.Term do
     x
   end
 
-  @doc """
-  I create a variable term of type `termfv` by wrapping a variable in the `:tvar` tag.
-  """
-  @spec var_termfv(v) :: {:tvar, v} when v: term
-  def var_termfv(v) do
-    {:tvar, v}
-  end
-
-  @doc """
-  I create a constructor term of type `termfv` by wrapping a constructor and children
-  in the `:tcom` tag.
-  """
-  @spec com_termfv(ctor, [x]) :: {:tcom, {ctor, [x]}}
-        when ctor: term, x: term
-  def com_termfv(ctor, children) do
-    {:tcom, {ctor, children}}
-  end
-
-  @doc """
-  I create a variable term of type `tv` by composing `in_tv` with `var_termfv`.
-  """
-  @spec var_tv(v) :: tv(ctor, v) when ctor: term, v: term
-  def var_tv(v) do
-    in_tv(var_termfv(v))
-  end
-
-  @doc """
-  I create a constructor term of type `tv` by composing `in_tv` with `com_termfv`.
-  """
-  @spec com_tv(ctor, [tv(ctor, v)]) :: tv(ctor, v) when ctor: term, v: term
-  def com_tv(ctor, children) do
-    in_tv(com_termfv(ctor, children))
-  end
-
   # I am the initial algebra of `termf`, which is guaranteed to have
   # one because it is polynomial.  (Its catamorphism is defined below.)
   # I can be equivalently generated (and that is what we do here, to minimize
@@ -230,6 +196,40 @@ defmodule NockPoly.Term do
 
   @typedoc "A generic polynomial term with Nock noun constructors."
   @type nock_noun_term :: t(Noun.t())
+
+  @doc """
+  I create a variable term of type `termfv` by wrapping a variable in the `:tvar` tag.
+  """
+  @spec var_termfv(v) :: {:tvar, v} when v: term
+  def var_termfv(v) do
+    {:tvar, v}
+  end
+
+  @doc """
+  I create a constructor term of type `termfv` by wrapping a constructor and children
+  in the `:tcom` tag.
+  """
+  @spec com_termfv(ctor, [x]) :: {:tcom, {ctor, [x]}}
+        when ctor: term, x: term
+  def com_termfv(ctor, children) do
+    {:tcom, {ctor, children}}
+  end
+
+  @doc """
+  I create a variable term of type `tv` by composing `in_tv` with `var_termfv`.
+  """
+  @spec var_tv(v) :: tv(ctor, v) when ctor: term, v: term
+  def var_tv(v) do
+    in_tv(var_termfv(v))
+  end
+
+  @doc """
+  I create a constructor term of type `tv` by composing `in_tv` with `com_termfv`.
+  """
+  @spec com_tv(ctor, [tv(ctor, v)]) :: tv(ctor, v) when ctor: term, v: term
+  def com_tv(ctor, children) do
+    in_tv(com_termfv(ctor, children))
+  end
 
   defmodule Unreachable do
     @moduledoc """

@@ -84,6 +84,77 @@ defmodule NockPoly.Sexpr do
   """
   @type closed_nock_noun_sexpr :: closed_sexpr(Noun.t())
 
+  @doc """
+  I create a variable S-expression.
+
+  This is a convenience function for constructing variable S-expressions.
+  """
+  @spec var(v) :: sexpr(atom, v) when atom: term, v: term
+  def var(v) do
+    {:var, v}
+  end
+
+  @doc """
+  I create an atom S-expression with children.
+
+  This is a convenience function for constructing atom S-expressions.
+  """
+  @spec atom(atom, [sexpr(atom, v)]) :: sexpr(atom, v)
+        when atom: term, v: term
+  def atom(constructor, children) do
+    {:atom, constructor, children}
+  end
+
+  @doc """
+  I create an atom S-expression with no children.
+
+  This is a convenience function for constructing nullary atom S-expressions.
+  """
+  @spec atom0(atom) :: sexpr(atom, v) when atom: term, v: term
+  def atom0(constructor) do
+    {:atom, constructor, []}
+  end
+
+  @doc """
+  I create a closed S-expression with children.
+
+  This is a convenience function for constructing closed S-expressions
+  using the simpler untagged representation. Returns a pair when the
+  children list is non-empty.
+  """
+  @spec closed(atom, nonempty_list(closed_sexpr(atom))) :: closed_sexpr(atom)
+        when atom: term
+  def closed(constructor, children) do
+    {constructor, children}
+  end
+
+  @doc """
+  I create a closed S-expression with no children.
+
+  This is a convenience function for constructing nullary closed S-expressions.
+  Returns a bare atom since there are no children.
+  """
+  @spec closed0(atom) :: closed_sexpr(atom) when atom: term
+  def closed0(constructor) do
+    constructor
+  end
+
+  defmodule Unreachable do
+    @moduledoc """
+    I provide unreachable functions for closed S-expressions.
+
+    These functions are used as substitution functions when working with closed
+    S-expressions (where the variable type is `none()`). Since `none()` is
+    uninhabited, these functions can never actually be called.
+    """
+
+    @dialyzer {:nowarn_function, unreachable_sexpr: 1}
+    @spec unreachable_sexpr(none()) :: no_return()
+    def unreachable_sexpr(var) do
+      raise "unreachable: attempted to substitute variable #{inspect(var)} in closed sexpr"
+    end
+  end
+
   @typedoc """
   I am a slice algebra for closed S-expressions.
 
@@ -255,77 +326,6 @@ defmodule NockPoly.Sexpr do
       &from_term_subst/1,
       term
     )
-  end
-
-  @doc """
-  I create a variable S-expression.
-
-  This is a convenience function for constructing variable S-expressions.
-  """
-  @spec var(v) :: sexpr(atom, v) when atom: term, v: term
-  def var(v) do
-    {:var, v}
-  end
-
-  @doc """
-  I create an atom S-expression with children.
-
-  This is a convenience function for constructing atom S-expressions.
-  """
-  @spec atom(atom, [sexpr(atom, v)]) :: sexpr(atom, v)
-        when atom: term, v: term
-  def atom(constructor, children) do
-    {:atom, constructor, children}
-  end
-
-  @doc """
-  I create an atom S-expression with no children.
-
-  This is a convenience function for constructing nullary atom S-expressions.
-  """
-  @spec atom0(atom) :: sexpr(atom, v) when atom: term, v: term
-  def atom0(constructor) do
-    {:atom, constructor, []}
-  end
-
-  @doc """
-  I create a closed S-expression with children.
-
-  This is a convenience function for constructing closed S-expressions
-  using the simpler untagged representation. Returns a pair when the
-  children list is non-empty.
-  """
-  @spec closed(atom, nonempty_list(closed_sexpr(atom))) :: closed_sexpr(atom)
-        when atom: term
-  def closed(constructor, children) do
-    {constructor, children}
-  end
-
-  @doc """
-  I create a closed S-expression with no children.
-
-  This is a convenience function for constructing nullary closed S-expressions.
-  Returns a bare atom since there are no children.
-  """
-  @spec closed0(atom) :: closed_sexpr(atom) when atom: term
-  def closed0(constructor) do
-    constructor
-  end
-
-  defmodule Unreachable do
-    @moduledoc """
-    I provide unreachable functions for closed S-expressions.
-
-    These functions are used as substitution functions when working with closed
-    S-expressions (where the variable type is `none()`). Since `none()` is
-    uninhabited, these functions can never actually be called.
-    """
-
-    @dialyzer {:nowarn_function, unreachable_sexpr: 1}
-    @spec unreachable_sexpr(none()) :: no_return()
-    def unreachable_sexpr(var) do
-      raise "unreachable: attempted to substitute variable #{inspect(var)} in closed sexpr"
-    end
   end
 
   @typedoc """
