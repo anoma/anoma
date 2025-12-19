@@ -664,7 +664,8 @@ defmodule Anoma.Node.Transaction.Ordering do
        ) do
     # launch a task with reads or writes
     Task.start(fn ->
-      chose_function(flag).({height, args}, from, addresses)
+      resp = chose_function(flag, {height, args}, addresses)
+      GenServer.reply(from, resp)
     end)
 
     # if a key has been acted on, remove it from pending
@@ -700,25 +701,18 @@ defmodule Anoma.Node.Transaction.Ordering do
     }
   end
 
-  @spec chose_function(:read | :write) :: ({non_neg_integer, any()},
-                                           GenServer.from(),
-                                           %{} ->
-                                             :ok
-                                             | {:ok, any()}
-                                             | {:error, any()})
-  defp chose_function(:write),
-    do: fn {height, list}, from, addresses ->
-      Enum.each(list, fn {key, value} ->
-        Map.fetch!(addresses, key)
-        |> Shard.write(key, value, height)
-      end)
+  @spec chose_function(:read | :write, {non_neg_integer, any()}, %{}) ::
+          :ok
+          | {:ok, any()}
+          | {:error, any()}
+  defp chose_function(:write, {height, list}, addresses) do
+    Enum.each(list, fn {key, value} ->
+      Map.fetch!(addresses, key)
+      |> Shard.write(key, value, height)
+    end)
+  end
 
-      GenServer.reply(from, :ok)
-    end
-
-  defp chose_function(:read),
-    do: fn {height, key}, from, addresses ->
-      from
-      |> GenServer.reply(Shard.read(Map.fetch!(addresses, key), key, height))
-    end
+  defp chose_function(:read, {height, key}, addresses) do
+    Shard.read(Map.fetch!(addresses, key), key, height)
+  end
 end
