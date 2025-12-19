@@ -664,7 +664,18 @@ defmodule Anoma.Node.Transaction.Ordering do
        ) do
     # launch a task with reads or writes
     Task.start(fn ->
-      resp = chose_function(flag, {height, args}, addresses)
+      resp =
+        case flag do
+          :read ->
+            Shard.read(Map.fetch!(addresses, args), args, height)
+
+          :write ->
+            Enum.each(args, fn {key, value} ->
+              Map.fetch!(addresses, key)
+              |> Shard.write(key, value, height)
+            end)
+        end
+
       GenServer.reply(from, resp)
     end)
 
@@ -699,20 +710,5 @@ defmodule Anoma.Node.Transaction.Ordering do
       | tx_id_to_height:
           Map.put(state.tx_id_to_height, tx_id, state.next_height)
     }
-  end
-
-  @spec chose_function(:read | :write, {non_neg_integer, any()}, %{}) ::
-          :ok
-          | {:ok, any()}
-          | {:error, any()}
-  defp chose_function(:write, {height, list}, addresses) do
-    Enum.each(list, fn {key, value} ->
-      Map.fetch!(addresses, key)
-      |> Shard.write(key, value, height)
-    end)
-  end
-
-  defp chose_function(:read, {height, key}, addresses) do
-    Shard.read(Map.fetch!(addresses, key), key, height)
   end
 end
