@@ -708,36 +708,17 @@ defmodule Anoma.Node.Transaction.Ordering do
                                              | {:error, any()})
   defp chose_function(:write),
     do: fn {height, list}, from, addresses ->
-      all_tasks =
-        for {key, value} <- list, reduce: [] do
-          tasks ->
-            # for each write, launch a separate task
-            [
-              Task.async(fn ->
-                Map.fetch!(addresses, key)
-                |> Shard.write(key, value, height)
-              end)
-              | tasks
-            ]
-        end
-
-      # make sure they all complete
-      for task <- all_tasks do
-        Task.await(task)
-      end
+      Enum.each(list, fn {key, value} ->
+        Map.fetch!(addresses, key)
+        |> Shard.write(key, value, height)
+      end)
 
       GenServer.reply(from, :ok)
     end
 
   defp chose_function(:read),
     do: fn {height, key}, from, addresses ->
-      GenServer.reply(
-        from,
-        Shard.read(
-          Map.fetch!(addresses, key),
-          key,
-          height
-        )
-      )
+      from
+      |> GenServer.reply(Shard.read(Map.fetch!(addresses, key), key, height))
     end
 end
