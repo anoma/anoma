@@ -403,29 +403,15 @@ defmodule Anoma.Node.Transaction.Ordering do
       for tx_id <- tx_id_list,
           reduce: {state.tx_id_to_height, state.next_height, %{}} do
         {map, order, map_of_keyheights} ->
-          reads = Map.get(state.reservations, tx_id).read
-          writes = Map.get(state.reservations, tx_id).write
+          reservations = Map.get(state.reservations, tx_id)
 
-          # record write orders
-          keymap_with_writes =
-            handle_order_update(
-              order,
-              :write,
-              writes,
-              map_of_keyheights,
-              state.shard_addresses
-            )
+          # Reserve the shards
+          reserve_keys(reservations, order, state.shard_addresses)
+          # Creates Key ⟶ [{flag, order}]
 
-          # record read orders if writes absent
           final_keymap =
-            handle_order_update(
-              order,
-              :read,
-              reads,
-              keymap_with_writes,
-              state.shard_addresses,
-              writes
-            )
+            reserve_order_mapping(reservations, order)
+            |> Map.merge(map_of_keyheights, fn _k, v1, v2 -> v2 ++ v1 end)
 
           with {from, atom, args} <- Map.get(state.requests, tx_id) do
             # if any requests were made by workers, forward them to shards
@@ -611,38 +597,28 @@ defmodule Anoma.Node.Transaction.Ordering do
     end
   end
 
-  @spec handle_order_update(
-          non_neg_integer(),
-          flag(),
-          MapSet.t(),
-          %{},
-          %{},
-          MapSet.t()
-        ) :: %{}
-  defp handle_order_update(
-         order,
-         flag,
-         keys,
-         keyheights,
-         addresses,
-         cmp \\ MapSet.new()
-       ) do
-    for key <- keys, reduce: keyheights do
-      # forward reservations to shards now that we know the heights
-      keymap ->
+  @spec reserve_keys(reservations(), non_neg_integer(), %{any() => pid()}) ::
+          :ok
+  defp reserve_keys(%{read: read_keys, write: write_keys}, order, addresses) do
+    op = fn keys, flag ->
+      Enum.each(keys, fn key ->
         Map.fetch!(addresses, key)
         |> Shard.reserve(key, order, flag)
-
-        # store the list of heights a key is concerned with for a given block
-        # if no write has been recorded
-        unless MapSet.member?(cmp, key) do
-          Map.update(keymap, key, [{flag, order}], fn list ->
-            list ++ [{flag, order}]
-          end)
-        else
-          keymap
-        end
+      end)
     end
+
+    # Order matters
+    op.(write_keys, :write)
+    op.(read_keys, :read)
+  end
+
+  @spec reserve_order_mapping(reservations(), non_neg_integer()) :: %{
+          any() => list()
+        }
+  defp reserve_order_mapping(%{read: read_keys, write: write_keys}, order) do
+    # Only record reads when writes are absent (merge takes the 2nd)
+    Map.new(read_keys, &{&1, [{:read, order}]})
+    |> Map.merge(Map.new(write_keys, &{&1, [{:write, order}]}))
   end
 
   @spec handle_advance_watermark([{flag(), any()}], any(), pid()) :: any()
@@ -677,17 +653,15 @@ defmodule Anoma.Node.Transaction.Ordering do
           reservations(),
           any()
         ) :: reservations()
-  defp(
-    handle_launch(
-      flag,
-      set_of_keys,
-      {tx_id, args},
-      from,
-      height,
-      pending_reservations,
-      addresses
-    )
-  ) do
+  defp handle_launch(
+         flag,
+         set_of_keys,
+         {tx_id, args},
+         from,
+         height,
+         pending_reservations,
+         addresses
+       ) do
     # launch a task with reads or writes
     Task.start(fn ->
       chose_function(flag).({height, args}, from, addresses)
