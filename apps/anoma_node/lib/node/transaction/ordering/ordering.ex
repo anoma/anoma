@@ -409,6 +409,7 @@ defmodule Anoma.Node.Transaction.Ordering do
           reserve_keys(reservations, order, state.shard_addresses)
           # Creates Key ⟶ [{flag, order}]
 
+          # This must be ordered correctly?
           final_keymap =
             reserve_order_mapping(reservations, order)
             |> Map.merge(map_of_keyheights, fn _k, v1, v2 -> v2 ++ v1 end)
@@ -680,15 +681,11 @@ defmodule Anoma.Node.Transaction.Ordering do
     end)
 
     # if a key has been acted on, remove it from pending
-    pending_reservations
-    |> Map.update!(
+    Map.update!(
+      pending_reservations,
       tx_id,
       fn map ->
-        Map.update!(
-          map,
-          flag,
-          &MapSet.difference(&1, set_of_keys)
-        )
+        Map.update!(map, flag, &MapSet.difference(&1, set_of_keys))
       end
     )
   end
