@@ -687,9 +687,7 @@ defmodule Anoma.Node.Transaction.Ordering do
         Map.update!(
           map,
           flag,
-          &MapSet.reject(&1, fn key ->
-            MapSet.member?(set_of_keys, key)
-          end)
+          &MapSet.difference(&1, set_of_keys)
         )
       end
     )
