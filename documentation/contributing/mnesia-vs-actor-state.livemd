@@ -31,7 +31,7 @@ One interesting thing about our system is that in the user data section of our d
 
 The `dump` format stores 2 kinds of information:
 
-1. Actor State
+1. [Actor](../visualization/actors.livemd) State
 2. [Mnesia](https://en.wikipedia.org/wiki/Mnesia) State
 
 As discussed in the user data documentation, loading a `dump` file overwrites the DB. However what we did not cover is what the differences are between [Mnesia](https://en.wikipedia.org/wiki/Mnesia) storage and Actor storage.
