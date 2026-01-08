@@ -691,8 +691,8 @@ defmodule Anoma.Node.Transaction.Ordering do
           reservations()
   defp remove_pending(flag, pending, keys, id) do
     pending
-    |> Map.update!(id, fn map ->
-      Map.update!(map, flag, &MapSet.difference(&1, keys))
+    |> Map.update(id, %{}, fn map ->
+      Map.update(map, flag, MapSet.new(), &MapSet.difference(&1, keys))
     end)
   end
 
