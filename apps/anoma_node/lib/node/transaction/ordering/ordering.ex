@@ -109,13 +109,13 @@ defmodule Anoma.Node.Transaction.Ordering do
 
     field(
       :reservations,
-      reservations(),
+      %{any() => reservations()},
       default: %{}
     )
 
     field(
       :pending_reservations,
-      reservations(),
+      %{any() => reservations()},
       default: %{}
     )
 
