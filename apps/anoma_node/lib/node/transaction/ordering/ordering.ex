@@ -250,8 +250,9 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   Afterwards, I send an event specifying that a particular ID has indeed
   received an order.
-  """
 
+  WARNING :: NO Read Only Transaction ID's should
+  """
   @spec order(String.t(), [binary()]) :: :ok
   def order(node_id, txs) do
     GenServer.cast(Registry.via(node_id, __MODULE__), {:order, txs})
@@ -508,6 +509,10 @@ defmodule Anoma.Node.Transaction.Ordering do
             end
           end
       end
+
+    # Only remove the writes, we allow reading, so we can read in the
+    # past, if the TX has finalized, the height has passed, so we
+    # should be able to read safely in the past that is finalized, we need to fix the shard logic
 
     # if any reservations still pending, unreserve them
     for {type, pending_keys} <- Map.fetch!(state.pending_reservations, id) do
