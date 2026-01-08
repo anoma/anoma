@@ -343,8 +343,8 @@ defmodule Anoma.Node.Transaction.Ordering do
           t()
         ) :: t()
   defp handle_write({tx_id, list}, from, state) do
-    # for each key to be written, make sure they exist
     keys = Enum.map(list, &elem(&1, 0)) |> Enum.into(MapSet.new())
+
     state_w_shards = ensure_all_started(state, keys)
 
     # case on whether there is a height present
@@ -353,7 +353,6 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   @spec handle_read({binary(), any()}, GenServer.from(), t()) :: t()
   defp handle_read({tx_id, key}, from, state) do
-    # make sure the shard for the key exists
     state_w_shards = ensure_started(state, key)
 
     # case on whether there is a height present
