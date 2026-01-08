@@ -113,12 +113,6 @@ defmodule Anoma.Node.Transaction.Ordering do
       default: %{}
     )
 
-    field(
-      :pending_reservations,
-      %{any() => reservations()},
-      default: %{}
-    )
-
     field(:block_key_order, %{any() => list({flag(), non_neg_integer()})},
       default: %{}
     )
@@ -349,17 +343,15 @@ defmodule Anoma.Node.Transaction.Ordering do
     state_w_shards = ensure_all_started(state, keys)
 
     # case on whether there is a height present
-    handle_height(:write, keys, {tx_id, list}, from, state_w_shards)
+    handle_height(:write, {tx_id, list}, from, state_w_shards)
   end
 
   @spec handle_read({binary(), any()}, GenServer.from(), t()) :: t()
   defp handle_read({tx_id, key}, from, state) do
-    keys = MapSet.new([key])
-
     state_w_shards = ensure_started(state, key)
 
     # case on whether there is a height present
-    handle_height(:read, keys, {tx_id, key}, from, state_w_shards)
+    handle_height(:read, {tx_id, key}, from, state_w_shards)
   end
 
   @spec handle_commit(
@@ -415,21 +407,7 @@ defmodule Anoma.Node.Transaction.Ordering do
 
           with {from, atom, args} <- Map.get(state.requests, tx_id) do
             # if any requests were made by workers, forward them to shards
-            set_of_keys =
-              case atom do
-                :read -> MapSet.new([args])
-                :write -> Enum.into(args, MapSet.new(), &elem(&1, 1))
-              end
-
-            handle_launch(
-              atom,
-              set_of_keys,
-              {tx_id, args},
-              from,
-              order,
-              state.pending_reservations,
-              state.shard_addresses
-            )
+            handle_launch(atom, args, from, order, state.shard_addresses)
           end
 
           {Map.put(map, tx_id, order), order + 1, final_keymap}
@@ -456,9 +434,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     new_state =
       %__MODULE__{
         state
-        | reservations: Map.put(state.reservations, tx_id, res),
-          pending_reservations:
-            Map.put(state.pending_reservations, tx_id, res)
+        | reservations: Map.put(state.reservations, tx_id, res)
       }
       |> ensure_all_started(MapSet.union(res.read, res.write))
 
@@ -514,9 +490,9 @@ defmodule Anoma.Node.Transaction.Ordering do
     # past, if the TX has finalized, the height has passed, so we
     # should be able to read safely in the past that is finalized, we need to fix the shard logic
 
-    # if any reservations still pending, unreserve them
-    for {type, pending_keys} <- Map.fetch!(state.pending_reservations, id) do
-      for key <- pending_keys do
+    # Unreserve reservations that may be out
+    for {type, keys} <- Map.fetch!(state.reservations, id) do
+      for key <- keys do
         state.shard_addresses
         |> Map.fetch!(key)
         |> Shard.unreserve(key, time, type)
@@ -527,7 +503,6 @@ defmodule Anoma.Node.Transaction.Ordering do
       state
       | requests: Map.delete(state.requests, id),
         reservations: Map.delete(state.reservations, id),
-        pending_reservations: Map.delete(state.pending_reservations, id),
         block_key_order: keymap
     }
   end
@@ -567,30 +542,14 @@ defmodule Anoma.Node.Transaction.Ordering do
     end
   end
 
-  @spec handle_height(
-          flag(),
-          any(),
-          {binary(), any()},
-          GenServer.from(),
-          t()
-        ) :: t()
-  defp handle_height(flag, set_of_keys, {tx_id, args}, from, state) do
+  @spec handle_height(flag(), {binary(), any()}, GenServer.from(), t()) :: t()
+  defp handle_height(flag, {tx_id, args}, from, state) do
     case Map.fetch(state.tx_id_to_height, tx_id) do
       {:ok, height} ->
-        # if we know the height, launch request and update pending keys
-        pending =
-          handle_launch(
-            flag,
-            set_of_keys,
-            {tx_id, args},
-            from,
-            height,
-            state.pending_reservations,
-            state.shard_addresses
-          )
+        # if we know the height, launch request
+        handle_launch(flag, args, from, height, state.shard_addresses)
 
-        # remove the reservation
-        %__MODULE__{state | pending_reservations: pending}
+        state
 
       :error ->
         # otherwise store the request
@@ -650,31 +609,21 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   @spec handle_launch(
           :read | :write,
-          MapSet.t(),
-          {binary(), any()},
+          any(),
           GenServer.from(),
           non_neg_integer(),
-          reservations(),
           any()
         ) :: reservations()
-  defp handle_launch(
-         flag,
-         set_of_keys,
-         {tx_id, args},
-         from,
-         height,
-         pending_reservations,
-         addresses
-       ) do
+  defp handle_launch(flag, keys, from, height, addresses) do
     # launch a task with reads or writes
     Task.start(fn ->
       resp =
         case flag do
           :read ->
-            Shard.read(Map.fetch!(addresses, args), args, height)
+            Shard.read(Map.fetch!(addresses, keys), keys, height)
 
           :write ->
-            Enum.each(args, fn {key, value} ->
+            Enum.each(keys, fn {key, value} ->
               Map.fetch!(addresses, key)
               |> Shard.write(key, value, height)
             end)
@@ -682,19 +631,8 @@ defmodule Anoma.Node.Transaction.Ordering do
 
       GenServer.reply(from, resp)
     end)
-
-    # if a key has been acted on, remove it from pending
-    remove_pending(flag, pending_reservations, set_of_keys, tx_id)
   end
 
-  @spec remove_pending(:read | :write, reservations(), MapSet.t(), binary()) ::
-          reservations()
-  defp remove_pending(flag, pending, keys, id) do
-    pending
-    |> Map.update(id, %{}, fn map ->
-      Map.update(map, flag, MapSet.new(), &MapSet.difference(&1, keys))
-    end)
-  end
 
   @spec handle_read_only(binary(), list(), t()) :: t()
   defp handle_read_only(tx_id, reads, state) do
