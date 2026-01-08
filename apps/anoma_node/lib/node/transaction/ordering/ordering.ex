@@ -677,13 +677,16 @@ defmodule Anoma.Node.Transaction.Ordering do
     end)
 
     # if a key has been acted on, remove it from pending
-    Map.update!(
-      pending_reservations,
-      tx_id,
-      fn map ->
-        Map.update!(map, flag, &MapSet.difference(&1, set_of_keys))
-      end
-    )
+    remove_pending(flag, pending_reservations, set_of_keys, tx_id)
+  end
+
+  @spec remove_pending(:read | :write, reservations(), MapSet.t(), binary()) ::
+          reservations()
+  defp remove_pending(flag, pending, keys, id) do
+    pending
+    |> Map.update!(id, fn map ->
+      Map.update!(map, flag, &MapSet.difference(&1, keys))
+    end)
   end
 
   @spec handle_read_only(binary(), list(), t()) :: t()
