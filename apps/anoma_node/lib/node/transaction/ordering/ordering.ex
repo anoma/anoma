@@ -353,10 +353,12 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   @spec handle_read({binary(), any()}, GenServer.from(), t()) :: t()
   defp handle_read({tx_id, key}, from, state) do
+    keys = MapSet.new([key])
+
     state_w_shards = ensure_started(state, key)
 
     # case on whether there is a height present
-    handle_height(:read, MapSet.new(key), {tx_id, key}, from, state_w_shards)
+    handle_height(:read, keys, {tx_id, key}, from, state_w_shards)
   end
 
   @spec handle_commit(
