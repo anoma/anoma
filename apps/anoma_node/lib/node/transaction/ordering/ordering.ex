@@ -449,28 +449,23 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   @spec handle_reserve(binary(), %{:read => list(), :write => list()}, t()) ::
           t()
-  defp handle_reserve(tx_id, reservations, state) do
-    # update reservation list
-    state_w_reservations = %__MODULE__{
-      state
-      | reservations: Map.put(state.reservations, tx_id, reservations),
-        pending_reservations:
-          Map.put(state.pending_reservations, tx_id, reservations)
-    }
+  defp handle_reserve(tx_id, res, state) do
+    # update reservation list, and reserve shard addresses
+    new_state =
+      %__MODULE__{
+        state
+        | reservations: Map.put(state.reservations, tx_id, res),
+          pending_reservations:
+            Map.put(state.pending_reservations, tx_id, res)
+      }
+      |> ensure_all_started(MapSet.union(res.read, res.write))
 
-    # if new keys are presents, get shard addresses
-    state_w_shards =
-      state_w_reservations
-      |> ensure_all_started(
-        MapSet.union(reservations.read, reservations.write)
-      )
-
-    unless Enum.empty?(reservations.write) do
+    unless Enum.empty?(res.write) do
       # if usual transaction do nothing
-      state_w_shards
+      new_state
     else
       # else handle read only transaction
-      handle_read_only(tx_id, reservations.read, state_w_shards)
+      handle_read_only(tx_id, res.read, new_state)
     end
   end
 
