@@ -344,11 +344,8 @@ defmodule Anoma.Node.Transaction.Ordering do
         ) :: t()
   defp handle_write({tx_id, list}, from, state) do
     # for each key to be written, make sure they exist
-    {state_w_shards, keys} =
-      for {key, _value} <- list, reduce: {state, MapSet.new()} do
-        {in_progress_state, keys} ->
-          {get_or_start_shard(in_progress_state, key), MapSet.put(keys, key)}
-      end
+    keys = Enum.map(list, &elem(&1, 0)) |> Enum.into(MapSet.new())
+    state_w_shards = ensure_all_started(state, keys)
 
     # case on whether there is a height present
     handle_height(:write, keys, {tx_id, list}, from, state_w_shards)
@@ -357,7 +354,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   @spec handle_read({binary(), any()}, GenServer.from(), t()) :: t()
   defp handle_read({tx_id, key}, from, state) do
     # make sure the shard for the key exists
-    state_w_shards = get_or_start_shard(state, key)
+    state_w_shards = ensure_started(state, key)
 
     # case on whether there is a height present
     handle_height(:read, MapSet.new(key), {tx_id, key}, from, state_w_shards)
@@ -463,10 +460,10 @@ defmodule Anoma.Node.Transaction.Ordering do
 
     # if new keys are presents, get shard addresses
     state_w_shards =
-      for keys <- MapSet.union(reservations.read, reservations.write),
-          reduce: state_w_reservations do
-        in_progress_state -> get_or_start_shard(in_progress_state, keys)
-      end
+      state_w_reservations
+      |> ensure_all_started(
+        MapSet.union(reservations.read, reservations.write)
+      )
 
     unless Enum.empty?(reservations.write) do
       # if usual transaction do nothing
@@ -538,8 +535,13 @@ defmodule Anoma.Node.Transaction.Ordering do
   #                           Helpers                        #
   ############################################################
 
-  @spec get_or_start_shard(t(), any()) :: t()
-  defp get_or_start_shard(state, key) do
+  @spec ensure_all_started(t(), Enum.t()) :: t()
+  defp ensure_all_started(state, keys) do
+    Enum.reduce(keys, state, fn key, state -> ensure_started(state, key) end)
+  end
+
+  @spec ensure_started(t(), any()) :: t()
+  defp ensure_started(state, key) do
     case Map.fetch(state.shard_addresses, key) do
       {:ok, _pid} ->
         # if we already know the shard PID do nothing
