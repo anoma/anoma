@@ -405,9 +405,9 @@ defmodule Anoma.Node.Transaction.Ordering do
             reserve_order_mapping(reservations, order)
             |> Map.merge(map_of_keyheights, fn _k, v1, v2 -> v2 ++ v1 end)
 
-          with {from, atom, args} <- Map.get(state.requests, tx_id) do
+          with {from, flag, args} <- Map.get(state.requests, tx_id) do
             # if any requests were made by workers, forward them to shards
-            handle_launch(atom, args, from, order, state.shard_addresses)
+            handle_launch(flag, args, from, order, state.shard_addresses)
           end
 
           {Map.put(map, tx_id, order), order + 1, final_keymap}
@@ -607,32 +607,29 @@ defmodule Anoma.Node.Transaction.Ordering do
     )
   end
 
-  @spec handle_launch(
-          :read | :write,
-          any(),
-          GenServer.from(),
-          non_neg_integer(),
-          any()
-        ) :: reservations()
-  defp handle_launch(flag, keys, from, height, addresses) do
-    # launch a task with reads or writes
+  @spec handle_launch(:read, any(), GenServer.from(), non_neg_integer(), %{
+          any() => pid()
+        }) :: {:ok, pid()}
+  defp handle_launch(:read, key, from, height, addresses) do
     Task.start(fn ->
-      resp =
-        case flag do
-          :read ->
-            Shard.read(Map.fetch!(addresses, keys), keys, height)
-
-          :write ->
-            Enum.each(keys, fn {key, value} ->
-              Map.fetch!(addresses, key)
-              |> Shard.write(key, value, height)
-            end)
-        end
-
+      resp = Shard.read(Map.fetch!(addresses, key), key, height)
       GenServer.reply(from, resp)
     end)
   end
 
+  @spec handle_launch(:write, any(), GenServer.from(), non_neg_integer(), %{
+          any() => pid()
+        }) :: {:ok, pid()}
+  defp handle_launch(:write, keys, from, height, addresses) do
+    Task.start(fn ->
+      Enum.each(keys, fn {key, value} ->
+        Map.fetch!(addresses, key)
+        |> Shard.write(key, value, height)
+      end)
+
+      GenServer.reply(from, :ok)
+    end)
+  end
 
   @spec handle_read_only(binary(), list(), t()) :: t()
   defp handle_read_only(tx_id, reads, state) do
