@@ -65,7 +65,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   @typedoc """
   I am a request that can be enqued
   """
-  @type request :: {GenServer.from(), flag(), list({any(), any()}) | any()}
+  @type request :: {flag(), GenServer.from(), list({any(), any()}) | any()}
   ############################################################
   #                         State                            #
   ############################################################
@@ -337,13 +337,13 @@ defmodule Anoma.Node.Transaction.Ordering do
 
     state_w_shards = ensure_all_started(state, keys)
 
-    process_request({from, :write, list}, tx_id, state_w_shards)
+    process_request({:write, from, list}, tx_id, state_w_shards)
   end
 
   @spec handle_read({binary(), any()}, GenServer.from(), t()) :: t()
   defp handle_read({tx_id, key}, from, state) do
     state_w_shards = ensure_started(state, key)
-    process_request({from, :read, key}, tx_id, state_w_shards)
+    process_request({:read, from, key}, tx_id, state_w_shards)
   end
 
   @spec handle_commit(
@@ -598,14 +598,14 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   @spec fire_request(request(), non_neg_integer(), %{any() => pid()}) ::
           {:ok, pid()}
-  defp fire_request({from, :read, key}, height, addresses) do
+  defp fire_request({:read, from, key}, height, addresses) do
     Task.start(fn ->
       resp = Shard.read(Map.fetch!(addresses, key), key, height)
       GenServer.reply(from, resp)
     end)
   end
 
-  defp fire_request({from, :write, keys}, height, addresses) do
+  defp fire_request({:write, from, keys}, height, addresses) do
     Task.start(fn ->
       Enum.each(keys, fn {key, value} ->
         Map.fetch!(addresses, key)
