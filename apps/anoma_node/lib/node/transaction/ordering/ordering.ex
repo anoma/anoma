@@ -248,7 +248,7 @@ defmodule Anoma.Node.Transaction.Ordering do
   end
 
   @doc """
-  I am the Ordeirng reserve function.
+  I am the Ordering reserve function.
 
   Given an ID of a transaction, there are two possible states:
 
