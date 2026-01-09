@@ -3,6 +3,7 @@ defmodule Anoma.Node.Examples.EShard do
   I contain examples on how to interact with the Shard module.
   """
 
+  alias Anoma.Node
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Shard
   alias Anoma.Node.Examples.ENode
@@ -13,20 +14,15 @@ defmodule Anoma.Node.Examples.EShard do
   I start a node with shards "a", "b", "c", initializing "a" and "c"
   with specific values, and verify the initial state.
   """
-  @spec spawn_node_with_initial_state() :: {:ok, ENode.t()}
-  def spawn_node_with_initial_state() do
-    # Generate a unique node_id for test isolation
-    unique_suffix = System.unique_integer([:positive, :monotonic])
-    node_id = "shard_test_node_#{unique_suffix}"
-
+  @spec spawn_node_with_initial_state(String.t()) :: String.t()
+  def spawn_node_with_initial_state(node_id \\ Node.example_random_id()) do
     # Define the schema: keys "a", "b", "c". "a" and "c" have initial values.
     schema = [{["a"], 5}, ["b"], {["c"], 15}]
     shard_config = [strategy: :one_per_key, schema: schema]
     opts = [node_id: node_id, transaction: [shards: shard_config]]
 
     # Start the node
-    enode = ENode.start_node(opts)
-    assert %ENode{node_id: ^node_id} = enode
+    ENode.start_node(opts)
 
     # Get shard PIDs
     pid_a = Registry.whereis(node_id, Shard, :a)
@@ -55,17 +51,16 @@ defmodule Anoma.Node.Examples.EShard do
     refute Map.has_key?(b_key_map, 0),
            "Shard 'b' should not have an initial value at height 0"
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
   I start a Shard with a predefined initial state and verify that
   reading the initial state (at height 1) returns the correct values.
   """
-  @spec start_and_initial_state() :: {:ok, ENode.t()}
-  def start_and_initial_state() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec start_and_initial_state(String.t()) :: String.t()
+  def start_and_initial_state(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_a_via = Registry.via(node_id, Shard, :a)
     shard_b_via = Registry.via(node_id, Shard, :b)
@@ -94,17 +89,16 @@ defmodule Anoma.Node.Examples.EShard do
     # Test key "c"
     assert Shard.read(shard_c_via, ["c"], 4) == {:ok, 15}
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
   I test a scenario where a read is requested before the watermark allows,
   then the watermark advances, and the read completes.
   """
-  @spec queued_read() :: {:ok, ENode.t()}
-  def queued_read() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec queued_read(String.t()) :: String.t()
+  def queued_read(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -133,7 +127,7 @@ defmodule Anoma.Node.Examples.EShard do
     # 5. Assert the result
     assert result == {:ok, 5}
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
@@ -141,10 +135,9 @@ defmodule Anoma.Node.Examples.EShard do
   a write is performed *after* the read is queued but *before* the read resolves,
   affecting the read's outcome.
   """
-  @spec queued_read_with_intermediate_write() :: {:ok, ENode.t()}
-  def queued_read_with_intermediate_write() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec queued_read_with_intermediate_write(String.t()) :: String.t()
+  def queued_read_with_intermediate_write(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -195,17 +188,16 @@ defmodule Anoma.Node.Examples.EShard do
     # Therefore, the latest write < 7 is the one at height 5.
     assert result == {:ok, write_value}
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
   I test a scenario where a read is requested, but the watermark never
   advances, causing the read to time out.
   """
-  @spec read_timeout() :: {:ok, ENode.t()}
-  def read_timeout() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec read_timeout(String.t()) :: String.t()
+  def read_timeout(node_id) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -244,7 +236,7 @@ defmodule Anoma.Node.Examples.EShard do
     if Process.alive?(read_task.pid),
       do: Task.shutdown(read_task, :brutal_kill)
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
@@ -252,10 +244,11 @@ defmodule Anoma.Node.Examples.EShard do
   An intermediate watermark advance unblocks only the lower-height read,
   while the higher-height read eventually times out.
   """
-  @spec partial_read_unblocking_with_timeout() :: {:ok, ENode.t()}
-  def partial_read_unblocking_with_timeout() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec partial_read_unblocking_with_timeout(String.t()) :: String.t()
+  def partial_read_unblocking_with_timeout(
+        node_id \\ Node.example_random_id()
+      ) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -312,17 +305,16 @@ defmodule Anoma.Node.Examples.EShard do
     if Process.alive?(read_task_timeout.pid),
       do: Task.shutdown(read_task_timeout, :brutal_kill)
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
   I test a more complex scenario involving multiple writes, reads, and
   write watermark advancements.
   """
-  @spec complex_write_and_read_scenario() :: {:ok, ENode.t()}
-  def complex_write_and_read_scenario() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec complex_write_and_read_scenario(String.t()) :: String.t()
+  def complex_write_and_read_scenario(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -380,17 +372,16 @@ defmodule Anoma.Node.Examples.EShard do
     # Sees write@10
     assert Shard.read(shard_via, key, 11) == {:ok, 8}
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
   I test the internal state changes related to Garbage Collection (GC)
   and the state of entries after reservations are released.
   """
-  @spec gc_and_reserve_release_state() :: {:ok, ENode.t()}
-  def gc_and_reserve_release_state() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec gc_and_reserve_release_state(String.t()) :: String.t()
+  def gc_and_reserve_release_state(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -498,17 +489,16 @@ defmodule Anoma.Node.Examples.EShard do
     refute Map.has_key?(kv5, 15)
     refute Map.has_key?(kv5, 17)
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
   I test various scenarios of reservation acquisition failures due to watermarks,
   existing values, and successful re-acquisition of existing reservations.
   """
-  @spec reserve_failures_and_reacquisition() :: {:ok, ENode.t()}
-  def reserve_failures_and_reacquisition() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec reserve_failures_and_reacquisition(String.t()) :: String.t()
+  def reserve_failures_and_reacquisition(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -587,7 +577,7 @@ defmodule Anoma.Node.Examples.EShard do
     assert kv_after_blocking[20].read_reserved_count > 0
     assert !kv_after_blocking[20].write_reserved?
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
@@ -595,10 +585,9 @@ defmodule Anoma.Node.Examples.EShard do
   (at a height lower than the height of the value the read depends on)
   is still held. This verifies a fix for overly broad write reservation blocking.
   """
-  @spec read_past_old_write_reserve() :: {:ok, ENode.t()}
-  def read_past_old_write_reserve() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec read_past_old_write_reserve(String.t()) :: String.t()
+  def read_past_old_write_reserve(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -636,17 +625,16 @@ defmodule Anoma.Node.Examples.EShard do
     assert Map.has_key?(kv_state, h_reserve)
     assert kv_state[h_reserve].write_reserved?
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
   I test writing to an initially empty shard, advancing the write watermark,
   and then performing reads both below and above the write height.
   """
-  @spec write_then_reads_empty_start() :: {:ok, ENode.t()}
-  def write_then_reads_empty_start() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec write_then_reads_empty_start(String.t()) :: String.t()
+  def write_then_reads_empty_start(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :b)
 
@@ -672,7 +660,7 @@ defmodule Anoma.Node.Examples.EShard do
     assert :ok == Shard.reserve(shard_via, key, read_height_ok, :read)
     assert Shard.read(shard_via, key, read_height_ok) == {:ok, write_value}
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
@@ -680,10 +668,9 @@ defmodule Anoma.Node.Examples.EShard do
   for key "b" at multiple heights, then unreserving at a specific height and verifying that only
   those reservations are released.
   """
-  @spec unreserve() :: {:ok, ENode.t()}
-  def unreserve() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec unreserve(String.t()) :: String.t()
+  def unreserve(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_a_via = Registry.via(node_id, Shard, :a)
     shard_b_via = Registry.via(node_id, Shard, :b)
@@ -753,17 +740,19 @@ defmodule Anoma.Node.Examples.EShard do
       assert b_heights_after[height].write_reserved?
     end)
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
   I test that GC preserves the latest *committed* state below the read
   watermark, even if a later read reservation was acquired and released.
   """
-  @spec gc_preserves_committed_state_before_watermark() :: {:ok, ENode.t()}
-  def gc_preserves_committed_state_before_watermark() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec gc_preserves_committed_state_before_watermark(String.t()) ::
+          String.t()
+  def gc_preserves_committed_state_before_watermark(
+        node_id \\ Node.example_random_id()
+      ) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :c)
 
@@ -801,7 +790,7 @@ defmodule Anoma.Node.Examples.EShard do
     refute Map.has_key?(key_height_map, 4),
            "State at height 4 should be GC'd"
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
@@ -809,10 +798,9 @@ defmodule Anoma.Node.Examples.EShard do
   allowing a previously blocked read (blocked by the reservation, not the watermark)
   to complete.
   """
-  @spec unreserve_triggers_pending_read() :: {:ok, ENode.t()}
-  def unreserve_triggers_pending_read() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec unreserve_triggers_pending_read(String.t()) :: String.t()
+  def unreserve_triggers_pending_read(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -863,7 +851,7 @@ defmodule Anoma.Node.Examples.EShard do
     assert result == {:ok, write_value},
            "Read should have resolved to #{write_value} after unreserve"
 
-    {:ok, enode}
+    node_id
   end
 
   @doc """
@@ -871,10 +859,9 @@ defmodule Anoma.Node.Examples.EShard do
   values, performing writes, backing up the state, and verifying the backup
   contents in Mnesia.
   """
-  @spec backup_state() :: {:ok, ENode.t()}
-  def backup_state() do
-    {:ok, enode} = spawn_node_with_initial_state()
-    %ENode{node_id: node_id} = enode
+  @spec backup_state(String.t()) :: String.t()
+  def backup_state(node_id \\ Node.example_random_id()) do
+    spawn_node_with_initial_state(node_id)
 
     shard_a_via = Registry.via(node_id, Shard, :a)
     shard_b_via = Registry.via(node_id, Shard, :b)
@@ -947,6 +934,6 @@ defmodule Anoma.Node.Examples.EShard do
              "Mismatch for backup of shard #{shard_id} key '#{key}' height #{height}. Expected #{inspect(expected_record)}, got #{inspect(read_result)}"
     end)
 
-    {:ok, enode}
+    node_id
   end
 end
