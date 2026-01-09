@@ -44,9 +44,9 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
     assert is_pid(pid_shard_c), "Shard 'c' should be registered and alive."
 
     # 3. Verify Initial State within Shards (don't use stateful Shard.read)
-    state_a = Shard.debug_get_state(pid_shard_a)
-    state_b = Shard.debug_get_state(pid_shard_b)
-    state_c = Shard.debug_get_state(pid_shard_c)
+    state_a = :sys.get_state(pid_shard_a)
+    state_b = :sys.get_state(pid_shard_b)
+    state_c = :sys.get_state(pid_shard_c)
 
     # Check initial value at height 0
     assert state_a.kv[["a"]][0].value == 5, "Shard 'a' initial value mismatch"
@@ -111,8 +111,8 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
     assert existing_pid_a == Registry.whereis(node_id, Shard, :a)
 
     # 5. Verify initial state within new shards 'd' and 'e'
-    state_d = Shard.debug_get_state(pid_shard_d)
-    state_e = Shard.debug_get_state(pid_shard_e)
+    state_d = :sys.get_state(pid_shard_d)
+    state_e = :sys.get_state(pid_shard_e)
 
     assert state_d.kv[["d"]][0].value == 10,
            "Shard 'd' initial value mismatch"

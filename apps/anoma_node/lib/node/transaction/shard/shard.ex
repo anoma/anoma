@@ -238,15 +238,6 @@ defmodule Anoma.Node.Transaction.Shard do
     GenServer.cast(shard_pid, {:write_watermark_advanced, key, h_write})
   end
 
-  # Remove, genserver itself has this
-  @doc """
-  I return the internal state of the Shard GenServer. **Use for debugging only.**
-  """
-  @spec debug_get_state(GenServer.server()) :: __MODULE__.t()
-  def debug_get_state(shard_pid) do
-    GenServer.call(shard_pid, :debug_get_state, :infinity)
-  end
-
   ############################################################
   #                    Genserver Callbacks                    #
   ############################################################
@@ -329,12 +320,6 @@ defmodule Anoma.Node.Transaction.Shard do
   @impl true
   def handle_call(:backup_state, _from, state) do
     handle_backup_state(state)
-  end
-
-  # --- Debug State Handling ---
-  @impl true
-  def handle_call(:debug_get_state, _from, state) do
-    {:reply, state, state}
   end
 
   # --- Watermark Update Handling ---

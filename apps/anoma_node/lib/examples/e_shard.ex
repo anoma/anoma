@@ -34,9 +34,9 @@ defmodule Anoma.Node.Examples.EShard do
     assert is_pid(pid_c), "Shard 'c' PID not found."
 
     # Get initial states
-    state_a = Shard.debug_get_state(pid_a)
-    state_b = Shard.debug_get_state(pid_b)
-    state_c = Shard.debug_get_state(pid_c)
+    state_a = :sys.get_state(pid_a)
+    state_b = :sys.get_state(pid_b)
+    state_c = :sys.get_state(pid_c)
 
     # Verify initial states at height 0
     assert Map.get(state_a.kv, ["a"], %{})[0].value == 5,
@@ -401,7 +401,7 @@ defmodule Anoma.Node.Examples.EShard do
     end)
 
     # --- Direct State Check (Post-Write) ---
-    state1 = Shard.debug_get_state(shard_via)
+    state1 = :sys.get_state(shard_via)
     kv1 = Map.get(state1.kv, key, %{})
 
     assert Map.get(kv1, 0).value == 5
@@ -419,7 +419,7 @@ defmodule Anoma.Node.Examples.EShard do
     assert :ok == Shard.reserve(shard_via, key, 17, :read)
 
     # Verify reservation presence in state
-    state2 = Shard.debug_get_state(shard_via)
+    state2 = :sys.get_state(shard_via)
     kv2 = Map.get(state2.kv, key, %{})
     assert Map.has_key?(kv2, 17)
     assert kv2[17].read_reserved_count > 0
@@ -432,7 +432,7 @@ defmodule Anoma.Node.Examples.EShard do
     Shard.advance_read_watermark(shard_via, key, 33)
 
     # --- Direct State Check (Post-GC) ---
-    state3 = Shard.debug_get_state(shard_via)
+    state3 = :sys.get_state(shard_via)
     kv3 = Map.get(state3.kv, key, %{})
 
     # Expected remaining heights:
@@ -461,7 +461,7 @@ defmodule Anoma.Node.Examples.EShard do
     assert Shard.read(shard_via, key, 17) == {:ok, 12}
 
     # --- Direct State Check (Post-Read) ---
-    state4 = Shard.debug_get_state(shard_via)
+    state4 = :sys.get_state(shard_via)
     kv4 = Map.get(state4.kv, key, %{})
     # Entry should still exist
     assert Map.has_key?(kv4, 17)
@@ -476,7 +476,7 @@ defmodule Anoma.Node.Examples.EShard do
     Shard.advance_read_watermark(shard_via, key, 34)
 
     # --- Direct State Check (Final) ---
-    state5 = Shard.debug_get_state(shard_via)
+    state5 = :sys.get_state(shard_via)
     kv5 = Map.get(state5.kv, key, %{})
 
     # Expected remaining heights:
@@ -538,7 +538,7 @@ defmodule Anoma.Node.Examples.EShard do
     assert :ok == Shard.reserve(shard_via, key, 15, :read)
 
     # Check state: both read and write should be reserved
-    state_after_reacquire = Shard.debug_get_state(shard_via)
+    state_after_reacquire = :sys.get_state(shard_via)
     kv_after_reacquire = Map.get(state_after_reacquire.kv, key, %{})
     assert Map.has_key?(kv_after_reacquire, 15)
     assert kv_after_reacquire[15].read_reserved_count > 0
@@ -571,7 +571,7 @@ defmodule Anoma.Node.Examples.EShard do
              {:error, :slot_occupied_by_value}
 
     # Check state: read should be reserved, write should not
-    state_after_blocking = Shard.debug_get_state(shard_via)
+    state_after_blocking = :sys.get_state(shard_via)
     kv_after_blocking = Map.get(state_after_blocking.kv, key, %{})
     assert Map.has_key?(kv_after_blocking, 20)
     assert kv_after_blocking[20].read_reserved_count > 0
@@ -620,7 +620,7 @@ defmodule Anoma.Node.Examples.EShard do
     assert result == {:ok, write_value}
 
     # 7. Verify the reservation at h_reserve is still held (for sanity)
-    state = Shard.debug_get_state(shard_via)
+    state = :sys.get_state(shard_via)
     kv_state = Map.get(state.kv, key, %{})
     assert Map.has_key?(kv_state, h_reserve)
     assert kv_state[h_reserve].write_reserved?
@@ -686,8 +686,8 @@ defmodule Anoma.Node.Examples.EShard do
     end)
 
     # Verify that all reservations were made correctly
-    state_before_unreserve_a = Shard.debug_get_state(shard_a_via)
-    state_before_unreserve_b = Shard.debug_get_state(shard_b_via)
+    state_before_unreserve_a = :sys.get_state(shard_a_via)
+    state_before_unreserve_b = :sys.get_state(shard_b_via)
 
     # Check "a" reservations (read)
     a_heights = Map.get(state_before_unreserve_a.kv, ["a"], %{})
@@ -714,8 +714,8 @@ defmodule Anoma.Node.Examples.EShard do
     assert :ok == Shard.unreserve(shard_b_via, ["b"], 3, :write)
 
     # Verify that only height 3 reservations were removed
-    state_after_unreserve_a = Shard.debug_get_state(shard_a_via)
-    state_after_unreserve_b = Shard.debug_get_state(shard_b_via)
+    state_after_unreserve_a = :sys.get_state(shard_a_via)
+    state_after_unreserve_b = :sys.get_state(shard_b_via)
 
     # Check "a" reservations after unreserve
     a_heights_after = Map.get(state_after_unreserve_a.kv, ["a"], %{})
@@ -772,7 +772,7 @@ defmodule Anoma.Node.Examples.EShard do
     Shard.advance_read_watermark(shard_via, key, 5)
 
     # 5. Verify state
-    state = Shard.debug_get_state(shard_via)
+    state = :sys.get_state(shard_via)
     key_height_map = Map.get(state.kv, key, %{})
 
     # Check that the entry at height 3 (committed write) still exists
