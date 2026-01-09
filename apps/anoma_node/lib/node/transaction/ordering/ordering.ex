@@ -61,6 +61,11 @@ defmodule Anoma.Node.Transaction.Ordering do
   I am the type of reservations
   """
   @type reservations :: %{:read => MapSet.t(), :write => MapSet.t()}
+
+  @typedoc """
+  I am a request that can be enqued
+  """
+  @type request :: {GenServer.from(), flag(), list({any(), any()}) | any()}
   ############################################################
   #                         State                            #
   ############################################################
@@ -97,13 +102,7 @@ defmodule Anoma.Node.Transaction.Ordering do
     field(:next_height, integer(), default: 1)
     field(:tx_id_to_height, %{binary() => integer()}, default: %{})
 
-    field(
-      :requests,
-      %{
-        binary() => {GenServer.from(), atom(), list(String.t()) | list(any())}
-      },
-      default: %{}
-    )
+    field(:requests, %{binary() => request()}, default: %{})
 
     field(:shard_addresses, %{any() => pid()}, default: %{})
 
@@ -342,16 +341,13 @@ defmodule Anoma.Node.Transaction.Ordering do
 
     state_w_shards = ensure_all_started(state, keys)
 
-    # case on whether there is a height present
-    handle_height(:write, {tx_id, list}, from, state_w_shards)
+    process_request({from, :write, list}, tx_id, state_w_shards)
   end
 
   @spec handle_read({binary(), any()}, GenServer.from(), t()) :: t()
   defp handle_read({tx_id, key}, from, state) do
     state_w_shards = ensure_started(state, key)
-
-    # case on whether there is a height present
-    handle_height(:read, {tx_id, key}, from, state_w_shards)
+    process_request({from, :read, key}, tx_id, state_w_shards)
   end
 
   @spec handle_commit(
@@ -405,9 +401,9 @@ defmodule Anoma.Node.Transaction.Ordering do
             reserve_order_mapping(reservations, order)
             |> Map.merge(map_of_keyheights, fn _k, v1, v2 -> v2 ++ v1 end)
 
-          with {from, flag, args} <- Map.get(state.requests, tx_id) do
+          with {:ok, request} <- Map.fetch(state.requests, tx_id) do
             # if any requests were made by workers, forward them to shards
-            handle_launch(flag, args, from, order, state.shard_addresses)
+            fire_request(request, order, state.shard_addresses)
           end
 
           {Map.put(map, tx_id, order), order + 1, final_keymap}
@@ -542,21 +538,18 @@ defmodule Anoma.Node.Transaction.Ordering do
     end
   end
 
-  @spec handle_height(flag(), {binary(), any()}, GenServer.from(), t()) :: t()
-  defp handle_height(flag, {tx_id, args}, from, state) do
+  @spec process_request(request(), binary(), t()) :: t()
+  defp process_request(request, tx_id, state) do
     case Map.fetch(state.tx_id_to_height, tx_id) do
       {:ok, height} ->
-        # if we know the height, launch request
-        handle_launch(flag, args, from, height, state.shard_addresses)
+        # if we know the height, process the request
+        fire_request(request, height, state.shard_addresses)
 
         state
 
       :error ->
         # otherwise store the request
-        %__MODULE__{
-          state
-          | requests: Map.put(state.requests, tx_id, {from, flag, args})
-        }
+        %__MODULE__{state | requests: Map.put(state.requests, tx_id, request)}
     end
   end
 
@@ -607,20 +600,16 @@ defmodule Anoma.Node.Transaction.Ordering do
     )
   end
 
-  @spec handle_launch(:read, any(), GenServer.from(), non_neg_integer(), %{
-          any() => pid()
-        }) :: {:ok, pid()}
-  defp handle_launch(:read, key, from, height, addresses) do
+  @spec fire_request(request(), non_neg_integer(), %{any() => pid()}) ::
+          {:ok, pid()}
+  defp fire_request({from, :read, key}, height, addresses) do
     Task.start(fn ->
       resp = Shard.read(Map.fetch!(addresses, key), key, height)
       GenServer.reply(from, resp)
     end)
   end
 
-  @spec handle_launch(:write, any(), GenServer.from(), non_neg_integer(), %{
-          any() => pid()
-        }) :: {:ok, pid()}
-  defp handle_launch(:write, keys, from, height, addresses) do
+  defp fire_request({from, :write, keys}, height, addresses) do
     Task.start(fn ->
       Enum.each(keys, fn {key, value} ->
         Map.fetch!(addresses, key)
