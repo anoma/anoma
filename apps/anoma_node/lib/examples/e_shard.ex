@@ -6,53 +6,9 @@ defmodule Anoma.Node.Examples.EShard do
   alias Anoma.Node
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Shard
-  alias Anoma.Node.Examples.ENode
+  alias Anoma.Node.Examples.EShardSupervisor
 
   import ExUnit.Assertions
-
-  @doc """
-  I start a node with shards "a", "b", "c", initializing "a" and "c"
-  with specific values, and verify the initial state.
-  """
-  @spec spawn_node_with_initial_state(String.t()) :: String.t()
-  def spawn_node_with_initial_state(node_id \\ Node.example_random_id()) do
-    # Define the schema: keys "a", "b", "c". "a" and "c" have initial values.
-    schema = [{["a"], 5}, ["b"], {["c"], 15}]
-    shard_config = [strategy: :one_per_key, schema: schema]
-    opts = [node_id: node_id, transaction: [shards: shard_config]]
-
-    # Start the node
-    ENode.start_node(opts)
-
-    # Get shard PIDs
-    pid_a = Registry.whereis(node_id, Shard, :a)
-    pid_b = Registry.whereis(node_id, Shard, :b)
-    pid_c = Registry.whereis(node_id, Shard, :c)
-
-    assert is_pid(pid_a), "Shard 'a' PID not found."
-    assert is_pid(pid_b), "Shard 'b' PID not found."
-    assert is_pid(pid_c), "Shard 'c' PID not found."
-
-    # Get initial states
-    state_a = :sys.get_state(pid_a)
-    state_b = :sys.get_state(pid_b)
-    state_c = :sys.get_state(pid_c)
-
-    # Verify initial states at height 0
-    assert Map.get(state_a.kv, ["a"], %{})[0].value == 5,
-           "Shard 'a' initial value mismatch at height 0"
-
-    assert Map.get(state_c.kv, ["c"], %{})[0].value == 15,
-           "Shard 'c' initial value mismatch at height 0"
-
-    # Shard "b" should have no entry for key "b" at height 0
-    b_key_map = Map.get(state_b.kv, ["b"], %{})
-
-    refute Map.has_key?(b_key_map, 0),
-           "Shard 'b' should not have an initial value at height 0"
-
-    node_id
-  end
 
   @doc """
   I start a Shard with a predefined initial state and verify that
@@ -60,7 +16,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec start_and_initial_state(String.t()) :: String.t()
   def start_and_initial_state(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_a_via = Registry.via(node_id, Shard, :a)
     shard_b_via = Registry.via(node_id, Shard, :b)
@@ -98,7 +54,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec queued_read(String.t()) :: String.t()
   def queued_read(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -137,7 +93,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec queued_read_with_intermediate_write(String.t()) :: String.t()
   def queued_read_with_intermediate_write(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -197,7 +153,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec read_timeout(String.t()) :: String.t()
   def read_timeout(node_id) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -248,7 +204,7 @@ defmodule Anoma.Node.Examples.EShard do
   def partial_read_unblocking_with_timeout(
         node_id \\ Node.example_random_id()
       ) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -314,7 +270,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec complex_write_and_read_scenario(String.t()) :: String.t()
   def complex_write_and_read_scenario(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -381,7 +337,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec gc_and_reserve_release_state(String.t()) :: String.t()
   def gc_and_reserve_release_state(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -498,7 +454,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec reserve_failures_and_reacquisition(String.t()) :: String.t()
   def reserve_failures_and_reacquisition(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -587,7 +543,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec read_past_old_write_reserve(String.t()) :: String.t()
   def read_past_old_write_reserve(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -634,7 +590,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec write_then_reads_empty_start(String.t()) :: String.t()
   def write_then_reads_empty_start(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :b)
 
@@ -670,7 +626,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec unreserve(String.t()) :: String.t()
   def unreserve(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_a_via = Registry.via(node_id, Shard, :a)
     shard_b_via = Registry.via(node_id, Shard, :b)
@@ -752,7 +708,7 @@ defmodule Anoma.Node.Examples.EShard do
   def gc_preserves_committed_state_before_watermark(
         node_id \\ Node.example_random_id()
       ) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :c)
 
@@ -800,11 +756,11 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec unreserve_triggers_pending_read(String.t()) :: String.t()
   def unreserve_triggers_pending_read(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
-    # Initial state %{"a" => 5} handled by spawn_node_with_initial_state
+    # Initial state %{"a" => 5} handled by EShardSupervisor.shard_start_abc
     key = ["a"]
 
     h_write = 2
@@ -861,7 +817,7 @@ defmodule Anoma.Node.Examples.EShard do
   """
   @spec backup_state(String.t()) :: String.t()
   def backup_state(node_id \\ Node.example_random_id()) do
-    spawn_node_with_initial_state(node_id)
+    EShardSupervisor.shard_start_abc(node_id)
 
     shard_a_via = Registry.via(node_id, Shard, :a)
     shard_b_via = Registry.via(node_id, Shard, :b)
