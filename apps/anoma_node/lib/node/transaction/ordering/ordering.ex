@@ -106,11 +106,7 @@ defmodule Anoma.Node.Transaction.Ordering do
 
     field(:shard_addresses, %{any() => pid()}, default: %{})
 
-    field(
-      :reservations,
-      %{any() => reservations()},
-      default: %{}
-    )
+    field(:reservations, %{any() => reservations()}, default: %{})
 
     field(:block_key_order, %{any() => list({flag(), non_neg_integer()})},
       default: %{}
