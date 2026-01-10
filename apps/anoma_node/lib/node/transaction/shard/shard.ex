@@ -452,7 +452,7 @@ defmodule Anoma.Node.Transaction.Shard do
       Enum.each(kv, fn {key, height_map} ->
         Enum.each(height_map, fn {height, details} ->
           # Only backup entries with a committed value
-          if not is_nil(details.value) do
+          if details.value do
             record_key = {id, key, height}
             :mnesia.write({backup_table, record_key, details.value})
           end
