@@ -40,7 +40,7 @@ defmodule Anoma.Node.Transaction.Shard do
   use GenServer
   use TypedStruct
 
-  @default_kv_entry_details %{
+  @default_details %{
     value: nil,
     read_reserved_count: 0,
     write_reserved?: false
@@ -65,7 +65,7 @@ defmodule Anoma.Node.Transaction.Shard do
   @type capabilities :: :read | :write | :read_write
 
   @typedoc "Stores the details for a specific {key, height}."
-  @type kv_entry_details :: %{
+  @type details :: %{
           # The actual value, nil if not written yet
           value: value() | nil,
           # Count of active read reservations
@@ -76,7 +76,7 @@ defmodule Anoma.Node.Transaction.Shard do
 
   @type startup_options ::
           {:node_id, String.t()}
-          | {:inital_kv, %{key() => %{height() => kv_entry_details()}}}
+          | {:inital_kv, %{key() => %{height() => details()}}}
           | {:id, atom()}
 
   ############################################################
@@ -90,7 +90,7 @@ defmodule Anoma.Node.Transaction.Shard do
     ### Fields
     - `:id` - The identifier for this shard.
     - `:node_id` - The ID of the node this shard belongs to.
-    - `:kv` - The core key-value store: `key => height => kv_entry_details`.
+    - `:kv` - The core key-value store: `key => height => details`.
     - `:watermarks` - Per-key watermarks: `key => %{read: height, write: height}`.
     - `:pending_reads` - Reads blocked by a watermark or write reservation: `key => height => GenServer.from()`.
     """
@@ -99,7 +99,7 @@ defmodule Anoma.Node.Transaction.Shard do
 
     field(
       :kv,
-      %{required(key()) => %{required(height()) => kv_entry_details()}},
+      %{required(key()) => %{required(height()) => details()}},
       default: %{}
     )
 
@@ -139,7 +139,7 @@ defmodule Anoma.Node.Transaction.Shard do
 
     kv =
       Map.new(args[:initial_kv], fn {key, value} ->
-        {key, %{0 => %{@default_kv_entry_details | value: value}}}
+        {key, %{0 => %{@default_details | value: value}}}
       end)
 
     watermarks =
@@ -296,40 +296,19 @@ defmodule Anoma.Node.Transaction.Shard do
   #                 Genserver Implementation                 #
   ############################################################
 
-  # Orchestrates the reservation process using helper functions and a `with` statement.
-  # 1. Checks watermarks.
-  # 2. Retrieves or initializes details for the {key, height}.
-  # 3. Processes the specific reservation request (:read, :write, or :read_write).
-  # 4. Updates the state if the reservation was successful and changed the details.
   @spec handle_reserve(key(), height(), capabilities(), t()) ::
           {:ok | {:error, atom()}, t()}
-  defp handle_reserve(key, height, type, state) do
+  defp handle_reserve(key, height, cap, state) do
     key_watermarks = Map.get(state.watermarks, key, @initial_watermarks)
 
-    with :ok <- check_watermarks(height, type, key_watermarks),
-         original_details = get_or_initialize_details(state.kv, key, height),
-         {:ok, final_details} <-
-           process_reservation_request(type, original_details) do
-      # Update state only if changes occurred
-      if final_details != original_details do
-        # Map.update
-        key_height_map = Map.get(state.kv, key, %{})
-        new_key_height_map = Map.put(key_height_map, height, final_details)
-        new_kv = Map.put(state.kv, key, new_key_height_map)
-        new_state = %{state | kv: new_kv}
-        {:ok, new_state}
-      else
-        # No change in reservation status (e.g., reservations already held)
-        {:ok, state}
-      end
+    with :ok <- check_watermarks(height, cap, key_watermarks),
+         :ok <- get_details(state.kv, key, height) |> reserve_detail_err(cap) do
+      kv = update_details(state.kv, key, height, &reserve_detail(&1, cap))
+      {:ok, %__MODULE__{state | kv: kv}}
     else
-      # Handle errors from check_watermarks or process_reservation_request
-      {:error, reason} ->
-        {{:error, reason}, state}
+      err -> {err, state}
     end
   end
-
-  # Rename for checking in the past as this is all that is doing
 
   # Checks if a reservation request conflicts with existing watermarks.
   @spec check_watermarks(height(), capabilities(), map()) ::
@@ -347,54 +326,11 @@ defmodule Anoma.Node.Transaction.Shard do
 
   defp check_watermarks(_height, _type, _key_watermarks), do: :ok
 
-  # Retrieves the kv_entry_details for a {key, height} or returns initial default details.
-  @spec get_or_initialize_details(map(), key(), height()) ::
-          kv_entry_details()
-  defp get_or_initialize_details(kv, key, height) do
-    kv
-    |> Map.get(key, %{})
-    |> Map.get(height, @default_kv_entry_details)
-  end
-
-  # Processes a reservation request based on the type and current details.
-
-  # Handles granting read/write reservations and checks for conflicts like existing values
-  # when attempting a write reservation. Uses function heads for clarity.
-  @spec process_reservation_request(capabilities(), kv_entry_details()) ::
-          {:ok, kv_entry_details()} | {:error, atom()}
-
-  defp process_reservation_request(:read, details) do
-    {:ok, %{details | read_reserved_count: details.read_reserved_count + 1}}
-  end
-
-  defp process_reservation_request(:write, %{value: value})
-       when not is_nil(value) do
-    {:error, :slot_occupied_by_value}
-  end
-
-  defp process_reservation_request(:write, details) do
-    {:ok, %{details | write_reserved?: true}}
-  end
-
-  defp process_reservation_request(:read_write, %{value: value})
-       when not is_nil(value) do
-    {:error, :slot_occupied_by_value}
-  end
-
-  defp process_reservation_request(:read_write, details) do
-    {:ok,
-     %{
-       details
-       | read_reserved_count: details.read_reserved_count + 1,
-         write_reserved?: true
-     }}
-  end
-
   @spec handle_write(key(), value(), height(), t()) :: t()
   defp handle_write(key, value, height, state) do
     key_height_map = Map.get(state.kv, key, %{})
     # Default is a failure condition
-    details = Map.get(key_height_map, height, @default_kv_entry_details)
+    details = Map.get(key_height_map, height, @default_details)
 
     cond do
       !details.write_reserved? ->
@@ -422,7 +358,7 @@ defmodule Anoma.Node.Transaction.Shard do
     key_height_map = Map.get(state.kv, key, %{})
 
     details_at_req =
-      Map.get(key_height_map, height_req, @default_kv_entry_details)
+      Map.get(key_height_map, height_req, @default_details)
 
     # If we hit the default, we fail
     # Unify check_pending_reads
@@ -533,23 +469,21 @@ defmodule Anoma.Node.Transaction.Shard do
   @spec handle_unreserve(key(), height(), :read | :write, t()) :: t()
   defp handle_unreserve(key, height, type, state) do
     new_kv =
-      Map.replace_lazy(state.kv, key, fn key_height ->
-        Map.replace_lazy(key_height, height, fn details ->
-          case type do
-            :read ->
-              count = max(0, details.read_reserved_count - 1)
-              %{details | read_reserved_count: count}
+      replace_details(state.kv, key, height, fn details ->
+        case type do
+          :read ->
+            count = max(0, details.read_reserved_count - 1)
+            %{details | read_reserved_count: count}
 
-            :write ->
-              %{details | write_reserved?: false}
-          end
-        end)
+          :write ->
+            %{details | write_reserved?: false}
+        end
       end)
 
     new_state = %__MODULE__{state | kv: new_kv}
 
-    ori_details = Map.get(state.kv, key, %{}) |> Map.get(height, %{})
-    new_details = Map.get(new_kv, key, %{}) |> Map.get(height, %{})
+    ori_details = get_details(state.kv, key, height)
+    new_details = get_details(new_kv, key, height)
 
     cond do
       ori_details == new_details ->
@@ -641,7 +575,7 @@ defmodule Anoma.Node.Transaction.Shard do
                   Map.get(
                     current_key_height_map_inner,
                     height_req,
-                    @default_kv_entry_details
+                    @default_details
                   )
 
                 if details_at_req_height.read_reserved_count > 0 do
@@ -858,4 +792,59 @@ defmodule Anoma.Node.Transaction.Shard do
       end
     end
   end
+
+  @spec get_details(map(), key(), height()) :: details()
+  defp get_details(kv, key, height) do
+    kv
+    |> Map.get(key, %{})
+    |> Map.get(height, @default_details)
+  end
+
+  @spec replace_details(map(), key(), height(), (details() -> details())) ::
+          map()
+  defp replace_details(kv, key, height, function) do
+    Map.replace_lazy(kv, key, fn key_height ->
+      Map.replace_lazy(key_height, height, function)
+    end)
+  end
+
+  # Note I run on the default details as well!
+  defp update_details(kv, key, height, function) do
+    default_value = function.(@default_details)
+
+    Map.update(kv, key, %{height => default_value}, fn key_height ->
+      Map.update(key_height, height, default_value, function)
+    end)
+  end
+
+  @spec reserve_detail(details(), capabilities()) :: details()
+  defp reserve_detail(details = %{value: value}, type)
+       when not is_nil(value) and type in [:write, :read_write] do
+    details
+  end
+
+  defp reserve_detail(details, :write) do
+    %{details | write_reserved?: true}
+  end
+
+  defp reserve_detail(details, :read) do
+    %{details | read_reserved_count: details.read_reserved_count + 1}
+  end
+
+  defp reserve_detail(details, :read_write) do
+    %{
+      details
+      | read_reserved_count: details.read_reserved_count + 1,
+        write_reserved?: true
+    }
+  end
+
+  @spec reserve_detail_err(details(), capabilities()) ::
+          :ok | {:error, atom()}
+  defp reserve_detail_err(%{value: value}, cap)
+       when not is_nil(value) and cap in [:write, :read_write] do
+    {:error, :slot_occupied_by_value}
+  end
+
+  defp reserve_detail_err(_, _), do: :ok
 end
