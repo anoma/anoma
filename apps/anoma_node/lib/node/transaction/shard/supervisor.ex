@@ -40,10 +40,10 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
   ############################################################
 
   @typedoc "I represent a key managed by a shard."
-  @type key_t :: [binary()]
+  @type key :: [binary()]
 
   @typedoc "I represent the initial value associated with a key in a shard."
-  @type initial_value_t :: any()
+  @type initial_value :: any()
 
   @typedoc """
   I am the schema defining the keys and their initial values for shards.
@@ -51,31 +51,31 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
   or `{key, initial_value}` tuples. If only a key is provided, there is no
   initial value.
   """
-  @type schema_t :: [key_t() | {key_t(), initial_value_t()}]
+  @type schema :: [key() | {key(), initial_value()}]
 
   @typedoc """
   I am the sharding strategy.
   Currently, I only support `:one_per_key`.
   """
-  @type strategy_t :: :one_per_key
+  @type strategy :: :one_per_key
 
   @typedoc """
   I am the type of the arguments that the ShardSupervisor expects at startup.
   I require `:node_id` and optionally `:strategy` and `:schema` keys for initial setup.
   """
-  @type supervisor_args_t :: [
+  @type args_t :: [
           node_id: String.t(),
-          strategy: strategy_t() | nil,
-          schema: schema_t() | nil
+          strategy: strategy() | nil,
+          schema: schema() | nil
         ]
 
   @typedoc """
   I am the type of the arguments that the Shard process expects.
   I am not explicitly used, but this may be useful to know.
   """
-  @type shard_args_t :: [
-          id: key_t(),
-          initial_kv: %{key_t() => initial_value_t()}
+  @type shard_args :: [
+          id: key(),
+          initial_kv: %{key() => initial_value()}
         ]
 
   ############################################################
@@ -92,7 +92,7 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
   synchronously *before* starting the supervisor. If Mnesia fails, I return
   an error. After the supervisor starts, I start the initial children.
   """
-  @spec start_link(args :: supervisor_args_t()) :: Supervisor.on_start()
+  @spec start_link(args_t()) :: Supervisor.on_start()
   def start_link(args) do
     node_id = Keyword.fetch!(args, :node_id)
     strategy = Keyword.get(args, :strategy)
@@ -182,8 +182,8 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
   """
   @spec start_shard(
           node_id :: String.t(),
-          key :: key_t(),
-          initial_value :: initial_value_t() | nil
+          key :: key(),
+          initial_value :: initial_value() | nil
         ) ::
           DynamicSupervisor.on_start_child()
           | {:error, :mnesia_update_failed, any()}
@@ -267,12 +267,12 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
   # and a map of key -> shard_id. (Used only during initial async setup)
   @spec process_schema(
           node_id :: String.t(),
-          strategy :: strategy_t() | nil,
-          schema :: schema_t() | nil
+          strategy :: strategy() | nil,
+          schema :: schema() | nil
         ) ::
           {
             [Supervisor.child_spec()],
-            %{key_t() => atom()}
+            %{key() => atom()}
           }
   defp process_schema(node_id, :one_per_key, schema) when is_list(schema) do
     Enum.reduce(schema, {[], %{}}, fn schema_entry, {specs_acc, map_acc} ->
@@ -319,7 +319,7 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
   # Called during initial synchronous setup within init/1.
   # Returns :ok on success, :no_shards if the map is empty, or {:error, reason}.
   @spec populate_mnesia_table(
-          map :: %{key_t() => atom()},
+          map :: %{key() => atom()},
           node_id :: String.t()
         ) ::
           :ok | :no_shards | {:error, any()}
@@ -357,7 +357,7 @@ defmodule Anoma.Node.Transaction.Shard.Supervisor do
   # Called by start_shard/3. Does NOT clear the table.
   @spec add_key_to_mnesia_map(
           node_id :: String.t(),
-          key :: key_t(),
+          key :: key(),
           shard_id :: atom()
         ) ::
           :ok | {:error, any()}

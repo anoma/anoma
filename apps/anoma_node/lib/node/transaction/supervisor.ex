@@ -20,7 +20,7 @@ defmodule Anoma.Node.Transaction.Supervisor do
           node_id: String.t(),
           mempool: Mempool.args_t(),
           ordering: Ordering.args_t(),
-          shards: Shard.Supervisor.supervisor_args_t() | nil
+          shards: Shard.Supervisor.args_t() | nil
         ]
 
   ############################################################
