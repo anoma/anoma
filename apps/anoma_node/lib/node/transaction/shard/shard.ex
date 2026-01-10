@@ -327,18 +327,15 @@ defmodule Anoma.Node.Transaction.Shard do
   @spec handle_read(key(), height(), GenServer.from(), t()) ::
           {:reply, {:ok, value()} | :absent | {:error, atom()}, t()}
           | {:noreply, t()}
-  defp handle_read(key, height_req, from, state) do
-    # --- Validation ---
-    key_height_map = Map.get(state.kv, key, %{})
+  defp handle_read(key, height, from, state = %{kv: kv, pending_reads: pend}) do
+    key_height_map = Map.get(kv, key, %{})
 
-    details_at_req =
-      Map.get(key_height_map, height_req, @default_details)
+    details = get_details(kv, key, height)
 
     # If we hit the default, we fail
     # Unify check_pending_reads
     cond do
-      # 1. Check Read Reservation
-      details_at_req.read_reserved_count == 0 ->
+      details.read_reserved_count == 0 ->
         {:reply, {:error, :read_not_reserved}, state}
 
       # 2. Attempt Resolution
@@ -347,25 +344,14 @@ defmodule Anoma.Node.Transaction.Shard do
           Map.get(state.watermarks, key, @initial_watermarks)
 
         resolution_result =
-          resolve_read_value(height_req, key_height_map, key_watermarks)
+          resolve_read_value(height, key_height_map, key_watermarks)
 
         case resolution_result do
-          # Includes {:ok, :absent} or {:ok, {:ok, val}}
           {:ok, value_or_absent} ->
-            # Resolve succeeded, release reservation and reply
-            updated_details = %{
-              details_at_req
-              | read_reserved_count: details_at_req.read_reserved_count - 1
-            }
+            new_kv =
+              replace_details(kv, key, height, &unreserve_detail(&1, :read))
 
-            new_key_height_map =
-              Map.put(key_height_map, height_req, updated_details)
-
-            new_kv = Map.put(state.kv, key, new_key_height_map)
-            new_state = %{state | kv: new_kv}
-
-            # Map internal {:ok, :absent} to just :absent for the caller
-            {:reply, value_or_absent, new_state}
+            {:reply, value_or_absent, %__MODULE__{state | kv: new_kv}}
 
           block_reason
           when block_reason in [
@@ -373,15 +359,10 @@ defmodule Anoma.Node.Transaction.Shard do
                  :blocked_by_write_reservation
                ] ->
             # Queue the read
-            pending_for_key = Map.get(state.pending_reads, key, %{})
-            current_pending_list = Map.get(pending_for_key, height_req, [])
-            updated_pending_list = [from | current_pending_list]
-
-            updated_pending_for_key =
-              Map.put(pending_for_key, height_req, updated_pending_list)
-
             new_pending_reads =
-              Map.put(state.pending_reads, key, updated_pending_for_key)
+              Map.update(pend, key, %{height => [from]}, fn pending ->
+                Map.update(pending, height, [from], &[from | &1])
+              end)
 
             {:noreply, %{state | pending_reads: new_pending_reads}}
         end
@@ -731,7 +712,6 @@ defmodule Anoma.Node.Transaction.Shard do
       case maybe_relevant_entry do
         # 3. No relevant entry found below height_req (implies initial state or empty)
         nil ->
-          # If no entry with a value or reservation exists below height_req, the result is absent.
           {:ok, :absent}
 
         # 4. Relevant entry found, check its state
