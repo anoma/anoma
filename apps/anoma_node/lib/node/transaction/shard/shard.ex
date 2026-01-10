@@ -514,46 +514,28 @@ defmodule Anoma.Node.Transaction.Shard do
               Enum.reduce(from_list, acc_state_outer, fn requester_from,
                                                          acc_state_inner ->
                 # Get freshest details for THIS requester, as it might have been updated by previous one in list
-                current_key_height_map_inner =
-                  Map.get(acc_state_inner.kv, key, %{})
+                details = get_details(acc_state_inner.kv, key, height_req)
 
-                details_at_req_height =
-                  Map.get(
-                    current_key_height_map_inner,
-                    height_req,
-                    @default_details
-                  )
-
-                if details_at_req_height.read_reserved_count > 0 do
+                if details.read_reserved_count > 0 do
                   GenServer.reply(requester_from, value_or_absent)
-
-                  updated_details = %{
-                    details_at_req_height
-                    | read_reserved_count:
-                        details_at_req_height.read_reserved_count - 1
-                  }
-
-                  new_key_height_map_inner =
-                    Map.put(
-                      current_key_height_map_inner,
-                      height_req,
-                      updated_details
-                    )
-
-                  new_kv_inner =
-                    Map.put(acc_state_inner.kv, key, new_key_height_map_inner)
-
-                  %{acc_state_inner | kv: new_kv_inner}
                 else
-                  # No reservation left, reply with error
                   GenServer.reply(
                     requester_from,
                     {:error, :read_not_reserved}
                   )
-
-                  # State (kv) doesn't change as no reservation was consumed
-                  acc_state_inner
                 end
+
+                kv = acc_state_inner.kv
+
+                new_kv_inner =
+                  replace_details(
+                    kv,
+                    key,
+                    height_req,
+                    &unreserve_detail(&1, :read)
+                  )
+
+                %{acc_state_inner | kv: new_kv_inner}
               end)
 
             # All requesters for this height_req processed, remove from pending map
