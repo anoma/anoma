@@ -310,22 +310,6 @@ defmodule Anoma.Node.Transaction.Shard do
     end
   end
 
-  # Checks if a reservation request conflicts with existing watermarks.
-  @spec check_watermarks(height(), capabilities(), map()) ::
-          :ok | {:error, atom()}
-  defp check_watermarks(height, type, %{write: key})
-       when type in [:write, :read_write] and height <= key do
-    {:error, :reserving_write_under_write_watermark}
-  end
-
-  # pattern match this, remove the :read_write.
-  defp check_watermarks(height, type, key_watermarks)
-       when type in [:read, :read_write] and height <= key_watermarks.read do
-    {:error, :reserving_read_under_read_watermark}
-  end
-
-  defp check_watermarks(_height, _type, _key_watermarks), do: :ok
-
   @spec handle_write(key(), value(), height(), t()) :: t()
   defp handle_write(key, value, height, state) do
     key_height_map = Map.get(state.kv, key, %{})
@@ -792,6 +776,29 @@ defmodule Anoma.Node.Transaction.Shard do
       end
     end
   end
+
+  ############################################################
+  #                      Helpers Watermarks                  #
+  ############################################################
+
+  # Checks if a reservation request conflicts with existing watermarks.
+  @spec check_watermarks(height(), capabilities(), map()) ::
+          :ok | {:error, atom()}
+  defp check_watermarks(height, type, %{write: key})
+       when type in [:write, :read_write] and height <= key do
+    {:error, :reserving_write_under_write_watermark}
+  end
+
+  # pattern match this, remove the :read_write.
+  defp check_watermarks(height, :read, %{read: mark}) when height <= mark do
+    {:error, :reserving_read_under_read_watermark}
+  end
+
+  defp check_watermarks(_height, _type, _key_watermarks), do: :ok
+
+  ############################################################
+  #                       Helpers Details                    #
+  ############################################################
 
   @spec get_details(map(), key(), height()) :: details()
   defp get_details(kv, key, height) do
