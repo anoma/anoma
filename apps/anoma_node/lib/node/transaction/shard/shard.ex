@@ -180,20 +180,9 @@ defmodule Anoma.Node.Transaction.Shard do
   with `:write` or `:read_write` capability for this `{key, height}`.
   I return `:ok` on success, or an error tuple.
   """
-  @spec write(
-          GenServer.server(),
-          key(),
-          value(),
-          height()
-        ) ::
-          :ok | {:error, :write_reservation_required}
+  @spec write(GenServer.server(), key(), value(), height()) :: :ok
   def write(shard_pid, key, value, height) do
-    # Should be cast, no infinity
-    GenServer.call(
-      shard_pid,
-      {:write, key, value, height},
-      :infinity
-    )
+    GenServer.cast(shard_pid, {:write, key, value, height})
   end
 
   @doc """
@@ -304,12 +293,6 @@ defmodule Anoma.Node.Transaction.Shard do
     handle_reserve(key, height, type, state)
   end
 
-  # --- Write Handling ---
-  @impl true
-  def handle_call({:write, key, value, height}, _from, state) do
-    handle_write(key, value, height, state)
-  end
-
   # --- Read Handling ---
   @impl true
   def handle_call({:read, key, height_req}, from, state) do
@@ -324,6 +307,10 @@ defmodule Anoma.Node.Transaction.Shard do
 
   # --- Watermark Update Handling ---
   @impl true
+  def handle_cast({:write, key, value, height}, state) do
+    handle_write(key, value, height, state)
+  end
+
   def handle_cast({:write_watermark_advanced, key, h_write}, state) do
     handle_write_watermark_advanced(key, h_write, state)
   end
@@ -437,8 +424,7 @@ defmodule Anoma.Node.Transaction.Shard do
      }}
   end
 
-  @spec handle_write(key(), value(), height(), __MODULE__.t()) ::
-          {:reply, :ok | {:error, atom()}, __MODULE__.t()}
+  @spec handle_write(key(), value(), height(), t()) :: {:noreply, t()}
   defp handle_write(key, value, height, state) do
     key_height_map = Map.get(state.kv, key, %{})
     # Default is a failure condition
@@ -447,7 +433,7 @@ defmodule Anoma.Node.Transaction.Shard do
     cond do
       !details.write_reserved? ->
         # Should be a no-op, if it's not reserved, this isn't a call anymore
-        {:reply, {:error, :write_reservation_required}, state}
+        {:noreply, state}
 
       true ->
         # Valid write reservation
@@ -460,7 +446,7 @@ defmodule Anoma.Node.Transaction.Shard do
 
         # Check pending reads *after* state update (write might allow resolution if watermark matches)
         final_state = check_pending_reads(key, new_state)
-        {:reply, :ok, final_state}
+        {:noreply, final_state}
     end
   end
 
