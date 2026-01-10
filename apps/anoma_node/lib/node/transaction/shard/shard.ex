@@ -112,7 +112,7 @@ defmodule Anoma.Node.Transaction.Shard do
   end
 
   ############################################################
-  #                    Public RPC API                      #
+  #                    Genserver Helpers                     #
   ############################################################
 
   @doc """
@@ -127,6 +127,66 @@ defmodule Anoma.Node.Transaction.Shard do
     # Register the name here
     GenServer.start_link(__MODULE__, opts)
   end
+
+  # Make into 5 lines or so
+  @impl true
+  def init(opts) do
+    Process.set_label(__MODULE__)
+    # Keyword validate! this, do this in start_link
+    id = Keyword.fetch!(opts, :id)
+    node_id = Keyword.fetch!(opts, :node_id)
+    initial_kv_arg = Keyword.get(opts, :initial_kv, %{})
+
+    # Register this in start_link:
+    # name = Registry.via(args[:node_id], __MODULE__)
+
+    # Register the shard process
+    case Registry.register(node_id, __MODULE__, id) do
+      {:ok, _pid} ->
+        Logger.debug(
+          "Shard #{id} successfully registered for node #{node_id}"
+        )
+
+      {:error, reason} ->
+        Logger.error(
+          "Shard #{id} failed to register for node #{node_id}: #{inspect(reason)}"
+        )
+    end
+
+    # Initialize KV with schema values at height 0
+    kv =
+      Enum.reduce(initial_kv_arg, %{}, fn {key, value}, acc ->
+        # Initial state: has value, no reservations
+        initial_details = %{
+          value: value,
+          read_reserved_count: 0,
+          write_reserved?: false
+        }
+
+        Map.put(acc, key, %{0 => initial_details})
+      end)
+
+    # Initialize watermarks for keys present in initial_kv
+    watermarks =
+      Enum.reduce(initial_kv_arg, %{}, fn {key, _}, acc ->
+        # Inline the usage of the @
+        Map.put(acc, key, @initial_watermarks)
+      end)
+
+    state = %__MODULE__{
+      id: id,
+      node_id: node_id,
+      kv: kv,
+      watermarks: watermarks,
+      pending_reads: %{}
+    }
+
+    {:ok, state}
+  end
+
+  ############################################################
+  #                    Public RPC API                      #
+  ############################################################
 
   @doc """
   I am the reserve function for the Shard module. Use me to reserve a
@@ -228,84 +288,22 @@ defmodule Anoma.Node.Transaction.Shard do
   end
 
   ############################################################
-  #                    Genserver Callbacks                    #
+  #                    Genserver Behavior                    #
   ############################################################
 
-  # Make into 5 lines or so
-  @impl true
-  def init(opts) do
-    Process.set_label(__MODULE__)
-    # Keyword validate! this, do this in start_link
-    id = Keyword.fetch!(opts, :id)
-    node_id = Keyword.fetch!(opts, :node_id)
-    initial_kv_arg = Keyword.get(opts, :initial_kv, %{})
-
-    # Register this in start_link:
-    # name = Registry.via(args[:node_id], __MODULE__)
-
-    # Register the shard process
-    case Registry.register(node_id, __MODULE__, id) do
-      {:ok, _pid} ->
-        Logger.debug(
-          "Shard #{id} successfully registered for node #{node_id}"
-        )
-
-      {:error, reason} ->
-        Logger.error(
-          "Shard #{id} failed to register for node #{node_id}: #{inspect(reason)}"
-        )
-    end
-
-    # Initialize KV with schema values at height 0
-    kv =
-      Enum.reduce(initial_kv_arg, %{}, fn {key, value}, acc ->
-        # Initial state: has value, no reservations
-        initial_details = %{
-          value: value,
-          read_reserved_count: 0,
-          write_reserved?: false
-        }
-
-        Map.put(acc, key, %{0 => initial_details})
-      end)
-
-    # Initialize watermarks for keys present in initial_kv
-    watermarks =
-      Enum.reduce(initial_kv_arg, %{}, fn {key, _}, acc ->
-        # Inline the usage of the @
-        Map.put(acc, key, @initial_watermarks)
-      end)
-
-    state = %__MODULE__{
-      id: id,
-      node_id: node_id,
-      kv: kv,
-      watermarks: watermarks,
-      pending_reads: %{}
-    }
-
-    {:ok, state}
-  end
-
-  # --- Reservation Handling ---
   @impl true
   def handle_call({:reserve, key, height, type}, _from, state) do
     handle_reserve(key, height, type, state)
   end
 
-  # --- Read Handling ---
-  @impl true
   def handle_call({:read, key, height_req}, from, state) do
     handle_read(key, height_req, from, state)
   end
 
-  # --- Backup Handling ---
-  @impl true
   def handle_call(:backup_state, _from, state) do
     handle_backup_state(state)
   end
 
-  # --- Watermark Update Handling ---
   @impl true
   def handle_cast({:write, key, value, height}, state) do
     handle_write(key, value, height, state)
@@ -315,19 +313,16 @@ defmodule Anoma.Node.Transaction.Shard do
     handle_write_watermark_advanced(key, h_write, state)
   end
 
-  @impl true
   def handle_cast({:read_watermark_advanced, key, h_read}, state) do
     handle_read_watermark_advanced(key, h_read, state)
   end
 
-  # --- Unreserve Handling ---
-  @impl true
   def handle_cast({:unreserve, key, height, type}, state) do
     handle_unreserve(key, height, type, state)
   end
 
   ############################################################
-  #             Internal Callback Handler Functions          #
+  #                 Genserver Implementation                 #
   ############################################################
 
   # Orchestrates the reservation process using helper functions and a `with` statement.
@@ -664,7 +659,7 @@ defmodule Anoma.Node.Transaction.Shard do
   end
 
   ############################################################
-  #                 Internal Helper Functions                #
+  #                           Helpers                        #
   ############################################################
 
   # I am the helper function to check pending reads after a watermark update, write, or unreserve.
