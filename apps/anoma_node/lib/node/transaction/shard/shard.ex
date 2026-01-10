@@ -74,6 +74,11 @@ defmodule Anoma.Node.Transaction.Shard do
           write_reserved?: boolean()
         }
 
+  @type startup_options ::
+          {:node_id, String.t()}
+          | {:inital_kv, %{key() => %{height() => kv_entry_details()}}}
+          | {:id, atom()}
+
   ############################################################
   #                         State                            #
   ############################################################
@@ -89,7 +94,7 @@ defmodule Anoma.Node.Transaction.Shard do
     - `:watermarks` - Per-key watermarks: `key => %{read: height, write: height}`.
     - `:pending_reads` - Reads blocked by a watermark or write reservation: `key => height => GenServer.from()`.
     """
-    field(:id, any())
+    field(:id, atom())
     field(:node_id, String.t())
 
     field(
@@ -121,65 +126,29 @@ defmodule Anoma.Node.Transaction.Shard do
   I start and link a Shard process, register it using the provided `id`,
   and initialize its KV state based on `initial_kv` options.
   """
-  @spec start_link(keyword()) :: GenServer.on_start()
-  def start_link(opts) do
-    # id: shard_id, node_id: node_id, initial_kv: %{key => val}
-    # Register the name here
-    GenServer.start_link(__MODULE__, opts)
+  @spec start_link(list(startup_options())) :: GenServer.on_start()
+  def start_link(args) do
+    args = Keyword.validate!(args, [:id, :node_id, initial_kv: %{}])
+    name = Registry.via(args[:node_id], __MODULE__, args[:id])
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
-  # Make into 5 lines or so
   @impl true
-  def init(opts) do
+  def init(args) do
     Process.set_label(__MODULE__)
-    # Keyword validate! this, do this in start_link
-    id = Keyword.fetch!(opts, :id)
-    node_id = Keyword.fetch!(opts, :node_id)
-    initial_kv_arg = Keyword.get(opts, :initial_kv, %{})
 
-    # Register this in start_link:
-    # name = Registry.via(args[:node_id], __MODULE__)
-
-    # Register the shard process
-    case Registry.register(node_id, __MODULE__, id) do
-      {:ok, _pid} ->
-        Logger.debug(
-          "Shard #{id} successfully registered for node #{node_id}"
-        )
-
-      {:error, reason} ->
-        Logger.error(
-          "Shard #{id} failed to register for node #{node_id}: #{inspect(reason)}"
-        )
-    end
-
-    # Initialize KV with schema values at height 0
     kv =
-      Enum.reduce(initial_kv_arg, %{}, fn {key, value}, acc ->
-        # Initial state: has value, no reservations
-        initial_details = %{
-          value: value,
-          read_reserved_count: 0,
-          write_reserved?: false
-        }
-
-        Map.put(acc, key, %{0 => initial_details})
+      Map.new(args[:initial_kv], fn {key, value} ->
+        {key, %{0 => %{@default_kv_entry_details | value: value}}}
       end)
 
-    # Initialize watermarks for keys present in initial_kv
     watermarks =
-      Enum.reduce(initial_kv_arg, %{}, fn {key, _}, acc ->
-        # Inline the usage of the @
-        Map.put(acc, key, @initial_watermarks)
-      end)
+      Map.new(args[:initial_kv], fn {key, _} -> {key, @initial_watermarks} end)
 
-    state = %__MODULE__{
-      id: id,
-      node_id: node_id,
-      kv: kv,
-      watermarks: watermarks,
-      pending_reads: %{}
-    }
+    {id, node_id} = {args[:id], args[:node_id]}
+
+    state =
+      %__MODULE__{id: id, node_id: node_id, kv: kv, watermarks: watermarks}
 
     {:ok, state}
   end
