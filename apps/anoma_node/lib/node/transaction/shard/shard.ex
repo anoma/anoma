@@ -532,58 +532,34 @@ defmodule Anoma.Node.Transaction.Shard do
 
   @spec handle_unreserve(key(), height(), :read | :write, t()) :: t()
   defp handle_unreserve(key, height, type, state) do
-    case Map.get(state.kv, key) do
-      nil ->
-        state
+    new_kv =
+      Map.replace_lazy(state.kv, key, fn key_height ->
+        Map.replace_lazy(key_height, height, fn details ->
+          case type do
+            :read ->
+              count = max(0, details.read_reserved_count - 1)
+              %{details | read_reserved_count: count}
 
-      key_height_map ->
-        case Map.get(key_height_map, height) do
-          nil ->
-            state
+            :write ->
+              %{details | write_reserved?: false}
+          end
+        end)
+      end)
 
-          # Odd double bind of name, call it original_details
-          details ->
-            original_details = details
+    new_state = %__MODULE__{state | kv: new_kv}
 
-            updated_details =
-              case type do
-                :read ->
-                  if details.read_reserved_count > 0 do
-                    %{
-                      details
-                      | read_reserved_count: details.read_reserved_count - 1
-                    }
-                  else
-                    # Idempotent: no change if count already zero
-                    details
-                  end
+    ori_details = Map.get(state.kv, key, %{}) |> Map.get(height, %{})
+    new_details = Map.get(new_kv, key, %{}) |> Map.get(height, %{})
 
-                :write ->
-                  %{details | write_reserved?: false}
-              end
+    cond do
+      ori_details == new_details ->
+        new_state
 
-            if updated_details != original_details do
-              # Another Map.update, at this point make it into a
-              # function for the kinds of updates we do frequently.
-              new_key_height_map =
-                Map.put(key_height_map, height, updated_details)
+      type == :write and ori_details.write_reserved? ->
+        check_pending_reads(key, new_state)
 
-              updated_kv = Map.put(state.kv, key, new_key_height_map)
-              state_after_kv_update = %{state | kv: updated_kv}
-
-              final_state =
-                if type == :write and original_details.write_reserved? and
-                     not updated_details.write_reserved? do
-                  check_pending_reads(key, state_after_kv_update)
-                else
-                  state_after_kv_update
-                end
-
-              final_state
-            else
-              state
-            end
-        end
+      true ->
+        new_state
     end
   end
 
