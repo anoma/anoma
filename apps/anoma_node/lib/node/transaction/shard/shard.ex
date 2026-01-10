@@ -311,26 +311,16 @@ defmodule Anoma.Node.Transaction.Shard do
   end
 
   @spec handle_write(key(), value(), height(), t()) :: t()
-  defp handle_write(key, value, height, state) do
-    key_height_map = Map.get(state.kv, key, %{})
-    # Default is a failure condition
-    details = Map.get(key_height_map, height, @default_details)
+  defp handle_write(key, value, height, state = %{kv: kv}) do
+    ori_details = get_details(kv, key, height)
 
-    cond do
-      !details.write_reserved? ->
-        state
+    if !ori_details.write_reserved? do
+      state
+    else
+      new_kv =
+        replace_details(kv, key, height, &unreserve_detail(&1, :write, value))
 
-      true ->
-        # Valid write reservation
-        # Update value, clear write reservation, KEEP read reservation
-        updated_details = %{details | value: value, write_reserved?: false}
-        # Another Map.update!, we know it exists before hand
-        new_key_height_map = Map.put(key_height_map, height, updated_details)
-        new_kv = Map.put(state.kv, key, new_key_height_map)
-        new_state = %{state | kv: new_kv}
-
-        # Check pending reads *after* state update (write might allow resolution if watermark matches)
-        check_pending_reads(key, new_state)
+      check_pending_reads(key, %__MODULE__{state | kv: new_kv})
     end
   end
 
@@ -453,16 +443,7 @@ defmodule Anoma.Node.Transaction.Shard do
   @spec handle_unreserve(key(), height(), :read | :write, t()) :: t()
   defp handle_unreserve(key, height, type, state) do
     new_kv =
-      replace_details(state.kv, key, height, fn details ->
-        case type do
-          :read ->
-            count = max(0, details.read_reserved_count - 1)
-            %{details | read_reserved_count: count}
-
-          :write ->
-            %{details | write_reserved?: false}
-        end
-      end)
+      replace_details(state.kv, key, height, &unreserve_detail(&1, type))
 
     new_state = %__MODULE__{state | kv: new_kv}
 
@@ -807,6 +788,10 @@ defmodule Anoma.Node.Transaction.Shard do
     |> Map.get(height, @default_details)
   end
 
+  ######################################
+  #              Iterators             #
+  ######################################
+
   @spec replace_details(map(), key(), height(), (details() -> details())) ::
           map()
   defp replace_details(kv, key, height, function) do
@@ -823,6 +808,10 @@ defmodule Anoma.Node.Transaction.Shard do
       Map.update(key_height, height, default_value, function)
     end)
   end
+
+  ######################################
+  #                Usage               #
+  ######################################
 
   @spec reserve_detail(details(), capabilities()) :: details()
   defp reserve_detail(details = %{value: value}, type)
@@ -844,6 +833,21 @@ defmodule Anoma.Node.Transaction.Shard do
       | read_reserved_count: details.read_reserved_count + 1,
         write_reserved?: true
     }
+  end
+
+  @spec unreserve_detail(details(), :write | :read_write, any()) :: details()
+  defp unreserve_detail(details, cap, value) do
+    %{unreserve_detail(details, cap) | value: value}
+  end
+
+  @spec unreserve_detail(details(), capabilities()) :: details()
+  defp unreserve_detail(details, :read) do
+    count = max(0, details.read_reserved_count - 1)
+    %{details | read_reserved_count: count}
+  end
+
+  defp unreserve_detail(details, :write) do
+    %{details | write_reserved?: false}
   end
 
   @spec reserve_detail_err(details(), capabilities()) ::
