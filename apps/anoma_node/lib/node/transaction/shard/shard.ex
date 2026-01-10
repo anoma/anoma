@@ -182,7 +182,7 @@ defmodule Anoma.Node.Transaction.Shard do
   def reserve(shard_pid, key, height, type) do
     # Todo: Timeout?
     # Remove timeout
-    GenServer.call(shard_pid, {:reserve, key, height, type}, :infinity)
+    GenServer.call(shard_pid, {:reserve, key, height, type})
   end
 
   @doc """
@@ -233,7 +233,7 @@ defmodule Anoma.Node.Transaction.Shard do
   def backup_state(shard_pid) do
     # No Infinity, unsure if should be a call as we may care about
     # blocking due to 2 phase commit
-    GenServer.call(shard_pid, :backup_state, :infinity)
+    GenServer.call(shard_pid, :backup_state)
   end
 
   @doc """
