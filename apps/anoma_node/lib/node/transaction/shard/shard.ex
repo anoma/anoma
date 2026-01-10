@@ -262,7 +262,8 @@ defmodule Anoma.Node.Transaction.Shard do
 
   @impl true
   def handle_call({:reserve, key, height, type}, _from, state) do
-    handle_reserve(key, height, type, state)
+    {response, state} = handle_reserve(key, height, type, state)
+    {:reply, response, state}
   end
 
   def handle_call({:read, key, height_req}, from, state) do
@@ -271,23 +272,24 @@ defmodule Anoma.Node.Transaction.Shard do
 
   def handle_call(:backup_state, _from, state) do
     handle_backup_state(state)
+    {:reply, :ok, state}
   end
 
   @impl true
   def handle_cast({:write, key, value, height}, state) do
-    handle_write(key, value, height, state)
+    {:noreply, handle_write(key, value, height, state)}
   end
 
   def handle_cast({:write_watermark_advanced, key, h_write}, state) do
-    handle_write_watermark_advanced(key, h_write, state)
+    {:noreply, handle_write_watermark_advanced(key, h_write, state)}
   end
 
   def handle_cast({:read_watermark_advanced, key, h_read}, state) do
-    handle_read_watermark_advanced(key, h_read, state)
+    {:noreply, handle_read_watermark_advanced(key, h_read, state)}
   end
 
   def handle_cast({:unreserve, key, height, type}, state) do
-    handle_unreserve(key, height, type, state)
+    {:noreply, handle_unreserve(key, height, type, state)}
   end
 
   ############################################################
@@ -299,8 +301,8 @@ defmodule Anoma.Node.Transaction.Shard do
   # 2. Retrieves or initializes details for the {key, height}.
   # 3. Processes the specific reservation request (:read, :write, or :read_write).
   # 4. Updates the state if the reservation was successful and changed the details.
-  @spec handle_reserve(key(), height(), capabilities(), __MODULE__.t()) ::
-          {:reply, :ok | {:error, atom()}, __MODULE__.t()}
+  @spec handle_reserve(key(), height(), capabilities(), t()) ::
+          {:ok | {:error, atom()}, t()}
   defp handle_reserve(key, height, type, state) do
     key_watermarks = Map.get(state.watermarks, key, @initial_watermarks)
 
@@ -315,15 +317,15 @@ defmodule Anoma.Node.Transaction.Shard do
         new_key_height_map = Map.put(key_height_map, height, final_details)
         new_kv = Map.put(state.kv, key, new_key_height_map)
         new_state = %{state | kv: new_kv}
-        {:reply, :ok, new_state}
+        {:ok, new_state}
       else
         # No change in reservation status (e.g., reservations already held)
-        {:reply, :ok, state}
+        {:ok, state}
       end
     else
       # Handle errors from check_watermarks or process_reservation_request
       {:error, reason} ->
-        {:reply, {:error, reason}, state}
+        {{:error, reason}, state}
     end
   end
 
@@ -388,7 +390,7 @@ defmodule Anoma.Node.Transaction.Shard do
      }}
   end
 
-  @spec handle_write(key(), value(), height(), t()) :: {:noreply, t()}
+  @spec handle_write(key(), value(), height(), t()) :: t()
   defp handle_write(key, value, height, state) do
     key_height_map = Map.get(state.kv, key, %{})
     # Default is a failure condition
@@ -396,8 +398,7 @@ defmodule Anoma.Node.Transaction.Shard do
 
     cond do
       !details.write_reserved? ->
-        # Should be a no-op, if it's not reserved, this isn't a call anymore
-        {:noreply, state}
+        state
 
       true ->
         # Valid write reservation
@@ -409,15 +410,13 @@ defmodule Anoma.Node.Transaction.Shard do
         new_state = %{state | kv: new_kv}
 
         # Check pending reads *after* state update (write might allow resolution if watermark matches)
-        final_state = check_pending_reads(key, new_state)
-        {:noreply, final_state}
+        check_pending_reads(key, new_state)
     end
   end
 
-  @spec handle_read(key(), height(), GenServer.from(), __MODULE__.t()) ::
-          {:reply, {:ok, value()} | :absent | {:error, atom()},
-           __MODULE__.t()}
-          | {:noreply, __MODULE__.t()}
+  @spec handle_read(key(), height(), GenServer.from(), t()) ::
+          {:reply, {:ok, value()} | :absent | {:error, atom()}, t()}
+          | {:noreply, t()}
   defp handle_read(key, height_req, from, state) do
     # --- Validation ---
     key_height_map = Map.get(state.kv, key, %{})
@@ -479,8 +478,7 @@ defmodule Anoma.Node.Transaction.Shard do
     end
   end
 
-  @spec handle_write_watermark_advanced(key(), height(), __MODULE__.t()) ::
-          {:noreply, __MODULE__.t()}
+  @spec handle_write_watermark_advanced(key(), height(), t()) :: t()
   defp handle_write_watermark_advanced(key, h_write, state) do
     current_key_watermarks =
       Map.get(state.watermarks, key, @initial_watermarks)
@@ -498,18 +496,14 @@ defmodule Anoma.Node.Transaction.Shard do
       }
 
       # Check pending reads based ONLY on the new write watermark
-      state_after_reads =
-        check_pending_reads(key, state_after_wm_update)
-
-      {:noreply, state_after_reads}
+      check_pending_reads(key, state_after_wm_update)
     else
       # Watermark did not advance for this key
-      {:noreply, state}
+      state
     end
   end
 
-  @spec handle_read_watermark_advanced(key(), height(), __MODULE__.t()) ::
-          {:noreply, __MODULE__.t()}
+  @spec handle_read_watermark_advanced(key(), height(), t()) :: t()
   defp handle_read_watermark_advanced(key, h_read, state) do
     current_key_watermarks =
       Map.get(state.watermarks, key, @initial_watermarks)
@@ -529,24 +523,23 @@ defmodule Anoma.Node.Transaction.Shard do
       # Perform Garbage Collection based ONLY on the new read watermark
       state_after_gc = gc_key(key, new_read_wm, state_after_wm_update)
 
-      {:noreply, state_after_gc}
+      state_after_gc
     else
       # Watermark did not advance for this key
-      {:noreply, state}
+      state
     end
   end
 
-  @spec handle_unreserve(key(), height(), :read | :write, __MODULE__.t()) ::
-          {:noreply, __MODULE__.t()}
+  @spec handle_unreserve(key(), height(), :read | :write, t()) :: t()
   defp handle_unreserve(key, height, type, state) do
     case Map.get(state.kv, key) do
       nil ->
-        {:noreply, state}
+        state
 
       key_height_map ->
         case Map.get(key_height_map, height) do
           nil ->
-            {:noreply, state}
+            state
 
           # Odd double bind of name, call it original_details
           details ->
@@ -586,45 +579,36 @@ defmodule Anoma.Node.Transaction.Shard do
                   state_after_kv_update
                 end
 
-              {:noreply, final_state}
+              final_state
             else
-              {:noreply, state}
+              state
             end
         end
     end
   end
 
-  @spec handle_backup_state(__MODULE__.t()) ::
-          {:reply, :ok | {:error, any()}, __MODULE__.t()}
-  defp handle_backup_state(
-         state = %__MODULE__{id: shard_id, node_id: node_id, kv: kv_map}
-       ) do
+  @spec handle_backup_state(t()) :: :ok
+  defp handle_backup_state(%__MODULE__{id: id, node_id: node_id, kv: kv}) do
     backup_table = Anoma.Node.Tables.table_shard_backups(node_id)
 
     mnesia_tx = fn ->
       # Overwrite for same height.
-      Enum.each(kv_map, fn {key, height_map} ->
+      Enum.each(kv, fn {key, height_map} ->
         Enum.each(height_map, fn {height, details} ->
           # Only backup entries with a committed value
           if not is_nil(details.value) do
-            record_key = {shard_id, key, height}
+            record_key = {id, key, height}
             :mnesia.write({backup_table, record_key, details.value})
           end
         end)
       end)
     end
 
-    case :mnesia.transaction(mnesia_tx) do
-      {:atomic, :ok} ->
-        {:reply, :ok, state}
-
-      {:aborted, reason} ->
-        Logger.error(
-          "Shard #{inspect(shard_id)} backup failed: #{inspect(reason)}"
-        )
-
-        {:reply, {:error, reason}, state}
+    with {:aborted, reason} <- :mnesia.transaction(mnesia_tx) do
+      Logger.error("Shard #{inspect(id)} backup failed: #{inspect(reason)}")
     end
+
+    :ok
   end
 
   ############################################################
