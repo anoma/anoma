@@ -536,40 +536,25 @@ defmodule Anoma.Node.Transaction.Shard do
   # - The heights of all write reservations between that value and target_height.
   @spec find_essential_heights_below(height(), map()) :: MapSet.t(height())
   defp find_essential_heights_below(target_height, key_height_map) do
-    # 1. Find the highest height h_val < target_height with a committed value
-    maybe_max_h_val =
+    # Sort relevant values backwards to grab most relevant items first
+    sorted_lower_heights =
       key_height_map
-      |> Enum.filter(fn {h, details} ->
-        h < target_height and not is_nil(details.value)
-      end)
-      |> Enum.max_by(fn {h, _} -> h end, fn -> nil end)
+      |> Enum.filter(fn {h, _} -> h < target_height end)
+      |> Enum.sort(:desc)
 
-    #  Do the common processing then do the case
-    case maybe_max_h_val do
+    reserved_heights =
+      sorted_lower_heights
+      |> Enum.filter(fn {_, details} -> details.write_reserved? end)
+      |> MapSet.new(fn {h, _} -> h end)
+
+    case Enum.find(sorted_lower_heights, fn {_, det} -> det.value end) do
       nil ->
-        # No committed value below target_height. Find write reservations below target_height.
-        write_reservation_heights_below =
-          key_height_map
-          |> Enum.filter(fn {h, details} ->
-            h < target_height and details.write_reserved?
-          end)
-          # Keep only the heights
-          |> Enum.map(fn {h, _} -> h end)
-
-        MapSet.new(write_reservation_heights_below)
+        reserved_heights
 
       {h_val, _details} ->
-        # 2. Find all heights h_wr with write reservations between h_val and target_height
-        write_reservation_heights_between =
-          key_height_map
-          |> Enum.filter(fn {h, details} ->
-            h > h_val and h < target_height and details.write_reserved?
-          end)
-          # Keep only the heights
-          |> Enum.map(fn {h, _} -> h end)
-
-        # 3. Combine h_val and the intermediate write reservation heights
-        MapSet.new([h_val | write_reservation_heights_between])
+        reserved_heights
+        |> MapSet.filter(fn h -> h > h_val end)
+        |> MapSet.put(h_val)
     end
   end
 
