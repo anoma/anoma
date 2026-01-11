@@ -371,53 +371,26 @@ defmodule Anoma.Node.Transaction.Shard do
 
   @spec handle_write_watermark_advanced(key(), height(), t()) :: t()
   defp handle_write_watermark_advanced(key, h_write, state) do
-    current_key_watermarks =
-      Map.get(state.watermarks, key, @initial_watermarks)
+    cur_watermark = Map.get(state.watermarks, key, @initial_watermarks)
+    new_watermark = advance_watermarks(key, h_write, :write, state.watermarks)
 
-    # Write watermark should only advance
-    new_write_wm = max(h_write, current_key_watermarks.write)
-
-    if new_write_wm > current_key_watermarks.write do
-      updated_watermarks = %{current_key_watermarks | write: new_write_wm}
-      new_watermarks_map = Map.put(state.watermarks, key, updated_watermarks)
-
-      state_after_wm_update = %__MODULE__{
-        state
-        | watermarks: new_watermarks_map
-      }
-
-      # Check pending reads based ONLY on the new write watermark
-      check_pending_reads(key, state_after_wm_update)
-    else
-      # Watermark did not advance for this key
+    if cur_watermark == new_watermark do
       state
+    else
+      check_pending_reads(key, %__MODULE__{state | watermarks: new_watermark})
     end
   end
 
   @spec handle_read_watermark_advanced(key(), height(), t()) :: t()
   defp handle_read_watermark_advanced(key, h_read, state) do
-    current_key_watermarks =
-      Map.get(state.watermarks, key, @initial_watermarks)
+    cur_watermark = Map.get(state.watermarks, key, @initial_watermarks)
+    new_watermark = advance_watermarks(key, h_read, :read, state.watermarks)
 
-    # Read watermark should only advance
-    new_read_wm = max(h_read, current_key_watermarks.read)
-
-    if new_read_wm > current_key_watermarks.read do
-      updated_watermarks = %{current_key_watermarks | read: new_read_wm}
-      new_watermarks_map = Map.put(state.watermarks, key, updated_watermarks)
-
-      state_after_wm_update = %__MODULE__{
-        state
-        | watermarks: new_watermarks_map
-      }
-
-      # Perform Garbage Collection based ONLY on the new read watermark
-      state_after_gc = gc_key(key, new_read_wm, state_after_wm_update)
-
-      state_after_gc
-    else
-      # Watermark did not advance for this key
+    if cur_watermark == new_watermark do
       state
+    else
+      read_key = new_watermark[key].read
+      gc_key(key, read_key, %{state | watermarks: new_watermark})
     end
   end
 
@@ -738,6 +711,17 @@ defmodule Anoma.Node.Transaction.Shard do
   end
 
   defp check_watermarks(_height, _type, _key_watermarks), do: :ok
+
+  @spec advance_watermarks(key(), height(), :read | :write, map()) :: map()
+  def advance_watermarks(key, height, type, watermark) do
+    update = fn x -> max(height, x) end
+    initial = Map.replace_lazy(@initial_watermarks, type, update)
+
+    watermark
+    |> Map.update(key, initial, fn watermark ->
+      Map.update(watermark, type, update.(@initial_watermarks), update)
+    end)
+  end
 
   ############################################################
   #                       Helpers Details                    #
