@@ -622,59 +622,29 @@ defmodule Anoma.Node.Transaction.Shard do
     end
   end
 
-  # I am the helper function to attempt resolving a read request.
-
   # I check if a read for `key` at `height_req` can be resolved based on the
   # current `key_height_map` and `key_watermarks`.
-  # I return:
-  # - `{:ok, :absent}` if resolvable and no value exists below `height_req`.
-  # - `{:ok, {:ok, value}}` if resolvable and a value exists.
-  # - `:blocked_by_watermark` if `height_req` is above the write watermark.
-  # - `:blocked_by_write_reservation` if the latest entry below `height_req` holds a write reservation.
   @spec resolve_read_value(height(), map(), map()) ::
           {:ok, :absent | {:ok, value()}}
           | :blocked_by_watermark
           | :blocked_by_write_reservation
-  defp resolve_read_value(height_req, key_height_map, key_watermarks) do
-    if height_req > key_watermarks.write + 1 do
-      :blocked_by_watermark
-    else
-      # 2. Find the latest entry below height_req that has EITHER a value OR a write reservation.
-      # This represents the most recent operation determining the state relevant to the read.
-      maybe_relevant_entry =
-        key_height_map
-        |> Enum.filter(fn {h, details} ->
-          h < height_req and
-            (not is_nil(details.value) or details.write_reserved?)
-        end)
-        |> Enum.max_by(fn {h, _details} -> h end, fn -> nil end)
+  defp resolve_read_value(height, _, %{write: w}) when height > w + 1 do
+    :blocked_by_watermark
+  end
 
-      case maybe_relevant_entry do
-        # 3. No relevant entry found below height_req (implies initial state or empty)
-        nil ->
-          {:ok, :absent}
+  defp resolve_read_value(height_req, key_height_map, _) do
+    # This represents the most recent operation relevant to the read.
+    relevant_entry =
+      key_height_map
+      |> Enum.filter(fn {h, det} ->
+        h < height_req && (det.value || det.write_reserved?)
+      end)
+      |> Enum.max(fn -> nil end)
 
-        # 4. Relevant entry found, check its state
-        {_h, details} ->
-          cond do
-            # If the latest relevant entry has a value (is committed), resolve the read.
-            not is_nil(details.value) ->
-              {:ok, {:ok, details.value}}
-
-            # If the latest relevant entry holds a write reservation, block the read.
-            details.write_reserved? ->
-              :blocked_by_write_reservation
-
-            # Should be unreachable.
-            true ->
-              Logger.error(
-                "Shard: Unreachable state in resolve_read_value for key height map: #{inspect(key_height_map)}, height_req: #{height_req}"
-              )
-
-              # Treat as absent if we somehow reach here
-              {:ok, :absent}
-          end
-      end
+    case relevant_entry do
+      nil -> {:ok, :absent}
+      {_, %{write_reserved?: true}} -> :blocked_by_write_reservation
+      {_, %{value: val}} -> {:ok, {:ok, val}}
     end
   end
 
