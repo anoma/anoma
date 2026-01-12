@@ -332,7 +332,6 @@ defmodule Anoma.Node.Transaction.Shard do
 
     details = get_details(kv, key, height)
 
-    # If we hit the default, we fail
     # Unify check_pending_reads
     cond do
       details.read_reserved_count == 0 ->
@@ -343,28 +342,23 @@ defmodule Anoma.Node.Transaction.Shard do
         key_watermarks =
           Map.get(state.watermarks, key, @initial_watermarks)
 
-        resolution_result =
+        resolution =
           resolve_read_value(height, key_height_map, key_watermarks)
 
-        case resolution_result do
-          {:ok, value_or_absent} ->
-            new_kv =
-              replace_details(kv, key, height, &unreserve_detail(&1, :read))
-
-            {:reply, value_or_absent, %__MODULE__{state | kv: new_kv}}
-
-          block_reason
-          when block_reason in [
-                 :blocked_by_watermark,
-                 :blocked_by_write_reservation
-               ] ->
-            # Queue the read
+        cond do
+          resolution in [:blocked_by_watermark, :blocked_by_write_reservation] ->
             new_pending_reads =
               Map.update(pend, key, %{height => [from]}, fn pending ->
                 Map.update(pending, height, [from], &[from | &1])
               end)
 
             {:noreply, %{state | pending_reads: new_pending_reads}}
+
+          true ->
+            new_kv =
+              replace_details(kv, key, height, &unreserve_detail(&1, :read))
+
+            {:reply, resolution, %__MODULE__{state | kv: new_kv}}
         end
     end
   end
@@ -481,7 +475,7 @@ defmodule Anoma.Node.Transaction.Shard do
             # Still blocked, keep pending
             {Map.put(acc_pending_map, height_req, from_list), acc_state_outer}
 
-          {:ok, value_or_absent} ->
+          value_or_absent ->
             # Process each requester in the list, decrementing reservations one by one
             final_acc_state_inner =
               Enum.reduce(from_list, acc_state_outer, fn requester_from,
@@ -602,7 +596,8 @@ defmodule Anoma.Node.Transaction.Shard do
   # I check if a read for `key` at `height_req` can be resolved based on the
   # current `key_height_map` and `key_watermarks`.
   @spec resolve_read_value(height(), map(), map()) ::
-          {:ok, :absent | {:ok, value()}}
+          :absent
+          | {:ok, value()}
           | :blocked_by_watermark
           | :blocked_by_write_reservation
   defp resolve_read_value(height, _, %{write: w}) when height > w + 1 do
@@ -619,9 +614,9 @@ defmodule Anoma.Node.Transaction.Shard do
       |> Enum.max(fn -> nil end)
 
     case relevant_entry do
-      nil -> {:ok, :absent}
+      nil -> :absent
       {_, %{write_reserved?: true}} -> :blocked_by_write_reservation
-      {_, %{value: val}} -> {:ok, {:ok, val}}
+      {_, %{value: val}} -> {:ok, val}
     end
   end
 
@@ -637,7 +632,6 @@ defmodule Anoma.Node.Transaction.Shard do
     {:error, :reserving_write_under_write_watermark}
   end
 
-  # pattern match this, remove the :read_write.
   defp check_watermarks(height, :read, %{read: mark}) when height <= mark do
     {:error, :reserving_read_under_read_watermark}
   end
