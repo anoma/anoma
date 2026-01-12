@@ -563,63 +563,40 @@ defmodule Anoma.Node.Transaction.Shard do
   # I perform garbage collection for a specific key based on the read watermark.
   # I remove entries older than the watermark unless they are essential for resolving
   # reads at or past the watermark height or at heights with active read reservations.
-  @spec gc_key(key(), height(), __MODULE__.t()) :: __MODULE__.t()
+  # Note there might be a subtle issue with the semantics of
+  # forgetting something that hasn't existed vs has once existed
+  # but has been tombstoned
+  @spec gc_key(key(), height(), t()) :: t()
   defp gc_key(key, read_watermark, state) do
-    case Map.get(state.kv, key) do
-      nil ->
-        # Key not present, nothing to GC
-        state
+    height_map = Map.get(state.kv, key, %{})
 
-      key_height_map ->
-        # 1. Identify heights with active read reservations
-        read_reservation_heights =
-          for {h, details} <- key_height_map,
-              details.read_reserved_count > 0,
-              into: MapSet.new(),
-              do: h
+    reserved_heights =
+      height_map
+      |> Enum.filter(fn {h, _} -> h <= read_watermark end)
+      |> Enum.filter(fn {_, %{read_reserved_count: c}} -> c > 0 end)
+      |> MapSet.new(fn {h, _} -> h end)
 
-        # 2. Determine essential heights to keep below the read watermark
-        essential_below_watermark =
-          find_essential_heights_below(read_watermark, key_height_map)
+    essential_heights =
+      reserved_heights
+      |> MapSet.put(read_watermark)
+      |> Enum.map(&find_essential_heights_below(&1, height_map))
+      |> Enum.reduce(MapSet.new(), &MapSet.union/2)
 
-        # 3. Determine essential heights to keep below each active read reservation
-        essential_below_reservations =
-          read_reservation_heights
-          |> Enum.map(&find_essential_heights_below(&1, key_height_map))
-          |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+    heights_left_below = MapSet.union(reserved_heights, essential_heights)
 
-        # 4. Combine all heights that MUST be kept:
-        #    - Heights holding read reservations themselves.
-        #    - Essential heights supporting the watermark.
-        #    - Essential heights supporting each reservation.
-        all_essential_heights_below_watermark =
-          read_reservation_heights
-          |> MapSet.union(essential_below_watermark)
-          |> MapSet.union(essential_below_reservations)
+    all_keys_left =
+      Map.filter(height_map, fn {h, _} ->
+        h >= read_watermark or MapSet.member?(heights_left_below, h)
+      end)
 
-        # 5. Filter the map: Keep entries >= watermark OR in the essential set below watermark
-        new_key_height_map =
-          Enum.filter(key_height_map, fn {h, _details} ->
-            # Keep if at or above watermark OR essential below
-            h >= read_watermark or
-              MapSet.member?(all_essential_heights_below_watermark, h)
-          end)
-          |> Map.new()
+    kv =
+      if Enum.empty?(all_keys_left) do
+        Map.delete(state.kv, key)
+      else
+        Map.put(state.kv, key, all_keys_left)
+      end
 
-        # Note there might be a subtle issue with the semantics of
-        # forgetting something that hasn't existed vs has once existed
-        # but has been tombstoned
-
-        # 6. Update state
-        if map_size(new_key_height_map) > 0 do
-          new_kv = Map.put(state.kv, key, new_key_height_map)
-          %{state | kv: new_kv}
-        else
-          # If GC removed all entries for the key, remove the key itself
-          new_kv = Map.delete(state.kv, key)
-          %{state | kv: new_kv}
-        end
-    end
+    %{state | kv: kv}
   end
 
   # I check if a read for `key` at `height_req` can be resolved based on the
