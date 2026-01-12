@@ -446,82 +446,53 @@ defmodule Anoma.Node.Transaction.Shard do
   # If a read becomes resolvable, I calculate the result, reply directly to the waiting
   # caller using `GenServer.reply/2`, release the corresponding read reservation, and
   # remove the request from the pending map.
-  @spec check_pending_reads(key(), __MODULE__.t()) :: __MODULE__.t()
+  @spec check_pending_reads(key(), t()) :: t()
   defp check_pending_reads(key, state) do
-    pending_for_key = Map.get(state.pending_reads, key, %{})
     key_watermarks = Map.get(state.watermarks, key, @initial_watermarks)
 
-    # Iterate through pending heights {height_req => from_list}
-    {new_pending_for_key, final_state_after_key_reduction} =
-      Enum.reduce(pending_for_key, {%{}, state}, fn {height_req, from_list},
-                                                    {acc_pending_map,
-                                                     acc_state_outer} ->
-        # Re-fetch key_height_map for each height_req as it's modified by inner reduce
-        current_key_height_map_outer = Map.get(acc_state_outer.kv, key, %{})
+    key_map = Map.get(state.kv, key, %{})
 
-        resolution_result =
-          resolve_read_value(
-            height_req,
-            current_key_height_map_outer,
-            key_watermarks
-          )
-
-        case resolution_result do
-          block_reason
-          when block_reason in [
-                 :blocked_by_watermark,
-                 :blocked_by_write_reservation
-               ] ->
-            # Still blocked, keep pending
-            {Map.put(acc_pending_map, height_req, from_list), acc_state_outer}
-
-          value_or_absent ->
-            # Process each requester in the list, decrementing reservations one by one
-            final_acc_state_inner =
-              Enum.reduce(from_list, acc_state_outer, fn requester_from,
-                                                         acc_state_inner ->
-                # Get freshest details for THIS requester, as it might have been updated by previous one in list
-                details = get_details(acc_state_inner.kv, key, height_req)
-
-                if details.read_reserved_count > 0 do
-                  GenServer.reply(requester_from, value_or_absent)
-                else
-                  GenServer.reply(
-                    requester_from,
-                    {:error, :read_not_reserved}
-                  )
-                end
-
-                kv = acc_state_inner.kv
-
-                new_kv_inner =
-                  replace_details(
-                    kv,
-                    key,
-                    height_req,
-                    &unreserve_detail(&1, :read)
-                  )
-
-                %{acc_state_inner | kv: new_kv_inner}
-              end)
-
-            # All requesters for this height_req processed, remove from pending map
-            {acc_pending_map, final_acc_state_inner}
-        end
+    reading_for_pendings =
+      state.pending_reads
+      |> Map.get(key, %{})
+      |> Enum.map(fn {height, pendings} ->
+        {height, pendings,
+         resolve_read_value(height, key_map, key_watermarks)}
       end)
 
-    new_pending_reads =
-      if map_size(new_pending_for_key) > 0 do
-        Map.put(
-          final_state_after_key_reduction.pending_reads,
-          key,
-          new_pending_for_key
-        )
+    {still_pending, can_resolve} =
+      Enum.split_with(reading_for_pendings, fn {_, _, resolved} ->
+        resolved in [:blocked_by_watermark, :blocked_by_write_reservation]
+      end)
+
+    pending_for_key = Map.new(still_pending, fn {h, p, _} -> {h, p} end)
+
+    final_pending_map =
+      if Enum.empty?(pending_for_key) do
+        Map.delete(state.pending_reads, key)
       else
-        Map.delete(final_state_after_key_reduction.pending_reads, key)
+        Map.put(state.pending_reads, key, pending_for_key)
       end
 
-    %{final_state_after_key_reduction | pending_reads: new_pending_reads}
+    new_details =
+      Map.new(can_resolve, fn {height, pendings, value} ->
+        details = get_details(state.kv, key, height)
+        new_count = max(0, details.read_reserved_count - length(pendings))
+
+        {can_send, no_send} =
+          Enum.split(pendings, details.read_reserved_count)
+
+        Enum.each(can_send, &GenServer.reply(&1, value))
+        Enum.each(no_send, &GenServer.reply(&1, {:error, :read_not_reserved}))
+
+        {height, %{details | read_reserved_count: new_count}}
+      end)
+
+    %__MODULE__{
+      state
+      | pending_reads: final_pending_map,
+        kv: Map.replace_lazy(state.kv, key, &Map.merge(&1, new_details))
+    }
   end
 
   # Finds essential heights to keep below a given target height.
