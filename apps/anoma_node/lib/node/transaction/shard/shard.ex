@@ -1,3 +1,5 @@
+# Simplify data type by turning the SOA data type into it's own data
+# structure with it's own API
 defmodule Anoma.Node.Transaction.Shard do
   @moduledoc """
   I am the Shard module.
@@ -79,9 +81,28 @@ defmodule Anoma.Node.Transaction.Shard do
           | {:inital_kv, %{key() => %{height() => details()}}}
           | {:id, atom()}
 
+  @type write_reserved :: %{read_reserved_count: non_neg_integer()}
+  @type filled :: %{value: value()}
+
+  @typedoc "I represent the value of a Cell, I can be in 3 different states:
+
+  1. I am empty
+  2. I could be filled with a value
+  3. I could have a write reservation out"
+  @type cell_slot :: filled() | :empty | write_reserved()
+
   ############################################################
   #                         State                            #
   ############################################################
+
+  typedstruct enforce: true, module: Cell do
+    @typedoc """
+    I represent a cell within a shard
+    """
+    field(:pending, nil | list(GenServer.from()))
+    field(:read_reserved, non_neg_integer())
+    field(:cell, Anoma.Node.Transaction.Shard.cell_slot())
+  end
 
   typedstruct enforce: true do
     @typedoc """
@@ -96,7 +117,7 @@ defmodule Anoma.Node.Transaction.Shard do
     """
     field(:id, atom())
     field(:node_id, String.t())
-
+    field(:cells, %{key() => Cell.t()}, default: %{})
     field(:kv, %{key() => %{height() => details()}}, default: %{})
 
     field(:watermarks, %{key() => %{read: height(), write: height()}},
@@ -582,6 +603,10 @@ defmodule Anoma.Node.Transaction.Shard do
       {_, %{value: val}} -> {:ok, val}
     end
   end
+
+  ############################################################
+  #                       Cell Operations                    #
+  ############################################################
 
   ############################################################
   #                      Helpers Watermarks                  #
