@@ -97,21 +97,13 @@ defmodule Anoma.Node.Transaction.Shard do
     field(:id, atom())
     field(:node_id, String.t())
 
-    field(
-      :kv,
-      %{required(key()) => %{required(height()) => details()}},
+    field(:kv, %{key() => %{height() => details()}}, default: %{})
+
+    field(:watermarks, %{key() => %{read: height(), write: height()}},
       default: %{}
     )
 
-    field(
-      :watermarks,
-      %{required(key()) => %{read: height(), write: height()}},
-      default: %{}
-    )
-
-    field(
-      :pending_reads,
-      %{required(key()) => %{required(height()) => list(GenServer.from())}},
+    field(:pending_reads, %{key() => %{height() => list(GenServer.from())}},
       default: %{}
     )
   end
