@@ -1,0 +1,251 @@
+defmodule Anoma.Node.Transaction.Shard.Cell do
+  @moduledoc """
+  """
+  use TypedStruct
+
+  alias Anoma.Node.Transaction.Shard.Cell
+  alias Anoma.Node.Transaction.Shard.Detail
+
+  @typedoc "The height associated with an operation."
+  @type height :: non_neg_integer()
+
+  @typedoc "The capabilities requested or held by a reservation."
+  @type cap :: :read | :write | :read_write
+
+  @typedoc "The watermark type"
+  @type watermarks() :: %{read: height(), write: height()}
+
+  typedstruct enforce: true do
+    @typedoc """
+    I represent a cell within a shard
+    """
+    field(:details, %{height() => Detail.t()}, default: %{})
+    field(:watermarks, watermarks(), default: %{read: 0, write: 0})
+  end
+
+  ############################################################
+  #                      Main Functions                      #
+  ############################################################
+
+  @spec reserve(t(), cap(), height()) :: {:ok, t()} | {:error, atom()}
+  def reserve(c = %__MODULE__{}, cap, height) do
+    with :ok <- can_reserve(c, cap, height),
+         true <- detail_at(c, height) |> Detail.can_reserve?(cap) do
+      {:ok, update_detail(c, height, &Detail.reserve(&1, cap))}
+    else
+      false -> {:error, :occupied}
+      err -> err
+    end
+  end
+
+  @spec unreserve(t(), cap(), height()) :: t()
+  def unreserve(c = %__MODULE__{}, cap, height) do
+    new_c = update_detail(c, height, &Detail.unreserve(&1, cap))
+    original = detail_at(c, height)
+
+    cond do
+      original == detail_at(new_c, height) -> c
+      cap == :write and original.cell == :reserved -> resolve_pending(new_c)
+      true -> new_c
+    end
+  end
+
+  @spec write(t(), height(), any()) :: t()
+  def write(c = %__MODULE__{}, height, value) do
+    case replace_detail(c, height, &Detail.write(&1, value)) do
+      {:ok, new_c} -> resolve_pending(new_c)
+      {:error, _e} -> c
+    end
+  end
+
+  @spec read(t(), height()) ::
+          {:ok, t(), any()} | {:error, :not_reserved | :pending}
+  def read(c = %__MODULE__{}, height) do
+    case detail_at(c, height) do
+      %Detail{reserved_reads: 0} ->
+        {:error, :not_reserved}
+
+      _ ->
+        new_c = update_detail(c, height, &Detail.unreserve(&1, :read))
+
+        case resolve_read_value(c, height) do
+          :blocked -> {:error, :pending}
+          :absent -> {:ok, new_c, :absent}
+          {:ok, resolved} -> {:ok, new_c, {:ok, resolved}}
+        end
+    end
+  end
+
+  @spec add_pending(t(), height(), GenServer.from()) :: t()
+  def add_pending(c, height, from) do
+    update = fn
+      d = %Detail{pending: nil} -> %Detail{d | pending: [from]}
+      d = %Detail{pending: p} -> %Detail{d | pending: [from | p]}
+    end
+
+    update_detail(c, height, update)
+  end
+
+  @spec run_advance_watermark(t(), :read | :write, height()) :: t()
+  def run_advance_watermark(c = %Cell{watermarks: w}, cap, height) do
+    case {advance_watermark(w, cap, height), cap} do
+      {^w, _} -> c
+      {new_w, :read} -> gc(%__MODULE__{c | watermarks: new_w})
+      {new_w, :write} -> resolve_pending(%__MODULE__{c | watermarks: new_w})
+    end
+  end
+
+  @spec resolve_pending(t()) :: t()
+  def resolve_pending(c = %__MODULE__{details: ds}) do
+    new_ds = Map.new(ds, fn {height, d} -> resolve_height(c, height, d) end)
+    %__MODULE__{c | details: new_ds}
+  end
+
+  @spec resolve_height(t(), height(), Detail.t()) :: {height(), Detail.t()}
+  defp resolve_height(_c, height, d = %Detail{pending: nil}), do: {height, d}
+
+  defp resolve_height(c, height, d = %Detail{pending: ps, reserved_reads: r}) do
+    case resolve_read_value(c, height) do
+      :blocked ->
+        {height, d}
+
+      value ->
+        new_count = max(0, r - length(ps))
+        {can_res, not_res} = Enum.split(ps, r)
+
+        Enum.each(can_res, &GenServer.reply(&1, value))
+        Enum.each(not_res, &GenServer.reply(&1, {:error, :read_not_reserved}))
+
+        {height, %Detail{d | pending: nil, reserved_reads: new_count}}
+    end
+  end
+
+  ############################################################
+  #                           Helpers                        #
+  ############################################################
+
+  @spec resolve_read_value(t(), height()) :: {:ok, any()} | :absent | :blocked
+  defp resolve_read_value(%__MODULE__{watermarks: w}, h) when h > w.write + 1,
+    do: :blocked
+
+  defp resolve_read_value(%__MODULE__{details: ds}, height) do
+    # This represents the most recent operation relevant to the read.
+    relevant_entries =
+      Enum.filter(ds, fn
+        {h, %Detail{cell: :reserved}} -> h < height
+        {h, %Detail{cell: %{value: _}}} -> h < height
+        {_, %Detail{cell: :empty}} -> false
+      end)
+
+    case Enum.max(relevant_entries, fn -> nil end) do
+      nil -> :absent
+      {_, %Detail{cell: :reserved}} -> :blocked
+      {_, %Detail{cell: %{value: val}}} -> {:ok, val}
+    end
+  end
+
+  @spec gc(t()) :: t()
+  defp gc(c = %__MODULE__{details: details, watermarks: %{read: watermark}}) do
+    reserved =
+      details
+      |> Enum.filter(fn {h, _} -> h <= watermark end)
+      |> Enum.filter(fn {_, %Detail{reserved_reads: c}} -> c > 0 end)
+      |> MapSet.new(fn {h, _} -> h end)
+
+    essential =
+      reserved
+      |> MapSet.put(watermark)
+      |> Enum.map(&find_essential_heights_below(c, &1))
+      |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+
+    heights_left_below = MapSet.union(reserved, essential)
+
+    all_keys_left =
+      Map.filter(details, fn {h, _} ->
+        h >= watermark or MapSet.member?(heights_left_below, h)
+      end)
+
+    %__MODULE__{c | details: all_keys_left}
+  end
+
+  @spec find_essential_heights_below(t(), height()) :: MapSet.t(height())
+  def find_essential_heights_below(%Cell{details: details}, target_height) do
+    # Sort relevant values backwards to grab most relevant items first
+    sorted =
+      details
+      |> Enum.filter(fn {h, _} -> h < target_height end)
+      |> Enum.sort_by(&elem(&1, 0), :desc)
+
+    reserved =
+      sorted
+      |> Enum.filter(fn
+        {_, %Detail{cell: :reserved}} -> true
+        {_, %Detail{cell: _not_res}} -> false
+      end)
+      |> MapSet.new(fn {h, _} -> h end)
+
+    case Enum.find(sorted, fn
+           {_, %Detail{cell: %{value: _}}} -> true
+           {_, %Detail{cell: _not_a_valu}} -> false
+         end) do
+      nil ->
+        reserved
+
+      {height_found_value, _details} ->
+        reserved
+        |> MapSet.filter(fn reserved -> reserved > height_found_value end)
+        |> MapSet.put(height_found_value)
+    end
+  end
+
+  ############################################################
+  #                     Helpers Details                      #
+  ############################################################
+
+  @spec detail_at(t(), height()) :: Detail.t()
+  def detail_at(%__MODULE__{details: ds}, height) do
+    Map.get(ds, height, %Detail{})
+  end
+
+  @spec replace_detail(t(), height(), (Detail.t() ->
+                                         {:error, atom()} | {:ok, Detail.t()})) ::
+          {:ok, t()} | {:error, atom()}
+  def replace_detail(c = %__MODULE__{details: ds}, height, f) do
+    with {:ok, val} <- Map.fetch(ds, height),
+         {:ok, nv} <- f.(val) do
+      {:ok, %__MODULE__{c | details: Map.put(ds, height, nv)}}
+    else
+      :error -> {:error, :empty}
+      error -> error
+    end
+  end
+
+  @spec update_detail(t(), height(), (Detail.t() -> Detail.t())) :: t()
+  def update_detail(c = %__MODULE__{details: ds}, height, f) do
+    %__MODULE__{c | details: Map.update(ds, height, f.(%Detail{}), f)}
+  end
+
+  ############################################################
+  #                    Helpers Watermarks                    #
+  ############################################################
+
+  @doc "Checks if a reservation request conflicts with existing watermarks."
+  @spec can_reserve(t(), cap(), height()) :: :ok | {:error, atom()}
+  def can_reserve(%Cell{watermarks: %{write: mark}}, cap, height)
+      when cap in [:write, :read_write] and height <= mark do
+    {:error, :reserving_write_under_write_watermark}
+  end
+
+  def can_reserve(%Cell{watermarks: %{read: mark}}, cap, height)
+      when height <= mark and cap in [:read, :read_write] do
+    {:error, :reserving_read_under_read_watermark}
+  end
+
+  def can_reserve(_, _, _), do: :ok
+
+  @spec advance_watermark(watermarks(), :read | :write, height()) ::
+          watermarks()
+  def advance_watermark(w, cap, height) do
+    Map.replace_lazy(w, cap, &max(height, &1))
+  end
+end

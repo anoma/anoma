@@ -7,6 +7,7 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
   alias Anoma.Node.Examples.ENode
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Shard
+  alias Anoma.Node.Transaction.Shard.Cell
   alias Anoma.Node.Tables
   alias Anoma.Node.Transaction.Shard.Supervisor
 
@@ -34,14 +35,12 @@ defmodule Anoma.Node.Examples.EShardSupervisor do
     state_a = :sys.get_state(pid_a)
     state_b = :sys.get_state(pid_b)
 
-    assert state_a.kv[["a"]][0].value == 5,
+    assert state_a.cells[["a"]].details[0].cell == %{value: 5},
            "Shard 'a' initial value mismatch at height 0"
 
     # Shard "b" should have no entry for key "b" at height 0
-    b_key_map = Map.get(state_b.kv, ["b"], %{})
-
-    refute Map.has_key?(b_key_map, 0),
-           "Shard 'b' should not have an initial value at height 0"
+    b_cell = Map.get(state_b, ["b"], %Cell{})
+    assert :empty == Cell.detail_at(b_cell, 0).cell
 
     # Check tables
     table = Tables.table_shard_key_map(node_id)

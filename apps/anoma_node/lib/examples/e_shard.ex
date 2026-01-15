@@ -7,6 +7,8 @@ defmodule Anoma.Node.Examples.EShard do
   alias Anoma.Node.Registry
   alias Anoma.Node.Tables
   alias Anoma.Node.Transaction.Shard
+  alias Anoma.Node.Transaction.Shard.Detail
+  alias Anoma.Node.Transaction.Shard.Cell
   alias Anoma.Node.Examples.EShardSupervisor
 
   import ExUnit.Assertions
@@ -20,7 +22,8 @@ defmodule Anoma.Node.Examples.EShard do
     Shard.advance_write_watermark(Registry.via(node_id, Shard, :b), ["b"], 5)
     Shard.advance_write_watermark(pid_c, ["c"], 5)
 
-    assert %{read: 0, write: 5} == :sys.get_state(pid_c).watermarks[["c"]]
+    assert %{read: 0, write: 5} ==
+             :sys.get_state(pid_c).cells[["c"]].watermarks
 
     node_id
   end
@@ -81,7 +84,7 @@ defmodule Anoma.Node.Examples.EShard do
     Task.shutdown(read_fail, :brutal_kill)
 
     Shard.unreserve(shard_a, ["a"], 14, :read)
-    assert Shard.read(shard_a, ["a"], 14) == {:error, :read_not_reserved}
+    assert Shard.read(shard_a, ["a"], 14) == {:error, :not_reserved}
     # A pending read stays, probably a bug?
     node_id
   end
@@ -89,11 +92,14 @@ defmodule Anoma.Node.Examples.EShard do
   @spec abc_val_a_write_to_5_shard_a() :: map()
   def abc_val_a_write_to_5_shard_a() do
     %{
-      ["a"] => %{
-        0 => %{value: 5, write_reserved?: false, read_reserved_count: 0},
-        3 => %{value: 55, write_reserved?: false, read_reserved_count: 0},
-        4 => %{value: nil, write_reserved?: false, read_reserved_count: 0},
-        14 => %{value: nil, write_reserved?: false, read_reserved_count: 0}
+      ["a"] => %Cell{
+        watermarks: %{read: 0, write: 5},
+        details: %{
+          0 => %Detail{cell: %{value: 5}, reserved_reads: 0, pending: nil},
+          3 => %Detail{cell: %{value: 55}},
+          4 => %Detail{},
+          14 => %Detail{}
+        }
       }
     }
   end
@@ -105,19 +111,22 @@ defmodule Anoma.Node.Examples.EShard do
     shard_a = Registry.via(node_id, Shard, :a)
 
     gcd_state = %{
-      ["a"] => %{
-        3 => %{value: 55, write_reserved?: false, read_reserved_count: 0},
-        12 => %{value: nil, write_reserved?: false, read_reserved_count: 1}
+      ["a"] => %Cell{
+        watermarks: %{read: 30, write: 5},
+        details: %{
+          3 => %Detail{cell: %{value: 55}},
+          12 => %Detail{reserved_reads: 1}
+        }
       }
     }
 
-    assert :sys.get_state(shard_a).kv == abc_val_a_write_to_5_shard_a()
+    assert :sys.get_state(shard_a).cells == abc_val_a_write_to_5_shard_a()
 
     Shard.reserve(shard_a, ["a"], 12, :read)
 
     Shard.advance_read_watermark(shard_a, ["a"], 30)
 
-    assert :sys.get_state(shard_a).kv == gcd_state
+    assert :sys.get_state(shard_a).cells == gcd_state
 
     Shard.advance_write_watermark(shard_a, ["a"], 30)
     assert Shard.read(shard_a, ["a"], 12) == {:ok, 55}
@@ -152,8 +161,7 @@ defmodule Anoma.Node.Examples.EShard do
     Shard.reserve(shard_a, ["a"], 20, :write)
     Shard.write(shard_a, ["a"], "value_at_20", 20)
 
-    assert Shard.reserve(shard_a, ["a"], 20, :write) ==
-             {:error, :slot_occupied_by_value}
+    assert Shard.reserve(shard_a, ["a"], 20, :write) == {:error, :occupied}
 
     node_id
   end
@@ -161,15 +169,18 @@ defmodule Anoma.Node.Examples.EShard do
   @spec abc_val_a_write_to_5_shard_a() :: map()
   def abc_val_a_waiting_7_11_shard_a() do
     %{
-      ["a"] => %{
-        0 => %{value: 5, write_reserved?: false, read_reserved_count: 0},
-        3 => %{value: 55, write_reserved?: false, read_reserved_count: 0},
-        4 => %{value: nil, write_reserved?: false, read_reserved_count: 0},
-        7 => %{value: nil, write_reserved?: true, read_reserved_count: 0},
-        8 => %{value: nil, write_reserved?: false, read_reserved_count: 1},
-        11 => %{value: nil, write_reserved?: true, read_reserved_count: 0},
-        12 => %{value: nil, write_reserved?: false, read_reserved_count: 1},
-        14 => %{value: nil, write_reserved?: false, read_reserved_count: 0}
+      ["a"] => %Cell{
+        watermarks: %{read: 0, write: 5},
+        details: %{
+          0 => %Detail{cell: %{value: 5}, reserved_reads: 0, pending: nil},
+          3 => %Detail{cell: %{value: 55}},
+          4 => %Detail{},
+          7 => %Detail{cell: :reserved},
+          8 => %Detail{reserved_reads: 1},
+          11 => %Detail{cell: :reserved},
+          12 => %Detail{reserved_reads: 1},
+          14 => %Detail{}
+        }
       }
     }
   end
@@ -185,7 +196,7 @@ defmodule Anoma.Node.Examples.EShard do
     Shard.reserve(shard_a, ["a"], 11, :write)
     Shard.reserve(shard_a, ["a"], 12, :read)
 
-    assert :sys.get_state(shard_a).kv == abc_val_a_waiting_7_11_shard_a()
+    assert :sys.get_state(shard_a).cells == abc_val_a_waiting_7_11_shard_a()
 
     node_id
   end
@@ -216,15 +227,18 @@ defmodule Anoma.Node.Examples.EShard do
     shard_a = Registry.via(node_id, Shard, :a)
 
     current_state = %{
-      ["a"] => %{
-        0 => %{value: 5, write_reserved?: false, read_reserved_count: 0},
-        3 => %{value: 55, write_reserved?: false, read_reserved_count: 0},
-        4 => %{value: nil, write_reserved?: false, read_reserved_count: 0},
-        7 => %{value: nil, write_reserved?: false, read_reserved_count: 0},
-        8 => %{value: nil, write_reserved?: false, read_reserved_count: 0},
-        11 => %{value: nil, write_reserved?: false, read_reserved_count: 0},
-        12 => %{value: nil, write_reserved?: false, read_reserved_count: 1},
-        14 => %{value: nil, write_reserved?: false, read_reserved_count: 0}
+      ["a"] => %Cell{
+        watermarks: %{read: 0, write: 5},
+        details: %{
+          0 => %Detail{cell: %{value: 5}, reserved_reads: 0, pending: nil},
+          3 => %Detail{cell: %{value: 55}},
+          4 => %Detail{},
+          7 => %Detail{cell: :empty},
+          8 => %Detail{reserved_reads: 0},
+          11 => %Detail{cell: :empty},
+          12 => %Detail{reserved_reads: 1},
+          14 => %Detail{}
+        }
       }
     }
 
@@ -232,7 +246,7 @@ defmodule Anoma.Node.Examples.EShard do
     Shard.unreserve(shard_a, ["a"], 8, :read)
     Shard.unreserve(shard_a, ["a"], 11, :write)
 
-    assert :sys.get_state(shard_a).kv == current_state
+    assert :sys.get_state(shard_a).cells == current_state
 
     node_id
   end
