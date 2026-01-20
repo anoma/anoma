@@ -27,9 +27,9 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
   #                      Main Functions                      #
   ############################################################
 
-  @spec reserve(t(), cap(), height()) :: {:ok, t()} | {:error, atom()}
-  def reserve(c = %__MODULE__{}, cap, height) do
-    with :ok <- can_reserve(c, cap, height),
+  @spec reserve(t(), height()) :: {:ok, t()} | {:error, atom()}
+  def reserve(c = %__MODULE__{}, height) do
+    with :ok <- can_reserve(c, height),
          true <- detail_at(c, height) |> Detail.can_reserve?() do
       {:ok, update_detail(c, height, &Detail.reserve/1)}
     else
@@ -208,18 +208,12 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
   ############################################################
 
   @doc "Checks if a reservation request conflicts with existing watermarks."
-  @spec can_reserve(t(), cap(), height()) :: :ok | {:error, atom()}
-  def can_reserve(%Cell{watermarks: %{write: mark}}, cap, height)
-      when cap in [:write, :read_write] and height <= mark do
+  @spec can_reserve(t(), height()) :: :ok | {:error, atom()}
+  def can_reserve(%Cell{watermarks: %{write: mark}}, ht) when ht <= mark do
     {:error, :reserving_write_under_write_watermark}
   end
 
-  def can_reserve(%Cell{watermarks: %{read: mark}}, cap, height)
-      when height <= mark and cap in [:read, :read_write] do
-    {:error, :reserving_read_under_read_watermark}
-  end
-
-  def can_reserve(_, _, _), do: :ok
+  def can_reserve(_, _), do: :ok
 
   @spec advance_watermark(watermarks(), :read | :write, height()) ::
           watermarks()

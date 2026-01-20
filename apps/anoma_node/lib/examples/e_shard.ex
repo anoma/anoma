@@ -59,7 +59,7 @@ defmodule Anoma.Node.Examples.EShard do
     read_after = Task.async(fn -> Shard.read(shard_a, ["a"], 4) end)
     read_fail = Task.async(fn -> Shard.read(shard_a, ["a"], 14) end)
 
-    Shard.reserve(shard_a, ["a"], 3, :write)
+    Shard.reserve(shard_a, ["a"], 3)
 
     abc_all_write_to_5(node_id)
 
@@ -126,13 +126,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_via = Registry.via(node_id, Shard, :a)
 
-    assert Shard.reserve(shard_via, ["a"], 10, :read) ==
-             {:error, :reserving_read_under_read_watermark}
-
-    assert Shard.reserve(shard_via, ["a"], 10, :write) ==
-             {:error, :reserving_write_under_write_watermark}
-
-    assert Shard.reserve(shard_via, ["a"], 10, :read_write) ==
+    assert Shard.reserve(shard_via, ["a"], 10) ==
              {:error, :reserving_write_under_write_watermark}
 
     node_id
@@ -144,10 +138,10 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_a = Registry.via(node_id, Shard, :a)
 
-    Shard.reserve(shard_a, ["a"], 20, :write)
+    Shard.reserve(shard_a, ["a"], 20)
     Shard.write(shard_a, ["a"], "value_at_20", 20)
 
-    assert Shard.reserve(shard_a, ["a"], 20, :write) == {:error, :occupied}
+    assert Shard.reserve(shard_a, ["a"], 20) == {:error, :occupied}
 
     node_id
   end
@@ -175,8 +169,8 @@ defmodule Anoma.Node.Examples.EShard do
 
     shard_a = Registry.via(node_id, Shard, :a)
 
-    Shard.reserve(shard_a, ["a"], 7, :write)
-    Shard.reserve(shard_a, ["a"], 11, :write)
+    Shard.reserve(shard_a, ["a"], 7)
+    Shard.reserve(shard_a, ["a"], 11)
 
     assert :sys.get_state(shard_a).cells == abc_val_a_waiting_7_11_shard_a()
 

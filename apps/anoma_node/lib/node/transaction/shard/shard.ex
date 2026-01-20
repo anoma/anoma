@@ -122,16 +122,13 @@ defmodule Anoma.Node.Transaction.Shard do
   I return `:ok` on success, or an error tuple.
   """
   # Might be a call? Need to know if we can reserve it
-  @spec reserve(GenServer.server(), key(), Cell.height(), Cell.cap()) ::
+  @spec reserve(GenServer.server(), key(), Cell.height()) ::
           :ok
           | {:error,
              :reserving_write_under_write_watermark
-             | :reserving_read_under_read_watermark
              | :occupied}
-  def reserve(shard_pid, key, height, type) do
-    # Todo: Timeout?
-    # Remove timeout
-    GenServer.call(shard_pid, {:reserve, key, height, type})
+  def reserve(shard_pid, key, height) do
+    GenServer.call(shard_pid, {:reserve, key, height})
   end
 
   @doc """
@@ -217,8 +214,8 @@ defmodule Anoma.Node.Transaction.Shard do
   ############################################################
 
   @impl true
-  def handle_call({:reserve, key, height, type}, _from, state) do
-    {response, state} = handle_reserve(key, height, type, state)
+  def handle_call({:reserve, key, height}, _from, state) do
+    {response, state} = handle_reserve(key, height, state)
     {:reply, response, state}
   end
 
@@ -268,10 +265,10 @@ defmodule Anoma.Node.Transaction.Shard do
     %__MODULE__{state | cells: Map.put(state.cells, key, fun.(cell))}
   end
 
-  @spec handle_reserve(key(), Cell.height(), Cell.cap(), t()) ::
+  @spec handle_reserve(key(), Cell.height(), t()) ::
           {:ok | {:error, atom()}, t()}
-  defp handle_reserve(key, height, cap, state = %__MODULE__{cells: cells}) do
-    case Map.get(cells, key, %Cell{}) |> Cell.reserve(cap, height) do
+  defp handle_reserve(key, height, state = %__MODULE__{cells: cells}) do
+    case Map.get(cells, key, %Cell{}) |> Cell.reserve(height) do
       {:ok, new_cells} ->
         {:ok, %__MODULE__{state | cells: Map.put(cells, key, new_cells)}}
 

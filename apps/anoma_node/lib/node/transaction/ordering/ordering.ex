@@ -435,7 +435,13 @@ defmodule Anoma.Node.Transaction.Ordering do
       new_state
     else
       # else handle read only transaction
-      handle_read_only(tx_id, res.read, new_state)
+      # store the tx at that height without advancing the order
+      # this guaranees referential transparency
+      %__MODULE__{
+        state
+        | tx_id_to_height:
+            Map.put(state.tx_id_to_height, tx_id, state.next_height)
+      }
     end
   end
 
@@ -484,7 +490,7 @@ defmodule Anoma.Node.Transaction.Ordering do
 
     # TODO :: Remove in next pass
     # Unreserve reservations that may be out
-    for {_type, keys} <- Map.fetch!(state.reservations, id) do
+    for {:write, keys} <- Map.fetch!(state.reservations, id) do
       for key <- keys do
         state.shard_addresses
         |> Map.fetch!(key)
@@ -552,17 +558,11 @@ defmodule Anoma.Node.Transaction.Ordering do
 
   @spec reserve_keys(reservations(), non_neg_integer(), %{any() => pid()}) ::
           :ok
-  defp reserve_keys(%{read: read_keys, write: write_keys}, order, addresses) do
-    op = fn keys, flag ->
-      Enum.each(keys, fn key ->
-        Map.fetch!(addresses, key)
-        |> Shard.reserve(key, order, flag)
-      end)
-    end
-
-    # Order matters
-    op.(write_keys, :write)
-    op.(read_keys, :read)
+  defp reserve_keys(%{write: write_keys}, order, addresses) do
+    Enum.each(write_keys, fn key ->
+      Map.fetch!(addresses, key)
+      |> Shard.reserve(key, order)
+    end)
   end
 
   @spec reserve_order_mapping(reservations(), non_neg_integer()) :: %{
@@ -615,22 +615,5 @@ defmodule Anoma.Node.Transaction.Ordering do
 
       GenServer.reply(from, :ok)
     end)
-  end
-
-  @spec handle_read_only(binary(), list(), t()) :: t()
-  defp handle_read_only(tx_id, reads, state) do
-    # reserve each key at next height
-    for key <- reads do
-      Map.fetch!(state.shard_addresses, key)
-      |> Shard.reserve(key, state.next_height, :read)
-    end
-
-    # store the tx at that height without advancing the order
-    # this guaranees referential transparency
-    %__MODULE__{
-      state
-      | tx_id_to_height:
-          Map.put(state.tx_id_to_height, tx_id, state.next_height)
-    }
   end
 end
