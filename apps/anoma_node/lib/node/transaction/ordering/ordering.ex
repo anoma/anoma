@@ -482,12 +482,13 @@ defmodule Anoma.Node.Transaction.Ordering do
     # past, if the TX has finalized, the height has passed, so we
     # should be able to read safely in the past that is finalized, we need to fix the shard logic
 
+    # TODO :: Remove in next pass
     # Unreserve reservations that may be out
-    for {type, keys} <- Map.fetch!(state.reservations, id) do
+    for {_type, keys} <- Map.fetch!(state.reservations, id) do
       for key <- keys do
         state.shard_addresses
         |> Map.fetch!(key)
-        |> Shard.unreserve(key, time, type)
+        |> Shard.unreserve(key, time)
       end
     end
 

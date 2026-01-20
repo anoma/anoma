@@ -30,24 +30,27 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
   @spec reserve(t(), cap(), height()) :: {:ok, t()} | {:error, atom()}
   def reserve(c = %__MODULE__{}, cap, height) do
     with :ok <- can_reserve(c, cap, height),
-         true <- detail_at(c, height) |> Detail.can_reserve?(cap) do
-      {:ok, update_detail(c, height, &Detail.reserve(&1, cap))}
+         true <- detail_at(c, height) |> Detail.can_reserve?() do
+      {:ok, update_detail(c, height, &Detail.reserve/1)}
     else
       false -> {:error, :occupied}
       err -> err
     end
   end
 
-  @spec unreserve(t(), cap(), height()) :: t()
-  def unreserve(c = %__MODULE__{}, cap, height) do
-    new_c = update_detail(c, height, &Detail.unreserve(&1, cap))
-    original = detail_at(c, height)
+  @spec unreserve(t(), height()) :: t()
+  def unreserve(c = %__MODULE__{}, height) do
+    new_c = update_detail(c, height, &Detail.unreserve/1)
 
-    cond do
-      original == detail_at(new_c, height) -> c
-      cap == :write and original.cell == :reserved -> resolve_pending(new_c)
-      true -> new_c
+    case detail_at(c, height) do
+      %Detail{cell: :reserved} -> resolve_pending(new_c)
+      _ -> new_c
     end
+  end
+
+  @spec retract(t(), height(), pid()) :: t()
+  def retract(c, height, pid) do
+    update_detail(c, height, &Detail.retract(&1, pid))
   end
 
   @spec write(t(), height(), any()) :: t()
@@ -58,19 +61,23 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
     end
   end
 
-  @spec read(t(), height()) ::
-          {:ok, any()} | {:error, :not_reserved | :pending}
-  def read(c = %__MODULE__{}, height) do
-    case detail_at(c, height) do
-      %Detail{reserved_reads: 0} ->
-        {:error, :not_reserved}
+  @spec read(t(), height()) :: {:ok, any()} | :absent | :blocked
+  def read(%__MODULE__{watermarks: w}, h) when h > w.write + 1,
+    do: :blocked
 
-      _ ->
-        case resolve_read_value(c, height) do
-          :blocked -> {:error, :pending}
-          :absent -> {:ok, :absent}
-          {:ok, resolved} -> {:ok, {:ok, resolved}}
-        end
+  def read(%__MODULE__{details: ds}, height) do
+    # This represents the most recent operation relevant to the read.
+    relevant_entries =
+      Enum.filter(ds, fn
+        {h, %Detail{cell: :reserved}} -> h < height
+        {h, %Detail{cell: %{value: _}}} -> h < height
+        {_, %Detail{cell: :empty}} -> false
+      end)
+
+    case Enum.max(relevant_entries, fn -> nil end) do
+      nil -> :absent
+      {_, %Detail{cell: :reserved}} -> :blocked
+      {_, %Detail{cell: %{value: val}}} -> {:ok, val}
     end
   end
 
@@ -100,10 +107,11 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
   end
 
   @spec resolve_height(t(), height(), Detail.t()) :: {height(), Detail.t()}
-  defp resolve_height(_c, height, d = %Detail{pending: nil}), do: {height, d}
+  defp resolve_height(_c, height, d = %Detail{pending: nil}),
+    do: {height, d}
 
   defp resolve_height(c, height, d = %Detail{pending: ps}) do
-    case resolve_read_value(c, height) do
+    case read(c, height) do
       :blocked ->
         {height, d}
 
@@ -117,32 +125,11 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
   #                           Helpers                        #
   ############################################################
 
-  @spec resolve_read_value(t(), height()) :: {:ok, any()} | :absent | :blocked
-  defp resolve_read_value(%__MODULE__{watermarks: w}, h) when h > w.write + 1,
-    do: :blocked
-
-  defp resolve_read_value(%__MODULE__{details: ds}, height) do
-    # This represents the most recent operation relevant to the read.
-    relevant_entries =
-      Enum.filter(ds, fn
-        {h, %Detail{cell: :reserved}} -> h < height
-        {h, %Detail{cell: %{value: _}}} -> h < height
-        {_, %Detail{cell: :empty}} -> false
-      end)
-
-    case Enum.max(relevant_entries, fn -> nil end) do
-      nil -> :absent
-      {_, %Detail{cell: :reserved}} -> :blocked
-      {_, %Detail{cell: %{value: val}}} -> {:ok, val}
-    end
-  end
-
   @spec gc(t()) :: t()
   defp gc(c = %__MODULE__{details: details, watermarks: %{read: watermark}}) do
     reserved =
       details
       |> Enum.filter(fn {h, _} -> h <= watermark end)
-      |> Enum.filter(fn {_, %Detail{reserved_reads: c}} -> c > 0 end)
       |> MapSet.new(fn {h, _} -> h end)
 
     essential =
@@ -151,11 +138,9 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
       |> Enum.map(&find_essential_heights_below(c, &1))
       |> Enum.reduce(MapSet.new(), &MapSet.union/2)
 
-    heights_left_below = MapSet.union(reserved, essential)
-
     all_keys_left =
       Map.filter(details, fn {h, _} ->
-        h >= watermark or MapSet.member?(heights_left_below, h)
+        h >= watermark or MapSet.member?(essential, h)
       end)
 
     %__MODULE__{c | details: all_keys_left}

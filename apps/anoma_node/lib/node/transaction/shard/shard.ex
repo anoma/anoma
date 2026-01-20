@@ -12,10 +12,11 @@ defmodule Anoma.Node.Transaction.Shard do
   I provide the following public functionality:
 
   - `start_link/1`
-  - `reserve/4`
+  - `reserve/3`
   - `read/3`
   - `write/4`
   - `unreserve/4`
+  - `retract/4`
   - `backup_state/1`
   - `advance_read_watermark/3`
   - `advance_write_watermark/3`
@@ -137,7 +138,6 @@ defmodule Anoma.Node.Transaction.Shard do
   I am the read function for the Shard module.
 
   I perform a synchronous read request for a key at a specific height.
-  I require a prior `reserve` call with `:read` or `:read_write` capability for this `{key, height}`.
   The caller blocks until the read can be resolved (potentially waiting for watermarks)
   and receives the result directly.
   Returns `{:ok, value}`, `:absent`, or an error tuple.
@@ -161,14 +161,21 @@ defmodule Anoma.Node.Transaction.Shard do
   end
 
   @doc """
-  I release a specific type of reservation (:read or :write) for a given key at a given height.
+  I release a write reservation for a given key at a given height.
 
   This is an asynchronous operation primarily used for rollbacks of failed transactions.
   """
-  @spec unreserve(GenServer.server(), key(), Cell.height(), :read | :write) ::
-          :ok
-  def unreserve(shard_pid, key, height, type) do
-    GenServer.cast(shard_pid, {:unreserve, key, height, type})
+  @spec unreserve(GenServer.server(), key(), Cell.height()) :: :ok
+  def unreserve(shard_pid, key, height) do
+    GenServer.cast(shard_pid, {:unreserve, key, height})
+  end
+
+  @doc """
+  I retract a potential read on a shard
+  """
+  @spec retract(GenServer.server(), key(), Cell.height(), pid()) :: :ok
+  def retract(shard_pid, key, height, pid) do
+    GenServer.cast(shard_pid, {:retract, key, height, pid})
   end
 
   @doc """
@@ -229,6 +236,10 @@ defmodule Anoma.Node.Transaction.Shard do
     {:noreply, update_cell(state, key, &Cell.write(&1, height, value))}
   end
 
+  def handle_cast({:retract, key, height, pid}, state) do
+    {:noreply, update_cell(state, key, &Cell.retract(&1, height, pid))}
+  end
+
   def handle_cast({:write_watermark_advanced, key, write}, state) do
     new_state =
       update_cell(state, key, &Cell.run_advance_watermark(&1, :write, write))
@@ -243,8 +254,8 @@ defmodule Anoma.Node.Transaction.Shard do
     {:noreply, new_state}
   end
 
-  def handle_cast({:unreserve, key, height, cap}, state) do
-    {:noreply, update_cell(state, key, &Cell.unreserve(&1, cap, height))}
+  def handle_cast({:unreserve, key, height}, state) do
+    {:noreply, update_cell(state, key, &Cell.unreserve(&1, height))}
   end
 
   ############################################################
@@ -276,15 +287,15 @@ defmodule Anoma.Node.Transaction.Shard do
     cell = Map.get(c, key, %Cell{})
 
     case Cell.read(cell, height) do
-      {:error, :pending} ->
+      :blocked ->
         new_cell = Map.put(c, key, Cell.add_pending(cell, height, from))
         {:noreply, %__MODULE__{state | cells: new_cell}}
 
-      {:error, :not_reserved} ->
-        {:reply, {:error, :not_reserved}, state}
+      :absent ->
+        {:reply, :absent, state}
 
       {:ok, resolved} ->
-        {:reply, resolved, state}
+        {:reply, {:ok, resolved}, state}
     end
   end
 

@@ -14,7 +14,6 @@ defmodule Anoma.Node.Transaction.Shard.Detail do
     I represent the details of a Shard Cell
     """
     field(:pending, nil | list(GenServer.from()), default: nil)
-    field(:reserved_reads, non_neg_integer(), default: 0)
     field(:cell, slot(), default: :empty)
   end
 
@@ -26,48 +25,37 @@ defmodule Anoma.Node.Transaction.Shard.Detail do
   def write(_, _), do: {:error, :can_not_write}
 
   @spec reserve(t(), Cell.cap()) :: t()
-  def reserve(d = %__MODULE__{reserved_reads: c}, :read) do
-    %__MODULE__{d | reserved_reads: c + 1}
-  end
-
-  def reserve(d = %__MODULE__{cell: :empty}, :write) do
-    %__MODULE__{d | cell: :reserved}
-  end
-
   def reserve(d = %__MODULE__{cell: %{value: _}}, :write), do: d
   def reserve(d = %__MODULE__{cell: :reserved}, :write), do: d
-  def reserve(d, :read_write), do: d |> reserve(:read) |> reserve(:write)
+  def reserve(d = %__MODULE__{cell: :empty}), do: %{d | cell: :reserved}
 
-  @spec unreserve(t(), Cell.cap()) :: t()
-  def unreserve(d = %__MODULE__{reserved_reads: c}, :read) do
-    # Remove this hack with a better model for unreserve data that
-    # passes who unreserved
-    new_c = max(0, c - 1)
+  @spec retract(t(), pid()) :: t()
+  def retract(d = %__MODULE__{pending: nil}, _), do: d
 
-    pending =
-      if 0 == new_c do
-        nil
-      else
-        d.pending
-      end
+  def retract(d = %__MODULE__{pending: ps}, pid) do
+    val =
+      Enum.reject(ps, fn {pid_2, _ref} -> pid_2 == pid end)
 
-    %__MODULE__{d | reserved_reads: new_c, pending: pending}
+    %{
+      d
+      | pending:
+          if Enum.empty?(val) do
+            nil
+          else
+            val
+          end
+    }
   end
 
-  def unreserve(d = %__MODULE__{cell: :reserved}, :write) do
+  @spec unreserve(t()) :: t()
+  def unreserve(d = %__MODULE__{cell: :reserved}) do
     %__MODULE__{d | cell: :empty}
   end
 
-  def unreserve(d, :write), do: d
+  def unreserve(d), do: d
 
-  @spec can_reserve?(t(), Cell.cap()) :: boolean()
-  def can_reserve?(%__MODULE__{cell: %{value: _}}, c)
-      when c in [:write, :read_write],
-      do: false
-
-  def can_reserve?(%__MODULE__{cell: :reserved}, c)
-      when c in [:write, :read_write],
-      do: false
-
-  def can_reserve?(_, _), do: true
+  @spec can_reserve?(t()) :: boolean()
+  def can_reserve?(%__MODULE__{cell: %{value: _}}), do: false
+  def can_reserve?(%__MODULE__{cell: :reserved}), do: false
+  def can_reserve?(_), do: true
 end

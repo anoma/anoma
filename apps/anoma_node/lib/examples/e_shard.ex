@@ -35,23 +35,15 @@ defmodule Anoma.Node.Examples.EShard do
     shard_b = Registry.via(node_id, Shard, :b)
     shard_c = Registry.via(node_id, Shard, :c)
 
-    # Reserve before the fact, note watermark at 5, means we can read at 4
-    Shard.reserve(shard_b, ["b"], 4, :read)
-
+    # read before the fact, note watermark at 5, means we can read at 4
     read_task = Task.async(fn -> Shard.read(shard_b, ["b"], 4) end)
     assert Task.yield(read_task, 100) == nil
 
     abc_all_write_to_5(node_id)
 
-    # Reserve after the fact
-    Shard.reserve(shard_c, ["c"], 4, :read)
-
     assert Task.await(read_task, 1000) == :absent
     assert Shard.read(shard_b, ["b"], 4) == :absent
     assert Shard.read(shard_c, ["c"], 4) == {:ok, 15}
-
-    Shard.unreserve(shard_b, ["b"], 4, :read)
-    Shard.unreserve(shard_c, ["b"], 4, :read)
 
     node_id
   end
@@ -61,10 +53,6 @@ defmodule Anoma.Node.Examples.EShard do
     EShardSupervisor.shard_start_abc(node_id)
 
     shard_a = Registry.via(node_id, Shard, :a)
-
-    Shard.reserve(shard_a, ["a"], 3, :read)
-    Shard.reserve(shard_a, ["a"], 4, :read)
-    Shard.reserve(shard_a, ["a"], 14, :read)
 
     # Kinds of reads that could happen in the past, present, and never
     read_before = Task.async(fn -> Shard.read(shard_a, ["a"], 3) end)
@@ -84,10 +72,7 @@ defmodule Anoma.Node.Examples.EShard do
     assert Process.alive?(read_fail.pid)
     Task.shutdown(read_fail, :brutal_kill)
 
-    Shard.unreserve(shard_a, ["a"], 3, :read)
-    Shard.unreserve(shard_a, ["a"], 4, :read)
-    Shard.unreserve(shard_a, ["a"], 14, :read)
-    assert Shard.read(shard_a, ["a"], 14) == {:error, :not_reserved}
+    Shard.retract(shard_a, ["a"], 14, read_fail.pid)
     # A pending read stays, probably a bug?
     node_id
   end
@@ -98,7 +83,7 @@ defmodule Anoma.Node.Examples.EShard do
       ["a"] => %Cell{
         watermarks: %{read: 0, write: 5},
         details: %{
-          0 => %Detail{cell: %{value: 5}, reserved_reads: 0, pending: nil},
+          0 => %Detail{cell: %{value: 5}, pending: nil},
           3 => %Detail{cell: %{value: 55}},
           4 => %Detail{},
           14 => %Detail{}
@@ -117,15 +102,13 @@ defmodule Anoma.Node.Examples.EShard do
       ["a"] => %Cell{
         watermarks: %{read: 30, write: 5},
         details: %{
-          3 => %Detail{cell: %{value: 55}},
-          12 => %Detail{reserved_reads: 1}
+          0 => %Detail{cell: %{value: 5}},
+          3 => %Detail{cell: %{value: 55}}
         }
       }
     }
 
     assert :sys.get_state(shard_a).cells == abc_val_a_write_to_5_shard_a()
-
-    Shard.reserve(shard_a, ["a"], 12, :read)
 
     Shard.advance_read_watermark(shard_a, ["a"], 30)
 
@@ -133,8 +116,6 @@ defmodule Anoma.Node.Examples.EShard do
 
     Shard.advance_write_watermark(shard_a, ["a"], 30)
     assert Shard.read(shard_a, ["a"], 12) == {:ok, 55}
-
-    Shard.unreserve(shard_a, ["a"], 12, :read)
 
     node_id
   end
@@ -177,13 +158,11 @@ defmodule Anoma.Node.Examples.EShard do
       ["a"] => %Cell{
         watermarks: %{read: 0, write: 5},
         details: %{
-          0 => %Detail{cell: %{value: 5}, reserved_reads: 0, pending: nil},
+          0 => %Detail{cell: %{value: 5}, pending: nil},
           3 => %Detail{cell: %{value: 55}},
           4 => %Detail{},
           7 => %Detail{cell: :reserved},
-          8 => %Detail{reserved_reads: 1},
           11 => %Detail{cell: :reserved},
-          12 => %Detail{reserved_reads: 1},
           14 => %Detail{}
         }
       }
@@ -197,9 +176,7 @@ defmodule Anoma.Node.Examples.EShard do
     shard_a = Registry.via(node_id, Shard, :a)
 
     Shard.reserve(shard_a, ["a"], 7, :write)
-    Shard.reserve(shard_a, ["a"], 8, :read)
     Shard.reserve(shard_a, ["a"], 11, :write)
-    Shard.reserve(shard_a, ["a"], 12, :read)
 
     assert :sys.get_state(shard_a).cells == abc_val_a_waiting_7_11_shard_a()
 
@@ -235,21 +212,18 @@ defmodule Anoma.Node.Examples.EShard do
       ["a"] => %Cell{
         watermarks: %{read: 0, write: 5},
         details: %{
-          0 => %Detail{cell: %{value: 5}, reserved_reads: 0, pending: nil},
+          0 => %Detail{cell: %{value: 5}, pending: nil},
           3 => %Detail{cell: %{value: 55}},
           4 => %Detail{},
           7 => %Detail{cell: :empty},
-          8 => %Detail{reserved_reads: 0},
           11 => %Detail{cell: :empty},
-          12 => %Detail{reserved_reads: 1},
           14 => %Detail{}
         }
       }
     }
 
-    Shard.unreserve(shard_a, ["a"], 7, :write)
-    Shard.unreserve(shard_a, ["a"], 8, :read)
-    Shard.unreserve(shard_a, ["a"], 11, :write)
+    Shard.unreserve(shard_a, ["a"], 7)
+    Shard.unreserve(shard_a, ["a"], 11)
 
     assert :sys.get_state(shard_a).cells == current_state
 
@@ -267,7 +241,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     Shard.write(shard_a, ["a"], "Family Mart", 7)
 
-    Shard.unreserve(shard_a, ["a"], 11, :write)
+    Shard.unreserve(shard_a, ["a"], 11)
     # Unreserving should have made our read work
     assert Task.await(read, 1000) == {:ok, "Family Mart"}
 
