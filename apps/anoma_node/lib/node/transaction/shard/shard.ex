@@ -283,9 +283,8 @@ defmodule Anoma.Node.Transaction.Shard do
       {:error, :not_reserved} ->
         {:reply, {:error, :not_reserved}, state}
 
-      {:ok, new_cell, resolved} ->
-        new_cells = Map.put(c, key, new_cell)
-        {:reply, resolved, %__MODULE__{state | cells: new_cells}}
+      {:ok, resolved} ->
+        {:reply, resolved, state}
     end
   end
 

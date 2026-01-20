@@ -37,8 +37,6 @@ defmodule Anoma.Node.Examples.EShard do
 
     # Reserve before the fact, note watermark at 5, means we can read at 4
     Shard.reserve(shard_b, ["b"], 4, :read)
-    # BAD we shouldn't have to reserve twice
-    Shard.reserve(shard_b, ["b"], 4, :read)
 
     read_task = Task.async(fn -> Shard.read(shard_b, ["b"], 4) end)
     assert Task.yield(read_task, 100) == nil
@@ -51,6 +49,9 @@ defmodule Anoma.Node.Examples.EShard do
     assert Task.await(read_task, 1000) == :absent
     assert Shard.read(shard_b, ["b"], 4) == :absent
     assert Shard.read(shard_c, ["c"], 4) == {:ok, 15}
+
+    Shard.unreserve(shard_b, ["b"], 4, :read)
+    Shard.unreserve(shard_c, ["b"], 4, :read)
 
     node_id
   end
@@ -83,6 +84,8 @@ defmodule Anoma.Node.Examples.EShard do
     assert Process.alive?(read_fail.pid)
     Task.shutdown(read_fail, :brutal_kill)
 
+    Shard.unreserve(shard_a, ["a"], 3, :read)
+    Shard.unreserve(shard_a, ["a"], 4, :read)
     Shard.unreserve(shard_a, ["a"], 14, :read)
     assert Shard.read(shard_a, ["a"], 14) == {:error, :not_reserved}
     # A pending read stays, probably a bug?
@@ -130,6 +133,8 @@ defmodule Anoma.Node.Examples.EShard do
 
     Shard.advance_write_watermark(shard_a, ["a"], 30)
     assert Shard.read(shard_a, ["a"], 12) == {:ok, 55}
+
+    Shard.unreserve(shard_a, ["a"], 12, :read)
 
     node_id
   end

@@ -59,19 +59,17 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
   end
 
   @spec read(t(), height()) ::
-          {:ok, t(), any()} | {:error, :not_reserved | :pending}
+          {:ok, any()} | {:error, :not_reserved | :pending}
   def read(c = %__MODULE__{}, height) do
     case detail_at(c, height) do
       %Detail{reserved_reads: 0} ->
         {:error, :not_reserved}
 
       _ ->
-        new_c = update_detail(c, height, &Detail.unreserve(&1, :read))
-
         case resolve_read_value(c, height) do
           :blocked -> {:error, :pending}
-          :absent -> {:ok, new_c, :absent}
-          {:ok, resolved} -> {:ok, new_c, {:ok, resolved}}
+          :absent -> {:ok, :absent}
+          {:ok, resolved} -> {:ok, {:ok, resolved}}
         end
     end
   end
@@ -104,19 +102,14 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
   @spec resolve_height(t(), height(), Detail.t()) :: {height(), Detail.t()}
   defp resolve_height(_c, height, d = %Detail{pending: nil}), do: {height, d}
 
-  defp resolve_height(c, height, d = %Detail{pending: ps, reserved_reads: r}) do
+  defp resolve_height(c, height, d = %Detail{pending: ps}) do
     case resolve_read_value(c, height) do
       :blocked ->
         {height, d}
 
       value ->
-        new_count = max(0, r - length(ps))
-        {can_res, not_res} = Enum.split(ps, r)
-
-        Enum.each(can_res, &GenServer.reply(&1, value))
-        Enum.each(not_res, &GenServer.reply(&1, {:error, :read_not_reserved}))
-
-        {height, %Detail{d | pending: nil, reserved_reads: new_count}}
+        Enum.each(ps, &GenServer.reply(&1, value))
+        {height, %Detail{d | pending: nil}}
     end
   end
 
