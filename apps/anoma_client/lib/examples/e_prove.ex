@@ -5,6 +5,7 @@ defmodule Anoma.Client.Examples.EProve do
   I test and run nock programs and verify their outputs.
   """
   alias Anoma.Client.Runner
+  alias Anoma.Tables
 
   require ExUnit.Assertions
   import ExUnit.Assertions
@@ -163,6 +164,30 @@ defmodule Anoma.Client.Examples.EProve do
            ]
 
     {:ok, result, stdio}
+  end
+
+  def prove_with_scry(client \\ Anoma.Client.Examples.EClient.setup()) do
+    :ok = Tables.reset_tables_for_client()
+
+    Anoma.Client.subscribe("*")
+
+    val = MapSet.new(["i am a set"])
+    key = ["anoma", "blob", "key"]
+
+    Anoma.Node.Transaction.Shard.Supervisor.start_shard(
+      client.node.node_id,
+      key,
+      val
+    )
+
+    program = [[12, [1], 1 | ["id" | key]]]
+    {:ok, result, _stdio} = Runner.prove(program, [])
+
+    noun_value = Noun.Nounable.to_noun(val)
+
+    assert Noun.equal?(noun_value, result)
+
+    :ok
   end
 
   @spec square_endpoint_call() :: binary()

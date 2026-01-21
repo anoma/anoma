@@ -43,7 +43,7 @@ defmodule Anoma.Client.Web.MempoolController do
          wrap? <- Map.get(params, "wrap", false),
          type <- String.to_existing_atom(params["transaction_type"]),
          {:ok, transaction} <- Base.decode64(tx),
-         {:ok, :added} <-
+         {:ok, :added, _tx_id} <-
            GRPCProxy.add_transaction(transaction, type, wrap?) do
       render(conn, "add_transaction.json")
     end

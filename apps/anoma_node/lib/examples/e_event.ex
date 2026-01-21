@@ -12,7 +12,6 @@ defmodule Anoma.Node.Examples.EEvent do
   alias Anoma.Node.Event
   alias Anoma.Node.Examples.ETransaction
   alias Anoma.Node.Transaction.Backends
-  alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Executor
 
   import ExUnit.Assertions
@@ -47,24 +46,6 @@ defmodule Anoma.Node.Examples.EEvent do
   def consensus_event(enode \\ ENode.start_node(), transaction_ids \\ []) do
     # create a transaction event
     event = new_consensus_event(transaction_ids)
-
-    Event.new_with_body(enode.node_id, event)
-  end
-
-  @doc """
-  I create an order event for the given transaction id.
-  """
-  @spec order_event(ENode.t(), String.t() | nil) :: EventBroker.Event.t()
-  def order_event(enode \\ ENode.start_node(), transaction_id \\ nil) do
-    transaction_id =
-      if transaction_id do
-        transaction_id
-      else
-        ETransaction.random_transaction_id()
-      end
-
-    # create a transaction event
-    event = new_order_event(transaction_id)
 
     Event.new_with_body(enode.node_id, event)
   end
@@ -138,22 +119,6 @@ defmodule Anoma.Node.Examples.EEvent do
   def send_consensus_event(enode \\ ENode.start_node(), event \\ nil) do
     # if no event was given, create a default event
     event = if event, do: event, else: consensus_event(enode)
-
-    # send the event
-    EventBroker.event(event)
-
-    {enode, event}
-  end
-
-  @doc """
-  I send the order event.
-  If no event was given, I send a default event.
-  """
-  @spec send_order_event(ENode.t(), EventBroker.Event.t() | nil) ::
-          {ENode.t(), EventBroker.Event.t()}
-  def send_order_event(enode \\ ENode.start_node(), event \\ nil) do
-    # if no event was given, create a default event
-    event = if event, do: event, else: order_event(enode)
 
     # send the event
     EventBroker.event(event)
@@ -238,16 +203,6 @@ defmodule Anoma.Node.Examples.EEvent do
   def new_consensus_event(transaction_ids) do
     %Mempool.Events.ConsensusEvent{
       order: transaction_ids
-    }
-  end
-
-  @doc """
-  I create a new order event.
-  """
-  @spec new_order_event(String.t()) :: Ordering.Events.OrderEvent.t()
-  def new_order_event(transaction_id) do
-    %Ordering.Events.OrderEvent{
-      tx_id: transaction_id
     }
   end
 

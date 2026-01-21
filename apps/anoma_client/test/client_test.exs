@@ -13,9 +13,6 @@ defmodule Anoma.ClientTest do
     for: Anoma.Client.Examples.EClient.Nock
 
   use TestHelper.GenerateExampleTests,
-    for: Anoma.Client.Examples.EClient.Executor
-
-  use TestHelper.GenerateExampleTests,
     for: Anoma.Client.Examples.EClient.Nock.Scry
 
   use TestHelper.GenerateExampleTests,

@@ -98,16 +98,20 @@ defmodule Anoma.Node.Transaction.Executor do
   @doc """
   I am the Executor launch function.
 
-  Given a transaction in {backend, code} format with specific ID,
-  I launch that transaction as a task. If no ID is provided, I generate one
-  randomly.
+  Given a transaction with specific ID and appropriate reads, I launch that
+  transaction as a task, with specified reads fed as scry-restrictions.
   """
 
-  @spec launch(String.t(), {Backends.backend(), Noun.t()}, binary()) :: :ok
-  def launch(node_id, tw_w_backend, id \\ :crypto.strong_rand_bytes(16)) do
+  @spec launch(
+          String.t(),
+          {Backends.backend(), Noun.t()},
+          binary(),
+          list(list(binary))
+        ) :: :ok
+  def launch(node_id, tw_w_backend, id, reads) do
     GenServer.cast(
       Registry.via(node_id, __MODULE__),
-      {:launch, tw_w_backend, id}
+      {:launch, tw_w_backend, id, reads}
     )
   end
 
@@ -133,8 +137,8 @@ defmodule Anoma.Node.Transaction.Executor do
   ############################################################
 
   @impl true
-  def handle_cast({:launch, tw_w_backend, id}, state) do
-    handle_launch(tw_w_backend, id, state)
+  def handle_cast({:launch, tw_w_backend, id, reads}, state) do
+    handle_launch(tw_w_backend, id, reads, state)
     {:noreply, state}
   end
 
@@ -150,11 +154,12 @@ defmodule Anoma.Node.Transaction.Executor do
   # @doc """
   # I launch a transaction in its own Task to execute.
   # """
-  @spec handle_launch({Backends.backend(), Noun.t()}, binary(), t()) :: :ok
-  defp handle_launch(tw_w_backend, id, state = %Executor{}) do
+  @spec handle_launch({Backends.backend(), Noun.t()}, binary(), list(), t()) ::
+          :ok
+  defp handle_launch(tw_w_backend, id, reads, state = %Executor{}) do
     spawn(fn ->
       try do
-        Backends.execute(state.node_id, tw_w_backend, id)
+        Backends.execute(state.node_id, tw_w_backend, id, reads)
       rescue
         _e ->
           task_crash_event(id, state.node_id)

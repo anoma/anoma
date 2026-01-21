@@ -53,6 +53,7 @@ defmodule Anoma.Node.Logging do
            {:node_id, String.t()} | {:table, atom()} | {:rocks, bool()}
 
   typedstruct module: LoggingEvent do
+    @derive Jason.Encoder
     @typedoc """
     I am the type of a logging event.
 

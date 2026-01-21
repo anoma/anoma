@@ -23,7 +23,9 @@ defmodule Anoma.Tables do
     {Blocks, [:round, :block]},
     {Values, [:key, :value]},
     {Updates, [:key, :value]},
-    {Intents, [:type, :body]}
+    {Intents, [:type, :body]},
+    {ShardKeyMap, [:key, :value]},
+    {ShardBackups, [:shard_id_key_height, :value]}
   ]
 
   @client_tables [
@@ -82,6 +84,22 @@ defmodule Anoma.Tables do
   @spec table_updates(String.t()) :: atom()
   def table_updates(node_id) do
     node_table_name(node_id, Updates)
+  end
+
+  @doc """
+  I return the table name for the given node its shard key map.
+  """
+  @spec table_shard_key_map(String.t()) :: atom()
+  def table_shard_key_map(node_id) do
+    node_table_name(node_id, ShardKeyMap)
+  end
+
+  @doc """
+  I return the table name for the given node its shard backups.
+  """
+  @spec table_shard_backups(String.t()) :: atom()
+  def table_shard_backups(node_id) do
+    node_table_name(node_id, ShardBackups)
   end
 
   @doc """

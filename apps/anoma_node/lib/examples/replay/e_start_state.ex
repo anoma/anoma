@@ -211,8 +211,8 @@ defmodule Anoma.Node.Examples.EReplay.StartState do
       {_enode, transaction} = EMempool.make_block(enode)
 
       # wait for the block event
-      order_event = EEvent.order_event(enode, transaction.id)
-      EEvent.wait_for_event(order_event)
+      execution_event = EEvent.execution_event(enode, transaction)
+      EEvent.wait_for_event(execution_event)
 
       # ensure that the transaction is written into the events table
       assert Helpers.seen_event?(

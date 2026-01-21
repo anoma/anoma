@@ -27,14 +27,14 @@ defmodule Anoma.Node.Transport.GRPC.Servers.Mempool do
 
     noun = if request.wrap, do: wrap_transaction(noun), else: noun
 
-    transaction = {request.transaction_type, noun}
+    transaction = noun
 
     # submit the transaction to the mempool
     node_id = request.node.id
-    :ok = Mempool.tx(node_id, transaction)
+    id = Mempool.tx(node_id, transaction)
 
     # return an empty response
-    %Add.Response{}
+    %Add.Response{result: id}
   rescue
     e -> raise_grpc_error!(e)
   end
