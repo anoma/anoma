@@ -367,7 +367,7 @@ defmodule Anoma.Node.Transaction.Ordering do
       for {key, pid} <- state.shard_addresses do
         # if all candidates in block completed:
         # advance watermarks to most recent height for ro txs
-        Shard.advance_write_watermark(pid, key, state.next_height - 1)
+        Shard.advance_watermark(pid, key, state.next_height - 1)
         # backup state
         Shard.backup_state(pid)
       end
@@ -582,7 +582,7 @@ defmodule Anoma.Node.Transaction.Ordering do
       fn
         {:read, order}, [] ->
           # if no further keys, advance to the last read of the block
-          Shard.advance_write_watermark(pid, key, order - 1)
+          Shard.advance_watermark(pid, key, order - 1)
           {:halt, []}
 
         {:read, _order}, [_hd | new_tl] ->
@@ -591,7 +591,7 @@ defmodule Anoma.Node.Transaction.Ordering do
 
         {:write, order}, acc ->
           # if we hit a write, advance watermark to it directly
-          Shard.advance_write_watermark(pid, key, order - 1)
+          Shard.advance_watermark(pid, key, order - 1)
           {:halt, acc}
       end
     )

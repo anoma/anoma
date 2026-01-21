@@ -4,8 +4,6 @@ defmodule Anoma.Node.Transaction.Shard.Detail do
   """
   use TypedStruct
 
-  alias Anoma.Node.Transaction.Shard.Cell
-
   @typedoc "I represent the value of a Cell"
   @type slot :: %{value: any()} | :empty | :reserved
 
@@ -24,9 +22,9 @@ defmodule Anoma.Node.Transaction.Shard.Detail do
 
   def write(_, _), do: {:error, :can_not_write}
 
-  @spec reserve(t(), Cell.cap()) :: t()
-  def reserve(d = %__MODULE__{cell: %{value: _}}, :write), do: d
-  def reserve(d = %__MODULE__{cell: :reserved}, :write), do: d
+  @spec reserve(t()) :: t()
+  def reserve(d = %__MODULE__{cell: %{value: _}}), do: d
+  def reserve(d = %__MODULE__{cell: :reserved}), do: d
   def reserve(d = %__MODULE__{cell: :empty}), do: %{d | cell: :reserved}
 
   @spec retract(t(), pid()) :: t()

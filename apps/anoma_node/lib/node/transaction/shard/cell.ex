@@ -9,18 +9,15 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
   @typedoc "The height associated with an operation."
   @type height :: non_neg_integer()
 
-  @typedoc "The capabilities requested or held by a reservation."
-  @type cap :: :read | :write | :read_write
-
   @typedoc "The watermark type"
-  @type watermarks() :: %{read: height(), write: height()}
+  @type watermarks() :: %{write: height()}
 
   typedstruct enforce: true do
     @typedoc """
     I represent a cell within a shard
     """
     field(:details, %{height() => Detail.t()}, default: %{})
-    field(:watermarks, watermarks(), default: %{read: 0, write: 0})
+    field(:watermarks, watermarks(), default: %{write: 0})
   end
 
   ############################################################
@@ -91,12 +88,11 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
     update_detail(c, height, update)
   end
 
-  @spec run_advance_watermark(t(), :read | :write, height()) :: t()
-  def run_advance_watermark(c = %Cell{watermarks: w}, cap, height) do
-    case {advance_watermark(w, cap, height), cap} do
-      {^w, _} -> c
-      {new_w, :read} -> gc(%__MODULE__{c | watermarks: new_w})
-      {new_w, :write} -> resolve_pending(%__MODULE__{c | watermarks: new_w})
+  @spec run_advance_watermark(t(), height()) :: t()
+  def run_advance_watermark(c = %Cell{watermarks: water}, height) do
+    case advance_watermark(water, height) do
+      ^water -> c
+      new_water -> resolve_pending(%__MODULE__{c | watermarks: new_water})
     end
   end
 
@@ -118,61 +114,6 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
       value ->
         Enum.each(ps, &GenServer.reply(&1, value))
         {height, %Detail{d | pending: nil}}
-    end
-  end
-
-  ############################################################
-  #                           Helpers                        #
-  ############################################################
-
-  @spec gc(t()) :: t()
-  defp gc(c = %__MODULE__{details: details, watermarks: %{read: watermark}}) do
-    reserved =
-      details
-      |> Enum.filter(fn {h, _} -> h <= watermark end)
-      |> MapSet.new(fn {h, _} -> h end)
-
-    essential =
-      reserved
-      |> MapSet.put(watermark)
-      |> Enum.map(&find_essential_heights_below(c, &1))
-      |> Enum.reduce(MapSet.new(), &MapSet.union/2)
-
-    all_keys_left =
-      Map.filter(details, fn {h, _} ->
-        h >= watermark or MapSet.member?(essential, h)
-      end)
-
-    %__MODULE__{c | details: all_keys_left}
-  end
-
-  @spec find_essential_heights_below(t(), height()) :: MapSet.t(height())
-  def find_essential_heights_below(%Cell{details: details}, target_height) do
-    # Sort relevant values backwards to grab most relevant items first
-    sorted =
-      details
-      |> Enum.filter(fn {h, _} -> h < target_height end)
-      |> Enum.sort_by(&elem(&1, 0), :desc)
-
-    reserved =
-      sorted
-      |> Enum.filter(fn
-        {_, %Detail{cell: :reserved}} -> true
-        {_, %Detail{cell: _not_res}} -> false
-      end)
-      |> MapSet.new(fn {h, _} -> h end)
-
-    case Enum.find(sorted, fn
-           {_, %Detail{cell: %{value: _}}} -> true
-           {_, %Detail{cell: _not_a_valu}} -> false
-         end) do
-      nil ->
-        reserved
-
-      {height_found_value, _details} ->
-        reserved
-        |> MapSet.filter(fn reserved -> reserved > height_found_value end)
-        |> MapSet.put(height_found_value)
     end
   end
 
@@ -215,9 +156,8 @@ defmodule Anoma.Node.Transaction.Shard.Cell do
 
   def can_reserve(_, _), do: :ok
 
-  @spec advance_watermark(watermarks(), :read | :write, height()) ::
-          watermarks()
-  def advance_watermark(w, cap, height) do
-    Map.replace_lazy(w, cap, &max(height, &1))
+  @spec advance_watermark(watermarks(), height()) :: watermarks()
+  def advance_watermark(w, height) do
+    Map.replace_lazy(w, :write, &max(height, &1))
   end
 end

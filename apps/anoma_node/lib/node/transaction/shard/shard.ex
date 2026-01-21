@@ -18,8 +18,7 @@ defmodule Anoma.Node.Transaction.Shard do
   - `unreserve/4`
   - `retract/4`
   - `backup_state/1`
-  - `advance_read_watermark/3`
-  - `advance_write_watermark/3`
+  - `advance_watermark/3`
   - `debug_get_state/1`
 
   ### Key Concepts
@@ -188,24 +187,12 @@ defmodule Anoma.Node.Transaction.Shard do
   end
 
   @doc """
-  I advance the read watermark for a given key.
-
-  This is an asynchronous operation.
-  """
-  @spec advance_read_watermark(GenServer.server(), key(), Cell.height()) ::
-          :ok
-  def advance_read_watermark(shard_pid, key, h_read) do
-    GenServer.cast(shard_pid, {:read_watermark_advanced, key, h_read})
-  end
-
-  @doc """
   I advance the write watermark for a given key.
 
   This is an asynchronous operation.
   """
-  @spec advance_write_watermark(GenServer.server(), key(), Cell.height()) ::
-          :ok
-  def advance_write_watermark(shard_pid, key, h_write) do
+  @spec advance_watermark(GenServer.server(), key(), Cell.height()) :: :ok
+  def advance_watermark(shard_pid, key, h_write) do
     GenServer.cast(shard_pid, {:write_watermark_advanced, key, h_write})
   end
 
@@ -239,14 +226,7 @@ defmodule Anoma.Node.Transaction.Shard do
 
   def handle_cast({:write_watermark_advanced, key, write}, state) do
     new_state =
-      update_cell(state, key, &Cell.run_advance_watermark(&1, :write, write))
-
-    {:noreply, new_state}
-  end
-
-  def handle_cast({:read_watermark_advanced, key, h_read}, state) do
-    new_state =
-      update_cell(state, key, &Cell.run_advance_watermark(&1, :read, h_read))
+      update_cell(state, key, &Cell.run_advance_watermark(&1, write))
 
     {:noreply, new_state}
   end

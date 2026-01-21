@@ -18,12 +18,11 @@ defmodule Anoma.Node.Examples.EShard do
     EShardSupervisor.shard_start_abc(node_id)
 
     pid_c = Registry.via(node_id, Shard, :c)
-    Shard.advance_write_watermark(Registry.via(node_id, Shard, :a), ["a"], 5)
-    Shard.advance_write_watermark(Registry.via(node_id, Shard, :b), ["b"], 5)
-    Shard.advance_write_watermark(pid_c, ["c"], 5)
+    Shard.advance_watermark(Registry.via(node_id, Shard, :a), ["a"], 5)
+    Shard.advance_watermark(Registry.via(node_id, Shard, :b), ["b"], 5)
+    Shard.advance_watermark(pid_c, ["c"], 5)
 
-    assert %{read: 0, write: 5} ==
-             :sys.get_state(pid_c).cells[["c"]].watermarks
+    assert %{write: 5} == :sys.get_state(pid_c).cells[["c"]].watermarks
 
     node_id
   end
@@ -81,7 +80,7 @@ defmodule Anoma.Node.Examples.EShard do
   def abc_val_a_write_to_5_shard_a() do
     %{
       ["a"] => %Cell{
-        watermarks: %{read: 0, write: 5},
+        watermarks: %{write: 5},
         details: %{
           0 => %Detail{cell: %{value: 5}, pending: nil},
           3 => %Detail{cell: %{value: 55}},
@@ -92,29 +91,15 @@ defmodule Anoma.Node.Examples.EShard do
     }
   end
 
-  @spec abc_val_a_gc_start_read_write_30(String.t()) :: String.t()
-  def abc_val_a_gc_start_read_write_30(node_id \\ Node.example_random_id()) do
+  @spec abc_val_a_gc_start_write_30(String.t()) :: String.t()
+  def abc_val_a_gc_start_write_30(node_id \\ Node.example_random_id()) do
     abc_val_for_a_write_to_5(node_id)
 
     shard_a = Registry.via(node_id, Shard, :a)
 
-    gcd_state = %{
-      ["a"] => %Cell{
-        watermarks: %{read: 30, write: 5},
-        details: %{
-          0 => %Detail{cell: %{value: 5}},
-          3 => %Detail{cell: %{value: 55}}
-        }
-      }
-    }
-
     assert :sys.get_state(shard_a).cells == abc_val_a_write_to_5_shard_a()
 
-    Shard.advance_read_watermark(shard_a, ["a"], 30)
-
-    assert :sys.get_state(shard_a).cells == gcd_state
-
-    Shard.advance_write_watermark(shard_a, ["a"], 30)
+    Shard.advance_watermark(shard_a, ["a"], 30)
     assert Shard.read(shard_a, ["a"], 12) == {:ok, 55}
 
     node_id
@@ -122,7 +107,7 @@ defmodule Anoma.Node.Examples.EShard do
 
   @spec abc_val_acq_before_watermark(String.t()) :: String.t()
   def abc_val_acq_before_watermark(node_id \\ Node.example_random_id()) do
-    abc_val_a_gc_start_read_write_30(node_id)
+    abc_val_a_gc_start_write_30(node_id)
 
     shard_via = Registry.via(node_id, Shard, :a)
 
@@ -150,7 +135,7 @@ defmodule Anoma.Node.Examples.EShard do
   def abc_val_a_waiting_7_11_shard_a() do
     %{
       ["a"] => %Cell{
-        watermarks: %{read: 0, write: 5},
+        watermarks: %{write: 5},
         details: %{
           0 => %Detail{cell: %{value: 5}, pending: nil},
           3 => %Detail{cell: %{value: 55}},
@@ -184,7 +169,7 @@ defmodule Anoma.Node.Examples.EShard do
     shard_a = Registry.via(node_id, Shard, :a)
 
     Shard.write(shard_a, ["a"], "Hi Life", 11)
-    Shard.advance_write_watermark(shard_a, ["a"], 12)
+    Shard.advance_watermark(shard_a, ["a"], 12)
 
     # We can read!!
     assert Shard.read(shard_a, ["a"], 12) == {:ok, "Hi Life"}
@@ -204,7 +189,7 @@ defmodule Anoma.Node.Examples.EShard do
 
     current_state = %{
       ["a"] => %Cell{
-        watermarks: %{read: 0, write: 5},
+        watermarks: %{write: 5},
         details: %{
           0 => %Detail{cell: %{value: 5}, pending: nil},
           3 => %Detail{cell: %{value: 55}},
@@ -231,7 +216,7 @@ defmodule Anoma.Node.Examples.EShard do
     shard_a = Registry.via(node_id, Shard, :a)
 
     read = Task.async(fn -> Shard.read(shard_a, ["a"], 12) end)
-    Shard.advance_write_watermark(shard_a, ["a"], 12)
+    Shard.advance_watermark(shard_a, ["a"], 12)
 
     Shard.write(shard_a, ["a"], "Family Mart", 7)
 
