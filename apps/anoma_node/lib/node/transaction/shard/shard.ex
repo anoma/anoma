@@ -4,8 +4,6 @@ defmodule Anoma.Node.Transaction.Shard do
 
   I manage a partition of the distributed key-value store, handling requests
   for reserving slots, reading, and writing specific keys at specific heights.
-  I maintain versioned state
-  for read resolution and garbage collection based on dual watermarks.
 
   ### Public API
 
@@ -23,10 +21,7 @@ defmodule Anoma.Node.Transaction.Shard do
 
   ### Key Concepts
 
-  - **Height:** A transaction-specific identifier used for versioning.
-  - **KV State:** A map storing key -> height -> entry_details.
-  - **Reservations:** Independent read and write reservations associated with a `{key, height}`.
-  - **Watermarks:** Per-key dual watermarks (`:read`, `:write`) control GC and read resolution respectively.
+  - **Cell:** A cell of a shard, contains all the information required for a shard.
   - **Synchronous Reads:** Read requests (`read/3`) block the caller
       until resolved. Resolution may be delayed internally if blocked
       by watermarks or preceding write reservations. Read completion
@@ -110,11 +105,9 @@ defmodule Anoma.Node.Transaction.Shard do
   read or write at a specific key at a specific height.
 
   Reservations exist to inform the KV store that a value will
-  be read or written at a specific height at some point in the future.
+  be written at a specific height at some point in the future.
   If I know that an empty entry will be written to, then an immediate read
-  will have to wait until the write occurs. If I know that some entry will
-  be read from, then I know I must keep around immediately preceding committed values at
-  least until the read is completed.
+  will have to wait until the write occurs.
 
   I request a reservation on a specific key at a given height.
   Capabilities can be `:read`, `:write`, or `:read_write`.
@@ -148,7 +141,7 @@ defmodule Anoma.Node.Transaction.Shard do
   I am the write function for the Shard module.
 
   I write a value for a key at a specific height, requiring a prior `reserve` call
-  with `:write` or `:read_write` capability for this `{key, height}`.
+  with `:write` capability for this `{key, height}`.
   I return `:ok` on success, or an error tuple.
   """
   @spec write(GenServer.server(), key(), any(), Cell.height()) :: :ok
@@ -167,7 +160,10 @@ defmodule Anoma.Node.Transaction.Shard do
   end
 
   @doc """
-  I retract a potential read on a shard
+  I retract a potential read on a shard.
+
+  I am useful when a specific `pid` may have requested a read that is
+  no longer relevant.
   """
   @spec retract(GenServer.server(), key(), Cell.height(), pid()) :: :ok
   def retract(shard_pid, key, height, pid) do
