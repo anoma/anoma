@@ -36,16 +36,18 @@ defmodule Anoma.Node.Examples.Mempool do
     :mnesia.subscribe({:table, events_table, :simple})
 
     # submit the transaction to the mempool.
-    Mempool.tx(
-      enode.node_id,
-      {transaction.backend, transaction.noun},
-      transaction.id
-    )
+    id =
+      Mempool.tx(
+        enode.node_id,
+        transaction.noun
+      )
 
     # assert that the transaction is in the mempool.
     # note: we cannot assert that it is the only transaction, because
     # this example is reused below.
     transactions = Mempool.tx_dump(enode.node_id)
+
+    transaction = %ETransaction{transaction | id: id}
 
     # wait for the transaction to be present in the events table, too.
     wait_for_transaction_in_table(enode, transaction)
@@ -89,16 +91,19 @@ defmodule Anoma.Node.Examples.Mempool do
 
   def add_multiple_transactions(enode, transactions) do
     # insert `transaction_count` transactions in the mempool
-    Enum.each(transactions, &add_transaction(enode, &1))
+    txs_with_ids =
+      Enum.map(transactions, fn tx ->
+        add_transaction(enode, tx) |> elem(1)
+      end)
 
     # assert all the transactions are in the mempool.
     mempool_transactions = Mempool.tx_dump(enode.node_id)
 
-    for transaction <- transactions do
+    for {_, transaction} <- txs_with_ids do
       assert transaction.id in mempool_transactions
     end
 
-    {enode, transactions}
+    {enode, txs_with_ids}
   end
 
   # -----------------------------------------------------------
@@ -120,7 +125,7 @@ defmodule Anoma.Node.Examples.Mempool do
     # subscribe to events here to be sure the tx events are caught
     with_subscription [[]] do
       # add the transaction to the mempool
-      {_enode, _transaction} = add_transaction(enode, transaction)
+      {_enode, transaction} = add_transaction(enode, transaction)
 
       # adding a transaction to the mempool has two observable effects.
       # - a transaction event should be fired
@@ -152,14 +157,14 @@ defmodule Anoma.Node.Examples.Mempool do
     # subscribe to events here to be sure the tx events are caught
     with_subscription [[]] do
       # add the transaction to the mempool
-      {enode, transactions} = add_multiple_transactions(enode, transactions)
+      {enode, txs_with_ids} = add_multiple_transactions(enode, transactions)
 
       # adding a transaction to the mempool has two observable effects.
       # - a transaction event should be fired
       # - there should be a new transaction task running in the dynanamic observer.
 
       # check that the event has been fired for each transaction
-      for transaction <- transactions do
+      for transaction <- txs_with_ids do
         event = EEvent.transaction_event(enode, transaction)
         EEvent.wait_for_event(event)
       end

@@ -31,7 +31,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   @type backend() ::
           :debug_term_storage
-          | {:read_only, pid}
+          | :read_only
           | :transparent_resource
           | :cairo_resource
 
@@ -44,7 +44,7 @@ defmodule Anoma.Node.Transaction.Backends do
 
   First, I execute the transaction code on the Anoma VM. Next, I apply processing
   logic to the resulting value, dependent on the selected backend.
-  - For read-only backend, the value is sent directly to specified recepient.
+  - For read-only backend, the value is broadcasted via the ResultEvent.
   - For the key-value and blob store executions, the obtained value is stored
   and a Complete Event is issued.
   - For the transparent Resource Machine (RM) execution, I verify the
@@ -52,20 +52,22 @@ defmodule Anoma.Node.Transaction.Backends do
     which is transmitted as a Nullifier Event.
   """
 
-  @spec execute(node_id, {back, Noun.t()}, id) :: :ok
+  @spec execute(node_id, {back, Noun.t()}, id, reads) :: :ok
         when id: binary(),
              node_id: String.t(),
-             back: backend()
-  def execute(node_id, {backend, tx_code}, id) do
+             back: backend(),
+             reads: list(list(binary()))
+  def execute(node_id, {backend, tx_code}, id, reads) do
     time = Storage.current_time(node_id)
 
     scry =
       fn list ->
         if list do
           with [id, key] <- list |> Noun.list_nock_to_erlang(),
+               true <- Enum.any?(reads, fn x -> Noun.equal?(key, x) end),
                {:ok, value} <-
                  (case backend do
-                    {:read_only, _pid} ->
+                    :read_only ->
                       Storage.read(
                         node_id,
                         {time, key |> Noun.list_nock_to_erlang()}
@@ -87,7 +89,7 @@ defmodule Anoma.Node.Transaction.Backends do
       end
 
     env = %Nock{scry_function: scry}
-    vm_result = vm_execute(tx_code, env, id)
+    vm_result = vm_execute(tx_code, env)
     result_event(id, vm_result, node_id, backend)
 
     res =
@@ -109,26 +111,14 @@ defmodule Anoma.Node.Transaction.Backends do
   #                       VM Execution                       #
   ############################################################
 
-  @spec vm_execute(Noun.t(), Nock.t(), binary()) ::
+  @spec vm_execute(Noun.t(), Nock.t()) ::
           {:ok, Noun.t()} | :vm_error
-  defp vm_execute(tx_code, env, id) do
-    with {:ok, code} <- cue_when_atom(tx_code),
-         {:ok, [_ | stage_2_tx]} <- nock(code, [9, 2, 0 | 1], env),
-         {:ok, ordered_tx} <- nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
-         {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
+  defp vm_execute(tx_code, env) do
+    with {:ok, result} <- nock(tx_code, [9, 2, 0 | 1], env) do
       {:ok, result}
     else
       _e -> :vm_error
     end
-  end
-
-  @spec cue_when_atom(Noun.t()) :: :error | {:ok, Noun.t()}
-  defp cue_when_atom(tx_code) when Noun.is_noun_atom(tx_code) do
-    Noun.Jam.cue(tx_code)
-  end
-
-  defp cue_when_atom(tx_code) do
-    {:ok, tx_code}
   end
 
   ############################################################
@@ -141,8 +131,8 @@ defmodule Anoma.Node.Transaction.Backends do
     store_value(node_id, id, vm_res)
   end
 
-  defp backend_logic({:read_only, pid}, _node_id, _id, vm_res, opts) do
-    send_value(vm_res, pid, opts)
+  defp backend_logic(:read_only, node_id, id, vm_res, _opts) do
+    emit_value(node_id, id, vm_res)
   end
 
   defp backend_logic(:transparent_resource, node_id, id, vm_res, _opts) do
@@ -192,13 +182,13 @@ defmodule Anoma.Node.Transaction.Backends do
         end
 
       old_cms =
-        case Ordering.read(node_id, {id, anoma_keyspace("commitments")}) do
+        case Ordering.read(node_id, {id, transparent_keyspace("commitments")}) do
           :absent -> MapSet.new()
           {:ok, res} -> res
         end
 
       writes = [
-        {anoma_keyspace("anchor"),
+        {transparent_keyspace("anchor"),
          TAcc.value(
            MapSet.union(
              map.commitments,
@@ -213,8 +203,8 @@ defmodule Anoma.Node.Transaction.Backends do
         {id,
          %{
            append: [
-             {anoma_keyspace("nullifiers"), map.nullifiers},
-             {anoma_keyspace("commitments"), map.commitments}
+             {transparent_keyspace("nullifiers"), map.nullifiers},
+             {transparent_keyspace("commitments"), map.commitments}
            ],
            write: writes
          }}
@@ -251,13 +241,13 @@ defmodule Anoma.Node.Transaction.Backends do
           true | {:error, String.t()}
   defp storage_check(node_id, id, trans) do
     stored_commitments =
-      case Ordering.read(node_id, {id, anoma_keyspace("commitments")}) do
+      case Ordering.read(node_id, {id, transparent_keyspace("commitments")}) do
         :absent -> MapSet.new()
         {:ok, res} -> res
       end
 
     stored_nullifiers =
-      case Ordering.read(node_id, {id, anoma_keyspace("nullifiers")}) do
+      case Ordering.read(node_id, {id, transparent_keyspace("nullifiers")}) do
         :absent -> MapSet.new()
         {:ok, res} -> res
       end
@@ -323,7 +313,7 @@ defmodule Anoma.Node.Transaction.Backends do
              :mnesia.transaction(fn ->
                :mnesia.match_object(
                  {Storage.values_table(node_id),
-                  {:_, anoma_keyspace("anchor")}, root}
+                  {:_, transparent_keyspace("anchor")}, root}
                )
              end) do
         {:cont, acc}
@@ -333,11 +323,20 @@ defmodule Anoma.Node.Transaction.Backends do
     end)
   end
 
-  @spec send_value(Noun.t(), pid(), list()) ::
-          {:ok, any()}
-  defp send_value(result, reply_to, opts) do
-    send(reply_to, {opts[:time], result})
-    {:ok, result}
+  def emit_value(node_id, id, result) do
+    wrapped_result =
+      case result do
+        :error -> :error
+        res -> {:ok, res}
+      end
+
+    event =
+      Node.Event.new_with_body(node_id, %Events.ROEvent{
+        tx_id: id,
+        read_result: wrapped_result
+      })
+
+    EventBroker.event(event)
   end
 
   @spec store_value(String.t(), binary(), Noun.t()) :: {:ok, any} | :error
@@ -360,7 +359,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   @spec empty_write(backend(), String.t(), binary()) :: :ok
-  defp empty_write({:read_only, _}, _node_id, _id) do
+  defp empty_write(:read_only, _node_id, _id) do
     :ok
   end
 
@@ -377,7 +376,7 @@ defmodule Anoma.Node.Transaction.Backends do
          # No need to check the commitment existence
          true <- nullifier_existence_check(tx, node_id, id) do
       {ct, append_roots} =
-        case Ordering.read(node_id, {id, anoma_keyspace("cairo_ct")}) do
+        case Ordering.read(node_id, {id, cairo_keyspace("ct")}) do
           :absent ->
             {CTransaction.cm_tree(),
              MapSet.new([Anoma.Constants.default_cairo_rm_root()])}
@@ -404,8 +403,7 @@ defmodule Anoma.Node.Transaction.Backends do
               Noun.equal?(deletion, <<1::256>>)
             end)
             |> Enum.map(fn {value, _} ->
-              {["anoma", "blob", "cairo", :crypto.hash(:sha256, value)],
-               value}
+              {["anoma", "blob", :crypto.hash(:sha256, value)], value}
             end)
           end)
         end)
@@ -415,12 +413,11 @@ defmodule Anoma.Node.Transaction.Backends do
         {id,
          %{
            append: [
-             {anoma_keyspace("cairo_nullifiers"), nullifiers},
-             {anoma_keyspace("cairo_roots"),
-              MapSet.put(append_roots, anchor)},
-             {anoma_keyspace("cairo_ciphertexts"), ciphertexts}
+             {cairo_keyspace("nullifiers"), nullifiers},
+             {cairo_keyspace("roots"), MapSet.put(append_roots, anchor)},
+             {cairo_keyspace("ciphertexts"), ciphertexts}
            ],
-           write: [{anoma_keyspace("cairo_ct"), ct_new} | write_app_data]
+           write: [{cairo_keyspace("ct"), ct_new} | write_app_data]
          }}
       )
 
@@ -447,7 +444,7 @@ defmodule Anoma.Node.Transaction.Backends do
           true | {:error, String.t()}
   def nullifier_existence_check(transaction, node_id, id) do
     with {:ok, stored_nullifiers} <-
-           Ordering.read(node_id, {id, anoma_keyspace("cairo_nullifiers")}) do
+           Ordering.read(node_id, {id, cairo_keyspace("nullifiers")}) do
       if Enum.any?(
            CTransaction.nullifiers(transaction),
            &MapSet.member?(stored_nullifiers, &1)
@@ -466,7 +463,7 @@ defmodule Anoma.Node.Transaction.Backends do
           true | {:error, String.t()}
   def root_existence_check(transaction, node_id, id) do
     stored_roots =
-      case Ordering.read(node_id, {id, anoma_keyspace("cairo_roots")}) do
+      case Ordering.read(node_id, {id, cairo_keyspace("roots")}) do
         :absent -> MapSet.new([Anoma.Constants.default_cairo_rm_root()])
         {:ok, val} -> val
       end
@@ -537,7 +534,7 @@ defmodule Anoma.Node.Transaction.Backends do
   end
 
   @spec event(backend(), EventBroker.Event.t()) :: :ok
-  defp event({:read_only, _}, _event) do
+  defp event(:read_only, _event) do
     :ok
   end
 
@@ -545,8 +542,18 @@ defmodule Anoma.Node.Transaction.Backends do
     EventBroker.event(event)
   end
 
-  @spec anoma_keyspace(String.t()) :: list(String.t())
+  @spec cairo_keyspace(String.t()) :: list(String.t())
+  defp cairo_keyspace(key) do
+    anoma_keyspace(["cairo", key])
+  end
+
+  @spec transparent_keyspace(String.t()) :: list(String.t())
+  defp transparent_keyspace(key) do
+    anoma_keyspace(["transparent", key])
+  end
+
+  @spec anoma_keyspace(list(String.t())) :: list(String.t())
   defp anoma_keyspace(key) do
-    ["anoma", key]
+    ["anoma" | key]
   end
 end

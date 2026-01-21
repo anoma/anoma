@@ -201,16 +201,19 @@ defmodule Anoma.Node.Examples.EGRPC do
     intent_jammed =
       ETransaction.nullify_intent()
       |> Noun.Nounable.to_noun()
-      |> Noun.Jam.jam()
+
+    tx = Examples.ENock.transparent_core(intent_jammed) |> Noun.Jam.jam()
 
     request = %Mempool.Add.Request{
       node: node_id,
-      transaction: %Transaction{transaction: intent_jammed},
+      transaction: %Transaction{transaction: tx},
       transaction_type: :transparent_resource
     }
 
-    {:ok, %Mempool.Add.Response{}} =
+    {:ok, %Mempool.Add.Response{result: id}} =
       MempoolService.Stub.add(client.channel, request)
+
+    assert id in Anoma.Node.Transaction.Mempool.tx_dump(client.node.node_id)
 
     client
   end

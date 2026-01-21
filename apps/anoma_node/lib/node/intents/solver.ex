@@ -284,13 +284,30 @@ defmodule Anoma.Node.Intents.Solver do
   @spec submit(Intent.t(), String.t()) :: :ok
   def submit(tx = %Anoma.RM.Transparent.Transaction{}, node_id) do
     tx_noun = tx |> Noun.Nounable.to_noun()
-    tx_candidate = [[1, 0, [1 | tx_noun], 0 | 909], 0 | 707]
+
+    tx_candidate = [
+      [
+        1,
+        [
+          0
+          | [
+              ["anoma", "transparent", "anchor"],
+              ["anoma", "transparent", "nullifiers"],
+              ["anoma", "transparent", "commitments"]
+            ]
+        ],
+        [1 | tx_noun],
+        0 | 909
+      ],
+      0 | 707
+    ]
+
     tx_filter = [Node.Event.node_filter(node_id), %Mempool.Events.TxFilter{}]
 
     with_subscription [tx_filter] do
       Mempool.tx(
         node_id,
-        {:transparent_resource, tx_candidate}
+        tx_candidate
       )
 
       receive do
