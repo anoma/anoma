@@ -29,7 +29,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Executor
-  alias Anoma.Node.Transaction.Storage
+  alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Mempool.Events
 
   require Logger
@@ -435,7 +435,26 @@ defmodule Anoma.Node.Transaction.Mempool do
          {:ok, tx_function} <-
            Nock.nock(function, [10, [6, 1 | tx_id], 0 | 1], %Nock{}),
          {:ok, reads_list} <- Noun.Nounable.List.from_noun(reads),
-         {:ok, writes_list} <- Noun.Nounable.List.from_noun(writes) do
+         {:ok, writes_list} <- Noun.Nounable.List.from_noun(writes),
+         read_list_of_keys <-
+           reads_list
+           |> Enum.map(fn n_key ->
+             {:ok, key} = Noun.Nounable.List.from_noun(n_key)
+             key
+           end),
+         write_list_of_keys <-
+           writes_list
+           |> Enum.map(fn n_key ->
+             {:ok, key} = Noun.Nounable.List.from_noun(n_key)
+             key
+           end) do
+      reservations = %{
+        read: MapSet.new(read_list_of_keys),
+        write: MapSet.new(write_list_of_keys)
+      }
+
+      Ordering.reserve(state.node_id, tx_id, reservations)
+
       handle_keyspace(
         code,
         {reads_list, writes_list},
@@ -528,9 +547,9 @@ defmodule Anoma.Node.Transaction.Mempool do
     round = state.round
     node_id = state.node_id
 
-    {writes, map} = process_execution(state, execution_list)
+    {writes, map, set_of_ids} = process_execution(state, execution_list)
 
-    Storage.commit(node_id, round, writes)
+    Ordering.commit(node_id, round, writes, set_of_ids)
 
     block_event(Enum.map(execution_list, &elem(&1, 1)), round, node_id)
 
@@ -574,14 +593,16 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   @spec process_execution(t(), [{{:ok, any()} | :error, binary()}]) ::
-          {[Mempool.Tx.t()], %{binary() => Mempool.Tx.t()}}
+          {[Mempool.Tx.t()], %{binary() => Mempool.Tx.t()}, MapSet.t()}
   defp process_execution(state, execution_list) do
-    for {tx_res, id} <- execution_list, reduce: {[], state.transactions} do
-      {lst, ex_state} ->
+    for {tx_res, id} <- execution_list,
+        reduce: {[], state.transactions, MapSet.new()} do
+      {lst, ex_state, set} ->
         {tx_struct, map} =
           Map.get_and_update!(ex_state, id, fn _ -> :pop end)
 
-        {[Map.put(tx_struct, :tx_result, tx_res) | lst], map}
+        {[Map.put(tx_struct, :tx_result, tx_res) | lst], map,
+         MapSet.put(set, id)}
     end
   end
 

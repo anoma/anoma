@@ -2,7 +2,6 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
   alias Anoma.Node
   alias Anoma.Node.Examples.ETransaction
   alias Anoma.Node.Transaction.Mempool
-  alias Anoma.Node.Transaction.Storage
   alias Examples.ECairo.EResource, as: ESResource
   alias Examples.ENock
 
@@ -18,8 +17,9 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     EventBroker.subscribe_me([])
 
-    Mempool.tx(node_id, tx_w_backend)
-    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+    id1 = Mempool.tx(node_id, tx_w_backend)
+    id2 = Mempool.tx(node_id, ETransaction.bluf())
+    Mempool.execute(node_id, [id1, id2])
 
     ETransaction.recieve_round_event(node_id, 0)
 
@@ -27,7 +27,9 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
     input_nullifier = ESResource.a_resource_nullifier()
 
     assert {:ok, MapSet.new([input_nullifier])} ==
-             Storage.read(node_id, {1, ["anoma", "cairo", "nullifiers"]})
+             ETransaction.reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "cairo", "nullifiers"]
+             )
 
     output_resource_cm =
       ESResource.a_fixed_output_resource()
@@ -45,12 +47,19 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     assert {:ok,
             MapSet.new([Anoma.Constants.default_cairo_rm_root(), anchor])} ==
-             Storage.read(node_id, {1, ["anoma", "cairo", "roots"]})
+             ETransaction.reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "cairo", "roots"]
+             )
 
-    assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "cairo", "ct"]})
+    assert {:ok, tree} ==
+             ETransaction.reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "cairo", "ct"]
+             )
 
     assert {:ok, set_of_ciphertexts} ==
-             Storage.read(node_id, {1, ["anoma", "cairo", "ciphertexts"]})
+             ETransaction.reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "cairo", "ciphertexts"]
+             )
 
     EventBroker.unsubscribe_me([])
 
@@ -70,8 +79,9 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     EventBroker.subscribe_me([])
 
-    Mempool.tx(node_id, tx_w_backend)
-    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+    id1 = Mempool.tx(node_id, tx_w_backend)
+    id2 = Mempool.tx(node_id, ETransaction.bluf())
+    Mempool.execute(node_id, [id1, id2])
 
     ETransaction.recieve_round_event(node_id, 0)
 
@@ -83,10 +93,14 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> Anoma.CairoResource.Resource.nullifier(<<1::256>>)
 
     assert {:ok, MapSet.new([input_nullifier_1, input_nullifier_2])} ==
-             Storage.read(node_id, {1, ["anoma", "cairo", "nullifiers"]})
+             ETransaction.reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "cairo", "nullifiers"]
+             )
 
     assert {:ok, set_of_ciphertexts} ==
-             Storage.read(node_id, {1, ["anoma", "cairo", "ciphertexts"]})
+             ETransaction.reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "cairo", "ciphertexts"]
+             )
 
     output_cm_1 =
       ESResource.a_fixed_output_resource()
@@ -104,9 +118,15 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     assert {:ok,
             MapSet.new([Anoma.Constants.default_cairo_rm_root(), anchor])} ==
-             Storage.read(node_id, {1, ["anoma", "cairo", "roots"]})
+             ETransaction.reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "cairo", "roots"]
+             )
 
-    assert {:ok, tree} == Storage.read(node_id, {1, ["anoma", "cairo", "ct"]})
+    assert {:ok, tree} ==
+             ETransaction.reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "cairo", "ct"]
+             )
+
     EventBroker.unsubscribe_me([])
 
     node_id
@@ -137,7 +157,10 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> MapSet.new()
 
     id2 = Mempool.tx(node_id, tx_w_backend_2)
-    Mempool.execute(node_id, [id1, id2])
+
+    # progress the watermark to read
+    id3 = Mempool.tx(node_id, ETransaction.bluf())
+    Mempool.execute(node_id, [id1, id2, id3])
 
     ETransaction.recieve_round_event(node_id, 0)
 
@@ -149,7 +172,9 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> Anoma.CairoResource.Resource.nullifier(<<1::256>>)
 
     assert {:ok, MapSet.new([input_nullifier_1, input_nullifier_2])} ==
-             Storage.read(node_id, {2, ["anoma", "cairo", "nullifiers"]})
+             ETransaction.reserve_and_do(:read, node_id, id3,
+               key: ["anoma", "cairo", "nullifiers"]
+             )
 
     output_cm_1 =
       ESResource.a_fixed_output_resource()
@@ -176,15 +201,22 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
               anchor_1,
               anchor_2
             ])} ==
-             Storage.read(node_id, {2, ["anoma", "cairo", "roots"]})
+             ETransaction.reserve_and_do(:read, node_id, id3,
+               key: ["anoma", "cairo", "roots"]
+             )
 
-    assert {:ok, tree} == Storage.read(node_id, {2, ["anoma", "cairo", "ct"]})
+    assert {:ok, tree} ==
+             ETransaction.reserve_and_do(:read, node_id, id3,
+               key: ["anoma", "cairo", "ct"]
+             )
 
     set_of_ciphertexts =
       MapSet.union(set_of_ciphertexts1, set_of_ciphertexts2)
 
     assert {:ok, set_of_ciphertexts} ==
-             Storage.read(node_id, {2, ["anoma", "cairo", "ciphertexts"]})
+             ETransaction.reserve_and_do(:read, node_id, id3,
+               key: ["anoma", "cairo", "ciphertexts"]
+             )
 
     EventBroker.unsubscribe_me([])
 

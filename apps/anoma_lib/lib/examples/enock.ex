@@ -173,14 +173,13 @@ defmodule Examples.ENock do
       ) do
     trivial_swap_arm = [1 | tx_noun]
 
-    keyspace = [
-      0
-      | [
-          ["anoma", "transparent", "anchor"],
-          ["anoma", "transparent", "commitments"],
-          ["anoma", "transparent", "nullifiers"]
-        ]
+    keys = [
+      ["anoma", "transparent", "roots"],
+      ["anoma", "transparent", "commitments"],
+      ["anoma", "transparent", "nullifiers"]
     ]
+
+    keyspace = [keys | keys]
 
     swap = [[1, keyspace, trivial_swap_arm, 0 | 909], 0 | 707]
     swap
@@ -193,14 +192,16 @@ defmodule Examples.ENock do
       ) do
     trivial_swap_arm = [1 | tx_noun]
 
+    keys = [
+      ["anoma", "cairo", "roots"],
+      ["anoma", "cairo", "ct"],
+      ["anoma", "cairo", "nullifiers"],
+      ["anoma", "cairo", "ciphertexts"]
+    ]
+
     keyspace = [
-      0
-      | [
-          ["anoma", "cairo", "roots"],
-          ["anoma", "cairo", "ct"],
-          ["anoma", "cairo", "nullifiers"],
-          ["anoma", "cairo", "ciphertexts"]
-        ]
+      keys
+      | keys
     ]
 
     swap = [[1, keyspace, trivial_swap_arm, 0 | 909], 0 | 707]
@@ -3225,5 +3226,155 @@ defmodule Examples.ENock do
       })
 
     code
+  end
+
+  @spec a_int() :: integer()
+  @spec b_int() :: integer()
+  @spec c_int() :: integer()
+  def a_int(), do: Noun.atom_binary_to_integer("a")
+  def b_int(), do: Noun.atom_binary_to_integer("b")
+  def c_int(), do: Noun.atom_binary_to_integer("c")
+
+  @spec abc_list() :: Noun.t()
+  def abc_list() do
+    [[0 | a_int()], [0 | b_int()], [1 | c_int()] | 0]
+  end
+
+  ####################################################################
+  ##                     Shard Backend Examples                     ##
+  ####################################################################
+
+  # Write Program Generator (writes a constant value to a key)
+  def write_code_gen(key_int, value) do
+    reservations = [[1 | key_int] | 0]
+    writes_logic = [1 | [[key_int | value] | 0]]
+    [[0 | 3] | [reservations | [writes_logic | [0 | 0]]]]
+  end
+
+  @doc """
+  Nock program for reading "a", "b", adding, and writing sum to "c". Used in EShardBackend tests.
+  """
+  @spec read_ab_write_c_sum() :: Noun.t()
+  def read_ab_write_c_sum() do
+    key_a = a_int()
+    key_b = b_int()
+    key_c = c_int()
+
+    reservations = abc_list()
+
+    scryA = [12 | [[1 | 0] | [1 | key_a]]]
+    scryB = [12 | [[1 | 0] | [1 | key_b]]]
+    addFormula = [4 | [4 | [4 | [4 | [0 | 2]]]]]
+    sumFormula = [7 | [[scryA | scryB] | addFormula]]
+    writes_logic = [[[1 | key_c] | sumFormula] | [1 | 0]]
+
+    [[0 | 3] | [reservations | [writes_logic | [0 | 0]]]]
+  end
+
+  @doc """
+  Nock program for copying value from "a" to "b". Used in EShardBackend tests.
+  """
+  @spec copy_a_to_b() :: Noun.t()
+  def copy_a_to_b() do
+    key_a = a_int()
+    key_b = b_int()
+
+    reservations = [[0 | key_a], [1 | key_b] | 0]
+    scryA = [12 | [[1 | 0] | [1 | key_a]]]
+    writes_logic = [[[1 | key_b] | scryA] | [1 | 0]]
+
+    [[0 | 3] | [reservations | [writes_logic | [0 | 0]]]]
+  end
+
+  @doc """
+  Nock program that reserves write on 'a', then crashes. Used in EShardBackend tests.
+  """
+  @spec crash_after_reserve_a() :: Noun.t()
+  def crash_after_reserve_a() do
+    reservations = [[1 | a_int()] | 0]
+    # Invalid Nock [0 | [0 | 0]] for the writes stage causes a crash
+    [[0 | 3] | [reservations | [0 | [0 | 0]]]]
+  end
+
+  @doc """
+  I test a Nock program for writing 3 to "a".
+
+  I verify stage 1 (reservation/code split) and stage 2 (execution).
+  """
+  @spec test_nock_program_tx1() :: :ok
+  def test_nock_program_tx1() do
+    # Setup
+    dummy_tx_id = "test_tx_id_1"
+    tx_code = write_code_gen(a_int(), 3)
+    expected_reservations = [[1 | a_int()] | 0]
+    expected_writes = [[a_int() | 3] | 0]
+
+    # Stage 1: Execute the core using the backend's formula to extract reservations
+    {:ok, stage1_result} = Nock.nock(tx_code, [9, 2, 0 | 1], %Nock{})
+
+    # Extract components from stage 1 result
+    [reservations | stage2_code] = stage1_result
+    assert reservations == expected_reservations
+
+    # Stage 2: Execute using the exact sequence from Backends.vm_execute_stage2
+    env_tx1 = %Nock{}
+
+    # Step 1: Apply formula [10, [6, 1 | id], 0 | 1] - this inserts the tx_id into the code
+    {:ok, ordered_tx1} =
+      Nock.nock(stage2_code, [10, [6, 1 | dummy_tx_id], 0 | 1], env_tx1)
+
+    # Step 2: Apply formula [9, 2, 0 | 1] - this executes the transaction
+    {:ok, result1} = Nock.nock(ordered_tx1, [9, 2, 0 | 1], env_tx1)
+
+    # This is the expected format that backends.ex receives from vm_execute_stage2
+    assert result1 == expected_writes
+
+    :ok
+  end
+
+  @doc """
+  I test a Nock program for the sequence (read a, read b, add a and b, write result to c).
+
+  I verify stage 1 (reservation/code split) and stage 2 (execution with mock scry).
+  """
+  @spec test_nock_program_tx3() :: :ok
+  def test_nock_program_tx3() do
+    # Setup
+    dummy_tx_id = "test_tx_id_3"
+    tx_code = read_ab_write_c_sum()
+    expected_reservations = abc_list()
+    expected_writes = [[c_int() | 7] | 0]
+
+    # Stage 1: Execute the core using the backend's formula
+    {:ok, [reservations | stage2_code]} =
+      Nock.nock(tx_code, [9, 2, 0 | 1], %Nock{})
+
+    # Extract the components
+    assert reservations == expected_reservations
+
+    # Create a mock scry function that simulates reading values from storage
+    a_val = a_int()
+    b_val = b_int()
+
+    mock_scry_tx3 = fn
+      ^a_val -> {:ok, 3}
+      ^b_val -> {:ok, 4}
+      _ -> :error
+    end
+
+    env_tx3 = %Nock{scry_function: mock_scry_tx3}
+
+    # Stage 2: Execute using the exact sequence from Backends.vm_execute_stage2
+    # Step 1: Apply formula [10, [6, 1 | id], 0 | 1] - inserts tx_id
+    {:ok, ordered_tx3} =
+      Nock.nock(stage2_code, [10, [6, 1 | dummy_tx_id], 0 | 1], env_tx3)
+
+    # Step 2: Apply formula [9, 2, 0 | 1] - executes transaction
+    {:ok, result3} = Nock.nock(ordered_tx3, [9, 2, 0 | 1], env_tx3)
+
+    # Expected sum and result format
+    assert result3 == expected_writes
+
+    :ok
   end
 end

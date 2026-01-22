@@ -253,64 +253,8 @@ defmodule Anoma.Node.Examples.ETransaction do
   end
 
   ############################################################
-  #                         Ordering                         #
+  #                      Candidate Code                      #
   ############################################################
-
-  @spec start_ordering(String.t()) :: GenServer.on_start()
-  def start_ordering(node_id \\ Node.example_random_id()) do
-    Anoma.Node.Transaction.Ordering.start_link(node_id: node_id)
-  end
-
-  @spec ord_write_then_read(String.t()) :: String.t()
-  def ord_write_then_read(node_id \\ Node.example_random_id()) do
-    start_storage(node_id)
-    start_ordering(node_id)
-
-    _write_task =
-      Task.async(fn ->
-        Ordering.write(node_id, {"tx id 1", [{["abc"], 123}]})
-      end)
-
-    read_task =
-      Task.async(fn -> Ordering.read(node_id, {"tx id 2", ["abc"]}) end)
-
-    order = ["tx id 1", "tx id 2"]
-
-    Ordering.order(node_id, order)
-    {:ok, 123} = Task.await(read_task)
-    node_id
-  end
-
-  @spec ord_read_future_then_write(String.t()) :: String.t()
-  def ord_read_future_then_write(node_id \\ Node.example_random_id()) do
-    start_storage(node_id)
-    start_ordering(node_id)
-
-    read_task =
-      Task.async(fn -> Ordering.read(node_id, {"tx id 2", ["abc"]}) end)
-
-    write_task =
-      Task.async(fn ->
-        Ordering.write(node_id, {"tx id 1", [{["abc"], 123}]})
-      end)
-
-    Ordering.order(node_id, ["tx id 1", "tx id 2"])
-    :ok = Task.await(write_task)
-    {:ok, 123} = Task.await(read_task)
-    node_id
-  end
-
-  @spec ord_order_first(String.t()) :: String.t()
-  def ord_order_first(node_id \\ Node.example_random_id()) do
-    start_storage(node_id)
-    start_ordering(node_id)
-
-    Ordering.order(node_id, ["tx id 1", "tx id 2"])
-
-    Ordering.write(node_id, {"tx id 1", [{["abc"], 123}]})
-    {:ok, 123} = Ordering.read(node_id, {"tx id 2", ["abc"]})
-    node_id
-  end
 
   @spec start_tx_module(String.t()) :: ENode.t() | any()
   def start_tx_module(node_id \\ Node.example_random_id()) do
@@ -385,36 +329,37 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     EventBroker.subscribe_me([])
 
-    Mempool.tx(node_id, code)
-    Mempool.execute(node_id, Mempool.tx_dump(node_id))
+    id1 = Mempool.tx(node_id, code)
+    # progress the watermark to read
+    id2 = Mempool.tx(node_id, bluf())
+    Mempool.execute(node_id, [id1, id2])
 
     recieve_round_event(node_id, 0)
 
     base_swap = ETransaction.swap_from_actions()
 
     assert {:ok, base_swap |> Transaction.nullifiers()} ==
-             Storage.read(
-               node_id,
-               {1, ["anoma", "transparent", "nullifiers"]}
+             reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "transparent", "nullifiers"]
              )
 
     assert {:ok, base_swap |> Transaction.commitments()} ==
-             Storage.read(
-               node_id,
-               {1, ["anoma", "transparent", "commitments"]}
+             reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "transparent", "commitments"]
              )
 
     cms = base_swap |> Transaction.commitments()
 
     assert {:ok, cms} ==
-             Storage.read(
-               node_id,
-               {1, ["anoma", "transparent", "commitments"]}
+             reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "transparent", "commitments"]
              )
 
     assert {:ok,
-            Anoma.RM.Transparent.Primitive.CommitmentAccumulator.value(cms)} ==
-             Storage.read(node_id, {1, ["anoma", "transparent", "anchor"]})
+            [Anoma.RM.Transparent.Primitive.CommitmentAccumulator.value(cms)]} ==
+             reserve_and_do(:read, node_id, id2,
+               key: ["anoma", "transparent", "roots"]
+             )
 
     EventBroker.unsubscribe_me([])
 
@@ -694,8 +639,7 @@ defmodule Anoma.Node.Examples.ETransaction do
       )
     end
 
-    [] = :mnesia.dirty_all_keys(Storage.values_table(node_id))
-    [] = :mnesia.dirty_all_keys(Storage.updates_table(node_id))
+    [] = :mnesia.dirty_all_keys(Tables.table_shard_backups(node_id))
     node_id
   end
 
@@ -837,5 +781,23 @@ defmodule Anoma.Node.Examples.ETransaction do
     after
       1000 -> assert(false, "Failed to find failure message: #{exp_message}")
     end
+  end
+
+  def reserve_and_do(:read, node_id, tx_id, opts) do
+    Ordering.reserve(node_id, tx_id, %{
+      read: MapSet.new([opts[:key]]),
+      write: MapSet.new([])
+    })
+
+    Ordering.read(node_id, {tx_id, opts[:key]})
+  end
+
+  def reserve_and_do(:write, node_id, tx_id, opts) do
+    Ordering.reserve(node_id, tx_id, %{
+      read: MapSet.new([]),
+      write: MapSet.new([opts[:key]])
+    })
+
+    Ordering.write(node_id, {tx_id, [{opts[:key], opts[:value]}]})
   end
 end

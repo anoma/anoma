@@ -11,7 +11,6 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
   alias Anoma.Client.Examples.EClient
   alias Anoma.Client.Storage
   alias Anoma.Tables
-  alias Anoma.Node.Transaction.Storage, as: NodeStorage
   alias Anoma.RM.Transparent.Action
   alias Anoma.RM.Transparent.Transaction
   alias Noun.Jam
@@ -70,9 +69,10 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
 
     key = ["anoma", "blob", "key"]
 
-    NodeStorage.write(
+    Anoma.Node.Transaction.Shard.Supervisor.start_shard(
       client.node.node_id,
-      {1, [{key, 123}]}
+      key,
+      123
     )
 
     program =
@@ -103,9 +103,10 @@ defmodule Anoma.Client.Examples.EClient.Nock.Scry do
     val = MapSet.new(["i am a set"])
     key = ["anoma", "blob", "key"]
 
-    NodeStorage.write(
+    Anoma.Node.Transaction.Shard.Supervisor.start_shard(
       client.node.node_id,
-      {1, [{key, val}]}
+      key,
+      val
     )
 
     program =
