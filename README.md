@@ -7,8 +7,8 @@ found [here](https://specs.anoma.net/latest).
 
 - [Contributors documentation](https://anoma.github.io/anoma/readme.html)
 - [Specification](https://specs.anoma.net/latest/)
-- Developer Docs (Coming Soon™)
-- User Docs (Coming Soon™)
+- [Developer Docs](./documentation)
+- [User Docs](./USAGE.md)
 
 ## Following Development
 
