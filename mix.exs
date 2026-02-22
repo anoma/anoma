@@ -33,7 +33,7 @@ defmodule Anoma.MixProject do
       # these options are required for running `mix compile` in the umbrella.
       # make changes here and in apps/anoma_protobuf/mix.exs
       protoc_options: [
-        elixir_out: "apps/anoma_protobuf/lib/anoma/protobuf",
+        elixir_out: "apps/anoma_protobuf/lib",
         proto_files: ["apps/anoma_protobuf/priv/protobuf"],
         extra_opts:
           "one_file_per_module=true,gen_descriptors=true,plugins=grpc,include_docs=true"
