@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+# Get the path to this script
+SELF=$(readlink "$0" || true)
+if [ -z "$SELF" ]; then SELF="$0"; fi
+# Source anoma in a function so we can control the CLI arguments it receives
+anoma() { . "$(dirname "$SELF")/anoma"; }
+# Source the anoma functions but suppress output
+anoma version
+# Make erl's init call the Anoma client entry point
+export ELIXIR_ERL_OPTIONS="$ELIXIR_ERL_OPTIONS -run Elixir.Anoma.Client.CLI start"
+# Start the Anoma client
+start "elixir" "$@"

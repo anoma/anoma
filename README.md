@@ -120,7 +120,8 @@ Further see the Known issues section if you encounter an issue.
 ## Docker images
 To work with Docker images, do the following:
 1. Install [Docker](https://docs.docker.com/engine/install/), this is necessary for both building and running Docker images
-2. Build the Anoma image from the repository root: `docker build -t <IMAGE> .`
+2. If using the official Anoma image, download it using [the package instructions](https://github.com/anoma/anoma/pkgs/container/anoma)
+3. If building the Anoma image instead, then run from the repository root: `docker build -t <IMAGE> .`
     * `<IMAGE>` is your chosen image name
 4. Run the Anoma image: `docker run -it --network host <IMAGE> <SUBCOMMAND>`
     * `<IMAGE>` is the name of Anoma Docker image to be run

@@ -15,13 +15,12 @@ COPY global_deps.exs mix.exs mix.lock version.exs ./
 COPY apps apps
 COPY config config
 COPY documentation documentation
-COPY params params
 # The Hex package manager is required for Mix to fetch dependencies
 RUN mix local.hex --force
 # rebar3 is required to compile Anoma dependencies
 RUN mix local.rebar --force
 # Protocol Buffers compiler is also required
-RUN mix escript.install hex protobuf --force
+RUN mix escript.install hex protobuf 0.11.0 --force
 # Add the Protocol Buffers compiler to the path
 ENV PATH="/root/.mix/escripts:${PATH}"
 RUN mix clean --deps
@@ -37,7 +36,6 @@ RUN apt-get install -y openssl
 # Copy the Anoma release into the minimal image
 WORKDIR /app
 COPY --from=builder /app/_build/dev/rel/anoma .
-COPY --from=builder /app/params params
 ENV LANG=C.UTF-8
 # The entry point of the Anoma system
 ENTRYPOINT ["bin/anoma"]

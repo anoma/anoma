@@ -16,3 +16,6 @@ config :anoma_client, Anoma.Client.Web.Endpoint,
 
 config :anoma_client,
   grpc_port: String.to_integer(System.get_env("CLIENT_GRPC_PORT") || "40051")
+
+config :anoma_node,
+  grpc_port: String.to_integer(System.get_env("NODE_GRPC_PORT") || "50051")

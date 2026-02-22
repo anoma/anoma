@@ -43,17 +43,12 @@ defmodule Anoma.MixProject do
 
   def releases do
     [
-      anoma_client: [
-        include_executables_for: [:unix],
-        applications: [
-          {:anoma_client, :permanent}
-        ]
-      ],
       anoma: [
         include_executables_for: [:unix, :windows],
         applications: [
           anoma_node: :permanent,
-          event_broker: :permanent
+          event_broker: :permanent,
+          anoma_client: :permanent
         ]
       ]
     ]
@@ -138,15 +133,15 @@ defmodule Anoma.MixProject do
     [
       extra_applications: [
         :observer,
-        :wx
-      ],
-      included_applications: [:mnesia]
+        :wx,
+        {:mnesia, :optional}
+      ]
     ]
   end
 
   def escript do
     [
-      main_module: Anoma.Cli,
+      main_module: Anoma.Client.CLI,
       name: "anoma",
       app: nil
     ]

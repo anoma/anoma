@@ -6,6 +6,7 @@
 # - mix-env: The environment to build the release for.
 # - elixir-version: The version of Elixir to use.
 # - otp-version: The version of OTP to use.
+# - os: The operating system to build for.
 name: Build Release
 on:
   workflow_call:
@@ -22,47 +23,94 @@ on:
       release_name:
         required: true
         type: string
+      os:
+        required: true
+        type: string
 jobs:
   build_release:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.os }}
     steps:
-      - name: checkout the repository
-        uses: actions/checkout@v4
-
-      - name: setup deps and _build cache
-        uses: actions/cache@v4
+      - uses: actions/checkout@v4
         with:
-          path: |
-            ${{ github.workspace }}/deps
-            ${{ github.workspace }}/_build
-          key: ${{ runner.os }}-build-${{ inputs.mix-env }}-${{ hashFiles('mix.lock') }}
-
-      - name: setup elixir
-        uses: ./.github/actions/elixir_setup
+          fetch-depth: 50
+      - uses: erlef/setup-beam@6e1d5a5aa63e46e2579c0a01718a1376fb24354f
         with:
-          elixir-version: ${{ inputs.elixir-version }}
           otp-version: ${{ inputs.otp-version }}
-
-      - name: install apt packages
-        uses: ./.github/actions/os_setup
-
-      #---------------------------------------------------------------------------
-      # Create binaries
-      #
-      # This part of the action generates all the binaries that are necessary
-      # for a release.
-      # If these need to be compiled for different elixir versions, the matrix
-      # should be put in the on_release.yml file.
-
-      - name: create the client binary
-        continue-on-error: false
+          elixir-version: ${{ inputs.elixir-version }}
+      - name: Install system dependencies
+        shell: bash
+        if: startsWith(runner.os, 'Linux')
+        run: sudo apt install -y libsodium-dev protobuf-compiler
+      - name: Install system dependencies
+        shell: bash
+        if: startsWith(runner.os, 'macOS')
+        run: brew install protobuf
+      - name: Install system dependencies
+        shell: pwsh
+        if: startsWith(runner.os, 'Windows')
+        run: |
+          choco install protoc
+          vcpkg install libsodium
+      - name: Install Elixir dependencies
         shell: bash
         run: |
-          MIX_ENV=prod mix do --app anoma_client escript.build
-          mv "apps/anoma_client/anoma_client" "apps/anoma_client/anoma_client-elixir-${{ inputs.elixir-version }}-otp-${{ inputs.otp-version }}"
-
-      - name: create artifact of the client binary
+          mix deps.get --force
+          mix escript.install hex protobuf 0.11.0 --force
+      - name: Build Anoma release
+        if: startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS')
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/.mix/escripts"
+          mix release
+      - name: Build Anoma release
+        if: startsWith(runner.os, 'Windows')
+        shell: pwsh
+        run: |
+          & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64 -SkipAutomaticLocation
+          $env:PATH = $env:USERPROFILE + '\.mix\escripts;' + $env:VCPKG_INSTALLATION_ROOT + '\packages\libsodium_x64-windows\bin;' + $env:PATH
+          $env:INCLUDE = $env:VCPKG_INSTALLATION_ROOT + '\packages\libsodium_x64-windows\include;' + $env:INCLUDE
+          $LIBSODIUM_LIB = $env:VCPKG_INSTALLATION_ROOT + '\packages\libsodium_x64-windows\lib'
+          $env:LIB = $LIBSODIUM_LIB + ';' + $env:LIB
+          copy ($LIBSODIUM_LIB + '\libsodium.lib') ($LIBSODIUM_LIB + '\libsodium.dll.a')
+          $env:DEBUG = '1'
+          mix release
+      - name: Copy shared libraries and client
+        if: startsWith(runner.os, 'macOS')
+        shell: bash
+        run: |
+           ./scripts/copy-dylibs.zsh _build/dev/rel/anoma
+           cp ./scripts/anomac _build/dev/rel/anoma/bin/
+      - name: Copy shared libraries and client
+        if: startsWith(runner.os, 'Linux')
+        shell: bash
+        run: |
+           ./scripts/copy-sos.sh _build/dev/rel/anoma
+           cp ./scripts/anomac _build/dev/rel/anoma/bin/
+      - name: Copy shared libraries
+        if: startsWith(runner.os, 'Windows')
+        shell: pwsh
+        run: |
+          $env:PATH = $env:USERPROFILE + '\.mix\escripts;' + $env:VCPKG_INSTALLATION_ROOT + '\packages\libsodium_x64-windows\bin;' + $env:PATH
+          $bin_dirs = (ls -Path "_build\dev\rel\anoma\erts-*\bin")
+          foreach($bin_dir in $bin_dirs) {
+            .\scripts\copy-dlls.ps1 -LibPath _build\dev\rel\anoma\lib -DestinationPath $bin_dir.FullName
+          }
+      - name: Compute SHA hashes
+        shell: pwsh
+        run: |
+          cd _build/dev/rel/
+          tar czf ($env:ARTIFACT_NAME + '.tar.gz') anoma
+          shasum -a 1 ($env:ARTIFACT_NAME + '.tar.gz') > ($env:ARTIFACT_NAME + '.tar.gz.sha1sum')
+          shasum -a 256 ($env:ARTIFACT_NAME + '.tar.gz') > ($env:ARTIFACT_NAME + '.tar.gz.sha256sum')
+        env:
+          ARTIFACT_NAME: anoma-${{ github.ref_name }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Create Anoma release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: anoma_client-elixir-${{ inputs.elixir-version }}-otp-${{ inputs.otp-version }}
-          path: "apps/anoma_client/anoma_client-elixir-${{ inputs.elixir-version }}-otp-${{ inputs.otp-version }}"
+          name: ${{ env.ARTIFACT_NAME }}
+          path: |
+            _build/dev/rel/${{ env.ARTIFACT_NAME }}.tar.gz
+            _build/dev/rel/${{ env.ARTIFACT_NAME }}.tar.gz.sha1sum
+            _build/dev/rel/${{ env.ARTIFACT_NAME }}.tar.gz.sha256sum
+        env:
+          ARTIFACT_NAME: anoma-${{ github.ref_name }}-${{ runner.os }}-${{ runner.arch }}

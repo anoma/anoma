@@ -64,11 +64,19 @@ jobs:
     needs: [compile, lint, test, docs]
     strategy:
       matrix:
-        beam_versions:
-          - otp: "27.1"
-            elixir: "1.17"
-          # - otp: "26.2.5.5"
-          #   elixir: "1.17"
+        include:
+          - otp_version: "27.1"
+            os: macos-latest
+            elixir_version: "1.17"
+          - otp_version: "27.1"
+            os: ubuntu-latest
+            elixir_version: "1.17"
+          - otp_version: "27.1"
+            os: windows-latest
+            elixir_version: "1.17"
+          - otp_version: "27.1"
+            os: macos-13
+            elixir_version: "1.17"
     permissions:
       contents: write
       id-token: write
@@ -76,8 +84,9 @@ jobs:
     uses: ./.github/workflows/build_release.yaml
     with:
       mix-env: "prod"
-      elixir-version: "${{ matrix.beam_versions.elixir }}"
-      otp-version: "${{ matrix.beam_versions.otp }}"
+      elixir-version: "${{ matrix.elixir_version }}"
+      otp-version: "${{ matrix.otp_version }}"
+      os: "${{ matrix.os }}"
       release_name: ${{ github.ref_name }}
 
   publish_release:
@@ -87,3 +96,12 @@ jobs:
       id-token: write
       pages: write
     uses: ./.github/workflows/publish_release.yaml
+
+  create_publish_docker:
+    needs: [compile, lint, test, docs]
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    uses: ./.github/workflows/docker.yml

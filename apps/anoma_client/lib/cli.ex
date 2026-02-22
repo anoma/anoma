@@ -50,6 +50,18 @@ defmodule Anoma.Client.CLI do
 
   require Logger
 
+  # Entry point to use if the Anoma client is being invoked by init. The plain
+  # arguments are obtained from :init analogously to :elixir.start_cli or
+  # :escript.start. Note that if running with `erl`, the CLI arguments have to
+  # be passed after the -extra flag to ensure that characters like hyphens are
+  # not interpreted by the runtime system or the emulator.
+  @spec start() :: any()
+  def start() do
+    main(Enum.map(:init.get_plain_arguments(), &List.to_string/1))
+  end
+
+  # Entry point called by escript. CLI arguments for the Anoma client are passed
+  # to this function as an array of strings.
   @spec main([String.t()]) :: any()
   def main(args) do
     case parse_args(args) do

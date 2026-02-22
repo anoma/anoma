@@ -34,9 +34,9 @@ defmodule AnomaNode.MixProject do
         :logger,
         :runtime_tools,
         :tools,
-        :ex_unit
-      ],
-      included_applications: [:mnesia]
+        :ex_unit,
+        {:mnesia, :optional}
+      ]
     ]
   end
 
