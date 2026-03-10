@@ -331,35 +331,35 @@ defmodule Anoma.Node.Examples.ETransaction do
 
     EventBroker.subscribe_me([])
 
-    id1 = Mempool.tx(node_id, code)
+    Mempool.tx(node_id, code)
     # progress the watermark to read
-    id2 = Mempool.tx(node_id, bluf())
-    Mempool.execute(node_id, [id1, id2])
+    id = Mempool.tx(node_id, bluf())
 
-    recieve_round_event(node_id, 0)
+    # wait for Narwhal consensus to execute the batch
+    wait_for_block_event(node_id)
 
     base_swap = ETransaction.swap_from_actions()
 
     assert {:ok, base_swap |> Transaction.nullifiers()} ==
-             reserve_and_do(:read, node_id, id2,
+             reserve_and_do(:read, node_id, id,
                key: ["anoma", "transparent", "nullifiers"]
              )
 
     assert {:ok, base_swap |> Transaction.commitments()} ==
-             reserve_and_do(:read, node_id, id2,
+             reserve_and_do(:read, node_id, id,
                key: ["anoma", "transparent", "commitments"]
              )
 
     cms = base_swap |> Transaction.commitments()
 
     assert {:ok, cms} ==
-             reserve_and_do(:read, node_id, id2,
+             reserve_and_do(:read, node_id, id,
                key: ["anoma", "transparent", "commitments"]
              )
 
     assert {:ok,
             [Anoma.RM.Transparent.Primitive.CommitmentAccumulator.value(cms)]} ==
-             reserve_and_do(:read, node_id, id2,
+             reserve_and_do(:read, node_id, id,
                key: ["anoma", "transparent", "roots"]
              )
 
@@ -379,7 +379,6 @@ defmodule Anoma.Node.Examples.ETransaction do
     log =
       capture_log(fn ->
         Mempool.tx(node_id, code)
-        Mempool.execute(node_id, Mempool.tx_dump(node_id))
         recieve_logger_failure(node_id, "already exist")
       end)
 
@@ -401,7 +400,6 @@ defmodule Anoma.Node.Examples.ETransaction do
     log =
       capture_log(fn ->
         Mempool.tx(node_id, code)
-        Mempool.execute(node_id, Mempool.tx_dump(node_id))
         recieve_logger_failure(node_id, "Root does not exist")
       end)
 
@@ -440,12 +438,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     start_tx_module(node_id)
     zero = zero(key)
 
-    id = Mempool.tx(node_id, zero)
+    Mempool.tx(node_id, zero)
     :mnesia.subscribe({:table, Storage.blocks_table(node_id), :simple})
-    dump = Mempool.tx_dump(node_id)
-
-    assert dump == [id]
-    Mempool.execute(node_id, dump)
 
     blocks_table = Storage.blocks_table(node_id)
 
@@ -485,10 +479,9 @@ defmodule Anoma.Node.Examples.ETransaction do
     zero = zero(key)
     inc = inc(key)
 
-    id1 = Mempool.tx(node_id, zero)
-    id2 = Mempool.tx(node_id, inc)
+    Mempool.tx(node_id, zero)
+    Mempool.tx(node_id, inc)
     :mnesia.subscribe({:table, blocks_table, :simple})
-    Mempool.execute(node_id, [id1, id2])
 
     assert_receive(
       {:mnesia_table_event,
@@ -535,9 +528,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     key = "key"
     zero_counter_submit(node_id)
     inc = inc(key)
-    id1 = Mempool.tx(node_id, inc)
+    Mempool.tx(node_id, inc)
     :mnesia.subscribe({:table, blocks_table, :simple})
-    Mempool.execute(node_id, [id1])
 
     assert_receive(
       {:mnesia_table_event,
@@ -585,9 +577,8 @@ defmodule Anoma.Node.Examples.ETransaction do
     # todo: ideally we wait for the event broker message
     # before execution
     bluf = bluf()
-    id1 = Mempool.tx(node_id, bluf)
+    Mempool.tx(node_id, bluf)
     :mnesia.subscribe({:table, blocks_table, :simple})
-    Mempool.execute(node_id, [id1])
 
     assert_receive(
       {:mnesia_table_event,
@@ -708,10 +699,9 @@ defmodule Anoma.Node.Examples.ETransaction do
     zero_counter_submit(node_id)
     inc = inc(key)
     bluf = bluf()
-    id2 = Mempool.tx(node_id, bluf)
-    id3 = Mempool.tx(node_id, inc(key))
+    Mempool.tx(node_id, bluf)
+    Mempool.tx(node_id, inc(key))
     :mnesia.subscribe({:table, blocks_table, :simple})
-    Mempool.execute(node_id, [id2, id3])
 
     assert_receive(
       {:mnesia_table_event,
@@ -755,21 +745,6 @@ defmodule Anoma.Node.Examples.ETransaction do
     node_id
   end
 
-  @spec recieve_round_event(String.t(), non_neg_integer()) :: :ok | :error_tx
-  def recieve_round_event(node_id, round) do
-    receive do
-      %EventBroker.Event{
-        body: %Node.Event{
-          node_id: ^node_id,
-          body: %Mempool.Events.BlockEvent{round: ^round}
-        }
-      } ->
-        :ok
-    after
-      1000 -> :error_tx
-    end
-  end
-
   @spec recieve_logger_failure(binary(), String.t()) :: any()
   defp recieve_logger_failure(node_id, exp_message) do
     receive do
@@ -783,6 +758,23 @@ defmodule Anoma.Node.Examples.ETransaction do
     after
       1000 -> assert(false, "Failed to find failure message: #{exp_message}")
     end
+  end
+
+  @doc """
+  I wait for a BlockEvent from the given node. The calling
+  process must already be subscribed to EventBroker.
+  """
+  @spec wait_for_block_event(String.t()) :: term()
+  def wait_for_block_event(node_id) do
+    assert_receive(
+      %EventBroker.Event{
+        body: %Node.Event{
+          node_id: ^node_id,
+          body: %Mempool.Events.BlockEvent{}
+        }
+      },
+      5000
+    )
   end
 
   @spec reserve_and_do(:read | :write, String.t(), binary(), keyword()) ::

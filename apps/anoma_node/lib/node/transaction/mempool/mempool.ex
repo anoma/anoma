@@ -2,24 +2,19 @@ defmodule Anoma.Node.Transaction.Mempool do
   @moduledoc """
   I am the Mempool Engine.
 
-  I posess the core functionality to submit new transactions, execute
-  incoming consensus, and dump current transactions. Alongside that, I
-  store all currently running transactions as well as their intermediate
-  VM results.
+  I posess the core functionality to submit new transactions and dump
+  current transactions. Alongside that, I store all currently running
+  transactions as well as their intermediate VM results.
 
-  As the main point of user-input, I also send the events needed for
-  replays.
-
-  All transactions are assumed to come in the form of {backend, noun}.
-
-  All consensus is assumed to come in a form of an orered list of binaries.
+  Execution is triggered automatically by Narwhal consensus: when
+  Bullshark commits a wave, the NarwhalConsensusEvent delivers
+  an ordered list of tx_ids, which I forward to the Executor.
 
   ### Public API
 
   I provide the following public functionality:
 
   - `tx_dump/1`
-  - `execute/2`
   - `tx/2`
   - `register_foreign_txs/2`
   """
@@ -74,7 +69,6 @@ defmodule Anoma.Node.Transaction.Mempool do
           [
             node_id: String.t(),
             transactions: [{binary, Noun.t()}],
-            consensus: [[binary()]],
             round: non_neg_integer()
           ]
           | [node_id: String.t()]
@@ -235,7 +229,6 @@ defmodule Anoma.Node.Transaction.Mempool do
       |> Keyword.validate!([
         :node_id,
         transactions: [],
-        consensus: [],
         round: 1
       ])
 
@@ -251,7 +244,6 @@ defmodule Anoma.Node.Transaction.Mempool do
       filter_for_mempool_execution_events()
     ])
 
-    # Subscribe to Narwhal consensus events (if Narwhal is running)
     EventBroker.subscribe_me([
       Node.Event.node_filter(node_id),
       %Narwhal.Events.NarwhalConsensusFilter{}
@@ -259,20 +251,15 @@ defmodule Anoma.Node.Transaction.Mempool do
 
     state = %__MODULE__{round: args[:round], node_id: node_id}
 
-    {:ok, state,
-     {:continue, {:load_state, args[:transactions], args[:consensus]}}}
+    {:ok, state, {:continue, {:load_state, args[:transactions]}}}
   end
 
   @impl true
-  def handle_continue({:load_state, transactions, consensus}, state) do
+  def handle_continue({:load_state, transactions}, state) do
     node_id = state.node_id
 
     for {id, {_backend, tx_candidate}} <- transactions do
       tx(node_id, tx_candidate, id)
-    end
-
-    for list <- consensus do
-      execute(node_id, list)
     end
 
     {:noreply, state}
@@ -315,29 +302,6 @@ defmodule Anoma.Node.Transaction.Mempool do
     GenServer.call(
       Registry.via(node_id, __MODULE__),
       {:tx, tx_w_backend, Base.encode64(:crypto.strong_rand_bytes(16))}
-    )
-  end
-
-  @doc """
-  I am the execution function.
-
-  I receive a list of binaries, which I recognize as a partial order for
-  block execution, sending an appropriate consensus submission event.
-
-  Once launched, I send the list to the Executor.
-
-  I am asynchronous, meaning that I do not block and blocks can be
-  submitted before the last one got executed.
-
-  If execution is susccesful, the Mempool will handle an appropriate
-  message from the Executor, which will trigger block-creation.
-  """
-
-  @spec execute(String.t(), list(binary())) :: :ok
-  def execute(node_id, ordered_list_of_txs) do
-    GenServer.cast(
-      Registry.via(node_id, __MODULE__),
-      {:execute, ordered_list_of_txs}
     )
   end
 
@@ -440,11 +404,6 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:noreply, handle_tx(tx, tx_id, state)}
   end
 
-  def handle_cast({:execute, id_list}, state) do
-    handle_execute(id_list, state)
-    {:noreply, state}
-  end
-
   def handle_cast(_, state) do
     {:noreply, state}
   end
@@ -478,8 +437,11 @@ defmodule Anoma.Node.Transaction.Mempool do
         },
         state
       ) do
-    if order != [] do
-      handle_execute(order, state)
+    known =
+      Enum.filter(order, &Map.has_key?(state.transactions, &1))
+
+    if known != [] do
+      handle_execute(known, state)
     end
 
     {:noreply, state}
@@ -554,12 +516,7 @@ defmodule Anoma.Node.Transaction.Mempool do
        when is_noun_zero(writes) do
     node_id = state.node_id
 
-    Executor.launch(
-      node_id,
-      {:read_only, tx_function},
-      tx_id,
-      reads
-    )
+    Executor.launch(node_id, {:read_only, tx_function}, tx_id, reads)
 
     state
   end
