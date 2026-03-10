@@ -224,12 +224,17 @@ defmodule EventBroker.Registry do
         ) ::
           {EventBroker.filter_spec_list(), registered_filters}
   defp iterate_sub(registered, filter_spec_list, supervisor) do
+    # Find the longest registered prefix of filter_spec_list.
+    # Check from longest to shortest: O(k) where k = length of
+    # the spec list, instead of scanning all registered keys.
     existing_prefix =
-      registered
-      |> Map.keys()
-      |> Enum.filter(fn p -> List.starts_with?(filter_spec_list, p) end)
-      |> Enum.sort(&(length(&1) > length(&2)))
-      |> hd()
+      filter_spec_list
+      |> length()
+      |> Range.new(0, -1)
+      |> Enum.find_value(fn len ->
+        prefix = Enum.take(filter_spec_list, len)
+        if Map.has_key?(registered, prefix), do: prefix
+      end)
 
     remaining_to_spawn = filter_spec_list -- existing_prefix
 
