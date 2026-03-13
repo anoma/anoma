@@ -3344,6 +3344,7 @@ defmodule Examples.ENock do
   ##                          Scry Crash                            ##
   ####################################################################
 
+  @dialyzer({:nowarn_function, nock_scry_crash: 0})
   @spec nock_scry_crash() :: Noun.t()
   def nock_scry_crash() do
     code = [12, [1 | 0] | [1 | 0]]
