@@ -15,9 +15,12 @@ defmodule Anoma.Node.Examples.ENarwhal do
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Mempool
   alias Anoma.Node.Transaction.Narwhal.Block
+  alias Anoma.Node.Transaction.Narwhal.Bullshark
   alias Anoma.Node.Transaction.Narwhal.Cert
   alias Anoma.Node.Transaction.Narwhal.Config
   alias Anoma.Node.Transaction.Narwhal.Events
+  alias Anoma.Node.Transaction.Narwhal.Primary
+  alias Anoma.Node.Transaction.Narwhal.Supervisor, as: NarwhalSup
   alias Anoma.Node.Transaction.Narwhal.Worker
   alias Anoma.Node.Transaction.Storage
 
@@ -267,12 +270,446 @@ defmodule Anoma.Node.Examples.ENarwhal do
     config
   end
 
+  @doc """
+  I verify all validators produce the same consensus ordering.
+
+  Submits one transaction per validator and feeds the protocol
+  until all appear in consensus from every validator.
+  """
+  @spec all_validators_agree([Config.t()]) :: [Config.t()]
+  def all_validators_agree(configs \\ generate_validator_configs()) do
+    start_all_validators(configs, batch_size: 1)
+
+    for c <- configs do
+      subscribe_local(c.node_id, %Events.NarwhalConsensusFilter{})
+    end
+
+    tx_ids =
+      for c <- configs, do: Mempool.tx(c.node_id, ETransaction.bluf())
+
+    feeder = spawn_link(fn -> feed_transactions(configs) end)
+
+    min_txs = length(tx_ids)
+
+    orderings =
+      collect_consensus_all(
+        Enum.map(configs, & &1.node_id),
+        &(length(&1) >= min_txs)
+      )
+
+    stop_feeder(feeder)
+
+    [first | rest] = orderings
+    for order <- rest, do: assert(order == first)
+    for tx <- tx_ids, do: assert(tx in first)
+
+    configs
+  end
+
+  @doc """
+  I verify all validators reach identical execution state.
+
+  Builds on `all_validators_agree/1`: after ordering is proven
+  identical, submits counter transactions (zero + increment)
+  and compares every validator's values table. This proves
+  identical execution, not just identical ordering.
+  """
+  @spec all_validators_execute_identically([Config.t()]) :: [Config.t()]
+  def all_validators_execute_identically(
+        configs \\ generate_validator_configs()
+      ) do
+    configs = all_validators_agree(configs)
+    key = "key"
+
+    for c <- configs do
+      subscribe_local(c.node_id, %Mempool.Events.BlockFilter{})
+    end
+
+    Mempool.tx(hd(configs).node_id, ETransaction.zero(key))
+    inc_id = Mempool.tx(hd(configs).node_id, ETransaction.inc(key))
+
+    feeder = spawn_link(fn -> feed_transactions(configs) end)
+
+    for c <- configs do
+      await_block_with_tx(c.node_id, inc_id)
+    end
+
+    stop_feeder(feeder)
+
+    backups = for c <- configs, do: dump_shard_backups(c.node_id)
+    [first | rest] = backups
+    for b <- rest, do: assert(b == first)
+
+    # Verify the counter progressed: zero set 0, inc set 1
+    counter_vals =
+      first
+      |> Enum.filter(fn {{_shard, k, _h}, _v} -> k == ["key"] end)
+      |> Enum.sort_by(fn {{_, _, h}, _} -> h end)
+      |> Enum.map(fn {_, v} -> v end)
+
+    assert counter_vals == [0, 1]
+
+    configs
+  end
+
+  @doc """
+  I start 3 of 4 validators and achieve consensus.
+
+  With n=4 and f=1, three validators meet the 2f+1=3 quorum.
+  The 4th validator is offline. All three early validators
+  agree on the ordering.
+  """
+  @spec partial_network_commits([Config.t()]) :: [Config.t()]
+  def partial_network_commits(configs \\ generate_validator_configs()) do
+    [c1, c2, c3, _c4] = configs
+    early = [c1, c2, c3]
+
+    start_all_validators(early, batch_size: 1)
+
+    for c <- early do
+      subscribe_local(c.node_id, %Events.NarwhalConsensusFilter{})
+    end
+
+    Mempool.tx(c1.node_id, ETransaction.bluf())
+    feeder = spawn_link(fn -> feed_transactions(early) end)
+    orders = for c <- early, do: elem(receive_consensus(c.node_id), 0)
+    stop_feeder(feeder)
+
+    [first | rest] = orders
+    for order <- rest, do: assert(order == first)
+
+    configs
+  end
+
+  @doc """
+  I demonstrate a late-joining validator catching up.
+
+  Builds on `partial_network_commits/1`: after 3 validators
+  commit, the 4th joins, fast-forwards its Primary round via
+  certificate synchronization, and participates in consensus.
+  """
+  @spec late_validator_catches_up([Config.t()]) :: [Config.t()]
+  def late_validator_catches_up(configs \\ generate_validator_configs()) do
+    configs = partial_network_commits(configs)
+    [c1, _, _, c4] = configs
+
+    subscribe_local(c4.node_id, %Events.NarwhalConsensusFilter{})
+    start_narwhal_node(c4, batch_size: 1)
+
+    # Submit to an early validator (c4 is at round 0 and its blocks
+    # would be rejected as stale by validators at higher rounds).
+    tx_id = Mempool.tx(c1.node_id, ETransaction.bluf())
+    feeder = spawn_link(fn -> feed_transactions(configs) end)
+    order = collect_consensus(c4.node_id, &(tx_id in &1))
+    stop_feeder(feeder)
+
+    assert tx_id in order
+
+    {_state_name, primary_data} =
+      :sys.get_state(Registry.via(c4.node_id, Primary))
+
+    assert primary_data.shared.round > 0,
+           "Primary should have fast-forwarded"
+
+    configs
+  end
+
+  @doc """
+  I clear all locally-stored blocks from one validator.
+
+  Builds on `late_validator_catches_up/1`: after all 4 validators
+  are running, I wipe the first validator's blocks table.
+  """
+  @spec missing_blocks([Config.t()]) :: [Config.t()]
+  def missing_blocks(configs \\ generate_validator_configs()) do
+    configs = late_validator_catches_up(configs)
+    clear_blocks(hd(configs).node_id)
+    configs
+  end
+
+  @doc """
+  I verify that missing blocks are recovered from peers.
+
+  Builds on `missing_blocks/1`: after clearing, the next commit's
+  causal traversal calls ensure_block, fetches blocks from peers
+  across multiple rounds, and ordering continues.
+  """
+  @spec missing_blocks_recovered_via_peer([Config.t()]) :: [Config.t()]
+  def missing_blocks_recovered_via_peer(
+        configs \\ generate_validator_configs()
+      ) do
+    configs = missing_blocks(configs)
+    target = hd(configs)
+
+    tx_id = Mempool.tx(target.node_id, ETransaction.bluf())
+    feeder = spawn_link(fn -> feed_transactions(configs) end)
+    order = collect_consensus(target.node_id, &(tx_id in &1))
+    stop_feeder(feeder)
+
+    assert tx_id in order
+
+    # Causal traversal fetched historical blocks from peers.
+    # Verify blocks span multiple rounds (the traversal walked
+    # backwards through the DAG to rebuild local state).
+    table = NarwhalSup.blocks_table(target.node_id)
+
+    {:atomic, recovered} =
+      :mnesia.transaction(fn ->
+        :mnesia.match_object({table, :_, :_})
+      end)
+
+    rounds =
+      recovered
+      |> Enum.map(fn {_, _, block} -> block.round end)
+      |> Enum.uniq()
+      |> Enum.sort()
+
+    assert length(rounds) >= 3,
+           "Expected blocks from at least 3 rounds, got #{inspect(rounds)}"
+
+    configs
+  end
+
+  @doc """
+  I verify each tx_id appears exactly once in the ordering.
+
+  Submits three rounds of transactions (12 total across 4
+  validators) to span multiple waves. Asserts uniqueness and
+  agreement across all validators for the cumulative ordering.
+  """
+  @spec each_tx_ordered_once([Config.t()]) :: [Config.t()]
+  def each_tx_ordered_once(configs \\ generate_validator_configs()) do
+    start_all_validators(configs, batch_size: 1)
+
+    for c <- configs do
+      subscribe_local(c.node_id, %Events.NarwhalConsensusFilter{})
+    end
+
+    tx_ids =
+      for _round <- 1..3,
+          c <- configs,
+          do: Mempool.tx(c.node_id, ETransaction.bluf())
+
+    feeder = spawn_link(fn -> feed_transactions(configs) end)
+
+    target_set = MapSet.new(tx_ids)
+
+    orderings =
+      collect_consensus_all(
+        Enum.map(configs, & &1.node_id),
+        &MapSet.subset?(target_set, MapSet.new(&1))
+      )
+
+    stop_feeder(feeder)
+
+    for order <- orderings do
+      assert order == Enum.uniq(order), "Ordering contains duplicates"
+    end
+
+    [first | rest] = orderings
+    for o <- rest, do: assert(o == first)
+
+    configs
+  end
+
+  @doc """
+  I verify that a skipped wave leader does not block consensus.
+
+  The leader for wave 1 (sorted_validators[1]) stays offline.
+  Bullshark skips wave 1 and commits wave 2+. All transactions
+  are eventually ordered through causal traversal of later waves.
+  """
+  @spec skipped_leader_recovery([Config.t()]) :: [Config.t()]
+  def skipped_leader_recovery(configs \\ generate_validator_configs()) do
+    sorted = Config.sorted_validators(hd(configs))
+    wave_1_leader_pk = Enum.at(sorted, rem(1, length(sorted)))
+
+    {[_offline], active} =
+      Enum.split_with(configs, &(&1.public_key == wave_1_leader_pk))
+
+    start_all_validators(active, batch_size: 1)
+
+    target = hd(active)
+    subscribe_local(target.node_id, %Events.NarwhalConsensusFilter{})
+
+    tx_id = Mempool.tx(target.node_id, ETransaction.bluf())
+    feeder = spawn_link(fn -> feed_transactions(active) end)
+
+    # Collect consensus events until wave 2+ commits
+    events = collect_waves_until_wave(target.node_id, 2)
+    stop_feeder(feeder)
+
+    all_orders = Enum.flat_map(events, &elem(&1, 0))
+    wave_numbers = Enum.map(events, &elem(&1, 1))
+
+    assert tx_id in all_orders, "Transaction should be ordered"
+    refute 1 in wave_numbers, "Wave 1 should be skipped (leader offline)"
+    assert Enum.max(wave_numbers) >= 2
+
+    configs
+  end
+
+  @doc """
+  I verify an offline validator's transactions are still ordered.
+
+  Builds on `all_validators_agree/1`: after consensus, one
+  validator submits a transaction and then goes offline. The
+  remaining three continue advancing rounds. The offline
+  validator's transaction — already batched and certified before
+  suspension — gets ordered through Bullshark's causal traversal
+  of the DAG.
+  """
+  @spec offline_validator_transactions_ordered([Config.t()]) :: [Config.t()]
+  def offline_validator_transactions_ordered(
+        configs \\ generate_validator_configs()
+      ) do
+    configs = all_validators_agree(configs)
+    {active, [victim]} = Enum.split(configs, 3)
+
+    # Submit a transaction to the victim.
+    # batch_size: 1 → immediate flush → victim's Primary
+    # includes the batch digest in its next block proposal.
+    tx_id = Mempool.tx(victim.node_id, ETransaction.bluf())
+
+    # Feed all validators so the victim's block gets certified.
+    feeder = spawn_link(fn -> feed_transactions(configs) end)
+    {first_order, _} = receive_consensus(hd(active).node_id)
+
+    # Suspend the victim — it can no longer participate.
+    for mod <- [Primary, Worker, Bullshark] do
+      :sys.suspend(Registry.via(victim.node_id, mod))
+    end
+
+    stop_feeder(feeder)
+
+    # Feed only active validators to advance rounds.
+    # Bullshark's causal traversal commits the victim's
+    # certified blocks from before the suspension.
+    feeder = spawn_link(fn -> feed_transactions(active) end)
+    order = collect_consensus(hd(active).node_id, &(tx_id in &1), first_order)
+    stop_feeder(feeder)
+
+    assert tx_id in order,
+           "Offline validator's transaction should be ordered"
+
+    for mod <- [Primary, Worker, Bullshark] do
+      :sys.resume(Registry.via(victim.node_id, mod))
+    end
+
+    configs
+  end
+
+  @doc """
+  I verify consensus continues after one validator crashes.
+
+  Builds on `all_validators_agree/1`: after all four validators
+  commit, one validator is suspended (simulating a crash). The
+  remaining three still meet quorum (2f+1=3) and produce
+  consensus normally.
+  """
+  @spec consensus_after_validator_crash([Config.t()]) :: [Config.t()]
+  def consensus_after_validator_crash(configs \\ generate_validator_configs()) do
+    configs = all_validators_agree(configs)
+    surviving = Enum.take(configs, 3)
+    crashed = List.last(configs)
+
+    # Suspend all Narwhal processes for the crashed validator
+    for mod <- [Primary, Worker, Bullshark] do
+      :sys.suspend(Registry.via(crashed.node_id, mod))
+    end
+
+    # Submit tx to a surviving validator
+    tx_id = Mempool.tx(hd(surviving).node_id, ETransaction.bluf())
+    feeder = spawn_link(fn -> feed_transactions(surviving) end)
+
+    orders =
+      collect_consensus_all(
+        Enum.map(surviving, & &1.node_id),
+        &(tx_id in &1)
+      )
+
+    stop_feeder(feeder)
+
+    [first | rest] = orders
+    for o <- rest, do: assert(o == first)
+    assert tx_id in first
+
+    # Resume suspended processes (cleanup)
+    for mod <- [Primary, Worker, Bullshark] do
+      :sys.resume(Registry.via(crashed.node_id, mod))
+    end
+
+    configs
+  end
+
+  @doc """
+  I verify a crashed validator recovers and rejoins consensus.
+
+  Builds on `consensus_after_validator_crash/1`: after the
+  suspended validator is resumed, it catches up via its
+  backlogged events. A transaction submitted to the recovered
+  validator is ordered by all four validators.
+  """
+  @spec crashed_validator_recovers([Config.t()]) :: [Config.t()]
+  def crashed_validator_recovers(configs \\ generate_validator_configs()) do
+    configs = consensus_after_validator_crash(configs)
+    recovered = List.last(configs)
+
+    # Submit tx to the recovered validator
+    tx_id = Mempool.tx(recovered.node_id, ETransaction.bluf())
+    feeder = spawn_link(fn -> feed_transactions(configs) end)
+
+    # Verify ALL validators (including recovered) order the tx.
+    # The recovered Bullshark must have caught up and committed
+    # the wave containing this tx.
+    collect_consensus_all(
+      Enum.map(configs, & &1.node_id),
+      &(tx_id in &1)
+    )
+
+    stop_feeder(feeder)
+
+    configs
+  end
+
+  # Helpers: protocol liveness
+
+  @spec feed_transactions([Config.t()], non_neg_integer()) :: no_return()
+  defp feed_transactions(configs, interval \\ 200) do
+    Process.sleep(interval)
+
+    for c <- configs do
+      try do
+        Mempool.tx(c.node_id, ETransaction.bluf())
+      catch
+        :exit, _ -> :ok
+      end
+    end
+
+    feed_transactions(configs, interval)
+  end
+
+  @spec stop_feeder(pid()) :: true
+  defp stop_feeder(pid) do
+    Process.unlink(pid)
+    Process.exit(pid, :kill)
+  end
+
+  # Helpers: block store manipulation
+
+  @spec clear_blocks(String.t()) :: {:atomic, :ok}
+  defp clear_blocks(node_id) do
+    {:atomic, :ok} = :mnesia.clear_table(NarwhalSup.blocks_table(node_id))
+  end
+
   # Helpers: node lifecycle
 
+  @spec start_all_validators([Config.t()], keyword()) :: [term()]
   defp start_all_validators(configs, opts) do
     for c <- configs, do: start_narwhal_node(c, opts)
   end
 
+  @spec start_narwhal_node(Config.t(), keyword()) :: term()
   defp start_narwhal_node(config, opts \\ []) do
     ENode.start_node(
       node_id: config.node_id,
@@ -287,6 +724,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
 
   # Helpers: subscriptions
 
+  @spec subscribe_vs(Config.t(), struct()) :: :ok
   defp subscribe_vs(config, filter) do
     EventBroker.subscribe_me([
       %Events.ValidatorSetFilter{node_ids: config.node_id_set},
@@ -294,6 +732,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
     ])
   end
 
+  @spec subscribe_local(String.t(), struct()) :: :ok
   defp subscribe_local(node_id, filter) do
     EventBroker.subscribe_me([
       Anoma.Node.Event.node_filter(node_id),
@@ -303,6 +742,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
 
   # Helpers: await events
 
+  @spec await_tx_event(binary(), timeout()) :: term()
   defp await_tx_event(tx_id, timeout \\ 2000) do
     assert_receive(
       %EventBroker.Event{
@@ -314,6 +754,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
     )
   end
 
+  @spec await_proposal(String.t(), timeout()) :: Block.t()
   defp await_proposal(node_id, timeout \\ 3000) do
     assert_receive(
       %EventBroker.Event{
@@ -330,6 +771,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
     block
   end
 
+  @spec await_certificate(timeout()) :: Cert.t()
   defp await_certificate(timeout \\ 5000) do
     assert_receive(
       %EventBroker.Event{
@@ -343,6 +785,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
     cert
   end
 
+  @spec await_dissemination(String.t(), timeout()) :: {binary(), [binary()]}
   defp await_dissemination(node_id, timeout \\ 5000) do
     assert_receive(
       %EventBroker.Event{
@@ -360,6 +803,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
     {digest, tx_ids}
   end
 
+  @spec await_batch_ready(binary(), timeout()) :: term()
   defp await_batch_ready(digest, timeout \\ 2000) do
     assert_receive(
       %EventBroker.Event{
@@ -371,6 +815,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
     )
   end
 
+  @spec await_consensus(timeout()) :: [binary()]
   defp await_consensus(timeout \\ 15_000) do
     assert_receive(
       %EventBroker.Event{
@@ -384,6 +829,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
     order
   end
 
+  @spec await_block_event(timeout()) :: {[binary()], non_neg_integer()}
   defp await_block_event(timeout \\ 15_000) do
     assert_receive(
       %EventBroker.Event{
@@ -400,8 +846,108 @@ defmodule Anoma.Node.Examples.ENarwhal do
     {order, round}
   end
 
+  @spec receive_consensus(String.t(), timeout()) ::
+          {[binary()], non_neg_integer()}
+  defp receive_consensus(node_id, timeout \\ 30_000) do
+    receive do
+      %EventBroker.Event{
+        body: %Anoma.Node.Event{
+          node_id: ^node_id,
+          body: %Events.NarwhalConsensusEvent{order: order, round: round}
+        }
+      } ->
+        {order, round}
+    after
+      timeout ->
+        raise "Timeout waiting for consensus from #{inspect(node_id)}"
+    end
+  end
+
+  @spec collect_consensus(
+          String.t(),
+          ([binary()] -> boolean()),
+          [binary()],
+          timeout()
+        ) :: [binary()]
+  defp collect_consensus(node_id, done?, acc \\ [], timeout \\ 30_000) do
+    if done?.(acc) do
+      acc
+    else
+      {order, _round} = receive_consensus(node_id, timeout)
+      collect_consensus(node_id, done?, acc ++ order, timeout)
+    end
+  end
+
+  # Collect consensus from multiple validators simultaneously.
+  # Receives events for ANY validator as they arrive, avoiding
+  # mailbox buildup from sequential per-validator collection.
+  @spec collect_consensus_all(
+          [String.t()],
+          ([binary()] -> boolean()),
+          timeout()
+        ) :: [[binary()]]
+  defp collect_consensus_all(node_ids, done?, timeout \\ 30_000) do
+    accs = Map.new(node_ids, fn id -> {id, []} end)
+    deadline = System.monotonic_time(:millisecond) + timeout
+    results = do_collect_all(node_ids, accs, done?, deadline)
+    Enum.map(node_ids, fn id -> Map.fetch!(results, id) end)
+  end
+
+  @spec do_collect_all(
+          [String.t()],
+          %{String.t() => [binary()]},
+          ([binary()] -> boolean()),
+          integer()
+        ) :: %{String.t() => [binary()]}
+  defp do_collect_all(node_ids, accs, done?, deadline) do
+    if Enum.all?(node_ids, fn id -> done?.(Map.fetch!(accs, id)) end) do
+      accs
+    else
+      remaining = max(deadline - System.monotonic_time(:millisecond), 0)
+
+      receive do
+        %EventBroker.Event{
+          body: %Anoma.Node.Event{
+            node_id: node_id,
+            body: %Events.NarwhalConsensusEvent{order: order}
+          }
+        }
+        when is_map_key(accs, node_id) ->
+          accs = Map.update!(accs, node_id, &(&1 ++ order))
+          do_collect_all(node_ids, accs, done?, deadline)
+      after
+        remaining ->
+          status =
+            Enum.map(node_ids, fn id ->
+              acc = Map.fetch!(accs, id)
+              {id, length(acc), done?.(acc)}
+            end)
+
+          raise "Timeout waiting for consensus: #{inspect(status)}"
+      end
+    end
+  end
+
+  @spec collect_waves_until_wave(
+          String.t(),
+          non_neg_integer(),
+          [{[binary()], non_neg_integer()}]
+        ) :: [{[binary()], non_neg_integer()}]
+  defp collect_waves_until_wave(node_id, target_wave, events \\ []) do
+    max_wave =
+      events |> Enum.map(&elem(&1, 1)) |> Enum.max(fn -> -1 end)
+
+    if max_wave >= target_wave do
+      events
+    else
+      {order, wave} = receive_consensus(node_id)
+      collect_waves_until_wave(node_id, target_wave, [{order, wave} | events])
+    end
+  end
+
   # Helpers: verification
 
+  @spec verify_storage(String.t(), [binary()]) :: true
   defp verify_storage(node_id, order) do
     blocks_table = Storage.blocks_table(node_id)
 
@@ -412,5 +958,38 @@ defmodule Anoma.Node.Examples.ENarwhal do
 
     [{^blocks_table, ["anoma", "block", 1], tx_list}] = block
     assert length(tx_list) == length(order)
+  end
+
+  @spec await_block_with_tx(String.t(), binary(), [binary()]) :: [binary()]
+  defp await_block_with_tx(node_id, target_tx, acc \\ []) do
+    if target_tx in acc do
+      acc
+    else
+      receive do
+        %EventBroker.Event{
+          body: %Anoma.Node.Event{
+            node_id: ^node_id,
+            body: %Mempool.Events.BlockEvent{order: order}
+          }
+        } ->
+          await_block_with_tx(node_id, target_tx, acc ++ order)
+      after
+        30_000 ->
+          raise "Timeout: #{inspect(node_id)} never executed " <>
+                  "tx #{inspect(target_tx)}"
+      end
+    end
+  end
+
+  @spec dump_shard_backups(String.t()) :: [{term(), term()}]
+  defp dump_shard_backups(node_id) do
+    table = Anoma.Tables.table_shard_backups(node_id)
+
+    {:atomic, result} =
+      :mnesia.transaction(fn ->
+        :mnesia.select(table, [{{table, :"$1", :"$2"}, [], [:"$$"]}])
+      end)
+
+    result |> Enum.map(fn [k, v] -> {k, v} end) |> Enum.sort()
   end
 end
