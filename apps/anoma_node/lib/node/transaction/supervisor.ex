@@ -6,6 +6,7 @@ defmodule Anoma.Node.Transaction.Supervisor do
   use Supervisor
 
   alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Transaction.Narwhal
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Shard
 
@@ -36,17 +37,29 @@ defmodule Anoma.Node.Transaction.Supervisor do
   def init(args) do
     Process.set_label(__MODULE__)
 
-    children = [
-      {Shard.Supervisor,
-       [node_id: args[:node_id]] ++ Keyword.get(args, :shards, [])},
-      {Anoma.Node.Transaction.Ordering,
-       [node_id: args[:node_id]] ++ Keyword.get(args, :ordering, [])},
-      {Anoma.Node.Transaction.Storage,
-       [node_id: args[:node_id]] ++ Keyword.get(args, :storage, [])},
-      {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]},
-      {Anoma.Node.Transaction.Mempool,
-       [node_id: args[:node_id]] ++ Keyword.get(args, :mempool, [])}
-    ]
+    narwhal_args = Keyword.get(args, :narwhal, [])
+
+    narwhal_children =
+      if narwhal_args[:config] do
+        [
+          {Narwhal.Supervisor, [node_id: args[:node_id]] ++ narwhal_args}
+        ]
+      else
+        []
+      end
+
+    children =
+      [
+        {Shard.Supervisor,
+         [node_id: args[:node_id]] ++ Keyword.get(args, :shards, [])},
+        {Anoma.Node.Transaction.Ordering,
+         [node_id: args[:node_id]] ++ Keyword.get(args, :ordering, [])},
+        {Anoma.Node.Transaction.Storage,
+         [node_id: args[:node_id]] ++ Keyword.get(args, :storage, [])},
+        {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]},
+        {Anoma.Node.Transaction.Mempool,
+         [node_id: args[:node_id]] ++ Keyword.get(args, :mempool, [])}
+      ] ++ narwhal_children
 
     Supervisor.init(children, strategy: :one_for_all)
   end
