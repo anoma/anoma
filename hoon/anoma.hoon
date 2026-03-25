@@ -1,4 +1,5 @@
 ::  Simple demo Nock standard library.
+
 !.
 =~  %909
 ~%  %k.909  ~  ~
