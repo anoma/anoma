@@ -672,6 +672,214 @@ defmodule Anoma.Node.Examples.ENarwhal do
     configs
   end
 
+  ############################################################
+  #        Byzantine Behavior — Invariant Testing            #
+  ############################################################
+
+  # Invariants:
+  #
+  # 1. DAG has at most one cert per {validator, round}.
+  # 2. DAG keeps advancing rounds (liveness).
+  # 3. Blocks reference >= 2f+1 certificates from round r-1.
+
+  @doc """
+  I generate configs where node 0 and a 5th node share a keypair.
+
+  validator_set has `n` unique public keys; node_id_set has `n+1`
+  node_ids. The duplicate reuses the first validator's keypair.
+  """
+  @spec generate_duplicate_validator_configs(pos_integer()) :: [Config.t()]
+  def generate_duplicate_validator_configs(n \\ 4) do
+    configs = Config.generate_configs(n)
+    original = hd(configs)
+    dupe_id = original.node_id <> "_dupe"
+    all_ids = MapSet.put(original.node_id_set, dupe_id)
+
+    dupe = %Config{original | node_id: dupe_id, node_id_set: all_ids}
+    configs = Enum.map(configs, &%{&1 | node_id_set: all_ids})
+    assert dupe.public_key == hd(configs).public_key
+    configs ++ [dupe]
+  end
+
+  @doc """
+  I run 5 nodes where two share a keypair and verify honest
+  validators agree and every cert has quorum signatures.
+
+  Invariant 1: `signed_blocks` prevents honest validators from
+  signing both proposals for the same {creator, round}. By
+  pigeonhole, at most one reaches quorum.
+
+  Invariant 2: the 3 uncontested validators form quorum (3/4)
+  and keep advancing despite the contested slot.
+  """
+  @spec duplicate_validators_cannot_equivocate([Config.t()]) :: [Config.t()]
+  def duplicate_validators_cannot_equivocate(
+        configs \\ generate_duplicate_validator_configs()
+      ) do
+    start_all_validators(configs, batch_size: 1)
+    honest = Enum.take(configs, 4)
+    tx_id = Mempool.tx(hd(honest).node_id, ETransaction.bluf())
+
+    orders = feed_and_collect(configs, honest, &(tx_id in &1))
+
+    for order <- orders, do: assert(tx_id in order)
+    [first | rest] = orders
+    for o <- rest, do: assert(o == first)
+
+    for c <- honest, do: assert_all_certs_have_quorum(c.node_id, c)
+
+    configs
+  end
+
+  @doc """
+  I verify every block at round r > 0 references >= 2f+1
+  certificates from round r-1.
+
+  Invariant 3: blocks are properly anchored in the DAG.
+  """
+  @spec blocks_reference_quorum_certs([Config.t()]) :: [Config.t()]
+  def blocks_reference_quorum_certs(
+        configs \\ generate_validator_configs()
+      ) do
+    configs = all_validators_agree(configs)
+    observer = hd(configs)
+
+    feed_and_collect(configs, [observer], &(length(&1) >= 3))
+    assert_blocks_reference_quorum(observer.node_id, observer)
+
+    configs
+  end
+
+  @doc """
+  I verify Bullshark only commits waves where the anchor has
+  >= f+1 vote-round references.
+
+  Invariant 4: the commit threshold is respected.
+  """
+  @spec bullshark_respects_commit_threshold([Config.t()]) :: [Config.t()]
+  def bullshark_respects_commit_threshold(
+        configs \\ generate_validator_configs()
+      ) do
+    configs = all_validators_agree(configs)
+    observer = hd(configs)
+
+    feed_and_collect(configs, [observer], &(length(&1) >= 5))
+    assert_commits_have_threshold(observer.node_id, observer)
+
+    configs
+  end
+
+  # Helpers: DAG invariant predicates
+  #
+  # Pure inspectors — read state, return true or raise.
+  # No setup, no side effects.
+
+  @spec get_bullshark_state(String.t()) :: Bullshark.t()
+  defp get_bullshark_state(node_id) do
+    :sys.get_state(Registry.via(node_id, Bullshark))
+  end
+
+  @spec get_bullshark_dag(String.t()) ::
+          %{{binary(), non_neg_integer()} => Cert.t()}
+  defp get_bullshark_dag(node_id) do
+    get_bullshark_state(node_id).dag
+  end
+
+  @spec assert_all_certs_have_quorum(String.t(), Config.t()) :: :ok
+  defp assert_all_certs_have_quorum(node_id, config) do
+    quorum = Config.quorum(config)
+
+    for {_key, cert} <- get_bullshark_dag(node_id) do
+      assert Cert.has_quorum?(cert, quorum)
+    end
+
+    :ok
+  end
+
+  @spec assert_blocks_reference_quorum(String.t(), Config.t()) :: :ok
+  defp assert_blocks_reference_quorum(node_id, config) do
+    dag = get_bullshark_dag(node_id)
+    quorum = Config.quorum(config)
+
+    checked =
+      for {{_pk, round}, cert} <- dag,
+          round > 0,
+          block = NarwhalSup.get_block(node_id, cert.block_digest),
+          block != nil do
+        assert length(block.certificates) >= quorum
+        for c <- block.certificates, do: assert(c.round == round - 1)
+        round
+      end
+
+    assert length(checked) > 0, "No blocks with round > 0 found"
+    :ok
+  end
+
+  @spec assert_commits_have_threshold(String.t(), Config.t()) :: :ok
+  defp assert_commits_have_threshold(node_id, config) do
+    state = get_bullshark_state(node_id)
+    dag = state.dag
+    threshold = Config.commit_threshold(config)
+
+    for wave <- 0..state.last_committed_wave, wave >= 0 do
+      anchor_round = wave * 2
+      vote_round = wave * 2 + 1
+      leader = Bullshark.wave_leader(config, wave)
+
+      case Map.get(dag, {leader, anchor_round}) do
+        nil ->
+          :ok
+
+        anchor_cert ->
+          refs =
+            Enum.count(Config.sorted_validators(config), fn validator ->
+              with %Cert{} = vote_cert <- Map.get(dag, {validator, vote_round}),
+                   block when block != nil <-
+                     NarwhalSup.get_block(node_id, vote_cert.block_digest) do
+                Enum.any?(block.certificates, fn c ->
+                  c.block_digest == anchor_cert.block_digest and
+                    c.validator == anchor_cert.validator
+                end)
+              else
+                _ -> false
+              end
+            end)
+
+          assert refs >= threshold,
+                 "Wave #{wave}: #{refs} vote refs, need #{threshold}"
+      end
+    end
+
+    :ok
+  end
+
+  # Helpers: consensus lifecycle
+  #
+  # feed_and_collect bundles the subscribe/feed/collect/stop
+  # boilerplate that most multi-validator examples repeat.
+
+  @spec feed_and_collect(
+          [Config.t()],
+          [Config.t()],
+          ([binary()] -> boolean())
+        ) :: [[binary()]]
+  defp feed_and_collect(feed_configs, observe_configs, done?) do
+    for c <- observe_configs do
+      subscribe_local(c.node_id, %Events.NarwhalConsensusFilter{})
+    end
+
+    feeder = spawn_link(fn -> feed_transactions(feed_configs) end)
+
+    orders =
+      collect_consensus_all(
+        Enum.map(observe_configs, & &1.node_id),
+        done?
+      )
+
+    stop_feeder(feeder)
+    orders
+  end
+
   # Helpers: protocol liveness
 
   @spec feed_transactions([Config.t()], non_neg_integer()) :: no_return()
