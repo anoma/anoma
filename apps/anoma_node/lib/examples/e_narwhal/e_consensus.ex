@@ -487,30 +487,37 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I verify Bullshark commits advance monotonically and all
-  submitted transactions appear in consensus output.
+  I verify every Bullshark commit decision respects the f+1
+  vote-reference threshold.
 
-  Invariant 4: the commit threshold (f+1 vote refs) is
-  enforced by `try_commit_wave` in Bullshark — we verify
-  the consequence: all transactions reach consensus.
+  Invariant 4: subscribes to `WaveDecisionEvent`s, runs the
+  protocol, and asserts that every `:committed` decision has
+  `refs >= commit_threshold`.
   """
-  @spec bullshark_commits_advance([Config.t()]) :: [Config.t()]
-  def bullshark_commits_advance(
+  @spec bullshark_respects_commit_threshold([Config.t()]) :: [Config.t()]
+  def bullshark_respects_commit_threshold(
         configs \\ ENarwhal.generate_validator_configs()
       ) do
-    configs = all_validators_agree(configs)
+    ENarwhal.start_all_validators(configs, batch_size: 1)
     observer = hd(configs)
+    threshold = Config.commit_threshold(observer)
+
+    subscribe_local(observer.node_id, %Events.WaveDecisionFilter{})
 
     tx_ids = for c <- configs, do: Mempool.tx(c.node_id, ETransaction.bluf())
-    target_set = MapSet.new(tx_ids)
 
-    [order] =
-      feed_and_collect(configs, [observer], &MapSet.subset?(target_set, MapSet.new(&1)))
+    feed_and_collect(configs, configs, &(length(&1) >= length(tx_ids)))
 
-    for tx <- tx_ids, do: assert(tx in order)
+    # Drain all WaveDecisionEvents from the mailbox
+    decisions = collect_wave_decisions(observer.node_id)
 
-    state = get_bullshark_state(observer.node_id)
-    assert state.last_committed_wave >= 1
+    committed = Enum.filter(decisions, &(&1.outcome == :committed))
+    assert length(committed) >= 1
+
+    for d <- committed do
+      assert d.refs >= threshold,
+             "Wave #{d.wave}: #{d.refs} refs, need #{threshold}"
+    end
 
     configs
   end
@@ -680,6 +687,21 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   # DAG inspection and invariant predicates
+
+  @spec collect_wave_decisions(String.t()) :: [Events.WaveDecisionEvent.t()]
+  defp collect_wave_decisions(node_id) do
+    receive do
+      %EventBroker.Event{
+        body: %Anoma.Node.Event{
+          node_id: ^node_id,
+          body: %Events.WaveDecisionEvent{} = decision
+        }
+      } ->
+        [decision | collect_wave_decisions(node_id)]
+    after
+      0 -> []
+    end
+  end
 
   @spec get_bullshark_state(String.t()) :: Bullshark.t()
   defp get_bullshark_state(node_id) do
