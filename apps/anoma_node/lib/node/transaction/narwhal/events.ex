@@ -13,13 +13,13 @@ defmodule Anoma.Node.Transaction.Narwhal.Events do
   ### Public API
 
   Events: `BatchReadyEvent`, `NarwhalConsensusEvent`,
-  `BatchDisseminateEvent`, `BlockProposalEvent`,
-  `SignatureEvent`, `CertificateEvent`.
+  `WaveDecisionEvent`, `BatchDisseminateEvent`,
+  `BlockProposalEvent`, `SignatureEvent`, `CertificateEvent`.
 
   Filters: `BatchReadyFilter`, `NarwhalConsensusFilter`,
-  `BatchDisseminateFilter`, `BlockProposalFilter`,
-  `SignatureFilter`, `CertificateFilter`,
-  `ValidatorSetFilter`.
+  `WaveDecisionFilter`, `BatchDisseminateFilter`,
+  `BlockProposalFilter`, `SignatureFilter`,
+  `CertificateFilter`, `ValidatorSetFilter`.
   """
 
   alias Anoma.Node.Event
@@ -64,6 +64,35 @@ defmodule Anoma.Node.Transaction.Narwhal.Events do
     """
     field(:order, [binary()], default: [])
     field(:round, non_neg_integer(), default: 0)
+  end
+
+  typedstruct module: WaveDecisionEvent do
+    @typedoc """
+    I record Bullshark's commit decision for a wave.
+
+    Published by Bullshark for every wave it evaluates. Useful
+    for replay auditing and invariant testing: every `:committed`
+    decision should have `refs >= commit_threshold`.
+
+    ### Fields
+
+    - `:wave`           - The wave number.
+    - `:outcome`        - `:committed` or `:skipped`.
+    - `:reason`         - Why: `:committed`, `:no_anchor`,
+                          `:insufficient_refs`, or `:unavailable`.
+    - `:refs`           - Vote-round references counted (0 when
+                          no anchor).
+    - `:anchor_digest`  - The anchor cert's block digest, or nil.
+    """
+    field(:wave, non_neg_integer(), default: 0)
+    field(:outcome, :committed | :skipped, default: :skipped)
+
+    field(:reason, :committed | :no_anchor | :insufficient_refs | :unavailable,
+      default: :no_anchor
+    )
+
+    field(:refs, non_neg_integer(), default: 0)
+    field(:anchor_digest, binary() | nil, default: nil)
   end
 
   ############################################################
@@ -138,6 +167,11 @@ defmodule Anoma.Node.Transaction.Narwhal.Events do
 
   deffilter NarwhalConsensusFilter do
     %EventBroker.Event{body: %Event{body: %NarwhalConsensusEvent{}}} -> true
+    _ -> false
+  end
+
+  deffilter WaveDecisionFilter do
+    %EventBroker.Event{body: %Event{body: %WaveDecisionEvent{}}} -> true
     _ -> false
   end
 

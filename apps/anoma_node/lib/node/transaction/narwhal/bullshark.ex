@@ -150,13 +150,24 @@ defmodule Anoma.Node.Transaction.Narwhal.Bullshark do
 
     case Map.get(state.dag, {leader, anchor_round}) do
       nil ->
+        publish_wave_decision(state, wave, :skipped, :no_anchor, 0, nil)
         {:ok, state}
 
       anchor_cert ->
-        if count_references(state, anchor_cert, vote_round) >=
-             Config.commit_threshold(state.config) do
-          commit_anchor(state, anchor_cert, wave)
+        refs = count_references(state, anchor_cert, vote_round)
+        digest = anchor_cert.block_digest
+
+        if refs >= Config.commit_threshold(state.config) do
+          case commit_anchor(state, anchor_cert, wave) do
+            {:ok, new_state} ->
+              publish_wave_decision(state, wave, :committed, :committed, refs, digest)
+              {:ok, new_state}
+
+            :unavailable ->
+              :unavailable
+          end
         else
+          publish_wave_decision(state, wave, :skipped, :insufficient_refs, refs, digest)
           {:ok, state}
         end
     end
@@ -342,5 +353,28 @@ defmodule Anoma.Node.Transaction.Narwhal.Bullshark do
           nil
       end
     end) || :unavailable
+  end
+
+  @spec publish_wave_decision(
+          t(),
+          non_neg_integer(),
+          :committed | :skipped,
+          :committed | :no_anchor | :insufficient_refs,
+          non_neg_integer(),
+          binary() | nil
+        ) :: term()
+  defp publish_wave_decision(state, wave, outcome, reason, refs, anchor_digest) do
+    EventBroker.event(
+      Anoma.Node.Event.new_with_body(
+        state.node_id,
+        %Events.WaveDecisionEvent{
+          wave: wave,
+          outcome: outcome,
+          reason: reason,
+          refs: refs,
+          anchor_digest: anchor_digest
+        }
+      )
+    )
   end
 end
