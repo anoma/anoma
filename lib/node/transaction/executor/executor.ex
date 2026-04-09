@@ -88,6 +88,11 @@ defmodule Anoma.Node.Transaction.Executor do
     ])
 
     EventBroker.subscribe_me([
+      Node.Event.node_filter(args[:node_id]),
+      %Events.TaskCrashFilter{}
+    ])
+
+    EventBroker.subscribe_me([
       %Mempool.Events.BlockFilter{}
     ])
 
@@ -210,6 +215,15 @@ defmodule Anoma.Node.Transaction.Executor do
         }
       } ->
         {res, id}
+
+      %EventBroker.Event{
+        body: %Node.Event{
+          body: %Events.TaskCrash{
+            task: ^id
+          }
+        }
+      } ->
+        {:error, id}
     end
   end
 
