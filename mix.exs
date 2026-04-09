@@ -26,7 +26,16 @@ defmodule AnomaNode.MixProject do
       lockfile: "mix.lock",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
+      package: package(),
       deps: deps()
+    ]
+  end
+
+  def package do
+    [
+      maintainers: ["Mariari", " Raymond E. Pasco"],
+      name: :anoma_node,
+      licenses: ["MIT"]
     ]
   end
 
