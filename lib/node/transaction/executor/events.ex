@@ -4,6 +4,7 @@ defmodule Anoma.Node.Transaction.Executor.Events do
 
   I also define the filters that can be used to subscribe to these events.
   """
+  alias Anoma.Node.Event
   alias Anoma.Node.Transaction.Mempool
 
   use EventBroker.DefFilter
@@ -32,8 +33,23 @@ defmodule Anoma.Node.Transaction.Executor.Events do
     @derive Jason.Encoder
     @typedoc """
     I am a crash event for a task that failed.
+
+    ### Fields
+    - `:task` - The transaction id of the crashed task.
     """
-    field(:task, pid())
+    field(:task, binary())
+  end
+
+  ############################################################
+  #                           Filters                        #
+  ############################################################
+
+  deffilter TaskCrashFilter do
+    %EventBroker.Event{body: %Event{body: %TaskCrash{}}} ->
+      true
+
+    _ ->
+      false
   end
 
   ############################################################
