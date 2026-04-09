@@ -157,10 +157,7 @@
           {Credo.Check.Warning.BoolOperationOnSameValues, []},
           {Credo.Check.Warning.Dbg, []},
           {Credo.Check.Warning.ExpensiveEmptyEnumCheck, []},
-          {Credo.Check.Warning.IExPry,
-           files: %{
-             excluded: ["apps/anoma_lib/lib/test_helper/test_macro.ex"]
-           }},
+          {Credo.Check.Warning.IExPry, []},
           {Credo.Check.Warning.IoInspect, []},
           {Credo.Check.Warning.MissedMetadataKeyInLoggerConfig, []},
           {Credo.Check.Warning.OperationOnSameValues, []},
