@@ -87,7 +87,9 @@ defmodule Anoma.Node.Transaction.Narwhal.Events do
     field(:wave, non_neg_integer(), default: 0)
     field(:outcome, :committed | :skipped, default: :skipped)
 
-    field(:reason, :committed | :no_anchor | :insufficient_refs | :unavailable,
+    field(
+      :reason,
+      :committed | :no_anchor | :insufficient_refs | :unavailable,
       default: :no_anchor
     )
 

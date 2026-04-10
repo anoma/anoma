@@ -160,14 +160,30 @@ defmodule Anoma.Node.Transaction.Narwhal.Bullshark do
         if refs >= Config.commit_threshold(state.config) do
           case commit_anchor(state, anchor_cert, wave) do
             {:ok, new_state} ->
-              publish_wave_decision(state, wave, :committed, :committed, refs, digest)
+              publish_wave_decision(
+                state,
+                wave,
+                :committed,
+                :committed,
+                refs,
+                digest
+              )
+
               {:ok, new_state}
 
             :unavailable ->
               :unavailable
           end
         else
-          publish_wave_decision(state, wave, :skipped, :insufficient_refs, refs, digest)
+          publish_wave_decision(
+            state,
+            wave,
+            :skipped,
+            :insufficient_refs,
+            refs,
+            digest
+          )
+
           {:ok, state}
         end
     end
@@ -363,7 +379,14 @@ defmodule Anoma.Node.Transaction.Narwhal.Bullshark do
           non_neg_integer(),
           binary() | nil
         ) :: term()
-  defp publish_wave_decision(state, wave, outcome, reason, refs, anchor_digest) do
+  defp publish_wave_decision(
+         state,
+         wave,
+         outcome,
+         reason,
+         refs,
+         anchor_digest
+       ) do
     EventBroker.event(
       Anoma.Node.Event.new_with_body(
         state.node_id,

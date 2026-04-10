@@ -37,7 +37,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
     tx_ids =
       for c <- configs, do: Mempool.tx(c.node_id, ETransaction.bluf())
 
-    orderings = feed_and_collect(configs, configs, &(length(&1) >= length(tx_ids)))
+    orderings =
+      feed_and_collect(configs, configs, &(length(&1) >= length(tx_ids)))
 
     [first | rest] = orderings
     for order <- rest, do: assert(order == first)
@@ -103,7 +104,11 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
     target_set = MapSet.new(tx_ids)
 
     orderings =
-      feed_and_collect(configs, configs, &MapSet.subset?(target_set, MapSet.new(&1)))
+      feed_and_collect(
+        configs,
+        configs,
+        &MapSet.subset?(target_set, MapSet.new(&1))
+      )
 
     for order <- orderings do
       assert order == Enum.uniq(order), "Ordering contains duplicates"
@@ -125,7 +130,9 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   With n=4, f=1, three validators meet quorum (2f+1=3).
   """
   @spec partial_network_commits([Config.t()]) :: [Config.t()]
-  def partial_network_commits(configs \\ ENarwhal.generate_validator_configs()) do
+  def partial_network_commits(
+        configs \\ ENarwhal.generate_validator_configs()
+      ) do
     early = Enum.take(configs, 3)
     ENarwhal.start_all_validators(early, batch_size: 1)
 
@@ -146,7 +153,9 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   commit, the 4th joins and fast-forwards via certificates.
   """
   @spec late_validator_catches_up([Config.t()]) :: [Config.t()]
-  def late_validator_catches_up(configs \\ ENarwhal.generate_validator_configs()) do
+  def late_validator_catches_up(
+        configs \\ ENarwhal.generate_validator_configs()
+      ) do
     configs = partial_network_commits(configs)
     [c1, _, _, c4] = configs
 
@@ -226,7 +235,9 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   and commits wave 2+.
   """
   @spec skipped_leader_recovery([Config.t()]) :: [Config.t()]
-  def skipped_leader_recovery(configs \\ ENarwhal.generate_validator_configs()) do
+  def skipped_leader_recovery(
+        configs \\ ENarwhal.generate_validator_configs()
+      ) do
     sorted = Config.sorted_validators(hd(configs))
     wave_1_leader_pk = Enum.at(sorted, rem(1, length(sorted)))
 
@@ -303,7 +314,9 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   suspended. The remaining three still meet quorum.
   """
   @spec consensus_after_validator_crash([Config.t()]) :: [Config.t()]
-  def consensus_after_validator_crash(configs \\ ENarwhal.generate_validator_configs()) do
+  def consensus_after_validator_crash(
+        configs \\ ENarwhal.generate_validator_configs()
+      ) do
     configs = all_validators_agree(configs)
     surviving = Enum.take(configs, 3)
     crashed = List.last(configs)
@@ -333,7 +346,9 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   validator catches up and orders a new transaction.
   """
   @spec crashed_validator_recovers([Config.t()]) :: [Config.t()]
-  def crashed_validator_recovers(configs \\ ENarwhal.generate_validator_configs()) do
+  def crashed_validator_recovers(
+        configs \\ ENarwhal.generate_validator_configs()
+      ) do
     configs = consensus_after_validator_crash(configs)
     recovered = List.last(configs)
 
@@ -754,7 +769,9 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
         |> MapSet.delete(node_id)
         |> Enum.find_value(fn peer -> NarwhalSup.get_block(peer, digest) end)
         |> case do
-          nil -> nil
+          nil ->
+            nil
+
           block ->
             NarwhalSup.store_block(node_id, digest, block)
             block
