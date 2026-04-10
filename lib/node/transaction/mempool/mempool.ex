@@ -2,25 +2,21 @@ defmodule Anoma.Node.Transaction.Mempool do
   @moduledoc """
   I am the Mempool Engine.
 
-  I posess the core functionality to submit new transactions, execute
-  incoming consensus, and dump current transactions. Alongside that, I
-  store all currently running transactions as well as their intermediate
-  VM results.
+  I posess the core functionality to submit new transactions and dump
+  current transactions. Alongside that, I store all currently running
+  transactions as well as their intermediate VM results.
 
-  As the main point of user-input, I also send the events needed for
-  replays.
-
-  All transactions are assumed to come in the form of {backend, noun}.
-
-  All consensus is assumed to come in a form of an orered list of binaries.
+  Execution is triggered automatically by Narwhal consensus: when
+  Bullshark commits a wave, the NarwhalConsensusEvent delivers
+  an ordered list of tx_ids, which I forward to the Executor.
 
   ### Public API
 
   I provide the following public functionality:
 
   - `tx_dump/1`
-  - `execute/2`
   - `tx/2`
+  - `register_foreign_txs/2`
   """
 
   alias __MODULE__
@@ -29,6 +25,7 @@ defmodule Anoma.Node.Transaction.Mempool do
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Backends
   alias Anoma.Node.Transaction.Executor
+  alias Anoma.Node.Transaction.Narwhal
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Mempool.Events
 
@@ -72,7 +69,6 @@ defmodule Anoma.Node.Transaction.Mempool do
           [
             node_id: String.t(),
             transactions: [{binary, Noun.t()}],
-            consensus: [[binary()]],
             round: non_neg_integer()
           ]
           | [node_id: String.t()]
@@ -233,7 +229,6 @@ defmodule Anoma.Node.Transaction.Mempool do
       |> Keyword.validate!([
         :node_id,
         transactions: [],
-        consensus: [],
         round: 1
       ])
 
@@ -249,22 +244,22 @@ defmodule Anoma.Node.Transaction.Mempool do
       filter_for_mempool_execution_events()
     ])
 
+    EventBroker.subscribe_me([
+      Node.Event.node_filter(node_id),
+      %Narwhal.Events.NarwhalConsensusFilter{}
+    ])
+
     state = %__MODULE__{round: args[:round], node_id: node_id}
 
-    {:ok, state,
-     {:continue, {:load_state, args[:transactions], args[:consensus]}}}
+    {:ok, state, {:continue, {:load_state, args[:transactions]}}}
   end
 
   @impl true
-  def handle_continue({:load_state, transactions, consensus}, state) do
+  def handle_continue({:load_state, transactions}, state) do
     node_id = state.node_id
 
     for {id, {_backend, tx_candidate}} <- transactions do
       tx(node_id, tx_candidate, id)
-    end
-
-    for list <- consensus do
-      execute(node_id, list)
     end
 
     {:noreply, state}
@@ -311,25 +306,24 @@ defmodule Anoma.Node.Transaction.Mempool do
   end
 
   @doc """
-  I am the execution function.
+  I register transactions from other validators.
 
-  I receive a list of binaries, which I recognize as a partial order for
-  block execution, sending an appropriate consensus submission event.
+  I accept a list of `{tx_id, code}` pairs from a foreign
+  validator's batch and process each one through the normal
+  transaction pipeline (Nock evaluation, backend assignment,
+  executor launch) without publishing TxEvents.
 
-  Once launched, I send the list to the Executor.
-
-  I am asynchronous, meaning that I do not block and blocks can be
-  submitted before the last one got executed.
-
-  If execution is susccesful, the Mempool will handle an appropriate
-  message from the Executor, which will trigger block-creation.
+  This ensures all validators can execute the same global
+  transaction set when Narwhal consensus orders them.
   """
-
-  @spec execute(String.t(), list(binary())) :: :ok
-  def execute(node_id, ordered_list_of_txs) do
-    GenServer.cast(
+  @spec register_foreign_txs(
+          String.t(),
+          [{binary(), Noun.t()}]
+        ) :: :ok
+  def register_foreign_txs(node_id, tx_pairs) do
+    GenServer.call(
       Registry.via(node_id, __MODULE__),
-      {:execute, ordered_list_of_txs}
+      {:register_foreign_txs, tx_pairs}
     )
   end
 
@@ -383,6 +377,23 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:reply, tx_id, handle_tx(tx, tx_id, state)}
   end
 
+  def handle_call(
+        {:register_foreign_txs, tx_pairs},
+        _from,
+        state
+      ) do
+    state =
+      Enum.reduce(tx_pairs, state, fn {tx_id, code}, acc ->
+        if Map.has_key?(acc.transactions, tx_id) do
+          acc
+        else
+          handle_tx(code, tx_id, acc, foreign: true)
+        end
+      end)
+
+    {:reply, :ok, state}
+  end
+
   @spec handle_call(term(), GenServer.from(), t()) :: {:reply, :ok, t()}
   def handle_call(_, _, state) do
     {:reply, :ok, state}
@@ -391,11 +402,6 @@ defmodule Anoma.Node.Transaction.Mempool do
   @impl true
   def handle_cast({:tx_async, tx, tx_id}, state) do
     {:noreply, handle_tx(tx, tx_id, state)}
-  end
-
-  def handle_cast({:execute, id_list}, state) do
-    handle_execute(id_list, state)
-    {:noreply, state}
   end
 
   def handle_cast(_, state) do
@@ -421,6 +427,26 @@ defmodule Anoma.Node.Transaction.Mempool do
     {:noreply, handle_execution_event(e, state)}
   end
 
+  def handle_info(
+        %EventBroker.Event{
+          body: %Node.Event{
+            body: %Narwhal.Events.NarwhalConsensusEvent{
+              order: order
+            }
+          }
+        },
+        state
+      ) do
+    known =
+      Enum.filter(order, &Map.has_key?(state.transactions, &1))
+
+    if known != [] do
+      handle_execute(known, state)
+    end
+
+    {:noreply, state}
+  end
+
   def handle_info(_, state) do
     {:noreply, state}
   end
@@ -429,8 +455,10 @@ defmodule Anoma.Node.Transaction.Mempool do
   #                 Genserver Implementation                 #
   ############################################################
 
-  @spec handle_tx(Noun.t(), binary(), t()) :: t()
-  defp handle_tx(tx, tx_id, state = %Mempool{}) do
+  @spec handle_tx(Noun.t(), binary(), t(), Keyword.t()) :: t()
+  defp handle_tx(tx, tx_id, state, opts \\ [])
+
+  defp handle_tx(tx, tx_id, state = %Mempool{}, opts) do
     with {:ok, code} <- cue_when_atom(tx),
          {:ok, [[reads | writes] | function]} <-
            Nock.nock(code, [9, 2, 0 | 1], %Nock{}),
@@ -462,7 +490,8 @@ defmodule Anoma.Node.Transaction.Mempool do
         {reads_list, writes_list},
         tx_function,
         tx_id,
-        state
+        state,
+        opts
       )
     else
       _ ->
@@ -476,7 +505,14 @@ defmodule Anoma.Node.Transaction.Mempool do
     end
   end
 
-  defp handle_keyspace(_code, {reads, writes}, tx_function, tx_id, state)
+  defp handle_keyspace(
+         _code,
+         {reads, writes},
+         tx_function,
+         tx_id,
+         state,
+         _opts
+       )
        when is_noun_zero(writes) do
     node_id = state.node_id
 
@@ -485,7 +521,14 @@ defmodule Anoma.Node.Transaction.Mempool do
     state
   end
 
-  defp handle_keyspace(code, {reads, writes}, tx_function, tx_id, state) do
+  defp handle_keyspace(
+         code,
+         {reads, writes},
+         tx_function,
+         tx_id,
+         state,
+         opts
+       ) do
     flag =
       cond do
         keyspace_check(writes, @cairo_keyspace) ->
@@ -512,9 +555,16 @@ defmodule Anoma.Node.Transaction.Mempool do
       value = %Tx{code: code, backend: flag}
       node_id = state.node_id
 
-      tx_event(tx_id, value, node_id)
+      unless Keyword.get(opts, :foreign, false) do
+        tx_event(tx_id, value, node_id)
+      end
 
-      Executor.launch(node_id, {flag, tx_function}, tx_id, reads)
+      Executor.launch(
+        node_id,
+        {flag, tx_function},
+        tx_id,
+        reads
+      )
 
       %Mempool{
         state

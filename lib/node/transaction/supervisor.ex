@@ -1,11 +1,16 @@
 defmodule Anoma.Node.Transaction.Supervisor do
   @moduledoc """
   I am the supervisor for the transaction subsystem.
+
+  I always start Narwhal consensus. If no explicit narwhal
+  config is provided, I create a single-validator config so
+  the node runs autonomous consensus.
   """
 
   use Supervisor
 
   alias Anoma.Node.Transaction.Mempool
+  alias Anoma.Node.Transaction.Narwhal
   alias Anoma.Node.Transaction.Ordering
   alias Anoma.Node.Transaction.Shard
 
@@ -36,17 +41,36 @@ defmodule Anoma.Node.Transaction.Supervisor do
   def init(args) do
     Process.set_label(__MODULE__)
 
-    children = [
-      {Shard.Supervisor,
-       [node_id: args[:node_id]] ++ Keyword.get(args, :shards, [])},
-      {Anoma.Node.Transaction.Ordering,
-       [node_id: args[:node_id]] ++ Keyword.get(args, :ordering, [])},
-      {Anoma.Node.Transaction.Storage,
-       [node_id: args[:node_id]] ++ Keyword.get(args, :storage, [])},
-      {Anoma.Node.Transaction.Executor, [node_id: args[:node_id]]},
-      {Anoma.Node.Transaction.Mempool,
-       [node_id: args[:node_id]] ++ Keyword.get(args, :mempool, [])}
-    ]
+    node_id = args[:node_id]
+    narwhal_args = Keyword.get(args, :narwhal, [])
+
+    config =
+      narwhal_args[:config] ||
+        Narwhal.Config.single_validator(node_id)
+
+    batch_size = narwhal_args[:batch_size]
+
+    narwhal_opts =
+      [node_id: node_id, config: config] ++
+        if(batch_size, do: [batch_size: batch_size], else: [])
+
+    children =
+      [
+        {Shard.Supervisor,
+         [node_id: node_id] ++
+           Keyword.get(args, :shards, [])},
+        {Ordering,
+         [node_id: node_id] ++
+           Keyword.get(args, :ordering, [])},
+        {Anoma.Node.Transaction.Storage,
+         [node_id: node_id] ++
+           Keyword.get(args, :storage, [])},
+        {Anoma.Node.Transaction.Executor, [node_id: node_id]},
+        {Narwhal.Supervisor, narwhal_opts},
+        {Mempool,
+         [node_id: node_id] ++
+           Keyword.get(args, :mempool, [])}
+      ]
 
     Supervisor.init(children, strategy: :one_for_all)
   end

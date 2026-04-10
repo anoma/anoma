@@ -9,6 +9,7 @@
   {:jason, "~> 1.4"},
   {:protobuf, "~> 0.11.0"},
   {:typed_struct, "~> 0.3.0"},
+  {:gt_bridge, git: "https://github.com/mariari/ElixirGtBridge", branch: "next"},
   # non-runtime dependencies below
   {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
   {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
