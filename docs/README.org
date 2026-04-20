@@ -1,0 +1,97 @@
+* Anoma LLM Configuration
+
+This repository represents LLM configurations that all of our
+projects can merge in to bring the shared values of the engineering
+department into our codebases. This is important as without these
+configurations LLM agents may be misaligned, leading to code that may
+not be maintainable or review that misses key insights.
+
+Currently the repository only supports Claude.
+
+** Including these configurations into your repository
+
+To include this repository into your project run the following
+commands:
+
+#+begin_src sh
+  git remote add llm https://github.com/anoma/llm.git
+
+  git merge llm/<latest-tag> --allow-unrelated-histories
+#+end_src
+
+Then tell your LLM Agent to add the following skills to their init
+file.  Be forceful — =/init= tends to summarize skill file contents
+into =CLAUDE.md= instead of referencing them.  You must insist that it
+include the =@= references verbatim.
+
+#+begin_example
+❯ /init
+❯ You must include the following skills in your CLAUDE.md file.
+  Do NOT summarize their contents — use these exact @ references:
+  @.claude/skills/general-conventions/SKILL.md
+  @.claude/skills/elixir-conventions/SKILL.md
+  @.claude/skills/git-conventions/SKILL.md
+#+end_example
+
+where =elixir= can be replaced with the language of the project.
+
+The =@= references are directives that load the skill files at context
+time.  The =CLAUDE.md= should contain only the references, not
+duplicate or paraphrase their contents.  If =/init= produces a
+summary, tell it to replace the summary with the =@= references only.
+
+This repository does not offer a file like =Claude.md=, as it's
+expected to provide repository specific information we can not know
+about beforehand.
+
+** Shared LLM Values
+For code that we wish to preserve here are some values this repository
+brings in:
+
+1. Code Principles
+   - Minimize code
+   - Generalize over special-casing
+   - No unnecessary indirection
+   - Flatten control flow
+2. Live Exploration
+   - Inspect process/object state at runtime
+   - Test hypotheses interactively
+   - Trace actual call paths
+3. Example-Driven Development
+   - Each example should reveal something new about the system
+4. Anti-Patterns (never do)
+   - Add features beyond the request
+   - Create abstractions for single use
+   - Add flexibility or configurability not requested
+   - Handle errors that can't happen
+   - Improve adjacent code unprompted
+
+5. Failure Protocol
+   - Stop after 2 failed attempts at the same approach
+   - Preserve partial work
+   - Diagnose what failed and why
+   - Change approach or ask for guidance
+
+6. Scope Awareness
+   - Before starting: restate what is needed, surface unstated assumptions, flag ambiguity
+
+Different kinds of configurations for different workflows (like LLMs
+that generate an entire codebase for you) will be added over time,
+always check out the newest release to see what may benefit you.
+
+** Useful skills
+
+- =/code-review <file>= :: review a file with a subagent that
+  specializes in reviewing code.
+
+** Project setup
+
+This repository offers [[https://docs.anthropic.com/en/docs/claude-code/skills][skills]] set up in such a way to provide core
+values to projects written in any language. We do this by providing
+our general values as a generic skills file. Conventions for specific
+languages are added in their own skills file.
+
+These skills files do the heavy lifting for any custom agents you may
+wish to set up for your repository. Meaning that you just have to
+specify what is special for your project in a custom agent
+file, e.g. in this repository always run =XYZ=.
