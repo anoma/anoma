@@ -182,3 +182,6 @@ For more information on a smooth git experience check out the [git
 section in contributor's guide](./documentation/contributing/git.livemd)
 
 Happy hacking, and don't be afraid to submit patches.
+- See **[Windows/WSL Quickstart](documentation/windows-wsl-quickstart.md)**.
+
+- Regenerate protobuf stubs: `scripts/proto-gen.sh` (requires protoc & protoc-gen-elixir).
