@@ -51,6 +51,8 @@ defmodule Anoma.Node.Transaction.Mempool do
                           ["anoma", "blob"]
                         ])
 
+  @openvm_keyspace MapSet.new([["anoma", "openvm"]])
+
   ############################################################
   #                       Types                              #
   ############################################################
@@ -490,6 +492,9 @@ defmodule Anoma.Node.Transaction.Mempool do
       cond do
         keyspace_check(writes, @cairo_keyspace) ->
           :cairo_resource
+
+        keyspace_check(writes, @openvm_keyspace) ->
+          :openvm_resource
 
         keyspace_check(writes, @transparent_keyspace) ->
           :transparent_resource

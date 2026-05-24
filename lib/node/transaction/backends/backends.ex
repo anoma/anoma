@@ -17,6 +17,7 @@ defmodule Anoma.Node.Transaction.Backends do
   alias Anoma.Node.Logging
   alias Anoma.Node.Transaction.Backends.Events
   alias Anoma.Node.Transaction.Ordering
+  alias Anoma.RM.OpenVM.TransactionRecord, as: OpenVMTransaction
   alias Anoma.RM.Transparent.ComplianceUnit, as: TCU
   alias Anoma.RM.Transparent.Transaction, as: TTransaction
   alias Anoma.RM.Transparent.Primitive.CommitmentAccumulator, as: TAcc
@@ -33,6 +34,7 @@ defmodule Anoma.Node.Transaction.Backends do
           | :read_only
           | :transparent_resource
           | :cairo_resource
+          | :openvm_resource
 
   @type transaction() :: {backend(), Noun.t() | binary()}
 
@@ -128,6 +130,10 @@ defmodule Anoma.Node.Transaction.Backends do
 
   defp backend_logic(:cairo_resource, node_id, id, vm_res) do
     cairo_resource_tx(node_id, id, vm_res)
+  end
+
+  defp backend_logic(:openvm_resource, node_id, id, vm_res) do
+    openvm_resource_tx(node_id, id, vm_res)
   end
 
   @spec transparent_resource_tx(String.t(), binary(), Noun.t()) ::
@@ -459,6 +465,79 @@ defmodule Anoma.Node.Transaction.Backends do
       {:error, "A submitted root dose not exist in storage"}
   end
 
+  @spec openvm_resource_tx(String.t(), binary(), Noun.t()) ::
+          {:ok, OpenVMTransaction.t()} | :error
+  defp openvm_resource_tx(node_id, id, result) do
+    with {:ok, tx} <- OpenVMTransaction.from_noun(result),
+         true <- OpenVMTransaction.verify(tx),
+         old_roots <-
+           read_with_default(
+             node_id,
+             id,
+             openvm_keyspace("roots"),
+             MapSet.new([ExKeccak.hash_256("EMPTY")])
+           ),
+         old_nlfs <-
+           read_with_default(
+             node_id,
+             id,
+             openvm_keyspace("nullifiers"),
+             MapSet.new()
+           ),
+         true <- openvm_root_check(tx, old_roots),
+         true <- openvm_nullifier_check(tx, old_nlfs) do
+      ct =
+        case Ordering.read(node_id, {id, openvm_keyspace("ct")}) do
+          :absent -> VariableMerkleTree.new(&ExKeccak.hash_256/1)
+          {:ok, val} -> val
+        end
+
+      commitments = OpenVMTransaction.commitments(tx)
+      nullifiers = tx |> OpenVMTransaction.nullifiers() |> MapSet.new()
+
+      ct_new = VariableMerkleTree.add(ct, commitments)
+      anchor = VariableMerkleTree.root(ct_new)
+
+      writes = [
+        {openvm_keyspace("nullifiers"), MapSet.union(old_nlfs, nullifiers)},
+        {openvm_keyspace("roots"), MapSet.put(old_roots, anchor)},
+        {openvm_keyspace("ct"), ct_new}
+      ]
+
+      Ordering.write(node_id, {id, writes})
+
+      openvm_rm_event(MapSet.new(commitments), nullifiers, node_id)
+
+      {:ok, tx}
+    else
+      e ->
+        Logging.log_event(
+          node_id,
+          :error,
+          "Transaction verification failed. Reason: #{inspect(e)}"
+        )
+
+        :error
+    end
+  end
+
+  @spec openvm_root_check(OpenVMTransaction.t(), MapSet.t(<<_::256>>)) ::
+          true | {:error, String.t()}
+  defp openvm_root_check(tx, stored_roots) do
+    Enum.all?(OpenVMTransaction.roots(tx), &MapSet.member?(stored_roots, &1)) or
+      {:error, "A submitted root does not exist in storage"}
+  end
+
+  @spec openvm_nullifier_check(OpenVMTransaction.t(), MapSet.t(<<_::256>>)) ::
+          true | {:error, String.t()}
+  defp openvm_nullifier_check(tx, stored_nullifiers) do
+    not Enum.any?(
+         OpenVMTransaction.nullifiers(tx),
+         &MapSet.member?(stored_nullifiers, &1)
+       ) or
+      {:error, "A submitted nullifier already exists in storage"}
+  end
+
   ############################################################
   #                        Helpers                           #
   ############################################################
@@ -520,6 +599,21 @@ defmodule Anoma.Node.Transaction.Backends do
     EventBroker.event(event)
   end
 
+  @spec openvm_rm_event(
+          MapSet.t(<<_::256>>),
+          MapSet.t(<<_::256>>),
+          String.t()
+        ) :: :ok
+  defp openvm_rm_event(cms, nlfs, node_id) do
+    event =
+      Node.Event.new_with_body(node_id, %Events.OpenVMRMEvent{
+        commitments: cms,
+        nullifiers: nlfs
+      })
+
+    EventBroker.event(event)
+  end
+
   @spec event(backend(), EventBroker.Event.t()) :: :ok
   defp event(:read_only, _event) do
     :ok
@@ -545,6 +639,11 @@ defmodule Anoma.Node.Transaction.Backends do
   @spec transparent_keyspace(String.t()) :: list(String.t())
   defp transparent_keyspace(key) do
     anoma_keyspace(["transparent", key])
+  end
+
+  @spec openvm_keyspace(String.t()) :: list(String.t())
+  defp openvm_keyspace(key) do
+    anoma_keyspace(["openvm", key])
   end
 
   @spec anoma_keyspace(list(String.t())) :: list(String.t())
