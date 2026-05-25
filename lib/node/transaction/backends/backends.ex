@@ -469,7 +469,9 @@ defmodule Anoma.Node.Transaction.Backends do
           {:ok, OpenVMTransaction.t()} | :error
   defp openvm_resource_tx(node_id, id, result) do
     with {:ok, tx} <- OpenVMTransaction.from_noun(result),
-         true <- OpenVMTransaction.verify(tx),
+         {consumed, created, roots} <- OpenVMTransaction.verify_and_extract(tx),
+         nullifiers = Enum.map(consumed, fn {nf, _} -> nf end),
+         commitments = Enum.map(created, fn {cm, _} -> cm end),
          old_roots <-
            read_with_default(
              node_id,
@@ -484,29 +486,36 @@ defmodule Anoma.Node.Transaction.Backends do
              openvm_keyspace("nullifiers"),
              MapSet.new()
            ),
-         true <- openvm_root_check(tx, old_roots),
-         true <- openvm_nullifier_check(tx, old_nlfs) do
+         true <- openvm_root_check(roots, old_roots),
+         true <- openvm_nullifier_check(nullifiers, old_nlfs) do
+      nlfs = MapSet.new(nullifiers)
+
       ct =
         case Ordering.read(node_id, {id, openvm_keyspace("ct")}) do
           :absent -> VariableMerkleTree.new(&ExKeccak.hash_256/1)
           {:ok, val} -> val
         end
 
-      commitments = OpenVMTransaction.commitments(tx)
-      nullifiers = tx |> OpenVMTransaction.nullifiers() |> MapSet.new()
-
       ct_new = VariableMerkleTree.add(ct, commitments)
       anchor = VariableMerkleTree.root(ct_new)
 
+      write_app_data =
+        for {_tag, payloads} <- consumed ++ created,
+            payload_list <- Tuple.to_list(payloads),
+            {blob, true} <- payload_list do
+          {["anoma", "blob", :crypto.hash(:sha256, blob)], blob}
+        end
+
       writes = [
-        {openvm_keyspace("nullifiers"), MapSet.union(old_nlfs, nullifiers)},
+        {openvm_keyspace("nullifiers"), MapSet.union(old_nlfs, nlfs)},
         {openvm_keyspace("roots"), MapSet.put(old_roots, anchor)},
         {openvm_keyspace("ct"), ct_new}
+        | write_app_data
       ]
 
       Ordering.write(node_id, {id, writes})
 
-      openvm_rm_event(MapSet.new(commitments), nullifiers, node_id)
+      openvm_rm_event(MapSet.new(commitments), nlfs, node_id)
 
       {:ok, tx}
     else
@@ -521,20 +530,17 @@ defmodule Anoma.Node.Transaction.Backends do
     end
   end
 
-  @spec openvm_root_check(OpenVMTransaction.t(), MapSet.t(<<_::256>>)) ::
+  @spec openvm_root_check([<<_::256>>], MapSet.t(<<_::256>>)) ::
           true | {:error, String.t()}
-  defp openvm_root_check(tx, stored_roots) do
-    Enum.all?(OpenVMTransaction.roots(tx), &MapSet.member?(stored_roots, &1)) or
+  defp openvm_root_check(roots, stored_roots) do
+    Enum.all?(roots, &MapSet.member?(stored_roots, &1)) or
       {:error, "A submitted root does not exist in storage"}
   end
 
-  @spec openvm_nullifier_check(OpenVMTransaction.t(), MapSet.t(<<_::256>>)) ::
+  @spec openvm_nullifier_check([<<_::256>>], MapSet.t(<<_::256>>)) ::
           true | {:error, String.t()}
-  defp openvm_nullifier_check(tx, stored_nullifiers) do
-    not Enum.any?(
-         OpenVMTransaction.nullifiers(tx),
-         &MapSet.member?(stored_nullifiers, &1)
-       ) or
+  defp openvm_nullifier_check(nullifiers, stored_nullifiers) do
+    not Enum.any?(nullifiers, &MapSet.member?(stored_nullifiers, &1)) or
       {:error, "A submitted nullifier already exists in storage"}
   end
 

@@ -51,7 +51,7 @@ defmodule Anoma.Node.Transaction.Mempool do
                           ["anoma", "blob"]
                         ])
 
-  @openvm_keyspace MapSet.new([["anoma", "openvm"]])
+  @openvm_keyspace MapSet.new([["anoma", "openvm"], ["anoma", "blob"]])
 
   ############################################################
   #                       Types                              #
