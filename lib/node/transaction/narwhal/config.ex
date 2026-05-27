@@ -34,6 +34,12 @@ defmodule Anoma.Node.Transaction.Narwhal.Config do
     field(:validator_set, MapSet.t(binary()))
     field(:node_id_set, MapSet.t(String.t()))
     field(:pk_to_node_id, %{binary() => String.t()})
+
+    field(
+      :pk_to_address,
+      %{binary() => %{host: String.t(), port: pos_integer()}},
+      default: %{}
+    )
   end
 
   @doc """
@@ -104,6 +110,15 @@ defmodule Anoma.Node.Transaction.Narwhal.Config do
     pairs = Enum.zip(keypairs, node_id_list)
     pk_to_node_id = Map.new(pairs, fn {kp, nid} -> {kp.public, nid} end)
 
+    base_port = Application.get_env(:anoma_node, :grpc_port, 50_051)
+
+    pk_to_address =
+      pairs
+      |> Enum.with_index()
+      |> Map.new(fn {{kp, _nid}, i} ->
+        {kp.public, %{host: "localhost", port: base_port + i * 1500}}
+      end)
+
     Enum.map(pairs, fn {kp, nid} ->
       %__MODULE__{
         node_id: nid,
@@ -111,7 +126,8 @@ defmodule Anoma.Node.Transaction.Narwhal.Config do
         secret_key: kp.secret,
         validator_set: validator_set,
         node_id_set: node_ids,
-        pk_to_node_id: pk_to_node_id
+        pk_to_node_id: pk_to_node_id,
+        pk_to_address: pk_to_address
       }
     end)
   end

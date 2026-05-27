@@ -1,4 +1,4 @@
-ExUnit.start(exclude: [:zk])
+ExUnit.start(exclude: [:zk, :multi_vm])
 
 # the ets table for created nodes is used by all test modules that use
 # an example node.

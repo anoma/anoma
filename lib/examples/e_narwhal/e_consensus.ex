@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Examples.ENarwhal.Consensus do
+defmodule Anoma.Node.Examples.ENarwhal.EConsensus do
   @moduledoc """
   I contain multi-validator consensus examples for Narwhal + Bullshark.
 
@@ -8,6 +8,7 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   """
 
   alias Anoma.Node.Examples.ENarwhal
+  alias Anoma.Node.Examples.ENarwhal.ECluster
   alias Anoma.Node.Examples.ETransaction
   alias Anoma.Node.Registry
   alias Anoma.Node.Transaction.Mempool
@@ -48,10 +49,62 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I verify all validators reach identical execution state.
+  I submit one transaction to the first validator and confirm it commits
+  on that validator's local broker. Works in one VM or across VMs.
+  """
+  @spec commit_observed([Config.t()]) :: [Config.t()]
+  def commit_observed(configs) do
+    [target | _] = configs
 
-  Builds on `all_validators_agree/1`: submits counter
-  transactions and compares every validator's values table.
+    subscribe_local(target.node_id, %Events.NarwhalConsensusFilter{})
+    tx_id = Mempool.tx(target.node_id, ETransaction.bluf())
+
+    order =
+      with_feeder([target], fn ->
+        collect_consensus(target.node_id, &(tx_id in &1))
+      end)
+
+    assert tx_id in order
+    configs
+  end
+
+  @doc """
+  I verify Bullshark commits a transaction in a single VM;
+  `EMultiVM.transaction_committed/1` is the same code, distributed.
+  """
+  @spec transaction_committed([Config.t()], boolean()) :: [Config.t()]
+  def transaction_committed(
+        configs \\ ECluster.local_configs(),
+        teardown? \\ true
+      ) do
+    ECluster.with_validators(configs, &commit_observed/1, teardown?)
+  end
+
+  @doc """
+  I verify a validator recovers after its block store is wiped: commit,
+  wipe validator 0's blocks, commit again. In-VM the blocks return from a
+  sibling's table; `EMultiVM.recovery_after_block_wipe/2` pulls them over
+  the wire.
+  """
+  @spec recovery_after_block_wipe([Config.t()], boolean()) :: [Config.t()]
+  def recovery_after_block_wipe(
+        configs \\ ECluster.local_configs(),
+        teardown? \\ true
+      ) do
+    ECluster.with_validators(
+      configs,
+      fn cfgs ->
+        commit_observed(cfgs)
+        clear_blocks(hd(cfgs).node_id)
+        commit_observed(cfgs)
+      end,
+      teardown?
+    )
+  end
+
+  @doc """
+  I verify all validators reach identical execution state, building on
+  `all_validators_agree/1` with counter transactions.
   """
   @spec all_validators_execute_identically([Config.t()]) :: [Config.t()]
   def all_validators_execute_identically(
@@ -67,9 +120,9 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
     Mempool.tx(hd(configs).node_id, ETransaction.zero(key))
     inc_id = Mempool.tx(hd(configs).node_id, ETransaction.inc(key))
 
-    feeder = spawn_link(fn -> feed_transactions(configs) end)
-    for c <- configs, do: await_block_with_tx(c.node_id, inc_id)
-    stop_feeder(feeder)
+    with_feeder(configs, fn ->
+      for c <- configs, do: await_block_with_tx(c.node_id, inc_id)
+    end)
 
     backups = for c <- configs, do: dump_shard_backups(c.node_id)
     [first | rest] = backups
@@ -87,10 +140,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I verify each tx_id appears exactly once in the ordering.
-
-  Submits 12 transactions across 4 validators to span
-  multiple waves. Asserts uniqueness and agreement.
+  I verify each tx_id appears exactly once in the ordering, across 12
+  transactions spanning multiple waves.
   """
   @spec each_tx_ordered_once([Config.t()]) :: [Config.t()]
   def each_tx_ordered_once(configs \\ ENarwhal.generate_validator_configs()) do
@@ -125,9 +176,7 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   ############################################################
 
   @doc """
-  I start 3 of 4 validators and achieve consensus.
-
-  With n=4, f=1, three validators meet quorum (2f+1=3).
+  I start 3 of 4 validators and achieve consensus (n=4, f=1, quorum 3).
   """
   @spec partial_network_commits([Config.t()]) :: [Config.t()]
   def partial_network_commits(
@@ -147,10 +196,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I demonstrate a late-joining validator catching up.
-
-  Builds on `partial_network_commits/1`: after 3 validators
-  commit, the 4th joins and fast-forwards via certificates.
+  I demonstrate a late-joining validator catching up, building on
+  `partial_network_commits/1`: the 4th joins and fast-forwards.
   """
   @spec late_validator_catches_up([Config.t()]) :: [Config.t()]
   def late_validator_catches_up(
@@ -163,9 +210,11 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
     ENarwhal.start_narwhal_node(c4, batch_size: 1)
 
     tx_id = Mempool.tx(c1.node_id, ETransaction.bluf())
-    feeder = spawn_link(fn -> feed_transactions(configs) end)
-    order = collect_consensus(c4.node_id, &(tx_id in &1))
-    stop_feeder(feeder)
+
+    order =
+      with_feeder(configs, fn ->
+        collect_consensus(c4.node_id, &(tx_id in &1))
+      end)
 
     assert tx_id in order
 
@@ -178,9 +227,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I clear all locally-stored blocks from one validator.
-
-  Builds on `late_validator_catches_up/1`.
+  I clear all locally-stored blocks from one validator, building on
+  `late_validator_catches_up/1`.
   """
   @spec missing_blocks([Config.t()]) :: [Config.t()]
   def missing_blocks(configs \\ ENarwhal.generate_validator_configs()) do
@@ -190,10 +238,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I verify that missing blocks are recovered from peers.
-
-  Builds on `missing_blocks/1`: the next commit's causal
-  traversal fetches blocks from peers across multiple rounds.
+  I verify missing blocks are recovered from peers, building on
+  `missing_blocks/1`: the next commit's causal traversal refetches them.
   """
   @spec missing_blocks_recovered_via_peer([Config.t()]) :: [Config.t()]
   def missing_blocks_recovered_via_peer(
@@ -203,9 +249,11 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
     target = hd(configs)
 
     tx_id = Mempool.tx(target.node_id, ETransaction.bluf())
-    feeder = spawn_link(fn -> feed_transactions(configs) end)
-    order = collect_consensus(target.node_id, &(tx_id in &1))
-    stop_feeder(feeder)
+
+    order =
+      with_feeder(configs, fn ->
+        collect_consensus(target.node_id, &(tx_id in &1))
+      end)
 
     assert tx_id in order
 
@@ -229,10 +277,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I verify that a skipped wave leader does not block consensus.
-
-  The leader for wave 1 stays offline. Bullshark skips wave 1
-  and commits wave 2+.
+  I verify a skipped wave leader does not block consensus: the wave-1
+  leader stays offline, so Bullshark skips wave 1 and commits wave 2+.
   """
   @spec skipped_leader_recovery([Config.t()]) :: [Config.t()]
   def skipped_leader_recovery(
@@ -250,10 +296,11 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
     subscribe_local(target.node_id, %Events.NarwhalConsensusFilter{})
 
     tx_id = Mempool.tx(target.node_id, ETransaction.bluf())
-    feeder = spawn_link(fn -> feed_transactions(active) end)
 
-    events = collect_waves_until_wave(target.node_id, 2)
-    stop_feeder(feeder)
+    events =
+      with_feeder(active, fn ->
+        collect_waves_until_wave(target.node_id, 2)
+      end)
 
     all_orders = Enum.flat_map(events, &elem(&1, 0))
     wave_numbers = Enum.map(events, &elem(&1, 1))
@@ -266,11 +313,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I verify an offline validator's transactions are still ordered.
-
-  Builds on `all_validators_agree/1`: one validator submits a
-  transaction then goes offline. The remaining three order it
-  via causal traversal.
+  I verify an offline validator's submitted transaction is still ordered
+  by the other three, building on `all_validators_agree/1`.
   """
   @spec offline_validator_transactions_ordered([Config.t()]) :: [Config.t()]
   def offline_validator_transactions_ordered(
@@ -281,18 +325,21 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
 
     tx_id = Mempool.tx(victim.node_id, ETransaction.bluf())
 
-    feeder = spawn_link(fn -> feed_transactions(configs) end)
-    {first_order, _} = receive_consensus(hd(active).node_id)
+    first_order =
+      with_feeder(configs, fn ->
+        {first_order, _} = receive_consensus(hd(active).node_id)
 
-    for mod <- [Primary, Worker, Bullshark] do
-      :sys.suspend(Registry.via(victim.node_id, mod))
-    end
+        for mod <- [Primary, Worker, Bullshark] do
+          :sys.suspend(Registry.via(victim.node_id, mod))
+        end
 
-    stop_feeder(feeder)
+        first_order
+      end)
 
-    feeder = spawn_link(fn -> feed_transactions(active) end)
-    order = collect_consensus(hd(active).node_id, &(tx_id in &1), first_order)
-    stop_feeder(feeder)
+    order =
+      with_feeder(active, fn ->
+        collect_consensus(hd(active).node_id, &(tx_id in &1), first_order)
+      end)
 
     assert tx_id in order
 
@@ -308,10 +355,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   ############################################################
 
   @doc """
-  I verify consensus continues after one validator crashes.
-
-  Builds on `all_validators_agree/1`: one validator is
-  suspended. The remaining three still meet quorum.
+  I verify consensus continues after one validator crashes (suspended),
+  building on `all_validators_agree/1`: the other three still meet quorum.
   """
   @spec consensus_after_validator_crash([Config.t()]) :: [Config.t()]
   def consensus_after_validator_crash(
@@ -340,10 +385,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I verify a crashed validator recovers and rejoins consensus.
-
-  Builds on `consensus_after_validator_crash/1`: the resumed
-  validator catches up and orders a new transaction.
+  I verify a crashed validator recovers and rejoins, building on
+  `consensus_after_validator_crash/1`: the resumed node orders a new tx.
   """
   @spec crashed_validator_recovers([Config.t()]) :: [Config.t()]
   def crashed_validator_recovers(
@@ -370,9 +413,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   # 4. Bullshark commits only with >= f+1 vote-round references.
 
   @doc """
-  I generate configs where node 0 and a 5th node share a keypair.
-
-  validator_set has `n` unique public keys; node_id_set has `n+1`.
+  I generate configs where node 0 and a 5th node share a keypair, so
+  `validator_set` has `n` keys but `node_id_set` has `n+1`.
   """
   @spec generate_duplicate_validator_configs(pos_integer()) :: [Config.t()]
   def generate_duplicate_validator_configs(n \\ 4) do
@@ -388,11 +430,9 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I run 5 nodes where two share a keypair and verify honest
-  validators agree and every cert has quorum signatures.
-
-  Invariants 1+2: `signed_blocks` prevents double-signing;
-  uncontested validators keep advancing.
+  I run 5 nodes where two share a keypair and verify honest validators
+  agree with quorum-signed certs (invariants 1+2: no double-signing,
+  uncontested validators advance).
   """
   @spec duplicate_validators_cannot_equivocate([Config.t()]) :: [Config.t()]
   def duplicate_validators_cannot_equivocate(
@@ -414,12 +454,10 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I verify all invariants hold under equivocation.
-
-  Builds on `duplicate_validators_cannot_equivocate/1`: after
-  the duplicate validator scenario, I check blocks reference
-  quorum certs (invariant 3) and Bullshark respects the commit
-  threshold (invariant 4) on an honest validator's DAG.
+  I verify all invariants hold under equivocation, building on
+  `duplicate_validators_cannot_equivocate/1`: blocks reference quorum
+  certs (invariant 3) and Bullshark respects the commit threshold
+  (invariant 4).
   """
   @spec invariants_hold_under_equivocation([Config.t()]) :: [Config.t()]
   def invariants_hold_under_equivocation(
@@ -439,13 +477,9 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I combine equivocation with a crash fault.
-
-  5 nodes (4 unique pks, 1 duplicate). One honest validator
-  crashes. The remaining 2 honest + 2 duplicates (same pk)
-  must still reach consensus. With 3 unique honest pks still
-  alive (2 honest nodes + the contested pk), quorum (3) is
-  reachable.
+  I combine equivocation with a crash fault: 5 nodes (4 unique pks, 1
+  duplicate), one honest crashes, and the rest still reach consensus
+  because 3 unique honest pks remain alive (quorum is 3).
   """
   @spec equivocation_plus_crash([Config.t()]) :: [Config.t()]
   def equivocation_plus_crash(
@@ -483,10 +517,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I verify block cert references on a healthy network.
-
-  Invariant 3: every block at round r > 0 references >= 2f+1
-  certificates from round r-1.
+  I verify block cert references on a healthy network (invariant 3:
+  every block at round r > 0 references >= 2f+1 certs from r-1).
   """
   @spec blocks_reference_quorum_certs([Config.t()]) :: [Config.t()]
   def blocks_reference_quorum_certs(
@@ -502,11 +534,8 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
   end
 
   @doc """
-  I verify every Bullshark commit decision respects the f+1
-  vote-reference threshold.
-
-  Invariant 4: subscribes to `WaveDecisionEvent`s, runs the
-  protocol, and asserts that every `:committed` decision has
+  I verify every Bullshark commit respects the f+1 vote-reference
+  threshold (invariant 4): every `:committed` WaveDecisionEvent has
   `refs >= commit_threshold`.
   """
   @spec bullshark_respects_commit_threshold([Config.t()]) :: [Config.t()]
@@ -553,16 +582,9 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
       subscribe_local(c.node_id, %Events.NarwhalConsensusFilter{})
     end
 
-    feeder = spawn_link(fn -> feed_transactions(feed_configs) end)
-
-    orders =
-      collect_consensus_all(
-        Enum.map(observe_configs, & &1.node_id),
-        done?
-      )
-
-    stop_feeder(feeder)
-    orders
+    with_feeder(feed_configs, fn ->
+      collect_consensus_all(Enum.map(observe_configs, & &1.node_id), done?)
+    end)
   end
 
   @spec feed_transactions([Config.t()], non_neg_integer()) :: no_return()
@@ -580,10 +602,18 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
     feed_transactions(configs, interval)
   end
 
-  @spec stop_feeder(pid()) :: true
-  defp stop_feeder(pid) do
-    Process.unlink(pid)
-    Process.exit(pid, :kill)
+  # Run `fun` while a feeder floods `configs` with transactions, killing
+  # the feeder afterward even if `fun` raises.
+  @spec with_feeder([Config.t()], (-> result)) :: result when result: var
+  defp with_feeder(configs, fun) do
+    feeder = spawn_link(fn -> feed_transactions(configs) end)
+
+    try do
+      fun.()
+    after
+      Process.unlink(feeder)
+      Process.exit(feeder, :kill)
+    end
   end
 
   # Subscriptions
@@ -718,15 +748,10 @@ defmodule Anoma.Node.Examples.ENarwhal.Consensus do
     end
   end
 
-  @spec get_bullshark_state(String.t()) :: Bullshark.t()
-  defp get_bullshark_state(node_id) do
-    :sys.get_state(Registry.via(node_id, Bullshark))
-  end
-
   @spec get_bullshark_dag(String.t()) ::
           %{{binary(), non_neg_integer()} => Cert.t()}
   defp get_bullshark_dag(node_id) do
-    get_bullshark_state(node_id).dag
+    :sys.get_state(Registry.via(node_id, Bullshark)).dag
   end
 
   @spec assert_all_certs_have_quorum(String.t(), Config.t()) :: :ok

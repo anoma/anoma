@@ -8,7 +8,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
   Primary round 0 cert -> Bullshark wave 0 -> Full execution
 
   For multi-validator consensus, fault tolerance, and Byzantine
-  invariant examples, see `ENarwhal.Consensus`.
+  invariant examples, see `ENarwhal.EConsensus`.
   """
 
   alias Anoma.Node.Examples.ENode
@@ -276,7 +276,7 @@ defmodule Anoma.Node.Examples.ENarwhal do
   #                        Helpers                           #
   ############################################################
 
-  # Node lifecycle — public so ENarwhal.Consensus can use them
+  # Node lifecycle, public so ECluster and EConsensus can use them.
 
   @spec start_all_validators([Config.t()], keyword()) :: [term()]
   def start_all_validators(configs, opts) do
@@ -285,8 +285,20 @@ defmodule Anoma.Node.Examples.ENarwhal do
 
   @spec start_narwhal_node(Config.t(), keyword()) :: term()
   def start_narwhal_node(config, opts \\ []) do
+    # The config carries this validator's address, so one launch handles
+    # any config: in-VM it's advertised metadata (the gRPC endpoint is a
+    # VM-level singleton), cross-VM it's the peer VM's own endpoint.
+    # No seed_nodes: validators are wired explicitly.
+    addr = Map.fetch!(config.pk_to_address, config.public_key)
+
     ENode.start_node(
       node_id: config.node_id,
+      node_config: %{
+        node_id: config.node_id,
+        grpc_host: addr.host,
+        grpc_port: addr.port,
+        seed_nodes: %{}
+      },
       transaction: [
         narwhal: [
           config: config,
@@ -294,6 +306,24 @@ defmodule Anoma.Node.Examples.ENarwhal do
         ]
       ]
     )
+  end
+
+  @doc """
+  I rewrite every config's `pk_to_address` so validator `i` advertises
+  `port_fun.(i)` — used to place validators all on this VM (same port)
+  or across VMs (distinct ports).
+  """
+  @spec with_ports([Config.t()], (non_neg_integer() -> pos_integer())) ::
+          [Config.t()]
+  def with_ports(configs, port_fun) do
+    pk_to_address =
+      configs
+      |> Enum.with_index()
+      |> Map.new(fn {cfg, i} ->
+        {cfg.public_key, %{host: "localhost", port: port_fun.(i)}}
+      end)
+
+    Enum.map(configs, &%{&1 | pk_to_address: pk_to_address})
   end
 
   # Subscriptions
