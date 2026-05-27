@@ -130,6 +130,15 @@ defmodule Anoma.Node.Transaction.Narwhal.Worker do
   end
 
   @impl true
+  def handle_call({:fetch_block, digest}, _from, state) do
+    {:reply, NarwhalSup.get_block(state.node_id, digest) || :absent, state}
+  end
+
+  def handle_call({:fetch_batch, digest}, _from, state) do
+    {:reply, NarwhalSup.get_full_batch(state.node_id, digest), state}
+  end
+
+  @impl true
   def handle_info(
         %EventBroker.Event{
           body: %Anoma.Node.Event{
@@ -226,7 +235,7 @@ defmodule Anoma.Node.Transaction.Narwhal.Worker do
     if items != [] do
       NarwhalSup.store_batch(state.node_id, digest, tx_ids, tx_data)
 
-      publish(state.node_id, %Events.BatchDisseminateEvent{
+      Events.publish_cross_node(state.node_id, %Events.BatchDisseminateEvent{
         digest: digest,
         tx_ids: tx_ids,
         tx_data: tx_data,
@@ -269,10 +278,13 @@ defmodule Anoma.Node.Transaction.Narwhal.Worker do
         {tx_id,
          :crypto.hash(
            :sha256,
-           :erlang.term_to_binary(Map.get(tx_data, tx_id))
+           # `:deterministic` so the digest is identical on every node
+           # (see Block.signable_binary) -- otherwise a disseminated
+           # batch hashes differently on its receiver and is rejected.
+           :erlang.term_to_binary(Map.get(tx_data, tx_id), [:deterministic])
          )}
       end)
 
-    :crypto.hash(:sha256, :erlang.term_to_binary(committed))
+    :crypto.hash(:sha256, :erlang.term_to_binary(committed, [:deterministic]))
   end
 end

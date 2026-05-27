@@ -24,6 +24,8 @@ defmodule Anoma.Node.Transaction.Narwhal.Events do
 
   alias Anoma.Node.Event
 
+  require Anoma.Node.Event
+
   use EventBroker.DefFilter
   use TypedStruct
 
@@ -211,5 +213,28 @@ defmodule Anoma.Node.Transaction.Narwhal.Events do
 
     _ ->
       false
+  end
+
+  ############################################################
+  #                    Cross-Node Publish                    #
+  ############################################################
+
+  @doc """
+  I publish a Narwhal event twice on the local broker: once bare for
+  in-VM subscribers, and once wrapped in `Proxy.Events.External`, which
+  `Proxy.Node` forwards over the wire (the receiving VM's gRPC `PubSub`
+  unwraps and re-fires the bare event). This is a shim over the generic
+  `Proxy.Node` filter, pending a per-engine Narwhal proxy.
+  """
+  @spec publish_cross_node(String.t(), struct()) :: :ok
+  def publish_cross_node(node_id, body) do
+    EventBroker.event(Anoma.Node.Event.new_with_body(node_id, body))
+
+    external_body =
+      %Anoma.Node.Transport.Proxy.Events.External{event: body}
+
+    EventBroker.event(Anoma.Node.Event.new_with_body(node_id, external_body))
+
+    :ok
   end
 end

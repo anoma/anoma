@@ -64,6 +64,12 @@ defmodule Anoma.Node.Transaction.Narwhal.Block do
     block
     |> Map.from_struct()
     |> Map.drop([:signature])
-    |> :erlang.term_to_binary()
+    # `:deterministic` canonicalizes map key order so the bytes are
+    # identical on every node. Without it a block signed/digested on
+    # its creator fails verification after crossing a VM boundary,
+    # because the receiver's map layout (and thus default
+    # term_to_binary) differs -- which silently stalls cross-VM
+    # consensus.
+    |> :erlang.term_to_binary([:deterministic])
   end
 end

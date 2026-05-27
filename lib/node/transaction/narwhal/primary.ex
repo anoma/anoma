@@ -281,10 +281,6 @@ defmodule Anoma.Node.Transaction.Narwhal.Primary do
   #                    Implementation                        #
   ############################################################
 
-  defp publish(node_id, body) do
-    EventBroker.event(Anoma.Node.Event.new_with_body(node_id, body))
-  end
-
   # Fast-forward: find the highest round >= min_round where we have
   # quorum unique certs. Returns {:advance, new_round, round_certs}
   # or :current if no fast-forward is possible.
@@ -407,7 +403,10 @@ defmodule Anoma.Node.Transaction.Narwhal.Primary do
       %Cert{block_digest: digest, validator: config.public_key, round: round}
       |> Cert.add_signature(config.public_key, our_sig)
 
-    publish(nid, %Events.BlockProposalEvent{block: block, from_node: nid})
+    Events.publish_cross_node(nid, %Events.BlockProposalEvent{
+      block: block,
+      from_node: nid
+    })
 
     new_data = %SignatureCollection{
       shared: shared,
@@ -431,7 +430,7 @@ defmodule Anoma.Node.Transaction.Narwhal.Primary do
        }) do
     new_dag = Map.put(dag, {cert.validator, cert.round}, cert)
 
-    publish(nid, %Events.CertificateEvent{
+    Events.publish_cross_node(nid, %Events.CertificateEvent{
       cert: cert,
       from_node: nid
     })
@@ -494,7 +493,7 @@ defmodule Anoma.Node.Transaction.Narwhal.Primary do
 
         sig = Anoma.Crypto.Sign.sign_detached(block_digest, config.secret_key)
 
-        publish(shared.node_id, %Events.SignatureEvent{
+        Events.publish_cross_node(shared.node_id, %Events.SignatureEvent{
           block_digest: block_digest,
           signature: sig,
           pub_key: config.public_key,

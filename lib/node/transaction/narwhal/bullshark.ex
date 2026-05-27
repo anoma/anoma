@@ -30,6 +30,7 @@ defmodule Anoma.Node.Transaction.Narwhal.Bullshark do
   alias Anoma.Node.Transaction.Narwhal.Cert
   alias Anoma.Node.Transaction.Narwhal.Config
   alias Anoma.Node.Transaction.Narwhal.Events
+  alias Anoma.Node.Transaction.Narwhal.Recovery
   alias Anoma.Node.Transaction.Narwhal.Supervisor, as: NarwhalSup
   alias Anoma.Node.Transaction.Narwhal.Worker
 
@@ -50,6 +51,7 @@ defmodule Anoma.Node.Transaction.Narwhal.Bullshark do
     field(:dag, %{{binary(), non_neg_integer()} => Cert.t()}, default: %{})
     field(:last_committed_wave, integer(), default: -1)
     field(:committed_set, MapSet.t(binary()), default: MapSet.new())
+    field(:in_flight, MapSet.t(binary()), default: MapSet.new())
   end
 
   ############################################################
@@ -60,6 +62,15 @@ defmodule Anoma.Node.Transaction.Narwhal.Bullshark do
   def wave_leader(config, wave) do
     validators = Config.sorted_validators(config)
     Enum.at(validators, rem(wave, length(validators)))
+  end
+
+  @doc """
+  I notify `node_id`'s Bullshark that a recovery fetch for `digest`
+  finished, clearing its in-flight marker and retrying the commit.
+  """
+  @spec fetch_done(String.t(), binary()) :: :ok
+  def fetch_done(node_id, digest) do
+    GenServer.cast(Registry.via(node_id, __MODULE__), {:fetch_done, digest})
   end
 
   ############################################################
@@ -112,6 +123,12 @@ defmodule Anoma.Node.Transaction.Narwhal.Bullshark do
     {:noreply, state}
   end
 
+  @impl true
+  def handle_cast({:fetch_done, digest}, state) do
+    state = %{state | in_flight: MapSet.delete(state.in_flight, digest)}
+    {:noreply, try_commit(state)}
+  end
+
   ############################################################
   #                      Implementation                     #
   ############################################################
@@ -129,17 +146,87 @@ defmodule Anoma.Node.Transaction.Narwhal.Bullshark do
     if max_wave <= state.last_committed_wave do
       state
     else
-      Enum.reduce_while(
-        (state.last_committed_wave + 1)..max_wave//1,
-        state,
-        fn wave, acc ->
-          case try_commit_wave(acc, wave) do
-            {:ok, new_state} -> {:cont, new_state}
-            :unavailable -> {:halt, acc}
+      new_state =
+        Enum.reduce_while(
+          (state.last_committed_wave + 1)..max_wave//1,
+          state,
+          fn wave, acc ->
+            case try_commit_wave(acc, wave) do
+              {:ok, ns} -> {:cont, ns}
+              :unavailable -> {:halt, acc}
+            end
           end
-        end
-      )
+        )
+
+      # No progress with waves remaining means we're stuck on data we
+      # don't hold: a deferred wave (`:unavailable`) or one skipped for
+      # `insufficient_refs` (missing vote-round blocks). Pull what we lack.
+      if max_wave > new_state.last_committed_wave and
+           new_state.last_committed_wave == state.last_committed_wave do
+        request_missing(new_state)
+      else
+        new_state
+      end
     end
+  end
+
+  # Spawn a fetch for every block/batch we lack, marking it in-flight.
+  # Deduped via `in_flight` since `try_commit` runs per certificate.
+  @spec request_missing(t()) :: t()
+  defp request_missing(state) do
+    for {kind, digest, owner} <-
+          missing_blocks(state) ++ missing_batches(state),
+        not MapSet.member?(state.in_flight, digest),
+        reduce: state do
+      acc = %{node_id: node_id, in_flight: in_flight} ->
+        Recovery.spawn_fetch(node_id, candidates(acc, owner), kind, digest)
+
+        %{acc | in_flight: MapSet.put(in_flight, digest)}
+    end
+  end
+
+  # Blocks the DAG references that we don't hold, as {:block, digest,
+  # owner}. The tier-1 `get_block` check is accurate because
+  # `ensure_block` has already promoted any locally-recoverable block.
+  @spec missing_blocks(t()) :: [{:block, binary(), String.t()}]
+  defp missing_blocks(state) do
+    for {_key, cert} <- state.dag,
+        NarwhalSup.get_block(state.node_id, cert.block_digest) == nil,
+        owner = Map.get(state.config.pk_to_node_id, cert.validator),
+        owner != nil do
+      {:block, cert.block_digest, owner}
+    end
+  end
+
+  # Batches that our stored blocks reference but we don't hold, as
+  # {:batch, digest, owner}.
+  @spec missing_batches(t()) :: [{:batch, binary(), String.t()}]
+  defp missing_batches(state) do
+    for {_key, cert} <- state.dag,
+        block = NarwhalSup.get_block(state.node_id, cert.block_digest),
+        block != nil,
+        bd <- block.batch_digests,
+        NarwhalSup.get_full_batch(state.node_id, bd) == :absent,
+        owner = Map.get(state.config.pk_to_node_id, block.creator),
+        owner != nil do
+      {:batch, bd, owner}
+    end
+  end
+
+  # Holders to try, most-likely first: the owner (creator), then the
+  # rest. `:absent` makes Recovery fall through to the next candidate.
+  @spec candidates(t(), String.t()) :: [String.t()]
+  defp candidates(state, owner) do
+    others =
+      state.config.node_id_set
+      |> MapSet.delete(state.node_id)
+      |> MapSet.delete(owner)
+      |> MapSet.to_list()
+
+    # If we created the missing data ourselves (our store was wiped),
+    # the creator is us, so skip it and pull from peers; otherwise try
+    # the creator first.
+    if owner == state.node_id, do: others, else: [owner | others]
   end
 
   @spec try_commit_wave(t(), non_neg_integer()) :: {:ok, t()} | :unavailable
