@@ -17,17 +17,17 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     EventBroker.subscribe_me([])
 
-    id1 = Mempool.tx(node_id, tx_w_backend)
-    id2 = Mempool.tx(node_id, ETransaction.bluf())
-    Mempool.execute(node_id, [id1, id2])
+    Mempool.tx(node_id, tx_w_backend)
+    id = Mempool.tx(node_id, ETransaction.bluf())
 
-    ETransaction.recieve_round_event(node_id, 0)
+    # wait for Narwhal consensus to execute the batch
+    ETransaction.wait_for_block_event(node_id)
 
     # Generate the nf and cm from fixed resources
     input_nullifier = ESResource.a_resource_nullifier()
 
     assert {:ok, MapSet.new([input_nullifier])} ==
-             ETransaction.reserve_and_do(:read, node_id, id2,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "nullifiers"]
              )
 
@@ -47,17 +47,17 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     assert {:ok,
             MapSet.new([Anoma.Constants.default_cairo_rm_root(), anchor])} ==
-             ETransaction.reserve_and_do(:read, node_id, id2,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "roots"]
              )
 
     assert {:ok, tree} ==
-             ETransaction.reserve_and_do(:read, node_id, id2,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "ct"]
              )
 
     assert {:ok, set_of_ciphertexts} ==
-             ETransaction.reserve_and_do(:read, node_id, id2,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "ciphertexts"]
              )
 
@@ -79,11 +79,10 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     EventBroker.subscribe_me([])
 
-    id1 = Mempool.tx(node_id, tx_w_backend)
-    id2 = Mempool.tx(node_id, ETransaction.bluf())
-    Mempool.execute(node_id, [id1, id2])
+    Mempool.tx(node_id, tx_w_backend)
+    id = Mempool.tx(node_id, ETransaction.bluf())
 
-    ETransaction.recieve_round_event(node_id, 0)
+    ETransaction.wait_for_block_event(node_id)
 
     # Generate the nf and cm from fixed resources
     input_nullifier_1 = ESResource.a_resource_nullifier()
@@ -93,12 +92,12 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> Anoma.CairoResource.Resource.nullifier(<<1::256>>)
 
     assert {:ok, MapSet.new([input_nullifier_1, input_nullifier_2])} ==
-             ETransaction.reserve_and_do(:read, node_id, id2,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "nullifiers"]
              )
 
     assert {:ok, set_of_ciphertexts} ==
-             ETransaction.reserve_and_do(:read, node_id, id2,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "ciphertexts"]
              )
 
@@ -118,12 +117,12 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
 
     assert {:ok,
             MapSet.new([Anoma.Constants.default_cairo_rm_root(), anchor])} ==
-             ETransaction.reserve_and_do(:read, node_id, id2,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "roots"]
              )
 
     assert {:ok, tree} ==
-             ETransaction.reserve_and_do(:read, node_id, id2,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "ct"]
              )
 
@@ -138,31 +137,31 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       ) do
     ETransaction.start_tx_module(node_id)
 
+    # Build all transactions before submitting so they land in
+    # the same Narwhal batch (avoids the 100ms flush timer
+    # splitting them across waves).
     tx_w_backend_1 = trivial_cairo_transaction()
+    tx_w_backend_2 = trivial_cairo_intent_transaction()
 
     set_of_ciphertexts1 =
       Examples.ECairo.ETransaction.a_shielded_transaction()
       |> Anoma.CairoResource.Transaction.get_cipher_texts()
       |> MapSet.new()
 
-    EventBroker.subscribe_me([])
-
-    id1 = Mempool.tx(node_id, tx_w_backend_1)
-
-    tx_w_backend_2 = trivial_cairo_intent_transaction()
-
     set_of_ciphertexts2 =
       Examples.ECairo.ETransaction.a_shielded_transaction_with_intents()
       |> Anoma.CairoResource.Transaction.get_cipher_texts()
       |> MapSet.new()
 
-    id2 = Mempool.tx(node_id, tx_w_backend_2)
+    EventBroker.subscribe_me([])
+
+    Mempool.tx(node_id, tx_w_backend_1)
+    Mempool.tx(node_id, tx_w_backend_2)
 
     # progress the watermark to read
-    id3 = Mempool.tx(node_id, ETransaction.bluf())
-    Mempool.execute(node_id, [id1, id2, id3])
+    id = Mempool.tx(node_id, ETransaction.bluf())
 
-    ETransaction.recieve_round_event(node_id, 0)
+    ETransaction.wait_for_block_event(node_id)
 
     # Generate the nf and cm from fixed resources
     input_nullifier_1 = ESResource.a_resource_nullifier()
@@ -172,7 +171,7 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       |> Anoma.CairoResource.Resource.nullifier(<<1::256>>)
 
     assert {:ok, MapSet.new([input_nullifier_1, input_nullifier_2])} ==
-             ETransaction.reserve_and_do(:read, node_id, id3,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "nullifiers"]
              )
 
@@ -201,12 +200,12 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
               anchor_1,
               anchor_2
             ])} ==
-             ETransaction.reserve_and_do(:read, node_id, id3,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "roots"]
              )
 
     assert {:ok, tree} ==
-             ETransaction.reserve_and_do(:read, node_id, id3,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "ct"]
              )
 
@@ -214,7 +213,7 @@ defmodule Anoma.Node.Examples.EShieldedTransaction do
       MapSet.union(set_of_ciphertexts1, set_of_ciphertexts2)
 
     assert {:ok, set_of_ciphertexts} ==
-             ETransaction.reserve_and_do(:read, node_id, id3,
+             ETransaction.reserve_and_do(:read, node_id, id,
                key: ["anoma", "cairo", "ciphertexts"]
              )
 

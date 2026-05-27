@@ -195,27 +195,8 @@ defmodule Anoma.Node.Examples.Mempool do
   end
 
   def make_block(enode, transaction) do
-    # subscribe to events here to be sure the events are caught
     with_subscription [[]] do
-      # fire a transaction
       {_node, transaction} = execute_transaction(enode, transaction)
-
-      # the transaction is currently waiting for an ordering
-      # or it has already executed if it did not scry.
-      #
-      # to ensure that the transaction completes, a consensus event
-      # must be fired. This is done by the consensus engine
-      # by calling Mempool.execute(node, transaction_ids)
-      # there is no consensus in the current branch, so the call is done manually
-      #
-      # The Mempool.execute call will fire a consensus event
-      # and then call the executor to execute the transactions.
-      #
-      # The executor will order the transactions in the consensus
-      # and then wait for all transactions to complete.
-      # After this, an execution event is sent.
-      Mempool.execute(enode.node_id, [transaction.id])
-
       {enode, transaction}
     end
   end

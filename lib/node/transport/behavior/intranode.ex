@@ -2,22 +2,38 @@ defmodule Anoma.Node.Transport.IntraNode do
   alias Anoma.Node.Transport.NetworkRegister.Advert.GRPCAddress
   alias Anoma.Node.Transport.NetworkRegister.Advert.TCPAddress
 
-  @doc """
-  I send a call message to a remote node over the wire, and expect a response back.
+  @typedoc """
+  An established, reusable connection to a remote node (for the gRPC
+  transport this is a `GRPC.Channel`). Held by the TransportProtocol
+  engine and reused across messages, rather than reconnecting on
+  every send.
   """
-  @callback call(GRPCAddress.t() | TCPAddress.t(), map()) :: {:ok, term()}
+  @type connection :: term()
 
   @doc """
-  I cast a message to a remote node over the wire, and do not expect a result back.
+  I establish a reusable connection to a remote node's transport
+  address. The returned connection is held and reused for subsequent
+  sends.
   """
-  @callback cast(GRPCAddress.t() | TCPAddress.t(), map()) :: :ok
+  @callback connect(GRPCAddress.t() | TCPAddress.t()) ::
+              {:ok, connection()} | {:error, term()}
 
   @doc """
-  I send an event across the wire to another node, and do not expect a result back.
+  I send a call message over an established connection and expect a
+  response back.
   """
-  @callback publish(
-              GRPCAddress.t() | TCPAddress.t(),
-              String.t(),
-              EventBroker.Event.t()
-            ) :: :ok
+  @callback call(connection(), map()) :: {:ok, term()} | {:error, term()}
+
+  @doc """
+  I cast a message over an established connection and do not expect a
+  result back.
+  """
+  @callback cast(connection(), map()) :: :ok | {:error, term()}
+
+  @doc """
+  I publish an event over an established connection and do not expect
+  a result back.
+  """
+  @callback publish(connection(), String.t(), EventBroker.Event.t()) ::
+              :ok | {:error, term()}
 end

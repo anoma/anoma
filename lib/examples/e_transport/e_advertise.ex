@@ -32,12 +32,6 @@ defmodule Anoma.Node.Examples.EAdvertise do
   #                  Public API                              #
   ############################################################
 
-  # @doc """
-  # I create a config for a node based on its node id.
-  #
-  # Note here that the GRPC port is the same for both nodes. The GRPC endpoint
-  # is not multi-homed, so all nodes listen on the same GRPC port.
-  # """
   @spec node_config(map()) :: map()
   defp node_config(params \\ %{}) do
     %{
@@ -173,10 +167,6 @@ defmodule Anoma.Node.Examples.EAdvertise do
   """
   @spec stop_slave(Peer.t()) :: :ok
   def stop_slave(peer = %Peer{}) do
-    # delete the slave from the system
-    {:ok, ipv4} = :inet.parse_ipv4_address(to_charlist("127.0.0.1"))
-    :erl_boot_server.delete_slave(ipv4)
-
     # stop the slave vm
     :peer.stop(peer.server_ref)
 
@@ -190,11 +180,16 @@ defmodule Anoma.Node.Examples.EAdvertise do
     :ok
   end
 
-  # @doc """
-  # I start a second erlang vm as a slave to test distributed pub sub.
-  # """
-  @spec start_slave(charlist()) :: Peer.t()
-  defp start_slave(name \\ :peer.random_name()) do
+  @doc """
+  I start a second erlang vm as a slave to test distributed pub sub.
+
+  The slave's `:anoma_node`/`:grpc_port` is set to this VM's grpc_port plus
+  `port_offset`, so multiple slaves can coexist without colliding.
+  The default `port_offset` of `1500` preserves the original single-slave
+  behavior.
+  """
+  @spec start_slave(charlist(), pos_integer()) :: Peer.t()
+  def start_slave(name \\ :peer.random_name(), port_offset \\ 1500) do
     # if this is a test run, the node will not be distributed, so start that here
     :ok =
       case :net_kernel.start([:"primary@127.0.0.1"]) do
@@ -214,9 +209,9 @@ defmodule Anoma.Node.Examples.EAdvertise do
           err
       end
 
-    :erl_boot_server.start([])
-    {:ok, ipv4} = :inet.parse_ipv4_address(to_charlist("127.0.0.1"))
-    :erl_boot_server.add_slave(ipv4)
+    # Match the peer's naming to ours, else :peer.start fails: short
+    # names when started with `--sname`, long names otherwise.
+    longnames = :net_kernel.longnames() == true
 
     my_hostname =
       node()
@@ -232,7 +227,7 @@ defmodule Anoma.Node.Examples.EAdvertise do
     {:ok, pid, node} =
       :peer.start(%{
         name: name,
-        longnames: true,
+        longnames: longnames,
         host: my_hostname,
         args: [~c"-setcookie", to_charlist(current_cookie)]
       })
@@ -252,12 +247,12 @@ defmodule Anoma.Node.Examples.EAdvertise do
       end
     end
 
-    # set the grpc ports and http ports of the remote node to be 1 higher than ours.
+    # set the grpc ports of the remote node, offset from ours by port_offset.
     my_grpc_port = Application.get_env(:anoma_node, :grpc_port)
 
     :rpc.block_call(peer_node.name, Application, :put_all_env, [
       [
-        anoma_node: [grpc_port: my_grpc_port + 1500],
+        anoma_node: [grpc_port: my_grpc_port + port_offset],
         anoma_client: [
           {:grpc_port, 40_052},
           {Anoma.Client.Web.Endpoint, [http: [port: 4001]]},

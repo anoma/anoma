@@ -9,6 +9,7 @@ defmodule Anoma.Node.Transport.Proxy.TransportProtocol do
   """
 
   alias Anoma.Node.Registry
+  alias Anoma.Node.Transport.IntraNode
   alias Anoma.Node.Transport.NetworkRegister.Advert.GRPCAddress
   alias Anoma.Node.Transport.NetworkRegister.Advert.TCPAddress
   alias Anoma.Node.Transport.GRPC
@@ -43,6 +44,7 @@ defmodule Anoma.Node.Transport.Proxy.TransportProtocol do
     field(:node_id, String.t())
     field(:remote_node_id, String.t())
     field(:address, address)
+    field(:channel, IntraNode.connection() | nil, default: nil)
   end
 
   ############################################################
@@ -115,19 +117,28 @@ defmodule Anoma.Node.Transport.Proxy.TransportProtocol do
 
   @impl true
   def handle_call({:call, message}, _from, state) do
-    {:ok, result} = make_call(state.address, message)
-    {:reply, result, state}
+    case ensure_channel(state) do
+      {:ok, channel, state} ->
+        case GRPC.Behavior.call(channel, message) do
+          {:ok, result} ->
+            {:reply, result, state}
+
+          {:error, reason} ->
+            {:reply, {:error, reason}, %{state | channel: nil}}
+        end
+
+      {:error, reason, state} ->
+        {:reply, {:error, reason}, state}
+    end
   end
 
   @impl true
   def handle_cast({:cast, message}, state) do
-    make_cast(state.address, message)
-    {:noreply, state}
+    {:noreply, dispatch(state, &GRPC.Behavior.cast(&1, message))}
   end
 
   def handle_cast({:event, %{topic: topic, event: event}}, state) do
-    publish_event(state.address, topic, event)
-    {:noreply, state}
+    {:noreply, dispatch(state, &GRPC.Behavior.publish(&1, topic, event))}
   end
 
   @impl true
@@ -139,27 +150,49 @@ defmodule Anoma.Node.Transport.Proxy.TransportProtocol do
   #                    Genserver Helpers                     #
   ############################################################
 
-  defp make_call(address = %GRPCAddress{}, message) do
-    GRPC.Behavior.call(address, message)
+  # I run `fun` with an established channel, dropping the cached
+  # channel on failure so the next send reconnects.
+  @spec dispatch(t(), (IntraNode.connection() -> :ok | {:error, term()})) ::
+          t()
+  defp dispatch(state, fun) do
+    case ensure_channel(state) do
+      {:ok, channel, state} ->
+        case fun.(channel) do
+          :ok ->
+            state
+
+          {:error, reason} ->
+            Logger.warning("transport send failed: #{inspect(reason)}")
+            %{state | channel: nil}
+        end
+
+      {:error, reason, state} ->
+        Logger.warning(
+          "transport connect to #{state.remote_node_id} failed: " <>
+            "#{inspect(reason)}"
+        )
+
+        state
+    end
   end
 
-  defp make_call(_address, _message) do
-    IO.puts("undefined")
+  # I return the cached channel, connecting (and caching) on first
+  # use and reusing it thereafter. Only GRPC addresses are supported.
+  @spec ensure_channel(t()) ::
+          {:ok, IntraNode.connection(), t()} | {:error, term(), t()}
+  defp ensure_channel(state = %__MODULE__{channel: channel})
+       when channel != nil do
+    {:ok, channel, state}
   end
 
-  defp make_cast(address = %GRPCAddress{}, message) do
-    GRPC.Behavior.cast(address, message)
+  defp ensure_channel(state = %__MODULE__{address: %GRPCAddress{} = address}) do
+    case GRPC.Behavior.connect(address) do
+      {:ok, channel} -> {:ok, channel, %{state | channel: channel}}
+      {:error, reason} -> {:error, reason, state}
+    end
   end
 
-  defp make_cast(_address, _message) do
-    IO.puts("undefined")
-  end
-
-  defp publish_event(address = %GRPCAddress{}, topic, event) do
-    GRPC.Behavior.publish(address, topic, event)
-  end
-
-  defp publish_event(_address, _topic, _message) do
-    IO.puts("undefined")
+  defp ensure_channel(state) do
+    {:error, :unsupported_transport, state}
   end
 end
