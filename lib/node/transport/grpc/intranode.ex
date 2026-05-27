@@ -13,80 +13,63 @@ defmodule Anoma.Node.Transport.GRPC.Behavior do
   @behaviour IntraNode
 
   @impl true
-  @spec publish(
-          GRPCAddress.t() | TCPAddress.t(),
-          String.t(),
-          EventBroker.Event.t()
-        ) :: :ok
-  def publish(address, topic, event) do
-    %{host: host, port: port} = address
+  @spec connect(GRPCAddress.t() | TCPAddress.t()) ::
+          {:ok, GRPC.Channel.t()} | {:error, term()}
+  def connect(%{host: host, port: port}) do
+    # One persistent channel, reused for every message (not per-send).
+    GRPC.Stub.connect("#{host}:#{port}")
+  end
 
-    # connect to the grpc endpoint
-    {:ok, channel} = GRPC.Stub.connect("#{host}:#{port}")
-
+  @impl true
+  @spec publish(GRPC.Channel.t(), String.t(), EventBroker.Event.t()) ::
+          :ok | {:error, term()}
+  def publish(channel, topic, event) do
     request =
       Event.Request.new(%{
         topic: %PubSub.Topic{topic: topic},
         message: %PubSub.Message{message: :erlang.term_to_binary(event)}
       })
 
-    {:ok, %Event.Response{}} = PubSubService.Stub.publish(channel, request)
-    :ok
+    case PubSubService.Stub.publish(channel, request) do
+      {:ok, %Event.Response{}} -> :ok
+      {:error, _} = err -> err
+    end
   end
 
   @impl true
-  @spec call(GRPCAddress.t() | TCPAddress.t(), map()) :: {:ok, String.t()}
-  def call(address, message) do
-    %{host: host, port: port} = address
-
-    # connect to the grpc endpoint
-    {:ok, channel} = GRPC.Stub.connect("#{host}:#{port}")
-
-    to_node_id = message.to
-    from_node_id = message.from
-    payload = message.message
-    engine = message.engine
-
+  @spec call(GRPC.Channel.t(), map()) :: {:ok, term()} | {:error, term()}
+  def call(channel, message) do
     request =
       Call.Request.new(%{
-        node: %Node{id: to_node_id},
-        from: %Node{id: from_node_id},
-        message: :erlang.term_to_binary(payload),
-        engine: "#{engine}"
+        node: %Node{id: message.to},
+        from: %Node{id: message.from},
+        message: :erlang.term_to_binary(message.message),
+        engine: "#{message.engine}"
       })
 
-    {:ok, response} = IntraNodeService.Stub.call(channel, request)
+    case IntraNodeService.Stub.call(channel, request) do
+      {:ok, response} ->
+        {:ok, response |> Map.get(:message) |> :erlang.binary_to_term()}
 
-    response =
-      response
-      |> Map.get(:message)
-      |> :erlang.binary_to_term()
-
-    {:ok, response}
+      {:error, _} = err ->
+        err
+    end
   end
 
   @impl true
-  @spec cast(GRPCAddress.t() | TCPAddress.t(), map()) :: :ok
-  def cast(address, message) do
-    %{host: host, port: port} = address
-
-    # connect to the grpc endpoint
-    {:ok, channel} = GRPC.Stub.connect("#{host}:#{port}")
-
-    to_node_id = message.to
-    from_node_id = message.from
-    payload = message.message
-    engine = message.engine
-
+  @spec cast(GRPC.Channel.t(), map()) :: :ok | {:error, term()}
+  def cast(channel, message) do
     request =
       Cast.Request.new(%{
-        node: %Node{id: to_node_id},
-        from: %Node{id: from_node_id},
-        message: :erlang.term_to_binary(payload),
-        engine: "#{engine}"
+        node: %Node{id: message.to},
+        from: %Node{id: message.from},
+        message: :erlang.term_to_binary(message.message),
+        engine: "#{message.engine}"
       })
 
-    {:ok, %Cast.Response{}} = IntraNodeService.Stub.cast(channel, request)
-    :ok
+    case IntraNodeService.Stub.cast(channel, request) do
+      {:ok, %Cast.Response{}} -> :ok
+      {:error, _} = err -> err
+    end
   end
 end

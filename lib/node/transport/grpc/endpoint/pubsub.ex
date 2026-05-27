@@ -44,20 +44,14 @@ defmodule Anoma.Node.Transport.GRPC.Servers.PubSub do
     # reconstruct the event and fire it on the eventbroker
     event = :erlang.binary_to_term(request.message.message)
 
-    # the incoming event is wrapped in an ExternalEvent wrapper.
-    # Remove this wrapper and publish it as a regular event.
-    # todo: this is horrible. really really horrible.
+    # The incoming event is wrapped in an Events.External wrapper; strip
+    # it and republish the inner event as a regular local event.
     case event do
-      %EventBroker.Event{body: %Anoma.Node.Event{body: %Events.External{}}} ->
-        # Anoma.Node.Event
-        node_event = event.body
-        # ExternalEvent
-        inner_event = node_event.body
-        # the event wrapped in an external event
-        actual_event = inner_event.event
-
-        new_event = %{event | body: %{node_event | body: actual_event}}
-        EventBroker.event(new_event)
+      %EventBroker.Event{
+        body:
+          %Anoma.Node.Event{body: %Events.External{event: inner}} = node_event
+      } ->
+        EventBroker.event(%{event | body: %{node_event | body: inner}})
 
       _ ->
         :noop
