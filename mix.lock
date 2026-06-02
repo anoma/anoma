@@ -1,6 +1,7 @@
 %{
-  "anoma_lib": {:git, "https://github.com/anoma/anoma-lib", "835dca2a4e8c600b34a76c0007d62a19c8e9a808", [tag: "v1.0.1"]},
+  "anoma_lib": {:git, "https://github.com/anoma/anoma-lib", "144da07055a76505e444c4359d63307e01671cfb", [ref: "144da07055a76505e444c4359d63307e01671cfb"]},
   "anoma_protobuf": {:git, "https://github.com/anoma/anoma-protobuf", "8235a9dc6ee5c7ae7839b5dd89e65912b57a6e99", [tag: "v1.0.0"]},
+  "arm_openvm": {:git, "https://github.com/anoma/arm-openvm", "e264d9004231072365663da51c54d262333a8914", [ref: "e264d9004231072365663da51c54d262333a8914"]},
   "bunt": {:hex, :bunt, "1.0.0", "081c2c665f086849e6d57900292b3a161727ab40431219529f13c4ddcf3e7a44", [:mix], [], "hexpm", "dc5f86aa08a5f6fa6b8096f0735c4e76d54ae5c9fa2c143e5a1fc7c1cd9bb6b5"},
   "cairo": {:git, "https://github.com/anoma/aarm-cairo", "a5a2778a4ad9b2ff40cea471ac777089149b9fda", [ref: "a5a2778a4ad9b2ff40cea471ac777089149b9fda"]},
   "compile_protoc": {:git, "https://github.com/anoma/compile-protoc", "db7394a422ef6125436e063ba1cf42d990f5c506", [tag: "v1.0.0"]},

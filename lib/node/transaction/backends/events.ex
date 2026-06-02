@@ -84,6 +84,22 @@ defmodule Anoma.Node.Transaction.Backends.Events do
     field(:nullifiers, MapSet.t(binary()), default: MapSet.new())
   end
 
+  typedstruct enforce: true, module: OpenVMRMEvent do
+    @derive Jason.Encoder
+    @typedoc """
+    I hold the content of the OpenVM Resource Machine Event, which
+    communicates a set of nullifiers/commitments defined by the actions of the
+    transaction candidate.
+
+    ### Fields
+
+    - `:commitments`        - The set of commitments.
+    - `:nullifiers`         - The set of nullifiers.
+    """
+    field(:commitments, MapSet.t(<<_::256>>), default: MapSet.new())
+    field(:nullifiers, MapSet.t(<<_::256>>), default: MapSet.new())
+  end
+
   typedstruct enforce: true, module: ROEvent do
     @typedoc """
     I hold the content of the Read Only Event, which communicated a
