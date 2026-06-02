@@ -469,7 +469,8 @@ defmodule Anoma.Node.Transaction.Backends do
           {:ok, OpenVMTransaction.t()} | :error
   defp openvm_resource_tx(node_id, id, result) do
     with {:ok, tx} <- OpenVMTransaction.from_noun(result),
-         {consumed, created, roots} <- OpenVMTransaction.verify_and_extract(tx),
+         {consumed, created, roots} <-
+           OpenVMTransaction.verify_and_extract(tx),
          nullifiers = Enum.map(consumed, fn {nf, _} -> nf end),
          commitments = Enum.map(created, fn {cm, _} -> cm end),
          old_roots <-

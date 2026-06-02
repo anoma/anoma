@@ -2,7 +2,8 @@
 [
   {:anoma_lib,
    git: "https://github.com/anoma/anoma-lib",
-   ref: "144da07055a76505e444c4359d63307e01671cfb", override: true},
+   ref: "144da07055a76505e444c4359d63307e01671cfb",
+   override: true},
   {:anoma_protobuf,
    git: "https://github.com/anoma/anoma-protobuf", tag: "v1.0.0"},
   {:arm_openvm,
